@@ -1,5 +1,8 @@
 # GEMINI.md - プロジェクト開発ログ
 
+> [!NOTE]
+> このファイルの `Implementation Plan` および `Walkthrough` セクションは、必ず日本語で記述してください。
+
 ## タスク状況 (Tasks)
 
 - [ ] プロジェクト・オンボーディング <!-- id: 0 -->
