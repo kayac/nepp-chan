@@ -26,7 +26,7 @@ interface Thread {
     updatedAt: string
 }
 
-const ToolStatus = ({ tool }: { tool: ToolInvocation }) => {
+const ToolStatus = ({ tool, isDevMode }: { tool: ToolInvocation, isDevMode: boolean }) => {
     const [isExpanded, setIsExpanded] = useState(false)
     const isFinished = !!tool.result
 
@@ -34,7 +34,26 @@ const ToolStatus = ({ tool }: { tool: ToolInvocation }) => {
     let statusMessage = isFinished ? '完了' : '実行中...'
     let thinkingText = ''
 
-    if (tool.toolName === 'knowledgeTool') {
+    // Hide internal tools from the UI unless in dev mode
+    // if (!isDevMode && (tool.toolName === 'persona-tool' || tool.toolName === 'news-tool')) {
+    //     return null
+    // }
+
+    if (tool.toolName === 'persona-tool') {
+        friendlyName = '記憶'
+        if (tool.args?.action === 'save') {
+            statusMessage = isFinished ? '覚えました' : '覚えています...'
+        } else {
+            statusMessage = isFinished ? '思い出しました' : '思い出しています...'
+        }
+    } else if (tool.toolName === 'news-tool') {
+        friendlyName = '村の様子'
+        if (tool.args?.action === 'add') {
+            statusMessage = isFinished ? 'メモしました' : 'メモしています...'
+        } else {
+            statusMessage = isFinished ? '確認しました' : '確認しています...'
+        }
+    } else if (tool.toolName === 'knowledgeTool') {
         friendlyName = '村の知識'
         statusMessage = isFinished ? '思い出しました！' : '思い出しています・・・'
 
@@ -61,6 +80,14 @@ const ToolStatus = ({ tool }: { tool: ToolInvocation }) => {
     } else if (tool.toolName === 'masterTool') {
         friendlyName = '管理者モード'
         statusMessage = isFinished ? '認証完了' : '認証中...'
+    } else if (tool.toolName === 'searchTool') {
+        friendlyName = 'Web検索'
+        statusMessage = isFinished ? '完了' : '調べています...'
+
+        if (isFinished && tool.result) {
+            const query = tool.args?.query || 'これ'
+            thinkingText = `そうだ、${query}について調べてみたよ・・・`
+        }
     }
 
     const headerText = `${friendlyName}を${statusMessage}`
@@ -101,7 +128,9 @@ function App() {
     const [errorMsg, setErrorMsg] = useState<string | null>(null)
     const [threads, setThreads] = useState<Thread[]>([])
     const [threadId, setThreadId] = useState(() => `thread-${Date.now()}`)
+    const [isDevMode, setIsDevMode] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
+    const inputRef = useRef<HTMLInputElement>(null)
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -114,6 +143,12 @@ function App() {
     useEffect(() => {
         loadThreads()
     }, [])
+
+    useEffect(() => {
+        if (!isLoading) {
+            setTimeout(() => inputRef.current?.focus(), 10)
+        }
+    }, [isLoading])
 
     const loadThreads = async () => {
         try {
@@ -133,21 +168,45 @@ function App() {
         if (isLoading) return
         setThreadId(id)
         setMessages([])
+        setIsDevMode(false) // Reset dev mode on thread switch
         setIsLoading(true)
         try {
+            console.log(`Loading thread ${id}...`)
             const res = await fetch(`/api/threads/${id}/messages`)
             if (res.ok) {
                 const data = await res.json()
-                // Map UI messages to our Message format if needed
-                // Assuming data is compatible or we map it
-                // Mastra uiMessages might differ slightly, let's inspect or map safely
-                const mappedMessages = data.map((m: any) => ({
-                    id: m.id,
-                    role: m.role,
-                    content: m.content,
-                    parts: m.parts || (m.content ? [{ type: 'text', content: m.content }] : [])
-                }))
+                console.log('Loaded messages:', data)
+
+                // Check for devTool usage in history
+                let hasDevTool = false
+                const mappedMessages = data.map((m: any) => {
+                    const parts = m.parts
+                        ? m.parts.map((p: any) => {
+                            if (p.type === 'tool-invocation' && p.toolInvocation.toolName === 'devTool') {
+                                hasDevTool = true
+                            }
+                            return {
+                                ...p,
+                                content: p.content || p.text
+                            }
+                        })
+                        : (m.content ? [{ type: 'text', content: m.content }] : [])
+
+                    return {
+                        id: m.id,
+                        role: m.role,
+                        content: m.content,
+                        parts: parts
+                    }
+                })
+
+                if (hasDevTool) {
+                    setIsDevMode(true)
+                }
+
                 setMessages(mappedMessages)
+            } else {
+                console.error('Failed to fetch messages:', res.status, res.statusText)
             }
         } catch (e) {
             console.error('Failed to load messages', e)
@@ -164,6 +223,8 @@ function App() {
         setMessages([])
         setInput('')
         setErrorMsg(null)
+        setIsDevMode(false)
+        setTimeout(() => inputRef.current?.focus(), 10)
     }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,7 +272,17 @@ function App() {
                 }),
             })
 
-            if (!response.ok) throw new Error(response.statusText)
+            if (!response.ok) {
+                if (response.status === 429) {
+                    const errorData = await response.json()
+                    const retryAfter = errorData.retryAfter ? Math.ceil(parseFloat(errorData.retryAfter)) : null
+                    const msg = retryAfter
+                        ? `利用制限中です。あと${retryAfter}秒で解除されます。`
+                        : '利用制限中です。しばらく待ってから再試行してください。'
+                    throw new Error(msg)
+                }
+                throw new Error(response.statusText)
+            }
             if (!response.body) throw new Error('No response body')
 
             const reader = response.body.getReader()
@@ -246,13 +317,25 @@ function App() {
 
         } catch (error: any) {
             console.error('Chat error:', error)
-            setErrorMsg(error.message || 'An error occurred')
+            // setErrorMsg(error.message || 'An error occurred')
+
+            const errorMsg: Message = {
+                id: Date.now().toString(),
+                role: 'assistant',
+                content: error.message || 'エラーが発生しました',
+                parts: [{ type: 'text', content: error.message || 'エラーが発生しました' }]
+            }
+            setMessages(prev => [...prev, errorMsg])
         } finally {
             setIsLoading(false)
         }
     }
 
     const handleStreamEvent = (data: any, msgId: string) => {
+        if (data.type === 'tool-input-available' && data.toolName === 'devTool') {
+            setIsDevMode(true)
+        }
+
         setMessages(prev => {
             const newMessages = [...prev]
             const msgIndex = newMessages.findIndex(m => m.id === msgId)
@@ -262,13 +345,14 @@ function App() {
             const parts = [...(msg.parts || [])]
 
             if (data.type === 'text-delta') {
-                msg.content += data.delta
+                const cleanDelta = data.delta.replace(/більш/g, '')
+                msg.content += cleanDelta
 
                 const lastPart = parts[parts.length - 1]
                 if (lastPart && lastPart.type === 'text') {
-                    parts[parts.length - 1] = { ...lastPart, content: lastPart.content + data.delta }
+                    parts[parts.length - 1] = { ...lastPart, content: lastPart.content + cleanDelta }
                 } else {
-                    parts.push({ type: 'text', content: data.delta })
+                    parts.push({ type: 'text', content: cleanDelta })
                 }
             } else if (data.type === 'tool-input-available') {
                 const toolInvocation: ToolInvocation = {
@@ -289,6 +373,25 @@ function App() {
                         }
                     }
                 }
+            } else if (data.type === 'error') {
+                let errorText = data.errorText || 'エラーが発生しました'
+
+                // Handle Rate Limit
+                if (errorText.includes('Quota exceeded') || errorText.includes('429')) {
+                    const match = errorText.match(/Please retry in ([0-9.]+)s/)
+                    const retryAfter = match ? Math.ceil(parseFloat(match[1])) : null
+                    errorText = retryAfter
+                        ? `利用制限中です。あと${retryAfter}秒で解除されます。`
+                        : '利用制限中です。しばらく待ってから再試行してください。'
+                }
+
+                const lastPart = parts[parts.length - 1]
+                if (lastPart && lastPart.type === 'text') {
+                    parts[parts.length - 1] = { ...lastPart, content: lastPart.content + '\n\n' + errorText }
+                } else {
+                    parts.push({ type: 'text', content: errorText })
+                }
+                msg.content += '\n\n' + errorText
             }
 
             msg.parts = parts
@@ -321,8 +424,8 @@ function App() {
                             key={thread.id}
                             onClick={() => loadThread(thread.id)}
                             className={`p-3 rounded-lg cursor-pointer text-sm transition-colors ${thread.id === threadId
-                                    ? 'bg-gray-100 text-black font-medium'
-                                    : 'text-gray-600 hover:bg-gray-50'
+                                ? 'bg-gray-100 text-black font-medium'
+                                : 'text-gray-600 hover:bg-gray-50'
                                 }`}
                         >
                             <div className="truncate">{thread.title || '無題の会話'}</div>
@@ -340,75 +443,80 @@ function App() {
             </div>
 
             {/* Main Chat Area */}
-            <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full bg-white">
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {messages.map((msg) => (
-                        <div
-                            key={msg.id}
-                            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
+            <div className="flex-1 flex flex-col w-full bg-white">
+                <div className="flex-1 overflow-y-auto">
+                    <div className="max-w-3xl mx-auto p-4 space-y-4">
+                        {messages.map((msg) => (
                             <div
-                                className={`max-w-[80%] rounded-2xl px-4 py-2 ${msg.role === 'user'
+                                key={msg.id}
+                                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                            >
+                                <div
+                                    className={`max-w-[80%] rounded-2xl px-4 py-2 ${msg.role === 'user'
                                         ? 'bg-gray-100 text-gray-900'
                                         : 'bg-white text-gray-900'
-                                    }`}
-                            >
-                                {msg.parts && msg.parts.length > 0 ? (
-                                    msg.parts.map((part, index) => {
-                                        if (part.type === 'text') {
-                                            return <div key={index} className="whitespace-pre-wrap">{part.content}</div>
-                                        }
-                                        if (part.type === 'tool-invocation') {
-                                            return (
-                                                <div key={index} className="my-2">
-                                                    <ToolStatus tool={part.toolInvocation} />
-                                                </div>
-                                            )
-                                        }
-                                        return null
-                                    })
-                                ) : (
-                                    <div className="whitespace-pre-wrap">{msg.content}</div>
-                                )}
+                                        }`}
+                                >
+                                    {msg.parts && msg.parts.length > 0 ? (
+                                        msg.parts.map((part, index) => {
+                                            if (part.type === 'text') {
+                                                return <div key={index} className="whitespace-pre-wrap">{part.content}</div>
+                                            }
+                                            if (part.type === 'tool-invocation') {
+                                                return (
+                                                    <div key={index} className="my-2">
+                                                        <ToolStatus tool={part.toolInvocation} isDevMode={isDevMode} />
+                                                    </div>
+                                                )
+                                            }
+                                            return null
+                                        })
+                                    ) : (
+                                        <div className="whitespace-pre-wrap">{msg.content}</div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                    {isLoading && !messages[messages.length - 1]?.content && (
-                        <div className="flex justify-start">
-                            <div className="bg-white text-gray-500 px-4 py-2">
-                                <span className="animate-pulse">...</span>
+                        ))}
+                        {isLoading && !messages[messages.length - 1]?.content && (
+                            <div className="flex justify-start">
+                                <div className="bg-white text-gray-500 px-4 py-2">
+                                    <span className="animate-pulse">...</span>
+                                </div>
                             </div>
-                        </div>
-                    )}
-                    {errorMsg && (
-                        <div className="flex justify-center">
-                            <div className="bg-red-50 text-red-500 text-sm px-4 py-2 rounded-lg">
-                                {errorMsg}
+                        )}
+                        {errorMsg && (
+                            <div className="flex justify-center">
+                                <div className="bg-red-50 text-red-500 text-sm px-4 py-2 rounded-lg">
+                                    {errorMsg}
+                                </div>
                             </div>
-                        </div>
-                    )}
-                    <div ref={messagesEndRef} />
+                        )}
+                        <div ref={messagesEndRef} />
+                    </div>
                 </div>
 
                 {/* Input Area */}
-                <div className="p-4 border-t border-gray-100 bg-white">
-                    <form onSubmit={handleSubmit} className="flex gap-2">
-                        <input
-                            type="text"
-                            value={input}
-                            onChange={handleInputChange}
-                            placeholder="メッセージを入力..."
-                            className="flex-1 px-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-200"
-                            disabled={isLoading}
-                        />
-                        <button
-                            type="submit"
-                            disabled={isLoading || !input.trim()}
-                            className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-                        >
-                            送信
-                        </button>
-                    </form>
+                <div className="border-t border-gray-100 bg-white">
+                    <div className="max-w-3xl mx-auto p-4">
+                        <form onSubmit={handleSubmit} className="flex gap-2">
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                value={input}
+                                onChange={handleInputChange}
+                                placeholder="メッセージを入力..."
+                                className="flex-1 px-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-200"
+                                disabled={isLoading}
+                            />
+                            <button
+                                type="submit"
+                                disabled={isLoading || !input.trim()}
+                                className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                            >
+                                送信
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
