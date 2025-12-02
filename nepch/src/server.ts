@@ -23,6 +23,7 @@ app.post('/api/agents/Nep-chan/stream', async (c) => {
             });
 
             console.log('Stream result keys:', Object.keys(result));
+            console.log('Stream result:', JSON.stringify(result, null, 2));
 
             if ('toDataStreamResponse' in result) {
                 return (result as any).toDataStreamResponse();

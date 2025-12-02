@@ -30,16 +30,44 @@ export const masterTool = createTool({
             };
         }
 
-        // In a real implementation, we would search across all memories.
-        // memory.vector.query({ ... }) with scope 'resource' or similar.
+        try {
+            const { LibSQLVector } = await import('@mastra/libsql');
+            const { google } = await import('@ai-sdk/google');
+            const { embed } = await import('ai');
 
-        return {
-            success: true,
-            message: '検索結果:',
-            results: [
-                '村人A: 最近クマが出たらしい',
-                '村人B: そばの収穫時期について',
-            ],
-        };
+            const vectorStore = new LibSQLVector({
+                connectionUrl: 'file:local.db',
+            });
+
+            const { embedding } = await embed({
+                value: context.query,
+                model: google.textEmbeddingModel('text-embedding-004'),
+            });
+
+            // Search across all indices or a specific one if needed.
+            // For now, we assume 'embeddings' index is used for general knowledge/memory.
+            // Adjust 'indexName' if you have multiple indices.
+            const results = await vectorStore.query({
+                indexName: "embeddings",
+                queryVector: embedding,
+                topK: 5,
+            });
+
+            const formattedResults = results.map((r: any) =>
+                `[${r.score.toFixed(2)}] ${r.metadata?.text || 'No text'}`
+            );
+
+            return {
+                success: true,
+                message: `検索結果 (${formattedResults.length}件):`,
+                results: formattedResults,
+            };
+        } catch (error: any) {
+            console.error('Master tool error:', error);
+            return {
+                success: false,
+                message: `検索中にエラーが発生しました: ${error.message}`,
+            };
+        }
     },
 });
