@@ -2,45 +2,67 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { nepChan } from './mastra/agents/nep-chan';
+import { memory } from './mastra/memory';
 
 const app = new Hono();
 
 app.use('/*', cors());
 
 app.post('/api/agents/Nep-chan/stream', async (c) => {
-    const { messages } = await c.req.json();
-
-    // Mastra agent.stream returns a result that can be converted to a data stream
-    // compatible with AI SDK.
-    // However, Mastra's stream method might return a Mastra-specific response.
-    // Let's check if we can use toDataStreamResponse from ai package if Mastra returns a CoreMessage stream.
-
-    // nepChan.stream({ messages }) returns a Promise<MastraModelOutput> or AISDKV5OutputStream
-    // Since we are using AI SDK v5 models (google/anthropic via @ai-sdk/*), it likely returns AISDKV5OutputStream.
+    const { messages, threadId } = await c.req.json();
 
     try {
         const result = await nepChan.stream(messages as any, {
             format: 'aisdk',
+            threadId,
+            resourceId: 'default-user', // Use a default resourceId for now
         });
 
-        console.log('Stream result:', result);
+        console.log('Stream result keys:', Object.keys(result));
 
-        if (result instanceof Response || ('body' in (result as any))) {
-            return result;
+        if ('toDataStreamResponse' in result) {
+            return (result as any).toDataStreamResponse();
         }
 
-        // If result has toUIMessageStreamResponse, use it.
         if ('toUIMessageStreamResponse' in result) {
             return (result as any).toUIMessageStreamResponse();
         }
 
-        // Fallback if it returns a raw stream or something else.
-        // But Mastra with AI SDK v5 should return a result compatible with AI SDK.
-        // Let's assume it does.
+        if ('toTextStreamResponse' in result) {
+            return (result as any).toTextStreamResponse();
+        }
+
         return c.json({ error: 'Unexpected response format from agent' }, 500);
-    } catch (error) {
-        console.error(error);
-        return c.json({ error: 'Internal Server Error' }, 500);
+    } catch (error: any) {
+        console.error('Stream error:', error);
+        return c.json({ error: error.message }, 500);
+    }
+});
+
+app.get('/api/threads/:resourceId', async (c) => {
+    const resourceId = c.req.param('resourceId');
+    console.log(`Fetching threads for ${resourceId}`);
+    try {
+        const threads = await memory.getThreadsByResourceId({ resourceId });
+        console.log(`Found ${threads.length} threads`);
+        return c.json(threads);
+    } catch (error: any) {
+        console.error('Error fetching threads:', error);
+        return c.json({ error: error.message }, 500);
+    }
+});
+
+app.get('/api/threads/:threadId/messages', async (c) => {
+    const threadId = c.req.param('threadId');
+    console.log(`Fetching messages for ${threadId}`);
+    try {
+        const queryResult = await memory.query({ threadId });
+        const messages = queryResult.uiMessages;
+        console.log(`Found ${messages.length} messages`);
+        return c.json(messages);
+    } catch (error: any) {
+        console.error('Error fetching messages:', error);
+        return c.json({ error: error.message }, 500);
     }
 });
 
