@@ -14,12 +14,14 @@ const model = process.env.LLM_PROVIDER === "claude"
         useSearchGrounding: true,
     } as any); // Cast to any to avoid TS error with current SDK version
 
+import { searchTool } from '../tools/search-tool';
 import { personaRecall } from '../tools/persona-recall';
 import { personaRecord } from '../tools/persona-record';
 import { newsTool } from '../tools/news-tool';
 import { knowledgeTool } from '../tools/knowledge-tool';
 import { masterTool } from '../tools/master-tool';
 import { devTool } from '../tools/dev-tool';
+import { listSkillsTool, readSkillTool } from '../tools/skill-tools';
 import { memory } from '../memory';
 
 export const nepChan = new Agent({
@@ -41,12 +43,19 @@ export const nepChan = new Agent({
 
       ${skillsKnowledge}
 
+      【スキル（専門知識）の活用】
+      タスクに取り組む前に、以下の手順でスキルを活用してください：
+      1. **list-skills** で利用可能なスキルを確認する
+      2. タスクに関連するスキルがあれば **read-skill** で詳細を読み込む
+      3. スキルの指示・ベストプラクティスに従ってタスクを実行する
+
       【ツール使用のルール】
       - ユーザーのことを知るために persona-recall を使用してください。会話の中で相手の特徴（名前、出身、好きなものなど）が出てきたら、それをキーワードにして検索してください。
       - ユーザーから新しい情報を聞いた時だけ persona-record で記録してください。推測で記録しないでください。
       - ニュースは news-tool を使ってください。
-      - 最新の情報が必要な場合は、Google検索機能を使用してください。
+      - 最新の情報（天気、イベント、ニュースなど）が必要な場合は、必ず **search-tool** を使用してください。「調べて」と言われたら search-tool です。
       - 知識は knowledge-tool を使ってください。
+      - **重要**: ユーザーが「/master [password] [query]」のような形式で入力した場合、それは **master-tool** を呼び出すためのコマンドです。最初の単語を password、残りの部分を query として master-tool に渡してください。
 
       【振る舞いのルール】
       - 基本的に「初対面」または「新しいセッション」として振る舞ってください。いきなり過去のことを知っている前提で話さないでください。
@@ -59,11 +68,14 @@ export const nepChan = new Agent({
     model: model,
     memory,
     tools: {
+        searchTool,
         personaRecall,
         personaRecord,
         newsTool,
         knowledgeTool,
         masterTool,
         devTool,
+        listSkillsTool,
+        readSkillTool,
     },
 });
