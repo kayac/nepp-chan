@@ -1,12 +1,13 @@
-import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { logger } from 'hono/logger';
 import { nepChan } from './mastra/agents/nep-chan';
 import { memory } from './mastra/memory';
 import { requestContext } from './context';
 
 const app = new Hono();
 
+app.use('*', logger());
 app.use('/*', cors());
 
 app.post('/api/agents/Nep-chan/stream', async (c) => {
@@ -38,6 +39,18 @@ app.post('/api/agents/Nep-chan/stream', async (c) => {
             return c.json({ error: 'Unexpected response format from agent' }, 500);
         } catch (error: any) {
             console.error('Stream error:', error);
+
+            // Handle Rate Limit (429)
+            if (error.statusCode === 429 || error.message?.includes('Quota exceeded') || error.message?.includes('429')) {
+                const match = error.message?.match(/Please retry in ([0-9.]+)s/);
+                const retryAfter = match ? match[1] : null;
+                return c.json({
+                    error: 'Rate limit exceeded',
+                    retryAfter: retryAfter,
+                    message: error.message
+                }, 429);
+            }
+
             return c.json({ error: error.message }, 500);
         }
     });
@@ -84,7 +97,7 @@ app.get('/api/threads/:threadId/messages', async (c) => {
 const port = 4111;
 console.log(`Server is running on port ${port}`);
 
-serve({
-    fetch: app.fetch,
+export default {
     port,
-});
+    fetch: app.fetch,
+};
