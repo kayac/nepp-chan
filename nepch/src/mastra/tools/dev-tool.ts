@@ -2,6 +2,8 @@ import { createTool } from '@mastra/core/tools';
 import { memory } from '../memory';
 import { z } from 'zod';
 
+import { requestContext } from '../../context';
+
 export const devTool = createTool({
   id: 'dev-tool',
   description: 'ユーザーが /dev コマンドを入力した時に使用します。現在のユーザーの記憶（Working Memory）を表示します。',
@@ -10,8 +12,11 @@ export const devTool = createTool({
     memory: z.string(),
   }),
   execute: async ({ context, runId }) => {
-    const resourceId = context?.resourceId || 'default-user';
-    const threadId = context?.threadId;
+    console.log('DevTool Context:', JSON.stringify(context, null, 2));
+
+    const reqContext = requestContext.getStore();
+    const resourceId = context?.resourceId || reqContext?.resourceId || 'default-user';
+    const threadId = context?.threadId || reqContext?.threadId;
 
     if (!threadId) {
       return {
