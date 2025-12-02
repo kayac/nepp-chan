@@ -15,16 +15,44 @@ export const searchTool = createTool({
         })),
     }),
     execute: async ({ context }) => {
-        // TODO: Implement actual web search (e.g. using Tavily, Google Custom Search, etc.)
-        // For now, we return an empty list to simulate "no results found" for the fallback test,
-        // or we could return mock data.
+        const apiKey = process.env.GOOGLE_SEARCH_API_KEY;
+        const engineId = process.env.GOOGLE_SEARCH_ENGINE_ID;
 
-        console.log('Searching for:', context.query);
+        if (!apiKey || !engineId) {
+            console.error('Google Search API Key or Engine ID is missing.');
+            return {
+                results: []
+            };
+        }
 
-        // Mocking a "no result" scenario to test the fallback message
-        // "理由まではわからなかったみたい、ごめんね"
-        return {
-            results: []
-        };
+        try {
+            const response = await fetch(
+                `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${engineId}&q=${encodeURIComponent(context.query)}`
+            );
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Google Search API Error:', errorText);
+                return { results: [] };
+            }
+
+            const data = await response.json();
+            const items = data.items || [];
+
+            const results = items.map((item: any) => ({
+                title: item.title,
+                snippet: item.snippet,
+                url: item.link,
+            }));
+
+            return {
+                results: results
+            };
+        } catch (error) {
+            console.error('Search tool error:', error);
+            return {
+                results: []
+            };
+        }
     },
 });
