@@ -1,4 +1,4 @@
-import { nepChan } from '../mastra/agents/nep-chan';
+import { nepChan } from '../src/mastra/agents/nep-chan';
 
 async function testGrounding() {
     console.log('Testing Gemini Search Grounding...');

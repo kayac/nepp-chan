@@ -1,4 +1,4 @@
-import { masterTool } from '../mastra/tools/master-tool';
+import { masterTool } from '../src/mastra/tools/master-tool';
 
 async function testMaster() {
     console.log('Testing masterTool...');

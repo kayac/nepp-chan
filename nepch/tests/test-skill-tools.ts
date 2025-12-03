@@ -1,4 +1,4 @@
-import { listSkillsTool, readSkillTool } from '../mastra/tools/skill-tools';
+import { listSkillsTool, readSkillTool } from '../src/mastra/tools/skill-tools';
 
 async function testSkillTools() {
     console.log('--- Testing listSkillsTool ---');

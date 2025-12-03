@@ -1,6 +1,6 @@
-import { personaRecall } from '../mastra/tools/persona-recall';
-import { personaRecord } from '../mastra/tools/persona-record';
-import { newsTool } from '../mastra/tools/news-tool';
+import { personaRecall } from '../src/mastra/tools/persona-recall';
+import { personaRecord } from '../src/mastra/tools/persona-record';
+import { newsTool } from '../src/mastra/tools/news-tool';
 
 async function testTools() {
     console.log('Testing new tools...');
@@ -26,7 +26,7 @@ async function testTools() {
     console.log('\nTesting Persona Recall (Get)...');
     const getResult = await personaRecall.execute({
         context: {
-            userId: 'test-user-1',
+            query: 'Tokyo',
         },
         suspend: async () => { },
         runtimeContext: undefined as any

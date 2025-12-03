@@ -1,5 +1,5 @@
-import { PersonaService } from '../mastra/services/PersonaService';
-import { NewsService } from '../mastra/services/NewsService';
+import { PersonaService } from '../src/mastra/services/PersonaService';
+import { NewsService } from '../src/mastra/services/NewsService';
 import { v4 as uuidv4 } from 'uuid';
 
 async function test() {

@@ -1,4 +1,4 @@
-import { nepChan } from '../mastra/agents/nep-chan';
+import { nepChan } from '../src/mastra/agents/nep-chan';
 
 async function testAgent() {
     try {

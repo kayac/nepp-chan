@@ -1,5 +1,5 @@
-import { personaRecall } from '../mastra/tools/persona-recall';
-import { personaRecord } from '../mastra/tools/persona-record';
+import { personaRecall } from '../src/mastra/tools/persona-recall';
+import { personaRecord } from '../src/mastra/tools/persona-record';
 
 async function testContextPersona() {
     console.log('Testing Context-Aware Persona System...');

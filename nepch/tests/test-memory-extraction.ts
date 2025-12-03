@@ -1,4 +1,4 @@
-import { memory } from '../mastra/memory';
+import { memory } from '../src/mastra/memory';
 
 async function main() {
     const threadId = 'test-memory-' + Date.now();

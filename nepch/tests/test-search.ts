@@ -1,4 +1,4 @@
-import { searchTool } from '../mastra/tools/search-tool';
+import { searchTool } from '../src/mastra/tools/search-tool';
 
 async function testSearch() {
     console.log('Testing searchTool...');
