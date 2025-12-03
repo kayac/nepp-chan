@@ -13,23 +13,23 @@ interface SkillMetadata {
 
 // スキル一覧（実際はファイルシステムやDBから動的に読み込んでもOK）
 const SKILLS: Record<string, SkillMetadata> = {
-    docx: {
-        name: "docx",
-        description: "Word文書（.docx）の作成・編集に関するベストプラクティス",
-        path: "src/skills/docx/SKILL.md",
-        tags: ["document", "office"],
+    counseling: {
+        name: "counseling",
+        description: "ユーザーの悩みを聞き、共感して励ますためのガイドライン",
+        path: "src/skills/counseling/SKILL.md",
+        tags: ["communication", "mental-health"],
     },
-    pdf: {
-        name: "pdf",
-        description: "PDF操作・フォーム入力・テキスト抽出のガイドライン",
-        path: "src/skills/pdf/SKILL.md",
-        tags: ["document", "form"],
+    "village-guide": {
+        name: "village-guide",
+        description: "音威子府村の観光名所や名物を案内するためのガイドライン",
+        path: "src/skills/village-guide/SKILL.md",
+        tags: ["guide", "otoineppu", "sightseeing"],
     },
-    "frontend-design": {
-        name: "frontend-design",
-        description: "高品質なUIデザインとReactコンポーネント作成のベストプラクティス",
-        path: "src/skills/frontend-design/SKILL.md",
-        tags: ["ui", "react", "design"],
+    "office-support": {
+        name: "office-support",
+        description: "役場の手続きや生活情報（ゴミ出し等）を案内するためのガイドライン",
+        path: "src/skills/office-support/SKILL.md",
+        tags: ["guide", "otoineppu", "life"],
     },
 };
 
