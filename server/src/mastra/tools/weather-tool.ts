@@ -35,8 +35,8 @@ export const weatherTool = createTool({
     conditions: z.string(),
     location: z.string(),
   }),
-  execute: async ({ context }) => {
-    return await getWeather(context.location);
+  execute: async (inputData) => {
+    return await getWeather(inputData.location);
   },
 });
 
@@ -67,7 +67,7 @@ const getWeather = async (location: string) => {
   };
 };
 
-function getWeatherCondition(code: number): string {
+const getWeatherCondition = (code: number): string => {
   const conditions: Record<number, string> = {
     0: "Clear sky",
     1: "Mainly clear",
@@ -99,4 +99,4 @@ function getWeatherCondition(code: number): string {
     99: "Thunderstorm with heavy hail",
   };
   return conditions[code] || "Unknown";
-}
+};

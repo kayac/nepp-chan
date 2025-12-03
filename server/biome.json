@@ -7,7 +7,14 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**", "!node_modules", "!dist", "!.mastra", "!*.d.ts"]
+    "includes": [
+      "**",
+      "!node_modules",
+      "!dist",
+      "!.mastra",
+      "!.wrangler",
+      "!*.d.ts"
+    ]
   },
   "formatter": {
     "enabled": true,

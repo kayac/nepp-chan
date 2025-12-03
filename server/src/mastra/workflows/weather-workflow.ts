@@ -10,7 +10,7 @@ const forecastSchema = z.object({
   location: z.string(),
 });
 
-function getWeatherCondition(code: number): string {
+const getWeatherCondition = (code: number): string => {
   const conditions: Record<number, string> = {
     0: "Clear sky",
     1: "Mainly clear",
@@ -30,7 +30,7 @@ function getWeatherCondition(code: number): string {
     95: "Thunderstorm",
   };
   return conditions[code] || "Unknown";
-}
+};
 
 const fetchWeather = createStep({
   id: "fetch-weather",
