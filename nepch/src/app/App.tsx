@@ -39,21 +39,20 @@ const ToolStatus = ({ tool, isDevMode }: { tool: ToolInvocation, isDevMode: bool
     //     return null
     // }
 
-    if (tool.toolName === 'persona-tool') {
+    if (tool.toolName === 'persona-recall' || tool.toolName === 'personaRecall') {
         friendlyName = '記憶'
-        if (tool.args?.action === 'save') {
-            statusMessage = isFinished ? '覚えました' : '覚えています...'
-        } else {
-            statusMessage = isFinished ? '思い出しました' : '思い出しています...'
-        }
-    } else if (tool.toolName === 'news-tool') {
+        statusMessage = isFinished ? '思い出しました' : '思い出しています...'
+    } else if (tool.toolName === 'persona-record' || tool.toolName === 'personaRecord') {
+        friendlyName = '記憶'
+        statusMessage = isFinished ? '覚えました' : '覚えています...'
+    } else if (tool.toolName === 'news-tool' || tool.toolName === 'newsTool') {
         friendlyName = '村の様子'
         if (tool.args?.action === 'add') {
             statusMessage = isFinished ? 'メモしました' : 'メモしています...'
         } else {
             statusMessage = isFinished ? '確認しました' : '確認しています...'
         }
-    } else if (tool.toolName === 'knowledgeTool') {
+    } else if (tool.toolName === 'knowledge-tool' || tool.toolName === 'knowledgeTool') {
         friendlyName = '村の知識'
         statusMessage = isFinished ? '思い出しました！' : '思い出しています・・・'
 
@@ -74,13 +73,13 @@ const ToolStatus = ({ tool, isDevMode }: { tool: ToolInvocation, isDevMode: bool
                 thinkingText = '（内容を整理中・・・）'
             }
         }
-    } else if (tool.toolName === 'devTool') {
+    } else if (tool.toolName === 'dev-tool' || tool.toolName === 'devTool') {
         friendlyName = 'デバッグモード'
         statusMessage = isFinished ? '完了' : '起動中...'
-    } else if (tool.toolName === 'masterTool') {
+    } else if (tool.toolName === 'master-tool' || tool.toolName === 'masterTool') {
         friendlyName = '管理者モード'
         statusMessage = isFinished ? '認証完了' : '認証中...'
-    } else if (tool.toolName === 'searchTool') {
+    } else if (tool.toolName === 'search-tool' || tool.toolName === 'searchTool') {
         friendlyName = 'Web検索'
         statusMessage = isFinished ? '完了' : '調べています...'
 
@@ -88,6 +87,15 @@ const ToolStatus = ({ tool, isDevMode }: { tool: ToolInvocation, isDevMode: bool
             const query = tool.args?.query || 'これ'
             thinkingText = `そうだ、${query}について調べてみたよ・・・`
         }
+    } else if (tool.toolName === 'emergency-report' || tool.toolName === 'emergencyReport') {
+        friendlyName = '緊急通報'
+        statusMessage = isFinished ? '完了' : '通報中...'
+    } else if (tool.toolName === 'list-skills' || tool.toolName === 'listSkills') {
+        friendlyName = 'スキル確認'
+        statusMessage = isFinished ? '完了' : '確認中...'
+    } else if (tool.toolName === 'read-skill' || tool.toolName === 'readSkill') {
+        friendlyName = 'スキル読み込み'
+        statusMessage = isFinished ? '完了' : '読み込み中...'
     }
 
     const headerText = `${friendlyName}を${statusMessage}`
@@ -182,7 +190,7 @@ function App() {
                 const mappedMessages = data.map((m: any) => {
                     const parts = m.parts
                         ? m.parts.map((p: any) => {
-                            if (p.type === 'tool-invocation' && p.toolInvocation.toolName === 'devTool') {
+                            if (p.type === 'tool-invocation' && (p.toolInvocation.toolName === 'dev-tool' || p.toolInvocation.toolName === 'devTool')) {
                                 hasDevTool = true
                             }
                             return {
@@ -211,6 +219,54 @@ function App() {
         } catch (e) {
             console.error('Failed to load messages', e)
             setErrorMsg('メッセージの読み込みに失敗しました')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+
+
+    const handleBatchProcess = async () => {
+        if (isLoading) return
+        setIsLoading(true)
+        try {
+            console.log('Starting batch process...')
+            const res = await fetch('/api/batch/memory', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ resourceId: 'default-user' })
+            })
+            const data = await res.json()
+            console.log('Batch process result:', data)
+
+            if (data.success) {
+                // Show a temporary success message in the chat or just alert
+                // For now, let's add a system message to the chat if possible, or just alert
+                const systemMsg: Message = {
+                    id: Date.now().toString(),
+                    role: 'assistant',
+                    content: '記憶の整理が完了しました！',
+                    parts: [{ type: 'text', content: '記憶の整理が完了しました！' }]
+                }
+                setMessages(prev => [...prev, systemMsg])
+            } else {
+                const errorMsg: Message = {
+                    id: Date.now().toString(),
+                    role: 'assistant',
+                    content: `記憶の整理に失敗しました: ${data.message}`,
+                    parts: [{ type: 'text', content: `記憶の整理に失敗しました: ${data.message}` }]
+                }
+                setMessages(prev => [...prev, errorMsg])
+            }
+        } catch (e: any) {
+            console.error('Batch process error:', e)
+            const errorMsg: Message = {
+                id: Date.now().toString(),
+                role: 'assistant',
+                content: `エラーが発生しました: ${e.message}`,
+                parts: [{ type: 'text', content: `エラーが発生しました: ${e.message}` }]
+            }
+            setMessages(prev => [...prev, errorMsg])
         } finally {
             setIsLoading(false)
         }
@@ -340,7 +396,7 @@ function App() {
     }
 
     const handleStreamEvent = (data: any, msgId: string) => {
-        if (data.type === 'tool-input-available' && data.toolName === 'devTool') {
+        if (data.type === 'tool-input-available' && (data.toolName === 'dev-tool' || data.toolName === 'devTool')) {
             setIsDevMode(true)
         }
 
@@ -353,7 +409,7 @@ function App() {
             const parts = [...(msg.parts || [])]
 
             if (data.type === 'text-delta') {
-                const cleanDelta = data.delta.replace(/більш/g, '')
+                const cleanDelta = data.delta
                 msg.content += cleanDelta
 
                 const lastPart = parts[parts.length - 1]
@@ -425,12 +481,19 @@ function App() {
                     <p className="text-xs text-gray-500">音威子府村コンパニオンAI</p>
                 </div>
 
-                <div className="p-2">
+                <div className="p-2 space-y-2">
                     <button
                         onClick={createNewChat}
                         className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                     >
                         <span>+</span> 新しいチャット
+                    </button>
+                    <button
+                        onClick={handleBatchProcess}
+                        disabled={isLoading}
+                        className="w-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-xs"
+                    >
+                        <span>🧠</span> 記憶を整理 (Debug)
                     </button>
                 </div>
 

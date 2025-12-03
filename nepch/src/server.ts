@@ -4,8 +4,10 @@ import { logger } from 'hono/logger';
 import { nepChan } from './mastra/agents/nep-chan';
 import { memory } from './mastra/memory';
 import { requestContext } from './context';
+import { BatchService } from './mastra/services/BatchService';
 
 const app = new Hono();
+const batchService = new BatchService();
 
 app.use('*', logger());
 app.use('/*', cors());
@@ -92,6 +94,19 @@ app.get('/api/threads/:threadId/messages', async (c) => {
     } catch (error: any) {
         console.error('Error fetching messages:', error);
         return c.json({ error: error.message }, 500);
+    }
+});
+
+app.post('/api/batch/memory', async (c) => {
+    try {
+        const body = await c.req.json().catch(() => ({})); // Handle empty body
+        const resourceId = body.resourceId || 'default-user';
+        console.log(`Triggering batch memory processing for ${resourceId}`);
+        const result = await batchService.processMemoryForUser(resourceId);
+        return c.json(result);
+    } catch (error: any) {
+        console.error('Batch processing error:', error);
+        return c.json({ success: false, message: error.message }, 500);
     }
 });
 
