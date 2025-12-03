@@ -1,0 +1,15 @@
+{
+	"name": "aiss-nepch-dev",
+	"type": "module",
+	"scripts": {
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy --minify",
+		"cf-typegen": "wrangler types --env-interface CloudflareBindings"
+	},
+	"dependencies": {
+		"hono": "^4.10.7"
+	},
+	"devDependencies": {
+		"wrangler": "^4.51.0"
+	}
+}
