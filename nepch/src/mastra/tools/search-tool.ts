@@ -13,6 +13,8 @@ export const searchTool = createTool({
             snippet: z.string(),
             url: z.string(),
         })),
+        error: z.string().optional(),
+        source: z.string().optional(),
     }),
     execute: async ({ context }) => {
         const apiKey = process.env.GOOGLE_SEARCH_API_KEY;
@@ -31,6 +33,15 @@ export const searchTool = createTool({
             );
 
             if (!response.ok) {
+                if (response.status === 429) {
+                    console.warn('Google Custom Search API Rate Limit Exceeded');
+                    return {
+                        results: [],
+                        error: 'RATE_LIMIT_EXCEEDED',
+                        source: 'Google Custom Search API'
+                    };
+                }
+
                 const errorText = await response.text();
                 console.error('Google Search API Error:', errorText);
                 return { results: [] };

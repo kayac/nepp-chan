@@ -18,7 +18,7 @@ export const memory = new Memory({
             messageRange: 2,
         },
         workingMemory: {
-            enabled: true,
+            enabled: false,
             template: `
 # ユーザープロフィール
 

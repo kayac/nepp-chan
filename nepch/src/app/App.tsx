@@ -276,9 +276,17 @@ function App() {
                 if (response.status === 429) {
                     const errorData = await response.json()
                     const retryAfter = errorData.retryAfter ? Math.ceil(parseFloat(errorData.retryAfter)) : null
-                    const msg = retryAfter
+
+                    let msg = retryAfter
                         ? `利用制限中です。あと${retryAfter}秒で解除されます。`
                         : '利用制限中です。しばらく待ってから再試行してください。'
+
+                    if (errorData.error && errorData.error.includes('Gemini API')) {
+                        msg = retryAfter
+                            ? `Gemini APIの制限（1日1500回）を超えちゃったみたい。あと${retryAfter}秒で解除されるよ。`
+                            : 'Gemini APIの制限（1日1500回）を超えちゃったみたい。しばらく待ってからまた話しかけてね。'
+                    }
+
                     throw new Error(msg)
                 }
                 throw new Error(response.statusText)
@@ -377,12 +385,20 @@ function App() {
                 let errorText = data.errorText || 'エラーが発生しました'
 
                 // Handle Rate Limit
-                if (errorText.includes('Quota exceeded') || errorText.includes('429')) {
+                // Handle Rate Limit
+                if (errorText.includes('Quota exceeded') || errorText.includes('429') || errorText.includes('Rate limit exceeded')) {
                     const match = errorText.match(/Please retry in ([0-9.]+)s/)
                     const retryAfter = match ? Math.ceil(parseFloat(match[1])) : null
-                    errorText = retryAfter
-                        ? `利用制限中です。あと${retryAfter}秒で解除されます。`
-                        : '利用制限中です。しばらく待ってから再試行してください。'
+
+                    if (errorText.includes('Gemini API')) {
+                        errorText = retryAfter
+                            ? `Gemini APIの制限（1日1500回）を超えちゃったみたい。あと${retryAfter}秒で解除されるよ。`
+                            : 'Gemini APIの制限（1日1500回）を超えちゃったみたい。しばらく待ってからまた話しかけてね。'
+                    } else {
+                        errorText = retryAfter
+                            ? `利用制限中です。あと${retryAfter}秒で解除されます。`
+                            : '利用制限中です。しばらく待ってから再試行してください。'
+                    }
                 }
 
                 const lastPart = parts[parts.length - 1]

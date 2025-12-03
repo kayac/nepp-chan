@@ -46,7 +46,7 @@ app.post('/api/agents/Nep-chan/stream', async (c) => {
                 const match = error.message?.match(/Please retry in ([0-9.]+)s/);
                 const retryAfter = match ? match[1] : null;
                 return c.json({
-                    error: 'Rate limit exceeded',
+                    error: 'Gemini API Rate limit exceeded',
                     retryAfter: retryAfter,
                     message: error.message
                 }, 429);

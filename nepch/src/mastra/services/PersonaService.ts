@@ -89,4 +89,27 @@ export class PersonaService {
             summary: row.summary as string,
         }));
     }
+    async updatePersonaFromSummary(userId: string, summaryData: any) {
+        try {
+            const existing = await this.getPersona(userId);
+
+            // Merge existing data with new summary data
+            const newData = {
+                ...existing,
+                ...summaryData,
+                attributes: {
+                    ...(existing?.attributes || {}),
+                    ...(summaryData.attributes || {})
+                },
+                last_interaction: new Date().toISOString()
+            };
+
+            await this.savePersona(newData);
+
+            return true;
+        } catch (error) {
+            console.error('Failed to update persona from summary:', error);
+            return false;
+        }
+    }
 }
