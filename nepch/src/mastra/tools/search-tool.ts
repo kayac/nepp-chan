@@ -2,8 +2,8 @@ import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 
 export const searchTool = createTool({
-    id: 'search-tool',
-    description: 'インターネットで最新の情報を検索します。ユーザーから「調べてみようか？」と言われた場合や、最新の情報が必要な場合に使用してください。',
+    id: 'searchTool',
+    description: 'インターネットで最新の情報を検索します。他のツール（記憶、スキル、ニュースなど）で対応できない場合や、ユーザーから「調べて」と明示的に言われた場合に使用してください。',
     inputSchema: z.object({
         query: z.string().describe('検索したいキーワードや質問内容'),
     }),
@@ -29,7 +29,7 @@ export const searchTool = createTool({
 
         try {
             const response = await fetch(
-                `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${engineId}&q=${encodeURIComponent(context.query)}`
+                `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${engineId}&q=${encodeURIComponent(context.query)}&lr=lang_ja&gl=jp`
             );
 
             if (!response.ok) {
