@@ -6,7 +6,7 @@ const personaService = new PersonaService();
 
 export const personaRecall = createTool({
     id: 'persona-recall',
-    description: 'ユーザー（村人や観光客）の情報を思い出すためのツールです。会話の最初や、相手から「覚えている？」と聞かれた時に使います。',
+    description: 'ユーザー（村人や観光客）の情報を思い出すためのツールです。会話の最初や、相手から「覚えている？」と聞かれた時に使います。検索ツールを使う前に、まずこのツールで記憶を確認してください。',
     inputSchema: z.object({
         query: z.string().describe('ユーザーの特徴やキーワード（例：「東京出身」「蕎麦が好き」「タナカさん」など）'),
     }),

@@ -29,7 +29,7 @@ export const knowledgeTool = createTool({
         const results = await vectorStore.query({
             indexName: "embeddings",
             queryVector: embedding,
-            topK: 3,
+            topK: 20,
         });
 
         return {

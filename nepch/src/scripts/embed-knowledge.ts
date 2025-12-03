@@ -1,7 +1,7 @@
 import { MDocument } from '@mastra/rag';
 import { LibSQLVector } from '@mastra/libsql';
 import { google } from '@ai-sdk/google';
-import { embedMany } from 'ai';
+import { embed, embedMany } from 'ai';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -23,7 +23,7 @@ async function embedKnowledge() {
     });
 
     const knowledgeDir = path.resolve(__dirname, '../../knowledge');
-    const files = fs.readdirSync(knowledgeDir).filter(file => file.endsWith('.md'));
+    const files = fs.readdirSync(knowledgeDir).filter(file => file.endsWith('.md') && file !== 'agent_skills.md');
 
     for (const file of files) {
         console.log(`Processing ${file}...`);
@@ -34,24 +34,26 @@ async function embedKnowledge() {
 
         const chunks = await doc.chunk({
             strategy: "recursive",
-            size: 512,
+            maxSize: 256,
             overlap: 50,
         });
 
-        const { embeddings } = await embedMany({
-            values: chunks.map((chunk) => chunk.text),
-            model: google.textEmbeddingModel('text-embedding-004'),
-        });
+        for (let i = 0; i < chunks.length; i++) {
+            const { embedding } = await embed({
+                value: chunks[i].text,
+                model: google.textEmbeddingModel('text-embedding-004'),
+            });
 
-        await vectorStore.upsert({
-            indexName: "embeddings",
-            vectors: embeddings,
-            metadata: chunks.map((chunk) => ({
-                source: file,
-                text: chunk.text,
-            })),
-            ids: chunks.map((_, i) => `${file}-${i}`),
-        });
+            await vectorStore.upsert({
+                indexName: "embeddings",
+                vectors: [embedding],
+                metadata: [{
+                    source: file,
+                    text: chunks[i].text,
+                }],
+                ids: [`${file}-${i}`],
+            });
+        }
 
         console.log(`Embedded ${chunks.length} chunks from ${file}`);
     }
