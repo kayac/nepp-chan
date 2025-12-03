@@ -1,6 +1,6 @@
 import { Agent } from "@mastra/core/agent";
-import { LibSQLStore } from "@mastra/libsql";
-import { Memory } from "@mastra/memory";
+// import { LibSQLStore } from "@mastra/libsql";
+// import { Memory } from "@mastra/memory";
 import { scorers } from "../scorers/weather-scorer";
 import { weatherTool } from "../tools/weather-tool";
 
@@ -44,12 +44,12 @@ export const weatherAgent = new Agent({
         type: "ratio",
         rate: 1,
       },
-    },
-  },
-  memory: new Memory({
-    storage: new LibSQLStore({
-      id: "memory-storage",
-      url: "file:../mastra.db",
-    }),
-  }),
+    }
+  }
+  // memory: new Memory({
+  //   storage: new LibSQLStore({
+  //     id: "memory-storage",
+  //     url: "file:../mastra.db",
+  //   }),
+  // }),
 });
