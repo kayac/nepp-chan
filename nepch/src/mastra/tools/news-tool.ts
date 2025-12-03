@@ -11,7 +11,7 @@ export const newsTool = createTool({
         action: z.enum(['add', 'get']).describe('実行するアクション: "add" はニュースを追加、"get" はニュースを取得'),
         content: z.string().optional().describe('ニュースの内容（追加時のみ必須）'),
         category: z.enum(['NEWS', 'INSIGHT']).optional().default('NEWS').describe('ニュースのカテゴリ'),
-        sourceId: z.string().optional().describe('情報源となったユーザーID'),
+        sourceId: z.string().nullable().optional().describe('情報源となったユーザーID'),
         limit: z.number().optional().default(5).describe('取得するニュースの件数'),
     }),
     outputSchema: z.object({
@@ -32,7 +32,7 @@ export const newsTool = createTool({
                 const id = await newsService.addNews(
                     context.content,
                     context.category || 'NEWS',
-                    context.sourceId
+                    context.sourceId || undefined
                 );
 
                 return {
