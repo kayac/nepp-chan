@@ -1,7 +1,7 @@
 import { D1Store } from "@mastra/cloudflare-d1";
 import { Hono } from "hono";
 import { stream } from "hono/streaming";
-import { createMastra } from "./mastra";
+import { createMastra } from "./mastra/factory";
 import { createRequestContext } from "./mastra/runtime-context";
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
