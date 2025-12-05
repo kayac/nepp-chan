@@ -10,6 +10,31 @@ app.get("/message", (c) => {
   return c.text("Hello Hono!");
 });
 
+app.post("/chat", async (c) => {
+  const { message, resourceId, threadId } = await c.req.json<{
+    message: string;
+    resourceId?: string;
+    threadId?: string;
+  }>();
+
+  const storage = new D1Store({ id: "mastra-storage", binding: c.env.DB });
+  const mastra = createMastra(storage);
+  const requestContext = createRequestContext({ storage });
+
+  const agent = mastra.getAgent("weatherAgent");
+  const response = await agent.stream(message, {
+    resourceId: resourceId ?? "default-user",
+    threadId: threadId ?? crypto.randomUUID(),
+    requestContext,
+  });
+
+  return stream(c, async (stream) => {
+    for await (const chunk of response.textStream) {
+      await stream.write(chunk);
+    }
+  });
+});
+
 app.get("/weather", async (c) => {
   const storage = new D1Store({ id: "mastra-storage", binding: c.env.DB });
   const mastra = createMastra(storage);
