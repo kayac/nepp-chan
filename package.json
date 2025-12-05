@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "server:dev": "pnpm --filter @aiss-nepch/server dev",
+    "server:deploy": "pnpm --filter @aiss-nepch/server deploy",
+    "mastra:dev": "pnpm --filter @aiss-nepch/server mastra:dev",
+    "mastra:build": "pnpm --filter @aiss-nepch/server mastra:build",
+    "mastra:start": "pnpm --filter @aiss-nepch/server mastra:start",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.8"
+  }
+}
