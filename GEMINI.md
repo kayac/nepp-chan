@@ -38,8 +38,16 @@
     - [x] ツールID不一致の修正 (App.tsx) <!-- id: 29 -->
     - [x] 動作確認 <!-- id: 30 -->
 
+- [x] 検索ツールデバッグ <!-- id: 31 -->
+    - [x] 原因特定（API未有効化） <!-- id: 32 -->
+    - [x] エラーハンドリング改善 <!-- id: 33 -->
+
 - [ ] ドキュメント作成 <!-- id: 10 -->
     - [x] GEMINI.mdの作成（日本語化） <!-- id: 11 -->
+
+- [x] バグ修正 <!-- id: 34 -->
+    - [x] persona-recordツールのバリデーションエラー修正 <!-- id: 35 -->
+    - [x] embeddingsテーブル消失の修正（再生成） <!-- id: 36 -->
 
 ---
 
@@ -220,6 +228,22 @@ Mastra に SKILL パターンを実装し、`nep-chan` エージェントに統�
 #### エージェント統合
 `src/mastra/agents/nep-chan.ts` を更新しました：
 - `listSkillsTool` と `readSkillTool` をインポートして登録しました。
+
+---
+
+## 開発ログ (Walkthrough) - 検索ツールデバッグ
+
+検索ツールが動作しない問題を調査しました。
+
+### 原因
+Google Custom Search API がプロジェクトで有効化されていないことが判明しました。
+エラーメッセージ: `Custom Search API has not been used in project ... or it is disabled.`
+
+### 対応
+- `src/mastra/tools/search-tool.ts` を修正し、APIエラー発生時に詳細なエラーメッセージを返すようにしました。これにより、エージェントが「APIが無効です」といった状況を認識できるようになります。
+
+### 次のステップ
+ユーザーに Google Cloud Console で Custom Search API を有効化してもらう必要があります。
 - 関連するタスクを開始する前に、スキルを確認して読み込むようエージェントを明示的に誘導するシステム指示（instructions）を更新しました。
 
 ### 検証結果
