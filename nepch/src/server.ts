@@ -6,8 +6,13 @@ import { memory } from './mastra/memory';
 import { requestContext } from './context';
 import { BatchService } from './mastra/services/BatchService';
 
+import { InitService } from './mastra/services/InitService';
+import { SystemService } from './mastra/services/SystemService';
+
 const app = new Hono();
 const batchService = new BatchService();
+const initService = new InitService();
+const systemService = new SystemService();
 
 app.use('*', logger());
 app.use('/*', cors());
@@ -110,7 +115,39 @@ app.post('/api/batch/memory', async (c) => {
     }
 });
 
-const port = 4111;
+// Init Service Endpoints
+app.post('/api/system/init/db', async (c) => {
+    const result = await initService.initializeDatabase();
+    return c.json(result);
+});
+
+app.post('/api/system/init/embeddings', async (c) => {
+    const result = await initService.generateEmbeddings();
+    return c.json(result);
+});
+
+app.get('/api/system/env', async (c) => {
+    const result = await initService.checkEnvironment();
+    return c.json(result);
+});
+
+// System Service Endpoints
+app.get('/api/system/check/vector', async (c) => {
+    const result = await systemService.checkVectorSearch();
+    return c.json(result);
+});
+
+app.get('/api/system/check/tools', async (c) => {
+    const result = await systemService.checkToolRegistration();
+    return c.json(result);
+});
+
+app.post('/api/system/cleanup/threads', async (c) => {
+    const result = await systemService.cleanupOldThreads();
+    return c.json(result);
+});
+
+const port = Number(process.env.APP_PORT) || 4112;
 console.log(`Server is running on port ${port}`);
 
 export default {

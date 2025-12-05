@@ -23,66 +23,69 @@ export class BatchService {
             const threads = await memory.getThreadsByResourceId({ resourceId });
             console.log(`Found ${threads.length} threads for ${resourceId}`);
 
-            // Process only threads updated in the last 24 hours (mock logic for now, just taking the latest)
-            const latestThread = threads.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0];
-
-            if (!latestThread) {
+            if (threads.length === 0) {
                 console.log('No threads found.');
                 return { success: false, message: 'No threads found.' };
             }
 
-            console.log(`Processing latest thread: ${latestThread.id}`);
+            const results = [];
 
-            const queryResult = await memory.query({ threadId: latestThread.id });
-            const messages = queryResult.uiMessages;
+            for (const thread of threads) {
+                console.log(`Processing thread: ${thread.id}`);
 
-            if (messages.length === 0) {
-                console.log('No messages in thread.');
-                return { success: false, message: 'No messages in thread.' };
+                const queryResult = await memory.query({ threadId: thread.id });
+                const messages = queryResult.uiMessages;
+
+                if (messages.length === 0) {
+                    console.log(`No messages in thread ${thread.id}. Skipping.`);
+                    continue;
+                }
+
+                // Prepare conversation text
+                const conversationText = messages.map((m: any) => `${m.role}: ${m.content}`).join('\n');
+
+                // Call LLM to summarize and extract info
+                console.log(`🤖 Analyzing conversation ${thread.id} with LLM...`);
+                const { object } = await generateObject({
+                    model: this.model,
+                    schema: z.object({
+                        attributes: z.array(z.object({
+                            key: z.string(),
+                            value: z.string()
+                        })).describe('User attributes extracted from conversation (e.g., age, location, hobbies)'),
+                        summary: z.string().describe('Brief summary of the conversation topics'),
+                        interests: z.array(z.string()).describe('List of user interests mentioned'),
+                    }),
+                    messages: [
+                        { role: 'system', content: 'Analyze the following conversation and extract user information. Focus on attributes, interests, and a general summary.' },
+                        { role: 'user', content: conversationText }
+                    ],
+                });
+
+                console.log(`✨ Extraction complete for ${thread.id}:`, object);
+
+                // Convert attributes array to object
+                const attributesObj = object.attributes.reduce((acc, curr) => {
+                    acc[curr.key] = curr.value;
+                    return acc;
+                }, {} as Record<string, string>);
+
+                // Update Persona using thread.id as the persona ID
+                await this.personaService.updatePersonaFromSummary(thread.id, {
+                    attributes: attributesObj,
+                    current_concerns: { interests: object.interests },
+                    summary: object.summary
+                });
+
+                results.push({ threadId: thread.id, data: object });
             }
 
-            // Prepare conversation text
-            const conversationText = messages.map(m => `${m.role}: ${m.content}`).join('\n');
-
-            // Call LLM to summarize and extract info
-            console.log('🤖 Analyzing conversation with LLM...');
-            const { object } = await generateObject({
-                model: this.model,
-                schema: z.object({
-                    attributes: z.array(z.object({
-                        key: z.string(),
-                        value: z.string()
-                    })).describe('User attributes extracted from conversation (e.g., age, location, hobbies)'),
-                    summary: z.string().describe('Brief summary of the conversation topics'),
-                    interests: z.array(z.string()).describe('List of user interests mentioned'),
-                }),
-                messages: [
-                    { role: 'system', content: 'Analyze the following conversation and extract user information. Focus on attributes, interests, and a general summary.' },
-                    { role: 'user', content: conversationText }
-                ],
-            });
-
-            console.log('✨ Extraction complete:', object);
-
-            // Convert attributes array to object
-            const attributesObj = object.attributes.reduce((acc, curr) => {
-                acc[curr.key] = curr.value;
-                return acc;
-            }, {} as Record<string, string>);
-
-            // Update Persona
-            await this.personaService.updatePersonaFromSummary(resourceId, {
-                attributes: attributesObj,
-                current_concerns: { interests: object.interests }, // Mapping interests to concerns/interests
-                summary: object.summary
-            });
-
-            console.log('✅ Batch processing complete. Persona updated.');
+            console.log('✅ Batch processing complete. Personas updated.');
 
             // Find conversation links
             await this.findConversationLinks(threads, resourceId);
 
-            return { success: true, message: 'Batch processing complete. Persona updated and links checked.', data: object };
+            return { success: true, message: 'Batch processing complete. Personas updated and links checked.', data: results };
 
         } catch (error: any) {
             console.error('❌ Batch processing failed:', error);
