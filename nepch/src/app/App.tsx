@@ -134,6 +134,7 @@ const SidebarSection = ({ title, children, defaultOpen = false }: { title: strin
     return (
         <div className="border-t border-gray-200 pt-4">
             <button
+                type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full flex items-center justify-between px-2 mb-2 text-xs font-bold text-gray-500 hover:text-gray-700 transition-colors"
             >
@@ -159,6 +160,7 @@ function App() {
     const [isDevMode, setIsDevMode] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLInputElement>(null)
+    const testCountRef = useRef<HTMLInputElement>(null)
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -583,17 +585,17 @@ function App() {
                     <SidebarSection title="テストランナー">
                         <div className="flex gap-2 px-2">
                             <input
+                                ref={testCountRef}
                                 type="number"
                                 min="1"
                                 max="26"
                                 defaultValue="1"
-                                id="testCountInput"
                                 className="w-16 border border-gray-200 rounded px-2 py-1 text-xs"
                             />
                             <button
+                                type="button"
                                 onClick={async () => {
-                                    const input = document.getElementById('testCountInput') as HTMLInputElement;
-                                    const count = parseInt(input.value) || 1;
+                                    const count = parseInt(testCountRef.current?.value || '1');
                                     if (!confirm(`${count}件のテストを実行しますか？`)) return;
 
                                     try {

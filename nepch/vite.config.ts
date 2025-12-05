@@ -14,6 +14,9 @@ export default defineConfig({
     },
   },
   server: {
+    watch: {
+      ignored: ['**/e2etest/test-results/**', '**/local.db*'],
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:4112',
