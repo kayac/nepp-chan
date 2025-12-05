@@ -1,9 +1,15 @@
-import { ChatSendRequestSchema } from "@aiss-nepch/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { D1Store } from "@mastra/cloudflare-d1";
 import { stream } from "hono/streaming";
 import { createMastra } from "~/mastra/factory";
 import { createRequestContext } from "~/mastra/runtime-context";
+
+// Request Schema
+const ChatSendRequestSchema = z.object({
+  message: z.string().min(1),
+  resourceId: z.string().optional(),
+  threadId: z.string().optional(),
+});
 
 export const chatRoutes = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
 

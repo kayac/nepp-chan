@@ -12,21 +12,8 @@ importers:
         specifier: ^2.3.8
         version: 2.3.8
 
-  packages/schema:
-    dependencies:
-      zod:
-        specifier: ^4.1.13
-        version: 4.1.13
-    devDependencies:
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-
   server:
     dependencies:
-      '@aiss-nepch/schema':
-        specifier: workspace:*
-        version: link:../packages/schema
       '@hono/swagger-ui':
         specifier: ^0.5.2
         version: 0.5.2(hono@4.10.7)

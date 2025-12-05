@@ -1,9 +1,13 @@
-import { WeatherQuerySchema } from "@aiss-nepch/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { D1Store } from "@mastra/cloudflare-d1";
 import { stream } from "hono/streaming";
 import { createMastra } from "~/mastra/factory";
 import { createRequestContext } from "~/mastra/runtime-context";
+
+// Request Schema
+const WeatherQuerySchema = z.object({
+  city: z.string().optional().default("tokyo"),
+});
 
 export const weatherRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -20,10 +24,11 @@ const weatherRoute = createRoute({
   },
   responses: {
     200: {
-      description: "天気情報のストリーミングレスポンス",
+      description:
+        "天気情報のストリーミングレスポンス（WorkflowStreamEvent の JSON Lines）",
       content: {
         "text/event-stream": {
-          schema: z.string(),
+          schema: z.unknown(),
         },
       },
     },
