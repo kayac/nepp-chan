@@ -2,13 +2,13 @@ import { Mastra } from "@mastra/core/mastra";
 import type { MastraStorage } from "@mastra/core/storage";
 import { PinoLogger } from "@mastra/loggers";
 import { Observability } from "@mastra/observability";
-import { weatherAgent } from "./agents/weather-agent";
+import { weatherAgent } from "~/mastra/agents/weather-agent";
 import {
   completenessScorer,
   toolCallAppropriatenessScorer,
   translationScorer,
-} from "./scorers/weather-scorer";
-import { weatherWorkflow } from "./workflows/weather-workflow";
+} from "~/mastra/scorers/weather-scorer";
+import { weatherWorkflow } from "~/mastra/workflows/weather-workflow";
 
 export const createMastra = (storage: MastraStorage) =>
   new Mastra({

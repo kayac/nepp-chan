@@ -1,5 +1,5 @@
 import { LibSQLStore } from "@mastra/libsql";
-import { createMastra } from "./factory";
+import { createMastra } from "~/mastra/factory";
 
 export const mastra = createMastra(
   new LibSQLStore({
