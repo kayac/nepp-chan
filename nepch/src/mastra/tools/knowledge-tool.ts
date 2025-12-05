@@ -4,6 +4,8 @@ import { google } from '@ai-sdk/google';
 import { embed } from 'ai';
 import { z } from 'zod';
 
+import { connectionUrl } from '../db';
+
 export const knowledgeTool = createTool({
     id: 'knowledge-tool',
     description: '音威子府村に関する情報を検索します。ユーザーから村のことについて質問された場合に必ず使用してください。',
@@ -18,7 +20,7 @@ export const knowledgeTool = createTool({
     }),
     execute: async ({ context }) => {
         const vectorStore = new LibSQLVector({
-            connectionUrl: 'file:local.db',
+            connectionUrl: connectionUrl,
         });
 
         const { embedding } = await embed({

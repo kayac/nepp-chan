@@ -5,7 +5,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // Load agent skills knowledge
-const skillsKnowledgePath = path.join(process.cwd(), 'knowledge/agent_skills.md');
+// Load agent skills knowledge
+let skillsKnowledgePath = path.join(process.cwd(), 'knowledge/agent_skills.md');
+if (!fs.existsSync(skillsKnowledgePath)) {
+   // If running from .mastra/output, go up two levels
+   skillsKnowledgePath = path.join(process.cwd(), '../../knowledge/agent_skills.md');
+}
 const skillsKnowledge = fs.readFileSync(skillsKnowledgePath, 'utf-8');
 
 const model = process.env.LLM_PROVIDER === "claude"

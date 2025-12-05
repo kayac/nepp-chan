@@ -1,5 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { connectionUrl } from '../db';
 
 const MASTER_PASSWORD = process.env.MASTER_PASSWORD || 'admin';
 
@@ -36,7 +37,7 @@ export const masterTool = createTool({
             const { embed } = await import('ai');
 
             const vectorStore = new LibSQLVector({
-                connectionUrl: 'file:local.db',
+                connectionUrl: connectionUrl,
             });
 
             const { embedding } = await embed({

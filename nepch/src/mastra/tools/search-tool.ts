@@ -44,7 +44,20 @@ export const searchTool = createTool({
 
                 const errorText = await response.text();
                 console.error('Google Search API Error:', errorText);
-                return { results: [] };
+
+                let errorMessage = 'Unknown error';
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    errorMessage = errorJson.error?.message || errorText;
+                } catch (e) {
+                    errorMessage = errorText;
+                }
+
+                return {
+                    results: [],
+                    error: errorMessage,
+                    source: 'Google Custom Search API'
+                };
             }
 
             const data = await response.json();

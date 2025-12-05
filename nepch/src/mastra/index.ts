@@ -4,11 +4,13 @@ import { PinoLogger } from '@mastra/loggers';
 import { LibSQLStore } from '@mastra/libsql';
 import { nepChan } from './agents/nep-chan';
 
+import { connectionUrl } from './db';
+
 export const mastra = new Mastra({
   agents: { nepChan },
   storage: new LibSQLStore({
     // stores observability, scores, ... into memory storage, if it needs to persist, change to file:../mastra.db
-    url: ":memory:",
+    url: connectionUrl,
   }),
   logger: new PinoLogger({
     name: 'Mastra',
