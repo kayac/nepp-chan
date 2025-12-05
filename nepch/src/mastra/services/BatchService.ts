@@ -1,19 +1,24 @@
 import { memory } from '../memory';
-import { db } from '../db';
+import { db, connectionUrl } from '../db';
 import { PersonaService } from './PersonaService';
 import { google } from '@ai-sdk/google';
 import { generateObject, embed } from 'ai';
 import { z } from 'zod';
+import { LibSQLVector } from '@mastra/libsql';
 
 export class BatchService {
     private personaService: PersonaService;
     private model: any;
     private embeddingModel: any;
+    private vectorStore: LibSQLVector;
 
     constructor() {
         this.personaService = new PersonaService();
         this.model = google('gemini-2.0-flash');
         this.embeddingModel = google.textEmbeddingModel('text-embedding-004');
+        this.vectorStore = new LibSQLVector({
+            connectionUrl: connectionUrl,
+        });
     }
 
     async processMemoryForUser(resourceId: string = 'default-user') {
@@ -29,6 +34,9 @@ export class BatchService {
             }
 
             const results = [];
+
+            // Ensure vector table exists (optional, but good practice if not auto-created)
+            // await this.vectorStore.createIndex({ indexName: 'embeddings', dimension: 768 });
 
             for (const thread of threads) {
                 console.log(`Processing thread: ${thread.id}`);
@@ -77,6 +85,32 @@ export class BatchService {
                     summary: object.summary
                 });
 
+                // --- EMBEDDING LOGIC START ---
+                console.log(`🧠 Embedding persona for ${thread.id}...`);
+                const personaText = `Persona ID: ${thread.id}\nSummary: ${object.summary}\nAttributes: ${JSON.stringify(attributesObj)}\nInterests: ${object.interests.join(', ')}`;
+
+                const { embedding } = await embed({
+                    model: this.embeddingModel,
+                    value: personaText,
+                });
+
+                console.log(`Embedding generated. Length: ${embedding.length}, Type: ${typeof embedding}, IsArray: ${Array.isArray(embedding)}`);
+
+                await this.vectorStore.upsert({
+                    indexName: 'embeddings',
+                    vectors: [embedding as any],
+                    metadata: [{
+                        type: 'persona',
+                        thread_id: thread.id,
+                        text: personaText,
+                        summary: object.summary,
+                        ...attributesObj
+                    }],
+                    ids: [`persona-${thread.id}`]
+                });
+                console.log(`✅ Persona embedded for ${thread.id}`);
+                // --- EMBEDDING LOGIC END ---
+
                 results.push({ threadId: thread.id, data: object });
             }
 
@@ -113,6 +147,11 @@ export class BatchService {
             value: latestThreadContent,
         });
 
+        if (!embedding || !Array.isArray(embedding) || embedding.length === 0) {
+            console.error('Invalid embedding generated for conversation links.');
+            return;
+        }
+
         // Perform vector search to find related messages
         const vectorString = '[' + embedding.join(',') + ']';
         const searchResult = await db.execute({
@@ -124,7 +163,7 @@ export class BatchService {
         const relatedThreadIds = new Set<string>();
         searchResult.rows.forEach((row: any) => {
             try {
-                const metadata = JSON.parse(row.metadata);
+                const metadata = JSON.parse(row.metadata as string);
                 if (metadata.thread_id && metadata.thread_id !== latestThread.id) {
                     relatedThreadIds.add(metadata.thread_id);
                 }
@@ -175,3 +214,4 @@ export class BatchService {
         return messages.map((m: any) => `${m.role}: ${m.content}`).join('\n');
     }
 }
+

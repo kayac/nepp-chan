@@ -33,6 +33,7 @@ export class InitService {
               CREATE TABLE IF NOT EXISTS village_news (
                 id TEXT PRIMARY KEY,
                 content TEXT,
+                category TEXT,
                 source_villager_id TEXT,
                 created_at TEXT
               )

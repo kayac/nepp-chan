@@ -481,3 +481,21 @@ APIエンドポイント `/api/system/init/embeddings` を経由した初期化�
     - `villagers`, `village_news`, `conversation_links` テーブルの作成。
     - `knowledge` ディレクトリ内のMarkdownファイル（7ファイル）からのEmbedding生成と保存（129チャンク）。
 
+
+---
+
+## 開発ログ (Walkthrough) - 緊急通報ツールのデバッグ
+
+### 課題
+`emergencyReport` ツールを実行した際、`SQLITE_ERROR: table village_news has no column named category` というエラーが発生し、緊急情報の記録に失敗しました。
+
+### 原因
+`NewsService.ts` および `emergency-report.ts` は `village_news` テーブルに `category` カラムが存在することを前提としていましたが、`InitService.ts` のテーブル定義にはこのカラムが含まれていませんでした。
+
+### 対応
+1. **テーブル定義の更新**: `src/mastra/services/InitService.ts` を修正し、`village_news` テーブルの作成時に `category` カラムを含めるようにしました。
+2. **データベース移行**: 既存の `local.db` に対して `ALTER TABLE` コマンドを実行し、`category` カラムを追加しました。
+
+### 検証結果
+- 検証用スクリプトを作成・実行し、`NewsService.addNews` メソッドがエラーなく動作し、データが正常に挿入されることを確認しました。
+- `sqlite3` コマンドでテーブルスキーマを確認し、`category` カラムが存在することを確認しました。
