@@ -495,6 +495,73 @@ function App() {
                     >
                         <span>🧠</span> 記憶を整理 (Debug)
                     </button>
+
+                    <div className="pt-4 border-t border-gray-200">
+                        <h2 className="text-xs font-bold text-gray-500 mb-2 px-2">システム管理</h2>
+                        <div className="space-y-2">
+                            <button
+                                onClick={async () => {
+                                    if (!confirm('DBを初期化しますか？データが消える可能性があります。')) return;
+                                    const res = await fetch('/api/system/init/db', { method: 'POST' });
+                                    const data = await res.json();
+                                    alert(data.message);
+                                }}
+                                className="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 py-1 px-2 rounded text-xs"
+                            >
+                                🗑️ DB初期化
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    const res = await fetch('/api/system/init/embeddings', { method: 'POST' });
+                                    const data = await res.json();
+                                    alert(data.message);
+                                }}
+                                className="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 py-1 px-2 rounded text-xs"
+                            >
+                                📚 知識埋め込み
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    const res = await fetch('/api/system/env');
+                                    const data = await res.json();
+                                    alert(JSON.stringify(data, null, 2));
+                                }}
+                                className="w-full bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 py-1 px-2 rounded text-xs"
+                            >
+                                ⚙️ 環境変数確認
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    const res = await fetch('/api/system/check/vector');
+                                    const data = await res.json();
+                                    alert(JSON.stringify(data, null, 2));
+                                }}
+                                className="w-full bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 py-1 px-2 rounded text-xs"
+                            >
+                                🔍 ベクトル検索確認
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    const res = await fetch('/api/system/check/tools');
+                                    const data = await res.json();
+                                    alert(JSON.stringify(data, null, 2));
+                                }}
+                                className="w-full bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 py-1 px-2 rounded text-xs"
+                            >
+                                🛠️ ツール登録確認
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    const res = await fetch('/api/system/cleanup/threads', { method: 'POST' });
+                                    const data = await res.json();
+                                    alert(JSON.stringify(data, null, 2));
+                                }}
+                                className="w-full bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 py-1 px-2 rounded text-xs"
+                            >
+                                🧹 スレッド掃除
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-2 space-y-1">
