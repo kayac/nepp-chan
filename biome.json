@@ -9,11 +9,11 @@
     "ignoreUnknown": false,
     "includes": [
       "**",
-      "!node_modules",
-      "!dist",
-      "!.mastra",
-      "!.wrangler",
-      "!*.d.ts"
+      "!**/node_modules",
+      "!**/dist",
+      "!**/.mastra",
+      "!**/.wrangler",
+      "!**/*.d.ts"
     ]
   },
   "formatter": {
