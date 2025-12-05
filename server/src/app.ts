@@ -1,8 +1,11 @@
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
+import { errorHandler } from "~/middleware/error-handler";
 import { chatRoutes, healthRoutes, weatherRoutes } from "~/routes";
 
 const app = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
+
+app.onError(errorHandler);
 
 app.route("/", healthRoutes);
 app.route("/", chatRoutes);

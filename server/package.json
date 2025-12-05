@@ -2,6 +2,7 @@
   "name": "@aiss-nepch/server",
   "type": "module",
   "scripts": {
+    "test": "vitest",
     "dev": "wrangler dev --remote",
     "deploy": "wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
@@ -26,6 +27,8 @@
     "@types/node": "^24.10.1",
     "mastra": "1.0.0-beta.4",
     "typescript": "^5.9.3",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "~3.2.4",
     "wrangler": "^4.51.0"
   }
 }
