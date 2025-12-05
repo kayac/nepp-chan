@@ -21,7 +21,10 @@
       "database_name": "aiss-nepch-dev",
       "database_id": "99a3838a-45de-462e-8113-579cce62f28e"
     }
-  ]
+  ],
+  "alias": {
+    "~": "./src"
+  }
   /**
    * Smart Placement
    * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
