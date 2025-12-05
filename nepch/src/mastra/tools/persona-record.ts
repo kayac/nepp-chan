@@ -11,7 +11,7 @@ export const personaRecord = createTool({
         userId: z.string().describe('ユーザーID（会話の相手を一意に識別するID）'),
         data: z.object({
             name: z.string().nullable().optional().describe('ユーザーの名前'),
-            attributes: z.record(z.string()).nullable().optional().describe('ユーザーの属性（年齢、出身、職業など）'),
+            attributes: z.union([z.record(z.string(), z.string()), z.string()]).nullable().optional().describe('ユーザーの属性（年齢、出身、職業など）'),
             current_concerns: z.any().nullable().optional().describe('現在の悩みや関心事'),
             summary: z.string().nullable().optional().describe('ユーザーに関する全体的なメモや要約'),
         }).describe('保存するデータ'),
@@ -29,8 +29,13 @@ export const personaRecord = createTool({
                 };
             }
 
+            let attributes = context.data.attributes;
+            if (typeof attributes === 'string') {
+                attributes = { description: attributes };
+            }
+
             const cleanData = Object.fromEntries(
-                Object.entries(context.data).map(([k, v]) => [k, v === null ? undefined : v])
+                Object.entries({ ...context.data, attributes }).map(([k, v]) => [k, v === null ? undefined : v])
             );
 
             await personaService.savePersona({

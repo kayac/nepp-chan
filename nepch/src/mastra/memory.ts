@@ -2,13 +2,14 @@ import { Memory } from '@mastra/memory';
 import { LibSQLStore } from '@mastra/libsql';
 import { LibSQLVector } from '@mastra/libsql';
 import { google } from '@ai-sdk/google';
+import { connectionUrl } from './db';
 
 export const memory = new Memory({
     storage: new LibSQLStore({
-        url: 'file:local.db',
+        url: connectionUrl,
     }),
     vector: new LibSQLVector({
-        connectionUrl: 'file:local.db',
+        connectionUrl: connectionUrl,
     }),
     embedder: google.textEmbeddingModel('text-embedding-004'),
     options: {

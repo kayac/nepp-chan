@@ -95,6 +95,7 @@ export class PersonaService {
 
             // Merge existing data with new summary data
             const newData = {
+                id: userId,
                 ...existing,
                 ...summaryData,
                 attributes: {
