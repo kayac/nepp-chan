@@ -129,6 +129,26 @@ const ToolStatus = ({ tool, isDevMode }: { tool: ToolInvocation, isDevMode: bool
     )
 }
 
+const SidebarSection = ({ title, children, defaultOpen = false }: { title: string, children: React.ReactNode, defaultOpen?: boolean }) => {
+    const [isOpen, setIsOpen] = useState(defaultOpen)
+    return (
+        <div className="border-t border-gray-200 pt-4">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full flex items-center justify-between px-2 mb-2 text-xs font-bold text-gray-500 hover:text-gray-700 transition-colors"
+            >
+                <span>{title}</span>
+                <span>{isOpen ? '▼' : '▶'}</span>
+            </button>
+            {isOpen && (
+                <div className="space-y-2">
+                    {children}
+                </div>
+            )}
+        </div>
+    )
+}
+
 function App() {
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
@@ -496,72 +516,104 @@ function App() {
                         <span>🧠</span> 記憶を整理 (Debug)
                     </button>
 
-                    <div className="pt-4 border-t border-gray-200">
-                        <h2 className="text-xs font-bold text-gray-500 mb-2 px-2">システム管理</h2>
-                        <div className="space-y-2">
+                    <SidebarSection title="システム管理">
+                        <button
+                            onClick={async () => {
+                                if (!confirm('DBを初期化しますか？データが消える可能性があります。')) return;
+                                const res = await fetch('/api/system/init/db', { method: 'POST' });
+                                const data = await res.json();
+                                alert(data.message);
+                            }}
+                            className="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 py-1 px-2 rounded text-xs"
+                        >
+                            🗑️ DB初期化
+                        </button>
+                        <button
+                            onClick={async () => {
+                                const res = await fetch('/api/system/init/embeddings', { method: 'POST' });
+                                const data = await res.json();
+                                alert(data.message);
+                            }}
+                            className="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 py-1 px-2 rounded text-xs"
+                        >
+                            📚 知識埋め込み
+                        </button>
+                        <button
+                            onClick={async () => {
+                                const res = await fetch('/api/system/env');
+                                const data = await res.json();
+                                alert(JSON.stringify(data, null, 2));
+                            }}
+                            className="w-full bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 py-1 px-2 rounded text-xs"
+                        >
+                            ⚙️ 環境変数確認
+                        </button>
+                        <button
+                            onClick={async () => {
+                                const res = await fetch('/api/system/check/vector');
+                                const data = await res.json();
+                                alert(JSON.stringify(data, null, 2));
+                            }}
+                            className="w-full bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 py-1 px-2 rounded text-xs"
+                        >
+                            🔍 ベクトル検索確認
+                        </button>
+                        <button
+                            onClick={async () => {
+                                const res = await fetch('/api/system/check/tools');
+                                const data = await res.json();
+                                alert(JSON.stringify(data, null, 2));
+                            }}
+                            className="w-full bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 py-1 px-2 rounded text-xs"
+                        >
+                            🛠️ ツール登録確認
+                        </button>
+                        <button
+                            onClick={async () => {
+                                const res = await fetch('/api/system/cleanup/threads', { method: 'POST' });
+                                const data = await res.json();
+                                alert(JSON.stringify(data, null, 2));
+                            }}
+                            className="w-full bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 py-1 px-2 rounded text-xs"
+                        >
+                            🧹 スレッド掃除
+                        </button>
+                    </SidebarSection>
+
+                    <SidebarSection title="テストランナー">
+                        <div className="flex gap-2 px-2">
+                            <input
+                                type="number"
+                                min="1"
+                                max="26"
+                                defaultValue="1"
+                                id="testCountInput"
+                                className="w-16 border border-gray-200 rounded px-2 py-1 text-xs"
+                            />
                             <button
                                 onClick={async () => {
-                                    if (!confirm('DBを初期化しますか？データが消える可能性があります。')) return;
-                                    const res = await fetch('/api/system/init/db', { method: 'POST' });
-                                    const data = await res.json();
-                                    alert(data.message);
+                                    const input = document.getElementById('testCountInput') as HTMLInputElement;
+                                    const count = parseInt(input.value) || 1;
+                                    if (!confirm(`${count}件のテストを実行しますか？`)) return;
+
+                                    try {
+                                        const res = await fetch('/api/test/run', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ count })
+                                        });
+                                        const data = await res.json();
+                                        alert(data.message);
+                                    } catch (e) {
+                                        alert('テスト実行エラー');
+                                    }
                                 }}
-                                className="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 py-1 px-2 rounded text-xs"
+                                className="flex-1 bg-green-50 hover:bg-green-100 text-green-600 border border-green-200 py-1 px-2 rounded text-xs"
                             >
-                                🗑️ DB初期化
-                            </button>
-                            <button
-                                onClick={async () => {
-                                    const res = await fetch('/api/system/init/embeddings', { method: 'POST' });
-                                    const data = await res.json();
-                                    alert(data.message);
-                                }}
-                                className="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 py-1 px-2 rounded text-xs"
-                            >
-                                📚 知識埋め込み
-                            </button>
-                            <button
-                                onClick={async () => {
-                                    const res = await fetch('/api/system/env');
-                                    const data = await res.json();
-                                    alert(JSON.stringify(data, null, 2));
-                                }}
-                                className="w-full bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 py-1 px-2 rounded text-xs"
-                            >
-                                ⚙️ 環境変数確認
-                            </button>
-                            <button
-                                onClick={async () => {
-                                    const res = await fetch('/api/system/check/vector');
-                                    const data = await res.json();
-                                    alert(JSON.stringify(data, null, 2));
-                                }}
-                                className="w-full bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 py-1 px-2 rounded text-xs"
-                            >
-                                🔍 ベクトル検索確認
-                            </button>
-                            <button
-                                onClick={async () => {
-                                    const res = await fetch('/api/system/check/tools');
-                                    const data = await res.json();
-                                    alert(JSON.stringify(data, null, 2));
-                                }}
-                                className="w-full bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 py-1 px-2 rounded text-xs"
-                            >
-                                🛠️ ツール登録確認
-                            </button>
-                            <button
-                                onClick={async () => {
-                                    const res = await fetch('/api/system/cleanup/threads', { method: 'POST' });
-                                    const data = await res.json();
-                                    alert(JSON.stringify(data, null, 2));
-                                }}
-                                className="w-full bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 py-1 px-2 rounded text-xs"
-                            >
-                                🧹 スレッド掃除
+                                🧪 テスト実行
                             </button>
                         </div>
-                    </div>
+                    </SidebarSection>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -586,10 +638,10 @@ function App() {
                         </div>
                     )}
                 </div>
-            </div>
+            </div >
 
             {/* Main Chat Area */}
-            <div className="flex-1 flex flex-col w-full bg-white">
+            < div className="flex-1 flex flex-col w-full bg-white" >
                 <div className="flex-1 overflow-y-auto">
                     <div className="max-w-3xl mx-auto p-4 space-y-4">
                         {messages.map((msg) => (
@@ -664,8 +716,8 @@ function App() {
                         </form>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     )
 }
 

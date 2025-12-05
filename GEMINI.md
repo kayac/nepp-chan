@@ -2,6 +2,8 @@
 
 > [!IMPORTANT]
 > **最重要ルール**: このファイルの `Implementation Plan` および `Walkthrough` セクション、および作成するすべてのアーティファクト（計画書、ログ等）は、**必ず日本語で記述してください**。これは絶対的なルールです。
+>
+> **中間生成物の管理**: 途中で生成物が必要なときは、 `.tmp` 以下に `featureName` のディレクトリを切って格納するように徹底してください。
 
 ## タスク状況 (Tasks)
 
@@ -444,4 +446,55 @@ Google Custom Search API がプロジェクトで有効化されていないこ�
 
 ### 検証結果
 - 各機能の単体テストおよび統合テストを実行し、正常に動作することを確認しました。
-- E2Eテストにより、UIとバックエンドの連携に問題がないことを確認しました。
+---
+
+## 開発ログ (Walkthrough) - E2Eテストの単発/一括実行リファクタリング
+
+E2Eテストをリファクタリングし、単発（ランダム選択）実行と一括実行の両方に対応させました。また、UIからテスト実行をトリガーできる機能を追加しました。
+
+### 変更点
+
+#### テストロジックの改善
+
+- **[nepch/e2etest/browser-test.spec.ts](file:///Users/taxiiii/Works/private/LLM/mastraStreamChat/nepch/e2etest/browser-test.spec.ts)**:
+    - 環境変数 `TEST_TARGET_FILES` を読み込み、指定されたファイルのみをテスト対象とするように変更しました。
+    - これにより、テスト実行の決定論性が保証され、並列実行時の不整合が解消されました。
+    - 入力フィールドの待機タイムアウトを30秒に延長し、安定性を向上させました。
+    - スクリーンショットの保存パスをプロジェクトルート相対に修正しました。
+
+- **[nepch/scripts/run-e2e-random.ts](file:///Users/taxiiii/Works/private/LLM/mastraStreamChat/nepch/scripts/run-e2e-random.ts)**:
+    - 指定された件数（デフォルト1件）のキャラクターファイルをランダムに選択し、`TEST_TARGET_FILES` 環境変数を設定して Playwright を実行するスクリプトを新規作成しました。
+
+- **[nepch/playwright.config.ts](file:///Users/taxiiii/Works/private/LLM/mastraStreamChat/nepch/playwright.config.ts)**:
+    - Playwright 設定ファイルを作成し、テスト結果 (`test-results`) とレポート (`playwright-report`) を `e2etest` ディレクトリ配下に出力するように設定しました。
+
+#### バックエンド API
+
+- **[nepch/src/server.ts](file:///Users/taxiiii/Works/private/LLM/mastraStreamChat/nepch/src/server.ts)**:
+    - `POST /api/test/run` エンドポイントを追加しました。
+    - リクエストボディで `count` を受け取り、バックグラウンドで `bun run test:e2e:limit` を実行します。
+
+#### フロントエンド UI
+
+- **[nepch/src/app/App.tsx](file:///Users/taxiiii/Works/private/LLM/mastraStreamChat/nepch/src/app/App.tsx)**:
+    - サイドバーに「テストランナー」セクションを追加しました。
+    - テスト件数を指定して実行ボタンを押すことで、API経由でテストをトリガーできます。
+
+#### パッケージスクリプト
+
+- **[nepch/package.json](file:///Users/taxiiii/Works/private/LLM/mastraStreamChat/nepch/package.json)**:
+    - `"test:e2e:limit"`: ランダム実行用スクリプト (`bun run scripts/run-e2e-random.ts`)
+    - `"test:e2e:bulk"`: 一括実行用スクリプト (`bun x playwright test`)
+
+### 検証結果
+
+#### 自動テスト
+
+- **単発実行**: `TEST_LIMIT=1 bun run test:e2e:limit` を実行し、ランダムに1件のテストが選択され、正常にパスすることを確認しました。
+- **一括実行**: `bun run test:e2e:bulk --list` を実行し、全26件のテストがリストアップされることを確認しました。
+- **成果物確認**: テスト実行後、`e2etest/test-results` と `e2etest/playwright-report` が生成されることを確認しました。
+
+### 手動検証
+
+- ブラウザテストの実行中に生成されたスクリーンショットを確認し、正常に会話が行われていることを確認しました。
+- UIの「テスト実行」ボタンが機能することを確認しました（API呼び出し成功）。

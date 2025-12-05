@@ -40,3 +40,10 @@ dist
 .env
 *.db
 *.db-*
+
+# Temporary files
+.tmp
+
+
+# E2E Test Results
+e2etest/test-results/

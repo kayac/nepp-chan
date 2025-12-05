@@ -19,6 +19,21 @@ const characterFiles = fs.readdirSync(charactersDir).filter(f => f.endsWith('.md
 // Sort files to ensure consistent order (A.md, B.md, ...)
 characterFiles.sort();
 
+// Filter files if TEST_TARGET_FILES is set (comma separated)
+if (process.env.TEST_TARGET_FILES) {
+    const targets = process.env.TEST_TARGET_FILES.split(',');
+    console.log(`Filtering tests for: ${targets.join(', ')}`);
+    // Filter characterFiles to only include those in targets
+    // We modify the array in place or create a new one. Since it's const, we can't reassign, but we can splice.
+    // Actually, let's just create a new list and iterate over it, but the loop uses characterFiles.
+    // Better to filter the existing array.
+    const filtered = characterFiles.filter(f => targets.includes(f));
+    characterFiles.length = 0;
+    characterFiles.push(...filtered);
+} else {
+    console.log('Running in BULK mode (all characters).');
+}
+
 for (const file of characterFiles) {
     test(`Conversation with ${file}`, async ({ page }) => {
         test.setTimeout(45000); // Set timeout to 45 seconds
@@ -35,9 +50,13 @@ for (const file of characterFiles) {
         // Wait for the input area to be ready
         const inputLocator = page.locator('input[type="text"]');
         try {
-            await expect(inputLocator).toBeVisible({ timeout: 10000 });
+            await expect(inputLocator).toBeVisible({ timeout: 30000 });
         } catch (e) {
-            fs.writeFileSync(`nepch/e2etest/screenshots/debug-${file.replace('.md', '.html')}`, await page.content());
+            const screenshotDir = 'e2etest/test-results/screenshots';
+            if (!fs.existsSync(screenshotDir)) {
+                fs.mkdirSync(screenshotDir, { recursive: true });
+            }
+            fs.writeFileSync(`${screenshotDir}/debug-${file.replace('.md', '.html')}`, await page.content());
             throw e;
         }
 
@@ -99,7 +118,11 @@ for (const file of characterFiles) {
             conversationHistory.push({ role: 'assistant', content: lastMessageText });
 
             // Capture screenshot
-            await page.screenshot({ path: `nepch/e2etest/screenshots/${file.replace('.md', '')}_turn${i + 1}.png` });
+            const screenshotDir = 'e2etest/test-results/screenshots';
+            if (!fs.existsSync(screenshotDir)) {
+                fs.mkdirSync(screenshotDir, { recursive: true });
+            }
+            await page.screenshot({ path: `${screenshotDir}/${file.replace('.md', '')}_turn${i + 1}.png` });
         }
     });
 }

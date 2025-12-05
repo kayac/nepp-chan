@@ -147,6 +147,26 @@ app.post('/api/system/cleanup/threads', async (c) => {
     return c.json(result);
 });
 
+import { exec } from 'child_process';
+
+app.post('/api/test/run', async (c) => {
+    const { count } = await c.req.json();
+    const testLimit = count || 1;
+    console.log(`Triggering E2E test with limit: ${testLimit}`);
+
+    // Run in background
+    exec(`TEST_LIMIT=${testLimit} bun run test:e2e:limit`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Test execution error: ${error}`);
+            return;
+        }
+        console.log(`Test stdout: ${stdout}`);
+        console.error(`Test stderr: ${stderr}`);
+    });
+
+    return c.json({ success: true, message: `Started E2E test for ${testLimit} characters` });
+});
+
 const port = Number(process.env.APP_PORT) || 4112;
 console.log(`Server is running on port ${port}`);
 

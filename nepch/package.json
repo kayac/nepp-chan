@@ -27,7 +27,9 @@
   "scripts": {
     "dev": "vite & bun run src/server.ts",
     "build": "mastra build",
-    "start": "mastra start"
+    "start": "mastra start",
+    "test:e2e:limit": "bun run scripts/run-e2e-random.ts",
+    "test:e2e:bulk": "bun x playwright test"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.52",
