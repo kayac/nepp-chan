@@ -12,8 +12,27 @@ importers:
         specifier: ^2.3.8
         version: 2.3.8
 
+  packages/schema:
+    dependencies:
+      zod:
+        specifier: ^4.1.13
+        version: 4.1.13
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   server:
     dependencies:
+      '@aiss-nepch/schema':
+        specifier: workspace:*
+        version: link:../packages/schema
+      '@hono/swagger-ui':
+        specifier: ^0.5.2
+        version: 0.5.2(hono@4.10.7)
+      '@hono/zod-openapi':
+        specifier: ^1.1.5
+        version: 1.1.5(hono@4.10.7)(zod@4.1.13)
       '@mastra/cloudflare-d1':
         specifier: 1.0.0-beta.2
         version: 1.0.0-beta.2(@mastra/core@1.0.0-beta.6)
@@ -138,6 +157,11 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.23.8
+
+  '@asteasolutions/zod-to-openapi@8.1.0':
+    resolution: {integrity: sha512-tQFxVs05J/6QXXqIzj6rTRk3nj1HFs4pe+uThwE95jL5II2JfpVXkK+CqkO7aT0Do5AYqO6LDrKpleLUFXgY+g==}
+    peerDependencies:
+      zod: ^4.0.0
 
   '@babel/code-frame@7.27.1':
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
@@ -694,6 +718,24 @@ packages:
 
   '@expo/sudo-prompt@9.3.2':
     resolution: {integrity: sha512-HHQigo3rQWKMDzYDLkubN5WQOYXJJE2eNqIQC2axC2iO3mHdwnIR7FgZVvHWtBwAdzBgAP0ECp8KqS8TiMKvgw==}
+
+  '@hono/swagger-ui@0.5.2':
+    resolution: {integrity: sha512-7wxLKdb8h7JTdZ+K8DJNE3KXQMIpJejkBTQjrYlUWF28Z1PGOKw6kUykARe5NTfueIN37jbyG/sBYsbzXzG53A==}
+    peerDependencies:
+      hono: '*'
+
+  '@hono/zod-openapi@1.1.5':
+    resolution: {integrity: sha512-EAnY6ad4yt/MUKHx716BEGGOXSl5d0/FOLozOYB/pmSEFq07qrzefKFtBEMAgd3hlpJXjH+4lwgTtlAo+BGBgQ==}
+    engines: {node: '>=16.0.0'}
+    peerDependencies:
+      hono: '>=4.3.6'
+      zod: ^4.0.0
+
+  '@hono/zod-validator@0.7.5':
+    resolution: {integrity: sha512-n4l4hutkfYU07PzRUHBOVzUEn38VSfrh+UVE5d0w4lyfWDOEhzxIupqo5iakRiJL44c3vTuFJBvcmUl8b9agIA==}
+    peerDependencies:
+      hono: '>=3.9.0'
+      zod: ^3.25.0 || ^4.0.0
 
   '@img/sharp-darwin-arm64@0.33.5':
     resolution: {integrity: sha512-UT4p+iz/2H4twwAoLCqfA9UH5pI6DggwKEGuaPy7nCVQ8ZsiY5PIcrRvD1DzuY3qYL07NtIQcWnBSY/heikIFQ==}
@@ -2257,6 +2299,9 @@ packages:
   openapi-types@12.1.3:
     resolution: {integrity: sha512-N4YtSYJqghVu4iek2ZUvcN/0aqH1kRDuNqzcycDxhOUpg7GdvLa2F3DgS6yBNhInhv2r/6I0Flkn7CqL8+nIcw==}
 
+  openapi3-ts@4.5.0:
+    resolution: {integrity: sha512-jaL+HgTq2Gj5jRcfdutgRGLosCy/hT8sQf6VOy+P+g36cZOjI1iukdPnijC+4CmeRzg/jEllJUboEic2FhxhtQ==}
+
   p-map@7.0.4:
     resolution: {integrity: sha512-tkAQEw8ysMzmkhgw8k+1U/iPhWNhykKnSk4Rd5zLoPJCuJaGRPo6YposrZgaxHKzDHdDWWZvE/Sk7hsL2X/CpQ==}
     engines: {node: '>=18'}
@@ -2916,6 +2961,11 @@ snapshots:
       zod: 4.1.13
       zod-to-json-schema: 3.25.0(zod@4.1.13)
 
+  '@asteasolutions/zod-to-openapi@8.1.0(zod@4.1.13)':
+    dependencies:
+      openapi3-ts: 4.5.0
+      zod: 4.1.13
+
   '@babel/code-frame@7.27.1':
     dependencies:
       '@babel/helper-validator-identifier': 7.28.5
@@ -3347,6 +3397,23 @@ snapshots:
       - supports-color
 
   '@expo/sudo-prompt@9.3.2': {}
+
+  '@hono/swagger-ui@0.5.2(hono@4.10.7)':
+    dependencies:
+      hono: 4.10.7
+
+  '@hono/zod-openapi@1.1.5(hono@4.10.7)(zod@4.1.13)':
+    dependencies:
+      '@asteasolutions/zod-to-openapi': 8.1.0(zod@4.1.13)
+      '@hono/zod-validator': 0.7.5(hono@4.10.7)(zod@4.1.13)
+      hono: 4.10.7
+      openapi3-ts: 4.5.0
+      zod: 4.1.13
+
+  '@hono/zod-validator@0.7.5(hono@4.10.7)(zod@4.1.13)':
+    dependencies:
+      hono: 4.10.7
+      zod: 4.1.13
 
   '@img/sharp-darwin-arm64@0.33.5':
     optionalDependencies:
@@ -4915,6 +4982,10 @@ snapshots:
       wrappy: 1.0.2
 
   openapi-types@12.1.3: {}
+
+  openapi3-ts@4.5.0:
+    dependencies:
+      yaml: 2.8.2
 
   p-map@7.0.4: {}
 
