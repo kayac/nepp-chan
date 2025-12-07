@@ -8,7 +8,7 @@ const MessageResponseSchema = z.object({
 
 const healthRoute = createRoute({
   method: "get",
-  path: "/message",
+  path: "/",
   summary: "ヘルスチェック",
   description: "サーバーの稼働状況を確認",
   tags: ["Health"],

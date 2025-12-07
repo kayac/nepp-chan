@@ -15,7 +15,7 @@ export const weatherRoutes = new OpenAPIHono<{
 
 const weatherRoute = createRoute({
   method: "get",
-  path: "/weather",
+  path: "/",
   summary: "天気情報を取得",
   description: "指定した都市の天気情報をワークフロー経由でストリーミング取得",
   tags: ["Weather"],
