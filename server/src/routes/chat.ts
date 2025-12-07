@@ -15,7 +15,7 @@ export const chatRoutes = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
 
 const chatRoute = createRoute({
   method: "post",
-  path: "/chat",
+  path: "/",
   summary: "チャットメッセージを送信",
   description:
     "AIエージェントにメッセージを送信し、ストリーミングレスポンスを受け取る",

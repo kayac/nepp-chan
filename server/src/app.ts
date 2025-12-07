@@ -7,9 +7,9 @@ const app = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
 
 app.onError(errorHandler);
 
-app.route("/", healthRoutes);
-app.route("/", chatRoutes);
-app.route("/", weatherRoutes);
+app.route("/health", healthRoutes);
+app.route("/chat", chatRoutes);
+app.route("/weather", weatherRoutes);
 
 app.doc("/doc", {
   openapi: "3.1.0",
