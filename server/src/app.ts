@@ -1,9 +1,11 @@
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { errorHandler } from "~/middleware/error-handler";
+import { corsMiddleware, errorHandler } from "~/middleware";
 import { chatRoutes, healthRoutes, weatherRoutes } from "~/routes";
 
 const app = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
+
+app.use("*", corsMiddleware);
 
 app.onError(errorHandler);
 
