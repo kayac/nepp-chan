@@ -47,3 +47,5 @@ dist
 
 # E2E Test Results
 e2etest/test-results/
+*.log
+playwright-report/

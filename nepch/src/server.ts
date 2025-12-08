@@ -14,6 +14,8 @@ const app = new Hono();
 const batchService = new BatchService();
 const initService = new InitService();
 const systemService = new SystemService();
+import { TestService } from './mastra/services/TestService';
+const testService = new TestService();
 
 app.use('*', logger());
 app.use('/*', cors());
@@ -212,21 +214,22 @@ app.post('/api/system/cleanup/threads', async (c) => {
     return c.json(result);
 });
 
-import { exec } from 'child_process';
+
 
 app.post('/api/test/run', async (c) => {
     const { count } = await c.req.json();
     const testLimit = count || 1;
     console.log(`Triggering E2E test with limit: ${testLimit}`);
 
-    // Run in background
-    exec(`TEST_LIMIT=${testLimit} bun run test:e2e:limit`, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Test execution error: ${error}`);
-            return;
+    // Run in background (TestService handles the async execution internally)
+    testService.runRandomE2E(testLimit).then((result) => {
+        if (result.success) {
+            console.log(result.message);
+        } else {
+            console.error(result.message);
         }
-        console.log(`Test stdout: ${stdout}`);
-        console.error(`Test stderr: ${stderr}`);
+    }).catch((err) => {
+        console.error('Test execution failed:', err);
     });
 
     return c.json({ success: true, message: `Started E2E test for ${testLimit} characters` });

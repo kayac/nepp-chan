@@ -533,25 +533,15 @@ function App() {
                     >
                         <span>+</span> 新しいチャット
                     </button>
-                    <button
-                        onClick={handleBatchProcess}
-                        disabled={isLoading}
-                        className="w-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-xs"
-                    >
-                        <span>🧠</span> 記憶を整理 (Debug)
-                    </button>
+
 
                     <SidebarSection title="システム管理">
                         <button
-                            onClick={async () => {
-                                if (!confirm('DBを初期化しますか？データが消える可能性があります。')) return;
-                                const res = await fetch('/api/system/init/db', { method: 'POST' });
-                                const data = await res.json();
-                                alert(data.message);
-                            }}
-                            className="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 py-1 px-2 rounded text-xs"
+                            onClick={handleBatchProcess}
+                            disabled={isLoading}
+                            className="w-full bg-purple-50 hover:bg-purple-100 text-purple-600 border border-purple-200 py-1 px-2 rounded text-xs"
                         >
-                            🗑️ DB初期化
+                            🧠 記憶を整理 (Debug)
                         </button>
                         <button
                             onClick={async () => {
@@ -593,15 +583,28 @@ function App() {
                         >
                             🛠️ ツール登録確認
                         </button>
+                        <div className="pt-2 mt-2 border-t border-gray-100"></div>
                         <button
                             onClick={async () => {
+                                if (!confirm('古いスレッドを削除しますか？')) return;
                                 const res = await fetch('/api/system/cleanup/threads', { method: 'POST' });
                                 const data = await res.json();
                                 alert(JSON.stringify(data, null, 2));
                             }}
-                            className="w-full bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 py-1 px-2 rounded text-xs"
+                            className="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 py-1 px-2 rounded text-xs"
                         >
                             🧹 スレッド掃除
+                        </button>
+                        <button
+                            onClick={async () => {
+                                if (!confirm('DBを初期化しますか？データが消える可能性があります。')) return;
+                                const res = await fetch('/api/system/init/db', { method: 'POST' });
+                                const data = await res.json();
+                                alert(data.message);
+                            }}
+                            className="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 py-1 px-2 rounded text-xs"
+                        >
+                            🗑️ DB初期化
                         </button>
                     </SidebarSection>
 
