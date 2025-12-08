@@ -34,8 +34,7 @@ Mastra フレームワークを活用した AI-powered Weather Assistant API。C
 aiss-nepch/
 ├── server/                          # バックエンド API サーバー
 │   ├── src/
-│   │   ├── index.ts                 # エントリーポイント
-│   │   ├── app.ts                   # Hono アプリケーション設定
+│   │   ├── index.ts                 # エントリーポイント・Hono アプリケーション設定
 │   │   ├── middleware/              # ミドルウェア
 │   │   │   ├── cors.ts              # CORS
 │   │   │   └── error-handler.ts     # グローバルエラーハンドラー
