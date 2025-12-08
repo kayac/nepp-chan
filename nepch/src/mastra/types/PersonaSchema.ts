@@ -1,0 +1,22 @@
+import { z } from 'zod';
+
+export const PersonaSchema = z.object({
+    // User Attributes
+    age: z.string().describe('年齢（推測値含む）'),
+    location: z.enum(['村内', '村外', '他地域']).describe('居住地／出身地'),
+    relationship: z.enum(['観光客', '村人', '学生', '職員']).describe('ネップちゃんとの関係'),
+    interestTheme: z.array(z.enum(['自然', 'アート', '暮らし', '人間関係'])).describe('関心テーマ（複数選択可）'),
+    emotionalState: z.enum(['元気', '悩み中', '挑戦期']).describe('感情傾向／状態'),
+    behaviorPattern: z.enum(['創作中心', '旅行中', '仕事中']).describe('行動パターン'),
+
+    // Empathy Map
+    says: z.string().describe('Says: ユーザーが実際に言ったこと'),
+    thinks: z.string().describe('Thinks: ユーザーが考えていること（推測含む）'),
+    does: z.string().describe('Does: ユーザーがとった行動'),
+    feels: z.string().describe('Feels: ユーザーが感じていること'),
+
+    // Important Information
+    importantItems: z.array(z.string()).describe('ネップちゃんが重要と認識する項目（単語形式の配列）'),
+});
+
+export type Persona = z.infer<typeof PersonaSchema>;

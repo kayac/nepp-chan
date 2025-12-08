@@ -1,33 +1,25 @@
+
 import { createTool } from '@mastra/core/tools';
-import { memory } from '../memory';
 import { z } from 'zod';
+import { memory } from '../memory';
 import { google } from '@ai-sdk/google';
 import { generateObject } from 'ai';
-
-import { requestContext } from '../../context';
+import { PersonaSchema } from '../types/PersonaSchema';
 
 export const devTool = createTool({
   id: 'dev-tool',
-  description: 'ユーザーが /dev コマンドを入力した時に使用します。現在の会話から、Villagersのペルソナに記録されるべき情報を先に見ることができます。',
+  description: '開発者用ツール: 現在の会話からペルソナ抽出のプレビューを行います。',
   inputSchema: z.object({}),
   outputSchema: z.object({
     preview: z.string(),
   }),
-  execute: async ({ context, runId }) => {
-    console.log('DevTool Context:', JSON.stringify(context, null, 2));
-
-    const reqContext = requestContext.getStore();
-    const resourceId = context?.resourceId || reqContext?.resourceId || 'default-user';
-    const threadId = context?.threadId || reqContext?.threadId;
-
-    if (!threadId) {
-      return {
-        preview: "エラー: threadIdが見つかりませんでした。分析できません。",
-      };
-    }
-
+  execute: async ({ context, suspend }) => {
     try {
-      // Get messages
+      const threadId = context.threadId;
+      if (!threadId) {
+        return { preview: "スレッドIDが見つかりません。" };
+      }
+
       const queryResult = await memory.query({ threadId });
       const messages = queryResult.uiMessages;
 
@@ -37,41 +29,39 @@ export const devTool = createTool({
         };
       }
 
-      // Prepare conversation text
-      const conversationText = messages.map((m: any) => `${m.role}: ${m.content}`).join('\n');
-
-      // Call LLM to summarize and extract info (Same logic as BatchService)
+      const conversationText = messages.map((m: any) => `${m.role}: ${m.content} `).join('\n');
       const model = google('gemini-2.0-flash');
 
       const { object } = await generateObject({
         model: model,
-        schema: z.object({
-          attributes: z.array(z.object({
-            key: z.string(),
-            value: z.string()
-          })).describe('User attributes extracted from conversation (e.g., age, location, hobbies)'),
-          summary: z.string().describe('Brief summary of the conversation topics'),
-          interests: z.array(z.string()).describe('List of user interests mentioned'),
-        }),
+        schema: PersonaSchema,
         messages: [
-          { role: 'system', content: 'Analyze the following conversation and extract user information. Focus on attributes, interests, and a general summary.' },
+          { role: 'system', content: 'Analyze the following conversation and extract user information based on the defined schema. Be precise and infer attributes where possible.' },
           { role: 'user', content: conversationText }
         ],
       });
 
       const previewText = `
-【ペルソナ記録プレビュー】
+【ペルソナ記録プレビュー(New Schema)】
 --------------------------------------------------
-■ サマリー
-${object.summary}
+■ User Attributes
+  - 年齢: ${object.age}
+- 居住地: ${object.location}
+- 関係性: ${object.relationship}
+- 関心テーマ: ${object.interestTheme.join(', ')}
+- 感情状態: ${object.emotionalState}
+- 行動パターン: ${object.behaviorPattern}
 
-■ 抽出された属性
-${object.attributes.map(a => `- ${a.key}: ${a.value}`).join('\n')}
+■ Empathy Map
+  - Says(発言): ${object.says}
+- Thinks(思考): ${object.thinks}
+- Does(行動): ${object.does}
+- Feels(感情): ${object.feels}
 
-■ 関心事
-${object.interests.join(', ')}
+■ Important Information
+${object.importantItems.map(item => `- ${item}`).join('\n')}
 --------------------------------------------------
-※ この情報は「記憶を整理 (Debug)」ボタンを押すと保存されます。
+※ 「記憶を整理(Debug)」ボタンを押すと、この形式で保存・ベクトル化されます。
 `;
 
       return {
@@ -79,7 +69,7 @@ ${object.interests.join(', ')}
       };
     } catch (error: any) {
       return {
-        preview: `エラーが発生しました: ${error.message}`,
+        preview: `エラーが発生しました: ${error.message} `,
       };
     }
   },

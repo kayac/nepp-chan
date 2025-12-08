@@ -5,6 +5,7 @@ import { google } from '@ai-sdk/google';
 import { generateObject, embed } from 'ai';
 import { z } from 'zod';
 import { LibSQLVector } from '@mastra/libsql';
+import { PersonaSchema } from '../types/PersonaSchema';
 
 export class BatchService {
     private personaService: PersonaService;
@@ -54,64 +55,96 @@ export class BatchService {
 
                 // Call LLM to summarize and extract info
                 console.log(`🤖 Analyzing conversation ${thread.id} with LLM...`);
-                const { object } = await generateObject({
-                    model: this.model,
-                    schema: z.object({
-                        attributes: z.array(z.object({
-                            key: z.string(),
-                            value: z.string()
-                        })).describe('User attributes extracted from conversation (e.g., age, location, hobbies)'),
-                        summary: z.string().describe('Brief summary of the conversation topics'),
-                        interests: z.array(z.string()).describe('List of user interests mentioned'),
-                    }),
-                    messages: [
-                        { role: 'system', content: 'Analyze the following conversation and extract user information. Focus on attributes, interests, and a general summary.' },
-                        { role: 'user', content: conversationText }
-                    ],
-                });
 
-                console.log(`✨ Extraction complete for ${thread.id}:`, object);
+                try {
+                    // 2. Generate summary and extract attributes using the unified PersonaSchema
+                    console.log(`🤖 Analyzing conversation ${thread.id} with LLM...`);
+                    const { object } = await generateObject({
+                        model: this.model,
+                        schema: PersonaSchema,
+                        messages: [
+                            { role: 'system', content: 'Analyze the conversation and extract user persona information based on the defined schema. Be precise and infer attributes where possible.' },
+                            { role: 'user', content: conversationText }
+                        ],
+                    });
+                    console.log(`✨ Extraction complete for ${thread.id}`);
 
-                // Convert attributes array to object
-                const attributesObj = object.attributes.reduce((acc, curr) => {
-                    acc[curr.key] = curr.value;
-                    return acc;
-                }, {} as Record<string, string>);
+                    // 3. Update Persona in DB
+                    // Map PersonaSchema fields to DB columns
+                    // attributes column stores the structured persona data (User Attributes + Empathy Map)
+                    const attributesToSave = {
+                        age: object.age,
+                        location: object.location,
+                        relationship: object.relationship,
+                        interestTheme: object.interestTheme,
+                        emotionalState: object.emotionalState,
+                        behaviorPattern: object.behaviorPattern,
+                        says: object.says,
+                        thinks: object.thinks,
+                        does: object.does,
+                        feels: object.feels
+                    };
 
-                // Update Persona using thread.id as the persona ID
-                await this.personaService.updatePersonaFromSummary(thread.id, {
-                    attributes: attributesObj,
-                    current_concerns: { interests: object.interests },
-                    summary: object.summary
-                });
+                    await this.personaService.savePersona({
+                        id: thread.id, // Using threadId as villagerId for now
+                        name: `Villager-${thread.id.substring(0, 4)}`, // Placeholder name
+                        attributes: JSON.stringify(attributesToSave),
+                        current_concerns: JSON.stringify(object.importantItems), // Store important items as current concerns
+                        last_seen: new Date().toISOString(),
+                        summary: `[${object.relationship}] ${object.location}在住。${object.age}。関心: ${object.interestTheme.join(', ')}`, // Construct a brief summary
+                    });
+                    console.log(`💾 Persona saved for ${thread.id}`);
 
-                // --- EMBEDDING LOGIC START ---
-                console.log(`🧠 Embedding persona for ${thread.id}...`);
-                const personaText = `Persona ID: ${thread.id}\nSummary: ${object.summary}\nAttributes: ${JSON.stringify(attributesObj)}\nInterests: ${object.interests.join(', ')}`;
+                    // --- EMBEDDING LOGIC START ---
+                    console.log(`🧠 Embedding persona for ${thread.id}...`);
 
-                const { embedding } = await embed({
-                    model: this.embeddingModel,
-                    value: personaText,
-                });
+                    // Create a rich text representation for embedding
+                    const personaText = `
+Persona ID: ${thread.id}
+Attributes:
+- Age: ${object.age}
+- Location: ${object.location}
+- Relationship: ${object.relationship}
+- Interests: ${object.interestTheme.join(', ')}
+- Emotion: ${object.emotionalState}
+- Behavior: ${object.behaviorPattern}
 
-                console.log(`Embedding generated. Length: ${embedding.length}, Type: ${typeof embedding}, IsArray: ${Array.isArray(embedding)}`);
+Empathy Map:
+- Says: ${object.says}
+- Thinks: ${object.thinks}
+- Does: ${object.does}
+- Feels: ${object.feels}
 
-                await this.vectorStore.upsert({
-                    indexName: 'embeddings',
-                    vectors: [embedding as any],
-                    metadata: [{
-                        type: 'persona',
-                        thread_id: thread.id,
-                        text: personaText,
-                        summary: object.summary,
-                        ...attributesObj
-                    }],
-                    ids: [`persona-${thread.id}`]
-                });
-                console.log(`✅ Persona embedded for ${thread.id}`);
-                // --- EMBEDDING LOGIC END ---
+Important Items: ${object.importantItems.join(', ')}
+            `.trim();
 
-                results.push({ threadId: thread.id, data: object });
+                    const { embedding } = await embed({
+                        model: this.embeddingModel,
+                        value: personaText,
+                    });
+                    console.log(`Embedding generated. Length: ${embedding.length}`);
+
+                    await this.vectorStore.upsert({
+                        indexName: 'embeddings',
+                        vectors: [embedding as any],
+                        metadata: [{
+                            type: 'persona',
+                            thread_id: thread.id,
+                            text: personaText,
+                            // Store individual fields in metadata for filtering/analysis if needed
+                            ...attributesToSave,
+                            importantItems: object.importantItems
+                        }],
+                        ids: [`persona-${thread.id}`]
+                    });
+                    console.log(`✅ Persona embedded for ${thread.id}`);
+                    // --- EMBEDDING LOGIC END ---
+
+                    results.push({ threadId: thread.id, data: object });
+                } catch (err: any) {
+                    console.error(`❌ Error processing thread ${thread.id}:`, err);
+                    // Continue to next thread instead of crashing
+                }
             }
 
             console.log('✅ Batch processing complete. Personas updated.');

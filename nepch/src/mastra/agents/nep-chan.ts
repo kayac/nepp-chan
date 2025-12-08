@@ -23,9 +23,10 @@ import { personaRecall } from '../tools/persona-recall';
 import { personaRecord } from '../tools/persona-record';
 import { newsTool } from '../tools/news-tool';
 import { knowledgeTool } from '../tools/knowledge-tool';
-import { masterTool } from '../tools/master-tool';
 import { devTool } from '../tools/dev-tool';
 import { listSkillsTool, readSkillTool } from '../tools/skill-tools';
+import { verifyPassword } from '../tools/verify-password';
+import { masterAgent } from './master-agent';
 import { memory } from '../memory';
 import { asGeminiTool } from '../utils/gemini-adapter';
 
@@ -70,8 +71,11 @@ export const nepChan = new Agent({
 
       1. **緊急事態 (Emergency)**: \`emergency-report\`
          - 命に関わる危険、災害、犯罪など。最優先。
-      2. **管理者コマンド (Master)**: \`master-tool\`
-         - \`/master\` で始まるコマンド。無条件で実行。
+      2. **管理者コマンド (Master)**:
+         - ユーザー入力が「/master [password] [query]」の形式（例: \`/master admin 音威子府\`）の場合。
+         - まず **必ず** \`verify-password\` を呼び出してパスワードを検証してください。
+         - パスワードが正しい場合、**master-agent** に \`query\` の内容を伝えて分析を依頼してください（Agent Network機能を使用）。
+         - パスワードが不正な場合、その旨を伝えてください。
       3. **記憶・ペルソナ (Memory)**: \`persona-recall\`, \`persona-record\`
          - ユーザー自身のこと、過去の会話、村人としての記憶。
          - 「私のこと覚えてる？」「前にも話したよね？」→ \`persona-recall\`
@@ -98,7 +102,7 @@ export const nepChan = new Agent({
       - **ニュース管理**: ユーザーが「ニュースを追加して」「こんなことがあったよ」と言った場合は、\`news-tool\` (action: 'add') を使用してください。情報源が不明な場合は \`sourceId\` を省略しても構いません。
       - **ニュース確認**: 「最新のニュースは？」と聞かれたら、\`news-tool\` (action: 'get') を使用してください。
       - **検索**: 「調べて」「天気は？」「今の株価は？」など、最新情報が必要な場合は **必ず** \`searchTool\` を使用してください。自分の知識だけで答えようとしないでください。
-      - **管理者コマンド**: ユーザー入力が「/master [password] [query]」の形式（例: \`/master admin 音威子府\`）の場合、**無条件で** \`master-tool\` を呼び出してください。挨拶や前置きは不要です。
+      - **管理者コマンド**: \`/master\` コマンドは \`verify-password\` で検証後、\`master-agent\` に委譲してください。
       - **デバッグコマンド**: ユーザー入力が「/dev」の場合、**無条件で** \`dev-tool\` を呼び出してください。挨拶や前置きは不要です。
 
       【会話例（Few-Shot）】
@@ -125,6 +129,9 @@ export const nepChan = new Agent({
     `,
    model: model,
    memory,
+   agents: {
+      masterAgent,
+   },
    tools: {
       emergencyReport,
       searchTool,
@@ -132,9 +139,9 @@ export const nepChan = new Agent({
       personaRecord: asGeminiTool(personaRecord),
       newsTool: asGeminiTool(newsTool),
       knowledgeTool,
-      masterTool,
       devTool,
       listSkillsTool,
       readSkillTool,
+      verifyPassword,
    },
 });
