@@ -121,6 +121,7 @@ function hydrateContext(context: any, originalSchema: any): any {
  */
 export function asGeminiTool(originalTool: any) {
     const geminiSafeSchema = transformToGeminiSchema(originalTool.inputSchema);
+    console.log(`[GeminiAdapter] Wrapping tool ${originalTool.id}. Schema available: ${!!originalTool.inputSchema}`);
     // console.log(`[GeminiAdapter] Transformed schema for ${originalTool.id}:`, JSON.stringify(geminiSafeSchema, null, 2));
 
     return createTool({
@@ -128,12 +129,12 @@ export function asGeminiTool(originalTool: any) {
         description: originalTool.description,
         inputSchema: geminiSafeSchema,
         outputSchema: originalTool.outputSchema,
-        execute: async ({ context }) => {
-            // Hydrate context (parse JSON strings back to objects)
-            const hydratedContext = hydrateContext(context, originalTool.inputSchema);
+        execute: async (inputData, context) => {
+            // Hydrate inputData (parse JSON strings back to objects)
+            const hydratedInput = hydrateContext(inputData, originalTool.inputSchema);
 
             // Execute original tool
-            return originalTool.execute({ context: hydratedContext });
+            return originalTool.execute(hydratedInput, context);
         },
     });
 }

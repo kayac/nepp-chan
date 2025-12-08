@@ -1,4 +1,4 @@
-import { memory } from '../memory';
+import { memory, storage } from '../memory';
 import { db } from '../db';
 import { connectionUrl } from '../db';
 import { embed } from 'ai';
@@ -30,7 +30,9 @@ export class SystemService {
             });
 
             const embeddingArray = Array.from(embedding);
+            /* FIXME(mastra): Add a unique `id` parameter. See: https://mastra.ai/guides/v1/migrations/upgrade-to-v1/mastra#required-id-parameter-for-all-mastra-primitives */
             const vector = new LibSQLVector({
+                id: 'system-service-vector',
                 connectionUrl: connectionUrl,
             });
 
@@ -67,7 +69,7 @@ export class SystemService {
 
     async checkToolRegistration() {
         console.log('Checking tool registration...');
-        const tools = nepChan.tools;
+        const tools = nepChan.listTools();
         const toolNames = Object.keys(tools);
 
         return {
@@ -80,30 +82,19 @@ export class SystemService {
     async cleanupOldThreads(resourceId: string = 'default-user') {
         console.log(`Cleaning up threads for ${resourceId}...`);
         try {
-            const threads = await memory.getThreadsByResourceId({ resourceId });
+            const { threads } = await memory.listThreadsByResourceId({ resourceId });
             let deletedCount = 0;
-
-            for (const thread of threads) {
-                const queryResult = await memory.query({ threadId: thread.id });
-                const messages = queryResult.uiMessages;
-
-                if (messages.length === 0) {
-                    // Delete empty thread (Note: memory.deleteThread might not exist, checking implementation)
-                    // If no delete method, we just log it for now or implement direct DB deletion if needed.
-                    // Assuming for now we just identify them.
-                    // Actually, let's check if we can delete.
-                    // If not, we'll just return the count of empty threads.
-                }
-            }
-
-            // Since we don't have a direct deleteThread method exposed in the memory interface easily without checking,
-            // we will implement a direct DB deletion for now if needed, or just skip deletion and report.
-            // For safety, let's just report empty threads for now.
 
             const emptyThreads = [];
             for (const thread of threads) {
-                const queryResult = await memory.query({ threadId: thread.id });
-                if (queryResult.uiMessages.length === 0) {
+                const messageIds = (thread as any).messageIds || [];
+                if (messageIds.length === 0) {
+                    emptyThreads.push(thread.id);
+                    continue;
+                }
+
+                const { messages } = await storage.listMessagesById({ messageIds });
+                if (messages.length === 0) {
                     emptyThreads.push(thread.id);
                 }
             }

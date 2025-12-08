@@ -210,22 +210,45 @@ function App() {
                 // Check for devTool usage in history
                 let hasDevTool = false
                 const mappedMessages = data.map((m: any) => {
-                    const parts = m.parts
-                        ? m.parts.map((p: any) => {
-                            if (p.type === 'tool-invocation' && (p.toolInvocation.toolName === 'dev-tool' || p.toolInvocation.toolName === 'devTool')) {
-                                hasDevTool = true
+                    // Ensure content is a string
+                    let contentStr = ''
+                    if (typeof m.content === 'string') {
+                        contentStr = m.content
+                    } else if (typeof m.content === 'object' && m.content !== null) {
+                        // Handle structure like { format: 2, parts: [...], content: "..." }
+                        if (typeof m.content.content === 'string') {
+                            contentStr = m.content.content
+                        } else {
+                            contentStr = JSON.stringify(m.content)
+                        }
+                    }
+
+                    // Handle parts
+                    let parts = []
+                    // Check if parts exist on message or inside content object
+                    const rawParts = m.parts || (typeof m.content === 'object' && m.content?.parts) || []
+
+                    if (Array.isArray(rawParts) && rawParts.length > 0) {
+                        parts = rawParts.map((p: any) => {
+                            if (p.type === 'tool-invocation' && p.toolInvocation) {
+                                if (p.toolInvocation.toolName === 'dev-tool' || p.toolInvocation.toolName === 'devTool') {
+                                    hasDevTool = true
+                                }
+                                return p
                             }
                             return {
-                                ...p,
-                                content: p.content || p.text
+                                type: 'text',
+                                content: typeof p.content === 'string' ? p.content : (p.text || JSON.stringify(p))
                             }
                         })
-                        : (m.content ? [{ type: 'text', content: m.content }] : [])
+                    } else {
+                        parts = [{ type: 'text', content: contentStr }]
+                    }
 
                     return {
                         id: m.id,
                         role: m.role,
-                        content: m.content,
+                        content: contentStr,
                         parts: parts
                     }
                 })

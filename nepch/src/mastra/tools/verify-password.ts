@@ -11,8 +11,8 @@ export const verifyPassword = createTool({
         isValid: z.boolean(),
         message: z.string(),
     }),
-    execute: async ({ context }) => {
-        const isValid = context.password === process.env.MASTER_PASSWORD;
+    execute: async ({ password }) => {
+        const isValid = password === process.env.MASTER_PASSWORD;
         return {
             isValid,
             message: isValid ? 'パスワードは正しいです。' : 'パスワードが違います。',

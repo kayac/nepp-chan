@@ -18,13 +18,15 @@ export const knowledgeTool = createTool({
             score: z.number(),
         })),
     }),
-    execute: async ({ context }) => {
+    execute: async ({ query }) => {
+        /* FIXME(mastra): Add a unique `id` parameter. See: https://mastra.ai/guides/v1/migrations/upgrade-to-v1/mastra#required-id-parameter-for-all-mastra-primitives */
         const vectorStore = new LibSQLVector({
+            id: 'knowledge-tool-vector',
             connectionUrl: connectionUrl,
         });
 
         const { embedding } = await embed({
-            value: context.query,
+            value: query,
             model: google.textEmbeddingModel('text-embedding-004'),
         });
 

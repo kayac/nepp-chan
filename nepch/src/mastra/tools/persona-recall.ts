@@ -15,9 +15,9 @@ export const personaRecall = createTool({
         candidates: z.array(z.any()).optional(),
         message: z.string(),
     }),
-    execute: async ({ context }) => {
+    execute: async ({ query }) => {
         try {
-            const candidates = await personaService.searchPersonas(context.query);
+            const candidates = await personaService.searchPersonas(query);
 
             if (candidates.length > 0) {
                 return {

@@ -66,12 +66,12 @@ export const listSkillsTool = createTool({
             })
         ),
     }),
-    execute: async ({ context }) => {
+    execute: async ({ tag }) => {
         let skills = Object.values(SKILLS);
 
         // タグでフィルタリング
-        if (context.tag) {
-            skills = skills.filter((s) => s.tags?.includes(context.tag!));
+        if (tag) {
+            skills = skills.filter((s) => s.tags?.includes(tag));
         }
 
         return {
@@ -109,13 +109,13 @@ export const readSkillTool = createTool({
         skillName: z.string(),
         content: z.string(),
     }),
-    execute: async ({ context }) => {
-        const skill = SKILLS[context.skillName];
+    execute: async ({ skillName }) => {
+        const skill = SKILLS[skillName];
 
         if (!skill) {
             const available = Object.keys(SKILLS).join(", ");
             throw new Error(
-                `スキル "${context.skillName}" が見つかりません。利用可能: ${available}`
+                `スキル "${skillName}" が見つかりません。利用可能: ${available}`
             );
         }
 

@@ -1,7 +1,7 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { memory } from '../memory';
+import { memory, storage } from '../memory';
 import { google } from '@ai-sdk/google';
 import { generateObject } from 'ai';
 import { PersonaSchema } from '../types/PersonaSchema';
@@ -13,15 +13,24 @@ export const devTool = createTool({
   outputSchema: z.object({
     preview: z.string(),
   }),
-  execute: async ({ context, suspend }) => {
+  execute: async (_input, context) => {
     try {
-      const threadId = context.threadId;
+      const threadId = (context as any).threadId;
       if (!threadId) {
         return { preview: "スレッドIDが見つかりません。" };
       }
 
-      const queryResult = await memory.query({ threadId });
-      const messages = queryResult.uiMessages;
+      const thread = await memory.getThreadById({ threadId });
+      if (!thread) {
+        return { preview: "スレッドが見つかりません。" };
+      }
+
+      const messageIds = (thread as any).messageIds || [];
+      if (messageIds.length === 0) {
+        return { preview: "メッセージがまだありません。" };
+      }
+
+      const { messages } = await storage.listMessagesById({ messageIds });
 
       if (messages.length === 0) {
         return {

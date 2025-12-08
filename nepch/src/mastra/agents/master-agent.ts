@@ -4,7 +4,9 @@ import { knowledgeTool } from "../tools/knowledge-tool";
 import { newsTool } from "../tools/news-tool";
 import { asGeminiTool } from "../utils/gemini-adapter";
 
+/* FIXME(mastra): Add a unique `id` parameter. See: https://mastra.ai/guides/v1/migrations/upgrade-to-v1/mastra#required-id-parameter-for-all-mastra-primitives */
 export const masterAgent = new Agent({
+    id: "master-agent",
     name: "master-agent",
     instructions: `
         あなたは「村のデータ分析官（Village Data Analyst）」です。

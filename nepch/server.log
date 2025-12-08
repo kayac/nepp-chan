@@ -1,9 +1,68 @@
-Server is running on port 4111
+$ vite & bun run src/server.ts
+
+  VITE v7.2.6  ready in 250 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+[GeminiAdapter] Wrapping tool news-tool. Schema available: true
+[GeminiAdapter] Wrapping tool persona-record. Schema available: true
+[GeminiAdapter] Wrapping tool news-tool. Schema available: true
+Server is running on port 4112
+Started development server: http://localhost:4112
+<-- GET /api/threads/default-user
 Fetching threads for default-user
-Found 4 valid threads (out of 9)
+Found 41 threads
+--> GET /api/threads/default-user [32m200[0m 7ms
+<-- GET /api/threads/default-user
 Fetching threads for default-user
-Found 4 valid threads (out of 9)
+Found 41 threads
+--> GET /api/threads/default-user [32m200[0m 0ms
+<-- GET /api/threads/default-user
 Fetching threads for default-user
-Found 4 valid threads (out of 9)
+Found 41 threads
+--> GET /api/threads/default-user [32m200[0m 1ms
+<-- GET /api/threads/default-user
 Fetching threads for default-user
-Found 4 valid threads (out of 9)
+Found 41 threads
+--> GET /api/threads/default-user [32m200[0m 0ms
+<-- GET /api/threads/default-user
+Fetching threads for default-user
+Found 41 threads
+--> GET /api/threads/default-user [32m200[0m 2ms
+<-- GET /api/threads/default-user
+Fetching threads for default-user
+Found 41 threads
+--> GET /api/threads/default-user [32m200[0m 2ms
+<-- GET /api/threads/default-user
+Fetching threads for default-user
+Found 41 threads
+--> GET /api/threads/default-user [32m200[0m 1ms
+<-- GET /api/threads/default-user
+Fetching threads for default-user
+Found 41 threads
+--> GET /api/threads/default-user [32m200[0m 0ms
+<-- GET /api/threads/thread-1765162706076/messages
+Fetching messages for thread-1765162706076
+Found 12 messages
+--> GET /api/threads/thread-1765162706076/messages [32m200[0m 18ms
+17:25:25 [vite] (client) hmr update /src/app/App.tsx, /src/app/index.css
+<-- GET /api/threads/default-user
+Fetching threads for default-user
+Found 41 threads
+--> GET /api/threads/default-user [32m200[0m 3ms
+<-- GET /api/threads/default-user
+Fetching threads for default-user
+Found 41 threads
+--> GET /api/threads/default-user [32m200[0m 1ms
+<-- GET /api/threads/default-user
+Fetching threads for default-user
+Found 41 threads
+--> GET /api/threads/default-user [32m200[0m 0ms
+<-- GET /api/threads/default-user
+Fetching threads for default-user
+Found 41 threads
+--> GET /api/threads/default-user [32m200[0m 1ms
+<-- GET /api/threads/thread-1765162706076/messages
+Fetching messages for thread-1765162706076
+Found 12 messages
+--> GET /api/threads/thread-1765162706076/messages [32m200[0m 2ms

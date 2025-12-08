@@ -17,12 +17,12 @@ export const emergencyReport = createTool({
         message: z.string(),
         reportId: z.string().optional(),
     }),
-    execute: async ({ context }) => {
+    execute: async ({ content, location }) => {
         try {
             // Format content with location if available
-            let fullContent = context.content;
-            if (context.location) {
-                fullContent = `【場所: ${context.location}】 ${fullContent}`;
+            let fullContent = content;
+            if (location) {
+                fullContent = `【場所: ${location}】 ${fullContent}`;
             }
 
             // Add to NewsService with INSIGHT category (or we could add a new URGENT category to the service later)

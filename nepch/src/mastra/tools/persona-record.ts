@@ -20,26 +20,26 @@ export const personaRecord = createTool({
         success: z.boolean(),
         message: z.string(),
     }),
-    execute: async ({ context }) => {
+    execute: async ({ userId, data }) => {
         try {
-            if (!context.data) {
+            if (!data) {
                 return {
                     success: false,
                     message: '保存するデータが指定されていません。',
                 };
             }
 
-            let attributes = context.data.attributes;
+            let attributes = data.attributes;
             if (typeof attributes === 'string') {
                 attributes = { description: attributes };
             }
 
             const cleanData = Object.fromEntries(
-                Object.entries({ ...context.data, attributes }).map(([k, v]) => [k, v === null ? undefined : v])
+                Object.entries({ ...data, attributes }).map(([k, v]) => [k, v === null ? undefined : v])
             );
 
             await personaService.savePersona({
-                id: context.userId,
+                id: userId,
                 ...cleanData,
             });
 

@@ -19,10 +19,10 @@ export const newsTool = createTool({
         data: z.any().optional(),
         message: z.string(),
     }),
-    execute: async ({ context }) => {
+    execute: async ({ action, content, category, sourceId, limit }) => {
         try {
-            if (context.action === 'add') {
-                if (!context.content) {
+            if (action === 'add') {
+                if (!content) {
                     return {
                         success: false,
                         message: 'ニュースの内容が指定されていません。',
@@ -30,9 +30,9 @@ export const newsTool = createTool({
                 }
 
                 const id = await newsService.addNews(
-                    context.content,
-                    context.category || 'NEWS',
-                    context.sourceId || undefined
+                    content,
+                    category || 'NEWS',
+                    sourceId || undefined
                 );
 
                 return {
@@ -40,8 +40,8 @@ export const newsTool = createTool({
                     data: { id },
                     message: 'ニュースを登録しました。',
                 };
-            } else if (context.action === 'get') {
-                const news = await newsService.getRecentNews(context.limit);
+            } else if (action === 'get') {
+                const news = await newsService.getRecentNews(limit);
                 return {
                     success: true,
                     data: news,

@@ -4,11 +4,16 @@ import { LibSQLVector } from '@mastra/libsql';
 import { google } from '@ai-sdk/google';
 import { connectionUrl } from './db';
 
+/* FIXME(mastra): Add a unique `id` parameter. See: https://mastra.ai/guides/v1/migrations/upgrade-to-v1/mastra#required-id-parameter-for-all-mastra-primitives */
+export const storage = new LibSQLStore({
+    id: 'nep-chan-storage',
+    url: connectionUrl,
+});
+
 export const memory = new Memory({
-    storage: new LibSQLStore({
-        url: connectionUrl,
-    }),
+    storage,
     vector: new LibSQLVector({
+        id: 'nep-chan-vector',
         connectionUrl: connectionUrl,
     }),
     embedder: google.textEmbeddingModel('text-embedding-004'),

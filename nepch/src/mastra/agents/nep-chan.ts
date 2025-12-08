@@ -30,7 +30,9 @@ import { masterAgent } from './master-agent';
 import { memory } from '../memory';
 import { asGeminiTool } from '../utils/gemini-adapter';
 
+/* FIXME(mastra): Add a unique `id` parameter. See: https://mastra.ai/guides/v1/migrations/upgrade-to-v1/mastra#required-id-parameter-for-all-mastra-primitives */
 export const nepChan = new Agent({
+   id: 'nep-chan',
    name: 'Nep-chan',
    instructions: `
       あなたは北海道音威子府村（おといねっぷむら）の公認コンパニオンAI「ネップちゃん」です。

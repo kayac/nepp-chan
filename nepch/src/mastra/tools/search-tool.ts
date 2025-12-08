@@ -16,7 +16,7 @@ export const searchTool = createTool({
         error: z.string().optional(),
         source: z.string().optional(),
     }),
-    execute: async ({ context }) => {
+    execute: async ({ query }) => {
         const apiKey = process.env.GOOGLE_SEARCH_API_KEY;
         const engineId = process.env.GOOGLE_SEARCH_ENGINE_ID;
 
@@ -29,7 +29,7 @@ export const searchTool = createTool({
 
         try {
             const response = await fetch(
-                `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${engineId}&q=${encodeURIComponent(context.query)}&lr=lang_ja&gl=jp`
+                `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${engineId}&q=${encodeURIComponent(query)}&lr=lang_ja&gl=jp`
             );
 
             if (!response.ok) {

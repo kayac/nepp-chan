@@ -1,4 +1,4 @@
-import { memory } from '../memory';
+import { memory, storage } from '../memory';
 import { db, connectionUrl } from '../db';
 import { PersonaService } from './PersonaService';
 import { google } from '@ai-sdk/google';
@@ -17,7 +17,9 @@ export class BatchService {
         this.personaService = new PersonaService();
         this.model = google('gemini-2.0-flash');
         this.embeddingModel = google.textEmbeddingModel('text-embedding-004');
+        /* FIXME(mastra): Add a unique `id` parameter. See: https://mastra.ai/guides/v1/migrations/upgrade-to-v1/mastra#required-id-parameter-for-all-mastra-primitives */
         this.vectorStore = new LibSQLVector({
+            id: 'batch-service-vector',
             connectionUrl: connectionUrl,
         });
     }
@@ -26,7 +28,7 @@ export class BatchService {
         console.log(`🚀 Starting batch memory processing for ${resourceId}...`);
 
         try {
-            const threads = await memory.getThreadsByResourceId({ resourceId });
+            const { threads } = await memory.listThreadsByResourceId({ resourceId });
             console.log(`Found ${threads.length} threads for ${resourceId}`);
 
             if (threads.length === 0) {
@@ -42,8 +44,12 @@ export class BatchService {
             for (const thread of threads) {
                 console.log(`Processing thread: ${thread.id}`);
 
-                const queryResult = await memory.query({ threadId: thread.id });
-                const messages = queryResult.uiMessages;
+                const messageIds = (thread as any).messageIds || [];
+                if (messageIds.length === 0) {
+                    console.log(`No messages in thread ${thread.id}. Skipping.`);
+                    continue;
+                }
+                const { messages } = await storage.listMessagesById({ messageIds });
 
                 if (messages.length === 0) {
                     console.log(`No messages in thread ${thread.id}. Skipping.`);
@@ -241,8 +247,13 @@ Important Items: ${object.importantItems.join(', ')}
     }
 
     async getThreadContent(threadId: string): Promise<string | null> {
-        const queryResult = await memory.query({ threadId });
-        const messages = queryResult.uiMessages;
+        const thread = await memory.getThreadById({ threadId });
+        if (!thread) return null;
+
+        const messageIds = (thread as any).messageIds || [];
+        if (messageIds.length === 0) return null;
+
+        const { messages } = await storage.listMessagesById({ messageIds });
         if (messages.length === 0) return null;
         return messages.map((m: any) => `${m.role}: ${m.content}`).join('\n');
     }
