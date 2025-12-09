@@ -46,6 +46,7 @@ export const searchGoogleTool = createTool({
 });
 
 const searchGoogle = async (query: string): Promise<SearchOutput> => {
+  // TODO: Cloudflare Workers 環境で動作するようにc.envも受け取るようにする
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   const engineId = process.env.GOOGLE_SEARCH_ENGINE_ID;
 
