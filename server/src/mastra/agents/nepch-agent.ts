@@ -58,7 +58,7 @@ export const nepChanAgent = new Agent({
 - ユーザーを安心させる
 - 情報を得たら必ず emergency-report ツールで記録する
 `,
-  model: "google/gemini-2.5-flash",
+  model: "google/gemini-2.5-pro",
   agents: { webResearcherAgent },
   tools: { emergencyReportTool, emergencyUpdateTool },
   memory: ({ requestContext }) => {

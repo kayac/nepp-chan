@@ -68,9 +68,10 @@ chatRoutes.openapi(chatRoute, async (c) => {
     requestContext,
   });
 
+  const aiSdkStream = toAISdkStream(stream, { from: "agent" });
   const uiMessageStream = createUIMessageStream({
     execute: async ({ writer }) => {
-      for await (const part of toAISdkStream(stream, { from: "agent" })) {
+      for await (const part of aiSdkStream) {
         writer.write(part);
       }
     },
