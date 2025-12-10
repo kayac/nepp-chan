@@ -4,6 +4,7 @@ import { Memory } from "@mastra/memory";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
 
+// TODO: もうちょっと村に住んでる感だしたい
 export const nepChanAgent = new Agent({
   id: "nep-chan",
   name: "Nep chan",
