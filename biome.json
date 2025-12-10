@@ -13,7 +13,8 @@
       "!**/dist",
       "!**/.mastra",
       "!**/.wrangler",
-      "!**/*.d.ts"
+      "!**/*.d.ts",
+      "!**/server/public"
     ]
   },
   "formatter": {
