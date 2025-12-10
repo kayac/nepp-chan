@@ -10,7 +10,7 @@
     "mastra:dev": "pnpm --filter @aiss-nepch/server mastra:dev",
     "mastra:build": "pnpm --filter @aiss-nepch/server mastra:build",
     "mastra:start": "pnpm --filter @aiss-nepch/server mastra:start",
-    "lint": "biome check .",
+    "lint": "biome check . & tsc --noEmit",
     "lint:fix": "biome check --write .",
     "format": "biome format --write ."
   },
