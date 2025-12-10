@@ -1,5 +1,5 @@
+import type { D1Store } from "@mastra/cloudflare-d1";
 import { Agent } from "@mastra/core/agent";
-import type { MastraStorage } from "@mastra/core/storage";
 import { Memory } from "@mastra/memory";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
@@ -62,7 +62,7 @@ export const nepChanAgent = new Agent({
   agents: { webResearcherAgent },
   tools: { emergencyReportTool, emergencyUpdateTool },
   memory: ({ requestContext }) => {
-    const storage = requestContext.get("storage") as MastraStorage;
+    const storage = requestContext.get("storage") as D1Store;
     return new Memory({
       storage,
       options: {

@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { D1Store } from "@mastra/cloudflare-d1";
 import { stream } from "hono/streaming";
 import { createMastra } from "~/mastra/factory";
-import { createRequestContext } from "~/mastra/runtime-context";
+import { createRequestContext } from "~/mastra/request-context";
 
 // Request Schema
 const WeatherQuerySchema = z.object({

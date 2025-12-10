@@ -39,3 +39,6 @@ lerna-debug.log*
 # mastra
 .mastra/
 server/todos/
+
+# web build output
+server/public/
