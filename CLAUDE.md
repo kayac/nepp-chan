@@ -85,6 +85,12 @@ pnpm --filter @aiss-nepch/server check
 
 # デプロイ
 pnpm --filter @aiss-nepch/server deploy
+
+# D1 マイグレーション（開発環境）
+wrangler d1 execute aiss-nepch-dev --file=./server/src/db/migrations/<migration-file>.sql
+
+# D1 マイグレーション（本番環境）
+wrangler d1 execute aiss-nepch --file=./server/src/db/migrations/<migration-file>.sql
 ```
 
 ## パス別名
@@ -107,6 +113,11 @@ import { something } from "~/middleware";
 - ツールは `mastra/tools/` に配置
 - ワークフローは `mastra/workflows/` に配置
 - スコアラーは `mastra/scorers/` に配置
+- **重要**: Mastra v1.0.0-beta を使用中。ドキュメント参照時は v1 の API を確認すること
+  - MCP ツール (`mcp__mastra__mastraDocs`) を使用して最新のドキュメントを取得可能
+  - `createTool` の `execute` シグネチャ: `execute: async (inputData, context) => { ... }`
+    - `inputData`: inputSchema で定義したフィールドを直接受け取る
+    - `context?.requestContext`: RuntimeContext へのアクセス（storage, db など）
 
 ### エラーハンドリング
 
