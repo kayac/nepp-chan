@@ -16,9 +16,9 @@ export const chatRoutes = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
 const chatRoute = createRoute({
   method: "post",
   path: "/",
-  summary: "チャットメッセージを送信",
+  summary: "ねっぷちゃんとおしゃべり",
   description:
-    "AIエージェントにメッセージを送信し、ストリーミングレスポンスを受け取る",
+    "ねっぷちゃん（音威子府村のAIキャラクター）にメッセージを送信し、ストリーミングレスポンスを受け取る",
   tags: ["Chat"],
   request: {
     body: {
@@ -49,7 +49,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
   const mastra = createMastra(storage);
   const requestContext = createRequestContext({ storage, db: c.env.DB });
 
-  const agent = mastra.getAgent("weatherAgent");
+  const agent = mastra.getAgent("nepChanAgent");
   const response = await agent.stream(message, {
     resourceId: resourceId ?? "default-user",
     threadId: threadId ?? crypto.randomUUID(),
