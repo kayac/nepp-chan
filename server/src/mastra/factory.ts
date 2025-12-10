@@ -1,7 +1,6 @@
 import { Mastra } from "@mastra/core/mastra";
 import type { MastraStorage } from "@mastra/core/storage";
 import { PinoLogger } from "@mastra/loggers";
-import { Observability } from "@mastra/observability";
 import { nepChanAgent } from "~/mastra/agents/nepch-agent";
 import { villageInfoAgent } from "~/mastra/agents/village-info-agent";
 import { weatherAgent } from "~/mastra/agents/weather-agent";
@@ -31,8 +30,5 @@ export const createMastra = (storage: MastraStorage) =>
     logger: new PinoLogger({
       name: "Mastra",
       level: "info",
-    }),
-    observability: new Observability({
-      default: { enabled: true },
     }),
   });
