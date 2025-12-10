@@ -19,7 +19,8 @@
     {
       "binding": "DB",
       "database_name": "aiss-nepch-dev",
-      "database_id": "99a3838a-45de-462e-8113-579cce62f28e"
+      "database_id": "99a3838a-45de-462e-8113-579cce62f28e",
+      "remote": true
     }
   ],
   "alias": {
