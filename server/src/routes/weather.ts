@@ -40,7 +40,7 @@ weatherRoutes.openapi(weatherRoute, async (c) => {
 
   const storage = new D1Store({ id: "mastra-storage", binding: c.env.DB });
   const mastra = createMastra(storage);
-  const requestContext = createRequestContext({ storage });
+  const requestContext = createRequestContext({ storage, db: c.env.DB });
 
   const run = await mastra.getWorkflow("weatherWorkflow").createRun();
 
