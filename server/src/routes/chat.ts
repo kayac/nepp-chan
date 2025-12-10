@@ -1,14 +1,21 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { toAISdkStream } from "@mastra/ai-sdk";
 import { D1Store } from "@mastra/cloudflare-d1";
-import { stream } from "hono/streaming";
+import type { MastraStorage } from "@mastra/core/storage";
+import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 import { createMastra } from "~/mastra/factory";
-import { createRequestContext } from "~/mastra/runtime-context";
+import { createRequestContext } from "~/mastra/request-context";
 
-// Request Schema
+// Request Schema - AI SDK v5 format
 const ChatSendRequestSchema = z.object({
-  message: z.string().min(1),
-  resourceId: z.string().optional(),
-  threadId: z.string().optional(),
+  messages: z.array(
+    z.object({
+      role: z.enum(["user", "assistant", "system"]),
+      content: z.string(),
+    }),
+  ),
+  resourceId: z.string().nullish(),
+  threadId: z.string().nullish(),
 });
 
 export const chatRoutes = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
@@ -43,22 +50,33 @@ const chatRoute = createRoute({
 });
 
 chatRoutes.openapi(chatRoute, async (c) => {
-  const { message, resourceId, threadId } = c.req.valid("json");
+  const { messages, resourceId, threadId } = c.req.valid("json");
 
   const storage = new D1Store({ id: "mastra-storage", binding: c.env.DB });
-  const mastra = createMastra(storage);
+  const mastra = createMastra(storage as unknown as MastraStorage);
   const requestContext = createRequestContext({ storage, db: c.env.DB });
 
   const agent = mastra.getAgent("nepChanAgent");
-  const response = await agent.stream(message, {
-    resourceId: resourceId ?? "default-user",
-    threadId: threadId ?? crypto.randomUUID(),
+  const lastUserMessage = messages.filter((m) => m.role === "user").pop();
+  const prompt = lastUserMessage?.content ?? "";
+
+  const stream = await agent.stream(prompt, {
+    memory: {
+      resource: resourceId ?? "default-user",
+      thread: threadId ?? crypto.randomUUID(),
+    },
     requestContext,
   });
 
-  return stream(c, async (s) => {
-    for await (const chunk of response.textStream) {
-      await s.write(chunk);
-    }
+  const uiMessageStream = createUIMessageStream({
+    execute: async ({ writer }) => {
+      for await (const part of toAISdkStream(stream, { from: "agent" })) {
+        writer.write(part);
+      }
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    stream: uiMessageStream,
   });
 });
