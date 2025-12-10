@@ -3,6 +3,7 @@ import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
+import { devTool } from "~/mastra/tools/dev-tool";
 import { emergencyReportTool } from "~/mastra/tools/emergency-report-tool";
 import { emergencyUpdateTool } from "~/mastra/tools/emergency-update-tool";
 
@@ -39,6 +40,11 @@ export const nepChanAgent = new Agent({
 - 「私のこと覚えてる？」と聞かれたら Working Memory を参照して答える
 - 生活感のある発言があれば「村人」であるとして記録する
 
+## 開発コマンド
+- ユーザーが「/dev」と入力したら、**dev-tool** を呼び出して Working Memory を取得する
+- 取得した情報を構造化された読みやすい形式で、ネップちゃんらしく伝える
+- 例: 「あなたのこと、こう覚えてるよ！」と前置きしてから情報を伝える
+
 ## 緊急モード（最優先）
 ユーザーから以下のような危険情報を聞いたら、**即座に対応**してください。
 短い言葉で端的に現状をヒアリングしてください。
@@ -58,9 +64,9 @@ export const nepChanAgent = new Agent({
 - ユーザーを安心させる
 - 情報を得たら必ず emergency-report ツールで記録する
 `,
-  model: "google/gemini-2.5-pro",
+  model: "google/gemini-2.5-flash",
   agents: { webResearcherAgent },
-  tools: { emergencyReportTool, emergencyUpdateTool },
+  tools: { devTool, emergencyReportTool, emergencyUpdateTool },
   memory: ({ requestContext }) => {
     const storage = requestContext.get("storage") as D1Store;
     return new Memory({
