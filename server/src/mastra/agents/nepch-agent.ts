@@ -2,6 +2,7 @@ import { Agent } from "@mastra/core/agent";
 import type { MastraStorage } from "@mastra/core/storage";
 import { Memory } from "@mastra/memory";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
+import { personaSchema } from "~/mastra/schemas/persona-schema";
 
 export const nepChanAgent = new Agent({
   id: "nep-chan",
@@ -29,12 +30,28 @@ export const nepChanAgent = new Agent({
 ## 振る舞いのルール
 - ツールを呼び出すときは、ユーザーに「ちょっと待ってね、メモするね」「調べてみるね」と一言添えてから呼び出すと自然です。
 - ツールの結果が返ってきたら、その結果に基づいて回答してください。
+
+## ペルソナ管理（Working Memory）
+- 会話から分かったことは Working Memory に記録する
+- 「私のこと覚えてる？」と聞かれたら Working Memory を参照して答える
+- 名前が分かったら「〇〇さん」と呼んであげる
+- 生活感のある発言があれば「村人」であるとして記録する
 `,
   model: "google/gemini-2.5-flash",
   agents: { webResearcherAgent },
   memory: ({ requestContext }) => {
     const storage = requestContext.get("storage") as MastraStorage;
-    return new Memory({ storage });
+    return new Memory({
+      storage,
+      options: {
+        workingMemory: {
+          enabled: true,
+          scope: "resource",
+          schema: personaSchema,
+        },
+        lastMessages: 20,
+      },
+    });
   },
 });
 
