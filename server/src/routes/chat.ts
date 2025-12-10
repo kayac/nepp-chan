@@ -47,7 +47,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
 
   const storage = new D1Store({ id: "mastra-storage", binding: c.env.DB });
   const mastra = createMastra(storage);
-  const requestContext = createRequestContext({ storage });
+  const requestContext = createRequestContext({ storage, db: c.env.DB });
 
   const agent = mastra.getAgent("weatherAgent");
   const response = await agent.stream(message, {

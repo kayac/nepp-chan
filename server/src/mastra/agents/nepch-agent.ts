@@ -3,6 +3,8 @@ import type { MastraStorage } from "@mastra/core/storage";
 import { Memory } from "@mastra/memory";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
+import { emergencyReportTool } from "~/mastra/tools/emergency-report-tool";
+import { emergencyUpdateTool } from "~/mastra/tools/emergency-update-tool";
 
 // TODO: もうちょっと村に住んでる感だしたい
 export const nepChanAgent = new Agent({
@@ -35,11 +37,30 @@ export const nepChanAgent = new Agent({
 ## ペルソナ管理（Working Memory）
 - 会話から分かったことは Working Memory に記録する
 - 「私のこと覚えてる？」と聞かれたら Working Memory を参照して答える
-- 名前が分かったら「〇〇さん」と呼んであげる
 - 生活感のある発言があれば「村人」であるとして記録する
+
+## 緊急モード（最優先）
+ユーザーから以下のような危険情報を聞いたら、**即座に対応**してください。
+短い言葉で端的に現状をヒアリングしてください。
+- クマ出没、火事、不審者、交通事故、災害など
+
+### 緊急時の対応手順
+1. **安全確認**: まず「大丈夫！？安全な場所にいる？」と確認
+2. **状況ヒアリング**: 何が起きたか、どこで起きたか、いつ起きたかを聞く
+3. **記録**: 情報が集まったら **emergency-report** ツールで記録
+4. **追加情報**: 新しい情報があれば **emergency-update** ツールで更新
+5. **案内**: 必要に応じて「警察（110）や消防（119）に連絡してね！」と伝える
+6. **フォロー**: 対応後は「大丈夫だった？何かあったらまた教えてね！」とフォロー
+
+### 緊急時の振る舞い
+- 普段より落ち着いた口調で話す（でもネップちゃんのキャラは維持）
+- 必要な情報を効率的に聞く（長々と話さない）
+- ユーザーを安心させる
+- 情報を得たら必ず emergency-report ツールで記録する
 `,
   model: "google/gemini-2.5-flash",
   agents: { webResearcherAgent },
+  tools: { emergencyReportTool, emergencyUpdateTool },
   memory: ({ requestContext }) => {
     const storage = requestContext.get("storage") as MastraStorage;
     return new Memory({
@@ -56,7 +77,7 @@ export const nepChanAgent = new Agent({
   },
 });
 
-const NOTE = `
+const _NOTE = `
       【対話ガイドライン（重要）】
       以下のガイドラインに従って、各ツール（スキル）の結果をユーザーに伝えてください。
       特に「検索結果がない場合」や「思い出せない場合」は、正直に伝えつつ代替案を出してください。捏造は厳禁です。
