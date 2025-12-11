@@ -22,12 +22,14 @@ export const ChatContainer = () => {
 
   const threadId = currentThreadId ?? "";
 
+  const apiBase = import.meta.env.VITE_API_URL || "";
+
   const { messages, status, error, sendMessage, setMessages } = useChat({
     id: threadId,
     transport: useMemo(
       () =>
         new DefaultChatTransport({
-          api: "/chat",
+          api: `${apiBase}/chat`,
           prepareSendMessagesRequest({ messages }) {
             return {
               body: {
