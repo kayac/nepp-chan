@@ -4,6 +4,7 @@
  */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+  "account_id": "51544998e04526c4d6cc9e3e08653361",
   "name": "dev",
   "main": "src/index.ts",
   "compatibility_date": "2025-12-02",
@@ -15,8 +16,7 @@
     {
       "binding": "DB",
       "database_name": "aiss-nepch-dev",
-      "database_id": "99a3838a-45de-462e-8113-579cce62f28e",
-      "remote": true
+      "database_id": "c07fe98f-f5df-4f6e-a6c5-ec6354be4677"
     }
   ],
   "alias": {
