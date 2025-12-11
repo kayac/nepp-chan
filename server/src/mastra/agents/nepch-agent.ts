@@ -4,6 +4,7 @@ import { Memory } from "@mastra/memory";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
 import { devTool } from "~/mastra/tools/dev-tool";
+import { emergencyGetTool } from "~/mastra/tools/emergency-get-tool";
 import { emergencyReportTool } from "~/mastra/tools/emergency-report-tool";
 import { emergencyUpdateTool } from "~/mastra/tools/emergency-update-tool";
 
@@ -66,7 +67,12 @@ export const nepChanAgent = new Agent({
 `,
   model: "google/gemini-2.5-flash",
   agents: { webResearcherAgent },
-  tools: { devTool, emergencyReportTool, emergencyUpdateTool },
+  tools: {
+    devTool,
+    emergencyGetTool,
+    emergencyReportTool,
+    emergencyUpdateTool,
+  },
   memory: ({ requestContext }) => {
     const storage = requestContext.get("storage") as D1Store;
     return new Memory({
