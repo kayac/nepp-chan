@@ -1,6 +1,7 @@
 import { Mastra } from "@mastra/core/mastra";
 import type { MastraStorage } from "@mastra/core/storage";
 import { PinoLogger } from "@mastra/loggers";
+import { masterAgent } from "~/mastra/agents/master-agent";
 import { nepChanAgent } from "~/mastra/agents/nepch-agent";
 import { villageInfoAgent } from "~/mastra/agents/village-info-agent";
 import { weatherAgent } from "~/mastra/agents/weather-agent";
@@ -20,6 +21,7 @@ export const createMastra = (storage: MastraStorage) =>
       nepChanAgent,
       webResearcherAgent,
       villageInfoAgent,
+      masterAgent,
     },
     scorers: {
       toolCallAppropriatenessScorer,
