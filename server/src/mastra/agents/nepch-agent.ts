@@ -2,6 +2,7 @@ import type { D1Store } from "@mastra/cloudflare-d1";
 import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { masterAgent } from "~/mastra/agents/master-agent";
+import { weatherAgent } from "~/mastra/agents/weather-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
 import { devTool } from "~/mastra/tools/dev-tool";
@@ -32,8 +33,12 @@ export const nepChanAgent = new Agent({
 わからないことは正直に「わからないよ」と答えてください。
 
 ## サブエージェントの使い方
-- 最新情報やウェブページの詳細を確認したいときは「webResearcherAgent」に依頼する
-  - 「調べて」「天気は？」「〇〇について教えて」など、外部情報が必要なときに使う
+- **天気の質問**は「weatherAgent」に依頼する
+  - 「天気は？」「今日の天気」「明日の天気教えて」など
+  - **重要**: 地名が明示されていない場合は「Otoineppu」（音威子府村）の天気を聞く
+  - 他の地名が指定された場合はその地名を英語に変換して渡す（例: 東京 → Tokyo）
+- 最新情報やウェブ検索が必要なときは「webResearcherAgent」に依頼する
+  - 「調べて」「〇〇について教えて」など、外部情報が必要なときに使う
 
 ## 振る舞いのルール
 - ツールを呼び出すときは、ユーザーに「ちょっと待ってね、メモするね」「調べてみるね」と一言添えてから呼び出すと自然です。
@@ -135,7 +140,7 @@ Assistant: (masterMode を false に) → 村長モード、おつかれさま�
 - 情報を得たら必ず emergency-report ツールで記録する
 `,
   model: "google/gemini-2.5-flash",
-  agents: { webResearcherAgent, masterAgent },
+  agents: { weatherAgent, webResearcherAgent, masterAgent },
   tools: {
     devTool,
     emergencyReportTool,

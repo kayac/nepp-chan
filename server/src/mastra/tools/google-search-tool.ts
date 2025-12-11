@@ -40,16 +40,21 @@ export const searchGoogleTool = createTool({
     error: z.string().optional(),
     source: z.string(),
   }),
-  execute: async ({ query }) => {
-    return await searchGoogle(query);
+  execute: async (inputData, context) => {
+    const env = context?.requestContext?.get("env") as
+      | CloudflareBindings
+      | undefined;
+    const apiKey = env?.GOOGLE_GENERATIVE_AI_API_KEY;
+    const engineId = env?.GOOGLE_SEARCH_ENGINE_ID;
+    return await searchGoogle(inputData.query, apiKey, engineId);
   },
 });
 
-const searchGoogle = async (query: string): Promise<SearchOutput> => {
-  // TODO: Cloudflare Workers 環境で動作するようにc.envも受け取るようにする
-  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-  const engineId = process.env.GOOGLE_SEARCH_ENGINE_ID;
-
+const searchGoogle = async (
+  query: string,
+  apiKey?: string,
+  engineId?: string,
+): Promise<SearchOutput> => {
   if (!apiKey || !engineId) {
     console.error("Google Search API Key or Engine ID is missing.");
     return {
