@@ -20,6 +20,12 @@ const ChatSendRequestSchema = z.object({
 
 export const chatRoutes = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
 
+const getStorage = async (db: D1Database) => {
+  const storage = new D1Store({ id: "mastra-storage", binding: db });
+  await storage.init();
+  return storage;
+};
+
 const chatRoute = createRoute({
   method: "post",
   path: "/",
@@ -60,7 +66,7 @@ const truncateTitle = (text: string): string => {
 chatRoutes.openapi(chatRoute, async (c) => {
   const { messages, resourceId, threadId } = c.req.valid("json");
 
-  const storage = new D1Store({ id: "mastra-storage", binding: c.env.DB });
+  const storage = await getStorage(c.env.DB);
   const mastra = createMastra(storage as unknown as MastraStorage);
   const requestContext = createRequestContext({
     storage,

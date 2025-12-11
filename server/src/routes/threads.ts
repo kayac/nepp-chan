@@ -6,6 +6,12 @@ export const threadsRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
 }>();
 
+const getStorage = async (db: D1Database) => {
+  const storage = new D1Store({ id: "mastra-storage", binding: db });
+  await storage.init();
+  return storage;
+};
+
 const ThreadSchema = z.object({
   id: z.string(),
   resourceId: z.string(),
@@ -56,7 +62,7 @@ const getThreadsRoute = createRoute({
 threadsRoutes.openapi(getThreadsRoute, async (c) => {
   const { resourceId, page, perPage } = c.req.valid("query");
 
-  const storage = new D1Store({ id: "mastra-storage", binding: c.env.DB });
+  const storage = await getStorage(c.env.DB);
 
   const result = await storage.listThreadsByResourceId({
     resourceId,
@@ -122,7 +128,7 @@ const createThreadRoute = createRoute({
 threadsRoutes.openapi(createThreadRoute, async (c) => {
   const { resourceId, title, metadata } = c.req.valid("json");
 
-  const storage = new D1Store({ id: "mastra-storage", binding: c.env.DB });
+  const storage = await getStorage(c.env.DB);
 
   const now = new Date();
   const thread = await storage.saveThread({
@@ -182,7 +188,7 @@ const getThreadRoute = createRoute({
 threadsRoutes.openapi(getThreadRoute, async (c) => {
   const { threadId } = c.req.valid("param");
 
-  const storage = new D1Store({ id: "mastra-storage", binding: c.env.DB });
+  const storage = await getStorage(c.env.DB);
 
   const thread = await storage.getThreadById({ threadId });
 
@@ -239,7 +245,7 @@ threadsRoutes.openapi(getMessagesRoute, async (c) => {
   const { threadId } = c.req.valid("param");
   const { limit } = c.req.valid("query");
 
-  const storage = new D1Store({ id: "mastra-storage", binding: c.env.DB });
+  const storage = await getStorage(c.env.DB);
 
   const thread = await storage.getThreadById({ threadId });
 
