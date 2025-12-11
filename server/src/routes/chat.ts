@@ -14,8 +14,8 @@ const ChatSendRequestSchema = z.object({
       content: z.string(),
     }),
   ),
-  resourceId: z.string().nullish(),
-  threadId: z.string().nullish(),
+  resourceId: z.string().min(1, "resourceId is required"),
+  threadId: z.string().min(1, "threadId is required"),
 });
 
 export const chatRoutes = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
@@ -49,6 +49,14 @@ const chatRoute = createRoute({
   },
 });
 
+const DEFAULT_THREAD_TITLE = "新しい会話";
+const TITLE_MAX_LENGTH = 10;
+
+const truncateTitle = (text: string): string => {
+  if (text.length <= TITLE_MAX_LENGTH) return text;
+  return `${text.slice(0, TITLE_MAX_LENGTH)}...`;
+};
+
 chatRoutes.openapi(chatRoute, async (c) => {
   const { messages, resourceId, threadId } = c.req.valid("json");
 
@@ -65,10 +73,21 @@ chatRoutes.openapi(chatRoute, async (c) => {
   const lastUserMessage = messages.filter((m) => m.role === "user").pop();
   const prompt = lastUserMessage?.content ?? "";
 
+  const thread = await storage.getThreadById({ threadId });
+  if (thread && thread.title === DEFAULT_THREAD_TITLE && prompt) {
+    await storage.saveThread({
+      thread: {
+        ...thread,
+        title: truncateTitle(prompt),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
   const stream = await agent.stream(prompt, {
     memory: {
-      resource: resourceId ?? "default-user",
-      thread: threadId ?? crypto.randomUUID(),
+      resource: resourceId,
+      thread: threadId,
     },
     requestContext,
   });
@@ -76,9 +95,27 @@ chatRoutes.openapi(chatRoute, async (c) => {
   const aiSdkStream = toAISdkStream(stream, { from: "agent" });
   const uiMessageStream = createUIMessageStream({
     execute: async ({ writer }) => {
-      for await (const part of aiSdkStream) {
-        writer.write(part);
+      try {
+        for await (const part of aiSdkStream) {
+          writer.write(part);
+        }
+      } catch (error) {
+        console.error("Stream error:", error);
+        const message =
+          error instanceof Error
+            ? error.message
+            : "ストリーミング中にエラーが発生しました";
+        writer.write({
+          type: "error",
+          errorText: message,
+        });
       }
+    },
+    onError: (error) => {
+      console.error("UIMessageStream error:", error);
+      return error instanceof Error
+        ? error.message
+        : "予期しないエラーが発生しました";
     },
   });
 
