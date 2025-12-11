@@ -54,7 +54,11 @@ chatRoutes.openapi(chatRoute, async (c) => {
 
   const storage = new D1Store({ id: "mastra-storage", binding: c.env.DB });
   const mastra = createMastra(storage as unknown as MastraStorage);
-  const requestContext = createRequestContext({ storage, db: c.env.DB });
+  const requestContext = createRequestContext({
+    storage,
+    db: c.env.DB,
+    masterPassword: c.env.MASTER_PASSWORD,
+  });
 
   const agent = mastra.getAgent("nepChanAgent");
   const lastUserMessage = messages.filter((m) => m.role === "user").pop();

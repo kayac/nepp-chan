@@ -46,6 +46,13 @@ export const personaSchema = z.object({
   importantItems: z
     .array(z.string())
     .describe("ネップちゃんが重要と認識する項目（単語形式の配列）"),
+
+  // Session State
+  masterMode: z
+    .boolean()
+    .describe(
+      "村長モードフラグ。/master でパスワード認証成功後に true、/master exit で false",
+    ),
 });
 
 export type Persona = z.infer<typeof personaSchema>;

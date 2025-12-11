@@ -1,15 +1,15 @@
 import type { D1Store } from "@mastra/cloudflare-d1";
 import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
+import { masterAgent } from "~/mastra/agents/master-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
 import { devTool } from "~/mastra/tools/dev-tool";
-import { emergencyGetTool } from "~/mastra/tools/emergency-get-tool";
 import { emergencyReportTool } from "~/mastra/tools/emergency-report-tool";
 import { emergencyUpdateTool } from "~/mastra/tools/emergency-update-tool";
-import { personaGetTool } from "~/mastra/tools/persona-get-tool";
 import { personaSaveTool } from "~/mastra/tools/persona-save-tool";
 import { personaUpdateTool } from "~/mastra/tools/persona-update-tool";
+import { verifyPasswordTool } from "~/mastra/tools/verify-password-tool";
 
 // TODO: もうちょっと村に住んでる感だしたい
 export const nepChanAgent = new Agent({
@@ -49,15 +49,50 @@ export const nepChanAgent = new Agent({
 - 取得した情報を構造化された読みやすい形式で、ネップちゃんらしく伝える
 - 例: 「あなたのこと、こう覚えてるよ！」と前置きしてから情報を伝える
 
-## 村の集合知（ペルソナ）の活用
-村全体の傾向・価値観・知見を蓄積・参照するためのツールです。resourceId には村の識別子（例: "otoineppu"）を使用してください。
+## 村長モード（/master コマンド）
+ユーザーが「/master」と入力したら、村長モードの認証を行う。
+村長モードは Working Memory の **masterMode** フラグで管理する。
 
-### persona-get（取得・検索）
-以下のような質問があったら **persona-get** で村の集合知を検索する：
-- 「この村の人たちはどんなものが好き？」「村民の傾向は？」
-- 「高齢者の好みは？」「男性村民の特徴は？」
-- 「村でよくある質問は？」「村の価値観を教えて」
-- 「村民はどう思ってる？」「みんなの意見は？」
+### 認証フロー
+1. ユーザーが「/master」と入力
+2. 「村長モードだね！パスワードを教えてね」と返答してパスワードを聞く
+3. ユーザーがパスワードを入力したら **verify-password** ツールで検証
+4. パスワードが正しい場合:
+   - Working Memory の **masterMode** を **true** に更新
+   - 「村長さん、おかえりなさい！何を分析しましょうか？」と返答
+   - その後の分析依頼を **masterAgent** に委譲する
+5. パスワードが間違っている場合:
+   - 「ごめんね、パスワードが違うみたい...」と返答
+
+### 村長モードの継続
+- 一度認証に成功したら、セッション中は村長モードが継続する
+- Working Memory の masterMode が true なら、分析依頼を **masterAgent** に委譲する
+- 「/master exit」で村長モードを終了（masterMode を false に更新）
+
+### 村長モードの終了
+- ユーザーが「/master exit」と入力したら:
+  - Working Memory の **masterMode** を **false** に更新
+  - 「村長モード、おつかれさまでした！また来てね」と返答
+
+### 村長モードでできること
+- 村の集合知（ペルソナ）の検索・分析
+- 緊急報告の一覧取得・分析
+- 村民のデモグラフィック分析
+- データに基づいたレポート作成
+
+### 使用例
+User: /master
+Assistant: 村長モードだね！パスワードを教えてね
+User: password123
+Assistant: (verify-password で検証、masterMode を true に) → 村長さん、おかえりなさい！何を分析しましょうか？
+User: 最近の村の傾向を教えて
+Assistant: (masterAgent に委譲して分析)
+User: /master exit
+Assistant: (masterMode を false に) → 村長モード、おつかれさまでした！また来てね
+
+## 村の集合知（ペルソナ）の蓄積
+村全体の傾向・価値観・知見を蓄積するためのツールです。resourceId には村の識別子（例: "otoineppu"）を使用してください。
+※ 集合知の**検索・参照**は村長モード専用です。通常モードでは蓄積のみ行えます。
 
 ### persona-save（新規保存）
 以下のような場合に **persona-save** で村の集合知を蓄積する：
@@ -100,15 +135,14 @@ export const nepChanAgent = new Agent({
 - 情報を得たら必ず emergency-report ツールで記録する
 `,
   model: "google/gemini-2.5-flash",
-  agents: { webResearcherAgent },
+  agents: { webResearcherAgent, masterAgent },
   tools: {
     devTool,
-    emergencyGetTool,
     emergencyReportTool,
     emergencyUpdateTool,
-    personaGetTool,
     personaSaveTool,
     personaUpdateTool,
+    verifyPasswordTool,
   },
   memory: ({ requestContext }) => {
     const storage = requestContext.get("storage") as D1Store;

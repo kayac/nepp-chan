@@ -25,6 +25,9 @@
   ],
   "alias": {
     "~": "./src"
+  },
+  "vars": {
+    "MASTER_PASSWORD": "admin"
   }
   /**
    * Smart Placement
