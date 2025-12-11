@@ -124,11 +124,50 @@ import { something } from "~/middleware";
 - HTTP エラーは `HTTPException` をスロー
 - グローバルエラーハンドラーで一元的に処理
 
-## 環境変数
+## 環境変数（シークレット）
 
-| 変数名                         | 説明                      |
-| ------------------------------ | ------------------------- |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | Google Generative AI キー |
+API キーなどの機密情報は Cloudflare Workers のシークレットとして管理する。
+`wrangler.jsonc` の `vars` には含めないこと。
+
+### シークレット一覧
+
+| 変数名                         | 説明                        |
+| ------------------------------ | --------------------------- |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google Generative AI キー   |
+| `GOOGLE_SEARCH_ENGINE_ID`      | Google Custom Search エンジン ID |
+| `MASTER_PASSWORD`              | 村長モードのパスワード      |
+
+### シークレットの登録方法
+
+```bash
+# 開発環境（ローカル）
+# .dev.vars ファイルを作成し、環境変数を設定
+echo "GOOGLE_GENERATIVE_AI_API_KEY=your-api-key" >> ./server/.dev.vars
+echo "GOOGLE_SEARCH_ENGINE_ID=your-engine-id" >> ./server/.dev.vars
+echo "MASTER_PASSWORD=your-password" >> ./server/.dev.vars
+
+# 本番環境（Cloudflare Workers）
+cd server
+wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
+wrangler secret put GOOGLE_SEARCH_ENGINE_ID
+wrangler secret put MASTER_PASSWORD
+```
+
+### コードでのアクセス方法
+
+シークレットは `RuntimeContext` 経由で `c.env` から取得する。
+
+```typescript
+// ルートハンドラ
+const env = c.env;
+const apiKey = env.GOOGLE_GENERATIVE_AI_API_KEY;
+
+// Mastra ツール内
+execute: async (inputData, context) => {
+  const env = context?.requestContext?.get("env") as CloudflareBindings | undefined;
+  const apiKey = env?.GOOGLE_GENERATIVE_AI_API_KEY;
+};
+```
 
 ## ブランチ戦略
 

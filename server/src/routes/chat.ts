@@ -57,6 +57,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
   const requestContext = createRequestContext({
     storage,
     db: c.env.DB,
+    env: c.env,
     masterPassword: c.env.MASTER_PASSWORD,
   });
 
