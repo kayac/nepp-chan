@@ -46,9 +46,7 @@ export const ChatInput = ({ onSend, disabled }: Props) => {
           className={`px-5 py-2.5 text-sm font-medium rounded-xl transition-opacity ${
             disabled
               ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-              : isEmptyInput
-                ? "bg-[var(--color-accent)] text-white opacity-40 cursor-not-allowed"
-                : "bg-[var(--color-accent)] text-white hover:opacity-90"
+              : "bg-[var(--color-accent)] text-white hover:opacity-90"
           }`}
         >
           {disabled ? "待機中..." : "送信"}
