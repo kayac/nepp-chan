@@ -23,6 +23,8 @@ export const ChatInput = ({ onSend, disabled }: Props) => {
     }
   };
 
+  const isEmptyInput = !input.trim();
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -33,17 +35,23 @@ export const ChatInput = ({ onSend, disabled }: Props) => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="メッセージを入力..."
+          placeholder={disabled ? "準備中..." : "メッセージを入力..."}
           disabled={disabled}
           rows={1}
           className="flex-1 resize-none rounded-xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-sm focus:border-[var(--color-accent)] focus:outline-none disabled:bg-[var(--color-surface)] disabled:text-[var(--color-text-muted)] transition-colors"
         />
         <button
           type="submit"
-          disabled={disabled || !input.trim()}
-          className="px-5 py-2.5 bg-[var(--color-accent)] text-white text-sm font-medium rounded-xl hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+          disabled={disabled || isEmptyInput}
+          className={`px-5 py-2.5 text-sm font-medium rounded-xl transition-opacity ${
+            disabled
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : isEmptyInput
+                ? "bg-[var(--color-accent)] text-white opacity-40 cursor-not-allowed"
+                : "bg-[var(--color-accent)] text-white hover:opacity-90"
+          }`}
         >
-          送信
+          {disabled ? "待機中..." : "送信"}
         </button>
       </div>
     </form>
