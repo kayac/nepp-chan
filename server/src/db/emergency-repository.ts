@@ -94,4 +94,23 @@ export const emergencyRepository = {
 
     return result.results;
   },
+
+  async findRecent(db: D1Database, days: number, limit = 100) {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+    const sinceIso = since.toISOString();
+
+    const result = await db
+      .prepare(
+        `SELECT id, type, description, location, reported_at as reportedAt, updated_at as updatedAt
+         FROM emergency_reports
+         WHERE reported_at >= ?
+         ORDER BY reported_at DESC
+         LIMIT ?`,
+      )
+      .bind(sinceIso, limit)
+      .all<EmergencyReport>();
+
+    return result.results;
+  },
 };
