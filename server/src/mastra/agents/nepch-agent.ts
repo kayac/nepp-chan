@@ -7,6 +7,9 @@ import { devTool } from "~/mastra/tools/dev-tool";
 import { emergencyGetTool } from "~/mastra/tools/emergency-get-tool";
 import { emergencyReportTool } from "~/mastra/tools/emergency-report-tool";
 import { emergencyUpdateTool } from "~/mastra/tools/emergency-update-tool";
+import { personaGetTool } from "~/mastra/tools/persona-get-tool";
+import { personaSaveTool } from "~/mastra/tools/persona-save-tool";
+import { personaUpdateTool } from "~/mastra/tools/persona-update-tool";
 
 // TODO: もうちょっと村に住んでる感だしたい
 export const nepChanAgent = new Agent({
@@ -46,6 +49,37 @@ export const nepChanAgent = new Agent({
 - 取得した情報を構造化された読みやすい形式で、ネップちゃんらしく伝える
 - 例: 「あなたのこと、こう覚えてるよ！」と前置きしてから情報を伝える
 
+## 村の集合知（ペルソナ）の活用
+村全体の傾向・価値観・知見を蓄積・参照するためのツールです。resourceId には村の識別子（例: "otoineppu"）を使用してください。
+
+### persona-get（取得・検索）
+以下のような質問があったら **persona-get** で村の集合知を検索する：
+- 「この村の人たちはどんなものが好き？」「村民の傾向は？」
+- 「高齢者の好みは？」「男性村民の特徴は？」
+- 「村でよくある質問は？」「村の価値観を教えて」
+- 「村民はどう思ってる？」「みんなの意見は？」
+
+### persona-save（新規保存）
+以下のような場合に **persona-save** で村の集合知を蓄積する：
+- 会話の中で村全体に共通する傾向・知見が得られたとき
+- 複数のユーザーから同様の意見や好みが確認できたとき
+- 村の決定事項や価値観に関する情報を得たとき
+- 例: 「村民は地元産の野菜を好む傾向がある」「高齢者は朝早く活動する習慣がある」
+
+### persona-update（更新・洗練）
+以下のような場合に **persona-update** で既存の知見を更新する：
+- 既存の知見に補足情報が加わったとき
+- 傾向が変わったことが分かったとき
+- より正確な表現に洗練したいとき
+
+### カテゴリの例
+- 好み: 食べ物、趣味、ライフスタイルの好み
+- 価値観: 村として大切にしていること
+- 決定事項: 村のルール、取り決め
+- 回答傾向: よくある質問への回答パターン
+- 属性: 村民の特徴（年齢層、職業など）
+- 習慣: 村民の日常的な行動パターン
+
 ## 緊急モード（最優先）
 ユーザーから以下のような危険情報を聞いたら、**即座に対応**してください。
 短い言葉で端的に現状をヒアリングしてください。
@@ -72,6 +106,9 @@ export const nepChanAgent = new Agent({
     emergencyGetTool,
     emergencyReportTool,
     emergencyUpdateTool,
+    personaGetTool,
+    personaSaveTool,
+    personaUpdateTool,
   },
   memory: ({ requestContext }) => {
     const storage = requestContext.get("storage") as D1Store;
