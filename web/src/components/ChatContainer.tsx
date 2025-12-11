@@ -1,7 +1,12 @@
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
+import { DefaultChatTransport, type UIMessage } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createThread, fetchThreads, type Thread } from "~/lib/api";
+import {
+  createThread,
+  fetchMessages,
+  fetchThreads,
+  type Thread,
+} from "~/lib/api";
 import { getResourceId } from "~/lib/resource";
 import { ChatInput } from "./ChatInput";
 import { MessageList } from "./MessageList";
@@ -12,47 +17,12 @@ export const ChatContainer = () => {
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const isCreatingThread = useRef(false);
-
-  const handleNewThread = useCallback(async () => {
-    if (isCreatingThread.current) return;
-    isCreatingThread.current = true;
-    try {
-      const thread = await createThread(resourceId);
-      setThreads((prev) => [thread, ...prev]);
-      setCurrentThreadId(thread.id);
-      setIsSidebarOpen(false);
-    } finally {
-      isCreatingThread.current = false;
-    }
-  }, [resourceId]);
-
-  const handleSelectThread = useCallback((threadId: string) => {
-    setCurrentThreadId(threadId);
-    setIsSidebarOpen(false);
-  }, []);
-
-  useEffect(() => {
-    const init = async () => {
-      const result = await fetchThreads(resourceId);
-      setThreads(result.threads);
-      if (result.threads.length > 0) {
-        setCurrentThreadId(result.threads[0].id);
-      }
-      setIsInitialized(true);
-    };
-    init();
-  }, [resourceId]);
-
-  useEffect(() => {
-    if (isInitialized && threads.length === 0 && currentThreadId === null) {
-      handleNewThread();
-    }
-  }, [isInitialized, threads.length, currentThreadId, handleNewThread]);
 
   const threadId = currentThreadId ?? "";
 
-  const { messages, status, error, sendMessage } = useChat({
+  const { messages, status, error, sendMessage, setMessages } = useChat({
     id: threadId,
     transport: useMemo(
       () =>
@@ -82,7 +52,82 @@ export const ChatContainer = () => {
     ),
   });
 
-  const isLoading = status === "streaming" || status === "submitted";
+  const loadMessages = useCallback(
+    async (targetThreadId: string) => {
+      setIsLoadingMessages(true);
+      try {
+        const result = await fetchMessages(targetThreadId);
+        const uiMessages: UIMessage[] = result.messages.map((msg) => ({
+          id: msg.id,
+          role: msg.role as "user" | "assistant",
+          parts: [{ type: "text" as const, text: msg.content }],
+          createdAt: new Date(),
+        }));
+        setMessages(uiMessages);
+      } catch (err) {
+        console.error("Failed to load messages:", err);
+        setMessages([]);
+      } finally {
+        setIsLoadingMessages(false);
+      }
+    },
+    [setMessages],
+  );
+
+  const handleNewThread = useCallback(async () => {
+    if (isCreatingThread.current) return;
+    isCreatingThread.current = true;
+    try {
+      const thread = await createThread(resourceId);
+      setThreads((prev) => [thread, ...prev]);
+      setMessages([]);
+      setCurrentThreadId(thread.id);
+      setIsSidebarOpen(false);
+    } finally {
+      isCreatingThread.current = false;
+    }
+  }, [resourceId, setMessages]);
+
+  const handleSelectThread = useCallback(
+    async (selectedThreadId: string) => {
+      if (selectedThreadId === currentThreadId) {
+        setIsSidebarOpen(false);
+        return;
+      }
+      setCurrentThreadId(selectedThreadId);
+      setIsSidebarOpen(false);
+      await loadMessages(selectedThreadId);
+    },
+    [currentThreadId, loadMessages],
+  );
+
+  useEffect(() => {
+    const init = async () => {
+      const result = await fetchThreads(resourceId);
+      setThreads(result.threads);
+      if (result.threads.length > 0) {
+        const firstThread = result.threads[0];
+        setCurrentThreadId(firstThread.id);
+      }
+      setIsInitialized(true);
+    };
+    init();
+  }, [resourceId]);
+
+  useEffect(() => {
+    if (isInitialized && currentThreadId) {
+      loadMessages(currentThreadId);
+    }
+  }, [isInitialized, currentThreadId, loadMessages]);
+
+  useEffect(() => {
+    if (isInitialized && threads.length === 0 && currentThreadId === null) {
+      handleNewThread();
+    }
+  }, [isInitialized, threads.length, currentThreadId, handleNewThread]);
+
+  const isLoading =
+    status === "streaming" || status === "submitted" || isLoadingMessages;
 
   const handleSend = (content: string) => {
     if (!threadId) return;
@@ -91,85 +136,120 @@ export const ChatContainer = () => {
 
   return (
     <div className="flex h-screen bg-white">
+      {/* Sidebar */}
       {isSidebarOpen && (
-        <div className="w-64 border-r bg-gray-50 flex flex-col">
-          <div className="p-3 border-b">
-            <button
-              type="button"
-              onClick={handleNewThread}
-              className="w-full px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm font-medium"
-            >
-              + 新しい会話
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            {threads.map((thread) => (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 bg-black/20 z-10 md:hidden cursor-default"
+            onClick={() => setIsSidebarOpen(false)}
+            aria-label="サイドバーを閉じる"
+          />
+          <aside className="fixed md:relative z-20 w-72 h-full bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col animate-fade-in">
+            <div className="p-4 border-b border-[var(--color-border)]">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium">スレッド</span>
+                <button
+                  type="button"
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="p-1 hover:bg-white/60 rounded transition-colors"
+                  aria-label="閉じる"
+                >
+                  <svg
+                    className="w-5 h-5 text-[var(--color-text-muted)]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <title>閉じる</title>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
               <button
-                key={thread.id}
                 type="button"
-                onClick={() => handleSelectThread(thread.id)}
-                className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 ${
-                  thread.id === currentThreadId ? "bg-gray-200" : ""
-                }`}
+                onClick={handleNewThread}
+                className="w-full py-2.5 bg-[var(--color-accent)] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
               >
-                <div className="truncate font-medium text-gray-800">
-                  {thread.title ?? "新しい会話"}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {new Date(thread.updatedAt).toLocaleDateString("ja-JP")}
-                </div>
+                新しい会話
               </button>
-            ))}
-          </div>
-        </div>
+            </div>
+            <nav className="flex-1 overflow-y-auto py-2">
+              {threads.map((thread) => (
+                <button
+                  key={thread.id}
+                  type="button"
+                  onClick={() => handleSelectThread(thread.id)}
+                  className={`w-full px-4 py-3 text-left hover:bg-white/60 transition-colors ${
+                    thread.id === currentThreadId ? "bg-white" : ""
+                  }`}
+                >
+                  <div className="text-sm font-medium text-[var(--color-text)] truncate">
+                    {thread.title ?? "新しい会話"}
+                  </div>
+                  <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                    {new Date(thread.updatedAt).toLocaleDateString("ja-JP")}
+                  </div>
+                </button>
+              ))}
+            </nav>
+          </aside>
+        </>
       )}
 
-      <div className="flex-1 flex flex-col">
-        <header className="border-b bg-white px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+      {/* Main */}
+      <main className="flex-1 flex flex-col min-w-0">
+        <header className="h-14 border-b border-[var(--color-border)] bg-white px-4 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-1 hover:bg-gray-100 rounded"
-              aria-label="メニューを開く"
+              className="p-2 -ml-2 hover:bg-[var(--color-surface)] rounded-lg transition-colors"
+              aria-label="メニュー"
             >
               <svg
-                className="w-5 h-5 text-gray-600"
+                className="w-5 h-5 text-[var(--color-text-muted)]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
                 aria-hidden="true"
               >
+                <title>メニュー</title>
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   d="M4 6h16M4 12h16M4 18h16"
                 />
               </svg>
             </button>
-            <span className="text-2xl">🦊</span>
-            <h1 className="text-lg font-bold text-gray-800">ねっぷちゃん</h1>
+            <h1 className="text-base font-semibold">ねっぷちゃん</h1>
           </div>
           <button
             type="button"
             onClick={handleNewThread}
-            className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+            className="text-sm text-[var(--color-accent)] hover:underline"
           >
-            新しい会話
+            新規作成
           </button>
         </header>
 
         <MessageList messages={messages} isLoading={isLoading} />
 
         {error && (
-          <div className="mx-4 mb-2 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
-            エラー: {error.message}
+          <div className="mx-4 mb-2 px-4 py-2 bg-red-50 text-red-600 text-sm rounded-lg">
+            {error.message}
           </div>
         )}
 
         <ChatInput onSend={handleSend} disabled={isLoading || !threadId} />
-      </div>
+      </main>
     </div>
   );
 };
