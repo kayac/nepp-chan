@@ -11,15 +11,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: resolve(__dirname, "../server/public"),
+    outDir: "dist",
     emptyOutDir: true,
-  },
-  server: {
-    proxy: {
-      "/chat": "http://localhost:8787",
-      "/health": "http://localhost:8787",
-      "/weather": "http://localhost:8787",
-      "/threads": "http://localhost:8787",
-    },
   },
 });
