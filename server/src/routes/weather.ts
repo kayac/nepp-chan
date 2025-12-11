@@ -13,6 +13,12 @@ export const weatherRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
 }>();
 
+const getStorage = async (db: D1Database) => {
+  const storage = new D1Store({ id: "mastra-storage", binding: db });
+  await storage.init();
+  return storage;
+};
+
 const weatherRoute = createRoute({
   method: "get",
   path: "/",
@@ -38,7 +44,7 @@ const weatherRoute = createRoute({
 weatherRoutes.openapi(weatherRoute, async (c) => {
   const { city } = c.req.valid("query");
 
-  const storage = new D1Store({ id: "mastra-storage", binding: c.env.DB });
+  const storage = await getStorage(c.env.DB);
   const mastra = createMastra(storage);
   const requestContext = createRequestContext({
     storage,
