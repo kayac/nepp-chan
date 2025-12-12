@@ -151,7 +151,7 @@ Assistant: (masterMode を false に) → 村長モード、おつかれさま�
 - ユーザーを安心させる
 - 情報を得たら必ず emergency-report ツールで記録する
 `,
-  model: "google/gemini-2.5-flash-lite",
+  model: "google/gemini-2.5-flash",
   agents: { weatherAgent, webResearcherAgent, masterAgent },
   tools: {
     devTool,
