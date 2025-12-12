@@ -15,8 +15,8 @@ importers:
   server:
     dependencies:
       '@ai-sdk/google':
-        specifier: 3.0.0-beta.68
-        version: 3.0.0-beta.68(zod@4.1.13)
+        specifier: ^2.0.46
+        version: 2.0.46(zod@4.1.13)
       '@hono/swagger-ui':
         specifier: ^0.5.2
         version: 0.5.2(hono@4.10.8)
@@ -69,6 +69,9 @@ importers:
       '@types/node':
         specifier: ^24.10.1
         version: 24.10.2
+      dotenv-cli:
+        specifier: ^11.0.0
+        version: 11.0.0
       mastra:
         specifier: 1.0.0-beta.4
         version: 1.0.0-beta.4(@mastra/core@1.0.0-beta.10)(typescript@5.9.3)(zod@4.1.13)
@@ -170,8 +173,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google@3.0.0-beta.68':
-    resolution: {integrity: sha512-DnPCaa47dXeQCaqT1Cii32yzTQ+pbBVMpIWEx6xUOqK8b5nq+1mBdQrNkJK5krhYBoY4pusKi14UX08r5NSTPg==}
+  '@ai-sdk/google@2.0.46':
+    resolution: {integrity: sha512-8PK6u4sGE/kXebd7ZkTp+0aya4kNqzoqpS5m7cHY2NfTK6fhPc6GNvE+MZIZIoHQTp5ed86wGBdeBPpFaaUtyg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -218,32 +221,12 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider-utils@4.0.0-beta.45':
-    resolution: {integrity: sha512-h84K/LF26wL285mgSBpvRxbdH9B21mUCRHzuWCnsS6EH4aI9sF94QwKNEvMA+vAScfBpdjJ35k5m0aoRtgKokg==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@valibot/to-json-schema': ^1.3.0
-      arktype: ^2.1.22
-      effect: ^3.18.4
-      zod: ^3.25.76 || ^4.1.8
-    peerDependenciesMeta:
-      '@valibot/to-json-schema':
-        optional: true
-      arktype:
-        optional: true
-      effect:
-        optional: true
-
   '@ai-sdk/provider@1.1.3':
     resolution: {integrity: sha512-qZMxYJ0qqX/RfnuIaab+zp8UAeJn/ygXXAffR5I4N0n1IrvA6qBsjc8hXLmBiMV2zoXlifkacF7sEFnYnjBcqg==}
     engines: {node: '>=18'}
 
   '@ai-sdk/provider@2.0.0':
     resolution: {integrity: sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA==}
-    engines: {node: '>=18'}
-
-  '@ai-sdk/provider@3.0.0-beta.26':
-    resolution: {integrity: sha512-UQyOlrpahFL1CZ/QA0ZpFhAkE32fw1XXBx+6gu23YWSCMJCjaf/fiJUPV7xUhp/nXqVO/IC+PIIfLomx55D16A==}
     engines: {node: '>=18'}
 
   '@ai-sdk/react@1.2.12':
@@ -2129,6 +2112,14 @@ packages:
   diff-match-patch@1.0.5:
     resolution: {integrity: sha512-IayShXAgj/QMXgB0IWmKx+rOPuGMhqm5w6jvFxmVenXKIzRqTAAsbBPT3kWQeGANj3jGgvcvv4yK6SxqYmikgw==}
 
+  dotenv-cli@11.0.0:
+    resolution: {integrity: sha512-r5pA8idbk7GFWuHEU7trSTflWcdBpQEK+Aw17UrSHjS6CReuhrrPcyC3zcQBPQvhArRHnBo/h6eLH1fkCvNlww==}
+    hasBin: true
+
+  dotenv-expand@12.0.3:
+    resolution: {integrity: sha512-uc47g4b+4k/M/SeaW1y4OApx+mtLWl92l5LMPP0GNXctZqELk+YGgOPIIC5elYmUH4OuoK3JLhuRUYegeySiFA==}
+    engines: {node: '>=12'}
+
   dotenv@16.6.1:
     resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
     engines: {node: '>=12'}
@@ -3591,15 +3582,11 @@ snapshots:
       '@vercel/oidc': 3.0.5
       zod: 4.1.13
 
-  '@ai-sdk/google@3.0.0-beta.68(zod@4.1.13)':
+  '@ai-sdk/google@2.0.46(zod@4.1.13)':
     dependencies:
-      '@ai-sdk/provider': 3.0.0-beta.26
-      '@ai-sdk/provider-utils': 4.0.0-beta.45(zod@4.1.13)
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.19(zod@4.1.13)
       zod: 4.1.13
-    transitivePeerDependencies:
-      - '@valibot/to-json-schema'
-      - arktype
-      - effect
 
   '@ai-sdk/openai@2.0.80(zod@4.1.13)':
     dependencies:
@@ -3649,22 +3636,11 @@ snapshots:
       eventsource-parser: 3.0.6
       zod: 4.1.13
 
-  '@ai-sdk/provider-utils@4.0.0-beta.45(zod@4.1.13)':
-    dependencies:
-      '@ai-sdk/provider': 3.0.0-beta.26
-      '@standard-schema/spec': 1.0.0
-      eventsource-parser: 3.0.6
-      zod: 4.1.13
-
   '@ai-sdk/provider@1.1.3':
     dependencies:
       json-schema: 0.4.0
 
   '@ai-sdk/provider@2.0.0':
-    dependencies:
-      json-schema: 0.4.0
-
-  '@ai-sdk/provider@3.0.0-beta.26':
     dependencies:
       json-schema: 0.4.0
 
@@ -5337,6 +5313,17 @@ snapshots:
   detect-libc@2.1.2: {}
 
   diff-match-patch@1.0.5: {}
+
+  dotenv-cli@11.0.0:
+    dependencies:
+      cross-spawn: 7.0.6
+      dotenv: 17.2.3
+      dotenv-expand: 12.0.3
+      minimist: 1.2.8
+
+  dotenv-expand@12.0.3:
+    dependencies:
+      dotenv: 16.6.1
 
   dotenv@16.6.1: {}
 
