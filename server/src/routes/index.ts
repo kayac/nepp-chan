@@ -1,3 +1,4 @@
+export { knowledgeAdminRoutes } from "./admin";
 export { chatRoutes } from "./chat";
 export { healthRoutes } from "./health";
 export { threadsRoutes } from "./threads";
