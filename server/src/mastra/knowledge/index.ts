@@ -55,20 +55,15 @@ const chunkDocument = async (
   const doc = MDocument.fromMarkdown(content);
 
   const chunks = await doc.chunk({
-    strategy: "markdown",
-    headers: [
-      ["#", "title"],
-      ["##", "section"],
-      ["###", "subsection"],
-    ],
+    strategy: "recursive",
+    maxSize: 1000,
+    overlap: 100,
   });
 
   return chunks.map((chunk) => ({
     text: chunk.text,
     metadata: {
       source: filename,
-      section: chunk.metadata?.section as string | undefined,
-      subsection: chunk.metadata?.subsection as string | undefined,
       content: chunk.text,
     },
   }));

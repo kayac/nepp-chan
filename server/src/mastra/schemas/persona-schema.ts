@@ -1,8 +1,7 @@
 import { z } from "zod";
 
-// TODO: 中身は見直しが必要
 export const personaSchema = z.object({
-  // User Attributes
+  // User Attributes（プロフィール情報）
   age: z
     .enum([
       "不明",
@@ -26,21 +25,23 @@ export const personaSchema = z.object({
     .describe(
       "ネップちゃんとの関係。初期値は「不明」。生活感のある発言があれば「村人」と推定",
     ),
-  interestTheme: z
-    .array(z.enum(["自然", "アート", "暮らし", "人間関係"]))
-    .describe("関心テーマ（複数選択可）"),
+
+  // コメントアウト（将来用）
+  interestTheme: z.array(z.string()).describe("関心テーマ（複数選択可）"),
   emotionalState: z
-    .enum(["不明", "元気", "悩み中", "挑戦期"])
+    .array(z.string())
     .describe("感情傾向／状態。初期値は「不明」"),
   behaviorPattern: z
-    .enum(["不明", "創作中心", "旅行中", "仕事中"])
+    .array(z.string())
     .describe("行動パターン。初期値は「不明」"),
 
-  // Empathy Map
-  says: z.string().describe("Says: ユーザーが実際に言ったこと"),
-  thinks: z.string().describe("Thinks: ユーザーが考えていること（推測含む）"),
-  does: z.string().describe("Does: ユーザーがとった行動"),
-  feels: z.string().describe("Feels: ユーザーが感じていること"),
+  // Empathy Map（将来用）
+  says: z.array(z.string()).describe("Says: ユーザーが実際に言ったこと"),
+  thinks: z
+    .array(z.string())
+    .describe("Thinks: ユーザーが考えていること（推測含む）"),
+  does: z.array(z.string()).describe("Does: ユーザーがとった行動"),
+  feels: z.array(z.string()).describe("Feels: ユーザーが感じていること"),
 
   // Important Information
   importantItems: z
