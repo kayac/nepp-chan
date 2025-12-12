@@ -8,6 +8,7 @@
 
 - **ねっぷちゃんチャット**: 音威子府村 17 歳の AI キャラクターとの会話
 - **村長モード**: `/master` コマンドでパスワード認証後、データ分析機能を利用可能
+- **RAG ナレッジ検索**: Markdown ファイルをベクトル化し、村の情報を検索・参照
 - **村の集合知（ペルソナ）**: 会話から抽出した情報を蓄積・参照
 - **緊急情報管理**: 緊急報告の記録・更新・取得
 - **天気情報**: Open-Meteo API 経由で天気取得（ワークフロー）
@@ -35,10 +36,12 @@
 - **TailwindCSS** 4
 - **AI SDK React** (@ai-sdk/react)
 
-### データベース
+### データベース・ストレージ
 
 - **Cloudflare D1** - SQLite ベースのエッジデータベース
 - **D1Store** (@mastra/cloudflare-d1) - Mastra ストレージアダプタ
+- **Cloudflare R2** - ナレッジファイル（Markdown）のオブジェクトストレージ
+- **Cloudflare Vectorize** - ベクトルデータベース（RAG 用 embeddings 格納）
 
 ### 開発ツール
 
@@ -67,7 +70,8 @@ aiss-nepch/
 │   │   │   └── index.ts
 │   │   ├── mastra/
 │   │   │   ├── agents/              # AI エージェント（5 個）
-│   │   │   ├── tools/               # ツール（11 個）
+│   │   │   ├── tools/               # ツール（12 個）
+│   │   │   ├── knowledge/           # RAG ナレッジ処理（chunk, embeddings, sync）
 │   │   │   ├── workflows/           # ワークフロー
 │   │   │   ├── scorers/             # 評価スコアラー
 │   │   │   ├── schemas/             # Zod スキーマ（persona 等）
@@ -75,6 +79,9 @@ aiss-nepch/
 │   │   │   ├── factory.ts           # Mastra インスタンス生成
 │   │   │   ├── request-context.ts   # RuntimeContext 管理
 │   │   │   └── index.ts
+│   │   ├── routes/
+│   │   │   ├── admin/               # 管理 API
+│   │   │   │   └── knowledge.ts     # ナレッジ同期 API
 │   │   ├── db/
 │   │   │   ├── persona-repository.ts
 │   │   │   ├── emergency-repository.ts
@@ -82,6 +89,9 @@ aiss-nepch/
 │   │   │       ├── 001_emergency_reports.sql
 │   │   │       └── 002_persona.sql
 │   │   └── __tests__/
+│   ├── knowledge/                       # ナレッジ Markdown ファイル
+│   ├── scripts/
+│   │   └── upload-knowledge.ts          # R2 アップロード + 同期スクリプト
 │   ├── wrangler.jsonc
 │   └── vitest.config.ts
 ├── web/                             # フロントエンド（Cloudflare Pages）
@@ -112,6 +122,9 @@ aiss-nepch/
 | `/threads/:threadId`        | GET      | スレッド詳細取得               |
 | `/threads/:threadId/messages` | GET    | メッセージ履歴取得             |
 | `/weather`                  | GET      | 天気情報取得（ワークフロー経由） |
+| `/admin/knowledge/sync`     | POST     | 全ナレッジ同期（R2 → Vectorize） |
+| `/admin/knowledge/sync/:source` | POST | 特定ファイルのみ同期           |
+| `/admin/knowledge`          | DELETE   | 全ナレッジ削除                 |
 | `/swagger`                  | GET      | Swagger UI                     |
 | `/doc`                      | GET      | OpenAPI スキーマ               |
 
@@ -140,6 +153,7 @@ aiss-nepch/
 | `emergencyUpdateTool` | 緊急情報更新                         |
 | `emergencyGetTool`    | 緊急情報取得                         |
 | `villageSearchTool`   | 村検索                               |
+| `knowledgeSearchTool` | RAG ナレッジ検索（Vectorize）        |
 
 ## 開発コマンド
 
@@ -163,6 +177,11 @@ pnpm --filter @aiss-nepch/server deploy   # デプロイ
 # D1 マイグレーション
 wrangler d1 execute aiss-nepch-dev --file=./server/src/db/migrations/001_emergency_reports.sql
 wrangler d1 execute aiss-nepch-dev --file=./server/src/db/migrations/002_persona.sql
+
+# ナレッジ管理
+pnpm knowledge:upload            # R2 にアップロード + Vectorize 同期
+pnpm knowledge:upload --sync-only # 同期のみ（アップロードスキップ）
+pnpm knowledge:clear             # 全ナレッジ削除して再同期
 ```
 
 ## パス別名
@@ -279,6 +298,46 @@ execute: async (inputData, context) => {
 | confidence | REAL    | 信頼度（0-1）       |
 | createdAt  | TEXT    | 作成日時            |
 | updatedAt  | TEXT    | 更新日時            |
+
+## RAG ナレッジ機能
+
+### 概要
+
+村の情報を Markdown ファイルとして管理し、ベクトル検索で関連情報を取得する RAG（Retrieval-Augmented Generation）機能。
+
+### アーキテクチャ
+
+```text
+server/knowledge/*.md → R2 バケット → Vectorize（embeddings）
+                                    ↓
+                           knowledgeSearchTool で検索
+```
+
+### ファイル構成
+
+| パス | 説明 |
+| ---- | ---- |
+| `server/knowledge/` | ナレッジ Markdown ファイル |
+| `server/src/mastra/knowledge/index.ts` | chunk 分割・embeddings 生成・同期処理 |
+| `server/src/mastra/tools/knowledge-search-tool.ts` | ベクトル検索ツール |
+| `server/src/routes/admin/knowledge.ts` | 管理 API |
+| `server/scripts/upload-knowledge.ts` | アップロードスクリプト |
+
+### 処理フロー
+
+1. `pnpm knowledge:upload` で `server/knowledge/*.md` を R2 にアップロード（`--remote` フラグ必須）
+2. 本番 API の `/admin/knowledge/sync` を呼び出し
+3. Workers 内で R2 からファイルを読み込み
+4. `MDocument.fromMarkdown()` で chunk 分割（Mastra RAG）
+5. `embedMany()` で embeddings 生成（Google text-embedding-004）
+6. Vectorize に upsert
+
+### Cloudflare バインディング
+
+| バインディング | リソース |
+| -------------- | -------- |
+| `KNOWLEDGE_BUCKET` | R2 バケット `aiss-nepch-knowledge` |
+| `VECTORIZE` | Vectorize インデックス `knowledge` |
 
 ## ブランチ戦略
 

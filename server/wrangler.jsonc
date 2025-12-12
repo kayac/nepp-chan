@@ -25,6 +25,12 @@
       "index_name": "knowledge"
     }
   ],
+  "r2_buckets": [
+    {
+      "binding": "KNOWLEDGE_BUCKET",
+      "bucket_name": "aiss-nepch-knowledge"
+    }
+  ],
   "alias": {
     "~": "./src"
   }
