@@ -1,33 +1,33 @@
-import { readFileSync } from "node:fs";
+import { execSync } from "node:child_process";
 import { basename } from "node:path";
-import { MDocument } from "@mastra/rag";
-import { embedMany } from "ai";
 import { glob } from "glob";
 
 // 設定
-const KNOWLEDGE_DIR = "../knowledge";
+const KNOWLEDGE_DIR = "./knowledge";
 const API_BASE_URL = process.env.API_URL || "http://localhost:8787";
 const ADMIN_KEY = process.env.ADMIN_KEY;
-const EMBEDDING_MODEL = "google:text-embedding-004";
-const EMBEDDING_DIMENSIONS = 768;
-const BATCH_SIZE = 100;
+const R2_BUCKET_NAME = "aiss-nepch-knowledge";
+const CLOUDFLARE_ACCOUNT_ID = "51544998e04526c4d6cc9e3e08653361";
 
-type ChunkMetadata = {
-  source: string;
-  section?: string;
-  subsection?: string;
-  content: string;
+type SyncResponse = {
+  success: boolean;
+  message: string;
+  processedFiles?: number;
+  totalChunks?: number;
+  errors?: string[];
 };
 
-type VectorData = {
-  id: string;
-  values: number[];
-  metadata: ChunkMetadata;
+type DeleteResponse = {
+  success: boolean;
+  message: string;
+  count?: number;
 };
 
 const parseArgs = () => {
   const args = process.argv.slice(2);
   return {
+    uploadOnly: args.includes("--upload-only"),
+    syncOnly: args.includes("--sync-only"),
     clean: args.includes("--clean"),
     file: args.find((arg) => arg.startsWith("--file="))?.split("=")[1],
     help: args.includes("--help") || args.includes("-h"),
@@ -39,101 +39,76 @@ const printUsage = () => {
 Usage: pnpm run knowledge:upload [options]
 
 Options:
-  --clean           全削除してからアップロード
-  --file=<filename> 特定のファイルのみアップロード
+  --upload-only     R2へのアップロードのみ実行（sync APIを呼ばない）
+  --sync-only       sync APIの呼び出しのみ実行（R2へのアップロードをスキップ）
+  --clean           Vectorizeのナレッジを全削除
+  --file=<filename> 特定のファイルのみ処理
   --help, -h        ヘルプを表示
 
 Environment Variables:
   API_URL           APIのベースURL (default: http://localhost:8787)
-  ADMIN_KEY         管理API認証キー (required)
-  GOOGLE_GENERATIVE_AI_API_KEY  Google AI APIキー (required)
+  ADMIN_KEY         管理API認証キー (required for sync/clean)
+
+Examples:
+  pnpm knowledge:upload                    # 全ファイルをR2にアップロードして同期
+  pnpm knowledge:upload --file=foo.md      # 特定ファイルのみ
+  pnpm knowledge:upload --upload-only      # R2アップロードのみ
+  pnpm knowledge:upload --sync-only        # sync APIのみ
+  pnpm knowledge:upload --clean            # 全ナレッジを削除
 `);
 };
 
-const loadMarkdownFiles = async (
-  specificFile?: string,
-): Promise<{ filename: string; content: string }[]> => {
-  const pattern = specificFile
-    ? `${KNOWLEDGE_DIR}/${specificFile}`
-    : `${KNOWLEDGE_DIR}/**/*.md`;
-
-  const files = await glob(pattern);
-
-  if (files.length === 0) {
-    console.log(`No markdown files found in ${KNOWLEDGE_DIR}`);
-    return [];
+/**
+ * wrangler コマンドで R2 にファイルをアップロード
+ */
+const uploadToR2 = (filepath: string, key: string): boolean => {
+  try {
+    console.log(`  Uploading to R2: ${key}`);
+    execSync(
+      `CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler r2 object put ${R2_BUCKET_NAME}/${key} --file="${filepath}" --remote`,
+      { stdio: "pipe" },
+    );
+    return true;
+  } catch (error) {
+    console.error(
+      `  Failed to upload ${key}:`,
+      error instanceof Error ? error.message : error,
+    );
+    return false;
   }
-
-  return files.map((filepath) => ({
-    filename: basename(filepath),
-    content: readFileSync(filepath, "utf-8"),
-  }));
 };
 
-const chunkDocument = async (
-  filename: string,
-  content: string,
-): Promise<{ text: string; metadata: ChunkMetadata }[]> => {
-  const doc = MDocument.fromMarkdown(content);
-
-  const chunks = await doc.chunk({
-    strategy: "markdown",
-    headers: [
-      ["#", "title"],
-      ["##", "section"],
-      ["###", "subsection"],
-    ],
-  });
-
-  return chunks.map((chunk) => ({
-    text: chunk.text,
-    metadata: {
-      source: filename,
-      section: chunk.metadata?.section as string | undefined,
-      subsection: chunk.metadata?.subsection as string | undefined,
-      content: chunk.text,
-    },
-  }));
-};
-
-const generateEmbeddings = async (texts: string[]): Promise<number[][]> => {
-  const { embeddings } = await embedMany({
-    model: EMBEDDING_MODEL,
-    values: texts,
-    providerOptions: {
-      google: {
-        outputDimensionality: EMBEDDING_DIMENSIONS,
-      },
-    },
-  });
-
-  return embeddings;
-};
-
-const upsertVectors = async (vectors: VectorData[]): Promise<void> => {
+/**
+ * sync API を呼び出し
+ */
+const callSyncApi = async (source?: string): Promise<SyncResponse> => {
   if (!ADMIN_KEY) {
     throw new Error("ADMIN_KEY environment variable is required");
   }
 
-  const response = await fetch(`${API_BASE_URL}/admin/knowledge/upsert`, {
+  const url = source
+    ? `${API_BASE_URL}/admin/knowledge/sync/${encodeURIComponent(source)}`
+    : `${API_BASE_URL}/admin/knowledge/sync`;
+
+  const response = await fetch(url, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
       "X-Admin-Key": ADMIN_KEY,
     },
-    body: JSON.stringify({ vectors }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to upsert vectors: ${response.status} ${error}`);
+    throw new Error(`Sync API failed: ${response.status} ${error}`);
   }
 
-  const result = (await response.json()) as any;
-  console.log(`  Upserted: ${result.message}`);
+  return (await response.json()) as SyncResponse;
 };
 
-const deleteAllVectors = async (): Promise<void> => {
+/**
+ * delete API を呼び出し
+ */
+const callDeleteApi = async (): Promise<DeleteResponse> => {
   if (!ADMIN_KEY) {
     throw new Error("ADMIN_KEY environment variable is required");
   }
@@ -147,37 +122,10 @@ const deleteAllVectors = async (): Promise<void> => {
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to delete vectors: ${response.status} ${error}`);
+    throw new Error(`Delete API failed: ${response.status} ${error}`);
   }
 
-  const result = (await response.json()) as any;
-  console.log(`Deleted: ${result.message}`);
-};
-
-const deleteBySource = async (source: string): Promise<void> => {
-  if (!ADMIN_KEY) {
-    throw new Error("ADMIN_KEY environment variable is required");
-  }
-
-  const response = await fetch(
-    `${API_BASE_URL}/admin/knowledge/${encodeURIComponent(source)}`,
-    {
-      method: "DELETE",
-      headers: {
-        "X-Admin-Key": ADMIN_KEY,
-      },
-    },
-  );
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(
-      `Failed to delete vectors by source: ${response.status} ${error}`,
-    );
-  }
-
-  const result = (await response.json()) as any;
-  console.log(`Deleted by source: ${result.message}`);
+  return (await response.json()) as DeleteResponse;
 };
 
 const main = async () => {
@@ -188,78 +136,103 @@ const main = async () => {
     process.exit(0);
   }
 
-  if (!ADMIN_KEY) {
-    console.error("Error: ADMIN_KEY environment variable is required");
-    process.exit(1);
-  }
+  // --clean オプションの処理
+  if (args.clean) {
+    console.log("=== Knowledge Clean Script ===\n");
 
-  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-    console.error(
-      "Error: GOOGLE_GENERATIVE_AI_API_KEY environment variable is required",
-    );
-    process.exit(1);
+    if (!ADMIN_KEY) {
+      console.error("Error: ADMIN_KEY environment variable is required");
+      process.exit(1);
+    }
+
+    try {
+      const result = await callDeleteApi();
+      console.log(`Result: ${result.message}`);
+      if (result.count !== undefined) {
+        console.log(`  Deleted: ${result.count} vectors`);
+      }
+      console.log("\n=== Clean Complete ===");
+    } catch (error) {
+      console.error(
+        "Clean failed:",
+        error instanceof Error ? error.message : error,
+      );
+      process.exit(1);
+    }
+    return;
   }
 
   console.log("=== Knowledge Upload Script ===\n");
 
-  // クリーンオプションの処理
-  if (args.clean) {
-    console.log("Cleaning existing vectors...");
-    if (args.file) {
-      await deleteBySource(args.file);
-    } else {
-      await deleteAllVectors();
-    }
-    console.log("");
-  }
+  // R2 へのアップロード
+  if (!args.syncOnly) {
+    console.log("Step 1: Uploading files to R2...\n");
 
-  // Markdownファイルの読み込み
-  console.log("Loading markdown files...");
-  const files = await loadMarkdownFiles(args.file);
+    const pattern = args.file
+      ? `${KNOWLEDGE_DIR}/${args.file}`
+      : `${KNOWLEDGE_DIR}/**/*.md`;
 
-  if (files.length === 0) {
-    console.log("No files to process.");
-    process.exit(0);
-  }
+    const files = await glob(pattern);
 
-  console.log(`Found ${files.length} file(s)\n`);
-
-  // 各ファイルを処理
-  for (const file of files) {
-    console.log(`Processing: ${file.filename}`);
-
-    // チャンク分割
-    const chunks = await chunkDocument(file.filename, file.content);
-    console.log(`  Chunks: ${chunks.length}`);
-
-    if (chunks.length === 0) {
-      console.log("  No chunks generated, skipping...\n");
-      continue;
+    if (files.length === 0) {
+      console.log(`No markdown files found in ${KNOWLEDGE_DIR}`);
+      if (!args.uploadOnly) {
+        console.log("\nSkipping sync (no files to process)");
+      }
+      process.exit(0);
     }
 
-    // Embedding生成
-    console.log("  Generating embeddings...");
-    const texts = chunks.map((c) => c.text);
-    const embeddings = await generateEmbeddings(texts);
+    console.log(`Found ${files.length} file(s)`);
 
-    // ベクトルデータの作成
-    const vectors: VectorData[] = chunks.map((chunk, i) => ({
-      id: `${file.filename}-${i}`,
-      values: embeddings[i],
-      metadata: chunk.metadata,
-    }));
-
-    // バッチでupsert
-    console.log("  Upserting to Vectorize...");
-    for (let i = 0; i < vectors.length; i += BATCH_SIZE) {
-      const batch = vectors.slice(i, i + BATCH_SIZE);
-      await upsertVectors(batch);
+    let uploadedCount = 0;
+    for (const filepath of files) {
+      const key = basename(filepath);
+      if (uploadToR2(filepath, key)) {
+        uploadedCount++;
+      }
     }
 
-    console.log("");
+    console.log(`\nUploaded ${uploadedCount}/${files.length} files to R2\n`);
+
+    if (args.uploadOnly) {
+      console.log("=== Upload Complete (sync skipped) ===");
+      process.exit(0);
+    }
   }
 
-  console.log("=== Upload Complete ===");
+  // sync API の呼び出し
+  console.log("Step 2: Calling sync API...\n");
+
+  if (!ADMIN_KEY) {
+    console.error("Error: ADMIN_KEY environment variable is required for sync");
+    process.exit(1);
+  }
+
+  try {
+    const result = await callSyncApi(args.file);
+
+    console.log(`Result: ${result.message}`);
+    if (result.processedFiles !== undefined) {
+      console.log(`  Processed files: ${result.processedFiles}`);
+    }
+    if (result.totalChunks !== undefined) {
+      console.log(`  Total chunks: ${result.totalChunks}`);
+    }
+    if (result.errors && result.errors.length > 0) {
+      console.log(`  Errors:`);
+      for (const error of result.errors) {
+        console.log(`    - ${error}`);
+      }
+    }
+
+    console.log("\n=== Sync Complete ===");
+  } catch (error) {
+    console.error(
+      "Sync failed:",
+      error instanceof Error ? error.message : error,
+    );
+    process.exit(1);
+  }
 };
 
 main().catch((error) => {
