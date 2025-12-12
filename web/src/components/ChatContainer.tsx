@@ -137,7 +137,7 @@ export const ChatContainer = () => {
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-dvh bg-white">
       {/* Sidebar */}
       {isSidebarOpen && (
         <>
