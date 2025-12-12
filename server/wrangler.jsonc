@@ -19,6 +19,12 @@
       "database_id": "c07fe98f-f5df-4f6e-a6c5-ec6354be4677"
     }
   ],
+  "vectorize": [
+    {
+      "binding": "VECTORIZE",
+      "index_name": "knowledge"
+    }
+  ],
   "alias": {
     "~": "./src"
   }
