@@ -38,7 +38,7 @@ export const ChatInput = ({ onSend, disabled }: Props) => {
           placeholder={disabled ? "準備中..." : "メッセージを入力..."}
           disabled={disabled}
           rows={1}
-          className="flex-1 resize-none rounded-xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-sm focus:border-[var(--color-accent)] focus:outline-none disabled:bg-[var(--color-surface)] disabled:text-[var(--color-text-muted)] transition-colors"
+          className="flex-1 resize-none rounded-xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-base focus:border-[var(--color-accent)] focus:outline-none disabled:bg-[var(--color-surface)] disabled:text-[var(--color-text-muted)] transition-colors"
         />
         <button
           type="submit"
