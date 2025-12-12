@@ -1,9 +1,9 @@
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createTool } from "@mastra/core/tools";
 import { embed } from "ai";
 import { z } from "zod";
 
-const EMBEDDING_MODEL = "google:text-embedding-004";
-const EMBEDDING_DIMENSIONS = 768;
+const EMBEDDING_MODEL_NAME = "text-embedding-004";
 
 type KnowledgeBindings = CloudflareBindings & {
   VECTORIZE: VectorizeIndex;
@@ -74,6 +74,7 @@ export const knowledgeSearchTool = createTool({
       inputData.query,
       inputData.topK ?? 5,
       env.VECTORIZE,
+      env.GOOGLE_GENERATIVE_AI_API_KEY,
     );
   },
 });
@@ -82,20 +83,17 @@ const searchKnowledge = async (
   query: string,
   topK: number,
   vectorize: VectorizeIndex,
+  apiKey: string,
 ): Promise<SearchOutput> => {
   try {
-    // クエリをエンベディング
+    const google = createGoogleGenerativeAI({ apiKey });
+    const embeddingModel = google.textEmbeddingModel(EMBEDDING_MODEL_NAME);
+
     const { embedding } = await embed({
-      model: EMBEDDING_MODEL,
+      model: embeddingModel,
       value: query,
-      providerOptions: {
-        google: {
-          outputDimensionality: EMBEDDING_DIMENSIONS,
-        },
-      },
     });
 
-    // Vectorizeで類似検索
     const results = await vectorize.query(embedding, {
       topK,
       returnMetadata: "all",
