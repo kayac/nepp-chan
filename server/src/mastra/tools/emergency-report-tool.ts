@@ -5,7 +5,7 @@ import { emergencyRepository } from "~/db/emergency-repository";
 export const emergencyReportTool = createTool({
   id: "emergency-report",
   description:
-    "緊急事態（クマ出没、火事、不審者、事故など）を記録します。ユーザーから危険な情報や緊急性の高い情報を聞いた時に使用します。",
+    "緊急事態（クマ出没、火事、不審者、事故など）を即座に報告・記録するためのツールです。ユーザーから危険な情報や緊急性の高い情報を聞いた場合は、他のツールではなく必ずこのツールを最優先で使用してください。",
   inputSchema: z.object({
     type: z
       .string()
