@@ -4,6 +4,7 @@ import { corsMiddleware, errorHandler } from "~/middleware";
 import {
   chatRoutes,
   healthRoutes,
+  knowledgeAdminRoutes,
   threadsRoutes,
   weatherRoutes,
 } from "~/routes";
@@ -18,6 +19,7 @@ app.route("/health", healthRoutes);
 app.route("/chat", chatRoutes);
 app.route("/threads", threadsRoutes);
 app.route("/weather", weatherRoutes);
+app.route("/admin/knowledge", knowledgeAdminRoutes);
 
 app.doc("/doc", {
   openapi: "3.1.0",
