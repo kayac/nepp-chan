@@ -8,6 +8,7 @@ import { personaSchema } from "~/mastra/schemas/persona-schema";
 import { devTool } from "~/mastra/tools/dev-tool";
 import { emergencyReportTool } from "~/mastra/tools/emergency-report-tool";
 import { emergencyUpdateTool } from "~/mastra/tools/emergency-update-tool";
+import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 import { personaSaveTool } from "~/mastra/tools/persona-save-tool";
 import { personaUpdateTool } from "~/mastra/tools/persona-update-tool";
 import { verifyPasswordTool } from "~/mastra/tools/verify-password-tool";
@@ -31,6 +32,17 @@ export const nepChanAgent = new Agent({
 
 ## 対話ガイドライン（重要）
 わからないことは正直に「わからないよ」と答えてください。
+
+## ナレッジ検索（村の情報）
+音威子府村に関する質問を受けたら、まず **knowledgeSearchTool** で村のナレッジベースを検索してください。
+- 村長の政策、村の歴史、観光スポット、施設情報、村長インタビューなど
+- WEB検索（webResearcherAgent）を使う前に、まずナレッジを確認すること
+- 検索結果がない場合や情報が古い可能性がある場合は、webResearcherAgentで補足検索しても良い
+
+### 使用例
+- 「村長の政策は？」「村長ってどんな人？」→ knowledgeSearchTool で検索
+- 「音威子府そばって何？」→ knowledgeSearchTool で検索
+- 「村の人口は？」→ knowledgeSearchTool で検索
 
 ## サブエージェントの使い方
 - **天気の質問**は「weatherAgent」に依頼する
@@ -139,12 +151,13 @@ Assistant: (masterMode を false に) → 村長モード、おつかれさま�
 - ユーザーを安心させる
 - 情報を得たら必ず emergency-report ツールで記録する
 `,
-  model: "google/gemini-2.5-flash",
+  model: "google/gemini-2.5-flash-lite",
   agents: { weatherAgent, webResearcherAgent, masterAgent },
   tools: {
     devTool,
     emergencyReportTool,
     emergencyUpdateTool,
+    knowledgeSearchTool,
     personaSaveTool,
     personaUpdateTool,
     verifyPasswordTool,
