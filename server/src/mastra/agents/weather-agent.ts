@@ -1,6 +1,4 @@
 import { Agent } from "@mastra/core/agent";
-import type { MastraStorage } from "@mastra/core/storage";
-import { Memory } from "@mastra/memory";
 import { scorers } from "~/mastra/scorers/weather-scorer";
 import { weatherTool } from "~/mastra/tools/weather-tool";
 
@@ -21,7 +19,7 @@ export const weatherAgent = new Agent({
 
       Use the weatherTool to fetch current weather data.
 `,
-  model: "google/gemini-2.5-flash",
+  model: "google/gemini-2.5-pro",
   tools: { weatherTool },
   scorers: {
     toolCallAppropriateness: {
@@ -45,9 +43,5 @@ export const weatherAgent = new Agent({
         rate: 1,
       },
     },
-  },
-  memory: ({ requestContext }) => {
-    const storage = requestContext.get("storage") as MastraStorage;
-    return new Memory({ storage });
   },
 });
