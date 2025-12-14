@@ -5,6 +5,9 @@ export type Persona = {
   tags: string | null;
   content: string;
   source: string | null;
+  topic: string | null;
+  sentiment: string | null;
+  demographicSummary: string | null;
   createdAt: string;
   updatedAt: string | null;
 };
@@ -16,6 +19,9 @@ type CreateInput = {
   tags?: string;
   content: string;
   source?: string;
+  topic?: string;
+  sentiment?: string;
+  demographicSummary?: string;
   createdAt: string;
 };
 
@@ -24,14 +30,25 @@ type UpdateInput = {
   tags?: string;
   content?: string;
   source?: string;
+  topic?: string;
+  sentiment?: string;
+  demographicSummary?: string;
+};
+
+export type TopicAggregation = {
+  topic: string;
+  category: string;
+  count: number;
+  demographics: string;
+  samples: string;
 };
 
 export const personaRepository = {
   async create(db: D1Database, input: CreateInput) {
     const result = await db
       .prepare(
-        `INSERT INTO persona (id, resource_id, category, tags, content, source, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO persona (id, resource_id, category, tags, content, source, topic, sentiment, demographic_summary, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         input.id,
@@ -40,6 +57,9 @@ export const personaRepository = {
         input.tags ?? null,
         input.content,
         input.source ?? null,
+        input.topic ?? null,
+        input.sentiment ?? "neutral",
+        input.demographicSummary ?? null,
         input.createdAt,
       )
       .run();
@@ -71,6 +91,21 @@ export const personaRepository = {
       values.push(input.source);
     }
 
+    if (input.topic !== undefined) {
+      updates.push("topic = ?");
+      values.push(input.topic);
+    }
+
+    if (input.sentiment !== undefined) {
+      updates.push("sentiment = ?");
+      values.push(input.sentiment);
+    }
+
+    if (input.demographicSummary !== undefined) {
+      updates.push("demographic_summary = ?");
+      values.push(input.demographicSummary);
+    }
+
     if (updates.length === 0) {
       return { success: false, error: "更新する項目がありません" };
     }
@@ -90,7 +125,9 @@ export const personaRepository = {
   async findById(db: D1Database, id: string) {
     const result = await db
       .prepare(
-        `SELECT id, resource_id as resourceId, category, tags, content, source, created_at as createdAt, updated_at as updatedAt
+        `SELECT id, resource_id as resourceId, category, tags, content, source,
+                topic, sentiment, demographic_summary as demographicSummary,
+                created_at as createdAt, updated_at as updatedAt
          FROM persona WHERE id = ?`,
       )
       .bind(id)
@@ -102,7 +139,9 @@ export const personaRepository = {
   async findByResourceId(db: D1Database, resourceId: string, limit = 100) {
     const result = await db
       .prepare(
-        `SELECT id, resource_id as resourceId, category, tags, content, source, created_at as createdAt, updated_at as updatedAt
+        `SELECT id, resource_id as resourceId, category, tags, content, source,
+                topic, sentiment, demographic_summary as demographicSummary,
+                created_at as createdAt, updated_at as updatedAt
          FROM persona WHERE resource_id = ? ORDER BY created_at DESC LIMIT ?`,
       )
       .bind(resourceId, limit)
@@ -147,11 +186,49 @@ export const personaRepository = {
 
     const result = await db
       .prepare(
-        `SELECT id, resource_id as resourceId, category, tags, content, source, created_at as createdAt, updated_at as updatedAt
+        `SELECT id, resource_id as resourceId, category, tags, content, source,
+                topic, sentiment, demographic_summary as demographicSummary,
+                created_at as createdAt, updated_at as updatedAt
          FROM persona WHERE ${conditions.join(" AND ")} ORDER BY created_at DESC LIMIT ?`,
       )
       .bind(...values)
       .all<Persona>();
+
+    return result.results;
+  },
+
+  async aggregateByTopic(
+    db: D1Database,
+    resourceId: string,
+    options: { category?: string; limit?: number } = {},
+  ) {
+    const conditions: string[] = ["resource_id = ?", "topic IS NOT NULL"];
+    const values: (string | number)[] = [resourceId];
+
+    if (options.category) {
+      conditions.push("category = ?");
+      values.push(options.category);
+    }
+
+    const limit = options.limit ?? 20;
+    values.push(limit);
+
+    const result = await db
+      .prepare(
+        `SELECT
+           topic,
+           category,
+           COUNT(*) as count,
+           GROUP_CONCAT(DISTINCT demographic_summary) as demographics,
+           GROUP_CONCAT(content, ' | ') as samples
+         FROM persona
+         WHERE ${conditions.join(" AND ")}
+         GROUP BY topic, category
+         ORDER BY count DESC
+         LIMIT ?`,
+      )
+      .bind(...values)
+      .all<TopicAggregation>();
 
     return result.results;
   },
