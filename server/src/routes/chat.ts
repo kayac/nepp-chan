@@ -64,6 +64,7 @@ const chatRoute = createRoute({
 
 const DEFAULT_THREAD_TITLE = "新しい会話";
 const TITLE_MAX_LENGTH = 10;
+const MESSAGE_THRESHOLD = 10;
 
 const truncateTitle = (text: string): string => {
   if (text.length <= TITLE_MAX_LENGTH) return text;
@@ -91,17 +92,34 @@ chatRoutes.openapi(chatRoute, async (c) => {
   const prompt = lastUserMessage?.content ?? "";
 
   const thread = await storage.getThreadById({ threadId });
-  if (thread && thread.title === DEFAULT_THREAD_TITLE && prompt) {
+  const messageCount =
+    ((thread?.metadata as { messageCount?: number })?.messageCount ?? 0) + 1;
+
+  const shouldUpdateTitle =
+    thread && thread.title === DEFAULT_THREAD_TITLE && prompt;
+  const isAtSummaryThreshold = messageCount % MESSAGE_THRESHOLD === 0;
+
+  if (shouldUpdateTitle || isAtSummaryThreshold) {
     await storage.saveThread({
       thread: {
         ...thread,
-        title: truncateTitle(prompt),
+        id: threadId,
+        resourceId,
+        title: shouldUpdateTitle
+          ? truncateTitle(prompt)
+          : (thread?.title ?? DEFAULT_THREAD_TITLE),
+        metadata: { messageCount },
+        createdAt: thread?.createdAt ?? new Date(),
         updatedAt: new Date(),
       },
     });
   }
 
-  const stream = await agent.stream(prompt, {
+  const summaryPromptSuffix = isAtSummaryThreshold
+    ? `\n\n[システム: これは${messageCount}回目のメッセージです。この会話から得られた重要な知見（意見・要望・困りごと）があれば、persona-save で村の集合知として保存してください。]`
+    : "";
+
+  const stream = await agent.stream(prompt + summaryPromptSuffix, {
     memory: {
       resource: resourceId,
       thread: threadId,

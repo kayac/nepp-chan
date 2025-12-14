@@ -10,7 +10,7 @@ export const personaSaveTool = createTool({
     resourceId: z.string().describe("リソースID（村やグループの識別子）"),
     category: z
       .string()
-      .describe("カテゴリ（例: 好み、価値観、決定事項、回答傾向、属性、習慣）"),
+      .describe("カテゴリ（例: 意見、関心事、要望、困りごと、好み）"),
     tags: z
       .string()
       .optional()
@@ -23,7 +23,21 @@ export const personaSaveTool = createTool({
     source: z
       .string()
       .optional()
-      .describe("情報源（例: 会話サマリー、アンケート結果）"),
+      .describe("情報源（例: 会話、アンケート結果）"),
+    topic: z
+      .string()
+      .optional()
+      .describe(
+        "正規化されたトピック（例: 交通, 買い物, 医療, 除雪, 教育, その他）",
+      ),
+    sentiment: z
+      .enum(["positive", "neutral", "negative", "request"])
+      .optional()
+      .describe("感情・意図（positive/neutral/negative/request）"),
+    demographicSummary: z
+      .string()
+      .optional()
+      .describe("属性サマリー（例: 60代,村内）"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
@@ -42,7 +56,16 @@ export const personaSaveTool = createTool({
       };
     }
 
-    const { resourceId, category, tags, content, source } = inputData;
+    const {
+      resourceId,
+      category,
+      tags,
+      content,
+      source,
+      topic,
+      sentiment,
+      demographicSummary,
+    } = inputData;
 
     const personaId = crypto.randomUUID();
     const createdAt = new Date().toISOString();
@@ -55,6 +78,9 @@ export const personaSaveTool = createTool({
         tags,
         content,
         source,
+        topic,
+        sentiment,
+        demographicSummary,
         createdAt,
       });
 
