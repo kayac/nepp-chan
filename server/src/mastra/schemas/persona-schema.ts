@@ -39,6 +39,16 @@ export const personaSchema = z.object({
     .describe(
       "ユーザーが重要視している内容や長期会話で必要そうな情報を配列で記録し蓄積する",
     ),
+
+  // Conversation Summary（会話サマリー用）
+  conversationInsights: z
+    .array(z.string())
+    .describe(
+      "この会話で得られた知見を一時的に蓄積するリスト。persona-save で保存したらクリアする",
+    ),
+  lastSummaryAt: z
+    .number()
+    .describe("最後にサマリーを保存したメッセージ番号。節目検出に使用"),
 });
 
 export type Persona = z.infer<typeof personaSchema>;
