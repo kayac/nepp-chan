@@ -1,14 +1,12 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { toAISdkStream } from "@mastra/ai-sdk";
 import { D1Store } from "@mastra/cloudflare-d1";
-import type { Mastra } from "@mastra/core";
 import type { MastraStorage } from "@mastra/core/storage";
 import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 import { createMastra } from "~/mastra/factory";
 import { createRequestContext } from "~/mastra/request-context";
 
 let cachedStorage: D1Store | null = null;
-let cachedMastra: Mastra | null = null;
 
 // Request Schema - AI SDK v5 format
 const ChatSendRequestSchema = z.object({
@@ -75,11 +73,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
   const { messages, resourceId, threadId } = c.req.valid("json");
 
   const storage = await getStorage(c.env.DB);
-
-  if (!cachedMastra) {
-    cachedMastra = createMastra(storage as unknown as MastraStorage);
-  }
-  const mastra = cachedMastra;
+  const mastra = createMastra(storage as unknown as MastraStorage);
   const requestContext = createRequestContext({
     storage,
     db: c.env.DB,

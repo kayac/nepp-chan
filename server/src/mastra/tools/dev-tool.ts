@@ -7,7 +7,7 @@ import { personaSchema } from "~/mastra/schemas/persona-schema";
 export const devTool = createTool({
   id: "dev-tool",
   description:
-    "開発用コマンド。Working Memory に保存されているユーザーのペルソナ情報を取得します。「/dev」コマンドで呼び出されます。",
+    "開発用コマンド。ユーザーのペルソナ情報を取得します。「/dev」コマンドで呼び出されます。",
   inputSchema: z.object({}),
   outputSchema: z.object({
     success: z.boolean(),
