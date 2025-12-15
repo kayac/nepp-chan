@@ -33,17 +33,7 @@ export const ChatContainer = () => {
           prepareSendMessagesRequest({ messages }) {
             return {
               body: {
-                messages: messages.map((m) => ({
-                  role: m.role,
-                  content:
-                    m.parts
-                      ?.filter(
-                        (p): p is { type: "text"; text: string } =>
-                          p.type === "text",
-                      )
-                      .map((p) => p.text)
-                      .join("") ?? "",
-                })),
+                messages,
                 resourceId,
                 threadId,
               },
