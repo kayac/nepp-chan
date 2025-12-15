@@ -1,19 +1,21 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { toAISdkStream } from "@mastra/ai-sdk";
+import { handleChatStream } from "@mastra/ai-sdk";
 import { D1Store } from "@mastra/cloudflare-d1";
 import type { MastraStorage } from "@mastra/core/storage";
-import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
+import { createUIMessageStreamResponse, type UIMessage } from "ai";
 import { createMastra } from "~/mastra/factory";
 import { createRequestContext } from "~/mastra/request-context";
 
 let cachedStorage: D1Store | null = null;
 
-// Request Schema - AI SDK v5 format
+// Request Schema - UIMessage 形式をそのまま受け取る
 const ChatSendRequestSchema = z.object({
   messages: z.array(
     z.object({
+      id: z.string(),
       role: z.enum(["user", "assistant", "system"]),
-      content: z.string(),
+      parts: z.array(z.looseObject({ type: z.string() })),
+      createdAt: z.coerce.date().optional(),
     }),
   ),
   resourceId: z.string().min(1, "resourceId is required"),
@@ -62,7 +64,6 @@ const chatRoute = createRoute({
 
 const DEFAULT_THREAD_TITLE = "新しい会話";
 const TITLE_MAX_LENGTH = 10;
-const MESSAGE_THRESHOLD = 10;
 
 const truncateTitle = (text: string): string => {
   if (text.length <= TITLE_MAX_LENGTH) return text;
@@ -81,74 +82,45 @@ chatRoutes.openapi(chatRoute, async (c) => {
     masterPassword: c.env.MASTER_PASSWORD,
   });
 
-  const agent = mastra.getAgent("nepChanAgent");
-  const lastUserMessage = messages.filter((m) => m.role === "user").pop();
-  const prompt = lastUserMessage?.content ?? "";
-
+  // スレッドタイトル更新（初回ユーザーメッセージ時のみ）
   const thread = await storage.getThreadById({ threadId });
-  const messageCount =
-    ((thread?.metadata as { messageCount?: number })?.messageCount ?? 0) + 1;
+  if (thread?.title === DEFAULT_THREAD_TITLE) {
+    const lastUserMessage = messages.filter((m) => m.role === "user").pop();
+    const prompt =
+      lastUserMessage?.parts
+        ?.filter(
+          (p): p is { type: "text"; text: string } =>
+            typeof p === "object" && "type" in p && p.type === "text",
+        )
+        .map((p) => p.text)
+        .join("") ?? "";
 
-  const shouldUpdateTitle =
-    thread && thread.title === DEFAULT_THREAD_TITLE && prompt;
-  const isAtSummaryThreshold = messageCount % MESSAGE_THRESHOLD === 0;
-
-  if (shouldUpdateTitle || isAtSummaryThreshold) {
-    await storage.saveThread({
-      thread: {
-        ...thread,
-        id: threadId,
-        resourceId,
-        title: shouldUpdateTitle
-          ? truncateTitle(prompt)
-          : (thread?.title ?? DEFAULT_THREAD_TITLE),
-        metadata: { messageCount },
-        createdAt: thread?.createdAt ?? new Date(),
-        updatedAt: new Date(),
-      },
-    });
+    if (prompt) {
+      await storage.saveThread({
+        thread: {
+          ...thread,
+          id: threadId,
+          resourceId,
+          title: truncateTitle(prompt),
+          createdAt: thread.createdAt,
+          updatedAt: new Date(),
+        },
+      });
+    }
   }
 
-  const summaryPromptSuffix = isAtSummaryThreshold
-    ? `\n\n[システム: これは${messageCount}回目のメッセージです。この会話から得られた重要な知見（意見・要望・困りごと）があれば、persona-save で村の集合知として保存してください。]`
-    : "";
-
-  const stream = await agent.stream(prompt + summaryPromptSuffix, {
-    memory: {
-      resource: resourceId,
-      thread: threadId,
-    },
-    requestContext,
-  });
-
-  const aiSdkStream = toAISdkStream(stream, { from: "agent" });
-  const uiMessageStream = createUIMessageStream({
-    execute: async ({ writer }) => {
-      try {
-        for await (const part of aiSdkStream) {
-          writer.write(part);
-        }
-      } catch (error) {
-        console.error("Stream error:", error);
-        const message =
-          error instanceof Error
-            ? error.message
-            : "ストリーミング中にエラーが発生しました";
-        writer.write({
-          type: "error",
-          errorText: message,
-        });
-      }
-    },
-    onError: (error) => {
-      console.error("UIMessageStream error:", error);
-      return error instanceof Error
-        ? error.message
-        : "予期しないエラーが発生しました";
+  const stream = await handleChatStream({
+    mastra,
+    agentId: "nepChanAgent",
+    params: {
+      messages: messages as UIMessage[],
+      requestContext,
+      memory: {
+        resource: resourceId,
+        thread: threadId,
+      },
     },
   });
 
-  return createUIMessageStreamResponse({
-    stream: uiMessageStream,
-  });
+  return createUIMessageStreamResponse({ stream });
 });
