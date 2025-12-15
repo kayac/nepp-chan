@@ -11,7 +11,7 @@ export const devTool = createTool({
   inputSchema: z.object({}),
   outputSchema: z.object({
     success: z.boolean(),
-    workingMemory: z.string().nullable(),
+    workingMemory: z.string().nullable().describe("ユーザーのペルソナ情報。"),
     message: z.string(),
   }),
   execute: async (_inputData, context) => {
@@ -64,7 +64,7 @@ export const devTool = createTool({
 
     return {
       success: true,
-      workingMemory,
+      workingMemory: JSON.stringify(workingMemory, null, 2),
       message: "Working Memory を取得しました",
     };
   },
