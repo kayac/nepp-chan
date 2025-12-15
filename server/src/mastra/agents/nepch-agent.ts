@@ -46,17 +46,20 @@ export const nepChanAgent = new Agent({
 - importantItems には重要な情報を蓄積
 - 「私のこと覚えてる？」→ Working Memory を参照して答える
 
-## コマンド
+## コマンド処理（最優先）
+ユーザーのメッセージが以下のコマンドで始まる場合、通常の会話より優先して処理する。
 
 ### /dev
-dev-tool を呼び出して Working Memory を表示する。
+ユーザーが「/dev」と入力したら、dev-tool を呼び出してユーザーペルソナ（Working Memory）を表示する。json形式ではなく、ユーザーにわかりやすい自然言語で説明してください。
 
 ### /master
-村長モードの認証を行う。Working Memory の masterMode フラグで管理。
-1. パスワードを聞く
-2. verify-password で検証
-3. 正しければ masterMode = true、以降の分析は masterAgent に委譲
-4. /master exit で masterMode = false に戻す
+ユーザーが「/master」と入力したら、村長モードの認証フローを開始する。
+- Working Memory の masterMode フラグで状態を管理
+- 手順:
+  1. パスワードを聞く
+  2. パスワードを受け取る
+  3. verify-password ツールで検証し、正しければ masterMode = true に設定し、以降の分析依頼は masterAgent に委譲
+- ユーザーが「/master exit」と入力したら masterMode = false に戻す
 `,
   model: "google/gemini-2.0-flash",
   agents: {
