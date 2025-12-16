@@ -57,8 +57,7 @@ MASTER_PASSWORD=your-password
 
 ```bash
 # 開発環境
-wrangler d1 execute aiss-nepch-dev --file=./server/src/db/migrations/001_emergency_reports.sql
-wrangler d1 execute aiss-nepch-dev --file=./server/src/db/migrations/002_persona.sql
+wrangler d1 execute aiss-nepch-dev --file=./server/src/db/migrations/001_init.sql
 ```
 
 ## 開発
