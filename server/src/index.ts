@@ -1,5 +1,6 @@
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
+import { handleR2Event } from "~/handlers";
 import { corsMiddleware, errorHandler } from "~/middleware";
 import {
   chatRoutes,
@@ -32,4 +33,7 @@ app.doc("/doc", {
 
 app.get("/swagger", swaggerUI({ url: "/doc" }));
 
-export default app;
+export default {
+  fetch: app.fetch,
+  queue: handleR2Event,
+};
