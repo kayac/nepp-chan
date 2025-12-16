@@ -77,14 +77,8 @@ threadsRoutes.openapi(getThreadsRoute, async (c) => {
       id: t.id,
       resourceId: t.resourceId,
       title: t.title ?? null,
-      createdAt:
-        typeof t.createdAt === "string"
-          ? t.createdAt
-          : t.createdAt.toISOString(),
-      updatedAt:
-        typeof t.updatedAt === "string"
-          ? t.updatedAt
-          : t.updatedAt.toISOString(),
+      createdAt: t.createdAt.toISOString(),
+      updatedAt: t.updatedAt.toISOString(),
       metadata: t.metadata ?? null,
     })),
     hasMore: result.hasMore,
@@ -143,14 +137,8 @@ threadsRoutes.openapi(createThreadRoute, async (c) => {
       id: thread.id,
       resourceId: thread.resourceId,
       title: thread.title ?? null,
-      createdAt:
-        typeof thread.createdAt === "string"
-          ? thread.createdAt
-          : thread.createdAt.toISOString(),
-      updatedAt:
-        typeof thread.updatedAt === "string"
-          ? thread.updatedAt
-          : thread.updatedAt.toISOString(),
+      createdAt: thread.createdAt.toISOString(),
+      updatedAt: thread.updatedAt.toISOString(),
       metadata: thread.metadata ?? null,
     },
     201,
@@ -196,14 +184,8 @@ threadsRoutes.openapi(getThreadRoute, async (c) => {
     id: thread.id,
     resourceId: thread.resourceId,
     title: thread.title ?? null,
-    createdAt:
-      typeof thread.createdAt === "string"
-        ? thread.createdAt
-        : thread.createdAt.toISOString(),
-    updatedAt:
-      typeof thread.updatedAt === "string"
-        ? thread.updatedAt
-        : thread.updatedAt.toISOString(),
+    createdAt: thread.createdAt.toISOString(),
+    updatedAt: thread.updatedAt.toISOString(),
     metadata: thread.metadata ?? null,
   });
 });
@@ -256,7 +238,7 @@ threadsRoutes.openapi(getMessagesRoute, async (c) => {
 
   const messages = uiMessages.map((msg) => ({
     id: msg.id,
-    role: msg.role as "user" | "assistant" | "system" | "tool" | "data",
+    role: msg.role,
     parts: msg.parts,
   }));
 
