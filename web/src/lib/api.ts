@@ -1,3 +1,5 @@
+import type { UIMessage } from "ai";
+
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
 export type Thread = {
@@ -17,14 +19,8 @@ type ThreadsResponse = {
   perPage: number;
 };
 
-type Message = {
-  id: string;
-  role: "user" | "assistant" | "system" | "tool" | "data";
-  content: string;
-};
-
 type MessagesResponse = {
-  messages: Message[];
+  messages: UIMessage[];
 };
 
 export const fetchThreads = async (
