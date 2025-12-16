@@ -8,16 +8,13 @@ import { createRequestContext } from "~/mastra/request-context";
 
 let cachedStorage: D1Store | null = null;
 
-// Request Schema - UIMessage 形式をそのまま受け取る
 const ChatSendRequestSchema = z.object({
-  messages: z.array(
-    z.object({
-      id: z.string(),
-      role: z.enum(["user", "assistant", "system"]),
-      parts: z.array(z.looseObject({ type: z.string() })),
-      createdAt: z.coerce.date().optional(),
-    }),
-  ),
+  message: z.object({
+    id: z.string(),
+    role: z.enum(["user", "assistant", "system"]),
+    parts: z.array(z.looseObject({ type: z.string() })),
+    createdAt: z.coerce.date().optional(),
+  }),
   resourceId: z.string().min(1, "resourceId is required"),
   threadId: z.string().min(1, "threadId is required"),
 });
@@ -63,7 +60,7 @@ const chatRoute = createRoute({
 });
 
 chatRoutes.openapi(chatRoute, async (c) => {
-  const { messages, resourceId, threadId } = c.req.valid("json");
+  const { message, resourceId, threadId } = c.req.valid("json");
 
   const storage = await getStorage(c.env.DB);
   const mastra = createMastra(storage as unknown as MastraStorage);
@@ -78,7 +75,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
     mastra,
     agentId: "nepChanAgent",
     params: {
-      messages: messages as UIMessage[],
+      messages: [message] as UIMessage[],
       requestContext,
       memory: {
         resource: resourceId,
