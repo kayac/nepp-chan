@@ -7,10 +7,10 @@ export const threadsRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
 }>();
 
-const getStorage = async (db: D1Database) => {
+const getMemory = async (db: D1Database) => {
   const storage = new D1Store({ id: "mastra-storage", binding: db });
   await storage.init();
-  return storage;
+  return new Memory({ storage });
 };
 
 const ThreadSchema = z.object({
@@ -63,9 +63,9 @@ const getThreadsRoute = createRoute({
 threadsRoutes.openapi(getThreadsRoute, async (c) => {
   const { resourceId, page, perPage } = c.req.valid("query");
 
-  const storage = await getStorage(c.env.DB);
+  const memory = await getMemory(c.env.DB);
 
-  const result = await storage.listThreadsByResourceId({
+  const result = await memory.listThreadsByResourceId({
     resourceId,
     page,
     perPage,
@@ -129,18 +129,12 @@ const createThreadRoute = createRoute({
 threadsRoutes.openapi(createThreadRoute, async (c) => {
   const { resourceId, title, metadata } = c.req.valid("json");
 
-  const storage = await getStorage(c.env.DB);
+  const memory = await getMemory(c.env.DB);
 
-  const now = new Date();
-  const thread = await storage.saveThread({
-    thread: {
-      id: crypto.randomUUID(),
-      resourceId,
-      title: title ?? "新しい会話",
-      metadata,
-      createdAt: now,
-      updatedAt: now,
-    },
+  const thread = await memory.createThread({
+    resourceId,
+    title: title ?? "新しい会話",
+    metadata,
   });
 
   return c.json(
@@ -189,9 +183,9 @@ const getThreadRoute = createRoute({
 threadsRoutes.openapi(getThreadRoute, async (c) => {
   const { threadId } = c.req.valid("param");
 
-  const storage = await getStorage(c.env.DB);
+  const memory = await getMemory(c.env.DB);
 
-  const thread = await storage.getThreadById({ threadId });
+  const thread = await memory.getThreadById({ threadId });
 
   if (!thread) {
     throw new HTTPException(404, { message: "Thread not found" });
@@ -246,15 +240,14 @@ threadsRoutes.openapi(getMessagesRoute, async (c) => {
   const { threadId } = c.req.valid("param");
   const { limit } = c.req.valid("query");
 
-  const storage = await getStorage(c.env.DB);
+  const memory = await getMemory(c.env.DB);
 
-  const thread = await storage.getThreadById({ threadId });
+  const thread = await memory.getThreadById({ threadId });
 
   if (!thread) {
     throw new HTTPException(404, { message: "Thread not found" });
   }
 
-  const memory = new Memory({ storage });
   const result = await memory.recall({
     threadId,
     perPage: limit,
