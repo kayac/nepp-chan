@@ -219,9 +219,6 @@ const getMessagesRoute = createRoute({
     params: z.object({
       threadId: z.string().min(1),
     }),
-    query: z.object({
-      limit: z.coerce.number().int().min(1).max(100).optional().default(50),
-    }),
   },
   responses: {
     200: {
@@ -239,7 +236,6 @@ const getMessagesRoute = createRoute({
 
 threadsRoutes.openapi(getMessagesRoute, async (c) => {
   const { threadId } = c.req.valid("param");
-  const { limit } = c.req.valid("query");
 
   const memory = await getMemory(c.env.DB);
 
@@ -251,10 +247,11 @@ threadsRoutes.openapi(getMessagesRoute, async (c) => {
 
   const result = await memory.recall({
     threadId,
-    perPage: limit,
+    threadConfig: {
+      lastMessages: false,
+    },
   });
 
-  // MastraDBMessage を AI SDK v5 UI 形式に変換（ツールコール情報も含む）
   const uiMessages = convertMessages(result.messages).to("AIV5.UI");
 
   const messages = uiMessages.map((msg) => ({
