@@ -5,6 +5,7 @@ import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { masterAgent } from "~/mastra/agents/master-agent";
 import { personaAgent } from "~/mastra/agents/persona-agent";
+import { weatherAgent } from "~/mastra/agents/weather-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
 import { devTool } from "~/mastra/tools/dev-tool";
@@ -72,6 +73,7 @@ export const nepChanAgent = new Agent({
     masterAgent,
     personaAgent,
     webResearcherAgent,
+    weatherAgent,
   },
   tools: {
     devTool,
