@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { emergencyRepository } from "~/db/emergency-repository";
+import { emergencyRepository } from "~/repository/emergency-repository";
 
 export const emergencyReportTool = createTool({
   id: "emergency-report",

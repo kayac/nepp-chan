@@ -21,8 +21,7 @@ MASTER_PASSWORD=your-password
 ### D1 データベースの初期化
 
 ```bash
-wrangler d1 execute aiss-nepch-dev --file=./src/db/migrations/001_emergency_reports.sql
-wrangler d1 execute aiss-nepch-dev --file=./src/db/migrations/002_persona.sql
+wrangler d1 execute aiss-nepch-dev --file=./src/repository/migrations/001_init.sql
 ```
 
 ## 開発

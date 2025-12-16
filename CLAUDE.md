@@ -82,7 +82,7 @@ aiss-nepch/
 │   │   ├── routes/
 │   │   │   ├── admin/               # 管理 API
 │   │   │   │   └── knowledge.ts     # ナレッジ同期 API
-│   │   ├── db/
+│   │   ├── repository/
 │   │   │   ├── persona-repository.ts
 │   │   │   ├── emergency-repository.ts
 │   │   │   └── migrations/
@@ -178,7 +178,7 @@ pnpm --filter @aiss-nepch/server test     # テスト実行
 pnpm --filter @aiss-nepch/server deploy   # デプロイ
 
 # D1 マイグレーション
-wrangler d1 execute aiss-nepch-dev --file=./server/src/db/migrations/001_init.sql
+wrangler d1 execute aiss-nepch-dev --file=./server/src/repository/migrations/001_init.sql
 
 # ナレッジ管理
 pnpm knowledge:upload            # R2 にアップロード + Vectorize 同期
