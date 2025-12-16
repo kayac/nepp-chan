@@ -4,11 +4,11 @@ import {
 } from "~/mastra/knowledge";
 
 type R2EventType =
-  | "object-create"
-  | "object-delete"
-  | "lifecycle-abort-multipart-upload"
-  | "lifecycle-delete"
-  | "lifecycle-expire";
+  | "PutObject"
+  | "CompleteMultipartUpload"
+  | "CopyObject"
+  | "DeleteObject"
+  | "LifecycleDeletion";
 
 type R2EventObject = {
   key: string;
@@ -87,7 +87,9 @@ export const handleR2Event = async (
 
     try {
       switch (action) {
-        case "object-create": {
+        case "PutObject":
+        case "CompleteMultipartUpload":
+        case "CopyObject": {
           const result = await handleObjectCreate(key, env);
           if (result.success) {
             console.log(`Synced ${key}: ${result.chunks} chunks`);
@@ -96,9 +98,8 @@ export const handleR2Event = async (
           }
           break;
         }
-        case "object-delete":
-        case "lifecycle-delete":
-        case "lifecycle-expire": {
+        case "DeleteObject":
+        case "LifecycleDeletion": {
           const result = await handleObjectDelete(key, env);
           if (result.success) {
             console.log(`Deleted vectors for ${key}: ${result.deleted} items`);
