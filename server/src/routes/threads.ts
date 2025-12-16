@@ -1,5 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { D1Store } from "@mastra/cloudflare-d1";
+import { Memory } from "@mastra/memory";
 import { HTTPException } from "hono/http-exception";
 
 export const threadsRoutes = new OpenAPIHono<{
@@ -253,7 +254,8 @@ threadsRoutes.openapi(getMessagesRoute, async (c) => {
     throw new HTTPException(404, { message: "Thread not found" });
   }
 
-  const result = await storage.listMessages({
+  const memory = new Memory({ storage });
+  const result = await memory.recall({
     threadId,
     perPage: limit,
   });
