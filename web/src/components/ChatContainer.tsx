@@ -31,9 +31,10 @@ export const ChatContainer = () => {
         new DefaultChatTransport({
           api: `${apiBase}/chat`,
           prepareSendMessagesRequest({ messages }) {
+            const lastMessage = messages[messages.length - 1];
             return {
               body: {
-                messages,
+                message: lastMessage,
                 resourceId,
                 threadId,
               },

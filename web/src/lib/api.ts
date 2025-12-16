@@ -65,10 +65,8 @@ export const fetchThread = async (threadId: string): Promise<Thread> => {
 
 export const fetchMessages = async (
   threadId: string,
-  limit = 50,
 ): Promise<MessagesResponse> => {
-  const params = new URLSearchParams({ limit: String(limit) });
-  const res = await fetch(`${API_BASE}/threads/${threadId}/messages?${params}`);
+  const res = await fetch(`${API_BASE}/threads/${threadId}/messages`);
   if (!res.ok) {
     throw new Error(`Failed to fetch messages: ${res.status}`);
   }
