@@ -258,14 +258,23 @@ threadsRoutes.openapi(getMessagesRoute, async (c) => {
     perPage: limit,
   });
 
-  const messages = result.messages.map((msg) => ({
-    id: msg.id,
-    role: msg.role as "user" | "assistant" | "system" | "tool" | "data",
-    content:
-      typeof msg.content === "string"
-        ? msg.content
-        : (msg.content?.content ?? ""),
-  }));
+  const messages = result.messages.map((msg) => {
+    let content = "";
+    if (typeof msg.content === "string") {
+      content = msg.content;
+    } else if (msg.content && "parts" in msg.content) {
+      const parts = msg.content.parts as Array<{ type: string; text?: string }>;
+      content = parts
+        .filter((p) => p.type === "text" && p.text)
+        .map((p) => p.text)
+        .join("");
+    }
+    return {
+      id: msg.id,
+      role: msg.role as "user" | "assistant" | "system" | "tool" | "data",
+      content,
+    };
+  });
 
   return c.json({ messages });
 });
