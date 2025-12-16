@@ -1,10 +1,33 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { handleChatStream } from "@mastra/ai-sdk";
 import { D1Store } from "@mastra/cloudflare-d1";
+import type { InputProcessor, ProcessInputArgs } from "@mastra/core/processors";
 import type { MastraStorage } from "@mastra/core/storage";
 import { createUIMessageStreamResponse, type UIMessage } from "ai";
 import { createMastra } from "~/mastra/factory";
 import { createRequestContext } from "~/mastra/request-context";
+
+// 空の parts を持つメッセージをフィルタリングするプロセッサ
+const filterEmptyPartsProcessor: InputProcessor = {
+  id: "filter-empty-parts",
+  processInput: async ({ messages }: ProcessInputArgs) => {
+    return messages.filter((msg) => {
+      const content = msg.content;
+      // MastraDBMessage の content.parts をチェック
+      if (content && typeof content === "object" && "parts" in content) {
+        const parts = content.parts as Array<{ type: string; text?: string }>;
+        const hasNonEmptyText = parts.some(
+          (part) =>
+            part.type === "text" &&
+            typeof part.text === "string" &&
+            part.text.trim() !== "",
+        );
+        return hasNonEmptyText;
+      }
+      return true;
+    });
+  },
+};
 
 let cachedStorage: D1Store | null = null;
 
@@ -119,6 +142,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
         resource: resourceId,
         thread: threadId,
       },
+      inputProcessors: [filterEmptyPartsProcessor],
     },
   });
 
