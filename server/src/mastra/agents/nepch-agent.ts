@@ -82,6 +82,7 @@ export const nepChanAgent = new Agent({
     return new Memory({
       storage,
       options: {
+        generateTitle: true,
         workingMemory: {
           enabled: true,
           scope: "resource",
