@@ -9,14 +9,6 @@ const ADMIN_KEY = process.env.ADMIN_KEY;
 const R2_BUCKET_NAME = "aiss-nepch-knowledge";
 const CLOUDFLARE_ACCOUNT_ID = "51544998e04526c4d6cc9e3e08653361";
 
-type SyncResponse = {
-  success: boolean;
-  message: string;
-  processedFiles?: number;
-  totalChunks?: number;
-  errors?: string[];
-};
-
 type DeleteResponse = {
   success: boolean;
   message: string;
@@ -26,8 +18,6 @@ type DeleteResponse = {
 const parseArgs = () => {
   const args = process.argv.slice(2);
   return {
-    uploadOnly: args.includes("--upload-only"),
-    syncOnly: args.includes("--sync-only"),
     clean: args.includes("--clean"),
     file: args.find((arg) => arg.startsWith("--file="))?.split("=")[1],
     help: args.includes("--help") || args.includes("-h"),
@@ -39,22 +29,22 @@ const printUsage = () => {
 Usage: pnpm run knowledge:upload [options]
 
 Options:
-  --upload-only     R2へのアップロードのみ実行（sync APIを呼ばない）
-  --sync-only       sync APIの呼び出しのみ実行（R2へのアップロードをスキップ）
   --clean           Vectorizeのナレッジを全削除
-  --file=<filename> 特定のファイルのみ処理
+  --file=<filename> 特定のファイルのみアップロード
   --help, -h        ヘルプを表示
 
 Environment Variables:
   API_URL           APIのベースURL (default: http://localhost:8787)
-  ADMIN_KEY         管理API認証キー (required for sync/clean)
+  ADMIN_KEY         管理API認証キー (required for --clean)
 
 Examples:
-  pnpm knowledge:upload                    # 全ファイルをR2にアップロードして同期
+  pnpm knowledge:upload                    # 全ファイルをR2にアップロード
   pnpm knowledge:upload --file=foo.md      # 特定ファイルのみ
-  pnpm knowledge:upload --upload-only      # R2アップロードのみ
-  pnpm knowledge:upload --sync-only        # sync APIのみ
   pnpm knowledge:upload --clean            # 全ナレッジを削除
+
+Note:
+  R2へのアップロード後、R2 Event Notificationsにより
+  自動的にVectorizeへの同期が行われます。
 `);
 };
 
@@ -76,33 +66,6 @@ const uploadToR2 = (filepath: string, key: string): boolean => {
     );
     return false;
   }
-};
-
-/**
- * sync API を呼び出し
- */
-const callSyncApi = async (source?: string): Promise<SyncResponse> => {
-  if (!ADMIN_KEY) {
-    throw new Error("ADMIN_KEY environment variable is required");
-  }
-
-  const url = source
-    ? `${API_BASE_URL}/admin/knowledge/sync/${encodeURIComponent(source)}`
-    : `${API_BASE_URL}/admin/knowledge/sync`;
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "X-Admin-Key": ADMIN_KEY,
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Sync API failed: ${response.status} ${error}`);
-  }
-
-  return (await response.json()) as SyncResponse;
 };
 
 /**
@@ -165,74 +128,34 @@ const main = async () => {
   console.log("=== Knowledge Upload Script ===\n");
 
   // R2 へのアップロード
-  if (!args.syncOnly) {
-    console.log("Step 1: Uploading files to R2...\n");
+  console.log("Uploading files to R2...\n");
 
-    const pattern = args.file
-      ? `${KNOWLEDGE_DIR}/${args.file}`
-      : `${KNOWLEDGE_DIR}/**/*.md`;
+  const pattern = args.file
+    ? `${KNOWLEDGE_DIR}/${args.file}`
+    : `${KNOWLEDGE_DIR}/**/*.md`;
 
-    const files = await glob(pattern);
+  const files = await glob(pattern);
 
-    if (files.length === 0) {
-      console.log(`No markdown files found in ${KNOWLEDGE_DIR}`);
-      if (!args.uploadOnly) {
-        console.log("\nSkipping sync (no files to process)");
-      }
-      process.exit(0);
-    }
+  if (files.length === 0) {
+    console.log(`No markdown files found in ${KNOWLEDGE_DIR}`);
+    process.exit(0);
+  }
 
-    console.log(`Found ${files.length} file(s)`);
+  console.log(`Found ${files.length} file(s)`);
 
-    let uploadedCount = 0;
-    for (const filepath of files) {
-      const key = basename(filepath);
-      if (uploadToR2(filepath, key)) {
-        uploadedCount++;
-      }
-    }
-
-    console.log(`\nUploaded ${uploadedCount}/${files.length} files to R2\n`);
-
-    if (args.uploadOnly) {
-      console.log("=== Upload Complete (sync skipped) ===");
-      process.exit(0);
+  let uploadedCount = 0;
+  for (const filepath of files) {
+    const key = basename(filepath);
+    if (uploadToR2(filepath, key)) {
+      uploadedCount++;
     }
   }
 
-  // sync API の呼び出し
-  console.log("Step 2: Calling sync API...\n");
-
-  if (!ADMIN_KEY) {
-    console.error("Error: ADMIN_KEY environment variable is required for sync");
-    process.exit(1);
-  }
-
-  try {
-    const result = await callSyncApi(args.file);
-
-    console.log(`Result: ${result.message}`);
-    if (result.processedFiles !== undefined) {
-      console.log(`  Processed files: ${result.processedFiles}`);
-    }
-    if (result.totalChunks !== undefined) {
-      console.log(`  Total chunks: ${result.totalChunks}`);
-    }
-    if (result.errors && result.errors.length > 0) {
-      console.log(`  Errors:`);
-      for (const error of result.errors) {
-        console.log(`    - ${error}`);
-      }
-    }
-
-    console.log("\n=== Sync Complete ===");
-  } catch (error) {
-    console.error(
-      "Sync failed:",
-      error instanceof Error ? error.message : error,
-    );
-    process.exit(1);
-  }
+  console.log(`\nUploaded ${uploadedCount}/${files.length} files to R2`);
+  console.log(
+    "\nNote: Vectorize sync will be triggered automatically via R2 Event Notifications",
+  );
+  console.log("\n=== Upload Complete ===");
 };
 
 main().catch((error) => {
