@@ -88,7 +88,7 @@ export const nepChanAgent = new Agent({
           scope: "resource",
           schema: personaSchema,
         },
-        lastMessages: 8,
+        lastMessages: 20,
       },
     });
   },
