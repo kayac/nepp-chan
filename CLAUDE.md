@@ -53,7 +53,7 @@
 
 ## プロジェクト構成
 
-```
+```text
 aiss-nepch/
 ├── server/                          # バックエンド API（Cloudflare Workers）
 │   ├── src/
@@ -69,8 +69,8 @@ aiss-nepch/
 │   │   │   ├── weather.ts           # GET /weather（ワークフロー）
 │   │   │   └── index.ts
 │   │   ├── mastra/
-│   │   │   ├── agents/              # AI エージェント（5 個）
-│   │   │   ├── tools/               # ツール（12 個）
+│   │   │   ├── agents/              # AI エージェント（8 個）
+│   │   │   ├── tools/               # ツール（13 個）
 │   │   │   ├── knowledge/           # RAG ナレッジ処理（chunk, embeddings, sync）
 │   │   │   ├── workflows/           # ワークフロー
 │   │   │   ├── scorers/             # 評価スコアラー
@@ -86,8 +86,7 @@ aiss-nepch/
 │   │   │   ├── persona-repository.ts
 │   │   │   ├── emergency-repository.ts
 │   │   │   └── migrations/
-│   │   │       ├── 001_emergency_reports.sql
-│   │   │       └── 002_persona.sql
+│   │   │       └── 001_init.sql
 │   │   └── __tests__/
 │   ├── knowledge/                       # ナレッジ Markdown ファイル
 │   ├── scripts/
@@ -130,30 +129,34 @@ aiss-nepch/
 
 ## Mastra エージェント
 
-| ID              | 説明                                   | モデル              |
-| --------------- | -------------------------------------- | ------------------- |
-| `nep-chan`      | メインキャラクター（ねっぷちゃん）     | gemini-2.5-flash    |
-| `weather-agent` | 天気情報取得                           | gemini-2.5-pro      |
-| `web-researcher`| Web 検索用サブエージェント             | gemini-2.5-flash    |
-| `village-info`  | 村情報提供                             | gemini-2.5-flash    |
-| `master`        | 村長モード専用データ分析               | gemini-2.5-flash    |
+| ID               | 説明                                   | モデル              |
+| ---------------- | -------------------------------------- | ------------------- |
+| `nep-chan`       | メインキャラクター（ねっぷちゃん）     | gemini-2.0-flash    |
+| `weather-agent`  | 天気情報取得                           | gemini-2.0-flash    |
+| `web-researcher` | Web 検索用サブエージェント             | gemini-2.0-flash    |
+| `village-info`   | 村情報提供                             | gemini-2.0-flash    |
+| `master`         | 村長モード専用データ分析               | gemini-2.0-flash    |
+| `emergency`      | 緊急事態対応                           | gemini-2.0-flash    |
+| `persona`        | ペルソナ（村の集合知）管理             | gemini-2.0-flash    |
+| `knowledge`      | RAG ナレッジ検索                       | gemini-2.0-flash    |
 
 ## Mastra ツール
 
-| ツール名              | 説明                                 |
-| --------------------- | ------------------------------------ |
-| `weatherTool`         | Open-Meteo API で天気取得            |
-| `searchGoogleTool`    | Google Custom Search                 |
-| `verifyPasswordTool`  | 村長モード認証                       |
-| `devTool`             | Working Memory 表示（デバッグ用）    |
-| `personaGetTool`      | 村の集合知検索                       |
-| `personaSaveTool`     | ペルソナ保存                         |
-| `personaUpdateTool`   | ペルソナ更新                         |
-| `emergencyReportTool` | 緊急情報記録                         |
-| `emergencyUpdateTool` | 緊急情報更新                         |
-| `emergencyGetTool`    | 緊急情報取得                         |
-| `villageSearchTool`   | 村検索                               |
-| `knowledgeSearchTool` | RAG ナレッジ検索（Vectorize）        |
+| ツール名                 | 説明                                 |
+| ------------------------ | ------------------------------------ |
+| `weatherTool`            | Open-Meteo API で天気取得            |
+| `searchGoogleTool`       | Google Custom Search                 |
+| `verifyPasswordTool`     | 村長モード認証                       |
+| `devTool`                | Working Memory 表示（デバッグ用）    |
+| `personaGetTool`         | 村の集合知検索                       |
+| `personaSaveTool`        | ペルソナ保存                         |
+| `personaUpdateTool`      | ペルソナ更新                         |
+| `personaAggregateTool`   | ペルソナ集計                         |
+| `emergencyReportTool`    | 緊急情報記録                         |
+| `emergencyUpdateTool`    | 緊急情報更新                         |
+| `emergencyGetTool`       | 緊急情報取得                         |
+| `villageSearchTool`      | 村検索                               |
+| `knowledgeSearchTool`    | RAG ナレッジ検索（Vectorize）        |
 
 ## 開発コマンド
 
@@ -175,8 +178,7 @@ pnpm --filter @aiss-nepch/server test     # テスト実行
 pnpm --filter @aiss-nepch/server deploy   # デプロイ
 
 # D1 マイグレーション
-wrangler d1 execute aiss-nepch-dev --file=./server/src/db/migrations/001_emergency_reports.sql
-wrangler d1 execute aiss-nepch-dev --file=./server/src/db/migrations/002_persona.sql
+wrangler d1 execute aiss-nepch-dev --file=./server/src/db/migrations/001_init.sql
 
 # ナレッジ管理
 pnpm knowledge:upload            # R2 にアップロード + Vectorize 同期
@@ -272,32 +274,32 @@ execute: async (inputData, context) => {
 
 緊急報告を管理するテーブル。
 
-| カラム     | 型      | 説明                               |
-| ---------- | ------- | ---------------------------------- |
-| id         | TEXT    | PRIMARY KEY                        |
-| resourceId | TEXT    | リソース ID                        |
-| status     | TEXT    | 状態（active/resolved/archived）   |
-| severity   | TEXT    | 重要度（low/medium/high/critical） |
-| location   | TEXT    | 場所                               |
-| content    | TEXT    | 内容                               |
-| createdAt  | TEXT    | 作成日時                           |
-| updatedAt  | TEXT    | 更新日時                           |
+| カラム      | 型   | 説明           |
+| ----------- | ---- | -------------- |
+| id          | TEXT | PRIMARY KEY    |
+| type        | TEXT | 種別（NOT NULL） |
+| description | TEXT | 説明           |
+| location    | TEXT | 場所           |
+| reported_at | TEXT | 報告日時（NOT NULL） |
+| updated_at  | TEXT | 更新日時       |
 
-### personas
+### persona
 
 村の集合知を管理するテーブル。
 
-| カラム     | 型      | 説明                |
-| ---------- | ------- | ------------------- |
-| id         | TEXT    | PRIMARY KEY         |
-| resourceId | TEXT    | リソース ID         |
-| category   | TEXT    | カテゴリ            |
-| tags       | TEXT    | タグ（JSON 配列）   |
-| content    | TEXT    | 内容                |
-| source     | TEXT    | 情報源              |
-| confidence | REAL    | 信頼度（0-1）       |
-| createdAt  | TEXT    | 作成日時            |
-| updatedAt  | TEXT    | 更新日時            |
+| カラム              | 型   | 説明                 |
+| ------------------- | ---- | -------------------- |
+| id                  | TEXT | PRIMARY KEY          |
+| resource_id         | TEXT | リソース ID（NOT NULL） |
+| category            | TEXT | カテゴリ（NOT NULL） |
+| tags                | TEXT | タグ（JSON 配列）    |
+| content             | TEXT | 内容（NOT NULL）     |
+| source              | TEXT | 情報源               |
+| topic               | TEXT | トピック             |
+| sentiment           | TEXT | 感情（default: neutral） |
+| demographic_summary | TEXT | 属性サマリー         |
+| created_at          | TEXT | 作成日時（NOT NULL） |
+| updated_at          | TEXT | 更新日時             |
 
 ## RAG ナレッジ機能
 
