@@ -13,9 +13,12 @@ interface KnowledgeResult {
   content: string;
   score: number;
   source: string;
+  title?: string;
   section?: string;
   subsection?: string;
 }
+
+const MIN_SIMILARITY_SCORE = 0.5;
 
 interface SearchOutput {
   results: KnowledgeResult[];
@@ -45,6 +48,7 @@ export const knowledgeSearchTool = createTool({
         content: z.string(),
         score: z.number(),
         source: z.string(),
+        title: z.string().optional(),
         section: z.string().optional(),
         subsection: z.string().optional(),
       }),
@@ -105,17 +109,20 @@ const searchKnowledge = async (
       };
     }
 
-    // 結果をマッピング
-    const knowledgeResults: KnowledgeResult[] = results.matches.map((match) => {
-      const metadata = match.metadata as Record<string, unknown> | undefined;
-      return {
-        content: (metadata?.content as string) || "",
-        score: match.score,
-        source: (metadata?.source as string) || "unknown",
-        section: metadata?.section as string | undefined,
-        subsection: metadata?.subsection as string | undefined,
-      };
-    });
+    // 結果をマッピング（類似度閾値でフィルタリング）
+    const knowledgeResults: KnowledgeResult[] = results.matches
+      .filter((match) => match.score >= MIN_SIMILARITY_SCORE)
+      .map((match) => {
+        const metadata = match.metadata as Record<string, unknown> | undefined;
+        return {
+          content: (metadata?.content as string) || "",
+          score: match.score,
+          source: (metadata?.source as string) || "unknown",
+          title: metadata?.title as string | undefined,
+          section: metadata?.section as string | undefined,
+          subsection: metadata?.subsection as string | undefined,
+        };
+      });
 
     return {
       results: knowledgeResults,
