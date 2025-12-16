@@ -85,14 +85,6 @@ const chatRoute = createRoute({
   },
 });
 
-const DEFAULT_THREAD_TITLE = "新しい会話";
-const TITLE_MAX_LENGTH = 10;
-
-const truncateTitle = (text: string): string => {
-  if (text.length <= TITLE_MAX_LENGTH) return text;
-  return `${text.slice(0, TITLE_MAX_LENGTH)}...`;
-};
-
 chatRoutes.openapi(chatRoute, async (c) => {
   const { messages, resourceId, threadId } = c.req.valid("json");
 
@@ -105,33 +97,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
     masterPassword: c.env.MASTER_PASSWORD,
   });
 
-  // スレッドタイトル更新（初回ユーザーメッセージ時のみ）
-  const thread = await storage.getThreadById({ threadId });
-  if (thread?.title === DEFAULT_THREAD_TITLE) {
-    const lastUserMessage = messages.filter((m) => m.role === "user").pop();
-    const prompt =
-      lastUserMessage?.parts
-        ?.filter(
-          (p): p is { type: "text"; text: string } =>
-            typeof p === "object" && "type" in p && p.type === "text",
-        )
-        .map((p) => p.text)
-        .join("") ?? "";
-
-    if (prompt) {
-      await storage.saveThread({
-        thread: {
-          ...thread,
-          id: threadId,
-          resourceId,
-          title: truncateTitle(prompt),
-          createdAt: thread.createdAt,
-          updatedAt: new Date(),
-        },
-      });
-    }
-  }
-
+  // スレッドタイトルは nepch-agent の Memory 設定 (generateTitle: true) で自動生成される
   const stream = await handleChatStream({
     mastra,
     agentId: "nepChanAgent",

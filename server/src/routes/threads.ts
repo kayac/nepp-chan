@@ -1,5 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { D1Store } from "@mastra/cloudflare-d1";
+import { convertMessages } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { HTTPException } from "hono/http-exception";
 
@@ -25,7 +26,7 @@ const ThreadSchema = z.object({
 const MessageSchema = z.object({
   id: z.string(),
   role: z.enum(["user", "assistant", "system", "tool", "data"]),
-  content: z.string(),
+  parts: z.array(z.record(z.string(), z.unknown())),
 });
 
 // GET /threads - スレッド一覧取得
@@ -253,23 +254,14 @@ threadsRoutes.openapi(getMessagesRoute, async (c) => {
     perPage: limit,
   });
 
-  const messages = result.messages.map((msg) => {
-    let content = "";
-    if (typeof msg.content === "string") {
-      content = msg.content;
-    } else if (msg.content && "parts" in msg.content) {
-      const parts = msg.content.parts as Array<{ type: string; text?: string }>;
-      content = parts
-        .filter((p) => p.type === "text" && p.text)
-        .map((p) => p.text)
-        .join("");
-    }
-    return {
-      id: msg.id,
-      role: msg.role as "user" | "assistant" | "system" | "tool" | "data",
-      content,
-    };
-  });
+  // MastraDBMessage を AI SDK v5 UI 形式に変換（ツールコール情報も含む）
+  const uiMessages = convertMessages(result.messages).to("AIV5.UI");
+
+  const messages = uiMessages.map((msg) => ({
+    id: msg.id,
+    role: msg.role as "user" | "assistant" | "system" | "tool" | "data",
+    parts: msg.parts,
+  }));
 
   return c.json({ messages });
 });
