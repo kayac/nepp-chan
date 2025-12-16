@@ -31,6 +31,15 @@
       "bucket_name": "aiss-nepch-knowledge"
     }
   ],
+  "queues": {
+    "consumers": [
+      {
+        "queue": "knowledge-sync-queue",
+        "max_batch_size": 10,
+        "max_batch_timeout": 30
+      }
+    ]
+  },
   "alias": {
     "~": "./src"
   }
