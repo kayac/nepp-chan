@@ -2,9 +2,10 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { MDocument } from "@mastra/rag";
 import { embedMany } from "ai";
 
-const EMBEDDING_MODEL_NAME = "text-embedding-004";
-const EMBEDDING_DIMENSIONS = 768;
+const EMBEDDING_MODEL_NAME = "gemini-embedding-001";
+const EMBEDDING_DIMENSIONS = 1536;
 const BATCH_SIZE = 100;
+const MIN_CHUNK_LENGTH = 100;
 
 type EmbeddingModel = ReturnType<
   ReturnType<typeof createGoogleGenerativeAI>["textEmbeddingModel"]
@@ -59,10 +60,17 @@ const chunkDocument = async (
   });
 
   // MDocument のメソッドを活用してテキストとメタデータを取得
-  const texts = doc.getText();
+  const allTexts = doc.getText();
   const chunkMetadataList = doc.getMetadata();
 
-  const metadata: ChunkMetadata[] = texts.map((text, i) => {
+  // 短すぎるチャンクを除外（embedding 品質向上のため）
+  const filteredIndices = allTexts
+    .map((text, i) => ({ text, i }))
+    .filter(({ text }) => text.length >= MIN_CHUNK_LENGTH)
+    .map(({ i }) => i);
+
+  const texts = filteredIndices.map((i) => allTexts[i]);
+  const metadata: ChunkMetadata[] = filteredIndices.map((i) => {
     const chunkMeta = chunkMetadataList[i] as
       | Record<string, unknown>
       | undefined;
@@ -71,9 +79,13 @@ const chunkDocument = async (
       title: chunkMeta?.title as string | undefined,
       section: chunkMeta?.section as string | undefined,
       subsection: chunkMeta?.subsection as string | undefined,
-      content: text,
+      content: allTexts[i],
     };
   });
+
+  console.log(
+    `[Knowledge Sync] ${filename}: ${allTexts.length} chunks -> ${texts.length} after filtering (min ${MIN_CHUNK_LENGTH} chars)`,
+  );
 
   return { texts, metadata };
 };
@@ -94,6 +106,12 @@ const generateEmbeddings = async (
   const { embeddings } = await embedMany({
     model,
     values: texts,
+    providerOptions: {
+      google: {
+        outputDimensionality: EMBEDDING_DIMENSIONS,
+        taskType: "RETRIEVAL_DOCUMENT",
+      },
+    },
   });
 
   return embeddings;
