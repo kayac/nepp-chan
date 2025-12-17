@@ -9,6 +9,7 @@ import { weatherAgent } from "~/mastra/agents/weather-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
 import { devTool } from "~/mastra/tools/dev-tool";
+import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 import { verifyPasswordTool } from "~/mastra/tools/verify-password-tool";
 
 // TODO: もうちょっと村に住んでる感だしたい
@@ -51,20 +52,28 @@ export const nepChanAgent = new Agent({
 会話の節目（10メッセージごと）で、重要な知見（意見・要望・困りごと）があれば personaAgent に保存を依頼する。
 保存するかどうかは会話の内容から判断し、雑談のみの場合は保存不要。
 
-## コマンド処理（最優先）
+## コマンド処理
 ユーザーのメッセージが以下のコマンドで始まる場合、通常の会話より優先して処理する。
 
 ### /dev
-ユーザーが「/dev」と入力したら、dev-tool を呼び出してユーザーペルソナ（Working Memory）を表示する。json形式ではなく、ユーザーにわかりやすい自然言語で説明してください。
+dev-tool を呼び出してユーザーペルソナ（Working Memory）を表示する。json形式ではなく、ユーザーにわかりやすい自然言語で説明してください。
 
 ### /master
-ユーザーが「/master」と入力したら、村長モードの認証フローを開始する。
+村長モードの認証フローを開始する。
 - Working Memory の masterMode フラグで状態を管理
 - 手順:
   1. パスワードを聞く
   2. パスワードを受け取る
   3. verify-password ツールで検証し、正しければ masterMode = true に設定し、以降の分析依頼は masterAgent に委譲
 - ユーザーが「/master exit」と入力したら masterMode = false に戻す
+
+### /rag
+「/rag」で始まるメッセージは、RAG検索のデバッグモードです。
+- knowledgeSearchTool を直接呼び出す（knowledgeAgent や webResearcherAgent を使わない）
+- 「/rag 」の後ろの文字列を query パラメータとして渡す
+- 検索結果をJSON形式でそのまま表示する
+- 結果の解釈や自然言語での説明は不要。生データをそのまま返す
+- 例: 「/rag 観光スポット」→ knowledgeSearchTool を query="観光スポット" で呼び出し、結果をユーザーにわかりやすい自然言語で説明
 `,
   model: "google/gemini-2.0-flash",
   agents: {
@@ -77,6 +86,7 @@ export const nepChanAgent = new Agent({
   },
   tools: {
     devTool,
+    knowledgeSearchTool,
     verifyPasswordTool,
   },
   memory: ({ requestContext }) => {
