@@ -38,12 +38,12 @@ export const personaSchema = z.object({
       "村長モードフラグ。/master でパスワード認証成功後に true、/master exit で false",
     ),
   // Important Information
-  importantItems: z
-    .array(z.string())
-    .optional()
-    .describe(
-      "ユーザーが重要視している内容や長期会話で必要そうな情報を配列で記録し蓄積する",
-    ),
+  // importantItems: z
+  //   .array(z.string())
+  //   .optional()
+  //   .describe(
+  //     "ユーザーが重要視している内容や長期会話で必要そうな情報を配列で記録し蓄積する",
+  //   ),
 
   // Conversation Summary（会話サマリー用）
   conversationInsights: z
