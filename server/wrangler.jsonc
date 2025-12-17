@@ -28,7 +28,8 @@
   "r2_buckets": [
     {
       "binding": "KNOWLEDGE_BUCKET",
-      "bucket_name": "aiss-nepch-knowledge"
+      "bucket_name": "aiss-nepch-knowledge",
+      "preview_bucket_name": "aiss-nepch-knowledge"
     }
   ],
   "queues": {
