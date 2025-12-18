@@ -60,16 +60,26 @@ const chatRoute = createRoute({
 });
 
 chatRoutes.openapi(chatRoute, async (c) => {
+  const startTime = Date.now();
+  const log = (label: string) =>
+    console.log(`[TIMING] ${label}: ${Date.now() - startTime}ms`);
+
   const { message, resourceId, threadId } = c.req.valid("json");
+  log("request parsed");
 
   const storage = await getStorage(c.env.DB);
+  log("storage ready");
+
   const mastra = createMastra(storage as unknown as MastraStorage);
+  log("mastra created");
+
   const requestContext = createRequestContext({
     storage,
     db: c.env.DB,
     env: c.env,
     masterPassword: c.env.MASTER_PASSWORD,
   });
+  log("requestContext created");
 
   const stream = await handleChatStream({
     mastra,
@@ -83,6 +93,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
       },
     },
   });
+  log("stream created");
 
   return createUIMessageStreamResponse({ stream });
 });
