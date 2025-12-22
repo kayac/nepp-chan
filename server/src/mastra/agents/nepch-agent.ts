@@ -1,12 +1,11 @@
-import type { D1Store } from "@mastra/cloudflare-d1";
 import { Agent } from "@mastra/core/agent";
-import { Memory } from "@mastra/memory";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { masterAgent } from "~/mastra/agents/master-agent";
 import { personaAgent } from "~/mastra/agents/persona-agent";
 import { weatherAgent } from "~/mastra/agents/weather-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
+import { getMemoryFromContext } from "~/mastra/memory";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
 import { devTool } from "~/mastra/tools/dev-tool";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
@@ -89,19 +88,14 @@ dev-tool を呼び出してユーザーペルソナ（Working Memory）を表示
     knowledgeSearchTool,
     verifyPasswordTool,
   },
-  memory: ({ requestContext }) => {
-    const storage = requestContext.get("storage") as D1Store;
-    return new Memory({
-      storage,
-      options: {
-        generateTitle: true,
-        workingMemory: {
-          enabled: true,
-          scope: "resource",
-          schema: personaSchema,
-        },
-        lastMessages: 20,
+  memory: ({ requestContext }) =>
+    getMemoryFromContext(requestContext, {
+      generateTitle: true,
+      workingMemory: {
+        enabled: true,
+        scope: "resource",
+        schema: personaSchema,
       },
-    });
-  },
+      lastMessages: 20,
+    }),
 });
