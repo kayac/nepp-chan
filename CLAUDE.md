@@ -34,6 +34,7 @@
 - **React** 19
 - **Vite** 7
 - **TailwindCSS** 4
+- **TanStack Query** 5 - データフェッチング・キャッシング
 - **AI SDK React** (@ai-sdk/react)
 
 ### データベース・ストレージ
@@ -93,13 +94,32 @@ aiss-nepch/
 │   │   └── upload-knowledge.ts          # R2 アップロード + 同期スクリプト
 │   ├── wrangler.jsonc
 │   └── vitest.config.ts
-├── web/                             # フロントエンド（Cloudflare Pages）
+├── web/                             # フロントエンド（Cloudflare Pages・MPA構成）
+│   ├── index.html                   # チャット画面エントリー（/）
+│   ├── dashboard.html               # ダッシュボード画面エントリー（/dashboard）
 │   ├── src/
-│   │   ├── App.tsx
-│   │   ├── main.tsx
-│   │   ├── index.css
-│   │   ├── components/
-│   │   └── lib/
+│   │   ├── pages/
+│   │   │   ├── chat/                # チャット画面
+│   │   │   │   ├── App.tsx
+│   │   │   │   ├── main.tsx
+│   │   │   │   └── components/
+│   │   │   └── dashboard/           # ダッシュボード画面（管理画面）
+│   │   │       ├── App.tsx
+│   │   │       ├── main.tsx
+│   │   │       └── components/
+│   │   ├── hooks/                   # 共有フック
+│   │   ├── repository/              # API クライアント（Repository パターン）
+│   │   │   ├── thread-repository.ts
+│   │   │   ├── knowledge-repository.ts
+│   │   │   ├── persona-repository.ts
+│   │   │   ├── emergency-repository.ts
+│   │   │   └── index.ts
+│   │   ├── lib/
+│   │   │   └── api/
+│   │   │       └── client.ts        # 共通 API クライアント
+│   │   ├── types/                   # 共有型定義
+│   │   ├── providers/               # React Providers
+│   │   └── index.css
 │   ├── functions/
 │   │   └── _middleware.ts           # Basic 認証
 │   ├── wrangler.jsonc
@@ -162,10 +182,10 @@ aiss-nepch/
 
 ```bash
 # ルートレベル
-pnpm dev                     # web 開発サーバー
-pnpm build                   # web 本番ビルド
 pnpm server:dev              # server 開発サーバー
 pnpm server:deploy           # server 本番デプロイ
+pnpm web:dev                 # web 開発サーバー
+pnpm web:build               # web 本番ビルド
 pnpm web:deploy              # web 本番デプロイ
 pnpm mastra:dev              # Mastra Playground
 pnpm lint                    # Biome + TypeScript 型チェック

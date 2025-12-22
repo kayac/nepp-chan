@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Zen+Maru+Gothic:wght@500;700&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -8,6 +8,18 @@
   --color-text: #1a1a1a;
   --color-text-muted: #888888;
   --color-accent: #2563eb;
+
+  /* Dashboard theme - 北海道の自然をイメージ */
+  --dashboard-bg: #fafbfc;
+  --dashboard-surface: #ffffff;
+  --dashboard-border: #e2e8f0;
+  --dashboard-text: #1e293b;
+  --dashboard-text-muted: #64748b;
+  --dashboard-primary: #0f766e;
+  --dashboard-primary-light: #14b8a6;
+  --dashboard-accent: #f59e0b;
+  --dashboard-danger: #dc2626;
+  --dashboard-success: #16a34a;
 }
 
 body {
@@ -38,4 +50,31 @@ body {
 }
 .animate-fade-in {
   animation: fade-in 200ms ease;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-slide-up {
+  animation: slide-up 300ms ease-out;
+}
+
+@keyframes pulse-subtle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+.animate-pulse-subtle {
+  animation: pulse-subtle 1.5s ease-in-out infinite;
 }
