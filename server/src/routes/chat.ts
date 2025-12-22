@@ -1,12 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { handleChatStream } from "@mastra/ai-sdk";
-import { D1Store } from "@mastra/cloudflare-d1";
 import type { MastraStorage } from "@mastra/core/storage";
 import { createUIMessageStreamResponse, type UIMessage } from "ai";
+import { getStorage } from "~/lib/storage";
 import { createMastra } from "~/mastra/factory";
 import { createRequestContext } from "~/mastra/request-context";
-
-let cachedStorage: D1Store | null = null;
 
 const ChatSendRequestSchema = z.object({
   message: z.object({
@@ -20,15 +18,6 @@ const ChatSendRequestSchema = z.object({
 });
 
 export const chatRoutes = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
-
-const getStorage = async (db: D1Database) => {
-  if (cachedStorage) return cachedStorage;
-
-  const storage = new D1Store({ id: "mastra-storage", binding: db });
-  await storage.init();
-  cachedStorage = storage;
-  return storage;
-};
 
 const chatRoute = createRoute({
   method: "post",
