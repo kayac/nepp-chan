@@ -3,7 +3,8 @@ import { createTool } from "@mastra/core/tools";
 import { embed } from "ai";
 import { z } from "zod";
 
-const EMBEDDING_MODEL_NAME = "text-embedding-004";
+const EMBEDDING_MODEL_NAME = "gemini-embedding-001";
+const EMBEDDING_DIMENSIONS = 1536;
 
 type KnowledgeBindings = CloudflareBindings & {
   VECTORIZE: VectorizeIndex;
@@ -13,6 +14,7 @@ interface KnowledgeResult {
   content: string;
   score: number;
   source: string;
+  title?: string;
   section?: string;
   subsection?: string;
 }
@@ -30,14 +32,6 @@ export const knowledgeSearchTool = createTool({
     query: z
       .string()
       .describe("検索したい内容（例: 村長の政策、観光スポット、村の歴史）"),
-    topK: z
-      .number()
-      .int()
-      .min(1)
-      .max(20)
-      .optional()
-      .default(5)
-      .describe("取得する結果の件数（1-20、デフォルト: 5）"),
   }),
   outputSchema: z.object({
     results: z.array(
@@ -45,6 +39,7 @@ export const knowledgeSearchTool = createTool({
         content: z.string(),
         score: z.number(),
         source: z.string(),
+        title: z.string().optional(),
         section: z.string().optional(),
         subsection: z.string().optional(),
       }),
@@ -72,16 +67,16 @@ export const knowledgeSearchTool = createTool({
 
     return await searchKnowledge(
       inputData.query,
-      inputData.topK ?? 5,
       env.VECTORIZE,
       env.GOOGLE_GENERATIVE_AI_API_KEY,
     );
   },
 });
 
+const TOP_K = 3;
+
 const searchKnowledge = async (
   query: string,
-  topK: number,
   vectorize: VectorizeIndex,
   apiKey: string,
 ): Promise<SearchOutput> => {
@@ -92,10 +87,24 @@ const searchKnowledge = async (
     const { embedding } = await embed({
       model: embeddingModel,
       value: query,
+      providerOptions: {
+        google: {
+          outputDimensionality: EMBEDDING_DIMENSIONS,
+          taskType: "RETRIEVAL_QUERY",
+        },
+      },
     });
 
+    // デバッグ: embedding の先頭5要素を出力
+    console.log(
+      `[RAG Debug] query="${query}", embedding[0:5]=[${embedding
+        .slice(0, 5)
+        .map((v) => v.toFixed(4))
+        .join(", ")}]`,
+    );
+
     const results = await vectorize.query(embedding, {
-      topK,
+      topK: TOP_K,
       returnMetadata: "all",
     });
 
@@ -105,13 +114,13 @@ const searchKnowledge = async (
       };
     }
 
-    // 結果をマッピング
     const knowledgeResults: KnowledgeResult[] = results.matches.map((match) => {
       const metadata = match.metadata as Record<string, unknown> | undefined;
       return {
         content: (metadata?.content as string) || "",
         score: match.score,
         source: (metadata?.source as string) || "unknown",
+        title: metadata?.title as string | undefined,
         section: metadata?.section as string | undefined,
         subsection: metadata?.subsection as string | undefined,
       };
