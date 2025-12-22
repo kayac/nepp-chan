@@ -1,10 +1,10 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { fetchEmergencies } from "~/repository/emergency-repository";
 import {
   deleteAllKnowledge,
-  fetchEmergencies,
-  fetchPersonas,
   syncKnowledge,
-} from "~/lib/api/dashboard";
+} from "~/repository/knowledge-repository";
+import { fetchPersonas } from "~/repository/persona-repository";
 
 export const dashboardKeys = {
   personas: ["dashboard", "personas"] as const,

@@ -108,8 +108,15 @@ aiss-nepch/
 │   │   │       ├── main.tsx
 │   │   │       └── components/
 │   │   ├── hooks/                   # 共有フック
+│   │   ├── repository/              # API クライアント（Repository パターン）
+│   │   │   ├── thread-repository.ts
+│   │   │   ├── knowledge-repository.ts
+│   │   │   ├── persona-repository.ts
+│   │   │   ├── emergency-repository.ts
+│   │   │   └── index.ts
 │   │   ├── lib/
-│   │   │   └── api/                 # API クライアント
+│   │   │   └── api/
+│   │   │       └── client.ts        # 共通 API クライアント
 │   │   ├── types/                   # 共有型定義
 │   │   ├── providers/               # React Providers
 │   │   └── index.css
