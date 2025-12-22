@@ -4,7 +4,7 @@ import {
   fetchMessages,
   fetchThread,
   fetchThreads,
-} from "~/lib/api/threads";
+} from "~/repository/thread-repository";
 
 export const threadKeys = {
   all: ["threads"] as const,
