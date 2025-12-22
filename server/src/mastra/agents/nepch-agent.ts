@@ -65,14 +65,6 @@ dev-tool を呼び出してユーザーペルソナ（Working Memory）を表示
   2. パスワードを受け取る
   3. verify-password ツールで検証し、正しければ masterMode = true に設定し、以降の分析依頼は masterAgent に委譲
 - ユーザーが「/master exit」と入力したら masterMode = false に戻す
-
-### /rag
-「/rag」で始まるメッセージは、RAG検索のデバッグモードです。
-- knowledgeSearchTool を直接呼び出す（knowledgeAgent や webResearcherAgent を使わない）
-- 「/rag 」の後ろの文字列を query パラメータとして渡す
-- 検索結果をJSON形式でそのまま表示する
-- 結果の解釈や自然言語での説明は不要。生データをそのまま返す
-- 例: 「/rag 観光スポット」→ knowledgeSearchTool を query="観光スポット" で呼び出し、結果をユーザーにわかりやすい自然言語で説明
 `,
   model: "google/gemini-2.0-flash",
   agents: {
