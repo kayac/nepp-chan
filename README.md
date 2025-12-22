@@ -67,7 +67,7 @@ wrangler d1 execute aiss-nepch-dev --file=./server/src/repository/migrations/001
 pnpm server:dev
 
 # Web 開発サーバー起動
-pnpm dev
+pnpm web:dev
 
 # Mastra Playground 起動
 pnpm mastra:dev
