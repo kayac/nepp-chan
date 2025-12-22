@@ -4,8 +4,10 @@ import { handleR2Event } from "~/handlers";
 import { corsMiddleware, errorHandler } from "~/middleware";
 import {
   chatRoutes,
+  emergencyAdminRoutes,
   healthRoutes,
   knowledgeAdminRoutes,
+  personaAdminRoutes,
   threadsRoutes,
   weatherRoutes,
 } from "~/routes";
@@ -21,6 +23,8 @@ app.route("/chat", chatRoutes);
 app.route("/threads", threadsRoutes);
 app.route("/weather", weatherRoutes);
 app.route("/admin/knowledge", knowledgeAdminRoutes);
+app.route("/admin/persona", personaAdminRoutes);
+app.route("/admin/emergency", emergencyAdminRoutes);
 
 app.doc("/doc", {
   openapi: "3.1.0",

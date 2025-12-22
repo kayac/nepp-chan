@@ -1,35 +1,38 @@
 import { useChat } from "@ai-sdk/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { DefaultChatTransport } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  createThread,
-  fetchMessages,
-  fetchThreads,
-  type Thread,
-} from "~/lib/api";
+import { threadKeys, useCreateThread, useThreads } from "~/hooks/useThreads";
+import { API_BASE } from "~/lib/api/client";
+import { fetchMessages } from "~/lib/api/threads";
 import { getResourceId } from "~/lib/resource";
+import type { Thread } from "~/types";
 import { ChatInput } from "./ChatInput";
 import { MessageList } from "./MessageList";
 
 export const ChatContainer = () => {
   const resourceId = useMemo(() => getResourceId(), []);
-  const [threads, setThreads] = useState<Thread[]>([]);
+  const queryClient = useQueryClient();
+
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
-  const isCreatingThread = useRef(false);
+  const hasInitialized = useRef(false);
+
+  const { data: threadsData, isSuccess: threadsLoaded } =
+    useThreads(resourceId);
+  const threads = threadsData?.threads ?? [];
+
+  const createThreadMutation = useCreateThread(resourceId);
 
   const threadId = currentThreadId ?? "";
-
-  const apiBase = import.meta.env.VITE_API_URL || "";
 
   const { messages, status, error, sendMessage, setMessages } = useChat({
     id: threadId,
     transport: useMemo(
       () =>
         new DefaultChatTransport({
-          api: `${apiBase}/chat`,
+          api: `${API_BASE}/chat`,
           prepareSendMessagesRequest({ messages }) {
             const lastMessage = messages[messages.length - 1];
             return {
@@ -49,7 +52,10 @@ export const ChatContainer = () => {
     async (targetThreadId: string) => {
       setIsLoadingMessages(true);
       try {
-        const result = await fetchMessages(targetThreadId);
+        const result = await queryClient.fetchQuery({
+          queryKey: threadKeys.messages(targetThreadId),
+          queryFn: () => fetchMessages(targetThreadId),
+        });
         setMessages(result.messages);
       } catch (err) {
         console.error("Failed to load messages:", err);
@@ -58,22 +64,16 @@ export const ChatContainer = () => {
         setIsLoadingMessages(false);
       }
     },
-    [setMessages],
+    [queryClient, setMessages],
   );
 
   const handleNewThread = useCallback(async () => {
-    if (isCreatingThread.current) return;
-    isCreatingThread.current = true;
-    try {
-      const thread = await createThread(resourceId);
-      setThreads((prev) => [thread, ...prev]);
-      setMessages([]);
-      setCurrentThreadId(thread.id);
-      setIsSidebarOpen(false);
-    } finally {
-      isCreatingThread.current = false;
-    }
-  }, [resourceId, setMessages]);
+    if (createThreadMutation.isPending) return;
+    const thread = await createThreadMutation.mutateAsync(undefined);
+    setMessages([]);
+    setCurrentThreadId(thread.id);
+    setIsSidebarOpen(false);
+  }, [createThreadMutation, setMessages]);
 
   const handleSelectThread = useCallback(
     async (selectedThreadId: string) => {
@@ -88,30 +88,29 @@ export const ChatContainer = () => {
     [currentThreadId, loadMessages],
   );
 
+  // 初回ロード時に最初のスレッドを選択
   useEffect(() => {
-    const init = async () => {
-      const result = await fetchThreads(resourceId);
-      setThreads(result.threads);
-      if (result.threads.length > 0) {
-        const firstThread = result.threads[0];
+    if (threadsLoaded && !hasInitialized.current) {
+      hasInitialized.current = true;
+      if (threads.length > 0) {
+        const firstThread = threads[0];
         setCurrentThreadId(firstThread.id);
+        loadMessages(firstThread.id);
       }
-      setIsInitialized(true);
-    };
-    init();
-  }, [resourceId]);
-
-  useEffect(() => {
-    if (isInitialized && currentThreadId) {
-      loadMessages(currentThreadId);
     }
-  }, [isInitialized, currentThreadId, loadMessages]);
+  }, [threadsLoaded, threads, loadMessages]);
 
+  // スレッドがない場合は新規作成
   useEffect(() => {
-    if (isInitialized && threads.length === 0 && currentThreadId === null) {
+    if (
+      threadsLoaded &&
+      hasInitialized.current &&
+      threads.length === 0 &&
+      currentThreadId === null
+    ) {
       handleNewThread();
     }
-  }, [isInitialized, threads.length, currentThreadId, handleNewThread]);
+  }, [threadsLoaded, threads.length, currentThreadId, handleNewThread]);
 
   const isLoading =
     status === "streaming" || status === "submitted" || isLoadingMessages;
@@ -168,7 +167,7 @@ export const ChatContainer = () => {
               </button>
             </div>
             <nav className="flex-1 overflow-y-auto py-2">
-              {threads.map((thread) => (
+              {threads.map((thread: Thread) => (
                 <button
                   key={thread.id}
                   type="button"
