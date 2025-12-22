@@ -1,15 +1,16 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { D1Store } from "@mastra/cloudflare-d1";
+import { convertMessages } from "@mastra/core/agent";
+import { Memory } from "@mastra/memory";
 import { HTTPException } from "hono/http-exception";
+import { getStorage } from "~/lib/storage";
 
 export const threadsRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
 }>();
 
-const getStorage = async (db: D1Database) => {
-  const storage = new D1Store({ id: "mastra-storage", binding: db });
-  await storage.init();
-  return storage;
+const getMemory = async (db: D1Database) => {
+  const storage = await getStorage(db);
+  return new Memory({ storage });
 };
 
 const ThreadSchema = z.object({
@@ -24,7 +25,7 @@ const ThreadSchema = z.object({
 const MessageSchema = z.object({
   id: z.string(),
   role: z.enum(["user", "assistant", "system", "tool", "data"]),
-  content: z.string(),
+  parts: z.array(z.record(z.string(), z.unknown())),
 });
 
 // GET /threads - スレッド一覧取得
@@ -62,9 +63,9 @@ const getThreadsRoute = createRoute({
 threadsRoutes.openapi(getThreadsRoute, async (c) => {
   const { resourceId, page, perPage } = c.req.valid("query");
 
-  const storage = await getStorage(c.env.DB);
+  const memory = await getMemory(c.env.DB);
 
-  const result = await storage.listThreadsByResourceId({
+  const result = await memory.listThreadsByResourceId({
     resourceId,
     page,
     perPage,
@@ -75,14 +76,8 @@ threadsRoutes.openapi(getThreadsRoute, async (c) => {
       id: t.id,
       resourceId: t.resourceId,
       title: t.title ?? null,
-      createdAt:
-        typeof t.createdAt === "string"
-          ? t.createdAt
-          : t.createdAt.toISOString(),
-      updatedAt:
-        typeof t.updatedAt === "string"
-          ? t.updatedAt
-          : t.updatedAt.toISOString(),
+      createdAt: t.createdAt.toISOString(),
+      updatedAt: t.updatedAt.toISOString(),
       metadata: t.metadata ?? null,
     })),
     hasMore: result.hasMore,
@@ -128,18 +123,12 @@ const createThreadRoute = createRoute({
 threadsRoutes.openapi(createThreadRoute, async (c) => {
   const { resourceId, title, metadata } = c.req.valid("json");
 
-  const storage = await getStorage(c.env.DB);
+  const memory = await getMemory(c.env.DB);
 
-  const now = new Date();
-  const thread = await storage.saveThread({
-    thread: {
-      id: crypto.randomUUID(),
-      resourceId,
-      title: title ?? "新しい会話",
-      metadata,
-      createdAt: now,
-      updatedAt: now,
-    },
+  const thread = await memory.createThread({
+    resourceId,
+    title,
+    metadata,
   });
 
   return c.json(
@@ -147,14 +136,8 @@ threadsRoutes.openapi(createThreadRoute, async (c) => {
       id: thread.id,
       resourceId: thread.resourceId,
       title: thread.title ?? null,
-      createdAt:
-        typeof thread.createdAt === "string"
-          ? thread.createdAt
-          : thread.createdAt.toISOString(),
-      updatedAt:
-        typeof thread.updatedAt === "string"
-          ? thread.updatedAt
-          : thread.updatedAt.toISOString(),
+      createdAt: thread.createdAt.toISOString(),
+      updatedAt: thread.updatedAt.toISOString(),
       metadata: thread.metadata ?? null,
     },
     201,
@@ -188,9 +171,9 @@ const getThreadRoute = createRoute({
 threadsRoutes.openapi(getThreadRoute, async (c) => {
   const { threadId } = c.req.valid("param");
 
-  const storage = await getStorage(c.env.DB);
+  const memory = await getMemory(c.env.DB);
 
-  const thread = await storage.getThreadById({ threadId });
+  const thread = await memory.getThreadById({ threadId });
 
   if (!thread) {
     throw new HTTPException(404, { message: "Thread not found" });
@@ -200,14 +183,8 @@ threadsRoutes.openapi(getThreadRoute, async (c) => {
     id: thread.id,
     resourceId: thread.resourceId,
     title: thread.title ?? null,
-    createdAt:
-      typeof thread.createdAt === "string"
-        ? thread.createdAt
-        : thread.createdAt.toISOString(),
-    updatedAt:
-      typeof thread.updatedAt === "string"
-        ? thread.updatedAt
-        : thread.updatedAt.toISOString(),
+    createdAt: thread.createdAt.toISOString(),
+    updatedAt: thread.updatedAt.toISOString(),
     metadata: thread.metadata ?? null,
   });
 });
@@ -222,9 +199,6 @@ const getMessagesRoute = createRoute({
   request: {
     params: z.object({
       threadId: z.string().min(1),
-    }),
-    query: z.object({
-      limit: z.coerce.number().int().min(1).max(100).optional().default(50),
     }),
   },
   responses: {
@@ -243,38 +217,29 @@ const getMessagesRoute = createRoute({
 
 threadsRoutes.openapi(getMessagesRoute, async (c) => {
   const { threadId } = c.req.valid("param");
-  const { limit } = c.req.valid("query");
 
-  const storage = await getStorage(c.env.DB);
+  const memory = await getMemory(c.env.DB);
 
-  const thread = await storage.getThreadById({ threadId });
+  const thread = await memory.getThreadById({ threadId });
 
   if (!thread) {
     throw new HTTPException(404, { message: "Thread not found" });
   }
 
-  const result = await storage.listMessages({
+  const result = await memory.recall({
     threadId,
-    perPage: limit,
+    threadConfig: {
+      lastMessages: false,
+    },
   });
 
-  const messages = result.messages.map((msg) => {
-    let content = "";
-    if (typeof msg.content === "string") {
-      content = msg.content;
-    } else if (msg.content && "parts" in msg.content) {
-      const parts = msg.content.parts as Array<{ type: string; text?: string }>;
-      content = parts
-        .filter((p) => p.type === "text" && p.text)
-        .map((p) => p.text)
-        .join("");
-    }
-    return {
-      id: msg.id,
-      role: msg.role as "user" | "assistant" | "system" | "tool" | "data",
-      content,
-    };
-  });
+  const uiMessages = convertMessages(result.messages).to("AIV5.UI");
+
+  const messages = uiMessages.map((msg) => ({
+    id: msg.id,
+    role: msg.role,
+    parts: msg.parts,
+  }));
 
   return c.json({ messages });
 });

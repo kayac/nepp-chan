@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { type Persona, personaRepository } from "~/db/persona-repository";
+import {
+  type Persona,
+  personaRepository,
+} from "~/repository/persona-repository";
 
 const createMockDb = () => {
   const mockResults: Persona[] = [];

@@ -1,13 +1,14 @@
-import type { D1Store } from "@mastra/cloudflare-d1";
 import { Agent } from "@mastra/core/agent";
-import { Memory } from "@mastra/memory";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { masterAgent } from "~/mastra/agents/master-agent";
 import { personaAgent } from "~/mastra/agents/persona-agent";
+import { weatherAgent } from "~/mastra/agents/weather-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
+import { getMemoryFromContext } from "~/mastra/memory";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
 import { devTool } from "~/mastra/tools/dev-tool";
+import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 import { verifyPasswordTool } from "~/mastra/tools/verify-password-tool";
 
 // TODO: もうちょっと村に住んでる感だしたい
@@ -50,14 +51,14 @@ export const nepChanAgent = new Agent({
 会話の節目（10メッセージごと）で、重要な知見（意見・要望・困りごと）があれば personaAgent に保存を依頼する。
 保存するかどうかは会話の内容から判断し、雑談のみの場合は保存不要。
 
-## コマンド処理（最優先）
+## コマンド処理
 ユーザーのメッセージが以下のコマンドで始まる場合、通常の会話より優先して処理する。
 
 ### /dev
-ユーザーが「/dev」と入力したら、dev-tool を呼び出してユーザーペルソナ（Working Memory）を表示する。json形式ではなく、ユーザーにわかりやすい自然言語で説明してください。
+dev-tool を呼び出してユーザーペルソナ（Working Memory）を表示する。json形式ではなく、ユーザーにわかりやすい自然言語で説明してください。
 
 ### /master
-ユーザーが「/master」と入力したら、村長モードの認証フローを開始する。
+村長モードの認証フローを開始する。
 - Working Memory の masterMode フラグで状態を管理
 - 手順:
   1. パスワードを聞く
@@ -72,23 +73,21 @@ export const nepChanAgent = new Agent({
     masterAgent,
     personaAgent,
     webResearcherAgent,
+    weatherAgent,
   },
   tools: {
     devTool,
+    knowledgeSearchTool,
     verifyPasswordTool,
   },
-  memory: ({ requestContext }) => {
-    const storage = requestContext.get("storage") as D1Store;
-    return new Memory({
-      storage,
-      options: {
-        workingMemory: {
-          enabled: true,
-          scope: "resource",
-          schema: personaSchema,
-        },
-        lastMessages: 8,
+  memory: ({ requestContext }) =>
+    getMemoryFromContext(requestContext, {
+      generateTitle: true,
+      workingMemory: {
+        enabled: true,
+        scope: "resource",
+        schema: personaSchema,
       },
-    });
-  },
+      lastMessages: 20,
+    }),
 });

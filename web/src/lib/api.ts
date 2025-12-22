@@ -1,3 +1,5 @@
+import type { UIMessage } from "ai";
+
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
 export type Thread = {
@@ -17,14 +19,8 @@ type ThreadsResponse = {
   perPage: number;
 };
 
-type Message = {
-  id: string;
-  role: "user" | "assistant" | "system" | "tool" | "data";
-  content: string;
-};
-
 type MessagesResponse = {
-  messages: Message[];
+  messages: UIMessage[];
 };
 
 export const fetchThreads = async (
@@ -69,10 +65,8 @@ export const fetchThread = async (threadId: string): Promise<Thread> => {
 
 export const fetchMessages = async (
   threadId: string,
-  limit = 50,
 ): Promise<MessagesResponse> => {
-  const params = new URLSearchParams({ limit: String(limit) });
-  const res = await fetch(`${API_BASE}/threads/${threadId}/messages?${params}`);
+  const res = await fetch(`${API_BASE}/threads/${threadId}/messages`);
   if (!res.ok) {
     throw new Error(`Failed to fetch messages: ${res.status}`);
   }
