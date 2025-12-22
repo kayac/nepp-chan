@@ -127,7 +127,7 @@ threadsRoutes.openapi(createThreadRoute, async (c) => {
 
   const thread = await memory.createThread({
     resourceId,
-    title: title ?? "新しい会話",
+    title,
     metadata,
   });
 
