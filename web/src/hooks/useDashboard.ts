@@ -1,10 +1,14 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchEmergencies } from "~/repository/emergency-repository";
 import {
   deleteAllKnowledge,
   syncKnowledge,
 } from "~/repository/knowledge-repository";
-import { fetchPersonas } from "~/repository/persona-repository";
+import {
+  deleteAllPersonas,
+  extractPersonas,
+  fetchPersonas,
+} from "~/repository/persona-repository";
 
 export const dashboardKeys = {
   personas: ["dashboard", "personas"] as const,
@@ -32,3 +36,23 @@ export const useDeleteKnowledge = () =>
   useMutation({
     mutationFn: deleteAllKnowledge,
   });
+
+export const useExtractPersonas = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: extractPersonas,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.personas });
+    },
+  });
+};
+
+export const useDeletePersonas = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteAllPersonas,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.personas });
+    },
+  });
+};
