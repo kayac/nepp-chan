@@ -1,5 +1,5 @@
+import { apiClient } from "~/lib/api/client";
 import type { MessagesResponse, Thread, ThreadsResponse } from "~/types";
-import { apiClient } from "./client";
 
 export const fetchThreads = (
   resourceId: string,
