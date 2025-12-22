@@ -132,20 +132,24 @@ aiss-nepch/
 
 ## API エンドポイント
 
-| パス                        | メソッド | 説明                           |
-| --------------------------- | -------- | ------------------------------ |
-| `/health`                   | GET      | ヘルスチェック                 |
-| `/chat`                     | POST     | チャットメッセージ送信（ストリーミング） |
-| `/threads`                  | GET      | スレッド一覧取得（ページング対応） |
-| `/threads`                  | POST     | スレッド作成                   |
-| `/threads/:threadId`        | GET      | スレッド詳細取得               |
-| `/threads/:threadId/messages` | GET    | メッセージ履歴取得             |
-| `/weather`                  | GET      | 天気情報取得（ワークフロー経由） |
-| `/admin/knowledge/sync`     | POST     | 全ナレッジ同期（R2 → Vectorize） |
-| `/admin/knowledge/sync/:source` | POST | 特定ファイルのみ同期           |
-| `/admin/knowledge`          | DELETE   | 全ナレッジ削除                 |
-| `/swagger`                  | GET      | Swagger UI                     |
-| `/doc`                      | GET      | OpenAPI スキーマ               |
+| パス                               | メソッド | 説明                                     |
+| ---------------------------------- | -------- | ---------------------------------------- |
+| `/health`                          | GET      | ヘルスチェック                           |
+| `/chat`                            | POST     | チャットメッセージ送信（ストリーミング） |
+| `/threads`                         | GET      | スレッド一覧取得（ページング対応）       |
+| `/threads`                         | POST     | スレッド作成                             |
+| `/threads/:threadId`               | GET      | スレッド詳細取得                         |
+| `/threads/:threadId/messages`      | GET      | メッセージ履歴取得                       |
+| `/weather`                         | GET      | 天気情報取得（ワークフロー経由）         |
+| `/admin/knowledge/sync`            | POST     | 全ナレッジ同期（R2 → Vectorize）         |
+| `/admin/knowledge/sync/:source`    | POST     | 特定ファイルのみ同期                     |
+| `/admin/knowledge`                 | DELETE   | 全ナレッジ削除                           |
+| `/admin/persona`                   | GET      | ペルソナ一覧取得                         |
+| `/admin/persona/extract`           | POST     | 全スレッドからペルソナ抽出               |
+| `/admin/persona/extract/:threadId` | POST     | 特定スレッドからペルソナ抽出             |
+| `/admin/persona`                   | DELETE   | 全ペルソナ削除                           |
+| `/swagger`                         | GET      | Swagger UI                               |
+| `/doc`                             | GET      | OpenAPI スキーマ                         |
 
 ## Mastra エージェント
 
@@ -320,6 +324,22 @@ execute: async (inputData, context) => {
 | demographic_summary | TEXT | 属性サマリー         |
 | created_at          | TEXT | 作成日時（NOT NULL） |
 | updated_at          | TEXT | 更新日時             |
+
+### thread_persona_status
+
+ペルソナ抽出の処理状態を管理するテーブル。
+
+| カラム             | 型      | 説明                   |
+| ------------------ | ------- | ---------------------- |
+| thread_id          | TEXT    | PRIMARY KEY            |
+| last_extracted_at  | TEXT    | 最終抽出日時           |
+| last_message_count | INTEGER | 処理済みメッセージ数   |
+
+## Cron Trigger
+
+| スケジュール | ハンドラー           | 説明                          |
+| ------------ | -------------------- | ----------------------------- |
+| `0 18 * * *` | handlePersonaExtract | ペルソナ抽出（毎日03:00 JST） |
 
 ## RAG ナレッジ機能
 

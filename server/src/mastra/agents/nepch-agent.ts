@@ -2,7 +2,6 @@ import { Agent } from "@mastra/core/agent";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { masterAgent } from "~/mastra/agents/master-agent";
-import { personaAgent } from "~/mastra/agents/persona-agent";
 import { weatherAgent } from "~/mastra/agents/weather-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
@@ -38,7 +37,6 @@ export const nepChanAgent = new Agent({
 | 緊急事態（クマ出没、火災、不審者など） | emergencyAgent（最優先） |
 | 村の情報（歴史、施設、観光、村長など） | knowledgeAgent → 回答なければ webResearcherAgent |
 | 最新情報・Web検索・天気 | webResearcherAgent |
-| 意見・要望・困りごとの蓄積 | personaAgent（属性情報も一緒に伝える） |
 | 村長モード中の分析依頼 | masterAgent |
 
 ## Working Memory
@@ -46,10 +44,6 @@ export const nepChanAgent = new Agent({
 - 既に値がある場合は上書きしない（ユーザーが訂正した場合のみ）
 - importantItems には重要な情報を蓄積
 - 「私のこと覚えてる？」→ Working Memory を参照して答える
-
-## ペルソナ保存（村の集合知）
-会話の節目（10メッセージごと）で、重要な知見（意見・要望・困りごと）があれば personaAgent に保存を依頼する。
-保存するかどうかは会話の内容から判断し、雑談のみの場合は保存不要。
 
 ## コマンド処理
 ユーザーのメッセージが以下のコマンドで始まる場合、通常の会話より優先して処理する。
@@ -71,7 +65,6 @@ dev-tool を呼び出してユーザーペルソナ（Working Memory）を表示
     emergencyAgent,
     knowledgeAgent,
     masterAgent,
-    personaAgent,
     webResearcherAgent,
     weatherAgent,
   },
