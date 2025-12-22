@@ -5,10 +5,10 @@
     "node": ">=22.13.0"
   },
   "scripts": {
-    "dev": "pnpm --filter @aiss-nepch/web dev",
-    "build": "pnpm --filter @aiss-nepch/web build",
     "server:dev": "pnpm --filter @aiss-nepch/server dev",
     "server:deploy": "pnpm --filter @aiss-nepch/server run deploy",
+    "web:dev": "pnpm --filter @aiss-nepch/web dev",
+    "web:build": "pnpm --filter @aiss-nepch/web build",
     "web:deploy": "pnpm --filter @aiss-nepch/web run deploy",
     "mastra:dev": "pnpm --filter @aiss-nepch/server mastra:dev",
     "mastra:build": "pnpm --filter @aiss-nepch/server mastra:build",
