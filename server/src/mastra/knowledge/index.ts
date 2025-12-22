@@ -2,9 +2,10 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { MDocument } from "@mastra/rag";
 import { embedMany } from "ai";
 
-const EMBEDDING_MODEL_NAME = "text-embedding-004";
-const EMBEDDING_DIMENSIONS = 768;
+const EMBEDDING_MODEL_NAME = "gemini-embedding-001";
+const EMBEDDING_DIMENSIONS = 1536;
 const BATCH_SIZE = 100;
+const MIN_CHUNK_LENGTH = 100;
 
 type EmbeddingModel = ReturnType<
   ReturnType<typeof createGoogleGenerativeAI>["textEmbeddingModel"]
@@ -12,6 +13,7 @@ type EmbeddingModel = ReturnType<
 
 type ChunkMetadata = {
   source: string;
+  title?: string;
   section?: string;
   subsection?: string;
   content: string;
@@ -21,13 +23,6 @@ type VectorData = {
   id: string;
   values: number[];
   metadata: ChunkMetadata;
-};
-
-type SyncResult = {
-  success: boolean;
-  processedFiles: number;
-  totalChunks: number;
-  errors: string[];
 };
 
 const embeddingModelCache = new Map<string, EmbeddingModel>();
@@ -47,26 +42,52 @@ const getEmbeddingModel = (apiKey: string): EmbeddingModel => {
 
 /**
  * Markdown コンテンツを chunk に分割
+ * markdown戦略でheaders指定により、見出し構造を活用してチャンクを生成
  */
 const chunkDocument = async (
   filename: string,
   content: string,
-): Promise<{ text: string; metadata: ChunkMetadata }[]> => {
+): Promise<{ texts: string[]; metadata: ChunkMetadata[] }> => {
   const doc = MDocument.fromMarkdown(content);
 
-  const chunks = await doc.chunk({
-    strategy: "recursive",
-    maxSize: 1000,
-    overlap: 100,
+  await doc.chunk({
+    strategy: "markdown",
+    headers: [
+      ["#", "title"],
+      ["##", "section"],
+      ["###", "subsection"],
+    ],
   });
 
-  return chunks.map((chunk) => ({
-    text: chunk.text,
-    metadata: {
+  // MDocument のメソッドを活用してテキストとメタデータを取得
+  const allTexts = doc.getText();
+  const chunkMetadataList = doc.getMetadata();
+
+  // 短すぎるチャンクを除外（embedding 品質向上のため）
+  const filteredIndices = allTexts
+    .map((text, i) => ({ text, i }))
+    .filter(({ text }) => text.length >= MIN_CHUNK_LENGTH)
+    .map(({ i }) => i);
+
+  const texts = filteredIndices.map((i) => allTexts[i]);
+  const metadata: ChunkMetadata[] = filteredIndices.map((i) => {
+    const chunkMeta = chunkMetadataList[i] as
+      | Record<string, unknown>
+      | undefined;
+    return {
       source: filename,
-      content: chunk.text,
-    },
-  }));
+      title: chunkMeta?.title as string | undefined,
+      section: chunkMeta?.section as string | undefined,
+      subsection: chunkMeta?.subsection as string | undefined,
+      content: allTexts[i],
+    };
+  });
+
+  console.log(
+    `[Knowledge Sync] ${filename}: ${allTexts.length} chunks -> ${texts.length} after filtering (min ${MIN_CHUNK_LENGTH} chars)`,
+  );
+
+  return { texts, metadata };
 };
 
 /**
@@ -85,6 +106,12 @@ const generateEmbeddings = async (
   const { embeddings } = await embedMany({
     model,
     values: texts,
+    providerOptions: {
+      google: {
+        outputDimensionality: EMBEDDING_DIMENSIONS,
+        taskType: "RETRIEVAL_DOCUMENT",
+      },
+    },
   });
 
   return embeddings;
@@ -100,22 +127,21 @@ export const processKnowledgeFile = async (
   apiKey: string,
 ): Promise<{ chunks: number; error?: string }> => {
   try {
-    // 1. Chunk 分割
-    const chunks = await chunkDocument(filename, content);
+    // 1. Chunk 分割（MDocument のメソッドを活用）
+    const { texts, metadata } = await chunkDocument(filename, content);
 
-    if (chunks.length === 0) {
+    if (texts.length === 0) {
       return { chunks: 0 };
     }
 
     // 2. Embeddings 生成
-    const texts = chunks.map((c) => c.text);
     const embeddings = await generateEmbeddings(texts, apiKey);
 
     // 3. ベクトルデータの作成
-    const vectors: VectorData[] = chunks.map((chunk, i) => ({
+    const vectors: VectorData[] = texts.map((_, i) => ({
       id: `${filename}-${i}`,
       values: embeddings[i],
-      metadata: chunk.metadata,
+      metadata: metadata[i],
     }));
 
     // 4. バッチで Vectorize に upsert
@@ -130,126 +156,11 @@ export const processKnowledgeFile = async (
       );
     }
 
-    return { chunks: chunks.length };
+    return { chunks: texts.length };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return { chunks: 0, error: message };
   }
-};
-
-/**
- * R2 バケットから全ファイルを同期
- */
-export const syncAllKnowledge = async (
-  bucket: R2Bucket,
-  vectorize: VectorizeIndex,
-  apiKey: string,
-): Promise<SyncResult> => {
-  const result: SyncResult = {
-    success: true,
-    processedFiles: 0,
-    totalChunks: 0,
-    errors: [],
-  };
-
-  try {
-    const listed = await bucket.list();
-    const mdFiles = listed.objects.filter((obj) => obj.key.endsWith(".md"));
-
-    for (const obj of mdFiles) {
-      const file = await bucket.get(obj.key);
-      if (!file) {
-        result.errors.push(`Failed to read: ${obj.key}`);
-        continue;
-      }
-
-      const content = await file.text();
-      const filename = obj.key;
-
-      // 既存データを削除（同じソースのデータを更新するため）
-      await deleteKnowledgeBySource(vectorize, filename);
-
-      // ファイルを処理
-      const processResult = await processKnowledgeFile(
-        filename,
-        content,
-        vectorize,
-        apiKey,
-      );
-
-      if (processResult.error) {
-        result.errors.push(`${filename}: ${processResult.error}`);
-      } else {
-        result.processedFiles++;
-        result.totalChunks += processResult.chunks;
-      }
-    }
-
-    if (result.errors.length > 0) {
-      result.success = false;
-    }
-  } catch (error) {
-    result.success = false;
-    result.errors.push(
-      error instanceof Error ? error.message : "Unknown error",
-    );
-  }
-
-  return result;
-};
-
-/**
- * 特定のファイルのみ同期
- */
-export const syncKnowledgeBySource = async (
-  bucket: R2Bucket,
-  vectorize: VectorizeIndex,
-  source: string,
-  apiKey: string,
-): Promise<SyncResult> => {
-  const result: SyncResult = {
-    success: true,
-    processedFiles: 0,
-    totalChunks: 0,
-    errors: [],
-  };
-
-  try {
-    const file = await bucket.get(source);
-    if (!file) {
-      result.success = false;
-      result.errors.push(`File not found: ${source}`);
-      return result;
-    }
-
-    const content = await file.text();
-
-    // 既存データを削除
-    await deleteKnowledgeBySource(vectorize, source);
-
-    // ファイルを処理
-    const processResult = await processKnowledgeFile(
-      source,
-      content,
-      vectorize,
-      apiKey,
-    );
-
-    if (processResult.error) {
-      result.success = false;
-      result.errors.push(`${source}: ${processResult.error}`);
-    } else {
-      result.processedFiles = 1;
-      result.totalChunks = processResult.chunks;
-    }
-  } catch (error) {
-    result.success = false;
-    result.errors.push(
-      error instanceof Error ? error.message : "Unknown error",
-    );
-  }
-
-  return result;
 };
 
 /**

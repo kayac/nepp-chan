@@ -1,5 +1,5 @@
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, type UIMessage } from "ai";
+import { DefaultChatTransport } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createThread,
@@ -31,9 +31,10 @@ export const ChatContainer = () => {
         new DefaultChatTransport({
           api: `${apiBase}/chat`,
           prepareSendMessagesRequest({ messages }) {
+            const lastMessage = messages[messages.length - 1];
             return {
               body: {
-                messages,
+                message: lastMessage,
                 resourceId,
                 threadId,
               },
@@ -49,13 +50,7 @@ export const ChatContainer = () => {
       setIsLoadingMessages(true);
       try {
         const result = await fetchMessages(targetThreadId);
-        const uiMessages: UIMessage[] = result.messages.map((msg) => ({
-          id: msg.id,
-          role: msg.role as "user" | "assistant",
-          parts: [{ type: "text" as const, text: msg.content }],
-          createdAt: new Date(),
-        }));
-        setMessages(uiMessages);
+        setMessages(result.messages);
       } catch (err) {
         console.error("Failed to load messages:", err);
         setMessages([]);

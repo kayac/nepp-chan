@@ -82,7 +82,7 @@ aiss-nepch/
 │   │   ├── routes/
 │   │   │   ├── admin/               # 管理 API
 │   │   │   │   └── knowledge.ts     # ナレッジ同期 API
-│   │   ├── db/
+│   │   ├── repository/
 │   │   │   ├── persona-repository.ts
 │   │   │   ├── emergency-repository.ts
 │   │   │   └── migrations/
@@ -178,7 +178,7 @@ pnpm --filter @aiss-nepch/server test     # テスト実行
 pnpm --filter @aiss-nepch/server deploy   # デプロイ
 
 # D1 マイグレーション
-wrangler d1 execute aiss-nepch-dev --file=./server/src/db/migrations/001_init.sql
+wrangler d1 execute aiss-nepch-dev --file=./server/src/repository/migrations/001_init.sql
 
 # ナレッジ管理
 pnpm knowledge:upload            # R2 にアップロード + Vectorize 同期
@@ -331,8 +331,26 @@ server/knowledge/*.md → R2 バケット → Vectorize（embeddings）
 2. 本番 API の `/admin/knowledge/sync` を呼び出し
 3. Workers 内で R2 からファイルを読み込み
 4. `MDocument.fromMarkdown()` で chunk 分割（Mastra RAG）
-5. `embedMany()` で embeddings 生成（Google text-embedding-004）
-6. Vectorize に upsert
+5. 短いチャンク（100文字未満）をフィルタリング
+6. `embedMany()` で embeddings 生成（Google gemini-embedding-001, 1536次元）
+7. Vectorize に upsert
+
+### チャンクフィルタリング
+
+短すぎるチャンク（見出しのみ、短い導入文など）は汎用的な embedding を生成し、検索精度を低下させる。これを防ぐため、100文字未満のチャンクは同期時に除外される。
+
+```typescript
+const MIN_CHUNK_LENGTH = 100;
+```
+
+### Embedding モデル
+
+| 用途 | モデル | 次元数 | taskType |
+| ---- | ------ | ------ | -------- |
+| ドキュメント登録 | gemini-embedding-001 | 1536 | RETRIEVAL_DOCUMENT |
+| 検索クエリ | gemini-embedding-001 | 1536 | RETRIEVAL_QUERY |
+
+`gemini-embedding-001` は Google の多言語対応 embedding モデルで、日本語を含む100以上の言語をサポート。MTEB 多言語ランキング1位。Matryoshka Representation Learning により、3072次元から1536次元に削減して使用。
 
 ### Cloudflare バインディング
 
