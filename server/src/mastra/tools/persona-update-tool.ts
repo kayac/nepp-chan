@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { personaRepository } from "~/db/persona-repository";
+import { personaRepository } from "~/repository/persona-repository";
 
 export const personaUpdateTool = createTool({
   id: "persona-update",
