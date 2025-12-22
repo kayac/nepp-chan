@@ -1,16 +1,15 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { D1Store } from "@mastra/cloudflare-d1";
 import { convertMessages } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { HTTPException } from "hono/http-exception";
+import { getStorage } from "~/lib/storage";
 
 export const threadsRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
 }>();
 
 const getMemory = async (db: D1Database) => {
-  const storage = new D1Store({ id: "mastra-storage", binding: db });
-  await storage.init();
+  const storage = await getStorage(db);
   return new Memory({ storage });
 };
 
