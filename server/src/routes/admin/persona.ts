@@ -41,6 +41,7 @@ const PersonaSchema = z.object({
   demographicSummary: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string().nullable(),
+  conversationEndedAt: z.string().nullable(),
 });
 
 type Persona = z.infer<typeof PersonaSchema>;
@@ -90,7 +91,8 @@ personaAdminRoutes.openapi(listRoute, async (c) => {
     .prepare(
       `SELECT id, resource_id as resourceId, category, tags, content, source,
               topic, sentiment, demographic_summary as demographicSummary,
-              created_at as createdAt, updated_at as updatedAt
+              created_at as createdAt, updated_at as updatedAt,
+              conversation_ended_at as conversationEndedAt
        FROM persona ORDER BY created_at DESC LIMIT ?`,
     )
     .bind(Number(limit))
