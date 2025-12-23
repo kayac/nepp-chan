@@ -33,6 +33,7 @@ export type Persona = {
   demographicSummary: string | null;
   createdAt: string;
   updatedAt: string | null;
+  conversationEndedAt: string | null;
 };
 
 export type PersonasResponse = {
