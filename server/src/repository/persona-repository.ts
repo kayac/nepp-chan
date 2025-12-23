@@ -10,6 +10,7 @@ export type Persona = {
   demographicSummary: string | null;
   createdAt: string;
   updatedAt: string | null;
+  conversationEndedAt: string | null;
 };
 
 type CreateInput = {
@@ -23,6 +24,7 @@ type CreateInput = {
   sentiment?: string;
   demographicSummary?: string;
   createdAt: string;
+  conversationEndedAt?: string;
 };
 
 type UpdateInput = {
@@ -47,8 +49,8 @@ export const personaRepository = {
   async create(db: D1Database, input: CreateInput) {
     const result = await db
       .prepare(
-        `INSERT INTO persona (id, resource_id, category, tags, content, source, topic, sentiment, demographic_summary, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO persona (id, resource_id, category, tags, content, source, topic, sentiment, demographic_summary, created_at, conversation_ended_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         input.id,
@@ -61,6 +63,7 @@ export const personaRepository = {
         input.sentiment ?? "neutral",
         input.demographicSummary ?? null,
         input.createdAt,
+        input.conversationEndedAt ?? null,
       )
       .run();
 
@@ -127,7 +130,8 @@ export const personaRepository = {
       .prepare(
         `SELECT id, resource_id as resourceId, category, tags, content, source,
                 topic, sentiment, demographic_summary as demographicSummary,
-                created_at as createdAt, updated_at as updatedAt
+                created_at as createdAt, updated_at as updatedAt,
+                conversation_ended_at as conversationEndedAt
          FROM persona WHERE id = ?`,
       )
       .bind(id)
@@ -141,7 +145,8 @@ export const personaRepository = {
       .prepare(
         `SELECT id, resource_id as resourceId, category, tags, content, source,
                 topic, sentiment, demographic_summary as demographicSummary,
-                created_at as createdAt, updated_at as updatedAt
+                created_at as createdAt, updated_at as updatedAt,
+                conversation_ended_at as conversationEndedAt
          FROM persona WHERE resource_id = ? ORDER BY created_at DESC LIMIT ?`,
       )
       .bind(resourceId, limit)
@@ -188,7 +193,8 @@ export const personaRepository = {
       .prepare(
         `SELECT id, resource_id as resourceId, category, tags, content, source,
                 topic, sentiment, demographic_summary as demographicSummary,
-                created_at as createdAt, updated_at as updatedAt
+                created_at as createdAt, updated_at as updatedAt,
+                conversation_ended_at as conversationEndedAt
          FROM persona WHERE ${conditions.join(" AND ")} ORDER BY created_at DESC LIMIT ?`,
       )
       .bind(...values)

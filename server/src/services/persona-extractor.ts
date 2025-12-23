@@ -58,6 +58,14 @@ export const extractPersonaFromThread = async (
     return { skipped: true, reason: "empty_conversation" };
   }
 
+  const lastMessage = result.messages[result.messages.length - 1];
+  const conversationEndedAt =
+    lastMessage?.createdAt instanceof Date
+      ? lastMessage.createdAt.toISOString()
+      : typeof lastMessage?.createdAt === "string"
+        ? lastMessage.createdAt
+        : new Date().toISOString();
+
   const storage = await getStorage(env.DB);
   const mastra = createMastra(storage as unknown as MastraStorage);
   const agent = mastra.getAgent("personaAgent");
@@ -65,6 +73,7 @@ export const extractPersonaFromThread = async (
     storage,
     db: env.DB,
     env,
+    conversationEndedAt,
   });
 
   try {

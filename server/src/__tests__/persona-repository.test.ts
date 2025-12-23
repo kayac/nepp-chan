@@ -125,6 +125,7 @@ describe("personaRepository", () => {
         demographicSummary: null,
         createdAt: "2024-01-01T00:00:00Z",
         updatedAt: null,
+        conversationEndedAt: null,
       };
       mockDb._setMockResults([mockPersona]);
 
@@ -163,6 +164,7 @@ describe("personaRepository", () => {
           demographicSummary: null,
           createdAt: "2024-01-01T00:00:00Z",
           updatedAt: null,
+          conversationEndedAt: null,
         },
         {
           id: "2",
@@ -176,6 +178,7 @@ describe("personaRepository", () => {
           demographicSummary: null,
           createdAt: "2024-01-02T00:00:00Z",
           updatedAt: null,
+          conversationEndedAt: null,
         },
       ];
       mockDb._setMockResults(mockPersonas);
