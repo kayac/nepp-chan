@@ -7,7 +7,8 @@ import { threadPersonaStatusRepository } from "~/repository/thread-persona-statu
 
 type ExtractResult =
   | { skipped: true; reason: string }
-  | { extracted: true; messageCount: number };
+  | { extracted: true; messageCount: number }
+  | { error: true; reason: string };
 
 const getMemory = async (db: D1Database) => {
   const storage = await getStorage(db);
@@ -67,17 +68,24 @@ export const extractPersonaFromThread = async (
     env,
   });
 
-  await agent.generate(
-    `以下の会話からペルソナ情報を抽出して保存してください。複数のトピックがあれば、それぞれ別のペルソナとして保存してください:\n\n${conversationText}`,
-    { requestContext },
-  );
+  try {
+    await agent.generate(
+      `以下の会話からペルソナ情報を抽出して保存してください。複数のトピックがあれば、それぞれ別のペルソナとして保存してください:\n\n${conversationText}`,
+      { requestContext },
+    );
+  } catch (error) {
+    console.error(`Persona extraction failed for thread ${threadId}:`, error);
+    const message =
+      error instanceof Error ? error.message : "Unknown extraction error";
+    return { error: true, reason: message };
+  }
 
   return { extracted: true, messageCount: totalMessages };
 };
 
 const getAllThreadIds = async (db: D1Database): Promise<string[]> => {
   const result = await db
-    .prepare("SELECT id FROM mastra_threads ORDER BY created_at DESC")
+    .prepare("SELECT id FROM mastra_threads ORDER BY createdAt DESC")
     .all<{ id: string }>();
   return result.results.map((row) => row.id);
 };
