@@ -341,6 +341,62 @@ execute: async (inputData, context) => {
 | ------------ | -------------------- | ----------------------------- |
 | `0 18 * * *` | handlePersonaExtract | ペルソナ抽出（毎日03:00 JST） |
 
+## ペルソナ抽出バッチ処理
+
+### 概要
+
+会話履歴から村の集合知（ペルソナ）を抽出するバッチ処理。`personaAgent` が会話を分析し、意見・関心事・困りごとなどを匿名化して蓄積する。
+
+### アーキテクチャ
+
+```text
+[Cron Trigger / 管理API]
+       ↓
+mastra_threads から全スレッド取得
+       ↓
+thread_persona_status と比較（差分検出）
+       ↓
+新しいメッセージのみ抽出
+       ↓
+personaAgent で分析・保存
+       ↓
+thread_persona_status 更新
+```
+
+### ファイル構成
+
+| パス | 説明 |
+| ---- | ---- |
+| `server/src/services/persona-extractor.ts` | 抽出ロジック |
+| `server/src/routes/admin/persona.ts` | 管理 API |
+| `server/src/handlers/persona-extract-handler.ts` | Cron ハンドラー |
+| `server/src/repository/thread-persona-status-repository.ts` | 処理状態管理 |
+
+### 抽出結果タイプ
+
+| タイプ    | reason             | 説明                       |
+| --------- | ------------------ | -------------------------- |
+| extracted | -                  | ペルソナが抽出・保存された |
+| skipped   | no_new_messages    | 新しいメッセージがない     |
+| skipped   | empty_conversation | 空の会話                   |
+| skipped   | no_persona_found   | ペルソナ保存不要の会話     |
+| skipped   | extraction_error   | 抽出処理でエラー発生       |
+
+### 差分処理
+
+`thread_persona_status.last_message_count` を記録し、前回処理以降の新しいメッセージのみを抽出対象とする。これにより同じ会話の重複抽出を防止。
+
+`extracted` と `skipped`（`messageCount` あり）の両方で `thread_persona_status` を更新し、再処理を防ぐ。
+
+### 重複登録の考え方
+
+| ケース | 動作 |
+| ------ | ---- |
+| 異なるスレッドで同じ意見 | 別々に登録OK（複数人の声 = 重要） |
+| 同じスレッドの同じ会話を再処理 | スキップ（差分処理で防止） |
+| 同じスレッドに新しい会話追加 | 新しい部分のみ抽出・登録 |
+| 1つのスレッドに複数トピック | 複数のペルソナとして登録OK |
+
 ## RAG ナレッジ機能
 
 ### 概要
