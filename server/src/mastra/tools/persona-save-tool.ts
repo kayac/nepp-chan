@@ -47,6 +47,9 @@ export const personaSaveTool = createTool({
   }),
   execute: async (inputData, context) => {
     const db = context?.requestContext?.get("db") as D1Database | undefined;
+    const conversationEndedAt = context?.requestContext?.get(
+      "conversationEndedAt",
+    ) as string | undefined;
 
     if (!db) {
       return {
@@ -82,6 +85,7 @@ export const personaSaveTool = createTool({
         sentiment,
         demographicSummary,
         createdAt,
+        conversationEndedAt,
       });
 
       return {

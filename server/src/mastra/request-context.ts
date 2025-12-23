@@ -6,6 +6,7 @@ export type MastraRequestContextType = {
   db: D1Database;
   env: CloudflareBindings;
   masterPassword?: string;
+  conversationEndedAt?: string;
 };
 
 export const createRequestContext = (values: MastraRequestContextType) => {
@@ -15,6 +16,9 @@ export const createRequestContext = (values: MastraRequestContextType) => {
   requestContext.set("env", values.env);
   if (values.masterPassword) {
     requestContext.set("masterPassword", values.masterPassword);
+  }
+  if (values.conversationEndedAt) {
+    requestContext.set("conversationEndedAt", values.conversationEndedAt);
   }
   return requestContext;
 };
