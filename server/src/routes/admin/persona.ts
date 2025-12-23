@@ -110,6 +110,7 @@ const ExtractResultSchema = z.object({
   result: z.union([
     z.object({ skipped: z.literal(true), reason: z.string() }),
     z.object({ extracted: z.literal(true), messageCount: z.number() }),
+    z.object({ error: z.literal(true), reason: z.string() }),
   ]),
 });
 
@@ -157,10 +158,21 @@ personaAdminRoutes.openapi(extractAllRoute, async (c) => {
     const skipped = results.filter(
       (r) => "skipped" in r.result && r.result.skipped,
     ).length;
+    const errors = results.filter(
+      (r) => "error" in r.result && r.result.error,
+    ).length;
+
+    const messageParts = [
+      `${extracted}件のスレッドからペルソナを抽出しました`,
+      `${skipped}件スキップ`,
+    ];
+    if (errors > 0) {
+      messageParts.push(`${errors}件エラー`);
+    }
 
     return c.json({
       success: true,
-      message: `${extracted}件のスレッドからペルソナを抽出しました（${skipped}件スキップ）`,
+      message: messageParts.join("、"),
       results,
     });
   } catch (error) {
