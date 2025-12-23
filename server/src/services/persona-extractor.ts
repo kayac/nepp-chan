@@ -6,9 +6,8 @@ import { createRequestContext } from "~/mastra/request-context";
 import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
 
 type ExtractResult =
-  | { skipped: true; reason: string }
-  | { extracted: true; messageCount: number }
-  | { error: true; reason: string };
+  | { skipped: true; reason: string; messageCount?: number }
+  | { extracted: true; messageCount: number };
 
 const getMemory = async (db: D1Database) => {
   const storage = await getStorage(db);
@@ -74,10 +73,24 @@ export const extractPersonaFromThread = async (
       { requestContext },
     );
   } catch (error) {
+    // Gemini API が candidates を返さない場合は「保存すべきペルソナがない」と判断
+    // これは正常な動作なので skipped として扱う
+    const isNoPersonaFound =
+      error instanceof Error && error.message === "Invalid JSON response";
+    if (isNoPersonaFound) {
+      return {
+        skipped: true,
+        reason: "no_persona_found",
+        messageCount: totalMessages,
+      };
+    }
+    // その他のエラーはログに出力してスキップ
     console.error(`Persona extraction failed for thread ${threadId}:`, error);
-    const message =
-      error instanceof Error ? error.message : "Unknown extraction error";
-    return { error: true, reason: message };
+    return {
+      skipped: true,
+      reason: "extraction_error",
+      messageCount: totalMessages,
+    };
   }
 
   return { extracted: true, messageCount: totalMessages };
@@ -113,11 +126,15 @@ export const extractAllPendingThreads = async (env: CloudflareBindings) => {
 
     results.push({ threadId, result });
 
-    if ("extracted" in result && result.extracted) {
+    // extracted または skipped (messageCount あり) の場合はステータスを更新
+    // これにより次回の再処理を防ぐ
+    const messageCount =
+      "messageCount" in result ? result.messageCount : undefined;
+    if (messageCount !== undefined) {
       await threadPersonaStatusRepository.upsert(env.DB, {
         threadId,
         lastExtractedAt: new Date().toISOString(),
-        lastMessageCount: result.messageCount,
+        lastMessageCount: messageCount,
       });
     }
   }
