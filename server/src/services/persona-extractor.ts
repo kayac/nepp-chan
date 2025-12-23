@@ -5,8 +5,6 @@ import { createMastra } from "~/mastra/factory";
 import { createRequestContext } from "~/mastra/request-context";
 import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
 
-const RESOURCE_ID = "otoineppu";
-
 type ExtractResult =
   | { skipped: true; reason: string }
   | { extracted: true; messageCount: number };
@@ -77,50 +75,43 @@ export const extractPersonaFromThread = async (
   return { extracted: true, messageCount: totalMessages };
 };
 
-export const extractAllPendingThreads = async (env: CloudflareBindings) => {
-  const memory = await getMemory(env.DB);
+const getAllThreadIds = async (db: D1Database): Promise<string[]> => {
+  const result = await db
+    .prepare("SELECT id FROM mastra_threads ORDER BY created_at DESC")
+    .all<{ id: string }>();
+  return result.results.map((row) => row.id);
+};
 
+export const extractAllPendingThreads = async (env: CloudflareBindings) => {
   const allStatus = await threadPersonaStatusRepository.findAll(env.DB);
   const statusMap = new Map(allStatus.map((s) => [s.threadId, s]));
 
-  let page = 0;
-  const perPage = 100;
-  let hasMore = true;
+  const threadIds = await getAllThreadIds(env.DB);
+
   const results: Array<{
     threadId: string;
     result: ExtractResult;
   }> = [];
 
-  while (hasMore) {
-    const threadsResult = await memory.listThreadsByResourceId({
-      resourceId: RESOURCE_ID,
-      page,
-      perPage,
-    });
+  for (const threadId of threadIds) {
+    const status = statusMap.get(threadId);
+    const lastMessageCount = status?.lastMessageCount ?? 0;
 
-    for (const thread of threadsResult.threads) {
-      const status = statusMap.get(thread.id);
-      const lastMessageCount = status?.lastMessageCount ?? 0;
+    const result = await extractPersonaFromThread(
+      threadId,
+      lastMessageCount,
+      env,
+    );
 
-      const result = await extractPersonaFromThread(
-        thread.id,
-        lastMessageCount,
-        env,
-      );
+    results.push({ threadId, result });
 
-      results.push({ threadId: thread.id, result });
-
-      if ("extracted" in result && result.extracted) {
-        await threadPersonaStatusRepository.upsert(env.DB, {
-          threadId: thread.id,
-          lastExtractedAt: new Date().toISOString(),
-          lastMessageCount: result.messageCount,
-        });
-      }
+    if ("extracted" in result && result.extracted) {
+      await threadPersonaStatusRepository.upsert(env.DB, {
+        threadId,
+        lastExtractedAt: new Date().toISOString(),
+        lastMessageCount: result.messageCount,
+      });
     }
-
-    hasMore = threadsResult.hasMore;
-    page++;
   }
 
   return results;
