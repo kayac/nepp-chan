@@ -131,6 +131,9 @@ export const PersonaPanel = () => {
                     タグ
                   </th>
                   <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap">
+                    会話日時
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap">
                     作成日時
                   </th>
                 </tr>
@@ -171,6 +174,13 @@ export const PersonaPanel = () => {
                     </td>
                     <td className="px-4 py-3 text-stone-500 text-xs w-24">
                       {persona.tags || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-stone-500 whitespace-nowrap">
+                      {persona.conversationEndedAt
+                        ? new Date(persona.conversationEndedAt).toLocaleString(
+                            "ja-JP",
+                          )
+                        : "-"}
                     </td>
                     <td className="px-4 py-3 text-stone-500 whitespace-nowrap">
                       {new Date(persona.createdAt).toLocaleString("ja-JP")}
