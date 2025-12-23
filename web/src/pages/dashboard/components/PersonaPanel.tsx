@@ -109,16 +109,28 @@ export const PersonaPanel = () => {
       ) : (
         <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="min-w-[1200px] w-full text-sm">
               <thead className="bg-stone-50 border-b border-stone-200">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-stone-600">
+                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap w-32">
                     カテゴリ
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-stone-600">
+                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap">
+                    トピック
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap">
                     内容
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-stone-600">
+                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap">
+                    感情
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap">
+                    属性
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap w-24">
+                    タグ
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap">
                     作成日時
                   </th>
                 </tr>
@@ -126,13 +138,39 @@ export const PersonaPanel = () => {
               <tbody className="divide-y divide-stone-100">
                 {personas.map((persona) => (
                   <tr key={persona.id} className="hover:bg-stone-50">
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 w-32">
                       <span className="inline-flex px-2 py-1 text-xs font-medium bg-teal-50 text-teal-700 rounded">
                         {persona.category}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-stone-700 max-w-md truncate">
+                    <td className="px-4 py-3 text-stone-600">
+                      {persona.topic || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-stone-700 max-w-md whitespace-pre-wrap wrap-break-word">
                       {persona.content}
+                    </td>
+                    <td className="px-4 py-3">
+                      {persona.sentiment && (
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-medium rounded ${
+                            persona.sentiment === "positive"
+                              ? "bg-green-50 text-green-700"
+                              : persona.sentiment === "negative"
+                                ? "bg-red-50 text-red-700"
+                                : persona.sentiment === "request"
+                                  ? "bg-amber-50 text-amber-700"
+                                  : "bg-stone-100 text-stone-600"
+                          }`}
+                        >
+                          {persona.sentiment}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-stone-600 text-xs">
+                      {persona.demographicSummary || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-stone-500 text-xs w-24">
+                      {persona.tags || "-"}
                     </td>
                     <td className="px-4 py-3 text-stone-500 whitespace-nowrap">
                       {new Date(persona.createdAt).toLocaleString("ja-JP")}
