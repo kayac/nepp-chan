@@ -40,6 +40,7 @@
 ### データベース・ストレージ
 
 - **Cloudflare D1** - SQLite ベースのエッジデータベース
+- **Drizzle ORM** - 型安全な SQL クエリビルダー
 - **D1Store** (@mastra/cloudflare-d1) - Mastra ストレージアダプタ
 - **Cloudflare R2** - ナレッジファイル（Markdown）のオブジェクトストレージ
 - **Cloudflare Vectorize** - ベクトルデータベース（RAG 用 embeddings 格納）
@@ -83,6 +84,10 @@ aiss-nepch/
 │   │   ├── routes/
 │   │   │   ├── admin/               # 管理 API
 │   │   │   │   └── knowledge.ts     # ナレッジ同期 API
+│   │   ├── db/
+│   │   │   ├── schema.ts            # Drizzle スキーマ定義
+│   │   │   ├── client.ts            # DB クライアント生成
+│   │   │   └── index.ts             # エクスポート
 │   │   ├── repository/
 │   │   │   ├── persona-repository.ts
 │   │   │   ├── emergency-repository.ts
@@ -90,6 +95,7 @@ aiss-nepch/
 │   │   │       └── 001_init.sql
 │   │   └── __tests__/
 │   ├── knowledge/                       # ナレッジ Markdown ファイル
+│   ├── drizzle.config.ts                # Drizzle Kit 設定
 │   ├── scripts/
 │   │   └── upload-knowledge.ts          # R2 アップロード + 同期スクリプト
 │   ├── wrangler.jsonc
@@ -201,8 +207,13 @@ pnpm --filter @aiss-nepch/server dev      # 開発サーバー
 pnpm --filter @aiss-nepch/server test     # テスト実行
 pnpm --filter @aiss-nepch/server deploy   # デプロイ
 
-# D1 マイグレーション
-wrangler d1 execute aiss-nepch-dev --file=./server/src/repository/migrations/001_init.sql
+# Drizzle ORM / D1 マイグレーション
+pnpm db:generate             # スキーマから SQL 生成 → server/migrations/
+pnpm db:migrate              # リモート D1 (aiss-nepch-dev) に適用
+pnpm db:migrate:local        # ローカル D1 に適用
+pnpm db:studio               # Drizzle Studio（DB GUI）起動
+pnpm db:push                 # スキーマを直接 DB に反映（開発用）
+pnpm db:check                # スキーマとマイグレーションの整合性チェック
 
 # ナレッジ管理
 pnpm knowledge:upload            # R2 にアップロード + Vectorize 同期
@@ -454,6 +465,100 @@ const MIN_CHUNK_LENGTH = 100;
 | -------------- | -------- |
 | `KNOWLEDGE_BUCKET` | R2 バケット `aiss-nepch-knowledge` |
 | `VECTORIZE` | Vectorize インデックス `knowledge` |
+
+## Drizzle ORM
+
+### 概要
+
+Cloudflare D1 に対する型安全なクエリビルダー。生 SQL の代わりに Drizzle ORM を使用し、SQL インジェクションを防止しつつ型安全性を確保。
+
+### ファイル構成
+
+| パス | 説明 |
+| ---- | ---- |
+| `server/src/db/schema.ts` | テーブルスキーマ定義 |
+| `server/src/db/client.ts` | DB クライアント生成関数 |
+| `server/src/db/index.ts` | エクスポート |
+| `server/drizzle.config.ts` | Drizzle Kit 設定 |
+
+### スキーマ定義
+
+```typescript
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+
+export const persona = sqliteTable("persona", {
+  id: text("id").primaryKey(),
+  resourceId: text("resource_id").notNull(),
+  category: text("category").notNull(),
+  // ...
+});
+
+// 型推論
+export type Persona = typeof persona.$inferSelect;
+export type NewPersona = typeof persona.$inferInsert;
+```
+
+### DB クライアント使用方法
+
+```typescript
+import { createDb, persona } from "~/db";
+import { eq, desc } from "drizzle-orm";
+
+// D1Database から Drizzle クライアント生成
+const db = createDb(c.env.DB);
+
+// SELECT
+const result = await db
+  .select()
+  .from(persona)
+  .where(eq(persona.id, "xxx"))
+  .get();
+
+// INSERT
+await db.insert(persona).values({ id: "xxx", ... });
+
+// UPDATE
+await db.update(persona).set({ content: "新しい内容" }).where(eq(persona.id, "xxx"));
+
+// DELETE
+await db.delete(persona).where(eq(persona.id, "xxx"));
+```
+
+### Mastra テーブルの扱い
+
+`mastra_threads` は Mastra が管理するテーブル。読み取り専用のスキーマとして定義し、マイグレーション対象から除外。
+
+```typescript
+// drizzle.config.ts
+export default defineConfig({
+  tablesFilter: ["!mastra_*"],  // Mastra テーブルを除外
+});
+```
+
+### D1 マイグレーションフロー
+
+```bash
+# 1. スキーマを変更（server/src/db/schema.ts）
+
+# 2. マイグレーションファイル生成
+pnpm db:generate   # → server/migrations/ に SQL 生成
+
+# 3. D1 に適用
+pnpm db:migrate        # リモート D1 (aiss-nepch-dev)
+pnpm db:migrate:local  # ローカル D1
+```
+
+### テスト用 DB
+
+`@libsql/client` のインメモリ SQLite を使用。
+
+```typescript
+import { createClient } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
+
+const client = createClient({ url: ":memory:" });
+const db = drizzle(client, { schema });
+```
 
 ## ブランチ戦略
 
