@@ -15,7 +15,13 @@
     "mastra:start": "pnpm --filter @aiss-nepch/server mastra:start",
     "lint": "biome check . && pnpm --filter @aiss-nepch/web exec tsc --noEmit && pnpm --filter @aiss-nepch/server exec tsc --noEmit",
     "lint:fix": "biome check --write .",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "db:generate": "pnpm --filter @aiss-nepch/server db:generate",
+    "db:migrate": "pnpm --filter @aiss-nepch/server db:migrate",
+    "db:migrate:local": "pnpm --filter @aiss-nepch/server db:migrate:local",
+    "db:studio": "pnpm --filter @aiss-nepch/server db:studio",
+    "db:push": "pnpm --filter @aiss-nepch/server db:push",
+    "db:check": "pnpm --filter @aiss-nepch/server db:check"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.8"

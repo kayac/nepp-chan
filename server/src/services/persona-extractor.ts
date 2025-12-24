@@ -1,5 +1,8 @@
 import type { MastraStorage } from "@mastra/core/storage";
 import { Memory } from "@mastra/memory";
+import { desc } from "drizzle-orm";
+
+import { createDb, mastraThreads } from "~/db";
 import { getStorage } from "~/lib/storage";
 import { createMastra } from "~/mastra/factory";
 import { getWorkingMemoryByThread } from "~/mastra/memory";
@@ -119,13 +122,19 @@ export const extractPersonaFromThread = async (
 
 type ThreadInfo = { id: string; resourceId: string };
 
-const getAllThreads = async (db: D1Database): Promise<ThreadInfo[]> => {
-  const result = await db
-    .prepare(
-      "SELECT id, resourceId FROM mastra_threads ORDER BY createdAt DESC",
-    )
-    .all<ThreadInfo>();
-  return result.results;
+const getAllThreads = async (d1: D1Database): Promise<ThreadInfo[]> => {
+  const db = createDb(d1);
+
+  const results = await db
+    .select({
+      id: mastraThreads.id,
+      resourceId: mastraThreads.resourceId,
+    })
+    .from(mastraThreads)
+    .orderBy(desc(mastraThreads.id))
+    .all();
+
+  return results.filter((t): t is ThreadInfo => t.resourceId !== null);
 };
 
 export const extractAllPendingThreads = async (env: CloudflareBindings) => {
