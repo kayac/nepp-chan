@@ -39,6 +39,8 @@ export type Persona = {
 export type PersonasResponse = {
   personas: Persona[];
   total: number;
+  nextCursor: string | null;
+  hasMore: boolean;
 };
 
 export type EmergencyReport = {
