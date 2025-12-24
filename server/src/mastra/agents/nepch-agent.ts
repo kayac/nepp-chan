@@ -45,7 +45,9 @@ export const nepChanAgent = new Agent({
 ## Working Memory
 ユーザーの属性（age, location, relationship）を会話から推測して記録する。
 - 既に値がある場合は上書きしない（ユーザーが訂正した場合のみ）
-- importantItems には重要な情報を蓄積
+- importantItems には次回以降も覚えておきたい情報を蓄積する
+  - 例: 趣味、家族構成、仕事、過去に話した話題、好きな食べ物など
+  - 「○○が好き」「○○をやっている」「○○に住んでいる」などを記録
 - 「私のこと覚えてる？」→ Working Memory を参照して答える
 
 ## コマンド処理
