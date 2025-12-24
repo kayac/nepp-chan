@@ -1,9 +1,20 @@
 import { apiClient } from "~/lib/api/client";
 import type { PersonasResponse } from "~/types";
 
-export const fetchPersonas = (limit = 100): Promise<PersonasResponse> => {
-  const params = new URLSearchParams({ limit: String(limit) });
-  return apiClient<PersonasResponse>(`/admin/persona?${params}`, {
+type FetchPersonasParams = {
+  limit?: number;
+  cursor?: string;
+};
+
+export const fetchPersonas = (
+  params: FetchPersonasParams = {},
+): Promise<PersonasResponse> => {
+  const searchParams = new URLSearchParams();
+  searchParams.set("limit", String(params.limit ?? 30));
+  if (params.cursor) {
+    searchParams.set("cursor", params.cursor);
+  }
+  return apiClient<PersonasResponse>(`/admin/persona?${searchParams}`, {
     admin: true,
   });
 };
