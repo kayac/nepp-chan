@@ -2,6 +2,7 @@ import type { MastraStorage } from "@mastra/core/storage";
 import { Memory } from "@mastra/memory";
 import { getStorage } from "~/lib/storage";
 import { createMastra } from "~/mastra/factory";
+import { getWorkingMemoryByThread } from "~/mastra/memory";
 import { createRequestContext } from "~/mastra/request-context";
 import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
 
@@ -31,6 +32,7 @@ const formatMessagesForAnalysis = (
 
 export const extractPersonaFromThread = async (
   threadId: string,
+  resourceId: string,
   lastMessageCount: number,
   env: CloudflareBindings,
 ): Promise<ExtractResult> => {
@@ -66,6 +68,16 @@ export const extractPersonaFromThread = async (
         ? lastMessage.createdAt
         : new Date().toISOString();
 
+  // Working Memory を取得（参考情報として personaAgent に渡す）
+  const workingMemory = await getWorkingMemoryByThread(
+    env.DB,
+    threadId,
+    resourceId,
+  );
+  const workingMemoryText = workingMemory
+    ? `## Working Memory（参考情報）\n${JSON.stringify(workingMemory, null, 2)}\n\n`
+    : "";
+
   const storage = await getStorage(env.DB);
   const mastra = createMastra(storage as unknown as MastraStorage);
   const agent = mastra.getAgent("personaAgent");
@@ -78,7 +90,7 @@ export const extractPersonaFromThread = async (
 
   try {
     await agent.generate(
-      `以下の会話からペルソナ情報を抽出して保存してください。複数のトピックがあれば、それぞれ別のペルソナとして保存してください:\n\n${conversationText}`,
+      `以下の会話からペルソナ情報を抽出して保存してください。複数のトピックがあれば、それぞれ別のペルソナとして保存してください。\n\n${workingMemoryText}## 会話履歴\n${conversationText}`,
       { requestContext },
     );
   } catch (error) {
@@ -105,35 +117,40 @@ export const extractPersonaFromThread = async (
   return { extracted: true, messageCount: totalMessages };
 };
 
-const getAllThreadIds = async (db: D1Database): Promise<string[]> => {
+type ThreadInfo = { id: string; resourceId: string };
+
+const getAllThreads = async (db: D1Database): Promise<ThreadInfo[]> => {
   const result = await db
-    .prepare("SELECT id FROM mastra_threads ORDER BY createdAt DESC")
-    .all<{ id: string }>();
-  return result.results.map((row) => row.id);
+    .prepare(
+      "SELECT id, resourceId FROM mastra_threads ORDER BY createdAt DESC",
+    )
+    .all<ThreadInfo>();
+  return result.results;
 };
 
 export const extractAllPendingThreads = async (env: CloudflareBindings) => {
   const allStatus = await threadPersonaStatusRepository.findAll(env.DB);
   const statusMap = new Map(allStatus.map((s) => [s.threadId, s]));
 
-  const threadIds = await getAllThreadIds(env.DB);
+  const threads = await getAllThreads(env.DB);
 
   const results: Array<{
     threadId: string;
     result: ExtractResult;
   }> = [];
 
-  for (const threadId of threadIds) {
-    const status = statusMap.get(threadId);
+  for (const thread of threads) {
+    const status = statusMap.get(thread.id);
     const lastMessageCount = status?.lastMessageCount ?? 0;
 
     const result = await extractPersonaFromThread(
-      threadId,
+      thread.id,
+      thread.resourceId,
       lastMessageCount,
       env,
     );
 
-    results.push({ threadId, result });
+    results.push({ threadId: thread.id, result });
 
     // extracted または skipped (messageCount あり) の場合はステータスを更新
     // これにより次回の再処理を防ぐ
@@ -141,7 +158,7 @@ export const extractAllPendingThreads = async (env: CloudflareBindings) => {
       "messageCount" in result ? result.messageCount : undefined;
     if (messageCount !== undefined) {
       await threadPersonaStatusRepository.upsert(env.DB, {
-        threadId,
+        threadId: thread.id,
         lastExtractedAt: new Date().toISOString(),
         lastMessageCount: messageCount,
       });
