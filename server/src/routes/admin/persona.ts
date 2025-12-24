@@ -54,7 +54,8 @@ const listRoute = createRoute({
   tags: ["Admin - Persona"],
   request: {
     query: z.object({
-      limit: z.string().optional().default("100"),
+      limit: z.string().optional().default("30"),
+      cursor: z.string().optional(),
     }),
   },
   responses: {
@@ -65,6 +66,8 @@ const listRoute = createRoute({
           schema: z.object({
             personas: z.array(PersonaSchema),
             total: z.number(),
+            nextCursor: z.string().nullable(),
+            hasMore: z.boolean(),
           }),
         },
       },
@@ -84,8 +87,18 @@ const listRoute = createRoute({
 });
 
 personaAdminRoutes.openapi(listRoute, async (c) => {
-  const { limit } = c.req.valid("query");
+  const { limit, cursor } = c.req.valid("query");
   const db = c.env.DB;
+  const limitNum = Number(limit);
+
+  let cursorCondition = "";
+  const bindings: (string | number)[] = [];
+
+  if (cursor) {
+    const [cursorCreatedAt, cursorId] = cursor.split("_");
+    cursorCondition = "WHERE (created_at < ? OR (created_at = ? AND id < ?))";
+    bindings.push(cursorCreatedAt, cursorCreatedAt, cursorId);
+  }
 
   const result = await db
     .prepare(
@@ -93,15 +106,30 @@ personaAdminRoutes.openapi(listRoute, async (c) => {
               topic, sentiment, demographic_summary as demographicSummary,
               created_at as createdAt, updated_at as updatedAt,
               conversation_ended_at as conversationEndedAt
-       FROM persona ORDER BY created_at DESC LIMIT ?`,
+       FROM persona ${cursorCondition} ORDER BY created_at DESC, id DESC LIMIT ?`,
     )
-    .bind(Number(limit))
+    .bind(...bindings, limitNum + 1)
     .all<Persona>();
+
+  const hasMore = result.results.length > limitNum;
+  const personas = hasMore ? result.results.slice(0, limitNum) : result.results;
+
+  const lastPersona = personas[personas.length - 1];
+  const nextCursor =
+    hasMore && lastPersona
+      ? `${lastPersona.createdAt}_${lastPersona.id}`
+      : null;
+
+  const countResult = await db
+    .prepare("SELECT COUNT(*) as count FROM persona")
+    .first<{ count: number }>();
 
   return c.json(
     {
-      personas: result.results,
-      total: result.results.length,
+      personas,
+      total: countResult?.count ?? 0,
+      nextCursor,
+      hasMore,
     },
     200,
   );
