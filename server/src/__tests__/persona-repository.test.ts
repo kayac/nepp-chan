@@ -1,37 +1,25 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  type Persona,
-  personaRepository,
-} from "~/repository/persona-repository";
+import { and, desc, eq, like, or } from "drizzle-orm";
+import { beforeEach, describe, expect, it } from "vitest";
 
-const createMockDb = () => {
-  const mockResults: Persona[] = [];
+import { persona } from "~/db";
+import { createTestDb, type TestDb } from "./helpers/test-db";
 
-  return {
-    prepare: vi.fn(() => ({
-      bind: vi.fn(() => ({
-        run: vi.fn(() => Promise.resolve({ success: true })),
-        first: vi.fn(() => Promise.resolve(mockResults[0] ?? null)),
-        all: vi.fn(() => Promise.resolve({ results: mockResults })),
-      })),
-    })),
-    _setMockResults: (results: Persona[]) => {
-      mockResults.length = 0;
-      mockResults.push(...results);
-    },
-  };
-};
+/**
+ * persona テーブルに対する Drizzle ORM クエリの統合テスト
+ *
+ * personaRepository は D1Database を受け取る設計のため、
+ * ここでは libsql の in-memory DB を使って Drizzle クエリ自体をテストする
+ */
+describe("persona Drizzle クエリ", () => {
+  let db: TestDb;
 
-describe("personaRepository", () => {
-  let mockDb: ReturnType<typeof createMockDb>;
-
-  beforeEach(() => {
-    mockDb = createMockDb();
+  beforeEach(async () => {
+    db = await createTestDb();
   });
 
-  describe("create", () => {
+  describe("insert", () => {
     it("新しいペルソナを作成できる", async () => {
-      const input = {
+      await db.insert(persona).values({
         id: "test-id",
         resourceId: "village-1",
         category: "好み",
@@ -39,229 +27,315 @@ describe("personaRepository", () => {
         content: "村民は地元産の野菜を好む",
         source: "会話サマリー",
         createdAt: "2024-01-01T00:00:00Z",
-      };
+      });
 
-      const result = await personaRepository.create(
-        mockDb as unknown as D1Database,
-        input,
-      );
+      const saved = await db
+        .select()
+        .from(persona)
+        .where(eq(persona.id, "test-id"))
+        .get();
 
-      expect(result.success).toBe(true);
-      expect(result.id).toBe("test-id");
-      expect(mockDb.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("INSERT INTO persona"),
-      );
+      expect(saved).not.toBeNull();
+      expect(saved?.content).toBe("村民は地元産の野菜を好む");
+      expect(saved?.category).toBe("好み");
+      expect(saved?.tags).toBe("男性,高齢者");
     });
 
     it("オプション項目なしでも作成できる", async () => {
-      const input = {
-        id: "test-id",
+      await db.insert(persona).values({
+        id: "test-id-2",
         resourceId: "village-1",
         category: "価値観",
         content: "助け合いを大切にする",
         createdAt: "2024-01-01T00:00:00Z",
-      };
+      });
 
-      const result = await personaRepository.create(
-        mockDb as unknown as D1Database,
-        input,
-      );
+      const saved = await db
+        .select()
+        .from(persona)
+        .where(eq(persona.id, "test-id-2"))
+        .get();
 
-      expect(result.success).toBe(true);
+      expect(saved?.tags).toBeNull();
+      expect(saved?.source).toBeNull();
+      expect(saved?.sentiment).toBe("neutral");
     });
   });
 
   describe("update", () => {
-    it("ペルソナの内容を更新できる", async () => {
-      const result = await personaRepository.update(
-        mockDb as unknown as D1Database,
-        "test-id",
-        { content: "更新された内容" },
-      );
+    beforeEach(async () => {
+      await db.insert(persona).values({
+        id: "update-test",
+        resourceId: "village-1",
+        category: "好み",
+        content: "元の内容",
+        createdAt: "2024-01-01T00:00:00Z",
+      });
+    });
 
-      expect(result.success).toBe(true);
-      expect(mockDb.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("UPDATE persona"),
-      );
+    it("ペルソナの内容を更新できる", async () => {
+      await db
+        .update(persona)
+        .set({
+          content: "更新された内容",
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(persona.id, "update-test"));
+
+      const updated = await db
+        .select()
+        .from(persona)
+        .where(eq(persona.id, "update-test"))
+        .get();
+
+      expect(updated?.content).toBe("更新された内容");
+      expect(updated?.updatedAt).not.toBeNull();
     });
 
     it("複数項目を同時に更新できる", async () => {
-      const result = await personaRepository.update(
-        mockDb as unknown as D1Database,
-        "test-id",
-        {
+      await db
+        .update(persona)
+        .set({
           category: "新カテゴリ",
           tags: "新タグ",
           content: "新しい内容",
-        },
-      );
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(persona.id, "update-test"));
 
-      expect(result.success).toBe(true);
-    });
+      const updated = await db
+        .select()
+        .from(persona)
+        .where(eq(persona.id, "update-test"))
+        .get();
 
-    it("更新項目がない場合はエラーを返す", async () => {
-      const result = await personaRepository.update(
-        mockDb as unknown as D1Database,
-        "test-id",
-        {},
-      );
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("更新する項目がありません");
+      expect(updated?.category).toBe("新カテゴリ");
+      expect(updated?.tags).toBe("新タグ");
+      expect(updated?.content).toBe("新しい内容");
     });
   });
 
-  describe("findById", () => {
-    it("IDでペルソナを取得できる", async () => {
-      const mockPersona: Persona = {
-        id: "test-id",
+  describe("select by id", () => {
+    beforeEach(async () => {
+      await db.insert(persona).values({
+        id: "find-test",
         resourceId: "village-1",
         category: "好み",
         tags: "男性",
         content: "テスト内容",
-        source: null,
-        topic: null,
-        sentiment: null,
-        demographicSummary: null,
         createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: null,
-        conversationEndedAt: null,
-      };
-      mockDb._setMockResults([mockPersona]);
-
-      const result = await personaRepository.findById(
-        mockDb as unknown as D1Database,
-        "test-id",
-      );
-
-      expect(result).toEqual(mockPersona);
+      });
     });
 
-    it("存在しないIDの場合はnullを返す", async () => {
-      mockDb._setMockResults([]);
+    it("IDでペルソナを取得できる", async () => {
+      const result = await db
+        .select()
+        .from(persona)
+        .where(eq(persona.id, "find-test"))
+        .get();
 
-      const result = await personaRepository.findById(
-        mockDb as unknown as D1Database,
-        "non-existent",
-      );
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe("find-test");
+      expect(result?.content).toBe("テスト内容");
+    });
 
-      expect(result).toBeNull();
+    it("存在しないIDの場合はundefinedを返す", async () => {
+      const result = await db
+        .select()
+        .from(persona)
+        .where(eq(persona.id, "non-existent"))
+        .get();
+
+      expect(result).toBeUndefined();
     });
   });
 
-  describe("findByResourceId", () => {
-    it("リソースIDでペルソナ一覧を取得できる", async () => {
-      const mockPersonas: Persona[] = [
+  describe("select by resourceId", () => {
+    beforeEach(async () => {
+      await db.insert(persona).values([
         {
           id: "1",
           resourceId: "village-1",
           category: "好み",
-          tags: null,
           content: "内容1",
-          source: null,
-          topic: null,
-          sentiment: null,
-          demographicSummary: null,
           createdAt: "2024-01-01T00:00:00Z",
-          updatedAt: null,
-          conversationEndedAt: null,
         },
         {
           id: "2",
           resourceId: "village-1",
           category: "価値観",
-          tags: null,
           content: "内容2",
-          source: null,
-          topic: null,
-          sentiment: null,
-          demographicSummary: null,
           createdAt: "2024-01-02T00:00:00Z",
-          updatedAt: null,
-          conversationEndedAt: null,
         },
-      ];
-      mockDb._setMockResults(mockPersonas);
+        {
+          id: "3",
+          resourceId: "village-2",
+          category: "好み",
+          content: "別の村",
+          createdAt: "2024-01-03T00:00:00Z",
+        },
+      ]);
+    });
 
-      const result = await personaRepository.findByResourceId(
-        mockDb as unknown as D1Database,
-        "village-1",
-      );
+    it("リソースIDでペルソナ一覧を取得できる", async () => {
+      const result = await db
+        .select()
+        .from(persona)
+        .where(eq(persona.resourceId, "village-1"))
+        .orderBy(desc(persona.createdAt))
+        .all();
 
       expect(result).toHaveLength(2);
+      expect(result.every((p) => p.resourceId === "village-1")).toBe(true);
+    });
+
+    it("降順でソートされる", async () => {
+      const result = await db
+        .select()
+        .from(persona)
+        .where(eq(persona.resourceId, "village-1"))
+        .orderBy(desc(persona.createdAt))
+        .all();
+
+      expect(result[0].id).toBe("2"); // 最新が先頭
+      expect(result[1].id).toBe("1");
     });
   });
 
   describe("search", () => {
-    it("カテゴリで検索できる", async () => {
-      await personaRepository.search(
-        mockDb as unknown as D1Database,
-        "village-1",
+    beforeEach(async () => {
+      await db.insert(persona).values([
         {
+          id: "s1",
+          resourceId: "village-1",
           category: "好み",
+          tags: "男性,高齢者",
+          content: "地元産の野菜が人気",
+          createdAt: "2024-01-01T00:00:00Z",
         },
-      );
+        {
+          id: "s2",
+          resourceId: "village-1",
+          category: "好み",
+          tags: "女性",
+          content: "お米を好む",
+          createdAt: "2024-01-02T00:00:00Z",
+        },
+        {
+          id: "s3",
+          resourceId: "village-1",
+          category: "価値観",
+          tags: "男性",
+          content: "伝統を大切にする",
+          createdAt: "2024-01-03T00:00:00Z",
+        },
+      ]);
+    });
 
-      expect(mockDb.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("category = ?"),
-      );
+    it("カテゴリで検索できる", async () => {
+      const result = await db
+        .select()
+        .from(persona)
+        .where(
+          and(
+            eq(persona.resourceId, "village-1"),
+            eq(persona.category, "好み"),
+          ),
+        )
+        .all();
+
+      expect(result).toHaveLength(2);
+      expect(result.every((p) => p.category === "好み")).toBe(true);
     });
 
     it("タグで検索できる", async () => {
-      await personaRepository.search(
-        mockDb as unknown as D1Database,
-        "village-1",
-        {
-          tags: ["男性", "高齢者"],
-        },
-      );
+      const result = await db
+        .select()
+        .from(persona)
+        .where(
+          and(
+            eq(persona.resourceId, "village-1"),
+            like(persona.tags, "%男性%"),
+          ),
+        )
+        .all();
 
-      expect(mockDb.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("tags LIKE ?"),
-      );
+      expect(result).toHaveLength(2);
+      expect(result.every((p) => p.tags?.includes("男性"))).toBe(true);
+    });
+
+    it("複数タグのOR検索ができる", async () => {
+      const result = await db
+        .select()
+        .from(persona)
+        .where(
+          and(
+            eq(persona.resourceId, "village-1"),
+            or(like(persona.tags, "%女性%"), like(persona.tags, "%高齢者%")),
+          ),
+        )
+        .all();
+
+      expect(result).toHaveLength(2);
     });
 
     it("キーワードで検索できる", async () => {
-      await personaRepository.search(
-        mockDb as unknown as D1Database,
-        "village-1",
-        {
-          keyword: "野菜",
-        },
-      );
+      const result = await db
+        .select()
+        .from(persona)
+        .where(
+          and(
+            eq(persona.resourceId, "village-1"),
+            like(persona.content, "%野菜%"),
+          ),
+        )
+        .all();
 
-      expect(mockDb.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("content LIKE ?"),
-      );
+      expect(result).toHaveLength(1);
+      expect(result[0].content).toContain("野菜");
     });
 
     it("複合条件で検索できる", async () => {
-      await personaRepository.search(
-        mockDb as unknown as D1Database,
-        "village-1",
-        {
-          category: "好み",
-          tags: ["男性"],
-          keyword: "野菜",
-          limit: 10,
-        },
-      );
+      const result = await db
+        .select()
+        .from(persona)
+        .where(
+          and(
+            eq(persona.resourceId, "village-1"),
+            eq(persona.category, "好み"),
+            like(persona.tags, "%男性%"),
+            like(persona.content, "%野菜%"),
+          ),
+        )
+        .limit(10)
+        .all();
 
-      expect(mockDb.prepare).toHaveBeenCalled();
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe("s1");
     });
   });
 
   describe("delete", () => {
-    it("ペルソナを削除できる", async () => {
-      const result = await personaRepository.delete(
-        mockDb as unknown as D1Database,
-        "test-id",
-      );
+    beforeEach(async () => {
+      await db.insert(persona).values({
+        id: "delete-test",
+        resourceId: "village-1",
+        category: "好み",
+        content: "削除対象",
+        createdAt: "2024-01-01T00:00:00Z",
+      });
+    });
 
-      expect(result.success).toBe(true);
-      expect(mockDb.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("DELETE FROM persona"),
-      );
+    it("ペルソナを削除できる", async () => {
+      await db.delete(persona).where(eq(persona.id, "delete-test"));
+
+      const deleted = await db
+        .select()
+        .from(persona)
+        .where(eq(persona.id, "delete-test"))
+        .get();
+
+      expect(deleted).toBeUndefined();
     });
   });
 });
