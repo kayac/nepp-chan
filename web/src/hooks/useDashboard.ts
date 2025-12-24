@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { fetchEmergencies } from "~/repository/emergency-repository";
 import {
   deleteAllKnowledge,
@@ -15,10 +20,12 @@ export const dashboardKeys = {
   emergencies: ["dashboard", "emergencies"] as const,
 };
 
-export const usePersonas = (limit = 100) =>
-  useQuery({
-    queryKey: dashboardKeys.personas,
-    queryFn: () => fetchPersonas(limit),
+export const usePersonas = (limit = 30) =>
+  useInfiniteQuery({
+    queryKey: [...dashboardKeys.personas, limit],
+    queryFn: ({ pageParam }) => fetchPersonas({ limit, cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });
 
 export const useEmergencies = (limit = 100) =>
