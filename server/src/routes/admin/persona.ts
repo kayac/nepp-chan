@@ -241,6 +241,17 @@ const extractOneRoute = createRoute({
         },
       },
     },
+    404: {
+      description: "スレッドが見つからない",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.boolean(),
+            message: z.string(),
+          }),
+        },
+      },
+    },
   },
 });
 
@@ -248,6 +259,20 @@ personaAdminRoutes.openapi(extractOneRoute, async (c) => {
   const { threadId } = c.req.valid("param");
 
   try {
+    // スレッドから resourceId を取得
+    const thread = await c.env.DB.prepare(
+      "SELECT resourceId FROM mastra_threads WHERE id = ?",
+    )
+      .bind(threadId)
+      .first<{ resourceId: string }>();
+
+    if (!thread) {
+      return c.json(
+        { success: false, message: "スレッドが見つかりません" },
+        404,
+      );
+    }
+
     const status = await threadPersonaStatusRepository.findByThreadId(
       c.env.DB,
       threadId,
@@ -256,6 +281,7 @@ personaAdminRoutes.openapi(extractOneRoute, async (c) => {
 
     const result = await extractPersonaFromThread(
       threadId,
+      thread.resourceId,
       lastMessageCount,
       c.env,
     );
