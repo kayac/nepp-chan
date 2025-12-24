@@ -68,3 +68,45 @@ export type DeleteResult = {
   message: string;
   count?: number;
 };
+
+// ナレッジファイル関連
+export type FileInfo = {
+  key: string;
+  size: number;
+  lastModified: string;
+  etag: string;
+};
+
+export type FilesListResponse = {
+  files: FileInfo[];
+  truncated: boolean;
+};
+
+export type FileContentResponse = {
+  key: string;
+  content: string;
+  contentType: string;
+  size: number;
+  lastModified: string;
+};
+
+export type SaveFileResponse = {
+  success: boolean;
+  message: string;
+  chunks: number;
+};
+
+export type UploadFileResponse = {
+  success: boolean;
+  message: string;
+  key: string;
+  chunks: number;
+};
+
+export type ConvertFileResponse = {
+  success: boolean;
+  message: string;
+  key: string;
+  originalType: string;
+  chunks: number;
+};
