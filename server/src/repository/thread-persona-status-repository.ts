@@ -1,8 +1,6 @@
-export type ThreadPersonaStatus = {
-  threadId: string;
-  lastExtractedAt: string | null;
-  lastMessageCount: number;
-};
+import { eq } from "drizzle-orm";
+
+import { createDb, type ThreadPersonaStatus, threadPersonaStatus } from "~/db";
 
 type UpsertInput = {
   threadId: string;
@@ -11,50 +9,54 @@ type UpsertInput = {
 };
 
 export const threadPersonaStatusRepository = {
-  async findByThreadId(db: D1Database, threadId: string) {
-    const result = await db
-      .prepare(
-        `SELECT thread_id as threadId, last_extracted_at as lastExtractedAt, last_message_count as lastMessageCount
-         FROM thread_persona_status WHERE thread_id = ?`,
-      )
-      .bind(threadId)
-      .first<ThreadPersonaStatus>();
+  async findByThreadId(d1: D1Database, threadId: string) {
+    const db = createDb(d1);
 
-    return result;
+    const result = await db
+      .select()
+      .from(threadPersonaStatus)
+      .where(eq(threadPersonaStatus.threadId, threadId))
+      .get();
+
+    return result ?? null;
   },
 
-  async findAll(db: D1Database) {
-    const result = await db
-      .prepare(
-        `SELECT thread_id as threadId, last_extracted_at as lastExtractedAt, last_message_count as lastMessageCount
-         FROM thread_persona_status`,
-      )
-      .all<ThreadPersonaStatus>();
+  async findAll(d1: D1Database): Promise<ThreadPersonaStatus[]> {
+    const db = createDb(d1);
 
-    return result.results;
+    return db.select().from(threadPersonaStatus).all();
   },
 
-  async upsert(db: D1Database, input: UpsertInput) {
-    const result = await db
-      .prepare(
-        `INSERT INTO thread_persona_status (thread_id, last_extracted_at, last_message_count)
-         VALUES (?, ?, ?)
-         ON CONFLICT(thread_id) DO UPDATE SET
-           last_extracted_at = excluded.last_extracted_at,
-           last_message_count = excluded.last_message_count`,
-      )
-      .bind(input.threadId, input.lastExtractedAt, input.lastMessageCount)
-      .run();
+  async upsert(d1: D1Database, input: UpsertInput) {
+    const db = createDb(d1);
 
-    return { success: result.success };
+    await db
+      .insert(threadPersonaStatus)
+      .values({
+        threadId: input.threadId,
+        lastExtractedAt: input.lastExtractedAt,
+        lastMessageCount: input.lastMessageCount,
+      })
+      .onConflictDoUpdate({
+        target: threadPersonaStatus.threadId,
+        set: {
+          lastExtractedAt: input.lastExtractedAt,
+          lastMessageCount: input.lastMessageCount,
+        },
+      });
+
+    return { success: true };
   },
 
-  async delete(db: D1Database, threadId: string) {
-    const result = await db
-      .prepare("DELETE FROM thread_persona_status WHERE thread_id = ?")
-      .bind(threadId)
-      .run();
+  async delete(d1: D1Database, threadId: string) {
+    const db = createDb(d1);
 
-    return { success: result.success };
+    await db
+      .delete(threadPersonaStatus)
+      .where(eq(threadPersonaStatus.threadId, threadId));
+
+    return { success: true };
   },
 };
+
+export type { ThreadPersonaStatus };

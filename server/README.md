@@ -21,7 +21,8 @@ MASTER_PASSWORD=your-password
 ### D1 データベースの初期化
 
 ```bash
-wrangler d1 execute aiss-nepch-dev --file=./src/repository/migrations/001_init.sql
+# 初回セットアップ（既存マイグレーション適用）
+pnpm db:migrate
 ```
 
 ## 開発
@@ -89,12 +90,70 @@ curl "http://localhost:8787/weather?city=tokyo"
 ## スクリプト
 
 ```bash
+# 開発
 pnpm dev              # 開発サーバー起動
 pnpm test             # テスト実行
 pnpm deploy           # Cloudflare Workers へデプロイ
 pnpm cf-typegen       # Cloudflare 型生成
+
+# Drizzle ORM / D1 マイグレーション
+pnpm db:generate      # スキーマから SQL 生成 → migrations/
+pnpm db:migrate       # リモート D1 (aiss-nepch-dev) に適用
+pnpm db:migrate:local # ローカル D1 に適用
+pnpm db:studio        # Drizzle Studio（DB GUI）起動
+pnpm db:check         # スキーマとマイグレーションの整合性チェック
+
+# ナレッジ管理
 pnpm knowledge:upload # ナレッジアップロード
 pnpm knowledge:clear  # ナレッジ全削除して再アップロード
+```
+
+## Drizzle ORM
+
+型安全な SQL クエリビルダー。Cloudflare D1 に対して SQL インジェクションを防止しつつ型安全にクエリを実行。
+
+### スキーマ変更時のマイグレーションフロー
+
+```bash
+# 1. スキーマを変更
+#    src/db/schema.ts を編集
+
+# 2. マイグレーションファイル生成
+pnpm db:generate   # → migrations/ に SQL 生成
+
+# 3. D1 に適用
+pnpm db:migrate        # リモート D1
+pnpm db:migrate:local  # ローカル D1
+```
+
+### ファイル構成
+
+| パス | 説明 |
+| ---- | ---- |
+| `src/db/schema.ts` | テーブルスキーマ定義 |
+| `src/db/client.ts` | DB クライアント生成関数 |
+| `migrations/` | マイグレーション SQL |
+| `drizzle.config.ts` | Drizzle Kit 設定 |
+
+### 使用例
+
+```typescript
+import { createDb, persona } from "~/db";
+import { eq } from "drizzle-orm";
+
+const db = createDb(c.env.DB);
+
+// SELECT
+const result = await db.select().from(persona).where(eq(persona.id, "xxx")).get();
+
+// INSERT
+await db.insert(persona).values({ id: "xxx", ... });
+
+// UPDATE
+await db.update(persona).set({ content: "新内容" }).where(eq(persona.id, "xxx"));
+
+// DELETE
+await db.delete(persona).where(eq(persona.id, "xxx"));
 ```
 
 ## ナレッジ機能（RAG）

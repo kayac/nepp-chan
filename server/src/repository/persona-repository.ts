@@ -1,17 +1,6 @@
-export type Persona = {
-  id: string;
-  resourceId: string;
-  category: string;
-  tags: string | null;
-  content: string;
-  source: string | null;
-  topic: string | null;
-  sentiment: string | null;
-  demographicSummary: string | null;
-  createdAt: string;
-  updatedAt: string | null;
-  conversationEndedAt: string | null;
-};
+import { and, desc, eq, like, or, sql } from "drizzle-orm";
+
+import { createDb, type Persona, persona } from "~/db";
 
 type CreateInput = {
   id: string;
@@ -46,117 +35,82 @@ export type TopicAggregation = {
 };
 
 export const personaRepository = {
-  async create(db: D1Database, input: CreateInput) {
-    const result = await db
-      .prepare(
-        `INSERT INTO persona (id, resource_id, category, tags, content, source, topic, sentiment, demographic_summary, created_at, conversation_ended_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      )
-      .bind(
-        input.id,
-        input.resourceId,
-        input.category,
-        input.tags ?? null,
-        input.content,
-        input.source ?? null,
-        input.topic ?? null,
-        input.sentiment ?? "neutral",
-        input.demographicSummary ?? null,
-        input.createdAt,
-        input.conversationEndedAt ?? null,
-      )
-      .run();
+  async create(d1: D1Database, input: CreateInput) {
+    const db = createDb(d1);
 
-    return { success: result.success, id: input.id };
+    await db.insert(persona).values({
+      id: input.id,
+      resourceId: input.resourceId,
+      category: input.category,
+      tags: input.tags ?? null,
+      content: input.content,
+      source: input.source ?? null,
+      topic: input.topic ?? null,
+      sentiment: input.sentiment ?? "neutral",
+      demographicSummary: input.demographicSummary ?? null,
+      createdAt: input.createdAt,
+      conversationEndedAt: input.conversationEndedAt ?? null,
+    });
+
+    return { success: true, id: input.id };
   },
 
-  async update(db: D1Database, id: string, input: UpdateInput) {
-    const updates: string[] = [];
-    const values: (string | null)[] = [];
+  async update(d1: D1Database, id: string, input: UpdateInput) {
+    const db = createDb(d1);
 
-    if (input.category !== undefined) {
-      updates.push("category = ?");
-      values.push(input.category);
-    }
+    const updates: Partial<typeof persona.$inferInsert> = {
+      updatedAt: new Date().toISOString(),
+    };
 
-    if (input.tags !== undefined) {
-      updates.push("tags = ?");
-      values.push(input.tags);
-    }
+    if (input.category !== undefined) updates.category = input.category;
+    if (input.tags !== undefined) updates.tags = input.tags;
+    if (input.content !== undefined) updates.content = input.content;
+    if (input.source !== undefined) updates.source = input.source;
+    if (input.topic !== undefined) updates.topic = input.topic;
+    if (input.sentiment !== undefined) updates.sentiment = input.sentiment;
+    if (input.demographicSummary !== undefined)
+      updates.demographicSummary = input.demographicSummary;
 
-    if (input.content !== undefined) {
-      updates.push("content = ?");
-      values.push(input.content);
-    }
-
-    if (input.source !== undefined) {
-      updates.push("source = ?");
-      values.push(input.source);
-    }
-
-    if (input.topic !== undefined) {
-      updates.push("topic = ?");
-      values.push(input.topic);
-    }
-
-    if (input.sentiment !== undefined) {
-      updates.push("sentiment = ?");
-      values.push(input.sentiment);
-    }
-
-    if (input.demographicSummary !== undefined) {
-      updates.push("demographic_summary = ?");
-      values.push(input.demographicSummary);
-    }
-
-    if (updates.length === 0) {
+    const hasUpdates = Object.keys(updates).length > 1; // updatedAt 以外があるか
+    if (!hasUpdates) {
       return { success: false, error: "更新する項目がありません" };
     }
 
-    updates.push("updated_at = ?");
-    values.push(new Date().toISOString());
-    values.push(id);
+    await db.update(persona).set(updates).where(eq(persona.id, id));
 
-    const result = await db
-      .prepare(`UPDATE persona SET ${updates.join(", ")} WHERE id = ?`)
-      .bind(...values)
-      .run();
-
-    return { success: result.success };
+    return { success: true };
   },
 
-  async findById(db: D1Database, id: string) {
-    const result = await db
-      .prepare(
-        `SELECT id, resource_id as resourceId, category, tags, content, source,
-                topic, sentiment, demographic_summary as demographicSummary,
-                created_at as createdAt, updated_at as updatedAt,
-                conversation_ended_at as conversationEndedAt
-         FROM persona WHERE id = ?`,
-      )
-      .bind(id)
-      .first<Persona>();
+  async findById(d1: D1Database, id: string) {
+    const db = createDb(d1);
 
-    return result;
+    const result = await db
+      .select()
+      .from(persona)
+      .where(eq(persona.id, id))
+      .get();
+
+    return result ?? null;
   },
 
-  async findByResourceId(db: D1Database, resourceId: string, limit = 100) {
-    const result = await db
-      .prepare(
-        `SELECT id, resource_id as resourceId, category, tags, content, source,
-                topic, sentiment, demographic_summary as demographicSummary,
-                created_at as createdAt, updated_at as updatedAt,
-                conversation_ended_at as conversationEndedAt
-         FROM persona WHERE resource_id = ? ORDER BY created_at DESC LIMIT ?`,
-      )
-      .bind(resourceId, limit)
-      .all<Persona>();
+  async findByResourceId(
+    d1: D1Database,
+    resourceId: string,
+    limit = 100,
+  ): Promise<Persona[]> {
+    const db = createDb(d1);
 
-    return result.results;
+    return db
+      .select()
+      .from(persona)
+      .where(eq(persona.resourceId, resourceId))
+      .orderBy(desc(persona.createdAt))
+      .limit(limit)
+      .all();
   },
 
   async search(
-    db: D1Database,
+    d1: D1Database,
     resourceId: string,
     options: {
       category?: string;
@@ -164,87 +118,77 @@ export const personaRepository = {
       keyword?: string;
       limit?: number;
     } = {},
-  ) {
-    const conditions: string[] = ["resource_id = ?"];
-    const values: (string | number)[] = [resourceId];
+  ): Promise<Persona[]> {
+    const db = createDb(d1);
+
+    const conditions = [eq(persona.resourceId, resourceId)];
 
     if (options.category) {
-      conditions.push("category = ?");
-      values.push(options.category);
+      conditions.push(eq(persona.category, options.category));
     }
 
     if (options.tags && options.tags.length > 0) {
-      const tagConditions = options.tags.map(() => "tags LIKE ?");
-      conditions.push(`(${tagConditions.join(" OR ")})`);
-      for (const tag of options.tags) {
-        values.push(`%${tag}%`);
-      }
+      const tagConditions = options.tags.map((tag) =>
+        like(persona.tags, `%${tag}%`),
+      );
+      const tagCondition = or(...tagConditions);
+      if (tagCondition) conditions.push(tagCondition);
     }
 
     if (options.keyword) {
-      conditions.push("content LIKE ?");
-      values.push(`%${options.keyword}%`);
+      conditions.push(like(persona.content, `%${options.keyword}%`));
     }
 
-    const limit = options.limit ?? 50;
-    values.push(limit);
-
-    const result = await db
-      .prepare(
-        `SELECT id, resource_id as resourceId, category, tags, content, source,
-                topic, sentiment, demographic_summary as demographicSummary,
-                created_at as createdAt, updated_at as updatedAt,
-                conversation_ended_at as conversationEndedAt
-         FROM persona WHERE ${conditions.join(" AND ")} ORDER BY created_at DESC LIMIT ?`,
-      )
-      .bind(...values)
-      .all<Persona>();
-
-    return result.results;
+    return db
+      .select()
+      .from(persona)
+      .where(and(...conditions))
+      .orderBy(desc(persona.createdAt))
+      .limit(options.limit ?? 50)
+      .all();
   },
 
   async aggregateByTopic(
-    db: D1Database,
+    d1: D1Database,
     resourceId: string,
     options: { category?: string; limit?: number } = {},
-  ) {
-    const conditions: string[] = ["resource_id = ?", "topic IS NOT NULL"];
-    const values: (string | number)[] = [resourceId];
+  ): Promise<TopicAggregation[]> {
+    const db = createDb(d1);
+
+    const conditions = [
+      eq(persona.resourceId, resourceId),
+      sql`${persona.topic} IS NOT NULL`,
+    ];
 
     if (options.category) {
-      conditions.push("category = ?");
-      values.push(options.category);
+      conditions.push(eq(persona.category, options.category));
     }
 
-    const limit = options.limit ?? 20;
-    values.push(limit);
-
     const result = await db
-      .prepare(
-        `SELECT
-           topic,
-           category,
-           COUNT(*) as count,
-           GROUP_CONCAT(DISTINCT demographic_summary) as demographics,
-           GROUP_CONCAT(content, ' | ') as samples
-         FROM persona
-         WHERE ${conditions.join(" AND ")}
-         GROUP BY topic, category
-         ORDER BY count DESC
-         LIMIT ?`,
-      )
-      .bind(...values)
-      .all<TopicAggregation>();
+      .select({
+        topic: persona.topic,
+        category: persona.category,
+        count: sql<number>`COUNT(*)`,
+        demographics: sql<string>`GROUP_CONCAT(DISTINCT ${persona.demographicSummary})`,
+        samples: sql<string>`GROUP_CONCAT(${persona.content}, ' | ')`,
+      })
+      .from(persona)
+      .where(and(...conditions))
+      .groupBy(persona.topic, persona.category)
+      .orderBy(sql`count DESC`)
+      .limit(options.limit ?? 20)
+      .all();
 
-    return result.results;
+    return result as TopicAggregation[];
   },
 
-  async delete(db: D1Database, id: string) {
-    const result = await db
-      .prepare("DELETE FROM persona WHERE id = ?")
-      .bind(id)
-      .run();
+  async delete(d1: D1Database, id: string) {
+    const db = createDb(d1);
 
-    return { success: result.success };
+    await db.delete(persona).where(eq(persona.id, id));
+
+    return { success: true };
   },
 };
+
+export type { Persona };
