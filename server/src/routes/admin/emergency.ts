@@ -1,5 +1,8 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { desc } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
+
+import { createDb, emergencyReports } from "~/db";
 
 type AdminBindings = CloudflareBindings & {
   ADMIN_KEY?: string;
@@ -32,8 +35,6 @@ const EmergencySchema = z.object({
   reportedAt: z.string(),
   updatedAt: z.string().nullable(),
 });
-
-type Emergency = z.infer<typeof EmergencySchema>;
 
 const listRoute = createRoute({
   method: "get",
@@ -74,20 +75,19 @@ const listRoute = createRoute({
 
 emergencyAdminRoutes.openapi(listRoute, async (c) => {
   const { limit } = c.req.valid("query");
-  const db = c.env.DB;
+  const db = createDb(c.env.DB);
 
-  const result = await db
-    .prepare(
-      `SELECT id, type, description, location, reported_at as reportedAt, updated_at as updatedAt
-       FROM emergency_reports ORDER BY reported_at DESC LIMIT ?`,
-    )
-    .bind(Number(limit))
-    .all<Emergency>();
+  const results = await db
+    .select()
+    .from(emergencyReports)
+    .orderBy(desc(emergencyReports.reportedAt))
+    .limit(Number(limit))
+    .all();
 
   return c.json(
     {
-      emergencies: result.results,
-      total: result.results.length,
+      emergencies: results,
+      total: results.length,
     },
     200,
   );

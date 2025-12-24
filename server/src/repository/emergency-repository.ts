@@ -1,11 +1,6 @@
-export type EmergencyReport = {
-  id: string;
-  type: string;
-  description: string | null;
-  location: string | null;
-  reportedAt: string;
-  updatedAt: string | null;
-};
+import { desc, eq, gte } from "drizzle-orm";
+
+import { createDb, type EmergencyReport, emergencyReports } from "~/db";
 
 type CreateInput = {
   id: string;
@@ -21,96 +16,86 @@ type UpdateInput = {
 };
 
 export const emergencyRepository = {
-  async create(db: D1Database, input: CreateInput) {
-    const result = await db
-      .prepare(
-        `INSERT INTO emergency_reports (id, type, description, location, reported_at)
-         VALUES (?, ?, ?, ?, ?)`,
-      )
-      .bind(
-        input.id,
-        input.type,
-        input.description ?? null,
-        input.location ?? null,
-        input.reportedAt,
-      )
-      .run();
+  async create(d1: D1Database, input: CreateInput) {
+    const db = createDb(d1);
 
-    return { success: result.success, id: input.id };
+    await db.insert(emergencyReports).values({
+      id: input.id,
+      type: input.type,
+      description: input.description ?? null,
+      location: input.location ?? null,
+      reportedAt: input.reportedAt,
+    });
+
+    return { success: true, id: input.id };
   },
 
-  async update(db: D1Database, id: string, input: UpdateInput) {
-    const updates: string[] = [];
-    const values: (string | null)[] = [];
+  async update(d1: D1Database, id: string, input: UpdateInput) {
+    const db = createDb(d1);
 
-    if (input.description !== undefined) {
-      updates.push("description = ?");
-      values.push(input.description);
-    }
+    const updates: Partial<typeof emergencyReports.$inferInsert> = {
+      updatedAt: new Date().toISOString(),
+    };
 
-    if (input.location !== undefined) {
-      updates.push("location = ?");
-      values.push(input.location);
-    }
+    if (input.description !== undefined)
+      updates.description = input.description;
+    if (input.location !== undefined) updates.location = input.location;
 
-    if (updates.length === 0) {
+    const hasUpdates = Object.keys(updates).length > 1;
+    if (!hasUpdates) {
       return { success: false, error: "更新する項目がありません" };
     }
 
-    updates.push("updated_at = ?");
-    values.push(new Date().toISOString());
-    values.push(id);
+    await db
+      .update(emergencyReports)
+      .set(updates)
+      .where(eq(emergencyReports.id, id));
 
-    const result = await db
-      .prepare(
-        `UPDATE emergency_reports SET ${updates.join(", ")} WHERE id = ?`,
-      )
-      .bind(...values)
-      .run();
-
-    return { success: result.success };
+    return { success: true };
   },
 
-  async findById(db: D1Database, id: string) {
-    const result = await db
-      .prepare(
-        `SELECT id, type, description, location, reported_at as reportedAt, updated_at as updatedAt
-         FROM emergency_reports WHERE id = ?`,
-      )
-      .bind(id)
-      .first<EmergencyReport>();
+  async findById(d1: D1Database, id: string) {
+    const db = createDb(d1);
 
-    return result;
+    const result = await db
+      .select()
+      .from(emergencyReports)
+      .where(eq(emergencyReports.id, id))
+      .get();
+
+    return result ?? null;
   },
 
-  async findAll(db: D1Database, limit = 100) {
-    const result = await db
-      .prepare(
-        `SELECT id, type, description, location, reported_at as reportedAt, updated_at as updatedAt
-         FROM emergency_reports ORDER BY reported_at DESC LIMIT ?`,
-      )
-      .bind(limit)
-      .all<EmergencyReport>();
+  async findAll(d1: D1Database, limit = 100): Promise<EmergencyReport[]> {
+    const db = createDb(d1);
 
-    return result.results;
+    return db
+      .select()
+      .from(emergencyReports)
+      .orderBy(desc(emergencyReports.reportedAt))
+      .limit(limit)
+      .all();
   },
 
-  async findRecent(db: D1Database, days: number, limit = 100) {
+  async findRecent(
+    d1: D1Database,
+    days: number,
+    limit = 100,
+  ): Promise<EmergencyReport[]> {
+    const db = createDb(d1);
+
     const since = new Date();
     since.setDate(since.getDate() - days);
     const sinceIso = since.toISOString();
 
-    const result = await db
-      .prepare(
-        `SELECT id, type, description, location, reported_at as reportedAt, updated_at as updatedAt
-         FROM emergency_reports
-         WHERE reported_at >= ?
-         ORDER BY reported_at DESC
-         LIMIT ?`,
-      )
-      .bind(sinceIso, limit)
-      .all<EmergencyReport>();
-
-    return result.results;
+    return db
+      .select()
+      .from(emergencyReports)
+      .where(gte(emergencyReports.reportedAt, sinceIso))
+      .orderBy(desc(emergencyReports.reportedAt))
+      .limit(limit)
+      .all();
   },
 };
+
+export type { EmergencyReport };

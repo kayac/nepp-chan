@@ -10,7 +10,13 @@
     "mastra:build": "mastra build",
     "mastra:start": "mastra start",
     "knowledge:upload": "dotenv -e .dev.vars -- tsx scripts/upload-knowledge.ts",
-    "knowledge:clear": "dotenv -e .dev.vars -- tsx scripts/upload-knowledge.ts --clean"
+    "knowledge:clear": "dotenv -e .dev.vars -- tsx scripts/upload-knowledge.ts --clean",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "wrangler d1 migrations apply aiss-nepch-dev --remote",
+    "db:migrate:local": "wrangler d1 migrations apply aiss-nepch-dev --local",
+    "db:studio": "drizzle-kit studio",
+    "db:push": "drizzle-kit push",
+    "db:check": "drizzle-kit check"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.46",
@@ -27,6 +33,7 @@
     "@mastra/observability": "1.0.0-beta.4",
     "@mastra/rag": "2.0.0-beta.3",
     "ai": "^5.0.112",
+    "drizzle-orm": "^0.45.1",
     "glob": "^13.0.0",
     "hono": "^4.10.7",
     "zod": "^4.1.13"
@@ -34,6 +41,7 @@
   "devDependencies": {
     "@types/node": "^24.10.1",
     "dotenv-cli": "^11.0.0",
+    "drizzle-kit": "^0.31.8",
     "mastra": "1.0.0-beta.9",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
