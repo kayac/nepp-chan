@@ -60,7 +60,13 @@ export type EmergenciesResponse = {
 export type SyncResult = {
   success: boolean;
   message: string;
-  results?: { file: string; chunks: number; error?: string }[];
+  results?: {
+    file: string;
+    chunks: number;
+    error?: string;
+    edited?: boolean;
+  }[];
+  editedCount?: number;
 };
 
 export type DeleteResult = {
@@ -75,6 +81,7 @@ export type FileInfo = {
   size: number;
   lastModified: string;
   etag: string;
+  edited?: boolean;
 };
 
 export type FilesListResponse = {

@@ -53,6 +53,7 @@ const FileInfoSchema = z.object({
   size: z.number(),
   lastModified: z.string(),
   etag: z.string(),
+  edited: z.boolean().optional(),
 });
 
 const FilesListResponseSchema = z.object({
@@ -194,11 +195,33 @@ knowledgeAdminRoutes.openapi(syncAllRoute, async (c) => {
   try {
     // R2バケットからファイル一覧を取得
     const listed = await bucket.list();
-    const mdFiles = listed.objects.filter((obj) => obj.key.endsWith(".md"));
+    const allObjects = listed.objects;
+
+    // Markdown ファイル（originals/ 以外）
+    const mdFiles = allObjects.filter(
+      (obj) => obj.key.endsWith(".md") && !obj.key.startsWith("originals/"),
+    );
+
+    // originals/ 内のファイルをマップ化
+    const originalsMap = new Map<string, Date>();
+    for (const obj of allObjects) {
+      if (obj.key.startsWith("originals/")) {
+        // originals/xxx.pdf → xxx
+        const baseName = obj.key
+          .replace("originals/", "")
+          .replace(/\.[^.]+$/, "");
+        originalsMap.set(baseName, obj.uploaded);
+      }
+    }
 
     console.log(`[Sync] Found ${mdFiles.length} markdown files`);
 
-    const results: { file: string; chunks: number; error?: string }[] = [];
+    const results: {
+      file: string;
+      chunks: number;
+      error?: string;
+      edited?: boolean;
+    }[] = [];
 
     for (const obj of mdFiles) {
       const file = await bucket.get(obj.key);
@@ -207,8 +230,16 @@ knowledgeAdminRoutes.openapi(syncAllRoute, async (c) => {
         continue;
       }
 
+      // 編集済み判定: originals/ の対応ファイルより md が新しい場合
+      const baseName = obj.key.replace(/\.md$/, "");
+      const originalUploaded = originalsMap.get(baseName);
+      const isEdited =
+        originalUploaded !== undefined && obj.uploaded > originalUploaded;
+
       const content = await file.text();
-      console.log(`[Sync] Processing ${obj.key} (${content.length} bytes)`);
+      console.log(
+        `[Sync] Processing ${obj.key} (${content.length} bytes)${isEdited ? " [EDITED]" : ""}`,
+      );
 
       // 既存データを削除
       await deleteKnowledgeBySource(vectorize, obj.key);
@@ -225,15 +256,18 @@ knowledgeAdminRoutes.openapi(syncAllRoute, async (c) => {
         file: obj.key,
         chunks: result.chunks,
         error: result.error,
+        edited: isEdited,
       });
     }
 
     const totalChunks = results.reduce((sum, r) => sum + r.chunks, 0);
+    const editedCount = results.filter((r) => r.edited).length;
 
     return c.json({
       success: true,
       message: `${mdFiles.length}ファイル、${totalChunks}チャンクを同期しました`,
       results,
+      editedCount,
     });
   } catch (error) {
     console.error("Sync error:", error);
@@ -283,12 +317,36 @@ knowledgeAdminRoutes.openapi(listFilesRoute, async (c) => {
 
   try {
     const listed = await bucket.list({ limit: 1000 });
-    const files = listed.objects.map((obj) => ({
-      key: obj.key,
-      size: obj.size,
-      lastModified: obj.uploaded.toISOString(),
-      etag: obj.etag,
-    }));
+    const allObjects = listed.objects;
+
+    // originals/ 内のファイルをマップ化
+    const originalsMap = new Map<string, Date>();
+    for (const obj of allObjects) {
+      if (obj.key.startsWith("originals/")) {
+        const baseName = obj.key
+          .replace("originals/", "")
+          .replace(/\.[^.]+$/, "");
+        originalsMap.set(baseName, obj.uploaded);
+      }
+    }
+
+    // originals/ プレフィックスのファイルは除外し、編集済み情報を追加
+    const files = allObjects
+      .filter((obj) => !obj.key.startsWith("originals/"))
+      .map((obj) => {
+        const baseName = obj.key.replace(/\.md$/, "");
+        const originalUploaded = originalsMap.get(baseName);
+        const isEdited =
+          originalUploaded !== undefined && obj.uploaded > originalUploaded;
+
+        return {
+          key: obj.key,
+          size: obj.size,
+          lastModified: obj.uploaded.toISOString(),
+          etag: obj.etag,
+          edited: isEdited || undefined,
+        };
+      });
 
     return c.json(
       {
@@ -808,7 +866,15 @@ knowledgeAdminRoutes.openapi(convertFileRoute, async (c) => {
 
     console.log(`[Convert] Generated ${markdown.length} bytes of markdown`);
 
-    // R2 に保存
+    // 元ファイルを originals/ に保存
+    const originalExtension = file.name.split(".").pop() || "bin";
+    const originalKey = `originals/${key.replace(/\.md$/, `.${originalExtension}`)}`;
+    await bucket.put(originalKey, fileData, {
+      httpMetadata: { contentType: mimeType },
+    });
+    console.log(`[Convert] Saved original to ${originalKey}`);
+
+    // Markdown を R2 に保存
     await bucket.put(key, markdown, {
       httpMetadata: { contentType: "text/markdown" },
     });
