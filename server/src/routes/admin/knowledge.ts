@@ -230,11 +230,14 @@ knowledgeAdminRoutes.openapi(syncAllRoute, async (c) => {
         continue;
       }
 
-      // 編集済み判定: originals/ の対応ファイルより md が新しい場合
+      // 編集済み判定: originals/ の対応ファイルより md が十分新しい場合
+      // （同時アップロードは編集済みとみなさない：5秒以内の差は許容）
       const baseName = obj.key.replace(/\.md$/, "");
       const originalUploaded = originalsMap.get(baseName);
+      const EDIT_THRESHOLD_MS = 5000;
       const isEdited =
-        originalUploaded !== undefined && obj.uploaded > originalUploaded;
+        originalUploaded !== undefined &&
+        obj.uploaded.getTime() - originalUploaded.getTime() > EDIT_THRESHOLD_MS;
 
       const content = await file.text();
       console.log(
@@ -331,13 +334,17 @@ knowledgeAdminRoutes.openapi(listFilesRoute, async (c) => {
     }
 
     // originals/ プレフィックスのファイルは除外し、編集済み情報を追加
+    // 編集済み判定: originals/ より md が十分新しい場合（5秒以内の差は同時アップロードとみなす）
+    const EDIT_THRESHOLD_MS = 5000;
     const files = allObjects
       .filter((obj) => !obj.key.startsWith("originals/"))
       .map((obj) => {
         const baseName = obj.key.replace(/\.md$/, "");
         const originalUploaded = originalsMap.get(baseName);
         const isEdited =
-          originalUploaded !== undefined && obj.uploaded > originalUploaded;
+          originalUploaded !== undefined &&
+          obj.uploaded.getTime() - originalUploaded.getTime() >
+            EDIT_THRESHOLD_MS;
 
         return {
           key: obj.key,

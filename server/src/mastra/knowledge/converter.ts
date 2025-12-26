@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText } from "ai";
 
@@ -48,7 +49,7 @@ export const convertToMarkdown = async (
   }
 
   const google = createGoogleGenerativeAI({ apiKey });
-  const base64Data = btoa(String.fromCharCode(...new Uint8Array(fileData)));
+  const base64Data = Buffer.from(fileData).toString("base64");
 
   const { text } = await generateText({
     model: google("gemini-2.5-pro"),
