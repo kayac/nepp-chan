@@ -3,7 +3,7 @@ import type { FileInfo } from "~/types";
 type Props = {
   files: FileInfo[];
   onEdit: (key: string) => void;
-  onDelete: (key: string) => void;
+  onDelete: (key: string, edited?: boolean) => void;
   isDeleting: boolean;
 };
 
@@ -57,6 +57,11 @@ export const FileList = ({ files, onEdit, onDelete, isDeleting }: Props) => {
                 <span className="text-sm font-medium text-stone-900">
                   {file.key}
                 </span>
+                {file.edited && (
+                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-amber-100 text-amber-700 rounded">
+                    編集済み
+                  </span>
+                )}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-sm text-stone-500">
                 {formatFileSize(file.size)}
@@ -74,7 +79,7 @@ export const FileList = ({ files, onEdit, onDelete, isDeleting }: Props) => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => onDelete(file.key)}
+                  onClick={() => onDelete(file.key, file.edited)}
                   disabled={isDeleting}
                   className="text-red-600 hover:text-red-800 font-medium disabled:opacity-50"
                 >
