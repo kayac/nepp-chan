@@ -22,6 +22,14 @@ const formatDate = (dateString: string) =>
     minute: "2-digit",
   });
 
+const NEW_THRESHOLD_MS = 10 * 60 * 1000; // 10分
+
+const isNewFile = (lastModified: string) => {
+  const uploadedAt = new Date(lastModified).getTime();
+  const now = Date.now();
+  return now - uploadedAt < NEW_THRESHOLD_MS;
+};
+
 export const FileList = ({ files, onEdit, onDelete, isDeleting }: Props) => {
   if (files.length === 0) {
     return (
@@ -57,6 +65,11 @@ export const FileList = ({ files, onEdit, onDelete, isDeleting }: Props) => {
                 <span className="text-sm font-medium text-stone-900">
                   {file.key}
                 </span>
+                {isNewFile(file.lastModified) && (
+                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-teal-100 text-teal-700 rounded">
+                    NEW
+                  </span>
+                )}
                 {file.edited && (
                   <span className="ml-2 px-1.5 py-0.5 text-xs bg-amber-100 text-amber-700 rounded">
                     編集済み
