@@ -5,8 +5,16 @@ import type {
   FileContentResponse,
   FilesListResponse,
   SaveFileResponse,
+  SyncResult,
   UploadFileResponse,
 } from "~/types";
+
+// 全ナレッジ同期
+export const syncKnowledge = (): Promise<SyncResult> =>
+  apiClient<SyncResult>("/admin/knowledge/sync", {
+    method: "POST",
+    admin: true,
+  });
 
 export const deleteAllKnowledge = (): Promise<DeleteResult> =>
   apiClient<DeleteResult>("/admin/knowledge", {
