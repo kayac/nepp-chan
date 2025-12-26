@@ -12,6 +12,7 @@ import {
   fetchFileContent,
   fetchFiles,
   saveFile,
+  syncKnowledge,
   uploadFile,
 } from "~/repository/knowledge-repository";
 import {
@@ -40,6 +41,11 @@ export const useEmergencies = (limit = 100) =>
   useQuery({
     queryKey: dashboardKeys.emergencies,
     queryFn: () => fetchEmergencies(limit),
+  });
+
+export const useSyncKnowledge = () =>
+  useMutation({
+    mutationFn: syncKnowledge,
   });
 
 export const useDeleteKnowledge = () =>
