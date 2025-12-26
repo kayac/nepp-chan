@@ -80,7 +80,9 @@ export const ConvertDialog = ({
             <button
               type="submit"
               disabled={isConverting || !filename.trim()}
-              className="px-4 py-2 bg-teal-700 text-white text-sm font-medium rounded-lg hover:bg-teal-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`px-4 py-2 bg-teal-700 text-white text-sm font-medium rounded-lg hover:bg-teal-800 disabled:cursor-not-allowed ${
+                isConverting ? "animate-pulse" : "disabled:opacity-50"
+              }`}
             >
               {isConverting ? "変換中..." : "変換して保存"}
             </button>
