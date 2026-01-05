@@ -23,7 +23,7 @@ export const emergencyAgent = new Agent({
 - emergency-report: 新規の緊急報告を記録
 - emergency-update: 既存の報告に情報を追加
 `,
-  model: "google/gemini-2.0-flash",
+  model: "google/gemini-2.5-flash",
   tools: {
     emergencyReportTool,
     emergencyUpdateTool,
