@@ -161,14 +161,14 @@ aiss-nepch/
 
 | ID               | 説明                                   | モデル              |
 | ---------------- | -------------------------------------- | ------------------- |
-| `nep-chan`       | メインキャラクター（ねっぷちゃん）     | gemini-2.0-flash    |
-| `weather-agent`  | 天気情報取得                           | gemini-2.0-flash    |
-| `web-researcher` | Web 検索用サブエージェント             | gemini-2.0-flash    |
-| `village-info`   | 村情報提供                             | gemini-2.0-flash    |
-| `master`         | 村長モード専用データ分析               | gemini-2.0-flash    |
-| `emergency`      | 緊急事態対応                           | gemini-2.0-flash    |
-| `persona`        | ペルソナ（村の集合知）管理             | gemini-2.0-flash    |
-| `knowledge`      | RAG ナレッジ検索                       | gemini-2.0-flash    |
+| `nep-chan`       | メインキャラクター（ねっぷちゃん）     | gemini-2.5-flash    |
+| `weather-agent`  | 天気情報取得                           | gemini-2.5-flash    |
+| `web-researcher` | Web 検索用サブエージェント             | gemini-2.5-flash    |
+| `village-info`   | 村情報提供                             | gemini-2.5-flash    |
+| `master`         | 村長モード専用データ分析               | gemini-2.5-flash    |
+| `emergency`      | 緊急事態対応                           | gemini-2.5-flash    |
+| `persona`        | ペルソナ（村の集合知）管理             | gemini-2.5-flash    |
+| `knowledge`      | RAG ナレッジ検索                       | gemini-2.5-flash    |
 
 ## Mastra ツール
 

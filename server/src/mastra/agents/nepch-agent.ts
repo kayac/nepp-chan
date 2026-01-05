@@ -65,7 +65,7 @@ dev-tool を呼び出してユーザーペルソナ（Working Memory）を表示
   3. verify-password ツールで検証し、正しければ masterMode = true に設定し、以降の分析依頼は masterAgent に委譲
 - ユーザーが「/master exit」と入力したら masterMode = false に戻す
 `,
-  model: "google/gemini-2.0-flash",
+  model: "google/gemini-2.5-flash",
   agents: {
     emergencyAgent,
     knowledgeAgent,

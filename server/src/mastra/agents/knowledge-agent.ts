@@ -31,7 +31,7 @@ export const knowledgeAgent = new Agent({
 ## 利用可能なツール
 - knowledge-search: ナレッジベースから関連情報を検索
 `,
-  model: "google/gemini-2.0-flash",
+  model: "google/gemini-2.5-flash",
   tools: {
     knowledgeSearchTool,
   },
