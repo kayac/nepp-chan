@@ -4,8 +4,10 @@ import type {
   DeleteResult,
   FileContentResponse,
   FilesListResponse,
+  ReconvertFileResponse,
   SaveFileResponse,
   SyncResult,
+  UnifiedFilesListResponse,
   UploadFileResponse,
 } from "~/types";
 
@@ -105,3 +107,27 @@ export const convertFile = async (
 
   return res.json();
 };
+
+// 統合ファイル一覧取得
+export const fetchUnifiedFiles = (): Promise<UnifiedFilesListResponse> =>
+  apiClient<UnifiedFilesListResponse>("/admin/knowledge/unified", {
+    admin: true,
+  });
+
+// 元ファイルURL取得（クエリパラメータ認証）
+export const getOriginalFileUrl = (key: string): string => {
+  const adminKey = import.meta.env.VITE_ADMIN_KEY || "";
+  const encodedKey = encodeURIComponent(key.replace("originals/", ""));
+  return `${API_BASE}/admin/knowledge/originals/${encodedKey}?adminKey=${encodeURIComponent(adminKey)}`;
+};
+
+// 元ファイルからMarkdownを再生成
+export const reconvertFile = (
+  originalKey: string,
+  filename: string,
+): Promise<ReconvertFileResponse> =>
+  apiClient<ReconvertFileResponse>("/admin/knowledge/reconvert", {
+    method: "POST",
+    body: { originalKey, filename },
+    admin: true,
+  });

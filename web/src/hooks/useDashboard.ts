@@ -11,6 +11,8 @@ import {
   deleteFile,
   fetchFileContent,
   fetchFiles,
+  fetchUnifiedFiles,
+  reconvertFile,
   saveFile,
   syncKnowledge,
   uploadFile,
@@ -25,6 +27,7 @@ export const dashboardKeys = {
   personas: ["dashboard", "personas"] as const,
   emergencies: ["dashboard", "emergencies"] as const,
   knowledgeFiles: ["dashboard", "knowledge", "files"] as const,
+  knowledgeUnifiedFiles: ["dashboard", "knowledge", "unified"] as const,
   knowledgeFile: (key: string) =>
     ["dashboard", "knowledge", "file", key] as const,
 };
@@ -97,6 +100,9 @@ export const useSaveFile = () => {
       saveFile(key, content),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.knowledgeFiles });
+      queryClient.invalidateQueries({
+        queryKey: dashboardKeys.knowledgeUnifiedFiles,
+      });
     },
   });
 };
@@ -107,6 +113,9 @@ export const useDeleteFile = () => {
     mutationFn: deleteFile,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.knowledgeFiles });
+      queryClient.invalidateQueries({
+        queryKey: dashboardKeys.knowledgeUnifiedFiles,
+      });
     },
   });
 };
@@ -118,6 +127,9 @@ export const useUploadFile = () => {
       uploadFile(file, filename),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.knowledgeFiles });
+      queryClient.invalidateQueries({
+        queryKey: dashboardKeys.knowledgeUnifiedFiles,
+      });
     },
   });
 };
@@ -129,6 +141,35 @@ export const useConvertFile = () => {
       convertFile(file, filename),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.knowledgeFiles });
+      queryClient.invalidateQueries({
+        queryKey: dashboardKeys.knowledgeUnifiedFiles,
+      });
+    },
+  });
+};
+
+// 統合ファイル一覧
+export const useUnifiedFiles = () =>
+  useQuery({
+    queryKey: dashboardKeys.knowledgeUnifiedFiles,
+    queryFn: fetchUnifiedFiles,
+  });
+
+// 元ファイルからMarkdownを再生成
+export const useReconvertFile = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      originalKey,
+      filename,
+    }: {
+      originalKey: string;
+      filename: string;
+    }) => reconvertFile(originalKey, filename),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: dashboardKeys.knowledgeUnifiedFiles,
+      });
     },
   });
 };
