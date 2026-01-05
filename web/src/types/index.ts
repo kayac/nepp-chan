@@ -117,3 +117,32 @@ export type ConvertFileResponse = {
   originalType: string;
   chunks: number;
 };
+
+// 統合ファイル情報
+export type UnifiedFileInfo = {
+  baseName: string;
+  original?: {
+    key: string;
+    size: number;
+    lastModified: string;
+    contentType: string;
+  };
+  markdown?: {
+    key: string;
+    size: number;
+    lastModified: string;
+  };
+  hasMarkdown: boolean;
+};
+
+export type UnifiedFilesListResponse = {
+  files: UnifiedFileInfo[];
+  truncated: boolean;
+};
+
+export type ReconvertFileResponse = {
+  success: boolean;
+  message: string;
+  key: string;
+  chunks: number;
+};

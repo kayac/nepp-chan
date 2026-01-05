@@ -18,9 +18,11 @@ export const knowledgeAdminRoutes = new OpenAPIHono<{
   Bindings: AdminBindings;
 }>();
 
-// 認証ミドルウェア
+// 認証ミドルウェア（ヘッダーまたはクエリパラメータで認証）
 knowledgeAdminRoutes.use("*", async (c, next) => {
-  const adminKey = c.req.header("X-Admin-Key");
+  const adminKeyHeader = c.req.header("X-Admin-Key");
+  const adminKeyQuery = c.req.query("adminKey");
+  const adminKey = adminKeyHeader || adminKeyQuery;
   const expectedKey = c.env.ADMIN_KEY;
 
   if (!expectedKey) {
@@ -58,6 +60,32 @@ const FileInfoSchema = z.object({
 
 const FilesListResponseSchema = z.object({
   files: z.array(FileInfoSchema),
+  truncated: z.boolean(),
+});
+
+// 統合ファイル情報スキーマ
+const UnifiedFileInfoSchema = z.object({
+  baseName: z.string(),
+  original: z
+    .object({
+      key: z.string(),
+      size: z.number(),
+      lastModified: z.string(),
+      contentType: z.string(),
+    })
+    .optional(),
+  markdown: z
+    .object({
+      key: z.string(),
+      size: z.number(),
+      lastModified: z.string(),
+    })
+    .optional(),
+  hasMarkdown: z.boolean(),
+});
+
+const UnifiedFilesListResponseSchema = z.object({
+  files: z.array(UnifiedFileInfoSchema),
   truncated: z.boolean(),
 });
 
@@ -547,12 +575,13 @@ knowledgeAdminRoutes.openapi(saveFileRoute, async (c) => {
   }
 });
 
-// DELETE /admin/knowledge/files/:key - ファイル削除
+// DELETE /admin/knowledge/files/:key - ファイル完全削除
 const deleteFileRoute = createRoute({
   method: "delete",
   path: "/files/{key}",
-  summary: "ファイルを削除",
-  description: "ファイルを削除し、Vectorizeからも該当データを削除します",
+  summary: "ファイルを完全削除",
+  description:
+    "Markdown、元ファイル（originals/）、Vectorizeのデータをすべて削除します",
   tags: ["Admin - Knowledge"],
   request: {
     params: FileKeyParamSchema,
@@ -595,19 +624,36 @@ knowledgeAdminRoutes.openapi(deleteFileRoute, async (c) => {
     throw new HTTPException(400, { message: "Invalid file key" });
   }
 
-  try {
-    // R2 から削除
-    await bucket.delete(key);
-    console.log(`[Delete] Deleted ${key} from R2`);
+  // baseNameを抽出（xxx.md → xxx）
+  const baseName = key.replace(/\.md$/, "");
 
-    // Vectorize から削除
-    await deleteKnowledgeBySource(vectorize, key);
-    console.log(`[Delete] Deleted ${key} from Vectorize`);
+  try {
+    // 1. Markdownファイルを削除
+    const mdKey = baseName.endsWith(".md") ? baseName : `${baseName}.md`;
+    await bucket.delete(mdKey);
+    console.log(`[Delete] Deleted ${mdKey} from R2`);
+
+    // 2. 元ファイル（originals/）を検索して削除
+    const listed = await bucket.list({ prefix: `originals/${baseName}` });
+    for (const obj of listed.objects) {
+      // originals/baseName.* にマッチするもののみ削除
+      const objBaseName = obj.key
+        .replace("originals/", "")
+        .replace(/\.[^.]+$/, "");
+      if (objBaseName === baseName) {
+        await bucket.delete(obj.key);
+        console.log(`[Delete] Deleted ${obj.key} from R2`);
+      }
+    }
+
+    // 3. Vectorize から削除
+    await deleteKnowledgeBySource(vectorize, mdKey);
+    console.log(`[Delete] Deleted ${mdKey} from Vectorize`);
 
     return c.json(
       {
         success: true,
-        message: `ファイル ${key} を削除しました`,
+        message: `${baseName} を完全に削除しました`,
       },
       200,
     );
@@ -905,6 +951,373 @@ knowledgeAdminRoutes.openapi(convertFileRoute, async (c) => {
     console.error("Convert file error:", error);
     throw new HTTPException(500, {
       message: error instanceof Error ? error.message : "Convert failed",
+    });
+  }
+});
+
+// GET /admin/knowledge/unified - 統合ファイル一覧取得
+const listUnifiedFilesRoute = createRoute({
+  method: "get",
+  path: "/unified",
+  summary: "統合ファイル一覧を取得",
+  description:
+    "元ファイル（originals/）とMarkdownファイルを統合した一覧を取得します",
+  tags: ["Admin - Knowledge"],
+  responses: {
+    200: {
+      description: "統合ファイル一覧",
+      content: {
+        "application/json": {
+          schema: UnifiedFilesListResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "認証エラー",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    500: {
+      description: "サーバーエラー",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+knowledgeAdminRoutes.openapi(listUnifiedFilesRoute, async (c) => {
+  const bucket = c.env.KNOWLEDGE_BUCKET;
+
+  try {
+    const listed = await bucket.list({ limit: 1000 });
+    const allObjects = listed.objects;
+
+    // originals/ 内のファイルをマップ化
+    const originalsMap = new Map<
+      string,
+      { key: string; size: number; uploaded: Date; contentType: string }
+    >();
+    for (const obj of allObjects) {
+      if (obj.key.startsWith("originals/")) {
+        const baseName = obj.key
+          .replace("originals/", "")
+          .replace(/\.[^.]+$/, "");
+        const file = await bucket.head(obj.key);
+        originalsMap.set(baseName, {
+          key: obj.key,
+          size: obj.size,
+          uploaded: obj.uploaded,
+          contentType:
+            file?.httpMetadata?.contentType || "application/octet-stream",
+        });
+      }
+    }
+
+    // Markdown ファイルをマップ化
+    const markdownMap = new Map<
+      string,
+      { key: string; size: number; uploaded: Date }
+    >();
+    for (const obj of allObjects) {
+      if (obj.key.endsWith(".md") && !obj.key.startsWith("originals/")) {
+        const baseName = obj.key.replace(/\.md$/, "");
+        markdownMap.set(baseName, {
+          key: obj.key,
+          size: obj.size,
+          uploaded: obj.uploaded,
+        });
+      }
+    }
+
+    // 全てのベース名を収集
+    const allBaseNames = new Set([
+      ...originalsMap.keys(),
+      ...markdownMap.keys(),
+    ]);
+
+    const files: z.infer<typeof UnifiedFileInfoSchema>[] = [];
+
+    for (const baseName of allBaseNames) {
+      const original = originalsMap.get(baseName);
+      const markdown = markdownMap.get(baseName);
+
+      files.push({
+        baseName,
+        original: original
+          ? {
+              key: original.key,
+              size: original.size,
+              lastModified: original.uploaded.toISOString(),
+              contentType: original.contentType,
+            }
+          : undefined,
+        markdown: markdown
+          ? {
+              key: markdown.key,
+              size: markdown.size,
+              lastModified: markdown.uploaded.toISOString(),
+            }
+          : undefined,
+        hasMarkdown: !!markdown,
+      });
+    }
+
+    // 更新日時でソート（新しい順）
+    files.sort((a, b) => {
+      const aDate = a.markdown?.lastModified || a.original?.lastModified || "";
+      const bDate = b.markdown?.lastModified || b.original?.lastModified || "";
+      return bDate.localeCompare(aDate);
+    });
+
+    return c.json(
+      {
+        files,
+        truncated: listed.truncated,
+      },
+      200,
+    );
+  } catch (error) {
+    console.error("List unified files error:", error);
+    throw new HTTPException(500, {
+      message:
+        error instanceof Error ? error.message : "List unified files failed",
+    });
+  }
+});
+
+// GET /admin/knowledge/originals/:key - 元ファイル取得
+const getOriginalFileRoute = createRoute({
+  method: "get",
+  path: "/originals/{key}",
+  summary: "元ファイルを取得",
+  description: "originals/ 配下の元ファイルを取得します（画像/PDF）",
+  tags: ["Admin - Knowledge"],
+  request: {
+    params: FileKeyParamSchema,
+  },
+  responses: {
+    200: {
+      description: "元ファイル（バイナリ）",
+    },
+    401: {
+      description: "認証エラー",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "ファイルが見つかりません",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    500: {
+      description: "サーバーエラー",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+knowledgeAdminRoutes.openapi(getOriginalFileRoute, async (c) => {
+  const bucket = c.env.KNOWLEDGE_BUCKET;
+  const { key } = c.req.valid("param");
+
+  // ファイル名のバリデーション
+  if (key.includes("..") || key.startsWith("/")) {
+    throw new HTTPException(400, { message: "Invalid file key" });
+  }
+
+  const fullKey = `originals/${key}`;
+
+  try {
+    const object = await bucket.get(fullKey);
+    if (!object) {
+      throw new HTTPException(404, { message: "File not found" });
+    }
+
+    const contentType =
+      object.httpMetadata?.contentType || "application/octet-stream";
+    const body = await object.arrayBuffer();
+
+    return new Response(body, {
+      headers: {
+        "Content-Type": contentType,
+        "Content-Length": object.size.toString(),
+        "Content-Disposition": `inline; filename="${encodeURIComponent(key)}"`,
+      },
+    });
+  } catch (error) {
+    if (error instanceof HTTPException) throw error;
+    console.error("Get original file error:", error);
+    throw new HTTPException(500, {
+      message:
+        error instanceof Error ? error.message : "Get original file failed",
+    });
+  }
+});
+
+// POST /admin/knowledge/reconvert - 元ファイルからMarkdownを再生成
+const reconvertFileRoute = createRoute({
+  method: "post",
+  path: "/reconvert",
+  summary: "元ファイルからMarkdownを再生成",
+  description: "originals/ 配下の元ファイルからMarkdownを再生成します",
+  tags: ["Admin - Knowledge"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            originalKey: z.string().openapi({
+              description: "元ファイルのキー（originals/xxx.pdf）",
+            }),
+            filename: z.string().openapi({
+              description: "保存するMarkdownファイル名",
+            }),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "再変換成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.boolean(),
+            message: z.string(),
+            key: z.string(),
+            chunks: z.number(),
+          }),
+        },
+      },
+    },
+    400: {
+      description: "リクエストエラー",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "認証エラー",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "元ファイルが見つかりません",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    500: {
+      description: "サーバーエラー",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+knowledgeAdminRoutes.openapi(reconvertFileRoute, async (c) => {
+  const bucket = c.env.KNOWLEDGE_BUCKET;
+  const vectorize = c.env.VECTORIZE;
+  const apiKey = c.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  const { originalKey, filename } = c.req.valid("json");
+
+  if (!apiKey) {
+    throw new HTTPException(500, {
+      message: "GOOGLE_GENERATIVE_AI_API_KEY is not configured",
+    });
+  }
+
+  // バリデーション
+  if (!originalKey.startsWith("originals/")) {
+    throw new HTTPException(400, {
+      message: "originalKey must start with 'originals/'",
+    });
+  }
+
+  if (filename.includes("..") || filename.startsWith("/")) {
+    throw new HTTPException(400, { message: "Invalid filename" });
+  }
+
+  let key = filename;
+  if (!key.endsWith(".md")) {
+    key = `${key}.md`;
+  }
+
+  try {
+    // 元ファイルを取得
+    const object = await bucket.get(originalKey);
+    if (!object) {
+      throw new HTTPException(404, { message: "Original file not found" });
+    }
+
+    const mimeType =
+      object.httpMetadata?.contentType || "application/octet-stream";
+    if (!isSupportedMimeType(mimeType)) {
+      throw new HTTPException(400, {
+        message: `Unsupported file type: ${mimeType}`,
+      });
+    }
+
+    console.log(
+      `[Reconvert] Converting ${originalKey} (${mimeType}) to ${key}`,
+    );
+
+    // Gemini で変換
+    const fileData = await object.arrayBuffer();
+    const markdown = await convertToMarkdown(fileData, mimeType, apiKey);
+
+    console.log(`[Reconvert] Generated ${markdown.length} bytes of markdown`);
+
+    // Markdown を R2 に保存
+    await bucket.put(key, markdown, {
+      httpMetadata: { contentType: "text/markdown" },
+    });
+
+    // Vectorize に同期
+    await deleteKnowledgeBySource(vectorize, key);
+    const result = await processKnowledgeFile(key, markdown, vectorize, apiKey);
+
+    return c.json(
+      {
+        success: true,
+        message: `ファイルを再変換し、${result.chunks}チャンクを同期しました`,
+        key,
+        chunks: result.chunks,
+      },
+      200,
+    );
+  } catch (error) {
+    if (error instanceof HTTPException) throw error;
+    console.error("Reconvert file error:", error);
+    throw new HTTPException(500, {
+      message: error instanceof Error ? error.message : "Reconvert failed",
     });
   }
 });
