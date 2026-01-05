@@ -30,6 +30,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
 ::-webkit-scrollbar {
   width: 4px;
 }
