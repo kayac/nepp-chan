@@ -78,7 +78,7 @@ resourceId には村の識別子 "otoineppu" を使用する。
 - persona-save: 新規のペルソナ情報を保存
 - persona-update: 既存のペルソナ情報を更新
 `,
-  model: "google/gemini-2.0-flash",
+  model: "google/gemini-2.5-flash",
   tools: {
     personaSaveTool,
     personaUpdateTool,
