@@ -43,6 +43,13 @@ export const KnowledgePanel = () => {
   };
 
   const handleReconvert = (originalKey: string, baseName: string) => {
+    if (
+      !confirm(
+        `${baseName} のMarkdownを元ファイルから再生成しますか？\n（現在の編集内容は上書きされます）`,
+      )
+    ) {
+      return;
+    }
     setMessage(null);
     reconvertMutation.mutate(
       { originalKey, filename: baseName },

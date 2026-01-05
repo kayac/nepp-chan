@@ -74,35 +74,43 @@ export const FileList = ({
                   <span className="text-sm font-medium text-stone-900">
                     {file.baseName}
                   </span>
-                  {file.hasMarkdown ? (
-                    <span className="ml-2 px-1.5 py-0.5 text-xs bg-teal-100 text-teal-700 rounded">
-                      同期済み
-                    </span>
-                  ) : (
-                    <span className="ml-2 px-1.5 py-0.5 text-xs bg-stone-100 text-stone-600 rounded">
-                      未変換
-                    </span>
-                  )}
                 </td>
 
                 {/* 元ファイル */}
                 <td className="px-4 py-3 whitespace-nowrap">
-                  {file.original ? (
-                    <a
-                      href={getOriginalFileUrl(file.original.key)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-teal-600 hover:text-teal-800 hover:underline"
-                      title="元ファイルをダウンロード"
-                    >
-                      <span>
-                        {isImageType(file.original.contentType) ? "🖼️" : "📄"}
-                      </span>
-                      <span>{formatFileSize(file.original.size)}</span>
-                    </a>
-                  ) : (
-                    <span className="text-sm text-stone-400">-</span>
-                  )}
+                  {(() => {
+                    const orig = file.original;
+                    if (!orig) {
+                      return <span className="text-sm text-stone-400">-</span>;
+                    }
+                    return (
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={getOriginalFileUrl(orig.key)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-sm text-teal-600 hover:text-teal-800 hover:underline"
+                          title="元ファイルをダウンロード"
+                        >
+                          <span>
+                            {isImageType(orig.contentType) ? "🖼️" : "📄"}
+                          </span>
+                          <span>{formatFileSize(orig.size)}</span>
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => onReconvert(orig.key, file.baseName)}
+                          disabled={isReconverting}
+                          className={`text-xs px-2 py-0.5 rounded border border-stone-300 text-stone-600 hover:bg-stone-100 disabled:opacity-50 ${
+                            isReconverting ? "animate-pulse" : ""
+                          }`}
+                          title="元ファイルからMarkdownを再生成"
+                        >
+                          {isReconverting ? "生成中..." : "再生成"}
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </td>
 
                 {/* 更新日時 */}
@@ -113,49 +121,15 @@ export const FileList = ({
                 {/* 操作 */}
                 <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                   <div className="flex justify-end gap-3">
-                    {file.hasMarkdown ? (
-                      <>
-                        {(() => {
-                          const orig = file.original;
-                          if (!orig) return null;
-                          return (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                onReconvert(orig.key, file.baseName)
-                              }
-                              disabled={isReconverting}
-                              className={`text-amber-600 hover:text-amber-800 font-medium disabled:opacity-50 ${
-                                isReconverting ? "animate-pulse" : ""
-                              }`}
-                            >
-                              {isReconverting ? "再変換中..." : "再変換"}
-                            </button>
-                          );
-                        })()}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            file.markdown && onEdit(file.markdown.key)
-                          }
-                          className="text-teal-600 hover:text-teal-800 font-medium"
-                        >
-                          編集
-                        </button>
-                      </>
-                    ) : (
+                    {file.hasMarkdown && (
                       <button
                         type="button"
                         onClick={() =>
-                          file.original &&
-                          onReconvert(file.original.key, file.baseName)
+                          file.markdown && onEdit(file.markdown.key)
                         }
-                        disabled={isReconverting}
-                        className={`text-teal-600 hover:text-teal-800 font-medium disabled:opacity-50 ${
-                          isReconverting ? "animate-pulse" : ""
-                        }`}
+                        className="text-teal-600 hover:text-teal-800 font-medium"
                       >
-                        {isReconverting ? "変換中..." : "変換"}
+                        編集
                       </button>
                     )}
                     <button
