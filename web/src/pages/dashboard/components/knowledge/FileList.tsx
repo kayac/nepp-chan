@@ -1,10 +1,13 @@
-import type { FileInfo } from "~/types";
+import { getOriginalFileUrl } from "~/repository/knowledge-repository";
+import type { UnifiedFileInfo } from "~/types";
 
 type Props = {
-  files: FileInfo[];
+  files: UnifiedFileInfo[];
   onEdit: (key: string) => void;
-  onDelete: (key: string, edited?: boolean) => void;
+  onDelete: (baseName: string) => void;
+  onReconvert: (originalKey: string, baseName: string) => void;
   isDeleting: boolean;
+  isReconverting: boolean;
 };
 
 const formatFileSize = (bytes: number) => {
@@ -22,15 +25,16 @@ const formatDate = (dateString: string) =>
     minute: "2-digit",
   });
 
-const NEW_THRESHOLD_MS = 10 * 60 * 1000; // 10分
+const isImageType = (contentType: string) => contentType.startsWith("image/");
 
-const isNewFile = (lastModified: string) => {
-  const uploadedAt = new Date(lastModified).getTime();
-  const now = Date.now();
-  return now - uploadedAt < NEW_THRESHOLD_MS;
-};
-
-export const FileList = ({ files, onEdit, onDelete, isDeleting }: Props) => {
+export const FileList = ({
+  files,
+  onEdit,
+  onDelete,
+  onReconvert,
+  isDeleting,
+  isReconverting,
+}: Props) => {
   if (files.length === 0) {
     return (
       <div className="text-center py-8 text-stone-500">
@@ -48,7 +52,7 @@ export const FileList = ({ files, onEdit, onDelete, isDeleting }: Props) => {
               ファイル名
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-              サイズ
+              元ファイル
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
               更新日時
@@ -59,48 +63,114 @@ export const FileList = ({ files, onEdit, onDelete, isDeleting }: Props) => {
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-stone-200">
-          {files.map((file) => (
-            <tr key={file.key} className="hover:bg-stone-50">
-              <td className="px-4 py-3 whitespace-nowrap">
-                <span className="text-sm font-medium text-stone-900">
-                  {file.key}
-                </span>
-                {isNewFile(file.lastModified) && (
-                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-teal-100 text-teal-700 rounded">
-                    NEW
+          {files.map((file) => {
+            const lastModified =
+              file.markdown?.lastModified || file.original?.lastModified || "";
+
+            return (
+              <tr key={file.baseName} className="hover:bg-stone-50">
+                {/* ファイル名 */}
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <span className="text-sm font-medium text-stone-900">
+                    {file.baseName}
                   </span>
-                )}
-                {file.edited && (
-                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-amber-100 text-amber-700 rounded">
-                    編集済み
-                  </span>
-                )}
-              </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-stone-500">
-                {formatFileSize(file.size)}
-              </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-stone-500">
-                {formatDate(file.lastModified)}
-              </td>
-              <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
-                <button
-                  type="button"
-                  onClick={() => onEdit(file.key)}
-                  className="text-teal-600 hover:text-teal-800 font-medium mr-3"
-                >
-                  編集
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onDelete(file.key, file.edited)}
-                  disabled={isDeleting}
-                  className="text-red-600 hover:text-red-800 font-medium disabled:opacity-50"
-                >
-                  削除
-                </button>
-              </td>
-            </tr>
-          ))}
+                  {file.hasMarkdown ? (
+                    <span className="ml-2 px-1.5 py-0.5 text-xs bg-teal-100 text-teal-700 rounded">
+                      同期済み
+                    </span>
+                  ) : (
+                    <span className="ml-2 px-1.5 py-0.5 text-xs bg-stone-100 text-stone-600 rounded">
+                      未変換
+                    </span>
+                  )}
+                </td>
+
+                {/* 元ファイル */}
+                <td className="px-4 py-3 whitespace-nowrap">
+                  {file.original ? (
+                    <a
+                      href={getOriginalFileUrl(file.original.key)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm text-teal-600 hover:text-teal-800 hover:underline"
+                      title="元ファイルをダウンロード"
+                    >
+                      <span>
+                        {isImageType(file.original.contentType) ? "🖼️" : "📄"}
+                      </span>
+                      <span>{formatFileSize(file.original.size)}</span>
+                    </a>
+                  ) : (
+                    <span className="text-sm text-stone-400">-</span>
+                  )}
+                </td>
+
+                {/* 更新日時 */}
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-stone-500">
+                  {lastModified ? formatDate(lastModified) : "-"}
+                </td>
+
+                {/* 操作 */}
+                <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
+                  <div className="flex justify-end gap-3">
+                    {file.hasMarkdown ? (
+                      <>
+                        {(() => {
+                          const orig = file.original;
+                          if (!orig) return null;
+                          return (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onReconvert(orig.key, file.baseName)
+                              }
+                              disabled={isReconverting}
+                              className={`text-amber-600 hover:text-amber-800 font-medium disabled:opacity-50 ${
+                                isReconverting ? "animate-pulse" : ""
+                              }`}
+                            >
+                              {isReconverting ? "再変換中..." : "再変換"}
+                            </button>
+                          );
+                        })()}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            file.markdown && onEdit(file.markdown.key)
+                          }
+                          className="text-teal-600 hover:text-teal-800 font-medium"
+                        >
+                          編集
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          file.original &&
+                          onReconvert(file.original.key, file.baseName)
+                        }
+                        disabled={isReconverting}
+                        className={`text-teal-600 hover:text-teal-800 font-medium disabled:opacity-50 ${
+                          isReconverting ? "animate-pulse" : ""
+                        }`}
+                      >
+                        {isReconverting ? "変換中..." : "変換"}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => onDelete(file.baseName)}
+                      disabled={isDeleting}
+                      className="text-red-600 hover:text-red-800 font-medium disabled:opacity-50"
+                    >
+                      削除
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
