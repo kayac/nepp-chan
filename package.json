@@ -21,7 +21,8 @@
     "db:migrate:local": "pnpm --filter @aiss-nepch/server db:migrate:local",
     "db:studio": "pnpm --filter @aiss-nepch/server db:studio",
     "db:push": "pnpm --filter @aiss-nepch/server db:push",
-    "db:check": "pnpm --filter @aiss-nepch/server db:check"
+    "db:check": "pnpm --filter @aiss-nepch/server db:check",
+    "knowledge:upload": "npx tsx --env-file=.env scripts/upload-knowledge.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.8"

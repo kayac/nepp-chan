@@ -94,12 +94,12 @@ aiss-nepch/
 │   │   │   └── migrations/
 │   │   │       └── 001_init.sql
 │   │   └── __tests__/
-│   ├── knowledge/                       # ナレッジ Markdown ファイル
 │   ├── drizzle.config.ts                # Drizzle Kit 設定
-│   ├── scripts/
-│   │   └── upload-knowledge.ts          # R2 アップロード + 同期スクリプト
 │   ├── wrangler.jsonc
 │   └── vitest.config.ts
+├── knowledge/                           # ナレッジ Markdown ファイル
+├── scripts/
+│   └── upload-knowledge.ts              # R2 アップロードスクリプト
 ├── web/                             # フロントエンド（Cloudflare Pages・MPA構成）
 │   ├── index.html                   # チャット画面エントリー（/）
 │   ├── dashboard.html               # ダッシュボード画面エントリー（/dashboard）
@@ -216,9 +216,9 @@ pnpm db:push                 # スキーマを直接 DB に反映（開発用）
 pnpm db:check                # スキーマとマイグレーションの整合性チェック
 
 # ナレッジ管理
-pnpm knowledge:upload            # R2 にアップロード + Vectorize 同期
-pnpm knowledge:upload --sync-only # 同期のみ（アップロードスキップ）
-pnpm knowledge:clear             # 全ナレッジ削除して再同期
+pnpm knowledge:upload              # 全ファイルを R2 にアップロード（自動同期）
+pnpm knowledge:upload --file=x.md  # 特定ファイルのみアップロード
+pnpm knowledge:upload --clean      # 全ナレッジを削除
 ```
 
 ## パス別名
@@ -417,25 +417,25 @@ thread_persona_status 更新
 ### アーキテクチャ
 
 ```text
-server/knowledge/*.md → R2 バケット → Vectorize（embeddings）
-                                    ↓
-                           knowledgeSearchTool で検索
+knowledge/*.md → R2 バケット → Vectorize（embeddings）
+                                ↓
+                       knowledgeSearchTool で検索
 ```
 
 ### ファイル構成
 
 | パス | 説明 |
 | ---- | ---- |
-| `server/knowledge/` | ナレッジ Markdown ファイル |
+| `knowledge/` | ナレッジ Markdown ファイル |
+| `scripts/upload-knowledge.ts` | アップロードスクリプト |
 | `server/src/mastra/knowledge/index.ts` | chunk 分割・embeddings 生成・同期処理 |
 | `server/src/mastra/tools/knowledge-search-tool.ts` | ベクトル検索ツール |
 | `server/src/routes/admin/knowledge.ts` | 管理 API |
-| `server/scripts/upload-knowledge.ts` | アップロードスクリプト |
 
 ### 処理フロー
 
-1. `pnpm knowledge:upload` で `server/knowledge/*.md` を R2 にアップロード（`--remote` フラグ必須）
-2. 本番 API の `/admin/knowledge/sync` を呼び出し
+1. `pnpm knowledge:upload` で `knowledge/*.md` を R2 にアップロード
+2. R2 Event Notifications により自動的に Vectorize 同期が実行
 3. Workers 内で R2 からファイルを読み込み
 4. `MDocument.fromMarkdown()` で chunk 分割（Mastra RAG）
 5. 短いチャンク（100文字未満）をフィルタリング
