@@ -1,13 +1,19 @@
 import { getOriginalFileUrl } from "~/repository/knowledge-repository";
 import type { UnifiedFileInfo } from "~/types";
 
+/**
+ * NOTE: onEdit, onReconvert は運用時に復活させる
+ * 現在は閲覧・削除のみ可能
+ */
 type Props = {
   files: UnifiedFileInfo[];
-  onEdit: (key: string) => void;
-  onDelete: (baseName: string) => void;
-  onReconvert: (originalKey: string, baseName: string) => void;
-  isDeleting: boolean;
-  isReconverting: boolean;
+  onView?: (key: string) => void;
+  onDelete?: (baseName: string) => void;
+  isDeleting?: boolean;
+  // TODO: 運用時に復活
+  // onEdit: (key: string) => void;
+  // onReconvert: (originalKey: string, baseName: string) => void;
+  // isReconverting: boolean;
 };
 
 const formatFileSize = (bytes: number) => {
@@ -29,11 +35,13 @@ const isImageType = (contentType: string) => contentType.startsWith("image/");
 
 export const FileList = ({
   files,
-  onEdit,
+  onView,
   onDelete,
-  onReconvert,
   isDeleting,
-  isReconverting,
+  // TODO: 運用時に復活
+  // onEdit,
+  // onReconvert,
+  // isReconverting,
 }: Props) => {
   if (files.length === 0) {
     return (
@@ -97,7 +105,8 @@ export const FileList = ({
                           </span>
                           <span>{formatFileSize(orig.size)}</span>
                         </a>
-                        <button
+                        {/* TODO: 運用時に復活 - 再生成ボタン */}
+                        {/* <button
                           type="button"
                           onClick={() => onReconvert(orig.key, file.baseName)}
                           disabled={isReconverting}
@@ -107,7 +116,7 @@ export const FileList = ({
                           title="元ファイルからMarkdownを再生成"
                         >
                           {isReconverting ? "生成中..." : "再生成"}
-                        </button>
+                        </button> */}
                       </div>
                     );
                   })()}
@@ -121,7 +130,19 @@ export const FileList = ({
                 {/* 操作 */}
                 <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                   <div className="flex justify-end gap-3">
-                    {file.hasMarkdown && (
+                    {file.hasMarkdown && onView && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          file.markdown && onView(file.markdown.key)
+                        }
+                        className="text-teal-600 hover:text-teal-800 font-medium"
+                      >
+                        閲覧
+                      </button>
+                    )}
+                    {/* TODO: 運用時に復活 - 編集ボタン */}
+                    {/* {file.hasMarkdown && (
                       <button
                         type="button"
                         onClick={() =>
@@ -131,15 +152,17 @@ export const FileList = ({
                       >
                         編集
                       </button>
+                    )} */}
+                    {onDelete && (
+                      <button
+                        type="button"
+                        onClick={() => onDelete(file.baseName)}
+                        disabled={isDeleting}
+                        className="text-red-600 hover:text-red-800 font-medium disabled:opacity-50"
+                      >
+                        削除
+                      </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => onDelete(file.baseName)}
-                      disabled={isDeleting}
-                      className="text-red-600 hover:text-red-800 font-medium disabled:opacity-50"
-                    >
-                      削除
-                    </button>
                   </div>
                 </td>
               </tr>
