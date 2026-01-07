@@ -267,11 +267,20 @@ API キーなどの機密情報は Cloudflare Workers のシークレットと�
 
 ### シークレット一覧
 
+#### Cloudflare Workers（server）
+
 | 変数名                         | 説明                             |
 | ------------------------------ | -------------------------------- |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Google Generative AI キー        |
 | `GOOGLE_SEARCH_ENGINE_ID`      | Google Custom Search エンジン ID |
 | `MASTER_PASSWORD`              | 村長モードのパスワード           |
+
+#### Cloudflare Pages（web）
+
+| 変数名                | 説明                       |
+| --------------------- | -------------------------- |
+| `BASIC_AUTH_USER`     | Basic 認証のユーザー名     |
+| `BASIC_AUTH_PASSWORD` | Basic 認証のパスワード     |
 
 ### シークレットの登録方法
 
@@ -287,6 +296,11 @@ cd server
 wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 wrangler secret put GOOGLE_SEARCH_ENGINE_ID
 wrangler secret put MASTER_PASSWORD
+
+# 本番環境（Cloudflare Pages）
+cd web
+wrangler pages secret put BASIC_AUTH_USER
+wrangler pages secret put BASIC_AUTH_PASSWORD
 ```
 
 ### コードでのアクセス方法
