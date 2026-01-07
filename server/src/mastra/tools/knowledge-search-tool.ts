@@ -1,10 +1,17 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { ModelRouterLanguageModel } from "@mastra/core/llm";
 import { createTool } from "@mastra/core/tools";
+import { rerank } from "@mastra/rag";
 import { embed } from "ai";
 import { z } from "zod";
 
 const EMBEDDING_MODEL_NAME = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 1536;
+const RERANK_MODEL_ID = "google/gemini-2.5-flash" as const;
+
+const SEARCH_TOP_K = 10;
+
+const RERANK_TOP_K = 3;
 
 type KnowledgeBindings = CloudflareBindings & {
   VECTORIZE: VectorizeIndex;
@@ -73,8 +80,6 @@ export const knowledgeSearchTool = createTool({
   },
 });
 
-const TOP_K = 3;
-
 const searchKnowledge = async (
   query: string,
   vectorize: VectorizeIndex,
@@ -104,7 +109,7 @@ const searchKnowledge = async (
     );
 
     const results = await vectorize.query(embedding, {
-      topK: TOP_K,
+      topK: SEARCH_TOP_K,
       returnMetadata: "all",
     });
 
@@ -114,17 +119,40 @@ const searchKnowledge = async (
       };
     }
 
-    const knowledgeResults: KnowledgeResult[] = results.matches.map((match) => {
+    const queryResults = results.matches.map((match) => {
       const metadata = match.metadata as Record<string, unknown> | undefined;
       return {
-        content: (metadata?.content as string) || "",
+        id: match.id,
         score: match.score,
-        source: (metadata?.source as string) || "unknown",
-        title: metadata?.title as string | undefined,
-        section: metadata?.section as string | undefined,
-        subsection: metadata?.subsection as string | undefined,
+        metadata: {
+          text: (metadata?.content as string) || "",
+          content: (metadata?.content as string) || "",
+          source: (metadata?.source as string) || "unknown",
+          title: metadata?.title as string | undefined,
+          section: metadata?.section as string | undefined,
+          subsection: metadata?.subsection as string | undefined,
+        },
       };
     });
+
+    const rerankModel = new ModelRouterLanguageModel(RERANK_MODEL_ID);
+    const rerankedResults = await rerank(queryResults, query, rerankModel, {
+      topK: RERANK_TOP_K,
+      weights: {
+        semantic: 0.5,
+        vector: 0.3,
+        position: 0.2,
+      },
+    });
+
+    const knowledgeResults: KnowledgeResult[] = rerankedResults.map((r) => ({
+      content: (r.result.metadata?.content as string) || "",
+      score: r.score,
+      source: (r.result.metadata?.source as string) || "unknown",
+      title: r.result.metadata?.title as string | undefined,
+      section: r.result.metadata?.section as string | undefined,
+      subsection: r.result.metadata?.subsection as string | undefined,
+    }));
 
     return {
       results: knowledgeResults,
