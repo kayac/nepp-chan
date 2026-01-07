@@ -1,9 +1,9 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { handleChatStream } from "@mastra/ai-sdk";
-import type { MastraStorage } from "@mastra/core/storage";
+import { Mastra } from "@mastra/core/mastra";
 import { createUIMessageStreamResponse, type UIMessage } from "ai";
 import { getStorage } from "~/lib/storage";
-import { createMastra } from "~/mastra/factory";
+import { nepChanAgent } from "~/mastra/agents/nepch-agent";
 import { createRequestContext } from "~/mastra/request-context";
 
 const ChatSendRequestSchema = z.object({
@@ -51,7 +51,10 @@ const chatRoute = createRoute({
 chatRoutes.openapi(chatRoute, async (c) => {
   const { message, resourceId, threadId } = c.req.valid("json");
   const storage = await getStorage(c.env.DB);
-  const mastra = createMastra(storage as unknown as MastraStorage);
+  const mastra = new Mastra({
+    agents: { nepChanAgent },
+    storage,
+  });
   const requestContext = createRequestContext({
     storage,
     db: c.env.DB,

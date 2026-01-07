@@ -1,10 +1,10 @@
-import type { MastraStorage } from "@mastra/core/storage";
+import { Mastra } from "@mastra/core/mastra";
 import { Memory } from "@mastra/memory";
 import { desc } from "drizzle-orm";
 
 import { createDb, mastraThreads } from "~/db";
 import { getStorage } from "~/lib/storage";
-import { createMastra } from "~/mastra/factory";
+import { personaAgent } from "~/mastra/agents/persona-agent";
 import { getWorkingMemoryByThread } from "~/mastra/memory";
 import { createRequestContext } from "~/mastra/request-context";
 import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
@@ -82,7 +82,10 @@ export const extractPersonaFromThread = async (
     : "";
 
   const storage = await getStorage(env.DB);
-  const mastra = createMastra(storage as unknown as MastraStorage);
+  const mastra = new Mastra({
+    agents: { personaAgent },
+    storage,
+  });
   const agent = mastra.getAgent("personaAgent");
   const requestContext = createRequestContext({
     storage,
