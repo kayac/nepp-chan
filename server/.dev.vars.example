@@ -1,3 +1,4 @@
 GOOGLE_GENERATIVE_AI_API_KEY=your-api-key-here
 GOOGLE_SEARCH_ENGINE_ID=your-engine-id-here
 MASTER_PASSWORD=your-password-here
+ADMIN_KEY=your-admin-key-here
