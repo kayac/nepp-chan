@@ -1,3 +1,4 @@
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useKnowledgeFile } from "~/hooks/useDashboard";
 
 type Props = {
@@ -56,21 +57,7 @@ export const FileViewer = ({ fileKey, onClose }: Props) => {
             className="p-1.5 text-stone-400 hover:text-stone-600 rounded-lg hover:bg-stone-100"
             aria-label="閉じる"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <title>閉じる</title>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <XMarkIcon className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 

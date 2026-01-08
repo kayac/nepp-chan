@@ -1,4 +1,5 @@
 import { useChat } from "@ai-sdk/react";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useQueryClient } from "@tanstack/react-query";
 import type { UIMessage } from "ai";
 import { DefaultChatTransport, isToolOrDynamicToolUIPart } from "ai";
@@ -271,21 +272,10 @@ export const ChatContainer = () => {
                   className="p-1 hover:bg-white/60 rounded transition-colors"
                   aria-label="閉じる"
                 >
-                  <svg
+                  <XMarkIcon
                     className="w-5 h-5 text-[var(--color-text-muted)]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
                     aria-hidden="true"
-                  >
-                    <title>閉じる</title>
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  />
                 </button>
               </div>
               <button
@@ -329,21 +319,10 @@ export const ChatContainer = () => {
               className="p-2 -ml-2 hover:bg-[var(--color-surface)] rounded-lg transition-colors"
               aria-label="メニュー"
             >
-              <svg
+              <Bars3Icon
                 className="w-5 h-5 text-[var(--color-text-muted)]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
                 aria-hidden="true"
-              >
-                <title>メニュー</title>
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
+              />
             </button>
             <h1 className="text-base font-semibold">ねっぷちゃん</h1>
           </div>
