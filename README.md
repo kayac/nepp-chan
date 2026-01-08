@@ -43,20 +43,20 @@ pnpm install
 
 ### 環境変数の設定
 
-`server/.dev.vars` を作成：
+`.env.example` をコピーして `.env` を作成：
+
+```bash
+cp .env.example .env
+cp web/.env.example web/.env
+```
+
+`server/.dev.vars` を作成（Workers シークレット）：
 
 ```env
 GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
 GOOGLE_SEARCH_ENGINE_ID=your-engine-id
 MASTER_PASSWORD=your-password
 ADMIN_KEY=your-admin-key
-```
-
-`web/.dev.vars` を作成：
-
-```env
-BASIC_AUTH_USER=your-username
-BASIC_AUTH_PASSWORD=your-password
 ```
 
 ### D1 データベースの初期化
