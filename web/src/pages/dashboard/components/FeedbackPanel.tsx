@@ -1,3 +1,9 @@
+import {
+  CheckIcon,
+  HandThumbDownIcon,
+  HandThumbUpIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/solid";
 import { useEffect, useRef, useState } from "react";
 
 import {
@@ -56,20 +62,7 @@ const FeedbackDetailModal = ({
             className="p-1 text-stone-400 hover:text-stone-600 rounded-md"
             aria-label="閉じる"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <XMarkIcon className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
@@ -82,7 +75,17 @@ const FeedbackDetailModal = ({
                   : "bg-red-100 text-red-700"
               }`}
             >
-              {feedback.rating === "good" ? "良い回答" : "改善が必要"}
+              {feedback.rating === "good" ? (
+                <>
+                  <HandThumbUpIcon className="w-4 h-4" />
+                  良い回答
+                </>
+              ) : (
+                <>
+                  <HandThumbDownIcon className="w-4 h-4" />
+                  改善が必要
+                </>
+              )}
             </span>
             {feedback.category && (
               <span className="inline-flex px-2 py-1 text-xs font-medium bg-stone-100 text-stone-600 rounded">
@@ -491,13 +494,23 @@ export const FeedbackPanel = () => {
                   >
                     <td className="px-4 py-3 w-24">
                       <span
-                        className={`inline-flex px-2 py-1 text-xs font-medium rounded ${
+                        className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded ${
                           feedback.rating === "good"
                             ? "bg-green-100 text-green-700"
                             : "bg-red-100 text-red-700"
                         }`}
                       >
-                        {feedback.rating === "good" ? "Good" : "Bad"}
+                        {feedback.rating === "good" ? (
+                          <>
+                            <HandThumbUpIcon className="w-3.5 h-3.5" />
+                            Good
+                          </>
+                        ) : (
+                          <>
+                            <HandThumbDownIcon className="w-3.5 h-3.5" />
+                            Bad
+                          </>
+                        )}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-stone-600">
@@ -535,20 +548,7 @@ export const FeedbackPanel = () => {
                       >
                         {isResolved ? (
                           <>
-                            <svg
-                              className="w-3 h-3"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                              aria-hidden="true"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
+                            <CheckIcon className="w-3 h-3" />
                             解決済み
                           </>
                         ) : (
