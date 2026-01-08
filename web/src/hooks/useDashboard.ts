@@ -6,6 +6,11 @@ import {
 } from "@tanstack/react-query";
 import { fetchEmergencies } from "~/repository/emergency-repository";
 import {
+  deleteAllFeedbacks,
+  fetchFeedbackById,
+  fetchFeedbacks,
+} from "~/repository/feedback-repository";
+import {
   convertFile,
   deleteAllKnowledge,
   deleteFile,
@@ -26,6 +31,8 @@ import {
 export const dashboardKeys = {
   personas: ["dashboard", "personas"] as const,
   emergencies: ["dashboard", "emergencies"] as const,
+  feedbacks: ["dashboard", "feedbacks"] as const,
+  feedbackDetail: (id: string) => ["dashboard", "feedback", id] as const,
   knowledgeFiles: ["dashboard", "knowledge", "files"] as const,
   knowledgeUnifiedFiles: ["dashboard", "knowledge", "unified"] as const,
   knowledgeFile: (key: string) =>
@@ -170,6 +177,39 @@ export const useReconvertFile = () => {
       queryClient.invalidateQueries({
         queryKey: dashboardKeys.knowledgeUnifiedFiles,
       });
+    },
+  });
+};
+
+// フィードバック関連 hooks
+export const useFeedbacks = (
+  limit = 30,
+  options?: { rating?: "good" | "bad" },
+) =>
+  useInfiniteQuery({
+    queryKey: [...dashboardKeys.feedbacks, limit, options?.rating],
+    queryFn: ({ pageParam }) =>
+      fetchFeedbacks({ limit, cursor: pageParam, rating: options?.rating }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
+
+export const useFeedbackDetail = (id: string | null) =>
+  useQuery({
+    queryKey: dashboardKeys.feedbackDetail(id ?? ""),
+    queryFn: () => {
+      if (!id) throw new Error("ID is required");
+      return fetchFeedbackById(id);
+    },
+    enabled: !!id,
+  });
+
+export const useDeleteFeedbacks = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteAllFeedbacks,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.feedbacks });
     },
   });
 };

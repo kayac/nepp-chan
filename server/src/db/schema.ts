@@ -51,3 +51,19 @@ export type ThreadPersonaStatus = typeof threadPersonaStatus.$inferSelect;
 export type NewThreadPersonaStatus = typeof threadPersonaStatus.$inferInsert;
 
 export type MastraThread = typeof mastraThreads.$inferSelect;
+
+// メッセージフィードバック
+export const messageFeedback = sqliteTable("message_feedback", {
+  id: text("id").primaryKey(),
+  threadId: text("thread_id").notNull(),
+  messageId: text("message_id").notNull(),
+  rating: text("rating").notNull(), // "good" | "bad"
+  category: text("category"), // "incorrect_fact" | "outdated_info" | "nonexistent_info" | "off_topic" | "other"
+  comment: text("comment"),
+  conversationContext: text("conversation_context").notNull(), // JSON
+  toolExecutions: text("tool_executions"), // JSON
+  createdAt: text("created_at").notNull(),
+});
+
+export type MessageFeedback = typeof messageFeedback.$inferSelect;
+export type NewMessageFeedback = typeof messageFeedback.$inferInsert;

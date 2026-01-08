@@ -146,3 +146,75 @@ export type ReconvertFileResponse = {
   key: string;
   chunks: number;
 };
+
+// フィードバック関連
+export type FeedbackRating = "good" | "bad";
+
+export type FeedbackCategory =
+  | "incorrect_fact"
+  | "outdated_info"
+  | "nonexistent_info"
+  | "off_topic"
+  | "other";
+
+export type ConversationContextMessage = {
+  id: string;
+  role: string;
+  content: string;
+};
+
+export type ConversationContext = {
+  targetMessage: ConversationContextMessage;
+  previousMessages: ConversationContextMessage[];
+  nextMessages: ConversationContextMessage[];
+};
+
+export type ToolExecution = {
+  toolName: string;
+  state: string;
+  input?: unknown;
+  output?: unknown;
+  errorText?: string;
+};
+
+export type FeedbackSubmitRequest = {
+  threadId: string;
+  messageId: string;
+  rating: FeedbackRating;
+  category?: FeedbackCategory;
+  comment?: string;
+  conversationContext: ConversationContext;
+  toolExecutions?: ToolExecution[];
+};
+
+export type FeedbackSubmitResponse = {
+  success: boolean;
+  id: string;
+};
+
+export type MessageFeedback = {
+  id: string;
+  threadId: string;
+  messageId: string;
+  rating: string;
+  category: string | null;
+  comment: string | null;
+  conversationContext: string;
+  toolExecutions: string | null;
+  createdAt: string;
+};
+
+export type FeedbackStats = {
+  total: number;
+  good: number;
+  bad: number;
+  byCategory: Record<string, number>;
+};
+
+export type FeedbacksResponse = {
+  feedbacks: MessageFeedback[];
+  total: number;
+  nextCursor: string | null;
+  hasMore: boolean;
+  stats: FeedbackStats;
+};

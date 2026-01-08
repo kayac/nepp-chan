@@ -6,6 +6,8 @@ import { corsMiddleware, errorHandler } from "~/middleware";
 import {
   chatRoutes,
   emergencyAdminRoutes,
+  feedbackAdminRoutes,
+  feedbackRoutes,
   healthRoutes,
   knowledgeAdminRoutes,
   personaAdminRoutes,
@@ -21,8 +23,10 @@ app.onError(errorHandler);
 
 app.route("/health", healthRoutes);
 app.route("/chat", chatRoutes);
+app.route("/feedback", feedbackRoutes);
 app.route("/threads", threadsRoutes);
 app.route("/weather", weatherRoutes);
+app.route("/admin/feedback", feedbackAdminRoutes);
 app.route("/admin/knowledge", knowledgeAdminRoutes);
 app.route("/admin/persona", personaAdminRoutes);
 app.route("/admin/emergency", emergencyAdminRoutes);

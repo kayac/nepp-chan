@@ -2,9 +2,15 @@ import type { UIMessage } from "ai";
 import { isToolOrDynamicToolUIPart } from "ai";
 import { useState } from "react";
 
+import type { FeedbackRating } from "~/types";
+
+import { FeedbackButton } from "./FeedbackButton";
+
 type Props = {
   message: UIMessage;
   isStreaming?: boolean;
+  onFeedbackClick?: (rating: FeedbackRating) => void;
+  submittedRating?: FeedbackRating | null;
 };
 
 const getMessageContent = (message: UIMessage): string => {
@@ -72,7 +78,12 @@ const getStreamingStatus = (
   return { label: "考え中...", icon: "🤔" };
 };
 
-export const MessageItem = ({ message, isStreaming = false }: Props) => {
+export const MessageItem = ({
+  message,
+  isStreaming = false,
+  onFeedbackClick,
+  submittedRating,
+}: Props) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const isUser = message.role === "user";
   const content = getMessageContent(message);
@@ -126,21 +137,31 @@ export const MessageItem = ({ message, isStreaming = false }: Props) => {
         )}
       </div>
 
-      {hasDebugInfo && !isStreaming && (
+      {!isStreaming && content && (
         <div className="mt-2">
-          <button
-            type="button"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] flex items-center gap-1"
-          >
-            <span
-              className={`transition-transform ${isExpanded ? "rotate-90" : ""}`}
-            >
-              ▶
-            </span>
-            🔧 実行詳細 ({toolParts.length} ツール)
-          </button>
-          {isExpanded && (
+          <div className="flex items-center gap-3">
+            {onFeedbackClick && (
+              <FeedbackButton
+                onFeedback={onFeedbackClick}
+                submittedRating={submittedRating}
+              />
+            )}
+            {hasDebugInfo && (
+              <button
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] flex items-center gap-1"
+              >
+                <span
+                  className={`transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                >
+                  ▶
+                </span>
+                🔧 実行詳細 ({toolParts.length} ツール)
+              </button>
+            )}
+          </div>
+          {hasDebugInfo && isExpanded && (
             <div className="mt-2 bg-[var(--color-surface)] rounded-lg p-3 text-xs space-y-2">
               {toolParts.map((part, index) => {
                 const toolName = getToolNameFromPart(part);

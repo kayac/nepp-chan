@@ -1,14 +1,87 @@
 import { useChat } from "@ai-sdk/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { DefaultChatTransport } from "ai";
+import type { UIMessage } from "ai";
+import { DefaultChatTransport, isToolOrDynamicToolUIPart } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import { threadKeys, useCreateThread, useThreads } from "~/hooks/useThreads";
 import { API_BASE } from "~/lib/api/client";
 import { getResourceId } from "~/lib/resource";
+import { submitFeedback } from "~/repository/feedback-repository";
 import { fetchMessages } from "~/repository/thread-repository";
-import type { Thread } from "~/types";
+import type {
+  ConversationContext,
+  FeedbackCategory,
+  FeedbackRating,
+  Thread,
+  ToolExecution,
+} from "~/types";
+
 import { ChatInput } from "./ChatInput";
+import { FeedbackModal } from "./FeedbackModal";
 import { MessageList } from "./MessageList";
+
+type FeedbackModalState = {
+  isOpen: boolean;
+  messageId: string;
+  rating: FeedbackRating;
+} | null;
+
+const getMessageContent = (message: UIMessage): string =>
+  message.parts
+    .filter((part) => part.type === "text")
+    .map((part) => part.text)
+    .join("");
+
+const getToolNameFromPart = (part: { type: string; toolName?: string }) => {
+  if ("toolName" in part && part.toolName) return part.toolName;
+  const match = part.type.match(/^tool-(.+)$/);
+  return match ? match[1] : part.type;
+};
+
+const extractConversationContext = (
+  messages: UIMessage[],
+  targetMessageId: string,
+  contextSize = 3,
+): ConversationContext | null => {
+  const targetIndex = messages.findIndex((m) => m.id === targetMessageId);
+  if (targetIndex === -1) return null;
+
+  const targetMessage = messages[targetIndex];
+  const previousMessages = messages
+    .slice(Math.max(0, targetIndex - contextSize), targetIndex)
+    .map((m) => ({
+      id: m.id,
+      role: m.role,
+      content: getMessageContent(m),
+    }));
+  const nextMessages = messages
+    .slice(targetIndex + 1, targetIndex + 1 + contextSize)
+    .map((m) => ({
+      id: m.id,
+      role: m.role,
+      content: getMessageContent(m),
+    }));
+
+  return {
+    targetMessage: {
+      id: targetMessage.id,
+      role: targetMessage.role,
+      content: getMessageContent(targetMessage),
+    },
+    previousMessages,
+    nextMessages,
+  };
+};
+
+const extractToolExecutions = (message: UIMessage): ToolExecution[] =>
+  message.parts.filter(isToolOrDynamicToolUIPart).map((part) => ({
+    toolName: getToolNameFromPart(part),
+    state: part.state,
+    input: "input" in part ? part.input : undefined,
+    output: "output" in part ? part.output : undefined,
+    errorText: "errorText" in part ? (part.errorText as string) : undefined,
+  }));
 
 export const ChatContainer = () => {
   const resourceId = useMemo(() => getResourceId(), []);
@@ -18,6 +91,12 @@ export const ChatContainer = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const hasInitialized = useRef(false);
+
+  const [submittedFeedbacks, setSubmittedFeedbacks] = useState<
+    Record<string, FeedbackRating>
+  >({});
+  const [feedbackModal, setFeedbackModal] = useState<FeedbackModalState>(null);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
   const { data: threadsData, isSuccess: threadsLoaded } =
     useThreads(resourceId);
@@ -119,6 +198,61 @@ export const ChatContainer = () => {
     if (!threadId) return;
     sendMessage({ text: content });
   };
+
+  const handleFeedbackClick = useCallback(
+    (messageId: string, rating: FeedbackRating) => {
+      setFeedbackModal({ isOpen: true, messageId, rating });
+    },
+    [],
+  );
+
+  const handleFeedbackSubmit = useCallback(
+    async (data: { category?: FeedbackCategory; comment?: string }) => {
+      if (!feedbackModal || !threadId) return;
+
+      const targetMessage = messages.find(
+        (m) => m.id === feedbackModal.messageId,
+      );
+      if (!targetMessage) return;
+
+      const conversationContext = extractConversationContext(
+        messages,
+        feedbackModal.messageId,
+      );
+      if (!conversationContext) return;
+
+      const toolExecutions = extractToolExecutions(targetMessage);
+
+      setIsSubmittingFeedback(true);
+      try {
+        await submitFeedback({
+          threadId,
+          messageId: feedbackModal.messageId,
+          rating: feedbackModal.rating,
+          category: data.category,
+          comment: data.comment,
+          conversationContext,
+          toolExecutions:
+            toolExecutions.length > 0 ? toolExecutions : undefined,
+        });
+
+        setSubmittedFeedbacks((prev) => ({
+          ...prev,
+          [feedbackModal.messageId]: feedbackModal.rating,
+        }));
+        setFeedbackModal(null);
+      } catch (err) {
+        console.error("Failed to submit feedback:", err);
+      } finally {
+        setIsSubmittingFeedback(false);
+      }
+    },
+    [feedbackModal, threadId, messages],
+  );
+
+  const handleFeedbackModalClose = useCallback(() => {
+    setFeedbackModal(null);
+  }, []);
 
   return (
     <div className="flex h-dvh bg-white">
@@ -226,7 +360,12 @@ export const ChatContainer = () => {
           </button>
         </header>
 
-        <MessageList messages={messages} isLoading={isLoading} />
+        <MessageList
+          messages={messages}
+          isLoading={isLoading}
+          onFeedbackClick={handleFeedbackClick}
+          submittedFeedbacks={submittedFeedbacks}
+        />
 
         {error && (
           <div className="mx-4 mb-2 px-4 py-2 bg-red-50 text-red-600 text-sm rounded-lg">
@@ -236,6 +375,16 @@ export const ChatContainer = () => {
 
         <ChatInput onSend={handleSend} disabled={isLoading || !threadId} />
       </main>
+
+      {feedbackModal && (
+        <FeedbackModal
+          isOpen={feedbackModal.isOpen}
+          onClose={handleFeedbackModalClose}
+          rating={feedbackModal.rating}
+          onSubmit={handleFeedbackSubmit}
+          isSubmitting={isSubmittingFeedback}
+        />
+      )}
     </div>
   );
 };
