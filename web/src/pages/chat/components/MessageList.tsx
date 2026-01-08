@@ -35,7 +35,7 @@ export const MessageList = ({
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-[var(--color-text-muted)] text-sm">
+          <p className="text-(--color-text-muted) text-sm">
             ねっぷちゃんに話しかけてみよう！
           </p>
         </div>
@@ -63,11 +63,11 @@ export const MessageList = ({
         ))}
         {showPendingBubble && (
           <div className="animate-fade-in">
-            <div className="text-xs text-[var(--color-text-muted)] mb-1.5 flex items-center gap-1">
+            <div className="text-xs text-(--color-text-muted) mb-1.5 flex items-center gap-1">
               <span>ねっぷちゃん</span>
             </div>
-            <div className="inline-block bg-[var(--color-surface)] rounded-2xl rounded-tl-sm px-4 py-2.5">
-              <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
+            <div className="inline-block bg-(--color-surface) rounded-2xl rounded-tl-sm px-4 py-2.5">
+              <div className="flex items-center gap-2 text-(--color-text-muted)">
                 <span>🤔</span>
                 <span className="animate-pulse">考え中...</span>
               </div>
