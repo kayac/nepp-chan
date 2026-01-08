@@ -95,7 +95,7 @@ export const MessageItem = ({
     return (
       <div className="flex justify-end animate-fade-in">
         <div className="max-w-[85%] bg-(--color-accent) text-white rounded-2xl rounded-tr-sm px-4 py-2.5">
-          <div className="whitespace-pre-wrap break-words text-sm">
+          <div className="whitespace-pre-wrap wrap-break-word text-sm">
             {content}
           </div>
         </div>
@@ -127,7 +127,9 @@ export const MessageItem = ({
         <span>ねっぷちゃん</span>
       </div>
       <div className="inline-block max-w-[85%] bg-(--color-surface) rounded-2xl rounded-tl-sm px-4 py-2.5">
-        <div className="whitespace-pre-wrap break-words text-sm">{content}</div>
+        <div className="whitespace-pre-wrap wrap-break-word text-sm">
+          {content}
+        </div>
         {isStreaming && streamingStatus && (
           <div className="mt-2 pt-2 border-t border-(--color-border) flex items-center gap-2 text-xs text-(--color-text-muted)">
             <span className="inline-block w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
