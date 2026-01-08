@@ -1,8 +1,9 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { D1Store } from "@mastra/cloudflare-d1";
+import { Mastra } from "@mastra/core/mastra";
 import { stream } from "hono/streaming";
-import { createMastra } from "~/mastra/factory";
 import { createRequestContext } from "~/mastra/request-context";
+import { weatherWorkflow } from "~/mastra/workflows/weather-workflow";
 
 // Request Schema
 const WeatherQuerySchema = z.object({
@@ -45,7 +46,10 @@ weatherRoutes.openapi(weatherRoute, async (c) => {
   const { city } = c.req.valid("query");
 
   const storage = await getStorage(c.env.DB);
-  const mastra = createMastra(storage);
+  const mastra = new Mastra({
+    workflows: { weatherWorkflow },
+    storage,
+  });
   const requestContext = createRequestContext({
     storage,
     db: c.env.DB,

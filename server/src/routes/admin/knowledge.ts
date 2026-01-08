@@ -913,9 +913,9 @@ knowledgeAdminRoutes.openapi(convertFileRoute, async (c) => {
 
     console.log(`[Convert] Converting ${file.name} (${mimeType}) to ${key}`);
 
-    // Gemini で変換
+    // converterAgent で Markdown に変換
     const fileData = await file.arrayBuffer();
-    const markdown = await convertToMarkdown(fileData, mimeType, apiKey);
+    const markdown = await convertToMarkdown(fileData, mimeType);
 
     console.log(`[Convert] Generated ${markdown.length} bytes of markdown`);
 
@@ -1289,9 +1289,9 @@ knowledgeAdminRoutes.openapi(reconvertFileRoute, async (c) => {
       `[Reconvert] Converting ${originalKey} (${mimeType}) to ${key}`,
     );
 
-    // Gemini で変換
+    // converterAgent で Markdown に変換
     const fileData = await object.arrayBuffer();
-    const markdown = await convertToMarkdown(fileData, mimeType, apiKey);
+    const markdown = await convertToMarkdown(fileData, mimeType);
 
     console.log(`[Reconvert] Generated ${markdown.length} bytes of markdown`);
 
