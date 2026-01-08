@@ -42,26 +42,14 @@ const getToolNameFromPart = (part: { type: string; toolName?: string }) => {
 const extractConversationContext = (
   messages: UIMessage[],
   targetMessageId: string,
-  contextSize = 3,
 ): ConversationContext | null => {
   const targetIndex = messages.findIndex((m) => m.id === targetMessageId);
   if (targetIndex === -1) return null;
 
   const targetMessage = messages[targetIndex];
-  const previousMessages = messages
-    .slice(Math.max(0, targetIndex - contextSize), targetIndex)
-    .map((m) => ({
-      id: m.id,
-      role: m.role,
-      content: getMessageContent(m),
-    }));
-  const nextMessages = messages
-    .slice(targetIndex + 1, targetIndex + 1 + contextSize)
-    .map((m) => ({
-      id: m.id,
-      role: m.role,
-      content: getMessageContent(m),
-    }));
+  // 直前のユーザー入力のみ取得
+  const previousMessage =
+    targetIndex > 0 ? messages[targetIndex - 1] : undefined;
 
   return {
     targetMessage: {
@@ -69,8 +57,16 @@ const extractConversationContext = (
       role: targetMessage.role,
       content: getMessageContent(targetMessage),
     },
-    previousMessages,
-    nextMessages,
+    previousMessages: previousMessage
+      ? [
+          {
+            id: previousMessage.id,
+            role: previousMessage.role,
+            content: getMessageContent(previousMessage),
+          },
+        ]
+      : [],
+    nextMessages: [],
   };
 };
 

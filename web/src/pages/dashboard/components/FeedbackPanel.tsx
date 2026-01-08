@@ -186,7 +186,7 @@ const FeedbackDetailModal = ({
                     {tool.input !== undefined && (
                       <div className="mb-2">
                         <div className="text-xs text-stone-500 mb-1">入力:</div>
-                        <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-32">
+                        <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-96">
                           {JSON.stringify(tool.input, null, 2)}
                         </pre>
                       </div>
@@ -194,7 +194,7 @@ const FeedbackDetailModal = ({
                     {tool.output !== undefined && (
                       <div>
                         <div className="text-xs text-stone-500 mb-1">出力:</div>
-                        <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-32">
+                        <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-96">
                           {typeof tool.output === "string"
                             ? tool.output
                             : JSON.stringify(tool.output, null, 2)}

@@ -134,7 +134,7 @@ export const FeedbackModal = ({
           {isBadRating && (
             <fieldset className="mb-4">
               <legend className="block text-sm font-medium text-[var(--color-text)] mb-2">
-                改善点のカテゴリ
+                どこが問題でしたか？
               </legend>
               <div className="space-y-2">
                 {FEEDBACK_CATEGORIES.map((cat) => (
@@ -184,7 +184,7 @@ export const FeedbackModal = ({
               placeholder={
                 rating === "good"
                   ? "どこが良かったか教えてください"
-                  : "具体的にどう改善できるか教えてください"
+                  : "問題点を教えてください"
               }
               maxLength={1000}
               rows={3}
