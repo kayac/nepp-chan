@@ -262,8 +262,8 @@ export const ChatContainer = () => {
             onClick={() => setIsSidebarOpen(false)}
             aria-label="サイドバーを閉じる"
           />
-          <aside className="fixed md:relative z-20 w-72 h-full bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col animate-fade-in">
-            <div className="p-4 border-b border-[var(--color-border)]">
+          <aside className="fixed md:relative z-20 w-72 h-full bg-(--color-surface) border-r border-(--color-border) flex flex-col animate-fade-in">
+            <div className="p-4 border-b border-(--color-border)">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium">スレッド</span>
                 <button
@@ -273,7 +273,7 @@ export const ChatContainer = () => {
                   aria-label="閉じる"
                 >
                   <XMarkIcon
-                    className="w-5 h-5 text-[var(--color-text-muted)]"
+                    className="w-5 h-5 text-(--color-text-muted)"
                     aria-hidden="true"
                   />
                 </button>
@@ -281,7 +281,7 @@ export const ChatContainer = () => {
               <button
                 type="button"
                 onClick={handleNewThread}
-                className="w-full py-2.5 bg-[var(--color-accent)] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                className="w-full py-2.5 bg-(--color-accent) text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
               >
                 新しい会話
               </button>
@@ -296,10 +296,10 @@ export const ChatContainer = () => {
                     thread.id === currentThreadId ? "bg-white" : ""
                   }`}
                 >
-                  <div className="text-sm font-medium text-[var(--color-text)] truncate">
+                  <div className="text-sm font-medium text-(--color-text) truncate">
                     {thread.title ?? "新しい会話"}
                   </div>
-                  <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                  <div className="text-xs text-(--color-text-muted) mt-0.5">
                     {new Date(thread.updatedAt).toLocaleDateString("ja-JP")}
                   </div>
                 </button>
@@ -311,16 +311,16 @@ export const ChatContainer = () => {
 
       {/* Main */}
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 border-b border-[var(--color-border)] bg-white px-4 flex items-center justify-between shrink-0">
+        <header className="h-14 border-b border-(--color-border) bg-white px-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 -ml-2 hover:bg-[var(--color-surface)] rounded-lg transition-colors"
+              className="p-2 -ml-2 hover:bg-(--color-surface) rounded-lg transition-colors"
               aria-label="メニュー"
             >
               <Bars3Icon
-                className="w-5 h-5 text-[var(--color-text-muted)]"
+                className="w-5 h-5 text-(--color-text-muted)"
                 aria-hidden="true"
               />
             </button>
@@ -329,7 +329,7 @@ export const ChatContainer = () => {
           <button
             type="button"
             onClick={handleNewThread}
-            className="text-sm text-[var(--color-accent)] hover:underline"
+            className="text-sm text-(--color-accent) hover:underline"
           >
             新規作成
           </button>

@@ -44,7 +44,7 @@ const getToolStatus = (
     default:
       return {
         label: state,
-        color: "text-[var(--color-text-muted)]",
+        color: "text-(--color-text-muted)",
         icon: "",
       };
   }
@@ -94,7 +94,7 @@ export const MessageItem = ({
   if (isUser) {
     return (
       <div className="flex justify-end animate-fade-in">
-        <div className="max-w-[85%] bg-[var(--color-accent)] text-white rounded-2xl rounded-tr-sm px-4 py-2.5">
+        <div className="max-w-[85%] bg-(--color-accent) text-white rounded-2xl rounded-tr-sm px-4 py-2.5">
           <div className="whitespace-pre-wrap break-words text-sm">
             {content}
           </div>
@@ -106,11 +106,11 @@ export const MessageItem = ({
   if (isStreaming && !content) {
     return (
       <div className="animate-fade-in">
-        <div className="text-xs text-[var(--color-text-muted)] mb-1.5 flex items-center gap-1">
+        <div className="text-xs text-(--color-text-muted) mb-1.5 flex items-center gap-1">
           <span>ねっぷちゃん</span>
         </div>
-        <div className="inline-block bg-[var(--color-surface)] rounded-2xl rounded-tl-sm px-4 py-2.5">
-          <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
+        <div className="inline-block bg-(--color-surface) rounded-2xl rounded-tl-sm px-4 py-2.5">
+          <div className="flex items-center gap-2 text-(--color-text-muted)">
             <span>{streamingStatus?.icon || "🤔"}</span>
             <span className="animate-pulse">
               {streamingStatus?.label || "考え中..."}
@@ -123,13 +123,13 @@ export const MessageItem = ({
 
   return (
     <div className="animate-fade-in">
-      <div className="text-xs text-[var(--color-text-muted)] mb-1.5 flex items-center gap-1">
+      <div className="text-xs text-(--color-text-muted) mb-1.5 flex items-center gap-1">
         <span>ねっぷちゃん</span>
       </div>
-      <div className="inline-block max-w-[85%] bg-[var(--color-surface)] rounded-2xl rounded-tl-sm px-4 py-2.5">
+      <div className="inline-block max-w-[85%] bg-(--color-surface) rounded-2xl rounded-tl-sm px-4 py-2.5">
         <div className="whitespace-pre-wrap break-words text-sm">{content}</div>
         {isStreaming && streamingStatus && (
-          <div className="mt-2 pt-2 border-t border-[var(--color-border)] flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+          <div className="mt-2 pt-2 border-t border-(--color-border) flex items-center gap-2 text-xs text-(--color-text-muted)">
             <span className="inline-block w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
             <span>{streamingStatus.icon}</span>
             <span className="animate-pulse">{streamingStatus.label}</span>
@@ -150,7 +150,7 @@ export const MessageItem = ({
               <button
                 type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] flex items-center gap-1"
+                className="text-xs text-(--color-text-muted) hover:text-(--color-text) flex items-center gap-1"
               >
                 <span
                   className={`transition-transform ${isExpanded ? "rotate-90" : ""}`}
@@ -162,7 +162,7 @@ export const MessageItem = ({
             )}
           </div>
           {hasDebugInfo && isExpanded && (
-            <div className="mt-2 bg-[var(--color-surface)] rounded-lg p-3 text-xs space-y-2">
+            <div className="mt-2 bg-(--color-surface) rounded-lg p-3 text-xs space-y-2">
               {toolParts.map((part, index) => {
                 const toolName = getToolNameFromPart(part);
                 const status = getToolStatus(part.state);
@@ -174,7 +174,7 @@ export const MessageItem = ({
                 return (
                   <div
                     key={`${part.toolCallId}-${index}`}
-                    className="border-b border-[var(--color-border)] pb-2 last:border-0 last:pb-0"
+                    className="border-b border-(--color-border) pb-2 last:border-0 last:pb-0"
                   >
                     <div className="flex justify-between items-center">
                       <span className="font-medium">
@@ -189,7 +189,7 @@ export const MessageItem = ({
                     </div>
                     {input !== undefined && (
                       <details className="mt-1">
-                        <summary className="cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
+                        <summary className="cursor-pointer text-(--color-text-muted) hover:text-(--color-text)">
                           📥 入力パラメータ
                         </summary>
                         <pre className="mt-1 p-2 bg-white rounded text-[10px] overflow-x-auto">
@@ -199,7 +199,7 @@ export const MessageItem = ({
                     )}
                     {output !== undefined && (
                       <details className="mt-1">
-                        <summary className="cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
+                        <summary className="cursor-pointer text-(--color-text-muted) hover:text-(--color-text)">
                           📤 実行結果
                         </summary>
                         <pre className="mt-1 p-2 bg-white rounded text-[10px] overflow-x-auto">
