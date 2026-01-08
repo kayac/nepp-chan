@@ -97,7 +97,7 @@ pnpm deploy           # Cloudflare Workers へデプロイ
 pnpm cf-typegen       # Cloudflare 型生成
 
 # Drizzle ORM / D1 マイグレーション
-pnpm db:generate      # スキーマから SQL 生成 → migrations/
+pnpm db:generate      # スキーマから SQL 生成 → src/db/migrations/
 pnpm db:migrate       # リモート D1 (aiss-nepch-dev) に適用
 pnpm db:migrate:local # ローカル D1 に適用
 pnpm db:studio        # Drizzle Studio（DB GUI）起動
@@ -119,7 +119,7 @@ pnpm knowledge:clear  # ナレッジ全削除して再アップロード
 #    src/db/schema.ts を編集
 
 # 2. マイグレーションファイル生成
-pnpm db:generate   # → migrations/ に SQL 生成
+pnpm db:generate   # → src/db/migrations/ に SQL 生成
 
 # 3. D1 に適用
 pnpm db:migrate        # リモート D1
@@ -132,7 +132,7 @@ pnpm db:migrate:local  # ローカル D1
 | ---- | ---- |
 | `src/db/schema.ts` | テーブルスキーマ定義 |
 | `src/db/client.ts` | DB クライアント生成関数 |
-| `migrations/` | マイグレーション SQL |
+| `src/db/migrations/` | マイグレーション SQL |
 | `drizzle.config.ts` | Drizzle Kit 設定 |
 
 ### 使用例

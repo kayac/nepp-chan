@@ -87,12 +87,11 @@ aiss-nepch/
 │   │   ├── db/
 │   │   │   ├── schema.ts            # Drizzle スキーマ定義
 │   │   │   ├── client.ts            # DB クライアント生成
+│   │   │   ├── migrations/          # D1 マイグレーションファイル
 │   │   │   └── index.ts             # エクスポート
 │   │   ├── repository/
 │   │   │   ├── persona-repository.ts
-│   │   │   ├── emergency-repository.ts
-│   │   │   └── migrations/
-│   │   │       └── 001_init.sql
+│   │   │   └── emergency-repository.ts
 │   │   └── __tests__/
 │   ├── drizzle.config.ts                # Drizzle Kit 設定
 │   ├── wrangler.jsonc
@@ -208,7 +207,7 @@ pnpm --filter @aiss-nepch/server test     # テスト実行
 pnpm --filter @aiss-nepch/server deploy   # デプロイ
 
 # Drizzle ORM / D1 マイグレーション
-pnpm db:generate             # スキーマから SQL 生成 → server/migrations/
+pnpm db:generate             # スキーマから SQL 生成 → server/src/db/migrations/
 pnpm db:migrate              # リモート D1 (aiss-nepch-dev) に適用
 pnpm db:migrate:local        # ローカル D1 に適用
 pnpm db:studio               # Drizzle Studio（DB GUI）起動
@@ -492,6 +491,7 @@ Cloudflare D1 に対する型安全なクエリビルダー。生 SQL の代わ�
 | ---- | ---- |
 | `server/src/db/schema.ts` | テーブルスキーマ定義 |
 | `server/src/db/client.ts` | DB クライアント生成関数 |
+| `server/src/db/migrations/` | D1 マイグレーションファイル |
 | `server/src/db/index.ts` | エクスポート |
 | `server/drizzle.config.ts` | Drizzle Kit 設定 |
 
@@ -555,7 +555,7 @@ export default defineConfig({
 # 1. スキーマを変更（server/src/db/schema.ts）
 
 # 2. マイグレーションファイル生成
-pnpm db:generate   # → server/migrations/ に SQL 生成
+pnpm db:generate   # → server/src/db/migrations/ に SQL 生成
 
 # 3. D1 に適用
 pnpm db:migrate        # リモート D1 (aiss-nepch-dev)
