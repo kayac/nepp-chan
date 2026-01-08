@@ -1,10 +1,15 @@
 import type { UIMessage } from "ai";
 import { useEffect, useRef } from "react";
+
+import type { FeedbackRating } from "~/types";
+
 import { MessageItem } from "./MessageItem";
 
 type Props = {
   messages: UIMessage[];
   isLoading: boolean;
+  onFeedbackClick?: (messageId: string, rating: FeedbackRating) => void;
+  submittedFeedbacks?: Record<string, FeedbackRating>;
 };
 
 const isLastMessageFromAssistant = (messages: UIMessage[]): boolean => {
@@ -12,7 +17,12 @@ const isLastMessageFromAssistant = (messages: UIMessage[]): boolean => {
   return messages[messages.length - 1].role === "assistant";
 };
 
-export const MessageList = ({ messages, isLoading }: Props) => {
+export const MessageList = ({
+  messages,
+  isLoading,
+  onFeedbackClick,
+  submittedFeedbacks,
+}: Props) => {
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastMessage = messages[messages.length - 1];
 
@@ -43,6 +53,12 @@ export const MessageList = ({ messages, isLoading }: Props) => {
             key={message.id}
             message={message}
             isStreaming={isLoading && index === messages.length - 1}
+            onFeedbackClick={
+              message.role === "assistant" && onFeedbackClick
+                ? (rating) => onFeedbackClick(message.id, rating)
+                : undefined
+            }
+            submittedRating={submittedFeedbacks?.[message.id]}
           />
         ))}
         {showPendingBubble && (

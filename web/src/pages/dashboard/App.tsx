@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { EmergencyPanel } from "./components/EmergencyPanel";
+import { FeedbackPanel } from "./components/FeedbackPanel";
 import { KnowledgePanel } from "./components/KnowledgePanel";
 import { PersonaPanel } from "./components/PersonaPanel";
 
-type Tab = "knowledge" | "persona" | "emergency";
+type Tab = "knowledge" | "persona" | "feedback" | "emergency";
 
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   {
@@ -42,6 +43,26 @@ const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
           strokeLinejoin="round"
           strokeWidth={1.5}
           d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+        />
+      </svg>
+    ),
+  },
+  {
+    id: "feedback",
+    label: "フィードバック",
+    icon: (
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"
         />
       </svg>
     ),
@@ -126,6 +147,7 @@ export const App = () => {
         <main key={activeTab} className="animate-fade-in">
           {activeTab === "knowledge" && <KnowledgePanel />}
           {activeTab === "persona" && <PersonaPanel />}
+          {activeTab === "feedback" && <FeedbackPanel />}
           {activeTab === "emergency" && <EmergencyPanel />}
         </main>
       </div>
