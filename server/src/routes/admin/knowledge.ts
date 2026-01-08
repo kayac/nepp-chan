@@ -1,8 +1,8 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
-import { deleteAllKnowledge } from "~/mastra/knowledge";
 import {
   convertAndUpload,
+  deleteAllKnowledge,
   deleteFile,
   getFile,
   getOriginalFile,

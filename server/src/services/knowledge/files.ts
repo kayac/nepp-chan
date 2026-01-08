@@ -1,4 +1,4 @@
-import { deleteKnowledgeBySource } from "~/mastra/knowledge";
+import { deleteKnowledgeBySource } from "./embedding";
 
 const EDIT_THRESHOLD_MS = 5000;
 
