@@ -152,6 +152,28 @@ export const feedbackRepository = {
 
     return { success: true };
   },
+
+  async resolve(d1: D1Database, id: string) {
+    const db = createDb(d1);
+
+    await db
+      .update(messageFeedback)
+      .set({ resolvedAt: new Date().toISOString() })
+      .where(eq(messageFeedback.id, id));
+
+    return { success: true };
+  },
+
+  async unresolve(d1: D1Database, id: string) {
+    const db = createDb(d1);
+
+    await db
+      .update(messageFeedback)
+      .set({ resolvedAt: null })
+      .where(eq(messageFeedback.id, id));
+
+    return { success: true };
+  },
 };
 
 export type { MessageFeedback, FeedbackStats };

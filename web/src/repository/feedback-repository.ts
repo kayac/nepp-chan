@@ -52,3 +52,20 @@ export const deleteAllFeedbacks = (): Promise<DeleteFeedbacksResponse> =>
     method: "DELETE",
     admin: true,
   });
+
+type ResolveResponse = {
+  success: boolean;
+  message: string;
+};
+
+export const resolveFeedback = (id: string): Promise<ResolveResponse> =>
+  apiClient<ResolveResponse>(`/admin/feedback/${id}/resolve`, {
+    method: "PUT",
+    admin: true,
+  });
+
+export const unresolveFeedback = (id: string): Promise<ResolveResponse> =>
+  apiClient<ResolveResponse>(`/admin/feedback/${id}/resolve`, {
+    method: "DELETE",
+    admin: true,
+  });

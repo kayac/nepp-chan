@@ -202,6 +202,7 @@ export type MessageFeedback = {
   conversationContext: string;
   toolExecutions: string | null;
   createdAt: string;
+  resolvedAt: string | null;
 };
 
 export type FeedbackStats = {
