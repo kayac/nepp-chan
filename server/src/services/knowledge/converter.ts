@@ -1,25 +1,18 @@
 import { Buffer } from "node:buffer";
 import { converterAgent } from "~/mastra/agents/converter-agent";
 
-type SupportedMimeType =
-  | "image/png"
-  | "image/jpeg"
-  | "image/webp"
-  | "image/gif"
-  | "application/pdf";
-
-const SUPPORTED_MIME_TYPES: SupportedMimeType[] = [
+const SUPPORTED_MIME_TYPES = [
   "image/png",
   "image/jpeg",
   "image/webp",
   "image/gif",
   "application/pdf",
-];
+] as const;
 
-export const isSupportedMimeType = (
-  mimeType: string,
-): mimeType is SupportedMimeType =>
-  SUPPORTED_MIME_TYPES.includes(mimeType as SupportedMimeType);
+export const isSupportedMimeType = (mimeType: string) =>
+  SUPPORTED_MIME_TYPES.includes(
+    mimeType as (typeof SUPPORTED_MIME_TYPES)[number],
+  );
 
 export const convertToMarkdown = async (
   fileData: ArrayBuffer,
@@ -40,7 +33,7 @@ export const convertToMarkdown = async (
         {
           type: "file",
           data: base64Data,
-          mimeType: mimeType as SupportedMimeType,
+          mimeType,
         },
       ],
     },
