@@ -56,8 +56,9 @@ MASTER_PASSWORD=your-password
 ### D1 データベースの初期化
 
 ```bash
-# 開発環境
-wrangler d1 execute aiss-nepch-dev --file=./server/src/repository/migrations/001_init.sql
+# 開発環境（マイグレーション適用）
+cd server
+pnpm db:migrate:local
 ```
 
 ## 開発

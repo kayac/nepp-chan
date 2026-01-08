@@ -1,3 +1,4 @@
+-- ペルソナ抽出の処理状態を管理するテーブル
 CREATE TABLE IF NOT EXISTS thread_persona_status (
   thread_id TEXT PRIMARY KEY,
   last_extracted_at TEXT,
