@@ -2,6 +2,17 @@
 
 Cloudflare Pages で動作するフロントエンド。React + Vite + TailwindCSS。
 
+## ファイル探索ガイド
+
+| 探したいもの       | 場所                             |
+| ------------------ | -------------------------------- |
+| チャット画面       | `pages/chat/`                    |
+| ダッシュボード画面 | `pages/dashboard/`               |
+| API クライアント   | `repository/*-repository.ts`     |
+| 共通フック         | `hooks/`                         |
+| 型定義             | `types/`                         |
+| Basic 認証         | `functions/_middleware.ts`       |
+
 ## ディレクトリ構成
 
 ```text

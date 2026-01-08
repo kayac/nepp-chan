@@ -2,6 +2,17 @@
 
 Cloudflare Workers で動作するバックエンド API。Hono + Mastra AI フレームワーク。
 
+## ファイル探索ガイド
+
+| 探したいもの     | 場所                                   |
+| ---------------- | -------------------------------------- |
+| API ルート       | `routes/*.ts`, `routes/admin/*.ts`     |
+| エージェント     | `mastra/agents/*-agent.ts`             |
+| ツール           | `mastra/tools/*-tool.ts`               |
+| DB スキーマ      | `db/schema.ts`                         |
+| ビジネスロジック | `services/`                            |
+| 型定義           | 各ファイル内、または `mastra/schemas/` |
+
 ## ディレクトリ構成
 
 ```text
