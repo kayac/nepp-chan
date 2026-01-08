@@ -4,25 +4,32 @@
 
 ## 概要
 
-北海道音威子府村のマスコット AI「ねっぷちゃん」と会話できるチャットアプリケーションです。Mastra AI フレームワークを活用し、Cloudflare Workers + Pages 上で稼働します。
+北海道音威子府村の 17 歳の女の子 AI「ねっぷちゃん」と会話できるチャットアプリです。
+村の観光情報や施設案内、天気情報などを教えてくれます。
+管理者は村長モードでユーザーの声を分析し、村づくりに活かすことができます。
 
 ### 主要機能
 
-- ねっぷちゃんとのチャット会話
-- 村長モード（管理者向けデータ分析）
-- 村の集合知（ペルソナ）の蓄積・参照
-- 緊急情報の記録・管理
-- 天気情報の取得
-- Web 検索
+- 🗨️ ねっぷちゃんとのチャット会話
+- 👨‍💼 村長モード（管理者向けデータ分析）
+- 📚 RAG ナレッジ検索（村の情報を検索・参照）
+- 🧠 村の集合知（ペルソナ）の蓄積・参照
+- 🚨 緊急情報の記録・管理
+- 🌤️ 天気情報の取得
+- 🔍 Web 検索
 
 ## 技術スタック
 
-- **フレームワーク**: Hono, Mastra (beta)
-- **ランタイム**: Cloudflare Workers / Pages
-- **AI**: Google Generative AI (Gemini 2.5)
-- **フロントエンド**: React 19, Vite, TailwindCSS
-- **データベース**: Cloudflare D1
-- **言語**: TypeScript
+| カテゴリ         | 技術                              |
+| ---------------- | --------------------------------- |
+| フレームワーク   | Hono, Mastra (v1 beta)            |
+| ランタイム       | Cloudflare Workers / Pages        |
+| AI               | Google Generative AI (Gemini 2.5) |
+| フロントエンド   | React 19, Vite 7, TailwindCSS 4   |
+| データベース     | Cloudflare D1 (SQLite)            |
+| ベクトル検索     | Cloudflare Vectorize              |
+| ORM              | Drizzle ORM                       |
+| 言語             | TypeScript                        |
 
 ## セットアップ
 
@@ -35,39 +42,35 @@
 ### インストール
 
 ```bash
-# リポジトリをクローン
 git clone <repository-url>
 cd aiss-nepch
-
-# 依存関係をインストール
 pnpm install
 ```
 
 ### 環境変数の設定
 
-`server/.dev.vars` ファイルを作成し、以下の環境変数を設定：
+`server/.dev.vars` ファイルを作成:
 
-```
+```env
 GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
 GOOGLE_SEARCH_ENGINE_ID=your-engine-id
 MASTER_PASSWORD=your-password
+ADMIN_KEY=your-admin-key
 ```
 
 ### D1 データベースの初期化
 
 ```bash
-# 開発環境（マイグレーション適用）
-cd server
 pnpm db:migrate:local
 ```
 
 ## 開発
 
 ```bash
-# API サーバー起動
+# API サーバー起動 (http://localhost:8787)
 pnpm server:dev
 
-# Web 開発サーバー起動
+# Web 開発サーバー起動 (http://localhost:5173)
 pnpm web:dev
 
 # Mastra Playground 起動
@@ -77,9 +80,28 @@ pnpm mastra:dev
 ## デプロイ
 
 ```bash
-# API サーバーをデプロイ
+# API サーバー
 pnpm server:deploy
 
-# Web をデプロイ
+# Web
 pnpm web:deploy
 ```
+
+## プロジェクト構成
+
+```text
+aiss-nepch/
+├── server/          # バックエンド API (Cloudflare Workers)
+├── web/             # フロントエンド (Cloudflare Pages)
+├── knowledge/       # RAG 用ナレッジファイル (Markdown)
+└── scripts/         # ユーティリティスクリプト
+```
+
+## ドキュメント
+
+- API ドキュメント: `/swagger` エンドポイントで Swagger UI を参照
+- 開発者向け詳細: 各ディレクトリの `CLAUDE.md` を参照
+
+## ライセンス
+
+Private
