@@ -38,6 +38,7 @@ const FeedbackSchema = z.object({
   conversationContext: z.string(),
   toolExecutions: z.string().nullable(),
   createdAt: z.string(),
+  resolvedAt: z.string().nullable(),
 });
 
 const StatsSchema = z.object({
@@ -236,4 +237,132 @@ feedbackAdminRoutes.openapi(deleteAllRoute, async (c) => {
         error instanceof Error ? error.message : "Feedback deletion failed",
     });
   }
+});
+
+const resolveRoute = createRoute({
+  method: "put",
+  path: "/:id/resolve",
+  summary: "フィードバックを解決済みにする",
+  description: "指定したフィードバックを解決済みステータスに変更します",
+  tags: ["Admin - Feedback"],
+  request: {
+    params: z.object({
+      id: z.string().min(1),
+    }),
+  },
+  responses: {
+    200: {
+      description: "解決済みに変更成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.boolean(),
+            message: z.string(),
+          }),
+        },
+      },
+    },
+    401: {
+      description: "認証エラー",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.boolean(),
+            message: z.string(),
+          }),
+        },
+      },
+    },
+    404: {
+      description: "フィードバックが見つからない",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.boolean(),
+            message: z.string(),
+          }),
+        },
+      },
+    },
+  },
+});
+
+feedbackAdminRoutes.openapi(resolveRoute, async (c) => {
+  const { id } = c.req.valid("param");
+
+  const feedback = await feedbackRepository.findById(c.env.DB, id);
+  if (!feedback) {
+    return c.json(
+      { success: false, message: "フィードバックが見つかりません" },
+      404,
+    );
+  }
+
+  await feedbackRepository.resolve(c.env.DB, id);
+
+  return c.json({ success: true, message: "解決済みに変更しました" }, 200);
+});
+
+const unresolveRoute = createRoute({
+  method: "delete",
+  path: "/:id/resolve",
+  summary: "フィードバックを未解決に戻す",
+  description: "指定したフィードバックを未解決ステータスに戻します",
+  tags: ["Admin - Feedback"],
+  request: {
+    params: z.object({
+      id: z.string().min(1),
+    }),
+  },
+  responses: {
+    200: {
+      description: "未解決に変更成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.boolean(),
+            message: z.string(),
+          }),
+        },
+      },
+    },
+    401: {
+      description: "認証エラー",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.boolean(),
+            message: z.string(),
+          }),
+        },
+      },
+    },
+    404: {
+      description: "フィードバックが見つからない",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.boolean(),
+            message: z.string(),
+          }),
+        },
+      },
+    },
+  },
+});
+
+feedbackAdminRoutes.openapi(unresolveRoute, async (c) => {
+  const { id } = c.req.valid("param");
+
+  const feedback = await feedbackRepository.findById(c.env.DB, id);
+  if (!feedback) {
+    return c.json(
+      { success: false, message: "フィードバックが見つかりません" },
+      404,
+    );
+  }
+
+  await feedbackRepository.unresolve(c.env.DB, id);
+
+  return c.json({ success: true, message: "未解決に戻しました" }, 200);
 });

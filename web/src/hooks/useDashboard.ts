@@ -9,6 +9,8 @@ import {
   deleteAllFeedbacks,
   fetchFeedbackById,
   fetchFeedbacks,
+  resolveFeedback,
+  unresolveFeedback,
 } from "~/repository/feedback-repository";
 import {
   convertFile,
@@ -208,6 +210,26 @@ export const useDeleteFeedbacks = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteAllFeedbacks,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.feedbacks });
+    },
+  });
+};
+
+export const useResolveFeedback = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: resolveFeedback,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.feedbacks });
+    },
+  });
+};
+
+export const useUnresolveFeedback = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: unresolveFeedback,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.feedbacks });
     },

@@ -63,6 +63,7 @@ export const messageFeedback = sqliteTable("message_feedback", {
   conversationContext: text("conversation_context").notNull(), // JSON
   toolExecutions: text("tool_executions"), // JSON
   createdAt: text("created_at").notNull(),
+  resolvedAt: text("resolved_at"), // 解決日時（null = 未解決）
 });
 
 export type MessageFeedback = typeof messageFeedback.$inferSelect;
