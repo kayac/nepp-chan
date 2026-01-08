@@ -1,7 +1,4 @@
-import {
-  deleteKnowledgeBySource,
-  processKnowledgeFile,
-} from "~/mastra/knowledge";
+import { deleteKnowledgeBySource, processKnowledgeFile } from "./embedding";
 
 const EDIT_THRESHOLD_MS = 5000;
 

@@ -1,3 +1,9 @@
+export { convertToMarkdown, isSupportedMimeType } from "./converter";
+export {
+  deleteAllKnowledge,
+  deleteKnowledgeBySource,
+  processKnowledgeFile,
+} from "./embedding";
 export {
   deleteFile,
   type FileContent,

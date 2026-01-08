@@ -1,7 +1,4 @@
-import {
-  convertToMarkdown,
-  isSupportedMimeType,
-} from "~/mastra/knowledge/converter";
+import { convertToMarkdown, isSupportedMimeType } from "./converter";
 import { syncFile } from "./sync";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB for Markdown
