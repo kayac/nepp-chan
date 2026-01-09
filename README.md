@@ -39,30 +39,51 @@
 ### インストール
 
 ```bash
-# リポジトリをクローン
-git clone <repository-url>
-cd aiss-nepch
-
-# 依存関係をインストール
 pnpm install
 ```
 
 ### 環境変数の設定
 
-`.env.example` をコピーして `.env` を作成：
+#### ルートディレクトリ
 
-```bash
-cp .env.example .env
-cp web/.env.example web/.env
+`.env` を作成：
+
+```env
+# R2 アップロード用
+CLOUDFLARE_ACCOUNT_ID=your-account-id
+R2_BUCKET_NAME=your-bucket-name
+
+# API 呼び出し用
+API_URL=http://localhost:8787
+ADMIN_KEY=your-admin-key
 ```
 
-`server/.dev.vars` を作成：
+#### server ディレクトリ
+
+`server/.dev.vars` を作成（Workers 開発用）：
 
 ```env
 GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
 GOOGLE_SEARCH_ENGINE_ID=your-engine-id
 MASTER_PASSWORD=your-password
 ADMIN_KEY=your-admin-key
+```
+
+`server/.env` を作成（Mastra Playground 用）：
+
+```env
+GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
+GOOGLE_SEARCH_ENGINE_ID=your-engine-id
+MASTER_PASSWORD=your-password
+ADMIN_KEY=your-admin-key
+```
+
+#### web ディレクトリ
+
+`web/.env` を作成：
+
+```env
+VITE_API_URL=http://localhost:8787
 ```
 
 ### D1 データベースの初期化
