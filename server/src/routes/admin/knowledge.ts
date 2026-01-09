@@ -1,5 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
+
+import { adminAuth } from "~/middleware/admin-auth";
 import {
   convertAndUpload,
   deleteAllKnowledge,
@@ -14,30 +16,11 @@ import {
   uploadMarkdownFile,
 } from "~/services/knowledge";
 
-type AdminBindings = CloudflareBindings & {
-  ADMIN_KEY?: string;
-};
-
 export const knowledgeAdminRoutes = new OpenAPIHono<{
-  Bindings: AdminBindings;
+  Bindings: CloudflareBindings;
 }>();
 
-knowledgeAdminRoutes.use("*", async (c, next) => {
-  const adminKeyHeader = c.req.header("X-Admin-Key");
-  const adminKeyQuery = c.req.query("adminKey");
-  const adminKey = adminKeyHeader || adminKeyQuery;
-  const expectedKey = c.env.ADMIN_KEY;
-
-  if (!expectedKey) {
-    throw new HTTPException(500, { message: "ADMIN_KEY is not configured" });
-  }
-
-  if (adminKey !== expectedKey) {
-    throw new HTTPException(401, { message: "Unauthorized" });
-  }
-
-  await next();
-});
+knowledgeAdminRoutes.use("*", adminAuth);
 
 // スキーマ定義
 const SuccessResponseSchema = z.object({
