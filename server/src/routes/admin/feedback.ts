@@ -3,30 +3,14 @@ import { count } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
 import { createDb, messageFeedback } from "~/db";
+import { adminAuth } from "~/middleware/admin-auth";
 import { feedbackRepository } from "~/repository/feedback-repository";
 
-type AdminBindings = CloudflareBindings & {
-  ADMIN_KEY?: string;
-};
-
 export const feedbackAdminRoutes = new OpenAPIHono<{
-  Bindings: AdminBindings;
+  Bindings: CloudflareBindings;
 }>();
 
-feedbackAdminRoutes.use("*", async (c, next) => {
-  const adminKey = c.req.header("X-Admin-Key");
-  const expectedKey = c.env.ADMIN_KEY;
-
-  if (!expectedKey) {
-    throw new HTTPException(500, { message: "ADMIN_KEY is not configured" });
-  }
-
-  if (adminKey !== expectedKey) {
-    throw new HTTPException(401, { message: "Unauthorized" });
-  }
-
-  await next();
-});
+feedbackAdminRoutes.use("*", adminAuth);
 
 const FeedbackSchema = z.object({
   id: z.string(),
