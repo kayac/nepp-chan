@@ -28,7 +28,7 @@ export const ChatInput = ({ onSend, disabled }: Props) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-t border-[var(--color-border)] bg-white p-4 shrink-0"
+      className="border-t border-(--color-border) bg-white p-4 shrink-0"
     >
       <div className="max-w-2xl mx-auto flex gap-3">
         <textarea
@@ -38,7 +38,7 @@ export const ChatInput = ({ onSend, disabled }: Props) => {
           placeholder={disabled ? "準備中..." : "メッセージを入力..."}
           disabled={disabled}
           rows={1}
-          className="flex-1 resize-none rounded-xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-base focus:border-[var(--color-accent)] focus:outline-none disabled:bg-[var(--color-surface)] disabled:text-[var(--color-text-muted)] transition-colors"
+          className="flex-1 resize-none rounded-xl border border-(--color-border) bg-white px-4 py-2.5 text-base focus:border-(--color-accent) focus:outline-none disabled:bg-(--color-surface) disabled:text-(--color-text-muted) transition-colors"
         />
         <button
           type="submit"
@@ -46,7 +46,7 @@ export const ChatInput = ({ onSend, disabled }: Props) => {
           className={`px-5 py-2.5 text-sm font-medium rounded-xl transition-opacity ${
             disabled
               ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-              : "bg-[var(--color-accent)] text-white hover:opacity-90"
+              : "bg-(--color-accent) text-white hover:opacity-90"
           }`}
         >
           {disabled ? "待機中..." : "送信"}

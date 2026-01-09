@@ -1,14 +1,18 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 import {
+  convertAndUpload,
   deleteAllKnowledge,
-  deleteKnowledgeBySource,
-  processKnowledgeFile,
-} from "~/mastra/knowledge";
-import {
-  convertToMarkdown,
-  isSupportedMimeType,
-} from "~/mastra/knowledge/converter";
+  deleteFile,
+  getFile,
+  getOriginalFile,
+  listFiles,
+  listUnifiedFiles,
+  reconvertFromOriginal,
+  syncAll,
+  syncFile,
+  uploadMarkdownFile,
+} from "~/services/knowledge";
 
 type AdminBindings = CloudflareBindings & {
   ADMIN_KEY?: string;
@@ -18,7 +22,6 @@ export const knowledgeAdminRoutes = new OpenAPIHono<{
   Bindings: AdminBindings;
 }>();
 
-// 認証ミドルウェア（ヘッダーまたはクエリパラメータで認証）
 knowledgeAdminRoutes.use("*", async (c, next) => {
   const adminKeyHeader = c.req.header("X-Admin-Key");
   const adminKeyQuery = c.req.query("adminKey");
@@ -49,7 +52,6 @@ const ErrorResponseSchema = z.object({
   error: z.string().optional(),
 });
 
-// ファイル情報スキーマ
 const FileInfoSchema = z.object({
   key: z.string(),
   size: z.number(),
@@ -63,7 +65,6 @@ const FilesListResponseSchema = z.object({
   truncated: z.boolean(),
 });
 
-// 統合ファイル情報スキーマ
 const UnifiedFileInfoSchema = z.object({
   baseName: z.string(),
   original: z
@@ -89,7 +90,6 @@ const UnifiedFilesListResponseSchema = z.object({
   truncated: z.boolean(),
 });
 
-// ファイル内容スキーマ
 const FileContentResponseSchema = z.object({
   key: z.string(),
   content: z.string(),
@@ -98,15 +98,28 @@ const FileContentResponseSchema = z.object({
   lastModified: z.string(),
 });
 
-// ファイル保存リクエストスキーマ
 const SaveFileRequestSchema = z.object({
   content: z.string(),
 });
 
-// ファイルキーパラメータスキーマ
 const FileKeyParamSchema = z.object({
   key: z.string().openapi({ param: { name: "key", in: "path" } }),
 });
+
+const validateFileKey = (key: string) => {
+  if (key.includes("..") || key.startsWith("/")) {
+    throw new HTTPException(400, { message: "Invalid file key" });
+  }
+};
+
+const requireApiKey = (apiKey: string | undefined): string => {
+  if (!apiKey) {
+    throw new HTTPException(500, {
+      message: "GOOGLE_GENERATIVE_AI_API_KEY is not configured",
+    });
+  }
+  return apiKey;
+};
 
 // DELETE /admin/knowledge - 全削除
 const deleteAllRoute = createRoute({
@@ -118,37 +131,22 @@ const deleteAllRoute = createRoute({
   responses: {
     200: {
       description: "削除成功",
-      content: {
-        "application/json": {
-          schema: SuccessResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: SuccessResponseSchema } },
     },
     401: {
       description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     500: {
       description: "サーバーエラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
   },
 });
 
 knowledgeAdminRoutes.openapi(deleteAllRoute, async (c) => {
-  const vectorize = c.env.VECTORIZE;
-
   try {
-    const result = await deleteAllKnowledge(vectorize);
-
+    const result = await deleteAllKnowledge(c.env.VECTORIZE);
     return c.json({
       success: true,
       message: `${result.deleted}件のベクトルを削除しました`,
@@ -184,121 +182,40 @@ const syncAllRoute = createRoute({
                 file: z.string(),
                 chunks: z.number(),
                 error: z.string().optional(),
+                edited: z.boolean().optional(),
               }),
             ),
+            editedCount: z.number().optional(),
           }),
         },
       },
     },
     401: {
       description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     500: {
       description: "サーバーエラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
   },
 });
 
 knowledgeAdminRoutes.openapi(syncAllRoute, async (c) => {
-  const bucket = c.env.KNOWLEDGE_BUCKET;
-  const vectorize = c.env.VECTORIZE;
-  const apiKey = c.env.GOOGLE_GENERATIVE_AI_API_KEY;
-
-  if (!apiKey) {
-    throw new HTTPException(500, {
-      message: "GOOGLE_GENERATIVE_AI_API_KEY is not configured",
-    });
-  }
+  const apiKey = requireApiKey(c.env.GOOGLE_GENERATIVE_AI_API_KEY);
 
   try {
-    // R2バケットからファイル一覧を取得
-    const listed = await bucket.list();
-    const allObjects = listed.objects;
-
-    // Markdown ファイル（originals/ 以外）
-    const mdFiles = allObjects.filter(
-      (obj) => obj.key.endsWith(".md") && !obj.key.startsWith("originals/"),
-    );
-
-    // originals/ 内のファイルをマップ化
-    const originalsMap = new Map<string, Date>();
-    for (const obj of allObjects) {
-      if (obj.key.startsWith("originals/")) {
-        // originals/xxx.pdf → xxx
-        const baseName = obj.key
-          .replace("originals/", "")
-          .replace(/\.[^.]+$/, "");
-        originalsMap.set(baseName, obj.uploaded);
-      }
-    }
-
-    console.log(`[Sync] Found ${mdFiles.length} markdown files`);
-
-    const results: {
-      file: string;
-      chunks: number;
-      error?: string;
-      edited?: boolean;
-    }[] = [];
-
-    for (const obj of mdFiles) {
-      const file = await bucket.get(obj.key);
-      if (!file) {
-        results.push({ file: obj.key, chunks: 0, error: "File not found" });
-        continue;
-      }
-
-      // 編集済み判定: originals/ の対応ファイルより md が十分新しい場合
-      // （同時アップロードは編集済みとみなさない：5秒以内の差は許容）
-      const baseName = obj.key.replace(/\.md$/, "");
-      const originalUploaded = originalsMap.get(baseName);
-      const EDIT_THRESHOLD_MS = 5000;
-      const isEdited =
-        originalUploaded !== undefined &&
-        obj.uploaded.getTime() - originalUploaded.getTime() > EDIT_THRESHOLD_MS;
-
-      const content = await file.text();
-      console.log(
-        `[Sync] Processing ${obj.key} (${content.length} bytes)${isEdited ? " [EDITED]" : ""}`,
-      );
-
-      // 既存データを削除
-      await deleteKnowledgeBySource(vectorize, obj.key);
-
-      // 新しいデータを登録
-      const result = await processKnowledgeFile(
-        obj.key,
-        content,
-        vectorize,
-        apiKey,
-      );
-
-      results.push({
-        file: obj.key,
-        chunks: result.chunks,
-        error: result.error,
-        edited: isEdited,
-      });
-    }
-
-    const totalChunks = results.reduce((sum, r) => sum + r.chunks, 0);
-    const editedCount = results.filter((r) => r.edited).length;
+    const result = await syncAll({
+      bucket: c.env.KNOWLEDGE_BUCKET,
+      vectorize: c.env.VECTORIZE,
+      apiKey,
+    });
 
     return c.json({
       success: true,
-      message: `${mdFiles.length}ファイル、${totalChunks}チャンクを同期しました`,
-      results,
-      editedCount,
+      message: `${result.totalFiles}ファイル、${result.totalChunks}チャンクを同期しました`,
+      results: result.results,
+      editedCount: result.editedCount,
     });
   } catch (error) {
     console.error("Sync error:", error);
@@ -318,78 +235,23 @@ const listFilesRoute = createRoute({
   responses: {
     200: {
       description: "ファイル一覧",
-      content: {
-        "application/json": {
-          schema: FilesListResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: FilesListResponseSchema } },
     },
     401: {
       description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     500: {
       description: "サーバーエラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
   },
 });
 
 knowledgeAdminRoutes.openapi(listFilesRoute, async (c) => {
-  const bucket = c.env.KNOWLEDGE_BUCKET;
-
   try {
-    const listed = await bucket.list({ limit: 1000 });
-    const allObjects = listed.objects;
-
-    // originals/ 内のファイルをマップ化
-    const originalsMap = new Map<string, Date>();
-    for (const obj of allObjects) {
-      if (obj.key.startsWith("originals/")) {
-        const baseName = obj.key
-          .replace("originals/", "")
-          .replace(/\.[^.]+$/, "");
-        originalsMap.set(baseName, obj.uploaded);
-      }
-    }
-
-    // originals/ プレフィックスのファイルは除外し、編集済み情報を追加
-    // 編集済み判定: originals/ より md が十分新しい場合（5秒以内の差は同時アップロードとみなす）
-    const EDIT_THRESHOLD_MS = 5000;
-    const files = allObjects
-      .filter((obj) => !obj.key.startsWith("originals/"))
-      .map((obj) => {
-        const baseName = obj.key.replace(/\.md$/, "");
-        const originalUploaded = originalsMap.get(baseName);
-        const isEdited =
-          originalUploaded !== undefined &&
-          obj.uploaded.getTime() - originalUploaded.getTime() >
-            EDIT_THRESHOLD_MS;
-
-        return {
-          key: obj.key,
-          size: obj.size,
-          lastModified: obj.uploaded.toISOString(),
-          etag: obj.etag,
-          edited: isEdited || undefined,
-        };
-      });
-
-    return c.json(
-      {
-        files,
-        truncated: listed.truncated,
-      },
-      200,
-    );
+    const result = await listFiles(c.env.KNOWLEDGE_BUCKET);
+    return c.json(result, 200);
   } catch (error) {
     console.error("List files error:", error);
     throw new HTTPException(500, {
@@ -405,67 +267,36 @@ const getFileRoute = createRoute({
   summary: "ファイル内容を取得",
   description: "指定したファイルの内容を取得します",
   tags: ["Admin - Knowledge"],
-  request: {
-    params: FileKeyParamSchema,
-  },
+  request: { params: FileKeyParamSchema },
   responses: {
     200: {
       description: "ファイル内容",
-      content: {
-        "application/json": {
-          schema: FileContentResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: FileContentResponseSchema } },
     },
     401: {
       description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     404: {
       description: "ファイルが見つかりません",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     500: {
       description: "サーバーエラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
   },
 });
 
 knowledgeAdminRoutes.openapi(getFileRoute, async (c) => {
-  const bucket = c.env.KNOWLEDGE_BUCKET;
   const { key } = c.req.valid("param");
 
   try {
-    const object = await bucket.get(key);
-    if (!object) {
+    const result = await getFile(c.env.KNOWLEDGE_BUCKET, key);
+    if (!result) {
       throw new HTTPException(404, { message: "File not found" });
     }
-
-    const content = await object.text();
-
-    return c.json(
-      {
-        key,
-        content,
-        contentType: object.httpMetadata?.contentType || "text/markdown",
-        size: object.size,
-        lastModified: object.uploaded.toISOString(),
-      },
-      200,
-    );
+    return c.json(result, 200);
   } catch (error) {
     if (error instanceof HTTPException) throw error;
     console.error("Get file error:", error);
@@ -485,11 +316,7 @@ const saveFileRoute = createRoute({
   request: {
     params: FileKeyParamSchema,
     body: {
-      content: {
-        "application/json": {
-          schema: SaveFileRequestSchema,
-        },
-      },
+      content: { "application/json": { schema: SaveFileRequestSchema } },
     },
   },
   responses: {
@@ -507,56 +334,32 @@ const saveFileRoute = createRoute({
     },
     401: {
       description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     500: {
       description: "サーバーエラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
   },
 });
 
 knowledgeAdminRoutes.openapi(saveFileRoute, async (c) => {
-  const bucket = c.env.KNOWLEDGE_BUCKET;
-  const vectorize = c.env.VECTORIZE;
-  const apiKey = c.env.GOOGLE_GENERATIVE_AI_API_KEY;
   const { key } = c.req.valid("param");
   const { content } = c.req.valid("json");
+  const apiKey = requireApiKey(c.env.GOOGLE_GENERATIVE_AI_API_KEY);
 
-  if (!apiKey) {
-    throw new HTTPException(500, {
-      message: "GOOGLE_GENERATIVE_AI_API_KEY is not configured",
-    });
-  }
-
-  // ファイル名のバリデーション（パストラバーサル対策）
-  if (key.includes("..") || key.startsWith("/")) {
-    throw new HTTPException(400, { message: "Invalid file key" });
-  }
+  validateFileKey(key);
 
   try {
-    // R2 に保存
-    await bucket.put(key, content, {
+    await c.env.KNOWLEDGE_BUCKET.put(key, content, {
       httpMetadata: { contentType: "text/markdown" },
     });
-
     console.log(`[Save] Saved ${key} (${content.length} bytes)`);
 
-    // Vectorize に同期（既存データを削除してから登録）
-    await deleteKnowledgeBySource(vectorize, key);
-    const result = await processKnowledgeFile(key, content, vectorize, apiKey);
-
-    if (result.error) {
-      console.error(`[Save] Vectorize sync error for ${key}:`, result.error);
-    }
+    const result = await syncFile(key, content, {
+      vectorize: c.env.VECTORIZE,
+      apiKey,
+    });
 
     return c.json(
       {
@@ -583,78 +386,32 @@ const deleteFileRoute = createRoute({
   description:
     "Markdown、元ファイル（originals/）、Vectorizeのデータをすべて削除します",
   tags: ["Admin - Knowledge"],
-  request: {
-    params: FileKeyParamSchema,
-  },
+  request: { params: FileKeyParamSchema },
   responses: {
     200: {
       description: "削除成功",
-      content: {
-        "application/json": {
-          schema: SuccessResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: SuccessResponseSchema } },
     },
     401: {
       description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     500: {
       description: "サーバーエラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
   },
 });
 
 knowledgeAdminRoutes.openapi(deleteFileRoute, async (c) => {
-  const bucket = c.env.KNOWLEDGE_BUCKET;
-  const vectorize = c.env.VECTORIZE;
   const { key } = c.req.valid("param");
-
-  // ファイル名のバリデーション（パストラバーサル対策）
-  if (key.includes("..") || key.startsWith("/")) {
-    throw new HTTPException(400, { message: "Invalid file key" });
-  }
-
-  // baseNameを抽出（xxx.md → xxx）
-  const baseName = key.replace(/\.md$/, "");
+  validateFileKey(key);
 
   try {
-    // 1. Markdownファイルを削除
-    const mdKey = baseName.endsWith(".md") ? baseName : `${baseName}.md`;
-    await bucket.delete(mdKey);
-    console.log(`[Delete] Deleted ${mdKey} from R2`);
-
-    // 2. 元ファイル（originals/）を検索して削除
-    const listed = await bucket.list({ prefix: `originals/${baseName}` });
-    for (const obj of listed.objects) {
-      // originals/baseName.* にマッチするもののみ削除
-      const objBaseName = obj.key
-        .replace("originals/", "")
-        .replace(/\.[^.]+$/, "");
-      if (objBaseName === baseName) {
-        await bucket.delete(obj.key);
-        console.log(`[Delete] Deleted ${obj.key} from R2`);
-      }
-    }
-
-    // 3. Vectorize から削除
-    await deleteKnowledgeBySource(vectorize, mdKey);
-    console.log(`[Delete] Deleted ${mdKey} from Vectorize`);
-
+    await deleteFile(c.env.KNOWLEDGE_BUCKET, c.env.VECTORIZE, key);
+    const baseName = key.replace(/\.md$/, "");
     return c.json(
-      {
-        success: true,
-        message: `${baseName} を完全に削除しました`,
-      },
+      { success: true, message: `${baseName} を完全に削除しました` },
       200,
     );
   } catch (error) {
@@ -702,43 +459,21 @@ const uploadFileRoute = createRoute({
     },
     400: {
       description: "リクエストエラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     401: {
       description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     500: {
       description: "サーバーエラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
   },
 });
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB for Markdown
-
 knowledgeAdminRoutes.openapi(uploadFileRoute, async (c) => {
-  const bucket = c.env.KNOWLEDGE_BUCKET;
-  const vectorize = c.env.VECTORIZE;
-  const apiKey = c.env.GOOGLE_GENERATIVE_AI_API_KEY;
-
-  if (!apiKey) {
-    throw new HTTPException(500, {
-      message: "GOOGLE_GENERATIVE_AI_API_KEY is not configured",
-    });
-  }
+  const apiKey = requireApiKey(c.env.GOOGLE_GENERATIVE_AI_API_KEY);
 
   try {
     const formData = await c.req.formData();
@@ -749,41 +484,19 @@ knowledgeAdminRoutes.openapi(uploadFileRoute, async (c) => {
       throw new HTTPException(400, { message: "File is required" });
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      throw new HTTPException(400, {
-        message: `File size exceeds limit (${MAX_FILE_SIZE / 1024 / 1024}MB)`,
-      });
-    }
+    if (customFilename) validateFileKey(customFilename);
 
-    // ファイル名の決定
-    let key = customFilename || file.name;
-    if (!key.endsWith(".md")) {
-      key = `${key}.md`;
-    }
-
-    // ファイル名のバリデーション
-    if (key.includes("..") || key.startsWith("/")) {
-      throw new HTTPException(400, { message: "Invalid filename" });
-    }
-
-    const content = await file.text();
-
-    // R2 に保存
-    await bucket.put(key, content, {
-      httpMetadata: { contentType: "text/markdown" },
+    const result = await uploadMarkdownFile(file, customFilename, {
+      bucket: c.env.KNOWLEDGE_BUCKET,
+      vectorize: c.env.VECTORIZE,
+      apiKey,
     });
-
-    console.log(`[Upload] Uploaded ${key} (${content.length} bytes)`);
-
-    // Vectorize に同期
-    await deleteKnowledgeBySource(vectorize, key);
-    const result = await processKnowledgeFile(key, content, vectorize, apiKey);
 
     return c.json(
       {
         success: true,
         message: `ファイルをアップロードし、${result.chunks}チャンクを同期しました`,
-        key,
+        key: result.key,
         chunks: result.chunks,
       },
       200,
@@ -836,43 +549,21 @@ const convertFileRoute = createRoute({
     },
     400: {
       description: "リクエストエラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     401: {
       description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     500: {
       description: "サーバーエラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
   },
 });
 
-const MAX_CONVERT_FILE_SIZE = 20 * 1024 * 1024; // 20MB for images/PDF
-
 knowledgeAdminRoutes.openapi(convertFileRoute, async (c) => {
-  const bucket = c.env.KNOWLEDGE_BUCKET;
-  const vectorize = c.env.VECTORIZE;
-  const apiKey = c.env.GOOGLE_GENERATIVE_AI_API_KEY;
-
-  if (!apiKey) {
-    throw new HTTPException(500, {
-      message: "GOOGLE_GENERATIVE_AI_API_KEY is not configured",
-    });
-  }
+  const apiKey = requireApiKey(c.env.GOOGLE_GENERATIVE_AI_API_KEY);
 
   try {
     const formData = await c.req.formData();
@@ -882,66 +573,24 @@ knowledgeAdminRoutes.openapi(convertFileRoute, async (c) => {
     if (!file) {
       throw new HTTPException(400, { message: "File is required" });
     }
-
     if (!filename) {
       throw new HTTPException(400, { message: "Filename is required" });
     }
 
-    if (file.size > MAX_CONVERT_FILE_SIZE) {
-      throw new HTTPException(400, {
-        message: `File size exceeds limit (${MAX_CONVERT_FILE_SIZE / 1024 / 1024}MB)`,
-      });
-    }
+    validateFileKey(filename);
 
-    const mimeType = file.type;
-    if (!isSupportedMimeType(mimeType)) {
-      throw new HTTPException(400, {
-        message: `Unsupported file type: ${mimeType}. Supported: image/png, image/jpeg, image/webp, image/gif, application/pdf`,
-      });
-    }
-
-    // ファイル名の決定
-    let key = filename;
-    if (!key.endsWith(".md")) {
-      key = `${key}.md`;
-    }
-
-    // ファイル名のバリデーション
-    if (key.includes("..") || key.startsWith("/")) {
-      throw new HTTPException(400, { message: "Invalid filename" });
-    }
-
-    console.log(`[Convert] Converting ${file.name} (${mimeType}) to ${key}`);
-
-    // converterAgent で Markdown に変換
-    const fileData = await file.arrayBuffer();
-    const markdown = await convertToMarkdown(fileData, mimeType);
-
-    console.log(`[Convert] Generated ${markdown.length} bytes of markdown`);
-
-    // 元ファイルを originals/ に保存
-    const originalExtension = file.name.split(".").pop() || "bin";
-    const originalKey = `originals/${key.replace(/\.md$/, `.${originalExtension}`)}`;
-    await bucket.put(originalKey, fileData, {
-      httpMetadata: { contentType: mimeType },
+    const result = await convertAndUpload(file, filename, {
+      bucket: c.env.KNOWLEDGE_BUCKET,
+      vectorize: c.env.VECTORIZE,
+      apiKey,
     });
-    console.log(`[Convert] Saved original to ${originalKey}`);
-
-    // Markdown を R2 に保存
-    await bucket.put(key, markdown, {
-      httpMetadata: { contentType: "text/markdown" },
-    });
-
-    // Vectorize に同期
-    await deleteKnowledgeBySource(vectorize, key);
-    const result = await processKnowledgeFile(key, markdown, vectorize, apiKey);
 
     return c.json(
       {
         success: true,
         message: `ファイルを変換し、${result.chunks}チャンクを同期しました`,
-        key,
-        originalType: mimeType,
+        key: result.key,
+        originalType: result.originalType,
         chunks: result.chunks,
       },
       200,
@@ -967,121 +616,24 @@ const listUnifiedFilesRoute = createRoute({
     200: {
       description: "統合ファイル一覧",
       content: {
-        "application/json": {
-          schema: UnifiedFilesListResponseSchema,
-        },
+        "application/json": { schema: UnifiedFilesListResponseSchema },
       },
     },
     401: {
       description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     500: {
       description: "サーバーエラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
   },
 });
 
 knowledgeAdminRoutes.openapi(listUnifiedFilesRoute, async (c) => {
-  const bucket = c.env.KNOWLEDGE_BUCKET;
-
   try {
-    const listed = await bucket.list({ limit: 1000 });
-    const allObjects = listed.objects;
-
-    // originals/ 内のファイルをマップ化
-    const originalsMap = new Map<
-      string,
-      { key: string; size: number; uploaded: Date; contentType: string }
-    >();
-    for (const obj of allObjects) {
-      if (obj.key.startsWith("originals/")) {
-        const baseName = obj.key
-          .replace("originals/", "")
-          .replace(/\.[^.]+$/, "");
-        const file = await bucket.head(obj.key);
-        originalsMap.set(baseName, {
-          key: obj.key,
-          size: obj.size,
-          uploaded: obj.uploaded,
-          contentType:
-            file?.httpMetadata?.contentType || "application/octet-stream",
-        });
-      }
-    }
-
-    // Markdown ファイルをマップ化
-    const markdownMap = new Map<
-      string,
-      { key: string; size: number; uploaded: Date }
-    >();
-    for (const obj of allObjects) {
-      if (obj.key.endsWith(".md") && !obj.key.startsWith("originals/")) {
-        const baseName = obj.key.replace(/\.md$/, "");
-        markdownMap.set(baseName, {
-          key: obj.key,
-          size: obj.size,
-          uploaded: obj.uploaded,
-        });
-      }
-    }
-
-    // 全てのベース名を収集
-    const allBaseNames = new Set([
-      ...originalsMap.keys(),
-      ...markdownMap.keys(),
-    ]);
-
-    const files: z.infer<typeof UnifiedFileInfoSchema>[] = [];
-
-    for (const baseName of allBaseNames) {
-      const original = originalsMap.get(baseName);
-      const markdown = markdownMap.get(baseName);
-
-      files.push({
-        baseName,
-        original: original
-          ? {
-              key: original.key,
-              size: original.size,
-              lastModified: original.uploaded.toISOString(),
-              contentType: original.contentType,
-            }
-          : undefined,
-        markdown: markdown
-          ? {
-              key: markdown.key,
-              size: markdown.size,
-              lastModified: markdown.uploaded.toISOString(),
-            }
-          : undefined,
-        hasMarkdown: !!markdown,
-      });
-    }
-
-    // 更新日時でソート（新しい順）
-    files.sort((a, b) => {
-      const aDate = a.markdown?.lastModified || a.original?.lastModified || "";
-      const bDate = b.markdown?.lastModified || b.original?.lastModified || "";
-      return bDate.localeCompare(aDate);
-    });
-
-    return c.json(
-      {
-        files,
-        truncated: listed.truncated,
-      },
-      200,
-    );
+    const result = await listUnifiedFiles(c.env.KNOWLEDGE_BUCKET);
+    return c.json(result, 200);
   } catch (error) {
     console.error("List unified files error:", error);
     throw new HTTPException(500, {
@@ -1098,65 +650,38 @@ const getOriginalFileRoute = createRoute({
   summary: "元ファイルを取得",
   description: "originals/ 配下の元ファイルを取得します（画像/PDF）",
   tags: ["Admin - Knowledge"],
-  request: {
-    params: FileKeyParamSchema,
-  },
+  request: { params: FileKeyParamSchema },
   responses: {
-    200: {
-      description: "元ファイル（バイナリ）",
-    },
+    200: { description: "元ファイル（バイナリ）" },
     401: {
       description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     404: {
       description: "ファイルが見つかりません",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     500: {
       description: "サーバーエラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
   },
 });
 
 knowledgeAdminRoutes.openapi(getOriginalFileRoute, async (c) => {
-  const bucket = c.env.KNOWLEDGE_BUCKET;
   const { key } = c.req.valid("param");
-
-  // ファイル名のバリデーション
-  if (key.includes("..") || key.startsWith("/")) {
-    throw new HTTPException(400, { message: "Invalid file key" });
-  }
-
-  const fullKey = `originals/${key}`;
+  validateFileKey(key);
 
   try {
-    const object = await bucket.get(fullKey);
-    if (!object) {
+    const result = await getOriginalFile(c.env.KNOWLEDGE_BUCKET, key);
+    if (!result) {
       throw new HTTPException(404, { message: "File not found" });
     }
 
-    const contentType =
-      object.httpMetadata?.contentType || "application/octet-stream";
-    const body = await object.arrayBuffer();
-
-    return new Response(body, {
+    return new Response(result.body, {
       headers: {
-        "Content-Type": contentType,
-        "Content-Length": object.size.toString(),
+        "Content-Type": result.contentType,
+        "Content-Length": result.size.toString(),
         "Content-Disposition": `inline; filename="${encodeURIComponent(key)}"`,
       },
     });
@@ -1209,106 +734,46 @@ const reconvertFileRoute = createRoute({
     },
     400: {
       description: "リクエストエラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     401: {
       description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     404: {
       description: "元ファイルが見つかりません",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
     500: {
       description: "サーバーエラー",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
+      content: { "application/json": { schema: ErrorResponseSchema } },
     },
   },
 });
 
 knowledgeAdminRoutes.openapi(reconvertFileRoute, async (c) => {
-  const bucket = c.env.KNOWLEDGE_BUCKET;
-  const vectorize = c.env.VECTORIZE;
-  const apiKey = c.env.GOOGLE_GENERATIVE_AI_API_KEY;
   const { originalKey, filename } = c.req.valid("json");
+  const apiKey = requireApiKey(c.env.GOOGLE_GENERATIVE_AI_API_KEY);
 
-  if (!apiKey) {
-    throw new HTTPException(500, {
-      message: "GOOGLE_GENERATIVE_AI_API_KEY is not configured",
-    });
-  }
-
-  // バリデーション
   if (!originalKey.startsWith("originals/")) {
     throw new HTTPException(400, {
       message: "originalKey must start with 'originals/'",
     });
   }
-
-  if (filename.includes("..") || filename.startsWith("/")) {
-    throw new HTTPException(400, { message: "Invalid filename" });
-  }
-
-  let key = filename;
-  if (!key.endsWith(".md")) {
-    key = `${key}.md`;
-  }
+  validateFileKey(filename);
 
   try {
-    // 元ファイルを取得
-    const object = await bucket.get(originalKey);
-    if (!object) {
-      throw new HTTPException(404, { message: "Original file not found" });
-    }
-
-    const mimeType =
-      object.httpMetadata?.contentType || "application/octet-stream";
-    if (!isSupportedMimeType(mimeType)) {
-      throw new HTTPException(400, {
-        message: `Unsupported file type: ${mimeType}`,
-      });
-    }
-
-    console.log(
-      `[Reconvert] Converting ${originalKey} (${mimeType}) to ${key}`,
-    );
-
-    // converterAgent で Markdown に変換
-    const fileData = await object.arrayBuffer();
-    const markdown = await convertToMarkdown(fileData, mimeType);
-
-    console.log(`[Reconvert] Generated ${markdown.length} bytes of markdown`);
-
-    // Markdown を R2 に保存
-    await bucket.put(key, markdown, {
-      httpMetadata: { contentType: "text/markdown" },
+    const result = await reconvertFromOriginal(originalKey, filename, {
+      bucket: c.env.KNOWLEDGE_BUCKET,
+      vectorize: c.env.VECTORIZE,
+      apiKey,
     });
-
-    // Vectorize に同期
-    await deleteKnowledgeBySource(vectorize, key);
-    const result = await processKnowledgeFile(key, markdown, vectorize, apiKey);
 
     return c.json(
       {
         success: true,
         message: `ファイルを再変換し、${result.chunks}チャンクを同期しました`,
-        key,
+        key: result.key,
         chunks: result.chunks,
       },
       200,

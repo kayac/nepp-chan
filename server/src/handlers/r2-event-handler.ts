@@ -1,7 +1,7 @@
 import {
   deleteKnowledgeBySource,
   processKnowledgeFile,
-} from "~/mastra/knowledge";
+} from "~/services/knowledge/embedding";
 
 type R2EventType =
   | "PutObject"

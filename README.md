@@ -1,19 +1,15 @@
 # aiss-nepch
 
-音威子府村の AI キャラクター「ねっぷちゃん」チャットシステム
-
 ## 概要
 
-北海道音威子府村のマスコット AI「ねっぷちゃん」と会話できるチャットアプリケーションです。Mastra AI フレームワークを活用し、Cloudflare Workers + Pages 上で稼働します。
+北海道音威子府村のマスコット AI「ねっぷちゃん」と会話できるチャットアプリケーションです。
+
+ねっぷちゃんは村のことをなんでも知っていて、村民や観光客の役に立つ情報を教えてくれます。観光スポット、イベント、暮らしの情報などを案内します。
 
 ### 主要機能
 
 - ねっぷちゃんとのチャット会話
-- 村長モード（管理者向けデータ分析）
-- 村の集合知（ペルソナ）の蓄積・参照
-- 緊急情報の記録・管理
-- 天気情報の取得
-- Web 検索
+- 管理者向けデータ分析
 
 ## 技術スタック
 
@@ -23,6 +19,14 @@
 - **フロントエンド**: React 19, Vite, TailwindCSS
 - **データベース**: Cloudflare D1
 - **言語**: TypeScript
+
+## プロジェクト構成
+
+| ディレクトリ                | 説明                                        |
+| --------------------------- | ------------------------------------------- |
+| [server/](server/README.md) | バックエンド API（Cloudflare Workers）      |
+| [web/](web/README.md)       | フロントエンド WEB （Cloudflare Pages）     |
+| knowledge/                  | RAG 用ナレッジファイル                      |
 
 ## セットアップ
 
@@ -35,29 +39,59 @@
 ### インストール
 
 ```bash
-# リポジトリをクローン
-git clone <repository-url>
-cd aiss-nepch
-
-# 依存関係をインストール
 pnpm install
 ```
 
 ### 環境変数の設定
 
-`server/.dev.vars` ファイルを作成し、以下の環境変数を設定：
+#### ルートディレクトリ
 
+`.env` を作成：
+
+```env
+# R2 アップロード用
+CLOUDFLARE_ACCOUNT_ID=your-account-id
+R2_BUCKET_NAME=your-bucket-name
+
+# API 呼び出し用
+API_URL=http://localhost:8787
+ADMIN_KEY=your-admin-key
 ```
+
+#### server ディレクトリ
+
+`server/.dev.vars` を作成（Workers 開発用）：
+
+```env
 GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
 GOOGLE_SEARCH_ENGINE_ID=your-engine-id
 MASTER_PASSWORD=your-password
+ADMIN_KEY=your-admin-key
+```
+
+`server/.env` を作成（Mastra Playground 用）：
+
+```env
+GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
+GOOGLE_SEARCH_ENGINE_ID=your-engine-id
+MASTER_PASSWORD=your-password
+ADMIN_KEY=your-admin-key
+```
+
+#### web ディレクトリ
+
+`web/.env` を作成：
+
+```env
+VITE_API_URL=http://localhost:8787
 ```
 
 ### D1 データベースの初期化
 
 ```bash
-# 開発環境
-wrangler d1 execute aiss-nepch-dev --file=./server/src/repository/migrations/001_init.sql
+# 開発環境（マイグレーション適用）
+cd server
+pnpm db:migrate:local
 ```
 
 ## 開発
