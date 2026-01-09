@@ -49,7 +49,6 @@ server/src/
 | `/threads`                         | GET/POST | スレッド一覧・作成             |
 | `/threads/:threadId`               | GET      | スレッド詳細                   |
 | `/threads/:threadId/messages`      | GET      | メッセージ履歴                 |
-| `/weather`                         | GET      | 天気情報（ワークフロー経由）   |
 | `/feedback`                        | POST     | フィードバック送信             |
 | `/admin/knowledge/sync`            | POST     | ナレッジ同期                   |
 | `/admin/knowledge`                 | DELETE   | ナレッジ削除                   |

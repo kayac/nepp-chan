@@ -8,4 +8,3 @@ export { chatRoutes } from "./chat";
 export { feedbackRoutes } from "./feedback";
 export { healthRoutes } from "./health";
 export { threadsRoutes } from "./threads";
-export { weatherRoutes } from "./weather";

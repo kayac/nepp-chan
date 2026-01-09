@@ -49,7 +49,6 @@ pnpm dev
 | `/threads`                    | POST     | スレッド作成                     |
 | `/threads/:threadId`          | GET      | スレッド詳細取得                 |
 | `/threads/:threadId/messages` | GET      | メッセージ履歴取得               |
-| `/weather`                    | GET      | 天気情報取得（ワークフロー経由） |
 
 ## API テスト（curl）
 
@@ -79,12 +78,6 @@ curl -X POST http://localhost:8787/chat \
 
 ```bash
 curl "http://localhost:8787/threads?resourceId=user-123&page=1&perPage=10"
-```
-
-### 天気情報取得
-
-```bash
-curl "http://localhost:8787/weather?city=tokyo"
 ```
 
 ## スクリプト
