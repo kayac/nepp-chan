@@ -20,14 +20,11 @@ const getMessageContent = (message: UIMessage): string => {
     .join("");
 };
 
+const REPORT_TOOLS = ["emergencyReportTool", "emergencyUpdateTool"];
+
 const getToolDisplayName = (toolName: string): string => {
-  const names: Record<string, string> = {
-    "agent-webResearcherAgent": "🔍 ウェブ検索",
-    updateWorkingMemory: "💾 記憶を更新",
-    emergencyReportTool: "🚨 緊急報告",
-    emergencyUpdateTool: "📝 緊急情報更新",
-  };
-  return names[toolName] || `🔧 ${toolName}`;
+  if (REPORT_TOOLS.includes(toolName)) return "ねっぷちゃんが報告中";
+  return "ねっぷちゃんが調査中";
 };
 
 const getToolStatus = (
