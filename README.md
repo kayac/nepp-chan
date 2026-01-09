@@ -20,6 +20,14 @@
 - **データベース**: Cloudflare D1
 - **言語**: TypeScript
 
+## プロジェクト構成
+
+| ディレクトリ                | 説明                                        |
+| --------------------------- | ------------------------------------------- |
+| [server/](server/README.md) | バックエンド API（Cloudflare Workers）      |
+| [web/](web/README.md)       | フロントエンド WEB （Cloudflare Pages）     |
+| knowledge/                  | RAG 用ナレッジファイル                      |
+
 ## セットアップ
 
 ### 必要条件
