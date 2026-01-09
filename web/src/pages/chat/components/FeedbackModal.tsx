@@ -63,13 +63,13 @@ export const FeedbackModal = ({
       />
       <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 animate-fade-in">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-[var(--color-text)]">
+          <h2 className="text-lg font-bold text-(--color-text)">
             {rating === "good" ? "フィードバック" : "改善点を教えてください"}
           </h2>
           <button
             type="button"
             onClick={handleClose}
-            className="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-md"
+            className="p-1 text-(--color-text-muted) hover:text-(--color-text) rounded-md"
             aria-label="閉じる"
           >
             <XMarkIcon className="w-5 h-5" aria-hidden="true" />
@@ -99,7 +99,7 @@ export const FeedbackModal = ({
 
           {isBadRating && (
             <fieldset className="mb-4">
-              <legend className="block text-sm font-medium text-[var(--color-text)] mb-2">
+              <legend className="block text-sm font-medium text-(--color-text) mb-2">
                 どこが問題でしたか？
               </legend>
               <div className="space-y-2">
@@ -127,7 +127,7 @@ export const FeedbackModal = ({
                         <span className="w-1.5 h-1.5 bg-white rounded-full" />
                       )}
                     </span>
-                    <span className="text-sm text-[var(--color-text)]">
+                    <span className="text-sm text-(--color-text)">
                       {cat.label}
                     </span>
                   </label>
@@ -139,7 +139,7 @@ export const FeedbackModal = ({
           <div className="mb-6">
             <label
               htmlFor="feedback-comment"
-              className="block text-sm font-medium text-[var(--color-text)] mb-2"
+              className="block text-sm font-medium text-(--color-text) mb-2"
             >
               コメント（任意）
             </label>
@@ -154,9 +154,9 @@ export const FeedbackModal = ({
               }
               maxLength={1000}
               rows={3}
-              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-(--color-border) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-(--color-accent) focus:border-transparent resize-none"
             />
-            <div className="text-xs text-[var(--color-text-muted)] mt-1 text-right">
+            <div className="text-xs text-(--color-text-muted) mt-1 text-right">
               {comment.length}/1000
             </div>
           </div>
@@ -166,14 +166,14 @@ export const FeedbackModal = ({
               type="button"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="flex-1 py-2.5 px-4 border border-[var(--color-border)] text-[var(--color-text)] rounded-lg text-sm font-medium hover:bg-[var(--color-surface)] transition-colors disabled:opacity-50"
+              className="flex-1 py-2.5 px-4 border border-(--color-border) text-(--color-text) rounded-lg text-sm font-medium hover:bg-(--color-surface) transition-colors disabled:opacity-50"
             >
               キャンセル
             </button>
             <button
               type="submit"
               disabled={isSubmitting || (isBadRating && !category)}
-              className="flex-1 py-2.5 px-4 bg-[var(--color-accent)] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-2.5 px-4 bg-(--color-accent) text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? "送信中..." : "送信"}
             </button>

@@ -30,7 +30,7 @@ export const FeedbackButton = ({
           ${
             isGoodSelected
               ? "bg-green-100 text-green-700"
-              : "text-[var(--color-text-muted)] hover:text-green-600 hover:bg-green-50"
+              : "text-(--color-text-muted) hover:text-green-600 hover:bg-green-50"
           }
           ${hasSubmitted && !isGoodSelected ? "opacity-40" : ""}
           disabled:cursor-not-allowed
@@ -48,7 +48,7 @@ export const FeedbackButton = ({
           ${
             isBadSelected
               ? "bg-red-100 text-red-700"
-              : "text-[var(--color-text-muted)] hover:text-red-600 hover:bg-red-50"
+              : "text-(--color-text-muted) hover:text-red-600 hover:bg-red-50"
           }
           ${hasSubmitted && !isBadSelected ? "opacity-40" : ""}
           disabled:cursor-not-allowed
