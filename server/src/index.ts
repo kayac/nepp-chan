@@ -12,7 +12,6 @@ import {
   knowledgeAdminRoutes,
   personaAdminRoutes,
   threadsRoutes,
-  weatherRoutes,
 } from "~/routes";
 
 const app = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
@@ -25,7 +24,6 @@ app.route("/health", healthRoutes);
 app.route("/chat", chatRoutes);
 app.route("/feedback", feedbackRoutes);
 app.route("/threads", threadsRoutes);
-app.route("/weather", weatherRoutes);
 app.route("/admin/feedback", feedbackAdminRoutes);
 app.route("/admin/knowledge", knowledgeAdminRoutes);
 app.route("/admin/persona", personaAdminRoutes);
