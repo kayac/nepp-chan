@@ -1,31 +1,14 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { desc } from "drizzle-orm";
-import { HTTPException } from "hono/http-exception";
 
 import { createDb, emergencyReports } from "~/db";
-
-type AdminBindings = CloudflareBindings & {
-  ADMIN_KEY?: string;
-};
+import { adminAuth } from "~/middleware/admin-auth";
 
 export const emergencyAdminRoutes = new OpenAPIHono<{
-  Bindings: AdminBindings;
+  Bindings: CloudflareBindings;
 }>();
 
-emergencyAdminRoutes.use("*", async (c, next) => {
-  const adminKey = c.req.header("X-Admin-Key");
-  const expectedKey = c.env.ADMIN_KEY;
-
-  if (!expectedKey) {
-    throw new HTTPException(500, { message: "ADMIN_KEY is not configured" });
-  }
-
-  if (adminKey !== expectedKey) {
-    throw new HTTPException(401, { message: "Unauthorized" });
-  }
-
-  await next();
-});
+emergencyAdminRoutes.use("*", adminAuth);
 
 const EmergencySchema = z.object({
   id: z.string(),

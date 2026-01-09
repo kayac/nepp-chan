@@ -3,34 +3,18 @@ import { and, count, desc, eq, lt, or, type SQL } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
 import { createDb, mastraThreads, persona, threadPersonaStatus } from "~/db";
+import { adminAuth } from "~/middleware/admin-auth";
 import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
 import {
   extractAllPendingThreads,
   extractPersonaFromThread,
 } from "~/services/persona-extractor";
 
-type AdminBindings = CloudflareBindings & {
-  ADMIN_KEY?: string;
-};
-
 export const personaAdminRoutes = new OpenAPIHono<{
-  Bindings: AdminBindings;
+  Bindings: CloudflareBindings;
 }>();
 
-personaAdminRoutes.use("*", async (c, next) => {
-  const adminKey = c.req.header("X-Admin-Key");
-  const expectedKey = c.env.ADMIN_KEY;
-
-  if (!expectedKey) {
-    throw new HTTPException(500, { message: "ADMIN_KEY is not configured" });
-  }
-
-  if (adminKey !== expectedKey) {
-    throw new HTTPException(401, { message: "Unauthorized" });
-  }
-
-  await next();
-});
+personaAdminRoutes.use("*", adminAuth);
 
 const PersonaSchema = z.object({
   id: z.string(),
