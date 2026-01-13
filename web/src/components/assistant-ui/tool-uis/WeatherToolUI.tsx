@@ -6,7 +6,6 @@ import {
   SunIcon,
   WindIcon,
 } from "lucide-react";
-import type { FC } from "react";
 
 type WeatherArgs = {
   location: string;
@@ -70,7 +69,7 @@ const conditionsJa: Record<string, string> = {
   "Thunderstorm with heavy hail": "雷雨（大きな雹）",
 };
 
-const LoadingState: FC<{ location: string }> = ({ location }) => (
+const LoadingState = ({ location }: { location: string }) => (
   <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-blue-50 to-sky-50 p-4">
     <div className="size-12 animate-pulse rounded-full bg-blue-200" />
     <div className="flex-1">
@@ -83,7 +82,7 @@ const LoadingState: FC<{ location: string }> = ({ location }) => (
   </div>
 );
 
-const WeatherCard: FC<{ result: WeatherResult }> = ({ result }) => (
+const WeatherCard = ({ result }: { result: WeatherResult }) => (
   <div className="rounded-xl bg-gradient-to-br from-blue-50 via-sky-50 to-cyan-50 p-4 shadow-sm">
     <div className="flex items-start justify-between">
       <div className="flex items-center gap-4">

@@ -19,8 +19,6 @@ import {
   ThumbsDownIcon,
   ThumbsUpIcon,
 } from "lucide-react";
-import type { FC } from "react";
-
 import { MarkdownText } from "~/components/assistant-ui/MarkdownText";
 import { ToolFallback } from "~/components/assistant-ui/ToolFallback";
 import { TooltipIconButton } from "~/components/assistant-ui/TooltipIconButton";
@@ -29,7 +27,7 @@ import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/class-merge";
 import { useFeedback } from "~/pages/chat/FeedbackContext";
 
-export const Thread: FC = () => (
+export const Thread = () => (
   <ThreadPrimitive.Root
     className="aui-root aui-thread-root @container flex h-full flex-col bg-(--color-bg)"
     style={{
@@ -59,7 +57,7 @@ export const Thread: FC = () => (
   </ThreadPrimitive.Root>
 );
 
-const ThreadScrollToBottom: FC = () => (
+const ThreadScrollToBottom = () => (
   <ThreadPrimitive.ScrollToBottom asChild>
     <TooltipIconButton
       tooltip="下にスクロール"
@@ -71,7 +69,7 @@ const ThreadScrollToBottom: FC = () => (
   </ThreadPrimitive.ScrollToBottom>
 );
 
-const ThreadWelcome: FC = () => (
+const ThreadWelcome = () => (
   <div className="aui-thread-welcome-root mx-auto my-auto flex w-full max-w-(--thread-max-width) grow flex-col">
     <div className="aui-thread-welcome-center flex w-full grow flex-col items-center justify-center">
       <div className="aui-thread-welcome-message flex size-full flex-col justify-center px-4">
@@ -100,7 +98,7 @@ const SUGGESTIONS = [
   },
 ] as const;
 
-const ThreadSuggestions: FC = () => (
+const ThreadSuggestions = () => (
   <div className="aui-thread-welcome-suggestions grid w-full @md:grid-cols-2 gap-2 pb-4">
     {SUGGESTIONS.map((suggestion, index) => (
       <div
@@ -127,7 +125,7 @@ const ThreadSuggestions: FC = () => (
   </div>
 );
 
-const Composer: FC = () => (
+const Composer = () => (
   <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
     <ComposerPrimitive.Input
       placeholder="メッセージを入力..."
@@ -140,7 +138,7 @@ const Composer: FC = () => (
   </ComposerPrimitive.Root>
 );
 
-const ComposerAction: FC = () => (
+const ComposerAction = () => (
   <div className="aui-composer-action-wrapper absolute right-2 bottom-3 flex items-center">
     <AssistantIf condition={({ thread }) => !thread.isRunning}>
       <ComposerPrimitive.Send asChild>
@@ -174,7 +172,7 @@ const ComposerAction: FC = () => (
   </div>
 );
 
-const MessageError: FC = () => (
+const MessageError = () => (
   <MessagePrimitive.Error>
     <ErrorPrimitive.Root className="aui-message-error-root mt-2 rounded-lg border border-red-200 bg-(--color-danger-bg) p-3 text-(--color-danger) text-sm">
       <ErrorPrimitive.Message className="aui-message-error-message line-clamp-2" />
@@ -182,7 +180,7 @@ const MessageError: FC = () => (
   </MessagePrimitive.Error>
 );
 
-const AssistantMessage: FC = () => (
+const AssistantMessage = () => (
   <MessagePrimitive.Root
     className="aui-assistant-message-root fade-in slide-in-from-bottom-1 relative mx-auto w-full max-w-(--thread-max-width) animate-in py-3 duration-150"
     data-role="assistant"
@@ -207,7 +205,7 @@ const AssistantMessage: FC = () => (
   </MessagePrimitive.Root>
 );
 
-const FeedbackButtons: FC = () => {
+const FeedbackButtons = () => {
   const { submittedFeedbacks, onFeedbackClick } = useFeedback();
   const message = useMessage();
   const messageId = message.id;
@@ -241,7 +239,7 @@ const FeedbackButtons: FC = () => {
   );
 };
 
-const AssistantActionBar: FC = () => (
+const AssistantActionBar = () => (
   <ActionBarPrimitive.Root
     hideWhenRunning
     className="aui-assistant-action-bar-root flex gap-1 text-(--color-text-muted)"
@@ -260,7 +258,7 @@ const AssistantActionBar: FC = () => (
   </ActionBarPrimitive.Root>
 );
 
-const UserMessage: FC = () => (
+const UserMessage = () => (
   <MessagePrimitive.Root
     className="aui-user-message-root fade-in slide-in-from-bottom-1 mx-auto flex w-full max-w-(--thread-max-width) animate-in justify-end py-3 duration-150"
     data-role="user"
@@ -271,10 +269,10 @@ const UserMessage: FC = () => (
   </MessagePrimitive.Root>
 );
 
-const BranchPicker: FC<BranchPickerPrimitive.Root.Props> = ({
+const BranchPicker = ({
   className,
   ...rest
-}) => (
+}: BranchPickerPrimitive.Root.Props) => (
   <BranchPickerPrimitive.Root
     hideWhenSingleBranch
     className={cn(

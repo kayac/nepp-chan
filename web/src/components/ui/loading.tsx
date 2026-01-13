@@ -1,5 +1,3 @@
-import type { FC } from "react";
-
 import { cn } from "~/lib/class-merge";
 
 type LoadingDotsProps = {
@@ -7,10 +5,7 @@ type LoadingDotsProps = {
   size?: "sm" | "md";
 };
 
-export const LoadingDots: FC<LoadingDotsProps> = ({
-  className,
-  size = "md",
-}) => (
+export const LoadingDots = ({ className, size = "md" }: LoadingDotsProps) => (
   <output
     className={cn(
       "loading-dots",
@@ -30,7 +25,7 @@ type SpinnerProps = {
   size?: "sm" | "md" | "lg";
 };
 
-export const Spinner: FC<SpinnerProps> = ({ className, size = "md" }) => (
+export const Spinner = ({ className, size = "md" }: SpinnerProps) => (
   <output
     className={cn(
       "spinner",
@@ -47,10 +42,10 @@ type LoadingTextProps = {
   className?: string;
 };
 
-export const LoadingText: FC<LoadingTextProps> = ({
+export const LoadingText = ({
   children = "読み込み中",
   className,
-}) => (
+}: LoadingTextProps) => (
   <span
     className={cn(
       "inline-flex items-center gap-2 text-(--color-text-muted) text-sm",

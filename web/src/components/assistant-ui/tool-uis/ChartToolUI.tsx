@@ -1,7 +1,6 @@
 import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
 import { makeAssistantToolUI } from "@assistant-ui/react";
 import { BarChartIcon, LineChartIcon, PieChartIcon } from "lucide-react";
-import type { FC } from "react";
 import {
   Bar,
   BarChart,
@@ -50,7 +49,7 @@ const DEFAULT_COLORS = [
   "#14b8a6", // teal
 ];
 
-const LoadingState: FC = () => (
+const LoadingState = () => (
   <div className="rounded-xl bg-gradient-to-r from-indigo-50 to-violet-50 p-4">
     <div className="flex items-center gap-2">
       <BarChartIcon className="size-5 animate-pulse text-indigo-400" />
@@ -60,7 +59,7 @@ const LoadingState: FC = () => (
   </div>
 );
 
-const ChartIcon: FC<{ type: ChartType }> = ({ type }) => {
+const ChartIcon = ({ type }: { type: ChartType }) => {
   switch (type) {
     case "line":
       return <LineChartIcon className="size-5 text-indigo-500" />;
@@ -71,7 +70,7 @@ const ChartIcon: FC<{ type: ChartType }> = ({ type }) => {
   }
 };
 
-const LineChartComponent: FC<{ args: ChartArgs }> = ({ args }) => {
+const LineChartComponent = ({ args }: { args: ChartArgs }) => {
   const xKey = args.xKey || "name";
   const yKey = args.yKey || "value";
   const colors = args.colors || DEFAULT_COLORS;
@@ -106,7 +105,7 @@ const LineChartComponent: FC<{ args: ChartArgs }> = ({ args }) => {
   );
 };
 
-const BarChartComponent: FC<{ args: ChartArgs }> = ({ args }) => {
+const BarChartComponent = ({ args }: { args: ChartArgs }) => {
   const xKey = args.xKey || "name";
   const yKey = args.yKey || "value";
   const colors = args.colors || DEFAULT_COLORS;
@@ -141,7 +140,7 @@ const BarChartComponent: FC<{ args: ChartArgs }> = ({ args }) => {
   );
 };
 
-const PieChartComponent: FC<{ args: ChartArgs }> = ({ args }) => {
+const PieChartComponent = ({ args }: { args: ChartArgs }) => {
   const colors = args.colors || DEFAULT_COLORS;
 
   return (
@@ -179,7 +178,7 @@ const PieChartComponent: FC<{ args: ChartArgs }> = ({ args }) => {
   );
 };
 
-const Chart: FC<{ args: ChartArgs }> = ({ args }) => (
+const Chart = ({ args }: { args: ChartArgs }) => (
   <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200">
     {args.title && (
       <div className="mb-4 flex items-center gap-2 border-b border-gray-100 pb-3">
