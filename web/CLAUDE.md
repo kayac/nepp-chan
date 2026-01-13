@@ -4,14 +4,17 @@ Cloudflare Pages で動作するフロントエンド。React + Vite + TailwindC
 
 ## ファイル探索ガイド
 
-| 探したいもの       | 場所                             |
-| ------------------ | -------------------------------- |
-| チャット画面       | `pages/chat/`                    |
-| ダッシュボード画面 | `pages/dashboard/`               |
-| API クライアント   | `repository/*-repository.ts`     |
-| 共通フック         | `hooks/`                         |
-| 型定義             | `types/`                         |
-| Basic 認証         | `functions/_middleware.ts`       |
+| 探したいもの          | 場所                                   |
+| --------------------- | -------------------------------------- |
+| チャット画面          | `pages/chat/`                          |
+| チャット UI           | `components/assistant-ui/`             |
+| ツール表示 UI         | `components/assistant-ui/tool-uis/`    |
+| 共通 UI               | `components/ui/`                       |
+| ダッシュボード画面    | `pages/dashboard/`                     |
+| API クライアント      | `repository/*-repository.ts`           |
+| 共通フック            | `hooks/`                               |
+| 型定義                | `types/`                               |
+| Basic 認証            | `functions/_middleware.ts`             |
 
 ## ディレクトリ構成
 
@@ -20,42 +23,44 @@ web/
 ├── index.html           # チャット画面エントリー（/）
 ├── dashboard.html       # ダッシュボード画面エントリー（/dashboard）
 ├── src/
+│   ├── components/
+│   │   ├── assistant-ui/      # assistant-ui ベースのチャット UI
+│   │   │   ├── Thread.tsx           # メインスレッドコンポーネント
+│   │   │   ├── MarkdownText.tsx     # Markdown レンダリング
+│   │   │   ├── ToolFallback.tsx     # 汎用ツール実行表示
+│   │   │   ├── TooltipIconButton.tsx
+│   │   │   └── tool-uis/            # 個別ツール UI
+│   │   │       ├── index.tsx        # ToolUIRegistry
+│   │   │       ├── ChartToolUI.tsx
+│   │   │       ├── DataTableToolUI.tsx
+│   │   │       ├── TimelineToolUI.tsx
+│   │   │       ├── WeatherToolUI.tsx
+│   │   │       ├── GoogleSearchToolUI.tsx
+│   │   │       ├── KnowledgeSearchToolUI.tsx
+│   │   │       └── ChoiceButtonsToolUI.tsx
+│   │   └── ui/                # shadcn/ui ベース共通コンポーネント
+│   │       ├── button.tsx
+│   │       ├── tooltip.tsx
+│   │       └── loading.tsx
 │   ├── pages/
-│   │   ├── chat/        # チャット画面
+│   │   ├── chat/              # チャット画面
 │   │   │   ├── App.tsx
 │   │   │   ├── main.tsx
-│   │   │   └── components/
-│   │   │       ├── ChatContainer.tsx
-│   │   │       ├── ChatInput.tsx
-│   │   │       ├── MessageList.tsx
-│   │   │       ├── MessageItem.tsx
-│   │   │       ├── FeedbackButton.tsx
-│   │   │       └── FeedbackModal.tsx
-│   │   └── dashboard/   # ダッシュボード画面（管理）
-│   │       ├── App.tsx
-│   │       ├── main.tsx
-│   │       └── components/
-│   │           ├── KnowledgePanel.tsx
-│   │           ├── PersonaPanel.tsx
-│   │           ├── EmergencyPanel.tsx
-│   │           ├── FeedbackPanel.tsx
-│   │           └── knowledge/    # ナレッジ関連コンポーネント
-│   ├── hooks/           # 共有フック
-│   ├── repository/      # API クライアント（Repository パターン）
-│   │   ├── thread-repository.ts
-│   │   ├── knowledge-repository.ts
-│   │   ├── persona-repository.ts
-│   │   ├── emergency-repository.ts
-│   │   └── feedback-repository.ts
+│   │   │   ├── ChatPage.tsx         # メインページ（スレッド管理）
+│   │   │   ├── AssistantProvider.tsx # Runtime Provider
+│   │   │   ├── FeedbackContext.tsx   # フィードバック状態管理
+│   │   │   └── components/          # レガシー（未使用）
+│   │   └── dashboard/         # ダッシュボード画面（管理）
+│   │       └── ...
+│   ├── hooks/                 # 共有フック
+│   ├── repository/            # API クライアント（Repository パターン）
 │   ├── lib/
-│   │   └── api/
-│   │       └── client.ts  # 共通 API クライアント
-│   ├── types/           # 共有型定義
-│   ├── providers/       # React Providers
-│   └── index.css        # グローバル CSS
+│   │   ├── api/client.ts      # 共通 API クライアント
+│   │   └── class-merge.ts     # cn ユーティリティ
+│   ├── types/                 # 共有型定義
+│   └── index.css              # グローバル CSS（CSS 変数定義含む）
 ├── functions/
-│   └── _middleware.ts   # Basic 認証（Cloudflare Pages Functions）
-├── wrangler.jsonc
+│   └── _middleware.ts         # Basic 認証
 └── vite.config.ts
 ```
 
@@ -65,11 +70,64 @@ web/
 - **Vite** 7
 - **TailwindCSS** 4
 - **TanStack Query** 5 - データフェッチング・キャッシング
-- **AI SDK React** (@ai-sdk/react) - ストリーミングチャット
+- **assistant-ui** - チャット UI フレームワーク
+  - `@assistant-ui/react` - コアコンポーネント
+  - `@assistant-ui/react-ai-sdk` - AI SDK 統合
+  - `@assistant-ui/react-markdown` - Markdown サポート
+- **Radix UI** - ツールチップ等の基盤
+
+## チャット UI アーキテクチャ
+
+### assistant-ui 統合
+
+```text
+ChatPage
+  └── AssistantProvider (Runtime)
+      └── Thread
+          ├── ThreadWelcome (空の時)
+          ├── Messages
+          │   ├── UserMessage
+          │   └── AssistantMessage
+          │       ├── MarkdownText
+          │       └── ToolUI (各種ツール表示)
+          └── Composer (入力欄)
+```
+
+### ツール UI 実装
+
+```typescript
+// makeAssistantToolUI で定義
+export const WeatherToolUI = makeAssistantToolUI<Args, Result>({
+  toolName: "get-weather",
+  render: ({ args, result, status }) => {
+    if (status.type === "running") return <LoadingState />;
+    if (!result) return null;
+    return <WeatherCard result={result} />;
+  },
+});
+
+// index.tsx で登録
+export const toolsByName = {
+  "get-weather": WeatherToolUI,
+  // ...
+};
+```
+
+## CSS 変数（テーマ）
+
+`index.css` で定義。管理画面と統一された stone/teal ベースのカラースキーム。
+
+```css
+:root {
+  --color-bg: #fafaf9;           /* stone-50 */
+  --color-surface: white;
+  --color-accent: #0f766e;       /* teal-700 */
+  --color-text: #1c1917;         /* stone-900 */
+  /* ... */
+}
+```
 
 ## MPA 構成
-
-マルチページアプリケーション（MPA）構成を採用。
 
 | パス         | HTML              | 説明                   |
 | ------------ | ----------------- | ---------------------- |
@@ -81,83 +139,27 @@ web/
 ### コンポーネント
 
 ```typescript
-// 関数コンポーネントとフックを使用
-// Props は interface または type で定義（xxProps ではなく Props で統一）
 interface Props {
   message: string;
   onSubmit: () => void;
 }
 
 export const MessageItem = ({ message, onSubmit }: Props) => {
-  // JSX 内のロジックは複雑にせず、必要なら関数に切り出し
   return <div>...</div>;
-};
-```
-
-### Repository パターン
-
-API クライアントは Repository パターンで実装。
-
-```typescript
-// repository/thread-repository.ts
-export const threadRepository = {
-  getAll: async () => { ... },
-  getById: async (id: string) => { ... },
-  create: async (data: CreateThreadInput) => { ... },
 };
 ```
 
 ### TailwindCSS 4
 
-Tailwind CSS 4 の短縮記法を使用。
+Tailwind CSS 4 の短縮記法と CSS 変数記法を使用。
 
 ```tsx
-// Good
-<div className="h-10 w-full p-4 m-2" />
+// CSS 変数参照
+<div className="bg-(--color-surface) text-(--color-text)" />
 
-// Avoid
-<div className="height-10 width-full padding-4 margin-2" />
+// 透明度
+<div className="bg-stone-500/3" />  // 3% opacity
 ```
-
-### テキスト折り返し
-
-長いテキストの折り返しには `wrap-break-word` を使用。
-
-```tsx
-<p className="wrap-break-word">長いテキスト...</p>
-```
-
-## API クライアント
-
-### 共通クライアント
-
-```typescript
-// lib/api/client.ts
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8787";
-
-export const apiClient = {
-  get: async <T>(path: string): Promise<T> => { ... },
-  post: async <T>(path: string, body: unknown): Promise<T> => { ... },
-  // ...
-};
-```
-
-### 環境変数
-
-| 変数名         | 説明            |
-| -------------- | --------------- |
-| `VITE_API_URL` | API サーバー URL |
-
-## Basic 認証
-
-`functions/_middleware.ts` で Cloudflare Pages Functions を使った Basic 認証を実装。
-
-環境変数（Cloudflare Pages で設定）:
-
-| 変数名                | 説明               |
-| --------------------- | ------------------ |
-| `BASIC_AUTH_USER`     | Basic 認証ユーザー名 |
-| `BASIC_AUTH_PASSWORD` | Basic 認証パスワード |
 
 ## 開発コマンド
 
