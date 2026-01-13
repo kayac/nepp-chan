@@ -1,5 +1,5 @@
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Thread } from "~/components/assistant-ui/Thread";
@@ -13,11 +13,9 @@ import { FeedbackProvider } from "./FeedbackContext";
 
 export const ChatPage = () => {
   const resourceId = useMemo(() => getResourceId(), []);
-  const queryClient = useQueryClient();
 
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [submittedFeedbacks, setSubmittedFeedbacks] = useState<
     Record<string, FeedbackRating>
   >({});
@@ -37,22 +35,13 @@ export const ChatPage = () => {
 
   const createThreadMutation = useCreateThread(resourceId);
 
-  const loadMessages = useCallback(
-    async (targetThreadId: string) => {
-      setIsLoadingMessages(true);
-      try {
-        await queryClient.fetchQuery({
-          queryKey: threadKeys.messages(targetThreadId),
-          queryFn: () => fetchMessages(targetThreadId),
-        });
-      } catch (err) {
-        console.error("Failed to load messages:", err);
-      } finally {
-        setIsLoadingMessages(false);
-      }
-    },
-    [queryClient],
-  );
+  // 現在のスレッドのメッセージを取得
+  const { data: messagesData, isLoading: messagesLoading } = useQuery({
+    queryKey: threadKeys.messages(currentThreadId ?? ""),
+    queryFn: () => fetchMessages(currentThreadId ?? ""),
+    enabled: !!currentThreadId,
+  });
+  const initialMessages = messagesData?.messages;
 
   const handleNewThread = useCallback(async () => {
     if (createThreadMutation.isPending) return;
@@ -62,28 +51,38 @@ export const ChatPage = () => {
   }, [createThreadMutation]);
 
   const handleSelectThread = useCallback(
-    async (selectedThreadId: string) => {
+    (selectedThreadId: string) => {
       if (selectedThreadId === currentThreadId) {
         setIsSidebarOpen(false);
         return;
       }
       setCurrentThreadId(selectedThreadId);
       setIsSidebarOpen(false);
-      await loadMessages(selectedThreadId);
     },
-    [currentThreadId, loadMessages],
+    [currentThreadId],
   );
 
+  // threadId を localStorage に保存
+  useEffect(() => {
+    if (currentThreadId) {
+      localStorage.setItem(`chat_threadId_${resourceId}`, currentThreadId);
+    }
+  }, [currentThreadId, resourceId]);
+
+  // 初期化時に localStorage から復元
   useEffect(() => {
     if (threadsLoaded && !hasInitialized.current) {
       hasInitialized.current = true;
       if (threads.length > 0) {
-        const firstThread = threads[0];
-        setCurrentThreadId(firstThread.id);
-        loadMessages(firstThread.id);
+        const savedThreadId = localStorage.getItem(
+          `chat_threadId_${resourceId}`,
+        );
+        const thread =
+          threads.find((t) => t.id === savedThreadId) ?? threads[0];
+        setCurrentThreadId(thread.id);
       }
     }
-  }, [threadsLoaded, threads, loadMessages]);
+  }, [threadsLoaded, threads, resourceId]);
 
   useEffect(() => {
     if (
@@ -183,13 +182,17 @@ export const ChatPage = () => {
             submittedFeedbacks={submittedFeedbacks}
             onFeedbackClick={handleFeedbackClick}
           >
-            <AssistantProvider key={currentThreadId} threadId={currentThreadId}>
+            <AssistantProvider
+              key={currentThreadId}
+              threadId={currentThreadId}
+              initialMessages={initialMessages}
+            >
               <Thread />
             </AssistantProvider>
           </FeedbackProvider>
         ) : (
           <div className="flex-1 flex items-center justify-center text-(--color-text-muted)">
-            {isLoadingMessages ? "読み込み中..." : "スレッドを選択してください"}
+            {messagesLoading ? "読み込み中..." : "スレッドを選択してください"}
           </div>
         )}
       </main>
