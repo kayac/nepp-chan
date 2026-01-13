@@ -1,5 +1,3 @@
-import { ChatContainer } from "./components/ChatContainer";
+import { ChatPage } from "./ChatPage";
 
-export const App = () => {
-  return <ChatContainer />;
-};
+export const App = () => <ChatPage />;
