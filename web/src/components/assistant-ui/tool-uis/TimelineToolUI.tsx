@@ -1,7 +1,6 @@
 import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
 import { makeAssistantToolUI } from "@assistant-ui/react";
 import { CalendarIcon } from "lucide-react";
-import type { FC } from "react";
 
 import { cn } from "~/lib/class-merge";
 
@@ -22,7 +21,7 @@ type TimelineResult = {
   displayed: boolean;
 };
 
-const LoadingState: FC = () => (
+const LoadingState = () => (
   <div className="rounded-xl bg-gradient-to-r from-indigo-50 to-blue-50 p-4">
     <div className="flex items-center gap-2">
       <CalendarIcon className="size-5 animate-pulse text-indigo-400" />
@@ -53,9 +52,12 @@ const getStatusColor = (status?: TimelineEvent["status"]) => {
   }
 };
 
-const TimelineItem: FC<{ event: TimelineEvent; isLast: boolean }> = ({
+const TimelineItem = ({
   event,
   isLast,
+}: {
+  event: TimelineEvent;
+  isLast: boolean;
 }) => (
   <div className="relative flex gap-4">
     {/* Timeline line */}
@@ -108,7 +110,7 @@ const TimelineItem: FC<{ event: TimelineEvent; isLast: boolean }> = ({
   </div>
 );
 
-const Timeline: FC<{ args: TimelineArgs }> = ({ args }) => (
+const Timeline = ({ args }: { args: TimelineArgs }) => (
   <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200">
     {args.title && (
       <div className="mb-4 flex items-center gap-2 border-b border-gray-100 pb-3">

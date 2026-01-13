@@ -1,6 +1,5 @@
 import { makeAssistantToolUI } from "@assistant-ui/react";
 import { BookOpenIcon, FileTextIcon, SearchIcon } from "lucide-react";
-import type { FC } from "react";
 
 type KnowledgeArgs = {
   query: string;
@@ -18,7 +17,7 @@ type KnowledgeResult = {
   error?: string;
 };
 
-const LoadingState: FC<{ query: string }> = ({ query }) => (
+const LoadingState = ({ query }: { query: string }) => (
   <div className="rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 p-4">
     <div className="flex items-center gap-3">
       <SearchIcon className="size-5 animate-pulse text-emerald-500" />
@@ -34,10 +33,13 @@ const LoadingState: FC<{ query: string }> = ({ query }) => (
   </div>
 );
 
-const ResultCard: FC<{
+const ResultCard = ({
+  result,
+  index,
+}: {
   result: KnowledgeResult["results"][0];
   index: number;
-}> = ({ result, index }) => (
+}) => (
   <div
     className="rounded-lg border border-emerald-100 bg-white p-3 shadow-sm transition-shadow hover:shadow-md"
     style={{ animationDelay: `${index * 100}ms` }}

@@ -1,6 +1,5 @@
 import { makeAssistantToolUI } from "@assistant-ui/react";
 import { ExternalLinkIcon, GlobeIcon, SearchIcon } from "lucide-react";
-import type { FC } from "react";
 
 type SearchArgs = {
   query: string;
@@ -16,7 +15,7 @@ type SearchResult = {
   source: string;
 };
 
-const LoadingState: FC<{ query: string }> = ({ query }) => (
+const LoadingState = ({ query }: { query: string }) => (
   <div className="rounded-xl bg-gradient-to-r from-violet-50 to-purple-50 p-4">
     <div className="flex items-center gap-3">
       <GlobeIcon className="size-5 animate-spin text-violet-500" />
@@ -40,10 +39,13 @@ const getDomain = (url: string) => {
   }
 };
 
-const ResultCard: FC<{
+const ResultCard = ({
+  result,
+  index,
+}: {
   result: SearchResult["results"][0];
   index: number;
-}> = ({ result, index }) => (
+}) => (
   <a
     href={result.url}
     target="_blank"

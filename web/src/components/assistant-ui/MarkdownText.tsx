@@ -1,4 +1,3 @@
-import type { FC } from "react";
 import { memo, useState } from "react";
 
 import "@assistant-ui/react-markdown/styles/dot.css";
@@ -29,7 +28,7 @@ const useCopyToClipboard = ({ copiedDuration = 3000 } = {}) => {
   return { isCopied, copyToClipboard };
 };
 
-const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
+const CodeHeader = ({ language, code }: CodeHeaderProps) => {
   const { isCopied, copyToClipboard } = useCopyToClipboard();
   const onCopy = () => {
     if (!code || isCopied) return;

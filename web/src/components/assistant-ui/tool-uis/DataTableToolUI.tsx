@@ -7,7 +7,6 @@ import {
   ChevronUpIcon,
   TableIcon,
 } from "lucide-react";
-import type { FC } from "react";
 import { useMemo, useState } from "react";
 
 import { cn } from "~/lib/class-merge";
@@ -22,7 +21,7 @@ type DataTableResult = {
   displayed: boolean;
 };
 
-const LoadingState: FC = () => (
+const LoadingState = () => (
   <div className="rounded-xl bg-gradient-to-r from-slate-50 to-gray-50 p-4">
     <div className="flex items-center gap-2">
       <TableIcon className="size-5 animate-pulse text-slate-400" />
@@ -42,7 +41,7 @@ type SortConfig = {
   direction: "asc" | "desc";
 } | null;
 
-const DataTable: FC<{ args: DataTableArgs }> = ({ args }) => {
+const DataTable = ({ args }: { args: DataTableArgs }) => {
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
   const [isExpanded, setIsExpanded] = useState(args.data.length <= 5);
 

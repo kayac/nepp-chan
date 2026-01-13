@@ -1,5 +1,4 @@
 import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
-import type { FC } from "react";
 
 import { ChartToolUI, DisplayChartToolComponent } from "./ChartToolUI";
 import { ChoiceButtonsToolUI } from "./ChoiceButtonsToolUI";
@@ -35,7 +34,7 @@ export const toolsByName: Record<string, ToolCallMessagePartComponent> = {
  * すべての Tool UI コンポーネントを一括で登録するコンポーネント
  * AssistantRuntimeProvider 内に配置して使用
  */
-export const ToolUIRegistry: FC = () => (
+export const ToolUIRegistry = () => (
   <>
     <WeatherToolUI />
     <KnowledgeSearchToolUI />

@@ -1,6 +1,5 @@
 import { makeAssistantToolUI } from "@assistant-ui/react";
 import { CheckCircleIcon } from "lucide-react";
-import type { FC } from "react";
 import { useState } from "react";
 
 import { cn } from "~/lib/class-merge";
@@ -15,7 +14,7 @@ type ChoiceResult = {
   selectedIndex: number;
 };
 
-const LoadingState: FC = () => (
+const LoadingState = () => (
   <div className="rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 p-4">
     <div className="h-4 w-48 animate-pulse rounded bg-amber-200" />
     <div className="mt-3 flex flex-wrap gap-2">
@@ -29,10 +28,12 @@ const LoadingState: FC = () => (
   </div>
 );
 
-const ChoiceButtons: FC<{
+type Props = {
   args: ChoiceArgs;
   onSelect: (choice: string, index: number) => void;
-}> = ({ args, onSelect }) => {
+};
+
+const ChoiceButtons = ({ args, onSelect }: Props) => {
   const [selected, setSelected] = useState<number | null>(null);
 
   const handleSelect = (choice: string, index: number) => {
@@ -68,9 +69,12 @@ const ChoiceButtons: FC<{
   );
 };
 
-const SelectedResult: FC<{ args: ChoiceArgs; result: ChoiceResult }> = ({
+const SelectedResult = ({
   args,
   result,
+}: {
+  args: ChoiceArgs;
+  result: ChoiceResult;
 }) => (
   <div className="rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 p-4">
     <p className="mb-3 text-sm text-gray-600">{args.question}</p>
