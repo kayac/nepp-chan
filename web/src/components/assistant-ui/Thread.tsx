@@ -6,7 +6,7 @@ import {
   ErrorPrimitive,
   MessagePrimitive,
   ThreadPrimitive,
-  useMessage,
+  useMessageRuntime,
 } from "@assistant-ui/react";
 import {
   ArrowDownIcon,
@@ -207,8 +207,8 @@ const AssistantMessage = () => (
 
 const FeedbackButtons = () => {
   const { submittedFeedbacks, onFeedbackClick } = useFeedback();
-  const message = useMessage();
-  const messageId = message.id;
+  const messageRuntime = useMessageRuntime();
+  const messageId = messageRuntime.getState().id;
   const currentFeedback = submittedFeedbacks[messageId];
 
   return (
