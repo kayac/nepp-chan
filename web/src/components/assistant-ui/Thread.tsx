@@ -190,7 +190,7 @@ const AssistantMessage: FC = () => (
     <div className="text-xs text-(--color-text-muted) mb-1.5 font-medium">
       ねっぷちゃん
     </div>
-    <div className="aui-assistant-message-content wrap-break-word inline-block max-w-[85%] bg-(--color-surface) border border-(--color-border) rounded-2xl rounded-tl-sm px-4 py-2.5 text-(--color-text) leading-relaxed shadow-sm">
+    <div className="aui-assistant-message-content wrap-break-word rounded-xl bg-stone-500/3 px-4 py-3 text-(--color-text) leading-relaxed">
       <MessagePrimitive.Parts
         components={{
           Text: MarkdownText,
