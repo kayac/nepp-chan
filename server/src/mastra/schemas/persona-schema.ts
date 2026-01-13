@@ -27,7 +27,7 @@ export const personaSchema = z.object({
     .enum(["不明", "観光客", "村人", "学生", "職員"])
     .optional()
     .describe(
-      "ネップちゃんとの関係。初期値は「不明」。生活感のある発言があれば「村人」と推定",
+      "ねっぷちゃんとの関係。初期値は「不明」。生活感のある発言があれば「村人」と推定",
     ),
 
   // Session State
@@ -80,4 +80,4 @@ export type Persona = z.infer<typeof personaSchema>;
 // Important Information
 // importantItems: z
 //   .array(z.string())
-//   .describe("ネップちゃんが重要と認識する項目（単語形式の配列）"),
+//   .describe("ねっぷちゃんが重要と認識する項目（単語形式の配列）"),
