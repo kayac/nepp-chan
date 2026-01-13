@@ -8,27 +8,39 @@ import { threadKeys, useCreateThread, useThreads } from "~/hooks/useThreads";
 import { cn } from "~/lib/class-merge";
 import { getResourceId } from "~/lib/resource";
 import { fetchMessages } from "~/repository/thread-repository";
-import type { FeedbackRating, Thread as ThreadType } from "~/types";
+import type { Thread as ThreadType } from "~/types";
 
 import { AssistantProvider } from "./AssistantProvider";
-import { FeedbackProvider } from "./FeedbackContext";
+import { FeedbackModal } from "./components/FeedbackModal";
+import { FeedbackProvider, useFeedback } from "./FeedbackContext";
+
+const FeedbackModalWrapper = () => {
+  const {
+    feedbackModal,
+    isSubmitting,
+    onFeedbackSubmit,
+    onFeedbackModalClose,
+  } = useFeedback();
+
+  if (!feedbackModal) return null;
+
+  return (
+    <FeedbackModal
+      isOpen={feedbackModal.isOpen}
+      onClose={onFeedbackModalClose}
+      rating={feedbackModal.rating}
+      onSubmit={onFeedbackSubmit}
+      isSubmitting={isSubmitting}
+    />
+  );
+};
 
 export const ChatPage = () => {
   const resourceId = useMemo(() => getResourceId(), []);
 
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [submittedFeedbacks, setSubmittedFeedbacks] = useState<
-    Record<string, FeedbackRating>
-  >({});
   const hasInitialized = useRef(false);
-
-  const handleFeedbackClick = useCallback(
-    (messageId: string, rating: FeedbackRating) => {
-      setSubmittedFeedbacks((prev) => ({ ...prev, [messageId]: rating }));
-    },
-    [],
-  );
 
   const { data: threadsData, isSuccess: threadsLoaded } =
     useThreads(resourceId);
@@ -223,18 +235,16 @@ export const ChatPage = () => {
         </header>
 
         {currentThreadId && !messagesLoading ? (
-          <FeedbackProvider
-            submittedFeedbacks={submittedFeedbacks}
-            onFeedbackClick={handleFeedbackClick}
+          <AssistantProvider
+            key={currentThreadId}
+            threadId={currentThreadId}
+            initialMessages={initialMessages}
           >
-            <AssistantProvider
-              key={currentThreadId}
-              threadId={currentThreadId}
-              initialMessages={initialMessages}
-            >
+            <FeedbackProvider threadId={currentThreadId}>
               <Thread />
-            </AssistantProvider>
-          </FeedbackProvider>
+              <FeedbackModalWrapper />
+            </FeedbackProvider>
+          </AssistantProvider>
         ) : (
           <div className="flex-1 flex items-center justify-center">
             {currentThreadId || messagesLoading ? (
