@@ -33,7 +33,7 @@ import { useFeedback } from "~/pages/chat/FeedbackContext";
 
 export const Thread: FC = () => (
   <ThreadPrimitive.Root
-    className="aui-root aui-thread-root @container flex h-full flex-col bg-background"
+    className="aui-root aui-thread-root @container flex h-full flex-col bg-(--color-bg)"
     style={{
       ["--thread-max-width" as string]: "44rem",
     }}
@@ -54,7 +54,7 @@ export const Thread: FC = () => (
         }}
       />
 
-      <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mx-auto mt-auto flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible rounded-t-3xl bg-white pb-4 md:pb-6">
+      <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mx-auto mt-auto flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible rounded-t-3xl bg-(--color-surface) pb-4 md:pb-6">
         <ThreadScrollToBottom />
         <Composer />
       </ThreadPrimitive.ViewportFooter>
@@ -67,7 +67,7 @@ const ThreadScrollToBottom: FC = () => (
     <TooltipIconButton
       tooltip="下にスクロール"
       variant="outline"
-      className="aui-thread-scroll-to-bottom absolute -top-12 z-10 self-center rounded-full p-4 disabled:invisible bg-white hover:bg-(--color-surface)"
+      className="aui-thread-scroll-to-bottom absolute -top-12 z-10 self-center rounded-full p-4 disabled:invisible bg-(--color-surface) shadow-md hover:bg-(--color-surface-hover)"
     >
       <ArrowDownIcon />
     </TooltipIconButton>
@@ -78,7 +78,7 @@ const ThreadWelcome: FC = () => (
   <div className="aui-thread-welcome-root mx-auto my-auto flex w-full max-w-(--thread-max-width) grow flex-col">
     <div className="aui-thread-welcome-center flex w-full grow flex-col items-center justify-center">
       <div className="aui-thread-welcome-message flex size-full flex-col justify-center px-4">
-        <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in font-semibold text-2xl duration-200">
+        <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in font-semibold text-2xl text-(--color-text) duration-200">
           こんにちは！
         </h1>
         <p className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in text-(--color-text-muted) text-xl delay-75 duration-200">
@@ -114,10 +114,10 @@ const ThreadSuggestions: FC = () => (
         <ThreadPrimitive.Suggestion prompt={suggestion.prompt} send asChild>
           <Button
             variant="ghost"
-            className="aui-thread-welcome-suggestion h-auto w-full @md:flex-col flex-wrap items-start justify-start gap-1 rounded-2xl border px-4 py-3 text-left text-sm transition-colors hover:bg-(--color-surface)"
+            className="aui-thread-welcome-suggestion h-auto w-full @md:flex-col flex-wrap items-start justify-start gap-1 rounded-xl border border-(--color-border) px-4 py-3 text-left text-sm transition-all hover:bg-(--color-surface-hover) hover:border-(--color-border-subtle)"
             aria-label={suggestion.prompt}
           >
-            <span className="aui-thread-welcome-suggestion-text-1 font-medium">
+            <span className="aui-thread-welcome-suggestion-text-1 font-medium text-(--color-text-secondary)">
               {suggestion.title}
             </span>
             <span className="aui-thread-welcome-suggestion-text-2 text-(--color-text-muted)">
@@ -134,7 +134,7 @@ const Composer: FC = () => (
   <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
     <ComposerPrimitive.Input
       placeholder="メッセージを入力..."
-      className="aui-composer-input mb-1 max-h-32 min-h-14 w-full resize-none rounded-2xl border border-(--color-border) bg-white px-4 pt-4 pb-3 text-sm outline-none placeholder:text-(--color-text-muted) focus:border-(--color-accent) focus:ring-2 focus:ring-(--color-accent)/20"
+      className="aui-composer-input mb-1 max-h-32 min-h-14 w-full resize-none rounded-xl border border-(--color-border) bg-(--color-surface) px-4 pt-4 pb-3 text-sm text-(--color-text) outline-none placeholder:text-(--color-text-faint) focus:border-(--color-accent) focus:ring-2 focus:ring-(--color-accent-light)/20 transition-all"
       rows={1}
       autoFocus
       aria-label="メッセージ入力"
@@ -153,7 +153,7 @@ const ComposerAction: FC = () => (
           type="submit"
           variant="default"
           size="icon"
-          className="aui-composer-send size-8 rounded-full bg-(--color-accent) hover:bg-(--color-accent)/90"
+          className="aui-composer-send size-8 rounded-full bg-(--color-accent) hover:bg-(--color-accent-hover) transition-all active:scale-95"
           aria-label="送信"
         >
           <ArrowUpIcon className="aui-composer-send-icon size-4" />
@@ -165,7 +165,7 @@ const ComposerAction: FC = () => (
       <ComposerPrimitive.Cancel asChild>
         <Button
           type="button"
-          variant="default"
+          variant="secondary"
           size="icon"
           className="aui-composer-cancel size-8 rounded-full"
           aria-label="停止"
@@ -179,7 +179,7 @@ const ComposerAction: FC = () => (
 
 const MessageError: FC = () => (
   <MessagePrimitive.Error>
-    <ErrorPrimitive.Root className="aui-message-error-root mt-2 rounded-md border border-red-300 bg-red-50 p-3 text-red-600 text-sm">
+    <ErrorPrimitive.Root className="aui-message-error-root mt-2 rounded-lg border border-red-200 bg-(--color-danger-bg) p-3 text-(--color-danger) text-sm">
       <ErrorPrimitive.Message className="aui-message-error-message line-clamp-2" />
     </ErrorPrimitive.Root>
   </MessagePrimitive.Error>
@@ -190,8 +190,10 @@ const AssistantMessage: FC = () => (
     className="aui-assistant-message-root fade-in slide-in-from-bottom-1 relative mx-auto w-full max-w-(--thread-max-width) animate-in py-3 duration-150"
     data-role="assistant"
   >
-    <div className="text-xs text-(--color-text-muted) mb-1.5">ねっぷちゃん</div>
-    <div className="aui-assistant-message-content wrap-break-word inline-block max-w-[85%] bg-(--color-surface) rounded-2xl rounded-tl-sm px-4 py-2.5 text-foreground leading-relaxed">
+    <div className="text-xs text-(--color-text-muted) mb-1.5 font-medium">
+      ねっぷちゃん
+    </div>
+    <div className="aui-assistant-message-content wrap-break-word inline-block max-w-[85%] bg-(--color-surface) border border-(--color-border) rounded-2xl rounded-tl-sm px-4 py-2.5 text-(--color-text) leading-relaxed shadow-sm">
       <MessagePrimitive.Parts
         components={{
           Text: MarkdownText,
@@ -220,8 +222,9 @@ const FeedbackButtons: FC = () => {
         tooltip="良い回答"
         onClick={() => onFeedbackClick(messageId, "good")}
         className={cn(
+          "transition-colors",
           currentFeedback === "good" &&
-            "text-(--color-accent) bg-(--color-accent)/10",
+            "text-(--color-accent) bg-(--color-accent-subtle)",
         )}
       >
         <ThumbsUpIcon />
@@ -230,7 +233,9 @@ const FeedbackButtons: FC = () => {
         tooltip="改善が必要"
         onClick={() => onFeedbackClick(messageId, "bad")}
         className={cn(
-          currentFeedback === "bad" && "text-red-500 bg-red-500/10",
+          "transition-colors",
+          currentFeedback === "bad" &&
+            "text-(--color-danger) bg-(--color-danger-bg)",
         )}
       >
         <ThumbsDownIcon />
@@ -242,14 +247,12 @@ const FeedbackButtons: FC = () => {
 const AssistantActionBar: FC = () => (
   <ActionBarPrimitive.Root
     hideWhenRunning
-    autohide="not-last"
-    autohideFloat="single-branch"
-    className="aui-assistant-action-bar-root flex gap-1 text-(--color-text-muted) data-floating:absolute data-floating:rounded-md data-floating:border data-floating:bg-white data-floating:p-1 data-floating:shadow-sm"
+    className="aui-assistant-action-bar-root flex gap-1 text-(--color-text-muted)"
   >
     <ActionBarPrimitive.Copy asChild>
       <TooltipIconButton tooltip="コピー">
         <AssistantIf condition={({ message }) => message.isCopied}>
-          <CheckIcon />
+          <CheckIcon className="text-(--color-success)" />
         </AssistantIf>
         <AssistantIf condition={({ message }) => !message.isCopied}>
           <CopyIcon />
@@ -271,7 +274,7 @@ const UserMessage: FC = () => (
     data-role="user"
   >
     <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
-      <div className="aui-user-message-content wrap-break-word rounded-2xl rounded-tr-sm bg-(--color-accent) px-4 py-2.5 text-white">
+      <div className="aui-user-message-content wrap-break-word rounded-2xl rounded-tr-sm bg-(--color-user-message) px-4 py-2.5 text-white shadow-sm">
         <MessagePrimitive.Parts />
       </div>
       <div className="aui-user-action-bar-wrapper absolute top-1/2 left-0 -translate-x-full -translate-y-1/2 pr-2">
@@ -299,9 +302,9 @@ const UserActionBar: FC = () => (
 
 const EditComposer: FC = () => (
   <MessagePrimitive.Root className="aui-edit-composer-wrapper mx-auto flex w-full max-w-(--thread-max-width) flex-col py-3">
-    <ComposerPrimitive.Root className="aui-edit-composer-root ml-auto flex w-full max-w-[85%] flex-col rounded-2xl bg-(--color-surface)">
+    <ComposerPrimitive.Root className="aui-edit-composer-root ml-auto flex w-full max-w-[85%] flex-col rounded-xl bg-(--color-surface) border border-(--color-border)">
       <ComposerPrimitive.Input
-        className="aui-edit-composer-input min-h-14 w-full resize-none bg-transparent p-4 text-foreground text-sm outline-none"
+        className="aui-edit-composer-input min-h-14 w-full resize-none bg-transparent p-4 text-(--color-text) text-sm outline-none"
         autoFocus
       />
       <div className="aui-edit-composer-footer mx-3 mb-3 flex items-center gap-2 self-end">

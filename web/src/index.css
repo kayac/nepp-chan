@@ -1,25 +1,35 @@
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Zen+Maru+Gothic:wght@500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&display=swap");
 @import "tailwindcss";
 
 :root {
-  --color-bg: #ffffff;
-  --color-surface: #f7f7f7;
-  --color-border: #e8e8e8;
-  --color-text: #1a1a1a;
-  --color-text-muted: #888888;
-  --color-accent: #2563eb;
+  /* 統一テーマ - 北海道の静謐な自然 */
+  --color-bg: #fafaf9; /* stone-50 */
+  --color-surface: #ffffff;
+  --color-surface-hover: #f5f5f4; /* stone-100 */
+  --color-border: #e7e5e4; /* stone-200 */
+  --color-border-subtle: #d6d3d1; /* stone-300 */
+  --color-text: #1c1917; /* stone-900 */
+  --color-text-secondary: #44403c; /* stone-700 */
+  --color-text-muted: #78716c; /* stone-500 */
+  --color-text-faint: #a8a29e; /* stone-400 */
 
-  /* Dashboard theme - 北海道の自然をイメージ */
-  --dashboard-bg: #fafbfc;
-  --dashboard-surface: #ffffff;
-  --dashboard-border: #e2e8f0;
-  --dashboard-text: #1e293b;
-  --dashboard-text-muted: #64748b;
-  --dashboard-primary: #0f766e;
-  --dashboard-primary-light: #14b8a6;
-  --dashboard-accent: #f59e0b;
-  --dashboard-danger: #dc2626;
-  --dashboard-success: #16a34a;
+  /* アクセント - 深い森の緑 */
+  --color-accent: #0f766e; /* teal-700 */
+  --color-accent-hover: #0d9488; /* teal-600 */
+  --color-accent-light: #14b8a6; /* teal-500 */
+  --color-accent-subtle: #ccfbf1; /* teal-100 */
+
+  /* ステータスカラー */
+  --color-success: #16a34a; /* green-600 */
+  --color-success-bg: #dcfce7; /* green-100 */
+  --color-warning: #d97706; /* amber-600 */
+  --color-warning-bg: #fef3c7; /* amber-100 */
+  --color-danger: #dc2626; /* red-600 */
+  --color-danger-bg: #fef2f2; /* red-50 */
+
+  /* ユーザーメッセージ - 落ち着いた青緑 */
+  --color-user-message: #115e59; /* teal-800 */
+  --color-user-message-hover: #134e4a; /* teal-900 */
 }
 
 body {
@@ -28,6 +38,8 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: "palt" 1;
+  letter-spacing: 0.02em;
 }
 
 button {
@@ -37,14 +49,23 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* スクロールバー - 控えめに */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--color-border);
-  border-radius: 2px;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-subtle);
 }
 
+/* 基本アニメーション */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -79,9 +100,83 @@ button:disabled {
     opacity: 1;
   }
   50% {
-    opacity: 0.7;
+    opacity: 0.6;
   }
 }
 .animate-pulse-subtle {
-  animation: pulse-subtle 1.5s ease-in-out infinite;
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* ローディングドット */
+@keyframes loading-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.loading-dots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.loading-dots span {
+  width: 6px;
+  height: 6px;
+  background: var(--color-accent);
+  border-radius: 50%;
+  animation: loading-dot 1.4s ease-in-out infinite;
+}
+.loading-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.16s;
+}
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.32s;
+}
+.loading-dots-sm span {
+  width: 4px;
+  height: 4px;
+}
+
+/* スピナー */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.spinner-sm {
+  width: 12px;
+  height: 12px;
+  border-width: 1.5px;
+}
+.spinner-lg {
+  width: 24px;
+  height: 24px;
+  border-width: 2.5px;
+}
+
+/* フォーカスリング */
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--color-surface),
+    0 0 0 4px var(--color-accent-light);
 }

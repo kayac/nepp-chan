@@ -131,12 +131,16 @@ export const WeatherToolUI = makeAssistantToolUI<WeatherArgs, WeatherResult>({
   toolName: "get-weather",
   render: ({ args, result, status }) => {
     if (status.type === "running") {
-      return <LoadingState location={args.location} />;
+      return (
+        <div className="my-4">
+          <LoadingState location={args.location} />
+        </div>
+      );
     }
 
     if (status.type === "incomplete") {
       return (
-        <div className="rounded-xl bg-red-50 p-4 text-red-600">
+        <div className="my-4 rounded-xl bg-red-50 p-4 text-red-600">
           天気情報の取得に失敗しました
         </div>
       );
@@ -144,6 +148,10 @@ export const WeatherToolUI = makeAssistantToolUI<WeatherArgs, WeatherResult>({
 
     if (!result) return null;
 
-    return <WeatherCard result={result} />;
+    return (
+      <div className="my-4">
+        <WeatherCard result={result} />
+      </div>
+    );
   },
 });
