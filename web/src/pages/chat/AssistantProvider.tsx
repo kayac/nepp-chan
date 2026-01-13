@@ -1,5 +1,6 @@
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
+import type { UIMessage } from "ai";
 import { DefaultChatTransport } from "ai";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
@@ -10,13 +11,19 @@ import { getResourceId } from "~/lib/resource";
 
 interface Props {
   threadId: string;
+  initialMessages?: UIMessage[];
   children: ReactNode;
 }
 
-export const AssistantProvider = ({ threadId, children }: Props) => {
+export const AssistantProvider = ({
+  threadId,
+  initialMessages,
+  children,
+}: Props) => {
   const resourceId = useMemo(() => getResourceId(), []);
 
   const runtime = useChatRuntime({
+    messages: initialMessages,
     transport: useMemo(
       () =>
         new DefaultChatTransport({
