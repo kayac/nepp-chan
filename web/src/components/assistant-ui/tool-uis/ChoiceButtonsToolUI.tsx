@@ -102,24 +102,38 @@ export const ChoiceButtonsToolUI = makeAssistantToolUI<
   toolName: "select-choice",
   render: ({ args, result, status, addResult }) => {
     if (status.type === "running" && !args.choices) {
-      return <LoadingState />;
+      return (
+        <div className="my-4">
+          <LoadingState />
+        </div>
+      );
     }
 
     if (result) {
-      return <SelectedResult args={args} result={result} />;
+      return (
+        <div className="my-4">
+          <SelectedResult args={args} result={result} />
+        </div>
+      );
     }
 
     if (args.choices && args.question) {
       return (
-        <ChoiceButtons
-          args={args}
-          onSelect={(selectedChoice, selectedIndex) => {
-            addResult({ selectedChoice, selectedIndex });
-          }}
-        />
+        <div className="my-4">
+          <ChoiceButtons
+            args={args}
+            onSelect={(selectedChoice, selectedIndex) => {
+              addResult({ selectedChoice, selectedIndex });
+            }}
+          />
+        </div>
       );
     }
 
-    return <LoadingState />;
+    return (
+      <div className="my-4">
+        <LoadingState />
+      </div>
+    );
   },
 });

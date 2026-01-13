@@ -80,12 +80,16 @@ export const KnowledgeSearchToolUI = makeAssistantToolUI<
   toolName: "knowledge-search",
   render: ({ args, result, status }) => {
     if (status.type === "running") {
-      return <LoadingState query={args.query} />;
+      return (
+        <div className="my-4">
+          <LoadingState query={args.query} />
+        </div>
+      );
     }
 
     if (status.type === "incomplete") {
       return (
-        <div className="rounded-xl bg-red-50 p-4 text-red-600">
+        <div className="my-4 rounded-xl bg-red-50 p-4 text-red-600">
           ナレッジ検索に失敗しました
         </div>
       );
@@ -95,7 +99,7 @@ export const KnowledgeSearchToolUI = makeAssistantToolUI<
 
     if (result.error) {
       return (
-        <div className="rounded-xl bg-yellow-50 p-4 text-yellow-700">
+        <div className="my-4 rounded-xl bg-yellow-50 p-4 text-yellow-700">
           検索エラー: {result.error}
         </div>
       );
@@ -103,14 +107,14 @@ export const KnowledgeSearchToolUI = makeAssistantToolUI<
 
     if (result.results.length === 0) {
       return (
-        <div className="rounded-xl bg-gray-50 p-4 text-gray-600">
+        <div className="my-4 rounded-xl bg-gray-50 p-4 text-gray-600">
           「{args.query}」に関する情報が見つかりませんでした
         </div>
       );
     }
 
     return (
-      <div className="space-y-2">
+      <div className="my-4 space-y-2">
         <div className="flex items-center gap-2 text-sm text-emerald-600">
           <SearchIcon className="size-4" />
           <span>

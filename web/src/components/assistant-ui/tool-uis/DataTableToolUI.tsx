@@ -165,14 +165,26 @@ export const DisplayTableToolComponent: ToolCallMessagePartComponent = ({
   const tableArgs = args as unknown as DataTableArgs;
 
   if (status?.type === "running" && !tableArgs.columns) {
-    return <LoadingState />;
+    return (
+      <div className="my-4">
+        <LoadingState />
+      </div>
+    );
   }
 
   if (!tableArgs.columns || !tableArgs.data) {
-    return <LoadingState />;
+    return (
+      <div className="my-4">
+        <LoadingState />
+      </div>
+    );
   }
 
-  return <DataTable args={tableArgs} />;
+  return (
+    <div className="my-4">
+      <DataTable args={tableArgs} />
+    </div>
+  );
 };
 
 export const DataTableToolUI = makeAssistantToolUI<
@@ -182,13 +194,25 @@ export const DataTableToolUI = makeAssistantToolUI<
   toolName: "displayTableTool",
   render: ({ args, status }) => {
     if (status.type === "running" && !args.columns) {
-      return <LoadingState />;
+      return (
+        <div className="my-4">
+          <LoadingState />
+        </div>
+      );
     }
 
     if (!args.columns || !args.data) {
-      return <LoadingState />;
+      return (
+        <div className="my-4">
+          <LoadingState />
+        </div>
+      );
     }
 
-    return <DataTable args={args} />;
+    return (
+      <div className="my-4">
+        <DataTable args={args} />
+      </div>
+    );
   },
 });

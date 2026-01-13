@@ -76,12 +76,16 @@ export const GoogleSearchToolUI = makeAssistantToolUI<SearchArgs, SearchResult>(
     toolName: "searchGoogleTool",
     render: ({ args, result, status }) => {
       if (status.type === "running") {
-        return <LoadingState query={args.query} />;
+        return (
+          <div className="my-4">
+            <LoadingState query={args.query} />
+          </div>
+        );
       }
 
       if (status.type === "incomplete") {
         return (
-          <div className="rounded-xl bg-red-50 p-4 text-red-600">
+          <div className="my-4 rounded-xl bg-red-50 p-4 text-red-600">
             Web検索に失敗しました
           </div>
         );
@@ -98,7 +102,7 @@ export const GoogleSearchToolUI = makeAssistantToolUI<SearchArgs, SearchResult>(
               : `検索エラー: ${result.error}`;
 
         return (
-          <div className="rounded-xl bg-yellow-50 p-4 text-yellow-700">
+          <div className="my-4 rounded-xl bg-yellow-50 p-4 text-yellow-700">
             {errorMessage}
           </div>
         );
@@ -106,14 +110,14 @@ export const GoogleSearchToolUI = makeAssistantToolUI<SearchArgs, SearchResult>(
 
       if (result.results.length === 0) {
         return (
-          <div className="rounded-xl bg-gray-50 p-4 text-gray-600">
+          <div className="my-4 rounded-xl bg-gray-50 p-4 text-gray-600">
             「{args.query}」に関する検索結果が見つかりませんでした
           </div>
         );
       }
 
       return (
-        <div className="space-y-2">
+        <div className="my-4 space-y-2">
           <div className="flex items-center gap-2 text-sm text-violet-600">
             <SearchIcon className="size-4" />
             <span>Web検索結果（{result.results.length}件）</span>

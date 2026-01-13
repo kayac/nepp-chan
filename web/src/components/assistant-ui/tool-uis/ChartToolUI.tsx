@@ -206,18 +206,26 @@ export const DisplayChartToolComponent: ToolCallMessagePartComponent = ({
   const chartArgs = args as unknown as ChartArgs;
 
   if (status?.type === "running" && !chartArgs.data) {
-    return <LoadingState />;
+    return (
+      <div className="my-4">
+        <LoadingState />
+      </div>
+    );
   }
 
   if (!chartArgs.data || chartArgs.data.length === 0) {
     return (
-      <div className="rounded-xl bg-gray-50 p-4 text-gray-600">
+      <div className="my-4 rounded-xl bg-gray-50 p-4 text-gray-600">
         表示するデータがありません
       </div>
     );
   }
 
-  return <Chart args={chartArgs} />;
+  return (
+    <div className="my-4">
+      <Chart args={chartArgs} />
+    </div>
+  );
 };
 
 /**
@@ -229,17 +237,25 @@ export const ChartToolUI = makeAssistantToolUI<ChartArgs, ChartResult>({
     console.log("[ChartToolUI] render called", { args, status });
 
     if (status.type === "running" && !args.data) {
-      return <LoadingState />;
+      return (
+        <div className="my-4">
+          <LoadingState />
+        </div>
+      );
     }
 
     if (!args.data || args.data.length === 0) {
       return (
-        <div className="rounded-xl bg-gray-50 p-4 text-gray-600">
+        <div className="my-4 rounded-xl bg-gray-50 p-4 text-gray-600">
           表示するデータがありません
         </div>
       );
     }
 
-    return <Chart args={args} />;
+    return (
+      <div className="my-4">
+        <Chart args={args} />
+      </div>
+    );
   },
 });

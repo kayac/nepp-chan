@@ -139,18 +139,26 @@ export const DisplayTimelineToolComponent: ToolCallMessagePartComponent = ({
   const timelineArgs = args as unknown as TimelineArgs;
 
   if (status?.type === "running" && !timelineArgs.events) {
-    return <LoadingState />;
+    return (
+      <div className="my-4">
+        <LoadingState />
+      </div>
+    );
   }
 
   if (!timelineArgs.events || timelineArgs.events.length === 0) {
     return (
-      <div className="rounded-xl bg-gray-50 p-4 text-gray-600">
+      <div className="my-4 rounded-xl bg-gray-50 p-4 text-gray-600">
         表示するイベントがありません
       </div>
     );
   }
 
-  return <Timeline args={timelineArgs} />;
+  return (
+    <div className="my-4">
+      <Timeline args={timelineArgs} />
+    </div>
+  );
 };
 
 export const TimelineToolUI = makeAssistantToolUI<TimelineArgs, TimelineResult>(
@@ -158,18 +166,26 @@ export const TimelineToolUI = makeAssistantToolUI<TimelineArgs, TimelineResult>(
     toolName: "displayTimelineTool",
     render: ({ args, status }) => {
       if (status.type === "running" && !args.events) {
-        return <LoadingState />;
+        return (
+          <div className="my-4">
+            <LoadingState />
+          </div>
+        );
       }
 
       if (!args.events || args.events.length === 0) {
         return (
-          <div className="rounded-xl bg-gray-50 p-4 text-gray-600">
+          <div className="my-4 rounded-xl bg-gray-50 p-4 text-gray-600">
             表示するイベントがありません
           </div>
         );
       }
 
-      return <Timeline args={args} />;
+      return (
+        <div className="my-4">
+          <Timeline args={args} />
+        </div>
+      );
     },
   },
 );
