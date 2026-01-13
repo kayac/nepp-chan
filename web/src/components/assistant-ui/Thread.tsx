@@ -15,8 +15,6 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CopyIcon,
-  PencilIcon,
-  RefreshCwIcon,
   SquareIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
@@ -49,7 +47,6 @@ export const Thread: FC = () => (
       <ThreadPrimitive.Messages
         components={{
           UserMessage,
-          EditComposer,
           AssistantMessage,
         }}
       />
@@ -259,65 +256,18 @@ const AssistantActionBar: FC = () => (
         </AssistantIf>
       </TooltipIconButton>
     </ActionBarPrimitive.Copy>
-    <ActionBarPrimitive.Reload asChild>
-      <TooltipIconButton tooltip="再生成">
-        <RefreshCwIcon />
-      </TooltipIconButton>
-    </ActionBarPrimitive.Reload>
     <FeedbackButtons />
   </ActionBarPrimitive.Root>
 );
 
 const UserMessage: FC = () => (
   <MessagePrimitive.Root
-    className="aui-user-message-root fade-in slide-in-from-bottom-1 mx-auto grid w-full max-w-(--thread-max-width) animate-in auto-rows-auto grid-cols-[minmax(72px,1fr)_auto] content-start gap-y-2 py-3 duration-150 [&:where(>*)]:col-start-2"
+    className="aui-user-message-root fade-in slide-in-from-bottom-1 mx-auto flex w-full max-w-(--thread-max-width) animate-in justify-end py-3 duration-150"
     data-role="user"
   >
-    <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
-      <div className="aui-user-message-content wrap-break-word rounded-2xl rounded-tr-sm bg-(--color-user-message) px-4 py-2.5 text-white shadow-sm">
-        <MessagePrimitive.Parts />
-      </div>
-      <div className="aui-user-action-bar-wrapper absolute top-1/2 left-0 -translate-x-full -translate-y-1/2 pr-2">
-        <UserActionBar />
-      </div>
+    <div className="aui-user-message-content wrap-break-word max-w-[85%] rounded-2xl rounded-tr-sm bg-(--color-user-message) px-4 py-2.5 text-white shadow-sm">
+      <MessagePrimitive.Parts />
     </div>
-
-    <BranchPicker className="aui-user-branch-picker col-span-full col-start-1 row-start-3 -mr-1 justify-end" />
-  </MessagePrimitive.Root>
-);
-
-const UserActionBar: FC = () => (
-  <ActionBarPrimitive.Root
-    hideWhenRunning
-    autohide="not-last"
-    className="aui-user-action-bar-root flex flex-col items-end"
-  >
-    <ActionBarPrimitive.Edit asChild>
-      <TooltipIconButton tooltip="編集" className="aui-user-action-edit p-4">
-        <PencilIcon />
-      </TooltipIconButton>
-    </ActionBarPrimitive.Edit>
-  </ActionBarPrimitive.Root>
-);
-
-const EditComposer: FC = () => (
-  <MessagePrimitive.Root className="aui-edit-composer-wrapper mx-auto flex w-full max-w-(--thread-max-width) flex-col py-3">
-    <ComposerPrimitive.Root className="aui-edit-composer-root ml-auto flex w-full max-w-[85%] flex-col rounded-xl bg-(--color-surface) border border-(--color-border)">
-      <ComposerPrimitive.Input
-        className="aui-edit-composer-input min-h-14 w-full resize-none bg-transparent p-4 text-(--color-text) text-sm outline-none"
-        autoFocus
-      />
-      <div className="aui-edit-composer-footer mx-3 mb-3 flex items-center gap-2 self-end">
-        <ComposerPrimitive.Cancel asChild>
-          <Button variant="ghost" size="sm">
-            キャンセル
-          </Button>
-        </ComposerPrimitive.Cancel>
-        <ComposerPrimitive.Send asChild>
-          <Button size="sm">更新</Button>
-        </ComposerPrimitive.Send>
-      </div>
-    </ComposerPrimitive.Root>
   </MessagePrimitive.Root>
 );
 

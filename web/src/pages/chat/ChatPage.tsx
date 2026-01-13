@@ -215,9 +215,10 @@ export const ChatPage = () => {
             type="button"
             onClick={handleNewThread}
             disabled={createThreadMutation.isPending}
-            className="text-sm text-(--color-accent) hover:text-(--color-accent-hover) hover:underline underline-offset-2 transition-colors disabled:opacity-60"
+            className="text-sm text-(--color-accent) hover:text-(--color-accent-hover) transition-colors disabled:opacity-60 flex items-center gap-1"
           >
-            新規作成
+            <PlusIcon className="w-4 h-4" />
+            新しい会話
           </button>
         </header>
 
