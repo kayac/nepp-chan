@@ -222,7 +222,7 @@ export const ChatPage = () => {
           </button>
         </header>
 
-        {currentThreadId ? (
+        {currentThreadId && !messagesLoading ? (
           <FeedbackProvider
             submittedFeedbacks={submittedFeedbacks}
             onFeedbackClick={handleFeedbackClick}
@@ -237,7 +237,7 @@ export const ChatPage = () => {
           </FeedbackProvider>
         ) : (
           <div className="flex-1 flex items-center justify-center">
-            {messagesLoading ? (
+            {currentThreadId || messagesLoading ? (
               <div className="flex flex-col items-center gap-3">
                 <LoadingDots />
                 <span className="text-sm text-(--color-text-muted)">
