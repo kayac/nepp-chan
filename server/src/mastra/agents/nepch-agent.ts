@@ -7,6 +7,9 @@ import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
 import { devTool } from "~/mastra/tools/dev-tool";
+import { displayChartTool } from "~/mastra/tools/display-chart-tool";
+import { displayTableTool } from "~/mastra/tools/display-table-tool";
+import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 import { verifyPasswordTool } from "~/mastra/tools/verify-password-tool";
 
@@ -42,6 +45,14 @@ export const nepChanAgent = new Agent({
 - 最新情報・天気・一般的な質問 → Web検索
 - 村長モード中の分析依頼 → データ分析
 
+## データ可視化ツール
+ユーザーが「グラフで見せて」「表で見せて」「タイムラインで」などと言った場合、積極的に以下のツールを使う:
+- display-chart: 人口推移、統計データなどをグラフで表示（line=折れ線、bar=棒、pie=円）
+- display-table: 一覧データ、比較情報などをテーブルで表示
+- display-timeline: イベント予定、歴史的な出来事などを時系列で表示
+
+データがない場合は、ナレッジ検索やWeb検索で情報を集めてから可視化ツールを使う。
+
 ## Working Memory
 ユーザーの属性（age, location, relationship）を会話から推測して記録する。
 - 既に値がある場合は上書きしない（ユーザーが訂正した場合のみ）
@@ -75,6 +86,9 @@ dev-tool を呼び出してユーザーペルソナ（Working Memory）を表示
   },
   tools: {
     devTool,
+    displayChartTool,
+    displayTableTool,
+    displayTimelineTool,
     knowledgeSearchTool,
     verifyPasswordTool,
   },
