@@ -18,3 +18,9 @@
 
 ## 冬の事故防止
 - [屋根からの落氷雪事故防止などのお願い](https://www.vill.otoineppu.hokkaido.jp/bousai/files/R4rakuhyousetsujikoboushi.pdf)
+- [屋根からの落氷雪事故防止などのお願い](https://www.vill.otoineppu.hokkaido.jp/bousai/files/R4rakuhyousetsujikoboushi.pdf)
+
+## 気象庁情報
+- [特別警報について](http://www.jma.go.jp/jma/kishou/know/tokubetsu-keiho/index.html)
+- [天気の急変から身を守るために](http://www.jma.go.jp/jma/kishou/know/tenki_chuui/tenki_chuui_p1.html)
+- **お問い合わせ**: 旭川地方気象台防災管理官（TEL: 0166-32-7102）

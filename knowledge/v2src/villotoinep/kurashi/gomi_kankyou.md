@@ -17,3 +17,5 @@
 - [一般ごみ（名寄地区広域最終処分場）](http://eiseishisetu.jp/publics/index/58/)
 - [炭化ごみ（炭化センター）](http://eiseishisetu.jp/publics/index/93/)
 - [し尿汲み取り（衛生センター）](http://eiseishisetu.jp/publics/index/30/)
+- [次期中間処理施設整備進捗状況（名寄地区衛生施設事務組合）](http://eiseishisetu.jp/publics/index/90/)
+
