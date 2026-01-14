@@ -15,10 +15,37 @@ import { Spinner } from "~/components/ui/loading";
 import { cn } from "~/lib/class-merge";
 
 const REPORT_TOOLS = ["emergencyReportTool", "emergencyUpdateTool"];
+const MEMORY_TOOLS = ["working_memory"];
 
-const getToolDisplayName = (toolName: string) => {
-  if (REPORT_TOOLS.includes(toolName)) return "ねっぷちゃんが報告中";
-  return "ねっぷちゃんが調査中";
+type ToolDisplayText = {
+  running: string;
+  completed: string;
+};
+
+const TOOL_DISPLAY_MAP: Record<string, ToolDisplayText> = {
+  report: {
+    running: "ねっぷちゃんが報告中",
+    completed: "ねっぷちゃんが報告しました",
+  },
+  memory: {
+    running: "ねっぷちゃんが記憶中",
+    completed: "ねっぷちゃんが記憶しました",
+  },
+  default: {
+    running: "ねっぷちゃんが調査中",
+    completed: "ねっぷちゃんが調査しました",
+  },
+};
+
+const getToolDisplayName = (toolName: string, isRunning: boolean) => {
+  const getCategory = () => {
+    if (REPORT_TOOLS.includes(toolName)) return "report";
+    if (MEMORY_TOOLS.includes(toolName)) return "memory";
+    return "default";
+  };
+
+  const display = TOOL_DISPLAY_MAP[getCategory()];
+  return isRunning ? display.running : display.completed;
 };
 
 type ToolStatusInfo = {
@@ -117,7 +144,7 @@ export const ToolFallback: ToolCallMessagePartComponent = ({
         : JSON.stringify(status.error)
       : null;
 
-  const displayName = getToolDisplayName(toolName);
+  const displayName = getToolDisplayName(toolName, isRunning);
   const toolStatus = getToolStatus(status);
 
   return (
