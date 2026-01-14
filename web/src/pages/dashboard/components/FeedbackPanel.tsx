@@ -5,7 +5,7 @@ import {
   LightBulbIcon,
   XMarkIcon,
 } from "@heroicons/react/24/solid";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import {
   useDeleteFeedbacks,
@@ -13,20 +13,14 @@ import {
   useResolveFeedback,
   useUnresolveFeedback,
 } from "~/hooks/useDashboard";
-import type {
-  ConversationContext,
-  FeedbackCategory,
-  MessageFeedback,
-  ToolExecution,
+import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
+import {
+  type ConversationContext,
+  FEEDBACK_CATEGORY_LABELS,
+  type FeedbackCategory,
+  type MessageFeedback,
+  type ToolExecution,
 } from "~/types";
-
-const CATEGORY_LABELS: Record<FeedbackCategory, string> = {
-  incorrect_fact: "事実と異なる",
-  outdated_info: "情報が古い",
-  nonexistent_info: "存在しない情報",
-  off_topic: "質問に答えていない",
-  other: "その他",
-};
 
 type FeedbackDetailModalProps = {
   feedback: MessageFeedback;
@@ -97,8 +91,9 @@ const FeedbackDetailModal = ({
             </span>
             {feedback.category && (
               <span className="inline-flex px-2 py-1 text-xs font-medium bg-stone-100 text-stone-600 rounded">
-                {CATEGORY_LABELS[feedback.category as FeedbackCategory] ||
-                  feedback.category}
+                {FEEDBACK_CATEGORY_LABELS[
+                  feedback.category as FeedbackCategory
+                ] || feedback.category}
               </span>
             )}
             <span className="text-sm text-stone-500">
@@ -254,30 +249,15 @@ export const FeedbackPanel = () => {
   const deleteMutation = useDeleteFeedbacks();
   const resolveMutation = useResolveFeedback();
   const unresolveMutation = useUnresolveFeedback();
-  const [message, setMessage] = useState<string | null>(null);
   const [selectedFeedback, setSelectedFeedback] =
     useState<MessageFeedback | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useInfiniteScroll({
+    hasNextPage: hasNextPage ?? false,
+    isFetching: isFetchingNextPage,
+    onFetch: fetchNextPage,
+  });
 
-  useEffect(() => {
-    const element = loadMoreRef.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 0.1 },
-    );
-
-    observer.observe(element);
-
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (
       !window.confirm(
         "全てのフィードバックを削除しますか？この操作は取り消せません。",
@@ -285,15 +265,7 @@ export const FeedbackPanel = () => {
     ) {
       return;
     }
-    setMessage(null);
-    try {
-      const result = await deleteMutation.mutateAsync();
-      setMessage(result.message);
-    } catch (err) {
-      setMessage(
-        err instanceof Error ? err.message : "フィードバック削除に失敗しました",
-      );
-    }
+    deleteMutation.mutate();
   };
 
   if (isLoading) {
@@ -371,7 +343,8 @@ export const FeedbackPanel = () => {
                 key={category}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-stone-700 rounded-full text-sm"
               >
-                {CATEGORY_LABELS[category as FeedbackCategory] || category}
+                {FEEDBACK_CATEGORY_LABELS[category as FeedbackCategory] ||
+                  category}
                 <span className="font-medium">{count}</span>
               </span>
             ))}
@@ -468,15 +441,9 @@ export const FeedbackPanel = () => {
         </button>
       </div>
 
-      {message && (
-        <div
-          className={`px-4 py-3 rounded-lg text-sm ${
-            deleteMutation.isError
-              ? "bg-red-50 text-red-700"
-              : "bg-teal-50 text-teal-700"
-          }`}
-        >
-          {message}
+      {deleteMutation.isError && (
+        <div className="px-4 py-3 rounded-lg text-sm bg-red-50 text-red-700">
+          {deleteMutation.error?.message || "フィードバック削除に失敗しました"}
         </div>
       )}
 
@@ -547,7 +514,7 @@ export const FeedbackPanel = () => {
                     </td>
                     <td className="px-4 py-3 text-stone-600">
                       {feedback.category
-                        ? CATEGORY_LABELS[
+                        ? FEEDBACK_CATEGORY_LABELS[
                             feedback.category as FeedbackCategory
                           ] || feedback.category
                         : "-"}

@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
 import {
   useDeletePersonas,
   useExtractPersonas,
   usePersonas,
 } from "~/hooks/useDashboard";
+import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
 
 export const PersonaPanel = () => {
   const {
@@ -16,40 +16,17 @@ export const PersonaPanel = () => {
   } = usePersonas();
   const extractMutation = useExtractPersonas();
   const deleteMutation = useDeletePersonas();
-  const [message, setMessage] = useState<string | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useInfiniteScroll({
+    hasNextPage: hasNextPage ?? false,
+    isFetching: isFetchingNextPage,
+    onFetch: fetchNextPage,
+  });
 
-  useEffect(() => {
-    const element = loadMoreRef.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 0.1 },
-    );
-
-    observer.observe(element);
-
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const handleExtract = async () => {
-    setMessage(null);
-    try {
-      const result = await extractMutation.mutateAsync();
-      setMessage(result.message);
-    } catch (err) {
-      setMessage(
-        err instanceof Error ? err.message : "ペルソナ抽出に失敗しました",
-      );
-    }
+  const handleExtract = () => {
+    extractMutation.mutate();
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (
       !window.confirm(
         "全てのペルソナを削除しますか？この操作は取り消せません。",
@@ -57,15 +34,7 @@ export const PersonaPanel = () => {
     ) {
       return;
     }
-    setMessage(null);
-    try {
-      const result = await deleteMutation.mutateAsync();
-      setMessage(result.message);
-    } catch (err) {
-      setMessage(
-        err instanceof Error ? err.message : "ペルソナ削除に失敗しました",
-      );
-    }
+    deleteMutation.mutate();
   };
 
   if (isLoading) {
@@ -117,15 +86,11 @@ export const PersonaPanel = () => {
         </div>
       </div>
 
-      {message && (
-        <div
-          className={`px-4 py-3 rounded-lg text-sm ${
-            extractMutation.isError || deleteMutation.isError
-              ? "bg-red-50 text-red-700"
-              : "bg-teal-50 text-teal-700"
-          }`}
-        >
-          {message}
+      {(extractMutation.isError || deleteMutation.isError) && (
+        <div className="px-4 py-3 rounded-lg text-sm bg-red-50 text-red-700">
+          {extractMutation.error?.message ||
+            deleteMutation.error?.message ||
+            "エラーが発生しました"}
         </div>
       )}
 
