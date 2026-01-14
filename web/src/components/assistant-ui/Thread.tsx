@@ -15,6 +15,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CopyIcon,
+  LightbulbIcon,
   SquareIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
@@ -220,6 +221,12 @@ const FeedbackButtons = () => {
         onClick={() => onFeedbackClick(messageId, "bad")}
       >
         <ThumbsDownIcon />
+      </TooltipIconButton>
+      <TooltipIconButton
+        tooltip="アイディア"
+        onClick={() => onFeedbackClick(messageId, "idea")}
+      >
+        <LightbulbIcon />
       </TooltipIconButton>
     </>
   );

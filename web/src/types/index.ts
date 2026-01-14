@@ -148,7 +148,7 @@ export type ReconvertFileResponse = {
 };
 
 // フィードバック関連
-export type FeedbackRating = "good" | "bad";
+export type FeedbackRating = "good" | "bad" | "idea";
 
 export type FeedbackCategory =
   | "incorrect_fact"
@@ -209,6 +209,7 @@ export type FeedbackStats = {
   total: number;
   good: number;
   bad: number;
+  idea: number;
   byCategory: Record<string, number>;
 };
 
