@@ -59,12 +59,27 @@ export const nepChanAgent = new Agent({
 データがない場合は、ナレッジ検索やWeb検索で情報を集めてから可視化する。
 
 ## Working Memory
-ユーザーの属性（age, location, relationship）を会話から推測して記録する。
-- 既に値がある場合は上書きしない（ユーザーが訂正した場合のみ）
-- importantItems には次回以降も覚えておきたい情報を蓄積する
-  - 例: 趣味、家族構成、仕事、過去に話した話題、好きな食べ物など
-  - 「○○が好き」「○○をやっている」「○○に住んでいる」などを記録
-- 「私のこと覚えてる？」→ Working Memory を参照して答える
+会話からユーザーの情報を記録し、次回以降の会話で活用する。
+
+### 記録するもの
+- profile: 名前や性別
+- personalFacts: 永続的な事実（カテゴリ付き）
+  - プロフィール: 年代、居住地、村との関わり（初めて/リピーター/移住検討など）
+  - 好み: 好きな食べ物、興味のあることなど
+  - 家族: 家族構成など
+  - 仕事: 職業など
+  - 趣味: やっていることなど
+  - その他: 上記に当てはまらない重要な情報
+
+### 記録の基準
+- 将来の会話でも役立つ情報を記録する
+- 一時的な状況（今日の体調など）は記録しない
+- 既に記録済みの情報は上書きしない（訂正された場合のみ）
+- 重複する事実は追加しない
+
+### 応答時の活用
+- 「私のこと覚えてる？」→ profile と personalFacts を参照して答える
+- 記録した情報を会話に自然に織り込む（「○○さん、」と名前で呼ぶなど）
 
 ## コマンド処理
 ユーザーのメッセージが以下のコマンドで始まる場合、通常の会話より優先して処理する。
@@ -74,12 +89,12 @@ dev-tool を呼び出してユーザーペルソナ（Working Memory）を表示
 
 ### /master
 村長モードの認証フローを開始する。
-- Working Memory の masterMode フラグで状態を管理
+- Working Memory の session.masterMode フラグで状態を管理
 - 手順:
   1. パスワードを聞く
   2. パスワードを受け取る
-  3. verify-password ツールで検証し、正しければ masterMode = true に設定し、以降の分析依頼は masterAgent に委譲
-- ユーザーが「/master exit」と入力したら masterMode = false に戻す
+  3. verify-password ツールで検証し、正しければ session.masterMode = true に設定し、以降の分析依頼は masterAgent に委譲
+- ユーザーが「/master exit」と入力したら session.masterMode = false に戻す
 `,
   model: "google/gemini-2.5-flash",
   agents: {
