@@ -12,6 +12,27 @@
     - **※推奨**: 手続きの流れや詳細確認のため、印刷して手元に置くことをお勧めします。
 - [共同審査の手引き（設計測量）](https://www.vill.otoineppu.hokkaido.jp/gyousei/nyusatsu/files/R7shinseitebiki_sekkeisokuryou.pdf)
     - **※推奨**: 手続きの流れや詳細確認のため、印刷して手元に置くことをお勧めします。
+### 詳細手順
+#### 1. インターネットによる電子申請
+原則として、[共同審査ポータルサイト](http://www.hoctec.info/kyoshin/)から申請してください。
+
+#### 2. 紙媒体による申請（例外措置）
+音威子府村内に事業所を有する者で、オンライン申請が困難な場合に限り、紙媒体での申請を受け付けます。
+
+- **提出先**: 音威子府村役場 総務課総務財政室財政管理係（窓口①番）
+- **住所**: 〒098-2501 北海道中川郡音威子府村字音威子府444番地1
+- **提出書類**:
+    - [申請書(表紙)【様式1】](https://www.vill.otoineppu.hokkaido.jp/gyousei/nyusatsu/files/hyoushi.xlsx)
+    - [申請書(付票)【様式2】](https://www.vill.otoineppu.hokkaido.jp/gyousei/nyusatsu/files/fuhyou.xlsx)
+    - [暴力団排除に関する誓約書【様式19】](https://www.vill.otoineppu.hokkaido.jp/gyousei/nyusatsu/files/bouryokudanhaizyo.xlsx)
+    - その他必要書類（共同審査ポータルサイトからダウンロード）
+- **提出方法**:
+    - **郵送**: 返信用封筒（切手貼付）を同封
+    - **持参**: 審査は原則当日行います（返信用封筒不要）
+- **注意事項**:
+    - 証明書類はコピー可
+    - A4ファイル綴じ
+    - ホッチキス止め不可
 
 ## お問い合わせ
 総務課総務財政室 財政管理係

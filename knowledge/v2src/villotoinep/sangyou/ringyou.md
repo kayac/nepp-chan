@@ -10,3 +10,9 @@
 - [音威子府村森林整備計画](https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/oshirase/2022-0628-1439-20.html)
 - [特定間伐等促進計画](https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/oshirase/2022-0908-1542-20.html)
 - [音威子府村民有林造成事業について](https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/oshirase/2021-0917-1538-20.html)
+
+## お問い合わせ
+経済課産業振興室 林政係
+電話：01656-5-3313（内線 36）
+FAX : 01656-5-3837
+
