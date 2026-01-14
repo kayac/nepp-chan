@@ -15,6 +15,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CopyIcon,
+  LightbulbIcon,
   SquareIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
@@ -203,34 +204,29 @@ const AssistantMessage = () => (
 );
 
 const FeedbackButtons = () => {
-  const { submittedFeedbacks, onFeedbackClick } = useFeedback();
+  const { onFeedbackClick } = useFeedback();
   const messageRuntime = useMessageRuntime();
   const messageId = messageRuntime.getState().id;
-  const currentFeedback = submittedFeedbacks[messageId];
 
   return (
     <>
       <TooltipIconButton
         tooltip="良い回答"
         onClick={() => onFeedbackClick(messageId, "good")}
-        className={cn(
-          "transition-colors",
-          currentFeedback === "good" &&
-            "text-(--color-accent) bg-(--color-accent-subtle)",
-        )}
       >
         <ThumbsUpIcon />
       </TooltipIconButton>
       <TooltipIconButton
         tooltip="改善が必要"
         onClick={() => onFeedbackClick(messageId, "bad")}
-        className={cn(
-          "transition-colors",
-          currentFeedback === "bad" &&
-            "text-(--color-danger) bg-(--color-danger-bg)",
-        )}
       >
         <ThumbsDownIcon />
+      </TooltipIconButton>
+      <TooltipIconButton
+        tooltip="アイディア"
+        onClick={() => onFeedbackClick(messageId, "idea")}
+      >
+        <LightbulbIcon />
       </TooltipIconButton>
     </>
   );
