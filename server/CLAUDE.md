@@ -78,21 +78,24 @@ server/src/
 
 ## Mastra ツール
 
-| ツール名               | 説明                          |
-| ---------------------- | ----------------------------- |
-| `weatherTool`          | Open-Meteo API で天気取得     |
-| `searchGoogleTool`     | Google Custom Search          |
-| `verifyPasswordTool`   | 村長モード認証                |
-| `devTool`              | Working Memory 表示（デバッグ）|
-| `personaGetTool`       | 村の集合知検索                |
-| `personaSaveTool`      | ペルソナ保存                  |
-| `personaUpdateTool`    | ペルソナ更新                  |
-| `personaAggregateTool` | ペルソナ集計                  |
-| `emergencyReportTool`  | 緊急情報記録                  |
-| `emergencyUpdateTool`  | 緊急情報更新                  |
-| `emergencyGetTool`     | 緊急情報取得                  |
-| `villageSearchTool`    | 村検索                        |
-| `knowledgeSearchTool`  | RAG ナレッジ検索（Vectorize） |
+| ツール名               | 説明                              |
+| ---------------------- | --------------------------------- |
+| `weatherTool`          | Open-Meteo API で天気取得         |
+| `searchGoogleTool`     | Google Custom Search              |
+| `verifyPasswordTool`   | 村長モード認証                    |
+| `devTool`              | Working Memory 表示（デバッグ）   |
+| `displayChartTool`     | グラフ表示（line/bar/pie）        |
+| `displayTableTool`     | テーブル表示                      |
+| `displayTimelineTool`  | タイムライン表示                  |
+| `personaGetTool`       | 村の集合知検索                    |
+| `personaSaveTool`      | ペルソナ保存                      |
+| `personaUpdateTool`    | ペルソナ更新                      |
+| `personaAggregateTool` | ペルソナ集計                      |
+| `emergencyReportTool`  | 緊急情報記録                      |
+| `emergencyUpdateTool`  | 緊急情報更新                      |
+| `emergencyGetTool`     | 緊急情報取得                      |
+| `villageSearchTool`    | 村検索                            |
+| `knowledgeSearchTool`  | RAG ナレッジ検索（Vectorize）     |
 
 ## コーディング規約
 
