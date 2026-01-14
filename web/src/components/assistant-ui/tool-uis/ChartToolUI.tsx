@@ -15,8 +15,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ToolEmptyState } from "~/components/ui/emptyState";
-import { ToolLoadingState } from "~/components/ui/loading";
+import { ToolEmptyState } from "~/components/ui/EmptyState";
+import { ToolLoadingState } from "~/components/ui/Loading";
 
 type ChartType = "line" | "bar" | "pie";
 

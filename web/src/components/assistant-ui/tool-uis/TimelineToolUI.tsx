@@ -2,8 +2,8 @@ import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
 import { makeAssistantToolUI } from "@assistant-ui/react";
 import { CalendarIcon } from "lucide-react";
 
-import { ToolEmptyState } from "~/components/ui/emptyState";
-import { ToolLoadingState } from "~/components/ui/loading";
+import { ToolEmptyState } from "~/components/ui/EmptyState";
+import { ToolLoadingState } from "~/components/ui/Loading";
 import { cn } from "~/lib/class-merge";
 
 type TimelineEvent = {

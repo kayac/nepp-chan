@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { ToolLoadingState } from "~/components/ui/loading";
+import { ToolLoadingState } from "~/components/ui/Loading";
 import { cn } from "~/lib/class-merge";
 
 type DataTableArgs = {

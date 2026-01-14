@@ -2,7 +2,7 @@ import { makeAssistantToolUI } from "@assistant-ui/react";
 import { CheckCircleIcon } from "lucide-react";
 import { useState } from "react";
 
-import { ToolLoadingState } from "~/components/ui/loading";
+import { ToolLoadingState } from "~/components/ui/Loading";
 import { cn } from "~/lib/class-merge";
 
 type ChoiceArgs = {

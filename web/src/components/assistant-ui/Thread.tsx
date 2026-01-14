@@ -24,7 +24,7 @@ import { MarkdownText } from "~/components/assistant-ui/MarkdownText";
 import { ToolFallback } from "~/components/assistant-ui/ToolFallback";
 import { TooltipIconButton } from "~/components/assistant-ui/TooltipIconButton";
 import { toolsByName } from "~/components/assistant-ui/tool-uis";
-import { Button } from "~/components/ui/button";
+import { Button } from "~/components/ui/Button";
 import { cn } from "~/lib/class-merge";
 import { useFeedback } from "~/pages/chat/FeedbackContext";
 
