@@ -3,10 +3,7 @@ import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
 import { ChartToolUI, DisplayChartToolComponent } from "./ChartToolUI";
 import { ChoiceButtonsToolUI } from "./ChoiceButtonsToolUI";
 import { DataTableToolUI, DisplayTableToolComponent } from "./DataTableToolUI";
-import { GoogleSearchToolUI } from "./GoogleSearchToolUI";
-import { KnowledgeSearchToolUI } from "./KnowledgeSearchToolUI";
 import { DisplayTimelineToolComponent, TimelineToolUI } from "./TimelineToolUI";
-import { WeatherToolUI } from "./WeatherToolUI";
 
 export {
   ChartToolUI,
@@ -15,10 +12,7 @@ export {
   DisplayChartToolComponent,
   DisplayTableToolComponent,
   DisplayTimelineToolComponent,
-  GoogleSearchToolUI,
-  KnowledgeSearchToolUI,
   TimelineToolUI,
-  WeatherToolUI,
 };
 
 /**
@@ -36,9 +30,6 @@ export const toolsByName: Record<string, ToolCallMessagePartComponent> = {
  */
 export const ToolUIRegistry = () => (
   <>
-    <WeatherToolUI />
-    <KnowledgeSearchToolUI />
-    <GoogleSearchToolUI />
     <ChoiceButtonsToolUI />
     <DataTableToolUI />
     <TimelineToolUI />
