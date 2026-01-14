@@ -1,7 +1,84 @@
 # 税金
 
-- [村道民税](https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/2012-1121-1251-18.html)
-- [固定資産税](https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/2012-1121-1400-18.html)
-- [国民健康保険税](https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/2012-1213-1411-18.html)
-- [軽自動車税](https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/2012-1115-1636-18.html)
+音威子府村の税金に関する情報です。
+
+---
+
+## 村税の種類
+
+### 村道民税（住民税）
+
+個人および法人に課される地方税です。
+
+| 種類 | 説明 |
+|------|------|
+| 個人村道民税 | 村内に住所を有する個人に課税 |
+| 法人村民税 | 村内に事業所を有する法人に課税 |
+
+- [村道民税について](https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/2012-1121-1251-18.html)
+
+### 固定資産税
+
+土地、家屋、償却資産に対して課される税金です。
+
+- 課税対象: 毎年1月1日現在の所有者
+- 税率: 1.4%（標準税率）
+
+- [固定資産税について](https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/2012-1121-1400-18.html)
+
+### 軽自動車税
+
+原動機付自転車、軽自動車、小型特殊自動車、二輪の小型自動車に課される税金です。
+
+- 課税基準日: 毎年4月1日
+- 納期: 5月
+
+- [軽自動車税について](https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/2012-1115-1636-18.html)
+
+### 国民健康保険税
+
+国民健康保険に加入している世帯に課される税金です。
+
+- [国民健康保険税について](https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/2012-1213-1411-18.html)
+
+---
+
+## 証明書の発行
+
+税に関する各種証明書を発行しています。
+
+### 発行可能な証明書
+
+- 所得証明書
+- 課税証明書
+- 納税証明書
+- 固定資産評価証明書
+- その他
+
 - [村税関係証明書等の発行について](https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/2013-1015-1549-18.html)
+
+---
+
+## 納税方法
+
+### 口座振替
+
+金融機関での口座振替が利用できます。手続きは役場窓口または金融機関で行ってください。
+
+### 窓口納付
+
+役場窓口または指定金融機関で納付できます。
+
+---
+
+## お問い合わせ
+
+### 住民課 住民生活室
+
+- **電話**: 01656-5-3312
+- **所在地**: 音威子府村字音威子府444番地1
+
+---
+
+**参照**: 音威子府村公式サイト
+**備考**: 税率や納期の詳細は、各リンク先ページまたは役場窓口でご確認ください。
