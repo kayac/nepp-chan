@@ -157,6 +157,14 @@ export type FeedbackCategory =
   | "off_topic"
   | "other";
 
+export const FEEDBACK_CATEGORY_LABELS: Record<FeedbackCategory, string> = {
+  incorrect_fact: "事実と異なる",
+  outdated_info: "情報が古い",
+  nonexistent_info: "存在しない情報",
+  off_topic: "質問に答えていない",
+  other: "その他",
+};
+
 export type ConversationContextMessage = {
   id: string;
   role: string;

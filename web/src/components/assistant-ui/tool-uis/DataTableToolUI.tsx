@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { ToolLoadingState } from "~/components/ui/loading";
 import { cn } from "~/lib/class-merge";
 
 type DataTableArgs = {
@@ -20,21 +21,6 @@ type DataTableArgs = {
 type DataTableResult = {
   displayed: boolean;
 };
-
-const LoadingState = () => (
-  <div className="rounded-xl bg-gradient-to-r from-slate-50 to-gray-50 p-4">
-    <div className="flex items-center gap-2">
-      <TableIcon className="size-5 animate-pulse text-slate-400" />
-      <div className="h-4 w-32 animate-pulse rounded bg-slate-200" />
-    </div>
-    <div className="mt-3 space-y-2">
-      <div className="h-8 animate-pulse rounded bg-slate-200" />
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="h-10 animate-pulse rounded bg-slate-100" />
-      ))}
-    </div>
-  </div>
-);
 
 type SortConfig = {
   key: string;
@@ -154,64 +140,39 @@ const DataTable = ({ args }: { args: DataTableArgs }) => {
   );
 };
 
-/**
- * MessagePrimitive.Parts の tools.by_name で使用するコンポーネント
- */
-export const DisplayTableToolComponent: ToolCallMessagePartComponent = ({
-  args,
-  status,
-}) => {
-  const tableArgs = args as unknown as DataTableArgs;
-
-  if (status?.type === "running" && !tableArgs.columns) {
+const renderDataTable = (args: DataTableArgs, isRunning: boolean) => {
+  if ((isRunning && !args.columns) || !args.columns || !args.data) {
     return (
       <div className="my-4">
-        <LoadingState />
-      </div>
-    );
-  }
-
-  if (!tableArgs.columns || !tableArgs.data) {
-    return (
-      <div className="my-4">
-        <LoadingState />
+        <ToolLoadingState
+          variant="table"
+          icon={<TableIcon className="size-5 animate-pulse text-slate-400" />}
+        />
       </div>
     );
   }
 
   return (
     <div className="my-4">
-      <DataTable args={tableArgs} />
+      <DataTable args={args} />
     </div>
   );
 };
+
+/**
+ * MessagePrimitive.Parts の tools.by_name で使用するコンポーネント
+ */
+export const DisplayTableToolComponent: ToolCallMessagePartComponent = ({
+  args,
+  status,
+}) =>
+  renderDataTable(args as unknown as DataTableArgs, status?.type === "running");
 
 export const DataTableToolUI = makeAssistantToolUI<
   DataTableArgs,
   DataTableResult
 >({
   toolName: "displayTableTool",
-  render: ({ args, status }) => {
-    if (status.type === "running" && !args.columns) {
-      return (
-        <div className="my-4">
-          <LoadingState />
-        </div>
-      );
-    }
-
-    if (!args.columns || !args.data) {
-      return (
-        <div className="my-4">
-          <LoadingState />
-        </div>
-      );
-    }
-
-    return (
-      <div className="my-4">
-        <DataTable args={args} />
-      </div>
-    );
-  },
+  render: ({ args, status }) =>
+    renderDataTable(args, status.type === "running"),
 });
