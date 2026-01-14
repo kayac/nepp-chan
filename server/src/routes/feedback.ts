@@ -39,7 +39,7 @@ const ToolExecutionSchema = z.object({
 const FeedbackCreateRequestSchema = z.object({
   threadId: z.string().min(1, "threadId is required"),
   messageId: z.string().min(1, "messageId is required"),
-  rating: z.enum(["good", "bad"]),
+  rating: z.enum(["good", "bad", "idea"]),
   category: z
     .enum([
       "incorrect_fact",

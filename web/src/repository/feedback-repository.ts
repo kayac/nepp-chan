@@ -17,7 +17,7 @@ export const submitFeedback = (
 type FetchFeedbacksParams = {
   limit?: number;
   cursor?: string;
-  rating?: "good" | "bad";
+  rating?: "good" | "bad" | "idea";
 };
 
 export const fetchFeedbacks = (

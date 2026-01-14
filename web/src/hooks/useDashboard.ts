@@ -186,7 +186,7 @@ export const useReconvertFile = () => {
 // フィードバック関連 hooks
 export const useFeedbacks = (
   limit = 30,
-  options?: { rating?: "good" | "bad" },
+  options?: { rating?: "good" | "bad" | "idea" },
 ) =>
   useInfiniteQuery({
     queryKey: [...dashboardKeys.feedbacks, limit, options?.rating],
