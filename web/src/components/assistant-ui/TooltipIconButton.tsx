@@ -2,12 +2,12 @@ import { Slottable } from "@radix-ui/react-slot";
 import type { ComponentPropsWithRef } from "react";
 import { forwardRef } from "react";
 
-import { Button } from "~/components/ui/button";
+import { Button } from "~/components/ui/Button";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "~/components/ui/tooltip";
+} from "~/components/ui/Tooltip";
 import { cn } from "~/lib/class-merge";
 
 type Props = ComponentPropsWithRef<typeof Button> & {
