@@ -15,7 +15,7 @@ import { Spinner } from "~/components/ui/loading";
 import { cn } from "~/lib/class-merge";
 
 const REPORT_TOOLS = ["emergencyReportTool", "emergencyUpdateTool"];
-const MEMORY_TOOLS = ["working_memory"];
+const MEMORY_TOOLS = ["updateWorkingMemory"];
 
 type ToolDisplayText = {
   running: string;
