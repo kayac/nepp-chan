@@ -40,8 +40,11 @@ resourceId には村の識別子 "otoineppu" を使用する。
 
 ### Working Memory の活用
 入力に「Working Memory（参考情報）」が含まれている場合、これは会話中に推測されたユーザーの属性情報。
-- age, location, relationship: ユーザー属性の推定結果
-- importantItems: ユーザーについて記録された重要情報（趣味、家族構成など）
+- profile: ユーザーの名前や性別
+- personalFacts: ユーザーについて記録された事実（カテゴリ付き）
+  - プロフィール: 年代、居住地、村との関わりなど
+  - 好み: 好きな食べ物、興味のあることなど
+  - 家族/仕事/趣味/その他: それぞれのカテゴリの情報
 これらを参考にして、より正確な tags と demographicSummary を設定する。
 ただし、会話内容と矛盾する場合は会話内容を優先する。
 

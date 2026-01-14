@@ -1,83 +1,51 @@
 import { z } from "zod";
 
+const factCategoryEnum = z.enum([
+  "プロフィール",
+  "好み",
+  "家族",
+  "仕事",
+  "趣味",
+  "その他",
+]);
+
 export const personaSchema = z.object({
-  // User Attributes（プロフィール情報）
-  name: z.string().optional().describe("ユーザーの名前"),
-  age: z
-    .enum([
-      "不明",
-      "10代",
-      "20代",
-      "30代",
-      "40代",
-      "50代",
-      "60代",
-      "70代",
-      "80代以上",
-    ])
+  // 長期記憶: ユーザーの基本プロフィール
+  profile: z
+    .object({
+      name: z.string().optional().describe("ユーザーの名前や呼び名"),
+      gender: z.string().optional().describe("性別"),
+    })
     .optional()
-    .describe("年代。初期値は「不明」。会話内容から類推できれば更新"),
-  location: z
-    .enum(["不明", "村内", "村外", "他地域"])
-    .optional()
-    .describe(
-      "居住地／出身地。初期値は「不明」。生活感のある発言があれば「村内」と推定",
-    ),
-  relationship: z
-    .enum(["不明", "観光客", "村人", "学生", "職員"])
+    .describe("ユーザーの基本プロフィール"),
+
+  // 長期記憶: ユーザーについての永続的な事実
+  personalFacts: z
+    .array(
+      z.object({
+        fact: z
+          .string()
+          .describe(
+            "事実の内容（例: 「60代くらい」「そばが好き」「村内に住んでいる」）",
+          ),
+        category: factCategoryEnum.describe("事実のカテゴリ"),
+      }),
+    )
     .optional()
     .describe(
-      "ねっぷちゃんとの関係。初期値は「不明」。生活感のある発言があれば「村人」と推定",
+      "ユーザーについての永続的な事実。年代、居住地、趣味、家族構成、仕事など",
     ),
 
-  // Session State
-  masterMode: z
-    .boolean()
+  // 短期記憶: 現在のセッション状態
+  session: z
+    .object({
+      masterMode: z
+        .boolean()
+        .optional()
+        .describe("/master 認証成功で true、/master exit で false"),
+    })
     .optional()
-    .describe(
-      "村長モードフラグ。/master でパスワード認証成功後に true、/master exit で false",
-    ),
-  // Important Information
-  importantItems: z
-    .array(z.string())
-    .optional()
-    .describe(
-      "ユーザーの趣味、家族構成、過去の話題など、次回以降の会話で参照すべき重要情報を蓄積する",
-    ),
-
-  // Conversation Summary（会話サマリー用）
-  conversationInsights: z
-    .array(z.string())
-    .optional()
-    .describe(
-      "この会話で得られた知見を一時的に蓄積するリスト。persona-save で保存したらクリアする",
-    ),
-  lastSummaryAt: z
-    .number()
-    .optional()
-    .describe("最後にサマリーを保存したメッセージ番号。節目検出に使用"),
+    .describe("現在のセッション状態"),
 });
 
 export type Persona = z.infer<typeof personaSchema>;
-
-// コメントアウト（将来用）
-// interestTheme: z.array(z.string()).describe("関心テーマ（複数選択可）"),
-// emotionalState: z
-//   .array(z.string())
-//   .describe("感情傾向／状態。初期値は「不明」"),
-// behaviorPattern: z
-//   .array(z.string())
-//   .describe("行動パターン。初期値は「不明」"),
-
-// Empathy Map（将来用）
-// says: z.array(z.string()).describe("Says: ユーザーが実際に言ったこと"),
-// thinks: z
-//   .array(z.string())
-//   .describe("Thinks: ユーザーが考えていること（推測含む）"),
-// does: z.array(z.string()).describe("Does: ユーザーがとった行動"),
-// feels: z.array(z.string()).describe("Feels: ユーザーが感じていること"),
-
-// Important Information
-// importantItems: z
-//   .array(z.string())
-//   .describe("ねっぷちゃんが重要と認識する項目（単語形式の配列）"),
