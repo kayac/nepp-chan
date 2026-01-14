@@ -2,6 +2,7 @@ import { makeAssistantToolUI } from "@assistant-ui/react";
 import { CheckCircleIcon } from "lucide-react";
 import { useState } from "react";
 
+import { ToolLoadingState } from "~/components/ui/Loading";
 import { cn } from "~/lib/class-merge";
 
 type ChoiceArgs = {
@@ -13,20 +14,6 @@ type ChoiceResult = {
   selectedChoice: string;
   selectedIndex: number;
 };
-
-const LoadingState = () => (
-  <div className="rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 p-4">
-    <div className="h-4 w-48 animate-pulse rounded bg-amber-200" />
-    <div className="mt-3 flex flex-wrap gap-2">
-      {[1, 2, 3].map((i) => (
-        <div
-          key={i}
-          className="h-10 w-24 animate-pulse rounded-full bg-amber-100"
-        />
-      ))}
-    </div>
-  </div>
-);
 
 type Props = {
   args: ChoiceArgs;
@@ -108,7 +95,7 @@ export const ChoiceButtonsToolUI = makeAssistantToolUI<
     if (status.type === "running" && !args.choices) {
       return (
         <div className="my-4">
-          <LoadingState />
+          <ToolLoadingState variant="choice" />
         </div>
       );
     }
@@ -136,7 +123,7 @@ export const ChoiceButtonsToolUI = makeAssistantToolUI<
 
     return (
       <div className="my-4">
-        <LoadingState />
+        <ToolLoadingState variant="choice" />
       </div>
     );
   },

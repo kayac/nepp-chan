@@ -2,6 +2,8 @@ import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
 import { makeAssistantToolUI } from "@assistant-ui/react";
 import { CalendarIcon } from "lucide-react";
 
+import { ToolEmptyState } from "~/components/ui/EmptyState";
+import { ToolLoadingState } from "~/components/ui/Loading";
 import { cn } from "~/lib/class-merge";
 
 type TimelineEvent = {
@@ -20,26 +22,6 @@ type TimelineArgs = {
 type TimelineResult = {
   displayed: boolean;
 };
-
-const LoadingState = () => (
-  <div className="rounded-xl bg-gradient-to-r from-indigo-50 to-blue-50 p-4">
-    <div className="flex items-center gap-2">
-      <CalendarIcon className="size-5 animate-pulse text-indigo-400" />
-      <div className="h-4 w-32 animate-pulse rounded bg-indigo-200" />
-    </div>
-    <div className="mt-4 space-y-4 pl-6">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="flex gap-3">
-          <div className="size-3 animate-pulse rounded-full bg-indigo-200" />
-          <div className="flex-1 space-y-1">
-            <div className="h-4 w-24 animate-pulse rounded bg-indigo-200" />
-            <div className="h-3 w-48 animate-pulse rounded bg-indigo-100" />
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
 
 const getStatusColor = (status?: TimelineEvent["status"]) => {
   switch (status) {
@@ -131,63 +113,48 @@ const Timeline = ({ args }: { args: TimelineArgs }) => (
   </div>
 );
 
-/**
- * MessagePrimitive.Parts の tools.by_name で使用するコンポーネント
- */
-export const DisplayTimelineToolComponent: ToolCallMessagePartComponent = ({
-  args,
-  status,
-}) => {
-  const timelineArgs = args as unknown as TimelineArgs;
-
-  if (status?.type === "running" && !timelineArgs.events) {
+const renderTimeline = (args: TimelineArgs, isRunning: boolean) => {
+  if (isRunning && !args.events) {
     return (
       <div className="my-4">
-        <LoadingState />
+        <ToolLoadingState
+          variant="timeline"
+          icon={
+            <CalendarIcon className="size-5 animate-pulse text-indigo-400" />
+          }
+        />
       </div>
     );
   }
 
-  if (!timelineArgs.events || timelineArgs.events.length === 0) {
+  if (!args.events || args.events.length === 0) {
     return (
-      <div className="my-4 rounded-xl bg-gray-50 p-4 text-gray-600">
-        表示するイベントがありません
+      <div className="my-4">
+        <ToolEmptyState message="表示するイベントがありません" />
       </div>
     );
   }
 
   return (
     <div className="my-4">
-      <Timeline args={timelineArgs} />
+      <Timeline args={args} />
     </div>
   );
 };
 
+/**
+ * MessagePrimitive.Parts の tools.by_name で使用するコンポーネント
+ */
+export const DisplayTimelineToolComponent: ToolCallMessagePartComponent = ({
+  args,
+  status,
+}) =>
+  renderTimeline(args as unknown as TimelineArgs, status?.type === "running");
+
 export const TimelineToolUI = makeAssistantToolUI<TimelineArgs, TimelineResult>(
   {
     toolName: "displayTimelineTool",
-    render: ({ args, status }) => {
-      if (status.type === "running" && !args.events) {
-        return (
-          <div className="my-4">
-            <LoadingState />
-          </div>
-        );
-      }
-
-      if (!args.events || args.events.length === 0) {
-        return (
-          <div className="my-4 rounded-xl bg-gray-50 p-4 text-gray-600">
-            表示するイベントがありません
-          </div>
-        );
-      }
-
-      return (
-        <div className="my-4">
-          <Timeline args={args} />
-        </div>
-      );
-    },
+    render: ({ args, status }) =>
+      renderTimeline(args, status.type === "running"),
   },
 );

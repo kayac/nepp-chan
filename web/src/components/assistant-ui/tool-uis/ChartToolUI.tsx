@@ -15,6 +15,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { ToolEmptyState } from "~/components/ui/EmptyState";
+import { ToolLoadingState } from "~/components/ui/Loading";
 
 type ChartType = "line" | "bar" | "pie";
 
@@ -56,16 +58,6 @@ const AXIS_STYLE = {
   stroke: "#a8a29e",
   fontSize: 12,
 };
-
-const LoadingState = () => (
-  <div className="rounded-2xl bg-linear-to-r from-teal-50 to-cyan-50 p-5">
-    <div className="flex items-center gap-2">
-      <BarChartIcon className="size-5 animate-pulse text-teal-400" />
-      <div className="h-4 w-32 animate-pulse rounded bg-teal-200" />
-    </div>
-    <div className="mt-4 h-48 animate-pulse rounded-xl bg-teal-100" />
-  </div>
-);
 
 const ChartIcon = ({ type }: { type: ChartType }) => {
   switch (type) {
@@ -200,58 +192,39 @@ const Chart = ({ args }: { args: ChartArgs }) => (
   </div>
 );
 
-export const DisplayChartToolComponent: ToolCallMessagePartComponent = ({
-  args,
-  status,
-}) => {
-  const chartArgs = args as unknown as ChartArgs;
-
-  if (status?.type === "running" && !chartArgs.data) {
+const renderChart = (args: ChartArgs, isRunning: boolean) => {
+  if (isRunning && !args.data) {
     return (
       <div className="my-4">
-        <LoadingState />
+        <ToolLoadingState
+          variant="chart"
+          icon={<BarChartIcon className="size-5 animate-pulse text-teal-400" />}
+        />
       </div>
     );
   }
 
-  if (!chartArgs.data || chartArgs.data.length === 0) {
+  if (!args.data || args.data.length === 0) {
     return (
-      <div className="my-4 rounded-2xl bg-stone-50 p-5 text-stone-600">
-        表示するデータがありません
+      <div className="my-4">
+        <ToolEmptyState message="表示するデータがありません" />
       </div>
     );
   }
 
   return (
     <div className="my-4">
-      <Chart args={chartArgs} />
+      <Chart args={args} />
     </div>
   );
 };
 
+export const DisplayChartToolComponent: ToolCallMessagePartComponent = ({
+  args,
+  status,
+}) => renderChart(args as unknown as ChartArgs, status?.type === "running");
+
 export const ChartToolUI = makeAssistantToolUI<ChartArgs, ChartResult>({
   toolName: "displayChartTool",
-  render: ({ args, status }) => {
-    if (status.type === "running" && !args.data) {
-      return (
-        <div className="my-4">
-          <LoadingState />
-        </div>
-      );
-    }
-
-    if (!args.data || args.data.length === 0) {
-      return (
-        <div className="my-4 rounded-2xl bg-stone-50 p-5 text-stone-600">
-          表示するデータがありません
-        </div>
-      );
-    }
-
-    return (
-      <div className="my-4">
-        <Chart args={args} />
-      </div>
-    );
-  },
+  render: ({ args, status }) => renderChart(args, status.type === "running"),
 });
