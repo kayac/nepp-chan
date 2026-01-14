@@ -18,18 +18,14 @@ import {
 
 type ChartType = "line" | "bar" | "pie";
 
-type ChartData = {
-  name: string;
-  value: number;
-  [key: string]: unknown;
-};
+type ChartData = Record<string, string | number>;
 
 type ChartArgs = {
   title?: string;
   type: ChartType;
   data: ChartData[];
-  xKey?: string;
-  yKey?: string;
+  xKey: string;
+  yKey: string;
   colors?: string[];
 };
 
@@ -83,8 +79,7 @@ const ChartIcon = ({ type }: { type: ChartType }) => {
 };
 
 const LineChartComponent = ({ args }: { args: ChartArgs }) => {
-  const xKey = args.xKey || "name";
-  const yKey = args.yKey || "value";
+  const { xKey, yKey } = args;
   const colors = args.colors || DEFAULT_COLORS;
 
   return (
@@ -110,8 +105,7 @@ const LineChartComponent = ({ args }: { args: ChartArgs }) => {
 };
 
 const BarChartComponent = ({ args }: { args: ChartArgs }) => {
-  const xKey = args.xKey || "name";
-  const yKey = args.yKey || "value";
+  const { xKey, yKey } = args;
   const colors = args.colors || DEFAULT_COLORS;
 
   return (
@@ -125,7 +119,10 @@ const BarChartComponent = ({ args }: { args: ChartArgs }) => {
         <Tooltip contentStyle={TOOLTIP_STYLE} />
         <Bar dataKey={yKey} fill={colors[0]} radius={[8, 8, 0, 0]}>
           {args.data.map((item, index) => (
-            <Cell key={item.name} fill={colors[index % colors.length]} />
+            <Cell
+              key={String(item[xKey])}
+              fill={colors[index % colors.length]}
+            />
           ))}
         </Bar>
       </BarChart>
@@ -134,6 +131,7 @@ const BarChartComponent = ({ args }: { args: ChartArgs }) => {
 };
 
 const PieChartComponent = ({ args }: { args: ChartArgs }) => {
+  const { xKey, yKey } = args;
   const colors = args.colors || DEFAULT_COLORS;
 
   return (
@@ -145,7 +143,8 @@ const PieChartComponent = ({ args }: { args: ChartArgs }) => {
           cy="45%"
           outerRadius={120}
           fill="#ea580c"
-          dataKey="value"
+          dataKey={yKey}
+          nameKey={xKey}
           label={({ cx, cy, midAngle, outerRadius, percent }) => {
             const RADIAN = Math.PI / 180;
             const radius = outerRadius * 0.6;
@@ -168,7 +167,10 @@ const PieChartComponent = ({ args }: { args: ChartArgs }) => {
           labelLine={false}
         >
           {args.data.map((item, index) => (
-            <Cell key={item.name} fill={colors[index % colors.length]} />
+            <Cell
+              key={String(item[xKey])}
+              fill={colors[index % colors.length]}
+            />
           ))}
         </Pie>
         <Tooltip contentStyle={TOOLTIP_STYLE} />
