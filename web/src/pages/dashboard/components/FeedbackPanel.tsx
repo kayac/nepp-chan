@@ -2,6 +2,7 @@ import {
   CheckIcon,
   HandThumbDownIcon,
   HandThumbUpIcon,
+  LightBulbIcon,
   XMarkIcon,
 } from "@heroicons/react/24/solid";
 import { useEffect, useRef, useState } from "react";
@@ -72,13 +73,20 @@ const FeedbackDetailModal = ({
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${
                 feedback.rating === "good"
                   ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700"
+                  : feedback.rating === "idea"
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-red-100 text-red-700"
               }`}
             >
               {feedback.rating === "good" ? (
                 <>
                   <HandThumbUpIcon className="w-4 h-4" />
                   良い回答
+                </>
+              ) : feedback.rating === "idea" ? (
+                <>
+                  <LightBulbIcon className="w-4 h-4" />
+                  アイデア
                 </>
               ) : (
                 <>
@@ -229,9 +237,9 @@ const FeedbackDetailModal = ({
 };
 
 export const FeedbackPanel = () => {
-  const [ratingFilter, setRatingFilter] = useState<"good" | "bad" | undefined>(
-    undefined,
-  );
+  const [ratingFilter, setRatingFilter] = useState<
+    "good" | "bad" | "idea" | undefined
+  >(undefined);
   const [resolvedFilter, setResolvedFilter] = useState<
     "all" | "unresolved" | "resolved"
   >("all");
@@ -318,7 +326,7 @@ export const FeedbackPanel = () => {
   return (
     <div className="space-y-4">
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="bg-white rounded-xl border border-stone-200 p-4">
             <div className="text-2xl font-bold text-stone-800">
               {stats.total}
@@ -334,6 +342,12 @@ export const FeedbackPanel = () => {
           <div className="bg-white rounded-xl border border-stone-200 p-4">
             <div className="text-2xl font-bold text-red-600">{stats.bad}</div>
             <div className="text-sm text-stone-500">改善が必要</div>
+          </div>
+          <div className="bg-white rounded-xl border border-stone-200 p-4">
+            <div className="text-2xl font-bold text-amber-600">
+              {stats.idea}
+            </div>
+            <div className="text-sm text-stone-500">アイデア</div>
           </div>
           <div className="bg-white rounded-xl border border-stone-200 p-4">
             <div className="text-2xl font-bold text-stone-800">
@@ -406,6 +420,17 @@ export const FeedbackPanel = () => {
               }`}
             >
               Bad
+            </button>
+            <button
+              type="button"
+              onClick={() => setRatingFilter("idea")}
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                ratingFilter === "idea"
+                  ? "bg-amber-600 text-white"
+                  : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+              }`}
+            >
+              Idea
             </button>
           </div>
           <div className="flex gap-1">
@@ -497,13 +522,20 @@ export const FeedbackPanel = () => {
                         className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded ${
                           feedback.rating === "good"
                             ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
+                            : feedback.rating === "idea"
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-red-100 text-red-700"
                         }`}
                       >
                         {feedback.rating === "good" ? (
                           <>
                             <HandThumbUpIcon className="w-3.5 h-3.5" />
                             Good
+                          </>
+                        ) : feedback.rating === "idea" ? (
+                          <>
+                            <LightBulbIcon className="w-3.5 h-3.5" />
+                            Idea
                           </>
                         ) : (
                           <>

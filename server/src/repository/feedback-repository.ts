@@ -13,13 +13,14 @@ type FeedbackStats = {
   total: number;
   good: number;
   bad: number;
+  idea: number;
   byCategory: Record<string, number>;
 };
 
 type ListOptions = {
   limit?: number;
   cursor?: string;
-  rating?: "good" | "bad";
+  rating?: "good" | "bad" | "idea";
 };
 
 type ListResult = {
@@ -112,6 +113,12 @@ export const feedbackRepository = {
       .where(eq(messageFeedback.rating, "bad"))
       .get();
 
+    const ideaResult = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(messageFeedback)
+      .where(eq(messageFeedback.rating, "idea"))
+      .get();
+
     const categoryResults = await db
       .select({
         category: messageFeedback.category,
@@ -133,6 +140,7 @@ export const feedbackRepository = {
       total: totalResult?.count ?? 0,
       good: goodResult?.count ?? 0,
       bad: badResult?.count ?? 0,
+      idea: ideaResult?.count ?? 0,
       byCategory,
     };
   },

@@ -24,7 +24,6 @@ type FeedbackModalState = {
 };
 
 type FeedbackContextValue = {
-  submittedFeedbacks: Record<string, FeedbackRating>;
   feedbackModal: FeedbackModalState | null;
   isSubmitting: boolean;
   onFeedbackClick: (messageId: string, rating: FeedbackRating) => void;
@@ -137,9 +136,6 @@ interface Props {
 export const FeedbackProvider = ({ children, threadId }: Props) => {
   const threadRuntime = useThreadRuntime();
 
-  const [submittedFeedbacks, setSubmittedFeedbacks] = useState<
-    Record<string, FeedbackRating>
-  >({});
   const [feedbackModal, setFeedbackModal] = useState<FeedbackModalState | null>(
     null,
   );
@@ -188,10 +184,6 @@ export const FeedbackProvider = ({ children, threadId }: Props) => {
             toolExecutions.length > 0 ? toolExecutions : undefined,
         });
 
-        setSubmittedFeedbacks((prev) => ({
-          ...prev,
-          [feedbackModal.messageId]: feedbackModal.rating,
-        }));
         setFeedbackModal(null);
       } catch (err) {
         console.error("Failed to submit feedback:", err);
@@ -210,7 +202,6 @@ export const FeedbackProvider = ({ children, threadId }: Props) => {
   return (
     <FeedbackContext.Provider
       value={{
-        submittedFeedbacks,
         feedbackModal,
         isSubmitting,
         onFeedbackClick,

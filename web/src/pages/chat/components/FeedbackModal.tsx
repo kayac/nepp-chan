@@ -1,6 +1,7 @@
 import {
   HandThumbDownIcon,
   HandThumbUpIcon,
+  LightBulbIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
@@ -64,7 +65,11 @@ export const FeedbackModal = ({
       <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 animate-fade-in">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-(--color-text)">
-            {rating === "good" ? "フィードバック" : "改善点を教えてください"}
+            {rating === "good"
+              ? "フィードバック"
+              : rating === "idea"
+                ? "改善要望"
+                : "改善点を教えてください"}
           </h2>
           <button
             type="button"
@@ -81,13 +86,20 @@ export const FeedbackModal = ({
             className={`mb-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${
               rating === "good"
                 ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
+                : rating === "idea"
+                  ? "bg-amber-100 text-amber-700"
+                  : "bg-red-100 text-red-700"
             }`}
           >
             {rating === "good" ? (
               <>
                 <HandThumbUpIcon className="w-4 h-4" aria-hidden="true" />
                 良い回答
+              </>
+            ) : rating === "idea" ? (
+              <>
+                <LightBulbIcon className="w-4 h-4" aria-hidden="true" />
+                アイデア
               </>
             ) : (
               <>
@@ -150,7 +162,9 @@ export const FeedbackModal = ({
               placeholder={
                 rating === "good"
                   ? "どこが良かったか教えてください"
-                  : "問題点を教えてください"
+                  : rating === "idea"
+                    ? "ねっぷちゃんをもっと良くするアイデアを教えてください！"
+                    : "問題点を教えてください"
               }
               maxLength={1000}
               rows={3}
