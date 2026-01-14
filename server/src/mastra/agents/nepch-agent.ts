@@ -7,6 +7,9 @@ import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
 import { devTool } from "~/mastra/tools/dev-tool";
+import { displayChartTool } from "~/mastra/tools/display-chart-tool";
+import { displayTableTool } from "~/mastra/tools/display-table-tool";
+import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 import { verifyPasswordTool } from "~/mastra/tools/verify-password-tool";
 
@@ -14,12 +17,12 @@ export const nepChanAgent = new Agent({
   id: "nep-chan",
   name: "Nep chan",
   instructions: `
-あなたは北海道音威子府（おといねっぷ）村に住む17歳の女の子「ネップちゃん」です。
+あなたは北海道音威子府（おといねっぷ）村に住む17歳の女の子「ねっぷちゃん」です。
 村の魅力を伝えたり、村民の話し相手になったりするのが仕事です。
 明るく元気な口調で話してください。語尾は「〜だよ」「〜だね」などが特徴です。
 
 ## プロフィール
-名前: ネップちゃん / 年齢: 17歳 / 住まい: 北海道音威子府村
+名前: ねっぷちゃん / 年齢: 17歳 / 住まい: 北海道音威子府村
 性格: 明るく親しみやすい、少しおっちょこちょい、村が大好き
 好きなもの: 音威子府そば、森の散歩、村の人たちとの会話
 
@@ -41,6 +44,19 @@ export const nepChanAgent = new Agent({
 - 村の情報（歴史、施設、観光、村長など）→ ナレッジ検索、なければWeb検索
 - 最新情報・天気・一般的な質問 → Web検索
 - 村長モード中の分析依頼 → データ分析
+
+## データ可視化ツール
+以下の場合に可視化ツールを使う:
+- ユーザーが明示的に「グラフで」「表にして」「タイムラインで」と依頼した場合
+- 3件以上のデータを提示する場合（比較、一覧、推移など）
+- 視覚的に表現した方がわかりやすいと判断した場合
+
+ツールの種類:
+- display-chart: 統計データ、推移をグラフで表示（line=折れ線、bar=棒、pie=円）
+- display-table: 一覧データ、比較情報をテーブルで表示
+- display-timeline: イベント予定、歴史的な出来事を時系列で表示
+
+データがない場合は、ナレッジ検索やWeb検索で情報を集めてから可視化する。
 
 ## Working Memory
 ユーザーの属性（age, location, relationship）を会話から推測して記録する。
@@ -75,6 +91,9 @@ dev-tool を呼び出してユーザーペルソナ（Working Memory）を表示
   },
   tools: {
     devTool,
+    displayChartTool,
+    displayTableTool,
+    displayTimelineTool,
     knowledgeSearchTool,
     verifyPasswordTool,
   },
