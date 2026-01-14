@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Thread } from "~/components/assistant-ui/Thread";
-import { LoadingDots } from "~/components/ui/loading";
+import { LoadingDots } from "~/components/ui/Loading";
 import { threadKeys, useCreateThread, useThreads } from "~/hooks/useThreads";
 import { cn } from "~/lib/class-merge";
 import { getResourceId } from "~/lib/resource";

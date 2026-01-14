@@ -10,8 +10,8 @@ import {
 import type { FC, ReactNode } from "react";
 import { useState } from "react";
 
-import { Button } from "~/components/ui/button";
-import { Spinner } from "~/components/ui/loading";
+import { Button } from "~/components/ui/Button";
+import { Spinner } from "~/components/ui/Loading";
 import { cn } from "~/lib/class-merge";
 
 const REPORT_TOOLS = ["emergencyReportTool", "emergencyUpdateTool"];
