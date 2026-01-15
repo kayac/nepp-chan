@@ -43,7 +43,7 @@ const FeedbackModalWrapper = () => {
 
 export const ChatPage = () => {
   const resourceId = useMemo(() => getResourceId(), []);
-  const { data: adminUser } = useAdminUser();
+  const { data: adminUser, isLoading: isAdminLoading } = useAdminUser();
   const isAdmin = !!adminUser;
 
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
@@ -112,6 +112,10 @@ export const ChatPage = () => {
       handleNewThread();
     }
   }, [threadsLoaded, threads.length, currentThreadId, handleNewThread]);
+
+  if (isAdminLoading) {
+    return null;
+  }
 
   return (
     <div className="flex h-dvh bg-(--color-bg)">

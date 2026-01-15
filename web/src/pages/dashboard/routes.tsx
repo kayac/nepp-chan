@@ -43,10 +43,7 @@ const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/dashboard",
   beforeLoad: ({ context }) => {
-    if (context.auth.isLoading) {
-      return;
-    }
-    if (!context.auth.isAuthenticated) {
+    if (!context.auth.isLoading && !context.auth.isAuthenticated) {
       throw redirect({ to: "/dashboard/login" });
     }
   },

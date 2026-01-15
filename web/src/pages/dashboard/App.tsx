@@ -47,12 +47,16 @@ const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
 
 export const App = () => {
   const [activeTab, setActiveTab] = useState<Tab>("knowledge");
-  const { user, logout } = useAuth();
+  const { user, isLoading, logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
     window.location.href = "/dashboard/login";
   };
+
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <div className="min-h-dvh bg-stone-50">
