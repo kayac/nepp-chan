@@ -37,7 +37,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setState({ user: null, isLoading: false, isAuthenticated: false });
       }
-    } catch {
+    } catch (error) {
+      console.error("認証チェック失敗:", error);
       setState({ user: null, isLoading: false, isAuthenticated: false });
     }
   }, []);
