@@ -3,10 +3,12 @@ import { LibSQLStore } from "@mastra/libsql";
 import { PinoLogger } from "@mastra/loggers";
 import { converterAgent } from "~/mastra/agents/converter-agent";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
+import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
+import { feedbackAgent } from "~/mastra/agents/feedback-agent";
 import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
-import { masterAgent } from "~/mastra/agents/master-agent";
 import { nepChanAgent } from "~/mastra/agents/nepch-agent";
 import { personaAgent } from "~/mastra/agents/persona-agent";
+import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { villageInfoAgent } from "~/mastra/agents/village-info-agent";
 import { weatherAgent } from "~/mastra/agents/weather-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
@@ -26,10 +28,12 @@ export const mastra = new Mastra({
   agents: {
     converterAgent,
     emergencyAgent,
+    emergencyReporterAgent,
+    feedbackAgent,
     knowledgeAgent,
-    masterAgent,
     nepChanAgent,
     personaAgent,
+    personaAnalystAgent,
     villageInfoAgent,
     weatherAgent,
     webResearcherAgent,
