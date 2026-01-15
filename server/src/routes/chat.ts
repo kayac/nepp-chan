@@ -5,7 +5,7 @@ import { createUIMessageStreamResponse, type UIMessage } from "ai";
 import { getCookie } from "hono/cookie";
 
 import { getStorage } from "~/lib/storage";
-import { nepChanAgent } from "~/mastra/agents/nepch-agent";
+import { createNepChanAgent } from "~/mastra/agents/nepch-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { SESSION_COOKIE_NAME } from "~/middleware/session-auth";
 import { getUserFromSession } from "~/services/auth/session";
@@ -55,15 +55,17 @@ const chatRoute = createRoute({
 chatRoutes.openapi(chatRoute, async (c) => {
   const { message, resourceId, threadId } = c.req.valid("json");
   const storage = await getStorage(c.env.DB);
-  const mastra = new Mastra({
-    agents: { nepChanAgent },
-    storage,
-  });
 
   const sessionId = getCookie(c, SESSION_COOKIE_NAME);
   const adminUser = sessionId
     ? await getUserFromSession(c.env.DB, sessionId)
     : null;
+
+  const nepChanAgent = createNepChanAgent({ isAdmin: !!adminUser });
+  const mastra = new Mastra({
+    agents: { nepChanAgent },
+    storage,
+  });
 
   const requestContext = createRequestContext({
     storage,
