@@ -15,26 +15,21 @@ import type {
 export const syncKnowledge = (): Promise<SyncResult> =>
   apiClient<SyncResult>("/admin/knowledge/sync", {
     method: "POST",
-    admin: true,
   });
 
 export const deleteAllKnowledge = (): Promise<DeleteResult> =>
   apiClient<DeleteResult>("/admin/knowledge", {
     method: "DELETE",
-    admin: true,
   });
 
 // ファイル一覧取得
 export const fetchFiles = (): Promise<FilesListResponse> =>
-  apiClient<FilesListResponse>("/admin/knowledge/files", {
-    admin: true,
-  });
+  apiClient<FilesListResponse>("/admin/knowledge/files");
 
 // ファイル内容取得
 export const fetchFileContent = (key: string): Promise<FileContentResponse> =>
   apiClient<FileContentResponse>(
     `/admin/knowledge/files/${encodeURIComponent(key)}`,
-    { admin: true },
   );
 
 // ファイル保存
@@ -47,7 +42,6 @@ export const saveFile = (
     {
       method: "PUT",
       body: { content },
-      admin: true,
     },
   );
 
@@ -55,7 +49,6 @@ export const saveFile = (
 export const deleteFile = (key: string): Promise<DeleteResult> =>
   apiClient<DeleteResult>(`/admin/knowledge/files/${encodeURIComponent(key)}`, {
     method: "DELETE",
-    admin: true,
   });
 
 // ファイルアップロード（multipart/form-data）
@@ -69,10 +62,9 @@ export const uploadFile = async (
     formData.append("filename", filename);
   }
 
-  const adminKey = import.meta.env.VITE_ADMIN_KEY || "";
   const res = await fetch(`${API_BASE}/admin/knowledge/upload`, {
     method: "POST",
-    headers: { "X-Admin-Key": adminKey },
+    credentials: "include",
     body: formData,
   });
 
@@ -93,10 +85,9 @@ export const convertFile = async (
   formData.append("file", file);
   formData.append("filename", filename);
 
-  const adminKey = import.meta.env.VITE_ADMIN_KEY || "";
   const res = await fetch(`${API_BASE}/admin/knowledge/convert`, {
     method: "POST",
-    headers: { "X-Admin-Key": adminKey },
+    credentials: "include",
     body: formData,
   });
 
@@ -110,15 +101,12 @@ export const convertFile = async (
 
 // 統合ファイル一覧取得
 export const fetchUnifiedFiles = (): Promise<UnifiedFilesListResponse> =>
-  apiClient<UnifiedFilesListResponse>("/admin/knowledge/unified", {
-    admin: true,
-  });
+  apiClient<UnifiedFilesListResponse>("/admin/knowledge/unified");
 
-// 元ファイルURL取得（クエリパラメータ認証）
+// 元ファイルURL取得
 export const getOriginalFileUrl = (key: string): string => {
-  const adminKey = import.meta.env.VITE_ADMIN_KEY || "";
   const encodedKey = encodeURIComponent(key.replace("originals/", ""));
-  return `${API_BASE}/admin/knowledge/originals/${encodedKey}?adminKey=${encodeURIComponent(adminKey)}`;
+  return `${API_BASE}/admin/knowledge/originals/${encodedKey}`;
 };
 
 // 元ファイルからMarkdownを再生成
@@ -129,5 +117,4 @@ export const reconvertFile = (
   apiClient<ReconvertFileResponse>("/admin/knowledge/reconvert", {
     method: "POST",
     body: { originalKey, filename },
-    admin: true,
   });

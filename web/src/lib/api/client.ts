@@ -3,7 +3,6 @@ const API_BASE = import.meta.env.VITE_API_URL || "";
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
-  admin?: boolean;
 };
 
 class ApiError extends Error {
@@ -15,17 +14,6 @@ class ApiError extends Error {
     this.status = status;
   }
 }
-
-const getHeaders = (admin: boolean): HeadersInit => {
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-  };
-  if (admin) {
-    const adminKey = import.meta.env.VITE_ADMIN_KEY || "";
-    headers["X-Admin-Key"] = adminKey;
-  }
-  return headers;
-};
 
 const parseErrorResponse = async (res: Response, fallback: string) => {
   try {
@@ -40,11 +28,11 @@ export const apiClient = async <T>(
   endpoint: string,
   options: RequestOptions = {},
 ): Promise<T> => {
-  const { method = "GET", body, admin = false } = options;
+  const { method = "GET", body } = options;
 
   const res = await fetch(`${API_BASE}${endpoint}`, {
     method,
-    headers: getHeaders(admin),
+    headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: body ? JSON.stringify(body) : undefined,
   });

@@ -31,15 +31,11 @@ export const fetchFeedbacks = (
   if (params.rating) {
     searchParams.set("rating", params.rating);
   }
-  return apiClient<FeedbacksResponse>(`/admin/feedback?${searchParams}`, {
-    admin: true,
-  });
+  return apiClient<FeedbacksResponse>(`/admin/feedback?${searchParams}`);
 };
 
 export const fetchFeedbackById = (id: string): Promise<MessageFeedback> =>
-  apiClient<MessageFeedback>(`/admin/feedback/${id}`, {
-    admin: true,
-  });
+  apiClient<MessageFeedback>(`/admin/feedback/${id}`);
 
 type DeleteFeedbacksResponse = {
   success: boolean;
@@ -50,7 +46,6 @@ type DeleteFeedbacksResponse = {
 export const deleteAllFeedbacks = (): Promise<DeleteFeedbacksResponse> =>
   apiClient<DeleteFeedbacksResponse>("/admin/feedback", {
     method: "DELETE",
-    admin: true,
   });
 
 type ResolveResponse = {
@@ -61,11 +56,9 @@ type ResolveResponse = {
 export const resolveFeedback = (id: string): Promise<ResolveResponse> =>
   apiClient<ResolveResponse>(`/admin/feedback/${id}/resolve`, {
     method: "PUT",
-    admin: true,
   });
 
 export const unresolveFeedback = (id: string): Promise<ResolveResponse> =>
   apiClient<ResolveResponse>(`/admin/feedback/${id}/resolve`, {
     method: "DELETE",
-    admin: true,
   });
