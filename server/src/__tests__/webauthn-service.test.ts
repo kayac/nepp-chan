@@ -379,7 +379,7 @@ describe("webauthn service", () => {
       );
     });
 
-    it("認証成功時にチャレンジを削除する", async () => {
+    it("認証成功時に使用済みの認証トークンを削除する", async () => {
       const credentialId = "test-credential-id";
 
       vi.mocked(authChallengeRepository.findValidById).mockResolvedValue(
@@ -426,7 +426,7 @@ describe("webauthn service", () => {
       );
     });
 
-    it("無効または期限切れのチャレンジの場合はエラーを返す", async () => {
+    it("無効または期限切れの認証トークンの場合はエラーを返す", async () => {
       vi.mocked(authChallengeRepository.findValidById).mockResolvedValue(null);
 
       await expect(
@@ -582,7 +582,7 @@ describe("webauthn service", () => {
       ).rejects.toThrow("このメールアドレスは既に登録されています");
     });
 
-    it("チャレンジをDBに保存する", async () => {
+    it("認証トークンをDBに保存する", async () => {
       vi.mocked(adminInvitationRepository.findValidByToken).mockResolvedValue(
         mockInvitation,
       );
@@ -649,7 +649,7 @@ describe("webauthn service", () => {
       expect(result.options.challenge).toBe("auth-challenge");
     });
 
-    it("チャレンジをDBに保存する（type: authentication）", async () => {
+    it("ログイン用の認証トークンをDBに保存する", async () => {
       vi.mocked(generateAuthenticationOptions).mockResolvedValue({
         challenge: "auth-challenge",
         timeout: 60000,
