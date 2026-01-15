@@ -6,6 +6,7 @@ import {
 } from "~/repository/admin-user-repository";
 
 const SESSION_DURATION_DAYS = 30;
+const SESSION_ABSOLUTE_MAX_DAYS = 90;
 
 export const createSession = async (d1: D1Database, userId: string) => {
   const sessionId = generateToken();
@@ -29,7 +30,11 @@ export const createSession = async (d1: D1Database, userId: string) => {
 };
 
 export const validateSession = async (d1: D1Database, sessionId: string) => {
-  const session = await adminSessionRepository.findValidById(d1, sessionId);
+  const session = await adminSessionRepository.findValidById(
+    d1,
+    sessionId,
+    SESSION_ABSOLUTE_MAX_DAYS,
+  );
   if (!session) {
     return null;
   }

@@ -63,13 +63,14 @@ const createInvitationRoute = createRoute({
   path: "/",
   tags: ["Admin - Invitations"],
   summary: "新規招待作成",
+  description:
+    "管理者を招待します。super_admin の招待はスクリプト経由でのみ可能です。",
   request: {
     body: {
       content: {
         "application/json": {
           schema: z.object({
             email: z.string().email(),
-            role: z.enum(["admin", "super_admin"]).optional().default("admin"),
           }),
         },
       },
@@ -106,7 +107,7 @@ const createInvitationRoute = createRoute({
 });
 
 invitationRoutes.openapi(createInvitationRoute, async (c) => {
-  const { email, role } = c.req.valid("json");
+  const { email } = c.req.valid("json");
   const adminUser = c.get("adminUser");
 
   try {
@@ -114,7 +115,7 @@ invitationRoutes.openapi(createInvitationRoute, async (c) => {
       c.env.DB,
       email,
       adminUser.id,
-      role,
+      "admin",
       1,
     );
 
