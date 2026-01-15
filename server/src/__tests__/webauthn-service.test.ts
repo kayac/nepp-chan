@@ -447,7 +447,7 @@ describe("webauthn service", () => {
             clientExtensionResults: {},
           },
         ),
-      ).rejects.toThrow("無効または期限切れのチャレンジです");
+      ).rejects.toThrow("認証リクエストが無効または期限切れです");
     });
 
     it("ユーザーが見つからない場合はエラーを返す", async () => {

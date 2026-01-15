@@ -97,7 +97,7 @@ export const verifyWebAuthnRegistration = async (
     challengeId,
   );
   if (!challenge || challenge.type !== "registration") {
-    throw new Error("無効または期限切れのチャレンジです");
+    throw new Error("認証リクエストが無効または期限切れです");
   }
 
   const invitation = await adminInvitationRepository.findById(d1, invitationId);
@@ -106,7 +106,7 @@ export const verifyWebAuthnRegistration = async (
   }
 
   if (challenge.email !== invitation.email) {
-    throw new Error("招待とチャレンジのメールアドレスが一致しません");
+    throw new Error("招待と認証リクエストのメールアドレスが一致しません");
   }
 
   const verification = await verifyRegistrationResponse({
@@ -210,7 +210,7 @@ export const verifyWebAuthnAuthentication = async (
     challengeId,
   );
   if (!challenge || challenge.type !== "authentication") {
-    throw new Error("無効または期限切れのチャレンジです");
+    throw new Error("認証リクエストが無効または期限切れです");
   }
 
   const credentialIdBase64 = response.id;
