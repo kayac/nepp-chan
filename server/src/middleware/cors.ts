@@ -10,5 +10,6 @@ export const corsMiddleware = cors({
   },
   allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowHeaders: ["Content-Type", "User-Agent", "X-Admin-Key"],
+  credentials: true,
   maxAge: 86400,
 });

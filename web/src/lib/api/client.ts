@@ -45,6 +45,7 @@ export const apiClient = async <T>(
   const res = await fetch(`${API_BASE}${endpoint}`, {
     method,
     headers: getHeaders(admin),
+    credentials: "include",
     body: body ? JSON.stringify(body) : undefined,
   });
 

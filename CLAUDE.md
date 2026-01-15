@@ -70,8 +70,6 @@ await storage.init(); // 必須
 | ------------------------------ | ------------------ |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API         |
 | `GOOGLE_SEARCH_ENGINE_ID`      | Custom Search      |
-| `MASTER_PASSWORD`              | 村長モード認証     |
-| `ADMIN_KEY`                    | 管理 API 認証      |
 
 ### web（Pages）
 

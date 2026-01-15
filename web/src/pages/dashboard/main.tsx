@@ -1,8 +1,27 @@
-import { StrictMode } from "react";
+import { RouterProvider } from "@tanstack/react-router";
+import { StrictMode, useMemo } from "react";
 import { createRoot } from "react-dom/client";
+
 import "~/index.css";
 import { QueryProvider } from "~/providers/QueryProvider";
-import { App } from "./App";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { createAppRouter } from "./routes";
+
+const RouterWithAuth = () => {
+  const auth = useAuth();
+
+  const router = useMemo(
+    () =>
+      createAppRouter({
+        isAuthenticated: auth.isAuthenticated,
+        isLoading: auth.isLoading,
+        checkAuth: auth.checkAuth,
+      }),
+    [auth.isAuthenticated, auth.isLoading, auth.checkAuth],
+  );
+
+  return <RouterProvider router={router} />;
+};
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Root element not found");
@@ -10,7 +29,9 @@ if (!root) throw new Error("Root element not found");
 createRoot(root).render(
   <StrictMode>
     <QueryProvider>
-      <App />
+      <AuthProvider>
+        <RouterWithAuth />
+      </AuthProvider>
     </QueryProvider>
   </StrictMode>,
 );

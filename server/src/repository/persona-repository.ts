@@ -189,6 +189,107 @@ export const personaRepository = {
 
     return { success: true };
   },
+
+  async list(
+    d1: D1Database,
+    options: {
+      category?: string;
+      sentiment?: string;
+      limit?: number;
+      cursor?: string;
+    } = {},
+  ) {
+    const db = createDb(d1);
+    const limit = options.limit ?? 30;
+
+    const conditions = [];
+
+    if (options.category) {
+      conditions.push(eq(persona.category, options.category));
+    }
+
+    if (options.sentiment) {
+      conditions.push(eq(persona.sentiment, options.sentiment));
+    }
+
+    if (options.cursor) {
+      conditions.push(sql`${persona.createdAt} < ${options.cursor}`);
+    }
+
+    const personas = await db
+      .select()
+      .from(persona)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(persona.createdAt))
+      .limit(limit + 1)
+      .all();
+
+    const hasMore = personas.length > limit;
+    const items = hasMore ? personas.slice(0, limit) : personas;
+    const nextCursor = hasMore ? items[items.length - 1]?.createdAt : null;
+
+    return {
+      personas: items,
+      nextCursor,
+      hasMore,
+    };
+  },
+
+  async getStats(d1: D1Database) {
+    const db = createDb(d1);
+
+    const totalResult = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(persona)
+      .get();
+
+    const categoryResults = await db
+      .select({
+        category: persona.category,
+        count: sql<number>`COUNT(*)`,
+      })
+      .from(persona)
+      .groupBy(persona.category)
+      .all();
+
+    const sentimentResults = await db
+      .select({
+        sentiment: persona.sentiment,
+        count: sql<number>`COUNT(*)`,
+      })
+      .from(persona)
+      .where(sql`${persona.sentiment} IS NOT NULL`)
+      .groupBy(persona.sentiment)
+      .all();
+
+    const byCategory: Record<string, number> = {};
+    for (const row of categoryResults) {
+      if (row.category) {
+        byCategory[row.category] = row.count;
+      }
+    }
+
+    const bySentiment: Record<string, number> = {};
+    for (const row of sentimentResults) {
+      if (row.sentiment) {
+        bySentiment[row.sentiment] = row.count;
+      }
+    }
+
+    return {
+      total: totalResult?.count ?? 0,
+      byCategory,
+      bySentiment,
+    };
+  },
+
+  async deleteAll(d1: D1Database) {
+    const db = createDb(d1);
+
+    await db.delete(persona);
+
+    return { success: true };
+  },
 };
 
 export type { Persona };

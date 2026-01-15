@@ -1,4 +1,5 @@
 import { Agent } from "@mastra/core/agent";
+
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { masterAgent } from "~/mastra/agents/master-agent";
@@ -11,7 +12,6 @@ import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
-import { verifyPasswordTool } from "~/mastra/tools/verify-password-tool";
 
 export const nepChanAgent = new Agent({
   id: "nep-chan",
@@ -87,14 +87,20 @@ export const nepChanAgent = new Agent({
 ### /dev
 dev-tool を呼び出してユーザーペルソナ（Working Memory）を表示する。json形式ではなく、ユーザーにわかりやすい自然言語で説明してください。
 
-### /master
-村長モードの認証フローを開始する。
-- Working Memory の session.masterMode フラグで状態を管理
-- 手順:
-  1. パスワードを聞く
-  2. パスワードを受け取る
-  3. verify-password ツールで検証し、正しければ session.masterMode = true に設定し、以降の分析依頼は masterAgent に委譲
-- ユーザーが「/master exit」と入力したら session.masterMode = false に戻す
+## 管理者機能
+ユーザーが管理画面からパスキー認証でログインしている場合、masterAgent を通じて管理者機能が使用可能になる。
+認証状態は masterAgent が自動でチェックするので、使えるかどうかは委譲先に任せる。
+
+### masterAgent への委譲
+以下のような管理者向けの依頼は masterAgent に委譲する:
+- 緊急報告の取得（例: 「村の危険情報は？」「緊急報告を見せて」）
+- フィードバック一覧と統計（例: 「最近のフィードバックは？」「利用者の満足度は？」）
+- ペルソナ（住民の声）の取得（例: 「住民の声を教えて」「ペルソナデータを見せて」）
+- 村民の声の傾向分析（例: 「村民の要望を分析して」「住民の声のレポートを作って」）
+- デモグラフィック分析（例: 「年代別の傾向は？」「属性別に分析して」）
+- マーケティング視点での分析（例: 「改善すべき点は？」「施策の提案をして」）
+
+masterAgent が「この機能は使用できません」と返した場合は、その情報を表示せずに通常の知識で回答する。
 `,
   model: "google/gemini-2.5-flash",
   agents: {
@@ -110,7 +116,6 @@ dev-tool を呼び出してユーザーペルソナ（Working Memory）を表示
     displayTableTool,
     displayTimelineTool,
     knowledgeSearchTool,
-    verifyPasswordTool,
   },
   memory: ({ requestContext }) =>
     getMemoryFromContext(requestContext, {
