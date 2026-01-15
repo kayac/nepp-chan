@@ -55,7 +55,6 @@ R2_BUCKET_NAME=your-bucket-name
 
 # API 呼び出し用
 API_URL=http://localhost:8787
-ADMIN_KEY=your-admin-key
 ```
 
 #### server ディレクトリ
@@ -66,7 +65,6 @@ ADMIN_KEY=your-admin-key
 GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
 GOOGLE_SEARCH_ENGINE_ID=your-engine-id
 MASTER_PASSWORD=your-password
-ADMIN_KEY=your-admin-key
 ```
 
 `server/.env` を作成（Mastra Playground 用）：
@@ -75,7 +73,6 @@ ADMIN_KEY=your-admin-key
 GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
 GOOGLE_SEARCH_ENGINE_ID=your-engine-id
 MASTER_PASSWORD=your-password
-ADMIN_KEY=your-admin-key
 ```
 
 #### web ディレクトリ
