@@ -8,6 +8,7 @@ import {
   verifyRegistrationResponse,
 } from "@simplewebauthn/server";
 
+import { generateId, generateToken } from "~/lib/crypto";
 import { adminCredentialRepository } from "~/repository/admin-credential-repository";
 import { adminInvitationRepository } from "~/repository/admin-invitation-repository";
 import {
@@ -18,22 +19,6 @@ import { authChallengeRepository } from "~/repository/auth-challenge-repository"
 import { createSession } from "./session";
 
 const CHALLENGE_EXPIRY_MINUTES = 5;
-
-const generateId = () => {
-  const array = new Uint8Array(16);
-  crypto.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
-    "",
-  );
-};
-
-const generateToken = () => {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
-    "",
-  );
-};
 
 export type WebAuthnConfig = {
   rpId: string;

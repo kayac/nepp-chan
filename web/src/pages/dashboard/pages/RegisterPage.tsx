@@ -2,8 +2,8 @@ import { startRegistration } from "@simplewebauthn/browser";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
-import { API_BASE } from "~/lib/api/client";
-import { useAuth } from "../contexts/AuthContext";
+import { fetchRegisterOptions, verifyRegistration } from "~/lib/api/auth";
+import { useAuth } from "~/pages/dashboard/contexts/AuthContext";
 
 export const RegisterPage = () => {
   const { token } = useSearch({ from: "/dashboard/register" });
@@ -26,44 +26,21 @@ export const RegisterPage = () => {
     setIsLoading(true);
 
     try {
-      const optionsRes = await fetch(`${API_BASE}/auth/register/options`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ token }),
-      });
-
-      if (!optionsRes.ok) {
-        const data = await optionsRes.json();
-        throw new Error(data.error || "登録オプションの取得に失敗しました");
-      }
-
       const {
         options,
         challengeId,
         email: invitedEmail,
         invitationId,
-      } = await optionsRes.json();
+      } = await fetchRegisterOptions(token);
 
       setEmail(invitedEmail);
 
       const regResponse = await startRegistration({ optionsJSON: options });
-
-      const verifyRes = await fetch(`${API_BASE}/auth/register/verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          challengeId,
-          response: regResponse,
-          invitationId,
-        }),
+      await verifyRegistration({
+        challengeId,
+        response: regResponse,
+        invitationId,
       });
-
-      if (!verifyRes.ok) {
-        const data = await verifyRes.json();
-        throw new Error(data.error || "登録に失敗しました");
-      }
 
       await checkAuth();
       navigate({ to: "/dashboard" });

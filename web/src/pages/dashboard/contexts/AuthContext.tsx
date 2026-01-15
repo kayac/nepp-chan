@@ -7,14 +7,7 @@ import {
   useState,
 } from "react";
 
-import { API_BASE } from "~/lib/api/client";
-
-type AdminUser = {
-  id: string;
-  email: string;
-  name: string | null;
-  role: string;
-};
+import { type AdminUser, fetchCurrentUser, postLogout } from "~/lib/api/auth";
 
 type AuthState = {
   user: AdminUser | null;
@@ -38,16 +31,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkAuth = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/auth/me`, {
-        credentials: "include",
-      });
-      if (!res.ok) {
-        setState({ user: null, isLoading: false, isAuthenticated: false });
-        return;
-      }
-      const data = await res.json();
-      if (data.user) {
-        setState({ user: data.user, isLoading: false, isAuthenticated: true });
+      const user = await fetchCurrentUser();
+      if (user) {
+        setState({ user, isLoading: false, isAuthenticated: true });
       } else {
         setState({ user: null, isLoading: false, isAuthenticated: false });
       }
@@ -58,10 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(async () => {
     try {
-      await fetch(`${API_BASE}/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
+      await postLogout();
     } finally {
       setState({ user: null, isLoading: false, isAuthenticated: false });
     }
