@@ -136,13 +136,12 @@ export const verifyWebAuthnRegistration = async (
     updatedAt: null,
   });
 
-  const credentialIdBase64 = Buffer.from(credential.id).toString("base64url");
   const publicKeyBase64 = Buffer.from(credential.publicKey).toString(
     "base64url",
   );
 
   await adminCredentialRepository.create(d1, {
-    id: credentialIdBase64,
+    id: credential.id,
     userId,
     publicKey: publicKeyBase64,
     counter: credential.counter,
