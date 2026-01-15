@@ -28,6 +28,7 @@ export const AssistantProvider = ({
       () =>
         new DefaultChatTransport({
           api: `${API_BASE}/chat`,
+          credentials: "include",
           prepareSendMessagesRequest({ messages }) {
             const lastMessage = messages[messages.length - 1];
             return {

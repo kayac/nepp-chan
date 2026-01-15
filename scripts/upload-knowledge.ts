@@ -5,14 +5,7 @@ import { glob } from "glob";
 const KNOWLEDGE_DIR = "./knowledge";
 const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
 const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
-const API_BASE_URL = process.env.API_URL || "http://localhost:8787";
-const ADMIN_KEY = process.env.ADMIN_KEY;
-
-type DeleteResponse = {
-  success: boolean;
-  message: string;
-  count?: number;
-};
+const VECTORIZE_INDEX_NAME = "knowledge";
 
 const validateEnv = () => {
   const missing: string[] = [];
@@ -44,17 +37,13 @@ const printUsage = () => {
 Usage: pnpm run knowledge:upload [options]
 
 Options:
-  --clean           Vectorizeのナレッジを全削除
+  --clean           Vectorizeのナレッジを全削除（wrangler経由）
   --file=<filename> 特定のファイルのみアップロード
   --help, -h        ヘルプを表示
 
 Environment Variables (required):
   CLOUDFLARE_ACCOUNT_ID  Cloudflare アカウント ID
   R2_BUCKET_NAME         R2 バケット名
-
-Environment Variables (optional):
-  API_URL           APIのベースURL (default: http://localhost:8787)
-  ADMIN_KEY         管理API認証キー (required for --clean)
 
 Examples:
   pnpm knowledge:upload                    # 全ファイルをR2にアップロード
@@ -84,24 +73,34 @@ const uploadToR2 = (filepath: string, key: string): boolean => {
   }
 };
 
-const callDeleteApi = async (): Promise<DeleteResponse> => {
-  if (!ADMIN_KEY) {
-    throw new Error("ADMIN_KEY environment variable is required");
+const deleteVectorizeIndex = (): boolean => {
+  try {
+    console.log(`  Deleting Vectorize index: ${VECTORIZE_INDEX_NAME}`);
+
+    // wrangler vectorize delete-index でインデックス内の全ベクトルを削除
+    // --force フラグで確認をスキップ
+    execSync(
+      `CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler vectorize delete-index ${VECTORIZE_INDEX_NAME} --force`,
+      { stdio: "pipe" },
+    );
+
+    console.log("  Index deleted. Recreating...");
+
+    // インデックスを再作成（1536次元、cosine類似度）
+    execSync(
+      `CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler vectorize create ${VECTORIZE_INDEX_NAME} --dimensions=1536 --metric=cosine`,
+      { stdio: "pipe" },
+    );
+
+    console.log("  Index recreated successfully");
+    return true;
+  } catch (error) {
+    console.error(
+      "  Failed to reset Vectorize index:",
+      error instanceof Error ? error.message : error,
+    );
+    return false;
   }
-
-  const response = await fetch(`${API_BASE_URL}/admin/knowledge`, {
-    method: "DELETE",
-    headers: {
-      "X-Admin-Key": ADMIN_KEY,
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Delete API failed: ${response.status} ${error}`);
-  }
-
-  return (await response.json()) as DeleteResponse;
 };
 
 const main = async () => {
@@ -117,23 +116,10 @@ const main = async () => {
   if (args.clean) {
     console.log("=== Knowledge Clean Script ===\n");
 
-    if (!ADMIN_KEY) {
-      console.error("Error: ADMIN_KEY environment variable is required");
-      process.exit(1);
-    }
-
-    try {
-      const result = await callDeleteApi();
-      console.log(`Result: ${result.message}`);
-      if (result.count !== undefined) {
-        console.log(`  Deleted: ${result.count} vectors`);
-      }
+    const success = deleteVectorizeIndex();
+    if (success) {
       console.log("\n=== Clean Complete ===");
-    } catch (error) {
-      console.error(
-        "Clean failed:",
-        error instanceof Error ? error.message : error,
-      );
+    } else {
       process.exit(1);
     }
     return;

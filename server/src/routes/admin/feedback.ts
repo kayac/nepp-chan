@@ -3,14 +3,14 @@ import { count } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
 import { createDb, messageFeedback } from "~/db";
-import { adminAuth } from "~/middleware/admin-auth";
+import { sessionAuth } from "~/middleware/session-auth";
 import { feedbackRepository } from "~/repository/feedback-repository";
 
 export const feedbackAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
 }>();
 
-feedbackAdminRoutes.use("*", adminAuth);
+feedbackAdminRoutes.use("*", sessionAuth);
 
 const FeedbackSchema = z.object({
   id: z.string(),
