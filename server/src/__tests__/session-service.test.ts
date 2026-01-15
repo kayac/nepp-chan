@@ -293,5 +293,29 @@ describe("sessionService", () => {
 
       expect(options.sameSite).toBe("Strict");
     });
+
+    it("localhost の場合は secure が false になる", () => {
+      const options = sessionService.getSessionCookieOptions(new Date(), true);
+
+      expect(options.secure).toBe(false);
+    });
+
+    it("localhost の場合は sameSite が Lax になる", () => {
+      const options = sessionService.getSessionCookieOptions(new Date(), true);
+
+      expect(options.sameSite).toBe("Lax");
+    });
+
+    it("localhost でない場合（デフォルト）は secure が true になる", () => {
+      const options = sessionService.getSessionCookieOptions(new Date(), false);
+
+      expect(options.secure).toBe(true);
+    });
+
+    it("localhost でない場合（デフォルト）は sameSite が Strict になる", () => {
+      const options = sessionService.getSessionCookieOptions(new Date(), false);
+
+      expect(options.sameSite).toBe("Strict");
+    });
   });
 });

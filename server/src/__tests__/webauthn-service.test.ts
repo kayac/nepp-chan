@@ -163,6 +163,134 @@ describe("webauthn service", () => {
       expect(savedId).not.toContain("cnh4OGEwQnU5Q1VENC");
     });
 
+    it("パスキーの検証に失敗した場合はエラーを返す（verified が false）", async () => {
+      vi.mocked(authChallengeRepository.findValidById).mockResolvedValue(
+        mockChallenge,
+      );
+      vi.mocked(adminInvitationRepository.findById).mockResolvedValue(
+        mockInvitation,
+      );
+      vi.mocked(verifyRegistrationResponse).mockResolvedValue({
+        verified: false,
+        registrationInfo: undefined,
+      });
+
+      await expect(
+        webauthn.verifyWebAuthnRegistration(
+          mockDb,
+          mockConfig,
+          "challenge-1",
+          {} as Parameters<typeof webauthn.verifyWebAuthnRegistration>[3],
+          "invitation-1",
+        ),
+      ).rejects.toThrow("パスキーの検証に失敗しました");
+
+      expect(adminUserRepository.create).not.toHaveBeenCalled();
+      expect(adminCredentialRepository.create).not.toHaveBeenCalled();
+    });
+
+    it("パスキーの検証に失敗した場合はエラーを返す（registrationInfo が undefined）", async () => {
+      vi.mocked(authChallengeRepository.findValidById).mockResolvedValue(
+        mockChallenge,
+      );
+      vi.mocked(adminInvitationRepository.findById).mockResolvedValue(
+        mockInvitation,
+      );
+      vi.mocked(verifyRegistrationResponse).mockResolvedValue({
+        verified: true,
+        registrationInfo: undefined,
+        // biome-ignore lint/suspicious/noExplicitAny: テスト用の不正な戻り値をシミュレート
+      } as any);
+
+      await expect(
+        webauthn.verifyWebAuthnRegistration(
+          mockDb,
+          mockConfig,
+          "challenge-1",
+          {} as Parameters<typeof webauthn.verifyWebAuthnRegistration>[3],
+          "invitation-1",
+        ),
+      ).rejects.toThrow("パスキーの検証に失敗しました");
+
+      expect(adminUserRepository.create).not.toHaveBeenCalled();
+      expect(adminCredentialRepository.create).not.toHaveBeenCalled();
+    });
+
+    it("招待と認証リクエストのメールアドレスが一致しない場合はエラーを返す", async () => {
+      const differentEmailChallenge = {
+        ...mockChallenge,
+        email: "different@example.com",
+      };
+
+      vi.mocked(authChallengeRepository.findValidById).mockResolvedValue(
+        differentEmailChallenge,
+      );
+      vi.mocked(adminInvitationRepository.findById).mockResolvedValue(
+        mockInvitation,
+      );
+
+      await expect(
+        webauthn.verifyWebAuthnRegistration(
+          mockDb,
+          mockConfig,
+          "challenge-1",
+          {} as Parameters<typeof webauthn.verifyWebAuthnRegistration>[3],
+          "invitation-1",
+        ),
+      ).rejects.toThrow("招待と認証リクエストのメールアドレスが一致しません");
+
+      expect(verifyRegistrationResponse).not.toHaveBeenCalled();
+    });
+
+    it("使用済みの招待の場合はエラーを返す", async () => {
+      const usedInvitation = {
+        ...mockInvitation,
+        usedAt: new Date().toISOString(),
+      };
+
+      vi.mocked(authChallengeRepository.findValidById).mockResolvedValue(
+        mockChallenge,
+      );
+      vi.mocked(adminInvitationRepository.findById).mockResolvedValue(
+        usedInvitation,
+      );
+
+      await expect(
+        webauthn.verifyWebAuthnRegistration(
+          mockDb,
+          mockConfig,
+          "challenge-1",
+          {} as Parameters<typeof webauthn.verifyWebAuthnRegistration>[3],
+          "invitation-1",
+        ),
+      ).rejects.toThrow("無効な招待です");
+
+      expect(verifyRegistrationResponse).not.toHaveBeenCalled();
+    });
+
+    it("認証トークンのタイプが registration でない場合はエラーを返す", async () => {
+      const authenticationChallenge = {
+        ...mockChallenge,
+        type: "authentication",
+      };
+
+      vi.mocked(authChallengeRepository.findValidById).mockResolvedValue(
+        authenticationChallenge,
+      );
+
+      await expect(
+        webauthn.verifyWebAuthnRegistration(
+          mockDb,
+          mockConfig,
+          "challenge-1",
+          {} as Parameters<typeof webauthn.verifyWebAuthnRegistration>[3],
+          "invitation-1",
+        ),
+      ).rejects.toThrow("認証リクエストが無効または期限切れです");
+
+      expect(adminInvitationRepository.findById).not.toHaveBeenCalled();
+    });
+
     it("publicKey は base64url エンコードして保存する", async () => {
       const publicKeyBytes = new Uint8Array([1, 2, 3, 4, 5]);
       const expectedPublicKeyBase64 =
@@ -302,6 +430,84 @@ describe("webauthn service", () => {
         mockDb,
         credentialId,
       );
+    });
+
+    it("認証の検証に失敗した場合はエラーを返す（verified が false）", async () => {
+      const credentialId = "test-credential-id";
+
+      vi.mocked(authChallengeRepository.findValidById).mockResolvedValue(
+        mockChallenge,
+      );
+      vi.mocked(adminCredentialRepository.findById).mockResolvedValue(
+        mockCredential,
+      );
+      vi.mocked(verifyAuthenticationResponse).mockResolvedValue({
+        verified: false,
+        authenticationInfo: {
+          credentialID: credentialId,
+          newCounter: 1,
+          userVerified: false,
+          credentialDeviceType: "singleDevice",
+          credentialBackedUp: false,
+          origin: "http://localhost:5173",
+          rpID: "localhost",
+        },
+      });
+
+      await expect(
+        webauthn.verifyWebAuthnAuthentication(
+          mockDb,
+          mockConfig,
+          "challenge-1",
+          {
+            id: credentialId,
+            rawId: credentialId,
+            type: "public-key",
+            response: {
+              clientDataJSON: "",
+              authenticatorData: "",
+              signature: "",
+            },
+            authenticatorAttachment: "platform",
+            clientExtensionResults: {},
+          },
+        ),
+      ).rejects.toThrow("認証に失敗しました");
+
+      expect(adminCredentialRepository.updateCounter).not.toHaveBeenCalled();
+    });
+
+    it("認証トークンのタイプが authentication でない場合はエラーを返す", async () => {
+      const registrationChallenge = {
+        ...mockChallenge,
+        type: "registration",
+      };
+
+      vi.mocked(authChallengeRepository.findValidById).mockResolvedValue(
+        registrationChallenge,
+      );
+
+      await expect(
+        webauthn.verifyWebAuthnAuthentication(
+          mockDb,
+          mockConfig,
+          "challenge-1",
+          {
+            id: "test-credential",
+            rawId: "test-credential",
+            type: "public-key",
+            response: {
+              clientDataJSON: "",
+              authenticatorData: "",
+              signature: "",
+            },
+            authenticatorAttachment: "platform",
+            clientExtensionResults: {},
+          },
+        ),
+      ).rejects.toThrow("認証リクエストが無効または期限切れです");
+
+      expect(adminCredentialRepository.findById).not.toHaveBeenCalled();
     });
 
     it("登録されていないクレデンシャルの場合はエラーを返す", async () => {
