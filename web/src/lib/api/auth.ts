@@ -75,7 +75,8 @@ export const fetchLoginOptions = async (): Promise<LoginOptionsResponse> => {
   });
 
   if (!res.ok) {
-    throw new Error("ログインオプションの取得に失敗しました");
+    const data = await res.json();
+    throw new Error(data.error || "ログインオプションの取得に失敗しました");
   }
 
   return res.json();
@@ -106,6 +107,9 @@ export const fetchCurrentUser = async (): Promise<AdminUser | null> => {
   });
 
   if (!res.ok) {
+    if (res.status !== 401) {
+      console.error(`認証情報取得エラー: ${res.status} ${res.statusText}`);
+    }
     return null;
   }
 
@@ -114,10 +118,17 @@ export const fetchCurrentUser = async (): Promise<AdminUser | null> => {
 };
 
 export const postLogout = async () => {
-  await fetch(`${API_BASE}/auth/logout`, {
-    method: "POST",
-    credentials: "include",
-  });
+  try {
+    const res = await fetch(`${API_BASE}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+    if (!res.ok) {
+      console.error(`ログアウトエラー: ${res.status} ${res.statusText}`);
+    }
+  } catch (error) {
+    console.error("ログアウト失敗:", error);
+  }
 };
 
 export type { AdminUser };
