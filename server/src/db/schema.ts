@@ -129,7 +129,7 @@ export const adminSessions = sqliteTable("admin_sessions", {
 export type AdminSession = typeof adminSessions.$inferSelect;
 export type NewAdminSession = typeof adminSessions.$inferInsert;
 
-// 認証チャレンジ（一時保存）
+// 認証リクエスト（一時保存、WebAuthn challenge）
 export const authChallenges = sqliteTable("auth_challenges", {
   id: text("id").primaryKey(),
   challenge: text("challenge").notNull(),
