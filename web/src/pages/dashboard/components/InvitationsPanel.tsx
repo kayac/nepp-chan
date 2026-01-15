@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { API_BASE } from "~/lib/api/client";
+import { useAuth } from "../contexts/AuthContext";
 
 type Invitation = {
   id: string;
@@ -47,6 +48,7 @@ const deleteInvitation = async (id: string): Promise<void> => {
 
 export const InvitationsPanel = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -218,7 +220,7 @@ export const InvitationsPanel = () => {
                       {formatDate(inv.expiresAt)}
                     </td>
                     <td className="px-4 py-3">
-                      {!inv.usedAt && (
+                      {(!inv.usedAt || user?.role === "super_admin") && (
                         <button
                           type="button"
                           onClick={() => deleteMutation.mutate(inv.id)}
