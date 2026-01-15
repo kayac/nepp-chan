@@ -1,3 +1,4 @@
+import { generateToken } from "~/lib/crypto";
 import { adminSessionRepository } from "~/repository/admin-session-repository";
 import {
   type AdminUser,
@@ -6,16 +7,8 @@ import {
 
 const SESSION_DURATION_DAYS = 30;
 
-const generateSessionId = () => {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
-    "",
-  );
-};
-
 export const createSession = async (d1: D1Database, userId: string) => {
-  const sessionId = generateSessionId();
+  const sessionId = generateToken();
   const now = new Date();
   const expiresAt = new Date(
     now.getTime() + SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000,

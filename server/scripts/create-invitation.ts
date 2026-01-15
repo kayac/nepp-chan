@@ -13,21 +13,7 @@
 
 import { execSync } from "node:child_process";
 
-const generateId = () => {
-  const array = new Uint8Array(16);
-  crypto.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
-    "",
-  );
-};
-
-const generateToken = () => {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
-    "",
-  );
-};
+import { generateId, generateToken } from "../src/lib/crypto";
 
 const parseArgs = (args: string[]) => {
   const email = args.find((arg) => !arg.startsWith("--"));

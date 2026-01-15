@@ -2,8 +2,8 @@ import { startAuthentication } from "@simplewebauthn/browser";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { API_BASE } from "~/lib/api/client";
-import { useAuth } from "../contexts/AuthContext";
+import { fetchLoginOptions, verifyLogin } from "~/lib/api/auth";
+import { useAuth } from "~/pages/dashboard/contexts/AuthContext";
 
 export const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
@@ -16,33 +16,9 @@ export const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const optionsRes = await fetch(`${API_BASE}/auth/login/options`, {
-        method: "POST",
-        credentials: "include",
-      });
-
-      if (!optionsRes.ok) {
-        throw new Error("ログインオプションの取得に失敗しました");
-      }
-
-      const { options, challengeId } = await optionsRes.json();
-
+      const { options, challengeId } = await fetchLoginOptions();
       const authResponse = await startAuthentication({ optionsJSON: options });
-
-      const verifyRes = await fetch(`${API_BASE}/auth/login/verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          challengeId,
-          response: authResponse,
-        }),
-      });
-
-      if (!verifyRes.ok) {
-        const data = await verifyRes.json();
-        throw new Error(data.error || "認証に失敗しました");
-      }
+      await verifyLogin({ challengeId, response: authResponse });
 
       await checkAuth();
       navigate({ to: "/dashboard" });
