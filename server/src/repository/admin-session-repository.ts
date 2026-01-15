@@ -36,15 +36,23 @@ export const adminSessionRepository = {
     return result ?? null;
   },
 
-  async findValidById(d1: D1Database, id: string) {
+  async findValidById(d1: D1Database, id: string, maxAgeDays = 90) {
     const db = createDb(d1);
-    const now = new Date().toISOString();
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const absoluteExpiry = new Date(
+      now.getTime() - maxAgeDays * 24 * 60 * 60 * 1000,
+    ).toISOString();
 
     const result = await db
       .select()
       .from(adminSessions)
       .where(
-        and(eq(adminSessions.id, id), sql`${adminSessions.expiresAt} > ${now}`),
+        and(
+          eq(adminSessions.id, id),
+          sql`${adminSessions.expiresAt} > ${nowIso}`,
+          sql`${adminSessions.createdAt} > ${absoluteExpiry}`,
+        ),
       )
       .get();
 

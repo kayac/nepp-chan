@@ -130,6 +130,7 @@ describe("sessionService", () => {
       expect(adminSessionRepository.findValidById).toHaveBeenCalledWith(
         mockDb,
         testSession.id,
+        90,
       );
     });
 

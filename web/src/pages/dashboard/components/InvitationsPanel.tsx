@@ -23,13 +23,12 @@ const fetchInvitations = async (): Promise<{ invitations: Invitation[] }> => {
 
 const createInvitation = async (
   email: string,
-  role: string,
 ): Promise<{ success: boolean; invitation: { token: string } }> => {
   const res = await fetch(`${API_BASE}/admin/invitations`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ email, role }),
+    body: JSON.stringify({ email }),
   });
   if (!res.ok) {
     const data = await res.json();
@@ -49,7 +48,6 @@ const deleteInvitation = async (id: string): Promise<void> => {
 export const InvitationsPanel = () => {
   const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("admin");
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,8 +57,7 @@ export const InvitationsPanel = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: ({ email, role }: { email: string; role: string }) =>
-      createInvitation(email, role),
+    mutationFn: (email: string) => createInvitation(email),
     onSuccess: (data) => {
       const baseUrl = window.location.origin;
       const url = `${baseUrl}/dashboard/register?token=${data.invitation.token}`;
@@ -85,7 +82,7 @@ export const InvitationsPanel = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
-    createMutation.mutate({ email: email.trim(), role });
+    createMutation.mutate(email.trim());
   };
 
   const copyToClipboard = async (text: string) => {
@@ -152,14 +149,6 @@ export const InvitationsPanel = () => {
             required
             className="flex-1 px-3 py-2 border border-stone-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="px-3 py-2 border border-stone-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-          >
-            <option value="admin">管理者</option>
-            <option value="super_admin">スーパー管理者</option>
-          </select>
           <button
             type="submit"
             disabled={createMutation.isPending}
