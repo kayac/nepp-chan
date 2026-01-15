@@ -31,6 +31,13 @@
   /* ユーザーメッセージ - 落ち着いた青緑 */
   --color-user-message: #115e59; /* teal-800 */
   --color-user-message-hover: #134e4a; /* teal-900 */
+
+  /* 管理者モード - 温かみのあるアンバー */
+  --color-admin: #d97706; /* amber-600 */
+  --color-admin-hover: #b45309; /* amber-700 */
+  --color-admin-light: #fbbf24; /* amber-400 */
+  --color-admin-bg: #fffbeb; /* amber-50 */
+  --color-admin-border: #fde68a; /* amber-200 */
 }
 
 body {

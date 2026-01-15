@@ -1,9 +1,15 @@
-import { Bars3Icon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  Bars3Icon,
+  Cog6ToothIcon,
+  PlusIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Thread } from "~/components/assistant-ui/Thread";
 import { LoadingDots } from "~/components/ui/Loading";
+import { useAdminUser } from "~/hooks/useAdminUser";
 import { threadKeys, useCreateThread, useThreads } from "~/hooks/useThreads";
 import { cn } from "~/lib/class-merge";
 import { getResourceId } from "~/lib/resource";
@@ -37,6 +43,8 @@ const FeedbackModalWrapper = () => {
 
 export const ChatPage = () => {
   const resourceId = useMemo(() => getResourceId(), []);
+  const { data: adminUser } = useAdminUser();
+  const isAdmin = !!adminUser;
 
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -201,37 +209,81 @@ export const ChatPage = () => {
 
       {/* メインコンテンツ */}
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-10 h-14 border-b border-(--color-border) bg-(--color-surface) px-4 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
+        <header
+          className={cn(
+            "sticky top-0 z-10 border-b bg-(--color-surface) px-4 flex flex-col shrink-0 transition-colors",
+            isAdmin && "border-b-0",
+          )}
+        >
+          {/* 管理者モードバナー */}
+          {isAdmin && (
+            <div className="h-8 -mx-4 px-4 bg-(--color-admin-bg) border-b border-(--color-admin-border) flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-(--color-admin) animate-pulse" />
+                <span className="text-xs font-medium text-(--color-admin)">
+                  管理者モード
+                </span>
+              </div>
+              <a
+                href="/dashboard"
+                className="flex items-center gap-1 text-xs font-medium text-(--color-admin) hover:text-(--color-admin-hover) transition-colors"
+              >
+                <Cog6ToothIcon className="w-3.5 h-3.5" />
+                管理画面
+              </a>
+            </div>
+          )}
+
+          {/* メインヘッダー */}
+          <div
+            className={cn(
+              "h-14 flex items-center justify-between",
+              isAdmin && "border-b border-(--color-border)",
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="p-2 -ml-2 hover:bg-(--color-surface-hover) rounded-lg transition-colors"
+                aria-label="メニュー"
+              >
+                <Bars3Icon
+                  className="w-5 h-5 text-(--color-text-muted)"
+                  aria-hidden="true"
+                />
+              </button>
+              <div className="flex items-center gap-2">
+                <div
+                  className={cn(
+                    "w-7 h-7 rounded-lg flex items-center justify-center transition-colors",
+                    isAdmin ? "bg-(--color-admin)" : "bg-(--color-accent)",
+                  )}
+                >
+                  <span className="text-white text-xs font-bold">
+                    {isAdmin ? "管" : "ね"}
+                  </span>
+                </div>
+                <h1 className="text-base font-semibold text-(--color-text)">
+                  ねっぷちゃん
+                </h1>
+              </div>
+            </div>
             <button
               type="button"
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 -ml-2 hover:bg-(--color-surface-hover) rounded-lg transition-colors"
-              aria-label="メニュー"
+              onClick={handleNewThread}
+              disabled={createThreadMutation.isPending}
+              className={cn(
+                "text-sm transition-colors disabled:opacity-60 flex items-center gap-1",
+                isAdmin
+                  ? "text-(--color-admin) hover:text-(--color-admin-hover)"
+                  : "text-(--color-accent) hover:text-(--color-accent-hover)",
+              )}
             >
-              <Bars3Icon
-                className="w-5 h-5 text-(--color-text-muted)"
-                aria-hidden="true"
-              />
+              <PlusIcon className="w-4 h-4" />
+              新しい会話
             </button>
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-(--color-accent) flex items-center justify-center">
-                <span className="text-white text-xs font-bold">ね</span>
-              </div>
-              <h1 className="text-base font-semibold text-(--color-text)">
-                ねっぷちゃん
-              </h1>
-            </div>
           </div>
-          <button
-            type="button"
-            onClick={handleNewThread}
-            disabled={createThreadMutation.isPending}
-            className="text-sm text-(--color-accent) hover:text-(--color-accent-hover) transition-colors disabled:opacity-60 flex items-center gap-1"
-          >
-            <PlusIcon className="w-4 h-4" />
-            新しい会話
-          </button>
         </header>
 
         {currentThreadId && !messagesLoading ? (
