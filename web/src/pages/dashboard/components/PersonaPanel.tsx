@@ -4,6 +4,7 @@ import {
   usePersonas,
 } from "~/hooks/useDashboard";
 import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
+import { formatDateTime } from "~/lib/format";
 
 export const PersonaPanel = () => {
   const {
@@ -168,13 +169,11 @@ export const PersonaPanel = () => {
                   </td>
                   <td className="px-4 py-3 text-stone-500 whitespace-nowrap">
                     {persona.conversationEndedAt
-                      ? new Date(persona.conversationEndedAt).toLocaleString(
-                          "ja-JP",
-                        )
+                      ? formatDateTime(persona.conversationEndedAt)
                       : "-"}
                   </td>
                   <td className="px-4 py-3 text-stone-500 whitespace-nowrap">
-                    {new Date(persona.createdAt).toLocaleString("ja-JP")}
+                    {formatDateTime(persona.createdAt)}
                   </td>
                 </tr>
               ))}

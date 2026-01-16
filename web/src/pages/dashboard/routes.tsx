@@ -24,8 +24,12 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
 const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/dashboard",
-  beforeLoad: ({ context }) => {
-    if (!context.auth.isLoading && !context.auth.isAuthenticated) {
+  beforeLoad: async ({ context }) => {
+    // isLoading 中は認証チェック完了を待つ
+    if (context.auth.isLoading) {
+      await context.auth.checkAuth();
+    }
+    if (!context.auth.isAuthenticated) {
       window.location.href = "/login";
     }
   },

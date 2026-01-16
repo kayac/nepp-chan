@@ -1,54 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { API_BASE } from "~/lib/api/client";
+import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
+import { formatDateTime } from "~/lib/format";
+import {
+  createInvitation,
+  deleteInvitation,
+  fetchInvitations,
+} from "~/repository/invitation-repository";
 import { useAuth } from "../contexts/AuthContext";
-
-type Invitation = {
-  id: string;
-  email: string;
-  role: string;
-  invitedBy: string;
-  expiresAt: string;
-  usedAt: string | null;
-  createdAt: string;
-};
-
-const fetchInvitations = async (): Promise<{ invitations: Invitation[] }> => {
-  const res = await fetch(`${API_BASE}/admin/invitations`, {
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error("招待一覧の取得に失敗しました");
-  return res.json();
-};
-
-const createInvitation = async (
-  email: string,
-): Promise<{ success: boolean; invitation: { token: string } }> => {
-  const res = await fetch(`${API_BASE}/admin/invitations`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ email }),
-  });
-  if (!res.ok) {
-    const data = await res.json();
-    throw new Error(data.error || "招待の作成に失敗しました");
-  }
-  return res.json();
-};
-
-const deleteInvitation = async (id: string): Promise<void> => {
-  const res = await fetch(`${API_BASE}/admin/invitations/${id}`, {
-    method: "DELETE",
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error("招待の削除に失敗しました");
-};
 
 export const InvitationsPanel = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { copyToClipboard } = useCopyToClipboard();
   const [email, setEmail] = useState("");
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -87,20 +52,6 @@ export const InvitationsPanel = () => {
     createMutation.mutate(email.trim());
   };
 
-  const copyToClipboard = async (text: string) => {
-    await navigator.clipboard.writeText(text);
-  };
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleString("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   const isExpired = (expiresAt: string) => {
     return new Date(expiresAt) < new Date();
   };
@@ -129,6 +80,7 @@ export const InvitationsPanel = () => {
                 type="text"
                 value={createdUrl}
                 readOnly
+                aria-label="招待URL"
                 className="flex-1 px-3 py-2 bg-white border border-stone-300 rounded text-sm"
               />
               <button
@@ -217,7 +169,7 @@ export const InvitationsPanel = () => {
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm text-stone-600">
-                      {formatDate(inv.expiresAt)}
+                      {formatDateTime(inv.expiresAt)}
                     </td>
                     <td className="px-4 py-3">
                       {(!inv.usedAt || user?.role === "super_admin") && (

@@ -1,4 +1,5 @@
 import { useEmergencies } from "~/hooks/useDashboard";
+import { formatDateTime } from "~/lib/format";
 
 export const EmergencyPanel = () => {
   const { data, isLoading, error } = useEmergencies();
@@ -64,7 +65,7 @@ export const EmergencyPanel = () => {
                   {emergency.location ?? "-"}
                 </td>
                 <td className="px-4 py-3 text-stone-500 whitespace-nowrap">
-                  {new Date(emergency.reportedAt).toLocaleString("ja-JP")}
+                  {formatDateTime(emergency.reportedAt)}
                 </td>
               </tr>
             ))}
