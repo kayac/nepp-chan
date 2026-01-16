@@ -22,6 +22,8 @@ Cloudflare Pages で動作するフロントエンド。React + Vite + TailwindC
 web/
 ├── index.html           # チャット画面エントリー（/）
 ├── dashboard.html       # ダッシュボード画面エントリー（/dashboard）
+├── login.html           # ログイン画面エントリー（/login）
+├── register.html        # 登録画面エントリー（/register）
 ├── src/
 │   ├── components/
 │   │   ├── assistant-ui/      # assistant-ui ベースのチャット UI
@@ -50,6 +52,9 @@ web/
 │   │   │   ├── AssistantProvider.tsx # Runtime Provider
 │   │   │   ├── FeedbackContext.tsx   # フィードバック状態管理
 │   │   │   └── components/          # レガシー（未使用）
+│   │   ├── auth/              # 認証画面（スタンドアロン）
+│   │   │   ├── login.tsx            # ログインページ
+│   │   │   └── register.tsx         # 登録ページ
 │   │   └── dashboard/         # ダッシュボード画面（管理）
 │   │       └── ...
 │   ├── hooks/                 # 共有フック
@@ -133,6 +138,8 @@ export const toolsByName = {
 | ------------ | ----------------- | ---------------------- |
 | `/`          | `index.html`      | チャット画面           |
 | `/dashboard` | `dashboard.html`  | ダッシュボード（管理） |
+| `/login`     | `login.html`      | ログイン画面           |
+| `/register`  | `register.html`   | 登録画面               |
 
 ## コーディング規約
 
