@@ -1,3 +1,4 @@
+import { formatDateTime } from "~/lib/format";
 import { getOriginalFileUrl } from "~/repository/knowledge-repository";
 import type { UnifiedFileInfo } from "~/types";
 
@@ -21,15 +22,6 @@ const formatFileSize = (bytes: number) => {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
-
-const formatDate = (dateString: string) =>
-  new Date(dateString).toLocaleString("ja-JP", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 
 const isImageType = (contentType: string) => contentType.startsWith("image/");
 
@@ -124,7 +116,7 @@ export const FileList = ({
 
                 {/* 更新日時 */}
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-stone-500">
-                  {lastModified ? formatDate(lastModified) : "-"}
+                  {lastModified ? formatDateTime(lastModified) : "-"}
                 </td>
 
                 {/* 操作 */}

@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
 import { API_BASE } from "~/lib/api/client";
+import { formatDateTime } from "~/lib/format";
 import { useAuth } from "../contexts/AuthContext";
 
 type Invitation = {
@@ -87,16 +88,6 @@ export const InvitationsPanel = () => {
     e.preventDefault();
     if (!email.trim()) return;
     createMutation.mutate(email.trim());
-  };
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleString("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   };
 
   const isExpired = (expiresAt: string) => {
@@ -216,7 +207,7 @@ export const InvitationsPanel = () => {
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm text-stone-600">
-                      {formatDate(inv.expiresAt)}
+                      {formatDateTime(inv.expiresAt)}
                     </td>
                     <td className="px-4 py-3">
                       {(!inv.usedAt || user?.role === "super_admin") && (

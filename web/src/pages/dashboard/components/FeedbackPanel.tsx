@@ -14,6 +14,7 @@ import {
   useUnresolveFeedback,
 } from "~/hooks/useDashboard";
 import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
+import { formatDateTime } from "~/lib/format";
 import {
   type ConversationContext,
   FEEDBACK_CATEGORY_LABELS,
@@ -97,7 +98,7 @@ const FeedbackDetailModal = ({
               </span>
             )}
             <span className="text-sm text-stone-500">
-              {new Date(feedback.createdAt).toLocaleString("ja-JP")}
+              {formatDateTime(feedback.createdAt)}
             </span>
           </div>
 
@@ -523,7 +524,7 @@ export const FeedbackPanel = () => {
                       {feedback.comment || "-"}
                     </td>
                     <td className="px-4 py-3 text-stone-500 whitespace-nowrap">
-                      {new Date(feedback.createdAt).toLocaleString("ja-JP")}
+                      {formatDateTime(feedback.createdAt)}
                     </td>
                     <td className="px-4 py-3 w-24">
                       <button
