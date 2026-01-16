@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
 import { API_BASE } from "~/lib/api/client";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -49,6 +50,7 @@ const deleteInvitation = async (id: string): Promise<void> => {
 export const InvitationsPanel = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { copyToClipboard } = useCopyToClipboard();
   const [email, setEmail] = useState("");
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -85,10 +87,6 @@ export const InvitationsPanel = () => {
     e.preventDefault();
     if (!email.trim()) return;
     createMutation.mutate(email.trim());
-  };
-
-  const copyToClipboard = async (text: string) => {
-    await navigator.clipboard.writeText(text);
   };
 
   const formatDate = (dateStr: string) => {

@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo } from "react";
 
 import "@assistant-ui/react-markdown/styles/dot.css";
 import {
@@ -11,22 +11,8 @@ import { CheckIcon, CopyIcon } from "lucide-react";
 import remarkGfm from "remark-gfm";
 
 import { TooltipIconButton } from "~/components/assistant-ui/TooltipIconButton";
+import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
 import { cn } from "~/lib/class-merge";
-
-const useCopyToClipboard = ({ copiedDuration = 3000 } = {}) => {
-  const [isCopied, setIsCopied] = useState(false);
-
-  const copyToClipboard = (value: string) => {
-    if (!value) return;
-
-    navigator.clipboard.writeText(value).then(() => {
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), copiedDuration);
-    });
-  };
-
-  return { isCopied, copyToClipboard };
-};
 
 const CodeHeader = ({ language, code }: CodeHeaderProps) => {
   const { isCopied, copyToClipboard } = useCopyToClipboard();
