@@ -1,15 +1,13 @@
 import { startAuthentication } from "@simplewebauthn/browser";
-import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { StrictMode, useState } from "react";
+import { createRoot } from "react-dom/client";
 
+import "~/index.css";
 import { fetchLoginOptions, verifyLogin } from "~/lib/api/auth";
-import { useAuth } from "~/pages/dashboard/contexts/AuthContext";
 
-export const LoginPage = () => {
+const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
-  const { checkAuth } = useAuth();
 
   const handleLogin = async () => {
     setError(null);
@@ -20,8 +18,7 @@ export const LoginPage = () => {
       const authResponse = await startAuthentication({ optionsJSON: options });
       await verifyLogin({ challengeId, response: authResponse });
 
-      await checkAuth();
-      navigate({ to: "/dashboard" });
+      window.location.href = "/dashboard";
     } catch (err) {
       if (err instanceof Error) {
         if (err.name === "NotAllowedError") {
@@ -71,7 +68,7 @@ export const LoginPage = () => {
         <p className="mt-4 text-center text-stone-500 text-sm">
           招待を受けた方は
           <a
-            href="/dashboard/register"
+            href="/register"
             className="text-teal-600 hover:text-teal-700 ml-1"
           >
             こちらで登録
@@ -81,3 +78,12 @@ export const LoginPage = () => {
     </div>
   );
 };
+
+const root = document.getElementById("root");
+if (!root) throw new Error("Root element not found");
+
+createRoot(root).render(
+  <StrictMode>
+    <LoginPage />
+  </StrictMode>,
+);

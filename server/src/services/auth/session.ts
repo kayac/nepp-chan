@@ -79,7 +79,7 @@ export const getSessionCookieOptions = (
   return {
     httpOnly: true,
     secure: !isLocalhost,
-    sameSite: isLocalhost ? ("Lax" as const) : ("Strict" as const),
+    sameSite: isLocalhost ? ("Lax" as const) : ("None" as const),
     path: "/",
     expires: expiresAt,
   };

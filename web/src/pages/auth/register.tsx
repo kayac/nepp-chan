@@ -1,17 +1,17 @@
 import { startRegistration } from "@simplewebauthn/browser";
-import { useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { StrictMode, useEffect, useState } from "react";
+import { createRoot } from "react-dom/client";
 
+import "~/index.css";
 import { fetchRegisterOptions, verifyRegistration } from "~/lib/api/auth";
-import { useAuth } from "~/pages/dashboard/contexts/AuthContext";
 
-export const RegisterPage = () => {
-  const { token } = useSearch({ from: "/dashboard/register" });
+const RegisterPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const { checkAuth } = useAuth();
+
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token");
 
   useEffect(() => {
     if (!token) {
@@ -42,8 +42,7 @@ export const RegisterPage = () => {
         invitationId,
       });
 
-      await checkAuth();
-      navigate({ to: "/dashboard" });
+      window.location.href = "/dashboard";
     } catch (err) {
       if (err instanceof Error) {
         if (err.name === "NotAllowedError") {
@@ -100,7 +99,7 @@ export const RegisterPage = () => {
 
           <div className="mt-6 text-center">
             <a
-              href="/dashboard/login"
+              href="/login"
               className="text-teal-600 hover:text-teal-700 text-sm"
             >
               既にアカウントをお持ちの方はログイン
@@ -111,3 +110,12 @@ export const RegisterPage = () => {
     </div>
   );
 };
+
+const root = document.getElementById("root");
+if (!root) throw new Error("Root element not found");
+
+createRoot(root).render(
+  <StrictMode>
+    <RegisterPage />
+  </StrictMode>,
+);

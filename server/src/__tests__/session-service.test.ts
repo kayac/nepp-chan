@@ -271,7 +271,7 @@ describe("sessionService", () => {
       expect(options).toEqual({
         httpOnly: true,
         secure: true,
-        sameSite: "Strict",
+        sameSite: "None",
         path: "/",
         expires: expiresAt,
       });
@@ -289,10 +289,10 @@ describe("sessionService", () => {
       expect(options.secure).toBe(true);
     });
 
-    it("sameSite が Strict である（CSRF対策）", () => {
+    it("sameSite が None である（クロスオリジン対応）", () => {
       const options = sessionService.getSessionCookieOptions(new Date());
 
-      expect(options.sameSite).toBe("Strict");
+      expect(options.sameSite).toBe("None");
     });
 
     it("localhost の場合は secure が false になる", () => {
@@ -313,10 +313,10 @@ describe("sessionService", () => {
       expect(options.secure).toBe(true);
     });
 
-    it("localhost でない場合（デフォルト）は sameSite が Strict になる", () => {
+    it("localhost でない場合（デフォルト）は sameSite が None になる", () => {
       const options = sessionService.getSessionCookieOptions(new Date(), false);
 
-      expect(options.sameSite).toBe("Strict");
+      expect(options.sameSite).toBe("None");
     });
   });
 });
