@@ -20,7 +20,10 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   rating: FeedbackRating;
-  onSubmit: (data: { category?: FeedbackCategory; comment?: string }) => void;
+  onSubmit: (data: {
+    category?: FeedbackCategory;
+    comment?: string;
+  }) => Promise<void>;
   isSubmitting: boolean;
 };
 
@@ -38,9 +41,9 @@ export const FeedbackModal = ({
 
   const isBadRating = rating === "bad";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
+    await onSubmit({
       category: isBadRating ? category : undefined,
       comment: comment.trim() || undefined,
     });

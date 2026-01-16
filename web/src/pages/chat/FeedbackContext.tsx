@@ -87,13 +87,16 @@ const extractConversationContext = (
 };
 
 const extractToolExecutions = (message: UIMessage): ToolExecution[] =>
-  message.parts.filter(isToolOrDynamicToolUIPart).map((part) => ({
-    toolName: getToolNameFromPart(part),
-    state: part.state,
-    input: "input" in part ? part.input : undefined,
-    output: "output" in part ? part.output : undefined,
-    errorText: "errorText" in part ? (part.errorText as string) : undefined,
-  }));
+  message.parts
+    .filter(isToolOrDynamicToolUIPart)
+    .filter((part) => part.state !== undefined)
+    .map((part) => ({
+      toolName: getToolNameFromPart(part),
+      state: part.state as string,
+      input: "input" in part ? part.input : undefined,
+      output: "output" in part ? part.output : undefined,
+      errorText: "errorText" in part ? (part.errorText as string) : undefined,
+    }));
 
 /**
  * assistant-ui の ThreadMessage を UIMessage に変換
