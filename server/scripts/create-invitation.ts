@@ -87,14 +87,11 @@ VALUES ('${id}', '${email}', '${token}', 'system', '${role}', '${expiresAt.toISO
 
     execSync(command, { stdio: "inherit", cwd: process.cwd() });
 
+    const prodUrl = process.env.PRODUCTION_WEB_URL || "https://your-domain.com";
     console.log(`\n✅ 招待が作成されました！`);
     console.log(`\n📎 登録URL:`);
-    console.log(
-      `   ローカル: http://localhost:5173/dashboard/register?token=${token}`,
-    );
-    console.log(
-      `   本番: https://your-domain.com/dashboard/register?token=${token}`,
-    );
+    console.log(`   ローカル: http://localhost:5173/register?token=${token}`);
+    console.log(`   本番: ${prodUrl}/register?token=${token}`);
     console.log(`\n⏰ 有効期限: ${expiresAt.toLocaleString("ja-JP")}`);
     console.log(`\n💡 このURLを招待したい人に共有してください。\n`);
   } catch (error) {

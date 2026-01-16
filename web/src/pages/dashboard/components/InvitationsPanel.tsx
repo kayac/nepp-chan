@@ -62,7 +62,7 @@ export const InvitationsPanel = () => {
     mutationFn: (email: string) => createInvitation(email),
     onSuccess: (data) => {
       const baseUrl = window.location.origin;
-      const url = `${baseUrl}/dashboard/register?token=${data.invitation.token}`;
+      const url = `${baseUrl}/register?token=${data.invitation.token}`;
       setCreatedUrl(url);
       setEmail("");
       setError(null);
