@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest",
-    "dev": "wrangler dev --remote",
+    "dev": "wrangler dev --local",
     "deploy": "wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "mastra:dev": "mastra dev",
