@@ -129,6 +129,7 @@ export const InvitationsPanel = () => {
                 type="text"
                 value={createdUrl}
                 readOnly
+                aria-label="招待URL"
                 className="flex-1 px-3 py-2 bg-white border border-stone-300 rounded text-sm"
               />
               <button
