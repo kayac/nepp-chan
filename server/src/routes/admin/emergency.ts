@@ -2,13 +2,13 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { desc } from "drizzle-orm";
 
 import { createDb, emergencyReports } from "~/db";
-import { adminAuth } from "~/middleware/admin-auth";
+import { sessionAuth } from "~/middleware/session-auth";
 
 export const emergencyAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
 }>();
 
-emergencyAdminRoutes.use("*", adminAuth);
+emergencyAdminRoutes.use("*", sessionAuth);
 
 const EmergencySchema = z.object({
   id: z.string(),

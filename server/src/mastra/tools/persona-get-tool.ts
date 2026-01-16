@@ -1,5 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+
+import type { AdminUser } from "~/db";
 import { personaRepository } from "~/repository/persona-repository";
 
 const personaSchema = z.object({
@@ -16,7 +18,7 @@ const personaSchema = z.object({
 export const personaGetTool = createTool({
   id: "persona-get",
   description:
-    "村の集合知（ペルソナ）を検索・取得します。ユーザーの質問に答える際に、村の傾向や価値観を参照するときに使用します。自然言語のキーワードやカテゴリ、タグで検索できます。",
+    "【管理者専用】村の集合知（ペルソナ）を検索・取得します。自然言語のキーワードやカテゴリ、タグで検索できます。",
   inputSchema: z.object({
     resourceId: z.string().describe("リソースID（村やグループの識別子）"),
     category: z
@@ -47,6 +49,20 @@ export const personaGetTool = createTool({
     error: z.string().optional(),
   }),
   execute: async (inputData, context) => {
+    const adminUser = context?.requestContext?.get("adminUser") as
+      | AdminUser
+      | undefined;
+
+    if (!adminUser) {
+      return {
+        success: false,
+        personas: [],
+        count: 0,
+        message: "この機能は使用できません",
+        error: "NOT_AUTHORIZED",
+      };
+    }
+
     const db = context?.requestContext?.get("db") as D1Database | undefined;
 
     if (!db) {

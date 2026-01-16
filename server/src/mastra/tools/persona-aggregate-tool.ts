@@ -1,11 +1,13 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+
+import type { AdminUser } from "~/db";
 import { personaRepository } from "~/repository/persona-repository";
 
 export const personaAggregateTool = createTool({
   id: "persona-aggregate",
   description:
-    "村の集合知をトピック別に集計します。「バスの増便要望が5件（60代が多い）」のような形式で傾向を把握できます。村長モード専用。",
+    "【管理者専用】村の集合知をトピック別に集計します。「バスの増便要望が5件（60代が多い）」のような形式で傾向を把握できます。",
   inputSchema: z.object({
     resourceId: z.string().describe("リソースID（村やグループの識別子）"),
     category: z
@@ -36,6 +38,20 @@ export const personaAggregateTool = createTool({
     error: z.string().optional(),
   }),
   execute: async (inputData, context) => {
+    const adminUser = context?.requestContext?.get("adminUser") as
+      | AdminUser
+      | undefined;
+
+    if (!adminUser) {
+      return {
+        success: false,
+        aggregations: [],
+        totalCount: 0,
+        message: "この機能は使用できません",
+        error: "NOT_AUTHORIZED",
+      };
+    }
+
     const db = context?.requestContext?.get("db") as D1Database | undefined;
 
     if (!db) {

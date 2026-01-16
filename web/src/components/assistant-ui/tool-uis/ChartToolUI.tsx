@@ -137,7 +137,7 @@ const PieChartComponent = ({ args }: { args: ChartArgs }) => {
           fill="#ea580c"
           dataKey={yKey}
           nameKey={xKey}
-          label={({ cx, cy, midAngle, outerRadius, percent }) => {
+          label={({ cx, cy, midAngle = 0, outerRadius, percent }) => {
             const RADIAN = Math.PI / 180;
             const radius = outerRadius * 0.6;
             const x = cx + radius * Math.cos(-midAngle * RADIAN);

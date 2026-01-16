@@ -35,17 +35,6 @@ export const personaSchema = z.object({
     .describe(
       "ユーザーについての永続的な事実。年代、居住地、趣味、家族構成、仕事など",
     ),
-
-  // 短期記憶: 現在のセッション状態
-  session: z
-    .object({
-      masterMode: z
-        .boolean()
-        .optional()
-        .describe("/master 認証成功で true、/master exit で false"),
-    })
-    .optional()
-    .describe("現在のセッション状態"),
 });
 
 export type Persona = z.infer<typeof personaSchema>;

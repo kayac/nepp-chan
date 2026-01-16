@@ -14,9 +14,7 @@ export const fetchPersonas = (
   if (params.cursor) {
     searchParams.set("cursor", params.cursor);
   }
-  return apiClient<PersonasResponse>(`/admin/persona?${searchParams}`, {
-    admin: true,
-  });
+  return apiClient<PersonasResponse>(`/admin/persona?${searchParams}`);
 };
 
 type ExtractResult =
@@ -35,7 +33,6 @@ export type ExtractPersonasResponse = {
 export const extractPersonas = (): Promise<ExtractPersonasResponse> =>
   apiClient<ExtractPersonasResponse>("/admin/persona/extract", {
     method: "POST",
-    admin: true,
   });
 
 export type DeletePersonasResponse = {
@@ -47,5 +44,4 @@ export type DeletePersonasResponse = {
 export const deleteAllPersonas = (): Promise<DeletePersonasResponse> =>
   apiClient<DeletePersonasResponse>("/admin/persona", {
     method: "DELETE",
-    admin: true,
   });

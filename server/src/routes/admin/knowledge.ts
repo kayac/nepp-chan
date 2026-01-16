@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 
-import { adminAuth } from "~/middleware/admin-auth";
+import { sessionAuth } from "~/middleware/session-auth";
 import {
   convertAndUpload,
   deleteAllKnowledge,
@@ -20,7 +20,7 @@ export const knowledgeAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
 }>();
 
-knowledgeAdminRoutes.use("*", adminAuth);
+knowledgeAdminRoutes.use("*", sessionAuth);
 
 // スキーマ定義
 const SuccessResponseSchema = z.object({

@@ -2,9 +2,13 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { handleChatStream } from "@mastra/ai-sdk";
 import { Mastra } from "@mastra/core/mastra";
 import { createUIMessageStreamResponse, type UIMessage } from "ai";
+import { getCookie } from "hono/cookie";
+
 import { getStorage } from "~/lib/storage";
-import { nepChanAgent } from "~/mastra/agents/nepch-agent";
+import { createNepChanAgent } from "~/mastra/agents/nepch-agent";
 import { createRequestContext } from "~/mastra/request-context";
+import { SESSION_COOKIE_NAME } from "~/middleware/session-auth";
+import { getUserFromSession } from "~/services/auth/session";
 
 const ChatSendRequestSchema = z.object({
   message: z.object({
@@ -51,15 +55,23 @@ const chatRoute = createRoute({
 chatRoutes.openapi(chatRoute, async (c) => {
   const { message, resourceId, threadId } = c.req.valid("json");
   const storage = await getStorage(c.env.DB);
+
+  const sessionId = getCookie(c, SESSION_COOKIE_NAME);
+  const adminUser = sessionId
+    ? await getUserFromSession(c.env.DB, sessionId)
+    : null;
+
+  const nepChanAgent = createNepChanAgent({ isAdmin: !!adminUser });
   const mastra = new Mastra({
     agents: { nepChanAgent },
     storage,
   });
+
   const requestContext = createRequestContext({
     storage,
     db: c.env.DB,
     env: c.env,
-    masterPassword: c.env.MASTER_PASSWORD,
+    adminUser: adminUser ?? undefined,
   });
 
   const stream = await handleChatStream({
