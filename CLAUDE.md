@@ -70,6 +70,9 @@ await storage.init(); // 必須
 | ------------------------------ | ------------------ |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API         |
 | `GOOGLE_SEARCH_ENGINE_ID`      | Custom Search      |
+| `WEBAUTHN_RP_ID`               | WebAuthn RP ID     |
+| `WEBAUTHN_RP_NAME`             | WebAuthn RP 名     |
+| `WEBAUTHN_ORIGIN`              | WebAuthn オリジン  |
 
 ### web（Pages）
 

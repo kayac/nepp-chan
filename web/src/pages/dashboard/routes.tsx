@@ -3,12 +3,9 @@ import {
   createRoute,
   createRouter,
   Outlet,
-  redirect,
 } from "@tanstack/react-router";
 
 import { App } from "./App";
-import { LoginPage } from "./pages/LoginPage";
-import { RegisterPage } from "./pages/RegisterPage";
 
 type AuthContext = {
   isAuthenticated: boolean;
@@ -24,46 +21,18 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
   component: Outlet,
 });
 
-const loginRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/dashboard/login",
-  component: LoginPage,
-});
-
-const registerRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/dashboard/register",
-  validateSearch: (search: Record<string, unknown>) => ({
-    token: (search.token as string) || undefined,
-  }),
-  component: RegisterPage,
-});
-
 const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/dashboard",
   beforeLoad: ({ context }) => {
     if (!context.auth.isLoading && !context.auth.isAuthenticated) {
-      throw redirect({ to: "/dashboard/login" });
+      window.location.href = "/login";
     }
   },
   component: App,
 });
 
-const catchAllRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "*",
-  beforeLoad: () => {
-    throw redirect({ to: "/dashboard" });
-  },
-});
-
-const routeTree = rootRoute.addChildren([
-  loginRoute,
-  registerRoute,
-  dashboardRoute,
-  catchAllRoute,
-]);
+const routeTree = rootRoute.addChildren([dashboardRoute]);
 
 export const createAppRouter = (authContext: AuthContext) =>
   createRouter({
