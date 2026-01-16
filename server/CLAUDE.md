@@ -59,6 +59,14 @@ server/src/
 | `/admin/feedback/:id`              | GET      | フィードバック詳細             |
 | `/admin/feedback/:id/resolve`      | PUT      | フィードバック解決             |
 | `/admin/feedback`                  | DELETE   | 全フィードバック削除           |
+| `/admin/invitations`               | GET/POST | 招待一覧・作成                 |
+| `/admin/invitations/:id`           | DELETE   | 招待削除                       |
+| `/auth/register/options`           | POST     | WebAuthn 登録オプション取得    |
+| `/auth/register/verify`            | POST     | WebAuthn 登録検証              |
+| `/auth/login/options`              | POST     | WebAuthn ログインオプション    |
+| `/auth/login/verify`               | POST     | WebAuthn ログイン検証          |
+| `/auth/me`                         | GET      | 認証状態確認                   |
+| `/auth/logout`                     | POST     | ログアウト                     |
 | `/swagger`                         | GET      | Swagger UI                     |
 | `/doc`                             | GET      | OpenAPI スキーマ               |
 
@@ -177,14 +185,60 @@ throw new HTTPException(404, { message: "Not found" });
 
 ### emergency_reports
 
-| カラム      | 型   | 説明               |
-| ----------- | ---- | ------------------ |
-| id          | TEXT | PRIMARY KEY        |
-| type        | TEXT | 種別（NOT NULL）   |
-| description | TEXT | 説明               |
-| location    | TEXT | 場所               |
-| reported_at | TEXT | 報告日時（NOT NULL）|
-| updated_at  | TEXT | 更新日時           |
+| カラム      | 型   | 説明                 |
+| ----------- | ---- | -------------------- |
+| id          | TEXT | PRIMARY KEY          |
+| type        | TEXT | 種別（NOT NULL）     |
+| description | TEXT | 説明                 |
+| location    | TEXT | 場所                 |
+| reported_at | TEXT | 報告日時（NOT NULL） |
+| updated_at  | TEXT | 更新日時             |
+
+### admins
+
+| カラム     | 型   | 説明                             |
+| ---------- | ---- | -------------------------------- |
+| id         | TEXT | PRIMARY KEY                      |
+| email      | TEXT | メールアドレス（UNIQUE NOT NULL）|
+| role       | TEXT | 役割（admin/super_admin）        |
+| created_at | TEXT | 作成日時（NOT NULL）             |
+| updated_at | TEXT | 更新日時                         |
+
+### admin_invitations
+
+| カラム     | 型   | 説明                             |
+| ---------- | ---- | -------------------------------- |
+| id         | TEXT | PRIMARY KEY                      |
+| email      | TEXT | メールアドレス（UNIQUE NOT NULL）|
+| token      | TEXT | 招待トークン（UNIQUE NOT NULL）  |
+| invited_by | TEXT | 招待者                           |
+| role       | TEXT | 役割（admin/super_admin）        |
+| expires_at | TEXT | 有効期限（NOT NULL）             |
+| used_at    | TEXT | 使用日時                         |
+| created_at | TEXT | 作成日時（NOT NULL）             |
+
+### admin_sessions
+
+| カラム     | 型   | 説明                 |
+| ---------- | ---- | -------------------- |
+| id         | TEXT | PRIMARY KEY          |
+| admin_id   | TEXT | 管理者 ID（NOT NULL）|
+| expires_at | TEXT | 有効期限（NOT NULL） |
+| created_at | TEXT | 作成日時（NOT NULL） |
+
+### admin_credentials
+
+| カラム         | 型   | 説明                       |
+| -------------- | ---- | -------------------------- |
+| id             | TEXT | PRIMARY KEY                |
+| admin_id       | TEXT | 管理者 ID（NOT NULL）      |
+| credential_id  | TEXT | WebAuthn 資格情報 ID       |
+| public_key     | TEXT | 公開鍵                     |
+| counter        | INT  | 認証カウンター             |
+| device_type    | TEXT | デバイス種別               |
+| backed_up      | INT  | バックアップ済みフラグ     |
+| transports     | TEXT | トランスポート情報（JSON） |
+| created_at     | TEXT | 作成日時（NOT NULL）       |
 
 ### persona
 
