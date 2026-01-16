@@ -2,51 +2,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
-import { API_BASE } from "~/lib/api/client";
 import { formatDateTime } from "~/lib/format";
+import {
+  createInvitation,
+  deleteInvitation,
+  fetchInvitations,
+} from "~/repository/invitation-repository";
 import { useAuth } from "../contexts/AuthContext";
-
-type Invitation = {
-  id: string;
-  email: string;
-  role: string;
-  invitedBy: string;
-  expiresAt: string;
-  usedAt: string | null;
-  createdAt: string;
-};
-
-const fetchInvitations = async (): Promise<{ invitations: Invitation[] }> => {
-  const res = await fetch(`${API_BASE}/admin/invitations`, {
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error("招待一覧の取得に失敗しました");
-  return res.json();
-};
-
-const createInvitation = async (
-  email: string,
-): Promise<{ success: boolean; invitation: { token: string } }> => {
-  const res = await fetch(`${API_BASE}/admin/invitations`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ email }),
-  });
-  if (!res.ok) {
-    const data = await res.json();
-    throw new Error(data.error || "招待の作成に失敗しました");
-  }
-  return res.json();
-};
-
-const deleteInvitation = async (id: string): Promise<void> => {
-  const res = await fetch(`${API_BASE}/admin/invitations/${id}`, {
-    method: "DELETE",
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error("招待の削除に失敗しました");
-};
 
 export const InvitationsPanel = () => {
   const queryClient = useQueryClient();
