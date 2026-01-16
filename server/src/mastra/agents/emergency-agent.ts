@@ -1,31 +1,36 @@
 import { Agent } from "@mastra/core/agent";
-import { emergencyReportTool } from "~/mastra/tools/emergency-report-tool";
-import { emergencyUpdateTool } from "~/mastra/tools/emergency-update-tool";
+import { adminEmergencyTool } from "~/mastra/tools/admin-emergency-tool";
+import { emergencyGetTool } from "~/mastra/tools/emergency-get-tool";
 
 export const emergencyAgent = new Agent({
   id: "emergency-agent",
   name: "Emergency Agent",
-  description: "緊急事態（クマ出没、火災、不審者など）の報告・記録を担当",
+  description:
+    "【管理者専用】緊急報告（クマ出没、火災、不審者など）の取得・管理を担当。",
   instructions: `
-あなたは緊急事態対応の専門エージェントです。
+あなたは緊急報告の取得・管理を担当する専門エージェントです。
 
 ## 役割
-- 緊急事態の報告を受け付け、記録する
-- 既存の報告に追加情報を更新する
+- 村の危険情報・緊急報告を取得する
+- 緊急報告の詳細情報を提供する
 
-## 対応フロー
-1. ユーザーの安全を確認「大丈夫？安全な場所にいる？」
-2. 何が・どこで起きたか聞く
-3. emergency-report ツールで記録
-4. 必要なら「110や119に連絡してね」と案内
+## 対応パターン
+
+### 危険情報の問い合わせ
+- 「村の危険情報は？」「クマ出没情報を教えて」などの問い合わせ
+- emergency-get ツールで直近の緊急報告を取得して回答
+
+### 詳細な緊急報告の取得
+- 「緊急報告を見せて」「詳細な危険情報は？」などの問い合わせ
+- admin-emergency ツールでより多くの報告を取得
 
 ## 利用可能なツール
-- emergency-report: 新規の緊急報告を記録
-- emergency-update: 既存の報告に情報を追加
+- emergency-get: 直近の緊急報告を取得（認証必須）
+- admin-emergency: 管理者向けの詳細な緊急報告取得（認証必須）
 `,
   model: "google/gemini-2.5-flash",
   tools: {
-    emergencyReportTool,
-    emergencyUpdateTool,
+    emergencyGetTool,
+    adminEmergencyTool,
   },
 });

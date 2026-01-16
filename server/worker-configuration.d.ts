@@ -9,7 +9,6 @@ declare namespace Cloudflare {
 		GOOGLE_GENERATIVE_AI_API_KEY: string;
 		GOOGLE_SEARCH_ENGINE_ID: string;
 		MASTER_PASSWORD: string;
-		ADMIN_KEY: string;
 		KNOWLEDGE_BUCKET: R2Bucket;
 		DB: D1Database;
 		VECTORIZE: VectorizeIndex;
@@ -20,7 +19,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "GOOGLE_GENERATIVE_AI_API_KEY" | "GOOGLE_SEARCH_ENGINE_ID" | "MASTER_PASSWORD" | "ADMIN_KEY">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "GOOGLE_GENERATIVE_AI_API_KEY" | "GOOGLE_SEARCH_ENGINE_ID" | "MASTER_PASSWORD">> {}
 }
 
 // Begin runtime types

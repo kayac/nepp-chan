@@ -3,7 +3,7 @@ import { and, count, desc, eq, lt, or, type SQL } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
 import { createDb, mastraThreads, persona, threadPersonaStatus } from "~/db";
-import { adminAuth } from "~/middleware/admin-auth";
+import { sessionAuth } from "~/middleware/session-auth";
 import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
 import {
   extractAllPendingThreads,
@@ -14,7 +14,7 @@ export const personaAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
 }>();
 
-personaAdminRoutes.use("*", adminAuth);
+personaAdminRoutes.use("*", sessionAuth);
 
 const PersonaSchema = z.object({
   id: z.string(),

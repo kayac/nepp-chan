@@ -15,7 +15,6 @@ pnpm install
 ```
 GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
 GOOGLE_SEARCH_ENGINE_ID=your-engine-id
-MASTER_PASSWORD=your-password
 ```
 
 ### D1 データベースの初期化
@@ -161,14 +160,13 @@ await db.delete(persona).where(eq(persona.id, "xxx"));
 wrangler vectorize create knowledge --dimensions=768 --metric=cosine
 ```
 
-2. **ADMIN_KEY シークレット設定**
+2. **管理者アカウントの作成**
+
+管理 API を使用するには、パスキー認証でログインする必要があります。
+初期管理者は招待スクリプトで作成します：
 
 ```bash
-# ローカル開発（.dev.varsに追記）
-echo "ADMIN_KEY=your-admin-key" >> .dev.vars
-
-# 本番環境
-wrangler secret put ADMIN_KEY
+pnpm admin:invite admin@example.com
 ```
 
 ### ナレッジファイルの配置
@@ -222,7 +220,6 @@ pnpm knowledge:upload --clean --file=mayor-interview.md
 **必要な環境変数**
 
 ```bash
-export ADMIN_KEY=your-admin-key
 export GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
 export API_URL=http://localhost:8787  # デフォルト
 ```
@@ -235,19 +232,7 @@ export API_URL=http://localhost:8787  # デフォルト
 | `/admin/knowledge`             | DELETE   | 全ナレッジを削除         |
 | `/admin/knowledge/:source`     | DELETE   | 特定ソース（ファイル）を削除 |
 
-**認証**: `X-Admin-Key` ヘッダーが必要
-
-```bash
-# 全削除
-curl -X DELETE \
-  -H "X-Admin-Key: your-admin-key" \
-  http://localhost:8787/admin/knowledge
-
-# 特定ファイルのみ削除
-curl -X DELETE \
-  -H "X-Admin-Key: your-admin-key" \
-  "http://localhost:8787/admin/knowledge/mayor-interview.md"
-```
+**認証**: パスキー認証でログインしたセッションが必要です。ダッシュボード（`/dashboard`）からログイン後、管理機能を利用できます。
 
 ### 動作確認
 
@@ -265,8 +250,6 @@ curl -X POST http://localhost:8787/chat \
 | ------------------------------ | -------------------------------- |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Google Generative AI キー        |
 | `GOOGLE_SEARCH_ENGINE_ID`      | Google Custom Search エンジン ID |
-| `MASTER_PASSWORD`              | 村長モードのパスワード           |
-| `ADMIN_KEY`                    | 管理API認証キー（ナレッジ管理用）|
 
 ## Cloudflare 型生成
 

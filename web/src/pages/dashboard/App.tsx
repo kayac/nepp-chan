@@ -1,16 +1,21 @@
 import {
+  ArrowLeftEndOnRectangleIcon,
   BookOpenIcon,
   ChatBubbleLeftIcon,
+  EnvelopeIcon,
   ExclamationTriangleIcon,
   UserGroupIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
+
 import { EmergencyPanel } from "./components/EmergencyPanel";
 import { FeedbackPanel } from "./components/FeedbackPanel";
+import { InvitationsPanel } from "./components/InvitationsPanel";
 import { KnowledgePanel } from "./components/KnowledgePanel";
 import { PersonaPanel } from "./components/PersonaPanel";
+import { useAuth } from "./contexts/AuthContext";
 
-type Tab = "knowledge" | "persona" | "feedback" | "emergency";
+type Tab = "knowledge" | "persona" | "feedback" | "emergency" | "invitations";
 
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   {
@@ -33,10 +38,25 @@ const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     label: "緊急情報",
     icon: <ExclamationTriangleIcon className="w-4 h-4" aria-hidden="true" />,
   },
+  {
+    id: "invitations",
+    label: "招待管理",
+    icon: <EnvelopeIcon className="w-4 h-4" aria-hidden="true" />,
+  },
 ];
 
 export const App = () => {
   const [activeTab, setActiveTab] = useState<Tab>("knowledge");
+  const { user, isLoading, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = "/dashboard/login";
+  };
+
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <div className="min-h-dvh bg-stone-50">
@@ -55,12 +75,25 @@ export const App = () => {
                 <p className="text-[11px] text-stone-500 -mt-0.5">管理画面</p>
               </div>
             </div>
-            <a
-              href="/"
-              className="text-sm text-teal-700 hover:text-teal-800 hover:underline"
-            >
-              チャットへ戻る
-            </a>
+            <div className="flex items-center gap-4">
+              {user && (
+                <span className="text-sm text-stone-600">{user.email}</span>
+              )}
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex items-center gap-1 text-sm text-stone-600 hover:text-stone-800"
+              >
+                <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
+                ログアウト
+              </button>
+              <a
+                href="/"
+                className="text-sm text-teal-700 hover:text-teal-800 hover:underline"
+              >
+                チャットへ戻る
+              </a>
+            </div>
           </div>
         </div>
       </header>
@@ -95,6 +128,7 @@ export const App = () => {
           {activeTab === "persona" && <PersonaPanel />}
           {activeTab === "feedback" && <FeedbackPanel />}
           {activeTab === "emergency" && <EmergencyPanel />}
+          {activeTab === "invitations" && <InvitationsPanel />}
         </main>
       </div>
     </div>

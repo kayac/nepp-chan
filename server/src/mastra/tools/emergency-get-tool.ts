@@ -1,5 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+
+import type { AdminUser } from "~/db";
 import { emergencyRepository } from "~/repository/emergency-repository";
 
 const emergencyReportSchema = z.object({
@@ -14,7 +16,7 @@ const emergencyReportSchema = z.object({
 export const emergencyGetTool = createTool({
   id: "emergency-get",
   description:
-    "緊急報告の一覧を取得します。直近の日数を指定して、その期間内のニュースとして緊急事態情報を取得できます。",
+    "【管理者専用】緊急報告の一覧を取得します。直近の日数を指定して、その期間内の緊急事態情報を取得できます。",
   inputSchema: z.object({
     days: z
       .number()
@@ -38,6 +40,20 @@ export const emergencyGetTool = createTool({
     error: z.string().optional(),
   }),
   execute: async (inputData, context) => {
+    const adminUser = context?.requestContext?.get("adminUser") as
+      | AdminUser
+      | undefined;
+
+    if (!adminUser) {
+      return {
+        success: false,
+        reports: [],
+        count: 0,
+        message: "この機能は使用できません",
+        error: "NOT_AUTHORIZED",
+      };
+    }
+
     const db = context?.requestContext?.get("db") as D1Database | undefined;
 
     if (!db) {

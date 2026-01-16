@@ -1,4 +1,7 @@
 GOOGLE_GENERATIVE_AI_API_KEY=your-api-key-here
 GOOGLE_SEARCH_ENGINE_ID=your-engine-id-here
-MASTER_PASSWORD=your-password-here
-ADMIN_KEY=your-admin-key-here
+
+# WebAuthn
+WEBAUTHN_RP_ID=localhost
+WEBAUTHN_RP_NAME=ねっぷちゃん管理画面
+WEBAUTHN_ORIGIN=http://localhost:5173
