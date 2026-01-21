@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 
 import "~/index.css";
 import { fetchLoginOptions, verifyLogin } from "~/lib/api/auth";
+import { setAuthToken } from "~/lib/auth-token";
 
 const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
@@ -16,8 +17,9 @@ const LoginPage = () => {
     try {
       const { options, challengeId } = await fetchLoginOptions();
       const authResponse = await startAuthentication({ optionsJSON: options });
-      await verifyLogin({ challengeId, response: authResponse });
+      const result = await verifyLogin({ challengeId, response: authResponse });
 
+      setAuthToken(result.token);
       window.location.href = "/dashboard";
     } catch (err) {
       if (err instanceof Error) {

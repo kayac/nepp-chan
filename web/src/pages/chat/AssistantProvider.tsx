@@ -7,6 +7,7 @@ import { useMemo } from "react";
 
 import { ToolUIRegistry } from "~/components/assistant-ui/tool-uis";
 import { API_BASE } from "~/lib/api/client";
+import { getAuthToken } from "~/lib/auth-token";
 import { getResourceId } from "~/lib/resource";
 
 interface Props {
@@ -28,7 +29,13 @@ export const AssistantProvider = ({
       () =>
         new DefaultChatTransport({
           api: `${API_BASE}/chat`,
-          credentials: "include",
+          headers: (): Record<string, string> => {
+            const token = getAuthToken();
+            if (token) {
+              return { Authorization: `Bearer ${token}` };
+            }
+            return {};
+          },
           prepareSendMessagesRequest({ messages }) {
             const lastMessage = messages[messages.length - 1];
             return {
