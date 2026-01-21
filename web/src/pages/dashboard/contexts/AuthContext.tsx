@@ -61,6 +61,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
+    const justLoggedIn = sessionStorage.getItem("just_logged_in");
+    if (justLoggedIn) {
+      return;
+    }
     checkAuth();
   }, [checkAuth]);
 
