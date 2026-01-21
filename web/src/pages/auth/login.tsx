@@ -18,8 +18,8 @@ const LoginPage = () => {
       const authResponse = await startAuthentication({ optionsJSON: options });
       await verifyLogin({ challengeId, response: authResponse });
 
-      // モバイルブラウザでの Set-Cookie 処理完了を待つ
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // ログイン直後フラグを設定（クッキー設定完了前のリダイレクト対策）
+      sessionStorage.setItem("just_logged_in", "true");
 
       window.location.href = "/dashboard";
     } catch (err) {
@@ -38,7 +38,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-50">
+    <div className="min-h-dvh flex items-center justify-center bg-stone-50">
       <div className="max-w-md w-full mx-4">
         <div className="bg-white rounded-xl shadow-sm p-8">
           <div className="text-center mb-8">

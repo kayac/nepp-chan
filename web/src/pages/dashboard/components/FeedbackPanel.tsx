@@ -47,7 +47,7 @@ const FeedbackDetailModal = ({
         onClick={onClose}
         aria-label="閉じる"
       />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 p-6 max-h-[90vh] overflow-auto">
+      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 p-6 max-h-[90dvh] overflow-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-stone-800">
             フィードバック詳細
@@ -453,7 +453,7 @@ export const FeedbackPanel = () => {
           フィードバックデータがありません
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-stone-200 overflow-auto max-h-[70vh]">
+        <div className="bg-white rounded-xl border border-stone-200 overflow-auto max-h-[70dvh]">
           <table className="min-w-[800px] w-full text-sm">
             <thead className="bg-stone-50 border-b border-stone-200">
               <tr>
