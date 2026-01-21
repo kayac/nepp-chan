@@ -1,10 +1,8 @@
-import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
 import type { AdminUser } from "~/db";
+import { getTokenFromHeader } from "~/lib/auth-header";
 import { getUserFromSession } from "~/services/auth/session";
-
-const SESSION_COOKIE_NAME = "__session";
 
 type SessionVariables = {
   adminUser: AdminUser;
@@ -14,7 +12,7 @@ export const sessionAuth = createMiddleware<{
   Bindings: CloudflareBindings;
   Variables: SessionVariables;
 }>(async (c, next) => {
-  const sessionId = getCookie(c, SESSION_COOKIE_NAME);
+  const sessionId = getTokenFromHeader(c);
 
   if (!sessionId) {
     throw new HTTPException(401, { message: "セッションがありません" });
@@ -34,7 +32,7 @@ export const optionalSessionAuth = createMiddleware<{
   Bindings: CloudflareBindings;
   Variables: Partial<SessionVariables>;
 }>(async (c, next) => {
-  const sessionId = getCookie(c, SESSION_COOKIE_NAME);
+  const sessionId = getTokenFromHeader(c);
 
   if (sessionId) {
     const user = await getUserFromSession(c.env.DB, sessionId);
@@ -46,5 +44,4 @@ export const optionalSessionAuth = createMiddleware<{
   await next();
 });
 
-export { SESSION_COOKIE_NAME };
 export type { SessionVariables };
