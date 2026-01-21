@@ -299,36 +299,38 @@ export const FeedbackPanel = () => {
   return (
     <div className="space-y-4">
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="bg-white rounded-xl border border-stone-200 p-4">
-            <div className="text-2xl font-bold text-stone-800">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4">
+          <div className="bg-white rounded-xl border border-stone-200 p-3 sm:p-4">
+            <div className="text-xl sm:text-2xl font-bold text-stone-800">
               {stats.total}
             </div>
-            <div className="text-sm text-stone-500">総フィードバック</div>
+            <div className="text-xs sm:text-sm text-stone-500">総数</div>
           </div>
-          <div className="bg-white rounded-xl border border-stone-200 p-4">
-            <div className="text-2xl font-bold text-green-600">
+          <div className="bg-white rounded-xl border border-stone-200 p-3 sm:p-4">
+            <div className="text-xl sm:text-2xl font-bold text-green-600">
               {stats.good}
             </div>
-            <div className="text-sm text-stone-500">良い回答</div>
+            <div className="text-xs sm:text-sm text-stone-500">Good</div>
           </div>
-          <div className="bg-white rounded-xl border border-stone-200 p-4">
-            <div className="text-2xl font-bold text-red-600">{stats.bad}</div>
-            <div className="text-sm text-stone-500">改善が必要</div>
+          <div className="bg-white rounded-xl border border-stone-200 p-3 sm:p-4">
+            <div className="text-xl sm:text-2xl font-bold text-red-600">
+              {stats.bad}
+            </div>
+            <div className="text-xs sm:text-sm text-stone-500">Bad</div>
           </div>
-          <div className="bg-white rounded-xl border border-stone-200 p-4">
-            <div className="text-2xl font-bold text-amber-600">
+          <div className="bg-white rounded-xl border border-stone-200 p-3 sm:p-4">
+            <div className="text-xl sm:text-2xl font-bold text-amber-600">
               {stats.idea}
             </div>
-            <div className="text-sm text-stone-500">アイデア</div>
+            <div className="text-xs sm:text-sm text-stone-500">Idea</div>
           </div>
-          <div className="bg-white rounded-xl border border-stone-200 p-4">
-            <div className="text-2xl font-bold text-stone-800">
+          <div className="bg-white rounded-xl border border-stone-200 p-3 sm:p-4">
+            <div className="text-xl sm:text-2xl font-bold text-stone-800">
               {stats.total > 0
                 ? `${Math.round((stats.good / stats.total) * 100)}%`
                 : "-"}
             </div>
-            <div className="text-sm text-stone-500">満足率</div>
+            <div className="text-xs sm:text-sm text-stone-500">満足率</div>
           </div>
         </div>
       )}
@@ -353,93 +355,92 @@ export const FeedbackPanel = () => {
         </div>
       )}
 
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-4 flex-wrap">
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="text-sm text-stone-500">
             {feedbacks.length} / {total}件のフィードバック
           </div>
-          <div className="flex gap-1">
-            <button
-              type="button"
-              onClick={() => {
-                setRatingFilter(undefined);
-                setResolvedFilter("all");
-              }}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                ratingFilter === undefined && resolvedFilter === "all"
-                  ? "bg-stone-800 text-white"
-                  : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-              }`}
-            >
-              すべて
-            </button>
-            <button
-              type="button"
-              onClick={() => setRatingFilter("good")}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                ratingFilter === "good"
-                  ? "bg-green-600 text-white"
-                  : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-              }`}
-            >
-              Good
-            </button>
-            <button
-              type="button"
-              onClick={() => setRatingFilter("bad")}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                ratingFilter === "bad"
-                  ? "bg-red-600 text-white"
-                  : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-              }`}
-            >
-              Bad
-            </button>
-            <button
-              type="button"
-              onClick={() => setRatingFilter("idea")}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                ratingFilter === "idea"
-                  ? "bg-amber-600 text-white"
-                  : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-              }`}
-            >
-              Idea
-            </button>
-          </div>
-          <div className="flex gap-1">
-            <button
-              type="button"
-              onClick={() => setResolvedFilter("unresolved")}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                resolvedFilter === "unresolved"
-                  ? "bg-amber-600 text-white"
-                  : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-              }`}
-            >
-              未解決 ({unresolvedCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setResolvedFilter("resolved")}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                resolvedFilter === "resolved"
-                  ? "bg-teal-600 text-white"
-                  : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-              }`}
-            >
-              解決済み ({resolvedCount})
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleteMutation.isPending || allFeedbacks.length === 0}
+            className="sm:order-last px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {deleteMutation.isPending ? "削除中..." : "全て削除"}
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={deleteMutation.isPending || allFeedbacks.length === 0}
-          className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {deleteMutation.isPending ? "削除中..." : "全て削除"}
-        </button>
+        <div className="flex flex-wrap gap-1">
+          <button
+            type="button"
+            onClick={() => {
+              setRatingFilter(undefined);
+              setResolvedFilter("all");
+            }}
+            className={`px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors ${
+              ratingFilter === undefined && resolvedFilter === "all"
+                ? "bg-stone-800 text-white"
+                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+            }`}
+          >
+            すべて
+          </button>
+          <button
+            type="button"
+            onClick={() => setRatingFilter("good")}
+            className={`px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors ${
+              ratingFilter === "good"
+                ? "bg-green-600 text-white"
+                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+            }`}
+          >
+            Good
+          </button>
+          <button
+            type="button"
+            onClick={() => setRatingFilter("bad")}
+            className={`px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors ${
+              ratingFilter === "bad"
+                ? "bg-red-600 text-white"
+                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+            }`}
+          >
+            Bad
+          </button>
+          <button
+            type="button"
+            onClick={() => setRatingFilter("idea")}
+            className={`px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors ${
+              ratingFilter === "idea"
+                ? "bg-amber-600 text-white"
+                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+            }`}
+          >
+            Idea
+          </button>
+          <span className="w-px h-6 bg-stone-200 mx-1 hidden sm:block self-center" />
+          <button
+            type="button"
+            onClick={() => setResolvedFilter("unresolved")}
+            className={`px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors ${
+              resolvedFilter === "unresolved"
+                ? "bg-amber-600 text-white"
+                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+            }`}
+          >
+            未解決 ({unresolvedCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setResolvedFilter("resolved")}
+            className={`px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors ${
+              resolvedFilter === "resolved"
+                ? "bg-teal-600 text-white"
+                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+            }`}
+          >
+            解決済み ({resolvedCount})
+          </button>
+        </div>
       </div>
 
       {deleteMutation.isError && (
@@ -453,39 +454,148 @@ export const FeedbackPanel = () => {
           フィードバックデータがありません
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-stone-200 overflow-auto max-h-[70dvh]">
-          <table className="min-w-[800px] w-full text-sm">
-            <thead className="bg-stone-50 border-b border-stone-200">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap w-24">
-                  評価
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap">
-                  カテゴリ
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap">
-                  コメント
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap">
-                  日時
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap w-24">
-                  ステータス
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap w-20">
-                  詳細
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {feedbacks.map((feedback) => {
-                const isResolved = !!feedback.resolvedAt;
-                return (
-                  <tr
-                    key={feedback.id}
-                    className={`hover:bg-stone-50 ${isResolved ? "bg-stone-50 opacity-60" : ""}`}
-                  >
-                    <td className="px-4 py-3 w-24">
+        <>
+          {/* Desktop: Table View */}
+          <div className="hidden md:block bg-white rounded-xl border border-stone-200 overflow-auto max-h-[70dvh]">
+            <table className="min-w-[700px] w-full text-sm">
+              <thead className="bg-stone-50 border-b border-stone-200 sticky top-0">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap w-24">
+                    評価
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap">
+                    カテゴリ
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap">
+                    コメント
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap">
+                    日時
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap w-24">
+                    ステータス
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap w-16">
+                    詳細
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {feedbacks.map((feedback) => {
+                  const isResolved = !!feedback.resolvedAt;
+                  return (
+                    <tr
+                      key={feedback.id}
+                      className={`hover:bg-stone-50 ${isResolved ? "bg-stone-50 opacity-60" : ""}`}
+                    >
+                      <td className="px-4 py-3 w-24">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded ${
+                            feedback.rating === "good"
+                              ? "bg-green-100 text-green-700"
+                              : feedback.rating === "idea"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {feedback.rating === "good" ? (
+                            <>
+                              <HandThumbUpIcon className="w-3.5 h-3.5" />
+                              Good
+                            </>
+                          ) : feedback.rating === "idea" ? (
+                            <>
+                              <LightBulbIcon className="w-3.5 h-3.5" />
+                              Idea
+                            </>
+                          ) : (
+                            <>
+                              <HandThumbDownIcon className="w-3.5 h-3.5" />
+                              Bad
+                            </>
+                          )}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-stone-600 text-xs">
+                        {feedback.category
+                          ? FEEDBACK_CATEGORY_LABELS[
+                              feedback.category as FeedbackCategory
+                            ] || feedback.category
+                          : "-"}
+                      </td>
+                      <td className="px-4 py-3 text-stone-700 max-w-md truncate">
+                        {feedback.comment || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-stone-500 text-xs whitespace-nowrap">
+                        {formatDateTime(feedback.createdAt)}
+                      </td>
+                      <td className="px-4 py-3 w-24">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isResolved) {
+                              unresolveMutation.mutate(feedback.id);
+                            } else {
+                              resolveMutation.mutate(feedback.id);
+                            }
+                          }}
+                          disabled={
+                            resolveMutation.isPending ||
+                            unresolveMutation.isPending
+                          }
+                          className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded transition-colors whitespace-nowrap ${
+                            isResolved
+                              ? "bg-teal-100 text-teal-700 hover:bg-teal-200"
+                              : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                          } disabled:opacity-50`}
+                        >
+                          {isResolved ? (
+                            <>
+                              <CheckIcon className="w-3 h-3" />
+                              解決済み
+                            </>
+                          ) : (
+                            "未解決"
+                          )}
+                        </button>
+                      </td>
+                      <td className="px-4 py-3 w-16">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedFeedback(feedback)}
+                          className="text-teal-600 hover:text-teal-700 hover:underline text-sm"
+                        >
+                          詳細
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <div ref={loadMoreRef} className="py-4 text-center">
+              {isFetchingNextPage && (
+                <div className="text-stone-500 text-sm">読み込み中...</div>
+              )}
+              {!hasNextPage && feedbacks.length > 0 && (
+                <div className="text-stone-400 text-sm">
+                  すべてのフィードバックを表示しました
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile: Card View */}
+          <div className="md:hidden space-y-3 max-h-[70dvh] overflow-auto">
+            {feedbacks.map((feedback) => {
+              const isResolved = !!feedback.resolvedAt;
+              return (
+                <div
+                  key={feedback.id}
+                  className={`bg-white rounded-xl border border-stone-200 p-4 space-y-3 ${isResolved ? "opacity-60" : ""}`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span
                         className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded ${
                           feedback.rating === "good"
@@ -512,75 +622,76 @@ export const FeedbackPanel = () => {
                           </>
                         )}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-stone-600">
-                      {feedback.category
-                        ? FEEDBACK_CATEGORY_LABELS[
+                      {feedback.category && (
+                        <span className="inline-flex px-2 py-1 text-xs font-medium bg-stone-100 text-stone-600 rounded">
+                          {FEEDBACK_CATEGORY_LABELS[
                             feedback.category as FeedbackCategory
-                          ] || feedback.category
-                        : "-"}
-                    </td>
-                    <td className="px-4 py-3 text-stone-700 max-w-md truncate">
-                      {feedback.comment || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-stone-500 whitespace-nowrap">
+                          ] || feedback.category}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-stone-400 whitespace-nowrap">
                       {formatDateTime(feedback.createdAt)}
-                    </td>
-                    <td className="px-4 py-3 w-24">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (isResolved) {
-                            unresolveMutation.mutate(feedback.id);
-                          } else {
-                            resolveMutation.mutate(feedback.id);
-                          }
-                        }}
-                        disabled={
-                          resolveMutation.isPending ||
-                          unresolveMutation.isPending
+                    </span>
+                  </div>
+
+                  {feedback.comment && (
+                    <p className="text-sm text-stone-700 line-clamp-3">
+                      {feedback.comment}
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-between pt-2 border-t border-stone-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isResolved) {
+                          unresolveMutation.mutate(feedback.id);
+                        } else {
+                          resolveMutation.mutate(feedback.id);
                         }
-                        className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded transition-colors whitespace-nowrap ${
-                          isResolved
-                            ? "bg-teal-100 text-teal-700 hover:bg-teal-200"
-                            : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-                        } disabled:opacity-50`}
-                      >
-                        {isResolved ? (
-                          <>
-                            <CheckIcon className="w-3 h-3" />
-                            解決済み
-                          </>
-                        ) : (
-                          "未解決"
-                        )}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3 w-20">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedFeedback(feedback)}
-                        className="text-teal-600 hover:text-teal-700 hover:underline text-sm"
-                      >
-                        詳細
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <div ref={loadMoreRef} className="py-4 text-center">
-            {isFetchingNextPage && (
-              <div className="text-stone-500 text-sm">読み込み中...</div>
-            )}
-            {!hasNextPage && feedbacks.length > 0 && (
-              <div className="text-stone-400 text-sm">
-                すべてのフィードバックを表示しました
-              </div>
-            )}
+                      }}
+                      disabled={
+                        resolveMutation.isPending || unresolveMutation.isPending
+                      }
+                      className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded transition-colors ${
+                        isResolved
+                          ? "bg-teal-100 text-teal-700"
+                          : "bg-stone-100 text-stone-600"
+                      } disabled:opacity-50`}
+                    >
+                      {isResolved ? (
+                        <>
+                          <CheckIcon className="w-3 h-3" />
+                          解決済み
+                        </>
+                      ) : (
+                        "未解決"
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFeedback(feedback)}
+                      className="text-teal-600 hover:text-teal-700 text-sm font-medium"
+                    >
+                      詳細を見る
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+            <div ref={loadMoreRef} className="py-4 text-center">
+              {isFetchingNextPage && (
+                <div className="text-stone-500 text-sm">読み込み中...</div>
+              )}
+              {!hasNextPage && feedbacks.length > 0 && (
+                <div className="text-stone-400 text-sm">
+                  すべてのフィードバックを表示しました
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {selectedFeedback && (
