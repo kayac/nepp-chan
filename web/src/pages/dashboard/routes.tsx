@@ -34,13 +34,20 @@ const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/dashboard",
   beforeLoad: async ({ context }) => {
-    // ログイン直後はスキップ（クッキー設定完了待ち）
     const justLoggedIn = sessionStorage.getItem("just_logged_in");
+
     if (justLoggedIn) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      sessionStorage.removeItem("just_logged_in");
+      const user = await fetchCurrentUser();
+      if (!user) {
+        window.location.href = "/login";
+        return;
+      }
+      context.auth.setUser(user);
       return;
     }
 
-    // 認証状態が確定している場合はそのまま判定
     if (!context.auth.isLoading) {
       if (!context.auth.isAuthenticated) {
         window.location.href = "/login";
@@ -48,14 +55,11 @@ const dashboardRoute = createRoute({
       return;
     }
 
-    // isLoading 中は直接 API を呼んで認証確認
     const user = await fetchCurrentUser();
     if (!user) {
       window.location.href = "/login";
       return;
     }
-
-    // ユーザー情報を AuthContext に反映
     context.auth.setUser(user);
   },
   component: App,
