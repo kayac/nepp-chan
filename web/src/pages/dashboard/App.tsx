@@ -1,10 +1,12 @@
 import {
   ArrowLeftEndOnRectangleIcon,
+  Bars3Icon,
   BookOpenIcon,
   ChatBubbleLeftIcon,
   EnvelopeIcon,
   ExclamationTriangleIcon,
   UserGroupIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 
@@ -47,11 +49,17 @@ const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
 
 export const App = () => {
   const [activeTab, setActiveTab] = useState<Tab>("knowledge");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isLoading, logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
     window.location.href = "/dashboard/login";
+  };
+
+  const handleTabChange = (tabId: Tab) => {
+    setActiveTab(tabId);
+    setMobileMenuOpen(false);
   };
 
   if (isLoading) {
@@ -61,7 +69,7 @@ export const App = () => {
   return (
     <div className="min-h-dvh bg-stone-50">
       {/* Header */}
-      <header className="bg-white border-b border-stone-200">
+      <header className="bg-white border-b border-stone-200 sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-2.5">
@@ -75,9 +83,13 @@ export const App = () => {
                 <p className="text-[11px] text-stone-500 -mt-0.5">管理画面</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+
+            {/* Desktop Header Actions */}
+            <div className="hidden sm:flex items-center gap-4">
               {user && (
-                <span className="text-sm text-stone-600">{user.email}</span>
+                <span className="text-sm text-stone-600 truncate max-w-48">
+                  {user.email}
+                </span>
               )}
               <button
                 type="button"
@@ -94,21 +106,64 @@ export const App = () => {
                 チャットへ戻る
               </a>
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="sm:hidden p-2 -mr-2 text-stone-600 hover:text-stone-800"
+              aria-label="メニューを開く"
+            >
+              {mobileMenuOpen ? (
+                <XMarkIcon className="w-6 h-6" />
+              ) : (
+                <Bars3Icon className="w-6 h-6" />
+              )}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <div className="sm:hidden border-t border-stone-200 bg-white">
+            <div className="px-4 py-3 space-y-3">
+              {user && (
+                <div className="text-sm text-stone-600 truncate">
+                  {user.email}
+                </div>
+              )}
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex items-center gap-1 text-sm text-stone-600 hover:text-stone-800"
+                >
+                  <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
+                  ログアウト
+                </button>
+                <a
+                  href="/"
+                  className="text-sm text-teal-700 hover:text-teal-800"
+                >
+                  チャットへ戻る
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
         {/* Tab Navigation */}
-        <nav className="flex gap-1 p-1 bg-stone-100 rounded-lg mb-6 w-fit">
+        <nav className="flex gap-1 p-1 bg-stone-100 rounded-lg mb-4 sm:mb-6 sm:w-fit">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               type="button"
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               className={`
-                flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md
-                transition-colors duration-150
+                flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 px-1.5 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-sm font-medium rounded-md
+                transition-colors duration-150 whitespace-nowrap flex-1 sm:flex-none
                 ${
                   activeTab === tab.id
                     ? "bg-white text-teal-700 shadow-sm"
@@ -117,7 +172,7 @@ export const App = () => {
               `}
             >
               {tab.icon}
-              {tab.label}
+              <span>{tab.label}</span>
             </button>
           ))}
         </nav>
