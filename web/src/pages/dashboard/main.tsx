@@ -16,8 +16,9 @@ const RouterWithAuth = () => {
         isAuthenticated: auth.isAuthenticated,
         isLoading: auth.isLoading,
         checkAuth: auth.checkAuth,
+        setUser: auth.setUser,
       }),
-    [auth.isAuthenticated, auth.isLoading, auth.checkAuth],
+    [auth.isAuthenticated, auth.isLoading, auth.checkAuth, auth.setUser],
   );
 
   return <RouterProvider router={router} />;

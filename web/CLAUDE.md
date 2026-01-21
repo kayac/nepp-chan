@@ -168,6 +168,18 @@ Tailwind CSS 4 の短縮記法と CSS 変数記法を使用。
 <div className="bg-stone-500/3" />  // 3% opacity
 ```
 
+### ビューポート単位
+
+モバイルブラウザのアドレスバー対応のため、`vh` ではなく `dvh`（dynamic viewport height）を使用する。
+
+```tsx
+// NG: vh（モバイルでアドレスバー分がはみ出る）
+<div className="h-screen min-h-screen max-h-[90vh]" />
+
+// OK: dvh
+<div className="h-dvh min-h-dvh max-h-[90dvh]" />
+```
+
 ## 開発コマンド
 
 ```bash

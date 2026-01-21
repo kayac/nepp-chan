@@ -61,7 +61,7 @@ export const FileEditor = ({ fileKey, onClose }: Props) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-xl w-full max-w-4xl mx-4 max-h-[90dvh] flex flex-col">
         {/* ヘッダー */}
         <div className="flex items-center justify-between p-4 border-b border-stone-200">
           <h3 className="text-lg font-bold text-stone-800">{fileKey}</h3>
