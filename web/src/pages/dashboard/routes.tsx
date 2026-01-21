@@ -5,7 +5,6 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 
-import { fetchCurrentUser } from "~/lib/api/auth";
 import { App } from "./App";
 
 type AuthContext = {
@@ -33,34 +32,10 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
 const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/dashboard",
-  beforeLoad: async ({ context }) => {
-    const justLoggedIn = sessionStorage.getItem("just_logged_in");
-
-    if (justLoggedIn) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      sessionStorage.removeItem("just_logged_in");
-      const user = await fetchCurrentUser();
-      if (!user) {
-        window.location.href = "/login";
-        return;
-      }
-      context.auth.setUser(user);
-      return;
-    }
-
-    if (!context.auth.isLoading) {
-      if (!context.auth.isAuthenticated) {
-        window.location.href = "/login";
-      }
-      return;
-    }
-
-    const user = await fetchCurrentUser();
-    if (!user) {
+  beforeLoad: ({ context }) => {
+    if (!context.auth.isAuthenticated) {
       window.location.href = "/login";
-      return;
     }
-    context.auth.setUser(user);
   },
   component: App,
 });
