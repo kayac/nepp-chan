@@ -8,7 +8,7 @@ vi.mock("~/services/auth/session", () => ({
 }));
 
 // テスト対象をモック後にインポート
-const { sessionAuth, optionalSessionAuth, SESSION_COOKIE_NAME } = await import(
+const { sessionAuth, optionalSessionAuth } = await import(
   "~/middleware/session-auth"
 );
 
@@ -43,7 +43,7 @@ describe("session-auth ミドルウェア", () => {
       return app;
     };
 
-    it("セッションCookieがない場合は401を返す", async () => {
+    it("Authorizationヘッダーがない場合は401を返す", async () => {
       const app = createApp();
 
       const res = await app.request("/protected", {}, mockEnv);
@@ -59,7 +59,7 @@ describe("session-auth ミドルウェア", () => {
       const app = createApp();
       const req = new Request("http://localhost/protected", {
         headers: {
-          Cookie: `${SESSION_COOKIE_NAME}=invalid-session-id`,
+          Authorization: "Bearer invalid-session-id",
         },
       });
 
@@ -80,7 +80,7 @@ describe("session-auth ミドルウェア", () => {
       const app = createApp();
       const req = new Request("http://localhost/protected", {
         headers: {
-          Cookie: `${SESSION_COOKIE_NAME}=valid-session-id`,
+          Authorization: "Bearer valid-session-id",
         },
       });
 
@@ -98,7 +98,7 @@ describe("session-auth ミドルウェア", () => {
       const sessionId = "test-session-abc123";
       const req = new Request("http://localhost/protected", {
         headers: {
-          Cookie: `${SESSION_COOKIE_NAME}=${sessionId}`,
+          Authorization: `Bearer ${sessionId}`,
         },
       });
 
@@ -130,7 +130,7 @@ describe("session-auth ミドルウェア", () => {
       authenticated: boolean;
     };
 
-    it("セッションCookieがない場合でもリクエストは通る", async () => {
+    it("Authorizationヘッダーがない場合でもリクエストは通る", async () => {
       const app = createApp();
 
       const res = await app.request("/public", {}, mockEnv);
@@ -147,7 +147,7 @@ describe("session-auth ミドルウェア", () => {
       const app = createApp();
       const req = new Request("http://localhost/public", {
         headers: {
-          Cookie: `${SESSION_COOKIE_NAME}=invalid-session-id`,
+          Authorization: "Bearer invalid-session-id",
         },
       });
 
@@ -165,7 +165,7 @@ describe("session-auth ミドルウェア", () => {
       const app = createApp();
       const req = new Request("http://localhost/public", {
         headers: {
-          Cookie: `${SESSION_COOKIE_NAME}=valid-session-id`,
+          Authorization: "Bearer valid-session-id",
         },
       });
 
@@ -177,18 +177,12 @@ describe("session-auth ミドルウェア", () => {
       expect(body.authenticated).toBe(true);
     });
 
-    it("セッションCookieがない場合はgetUserFromSessionを呼ばない", async () => {
+    it("Authorizationヘッダーがない場合はgetUserFromSessionを呼ばない", async () => {
       const app = createApp();
 
       await app.request("/public", {}, mockEnv);
 
       expect(sessionService.getUserFromSession).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("SESSION_COOKIE_NAME", () => {
-    it("Cookie名は __session である", () => {
-      expect(SESSION_COOKIE_NAME).toBe("__session");
     });
   });
 });

@@ -5,6 +5,7 @@ import type {
   RegistrationResponseJSON,
 } from "@simplewebauthn/browser";
 
+import { getAuthToken } from "~/lib/auth-token";
 import { API_BASE } from "./client";
 
 type AdminUser = {
@@ -30,13 +31,18 @@ type AuthMeResponse = {
   user: AdminUser | null;
 };
 
+type AuthVerifyResponse = {
+  success: boolean;
+  token: string;
+  user: AdminUser;
+};
+
 export const fetchRegisterOptions = async (
   token: string,
 ): Promise<RegisterOptionsResponse> => {
   const res = await fetch(`${API_BASE}/auth/register/options`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify({ token }),
   });
 
@@ -52,11 +58,10 @@ export const verifyRegistration = async (params: {
   challengeId: string;
   response: RegistrationResponseJSON;
   invitationId: string;
-}) => {
+}): Promise<AuthVerifyResponse> => {
   const res = await fetch(`${API_BASE}/auth/register/verify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify(params),
   });
 
@@ -71,7 +76,6 @@ export const verifyRegistration = async (params: {
 export const fetchLoginOptions = async (): Promise<LoginOptionsResponse> => {
   const res = await fetch(`${API_BASE}/auth/login/options`, {
     method: "POST",
-    credentials: "include",
   });
 
   if (!res.ok) {
@@ -85,11 +89,10 @@ export const fetchLoginOptions = async (): Promise<LoginOptionsResponse> => {
 export const verifyLogin = async (params: {
   challengeId: string;
   response: AuthenticationResponseJSON;
-}) => {
+}): Promise<AuthVerifyResponse> => {
   const res = await fetch(`${API_BASE}/auth/login/verify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify(params),
   });
 
@@ -102,8 +105,15 @@ export const verifyLogin = async (params: {
 };
 
 export const fetchCurrentUser = async (): Promise<AdminUser | null> => {
+  const token = getAuthToken();
+  if (!token) {
+    return null;
+  }
+
   const res = await fetch(`${API_BASE}/auth/me`, {
-    credentials: "include",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 
   if (!res.ok) {
@@ -118,10 +128,17 @@ export const fetchCurrentUser = async (): Promise<AdminUser | null> => {
 };
 
 export const postLogout = async () => {
+  const token = getAuthToken();
+  if (!token) {
+    return;
+  }
+
   try {
     const res = await fetch(`${API_BASE}/auth/logout`, {
       method: "POST",
-      credentials: "include",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
     if (!res.ok) {
       console.error(`ログアウトエラー: ${res.status} ${res.statusText}`);

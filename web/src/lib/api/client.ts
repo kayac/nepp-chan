@@ -1,3 +1,5 @@
+import { getAuthToken } from "~/lib/auth-token";
+
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
 type RequestOptions = {
@@ -24,6 +26,17 @@ const parseErrorResponse = async (res: Response, fallback: string) => {
   }
 };
 
+const getHeaders = (): Record<string, string> => {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  const token = getAuthToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 export const apiClient = async <T>(
   endpoint: string,
   options: RequestOptions = {},
@@ -32,8 +45,7 @@ export const apiClient = async <T>(
 
   const res = await fetch(`${API_BASE}${endpoint}`, {
     method,
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
+    headers: getHeaders(),
     body: body ? JSON.stringify(body) : undefined,
   });
 

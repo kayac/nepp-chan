@@ -1,4 +1,5 @@
 import { API_BASE, apiClient } from "~/lib/api/client";
+import { getAuthToken } from "~/lib/auth-token";
 import type {
   ConvertFileResponse,
   DeleteResult,
@@ -62,9 +63,10 @@ export const uploadFile = async (
     formData.append("filename", filename);
   }
 
+  const token = getAuthToken();
   const res = await fetch(`${API_BASE}/admin/knowledge/upload`, {
     method: "POST",
-    credentials: "include",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   });
 
@@ -85,9 +87,10 @@ export const convertFile = async (
   formData.append("file", file);
   formData.append("filename", filename);
 
+  const token = getAuthToken();
   const res = await fetch(`${API_BASE}/admin/knowledge/convert`, {
     method: "POST",
-    credentials: "include",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   });
 
