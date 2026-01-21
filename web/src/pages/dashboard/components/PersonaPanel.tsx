@@ -100,7 +100,7 @@ export const PersonaPanel = () => {
           ペルソナデータがありません
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-stone-200 overflow-auto max-h-[70vh]">
+        <div className="bg-white rounded-xl border border-stone-200 overflow-auto max-h-[70dvh]">
           <table className="min-w-[1200px] w-full text-sm">
             <thead className="bg-stone-50 border-b border-stone-200">
               <tr>
