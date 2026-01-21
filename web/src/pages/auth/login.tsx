@@ -18,9 +18,6 @@ const LoginPage = () => {
       const authResponse = await startAuthentication({ optionsJSON: options });
       await verifyLogin({ challengeId, response: authResponse });
 
-      // ログイン直後フラグを設定（クッキー設定完了前のリダイレクト対策）
-      sessionStorage.setItem("just_logged_in", "true");
-
       window.location.href = "/dashboard";
     } catch (err) {
       if (err instanceof Error) {

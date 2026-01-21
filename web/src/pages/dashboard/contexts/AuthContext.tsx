@@ -61,12 +61,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    const justLoggedIn = sessionStorage.getItem("just_logged_in");
-    if (justLoggedIn) {
-      return;
-    }
     checkAuth();
   }, [checkAuth]);
+
+  if (state.isLoading) {
+    return null;
+  }
 
   return (
     <AuthContext.Provider value={{ ...state, checkAuth, logout, setUser }}>
