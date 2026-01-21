@@ -71,16 +71,3 @@ export const cleanupExpiredSessions = async (d1: D1Database) => {
   await adminSessionRepository.deleteExpired(d1);
   return { success: true };
 };
-
-export const getSessionCookieOptions = (
-  expiresAt: Date,
-  isLocalhost = false,
-) => {
-  return {
-    httpOnly: true,
-    secure: !isLocalhost,
-    sameSite: isLocalhost ? ("Lax" as const) : ("None" as const),
-    path: "/",
-    expires: expiresAt,
-  };
-};

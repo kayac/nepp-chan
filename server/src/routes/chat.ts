@@ -2,12 +2,11 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { handleChatStream } from "@mastra/ai-sdk";
 import { Mastra } from "@mastra/core/mastra";
 import { createUIMessageStreamResponse, type UIMessage } from "ai";
-import { getCookie } from "hono/cookie";
 
+import { getTokenFromHeader } from "~/lib/auth-header";
 import { getStorage } from "~/lib/storage";
 import { createNepChanAgent } from "~/mastra/agents/nepch-agent";
 import { createRequestContext } from "~/mastra/request-context";
-import { SESSION_COOKIE_NAME } from "~/middleware/session-auth";
 import { getUserFromSession } from "~/services/auth/session";
 
 const ChatSendRequestSchema = z.object({
@@ -56,7 +55,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
   const { message, resourceId, threadId } = c.req.valid("json");
   const storage = await getStorage(c.env.DB);
 
-  const sessionId = getCookie(c, SESSION_COOKIE_NAME);
+  const sessionId = getTokenFromHeader(c);
   const adminUser = sessionId
     ? await getUserFromSession(c.env.DB, sessionId)
     : null;

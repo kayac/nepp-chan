@@ -3,16 +3,9 @@ import type {
   AuthenticationResponseJSON,
   RegistrationResponseJSON,
 } from "@simplewebauthn/server";
-import { deleteCookie, getCookie, setCookie } from "hono/cookie";
-import {
-  SESSION_COOKIE_NAME,
-  type SessionVariables,
-} from "~/middleware/session-auth";
-import {
-  deleteSession,
-  getSessionCookieOptions,
-  getUserFromSession,
-} from "~/services/auth/session";
+import { getTokenFromHeader } from "~/lib/auth-header";
+import type { SessionVariables } from "~/middleware/session-auth";
+import { deleteSession, getUserFromSession } from "~/services/auth/session";
 import {
   generateWebAuthnAuthenticationOptions,
   generateWebAuthnRegistrationOptions,
@@ -124,6 +117,7 @@ const registerVerifyRoute = createRoute({
         "application/json": {
           schema: z.object({
             success: z.boolean(),
+            token: z.string(),
             user: z.object({
               id: z.string(),
               email: z.string(),
@@ -150,7 +144,6 @@ const registerVerifyRoute = createRoute({
 authRoutes.openapi(registerVerifyRoute, async (c) => {
   const { challengeId, response, invitationId } = c.req.valid("json");
   const config = getWebAuthnConfig(c.env);
-  const isLocalhost = config.rpId === "localhost";
 
   try {
     const result = await verifyWebAuthnRegistration(
@@ -161,10 +154,6 @@ authRoutes.openapi(registerVerifyRoute, async (c) => {
       invitationId,
     );
 
-    setCookie(c, SESSION_COOKIE_NAME, result.session.sessionId, {
-      ...getSessionCookieOptions(result.session.expiresAt, isLocalhost),
-    });
-
     const user = result.user;
     if (!user) {
       return c.json({ error: "ユーザーの作成に失敗しました" }, 400);
@@ -173,6 +162,7 @@ authRoutes.openapi(registerVerifyRoute, async (c) => {
     return c.json(
       {
         success: true,
+        token: result.session.sessionId,
         user: {
           id: user.id,
           email: user.email,
@@ -240,6 +230,7 @@ const loginVerifyRoute = createRoute({
         "application/json": {
           schema: z.object({
             success: z.boolean(),
+            token: z.string(),
             user: z.object({
               id: z.string(),
               email: z.string(),
@@ -266,7 +257,6 @@ const loginVerifyRoute = createRoute({
 authRoutes.openapi(loginVerifyRoute, async (c) => {
   const { challengeId, response } = c.req.valid("json");
   const config = getWebAuthnConfig(c.env);
-  const isLocalhost = config.rpId === "localhost";
 
   try {
     const result = await verifyWebAuthnAuthentication(
@@ -276,13 +266,10 @@ authRoutes.openapi(loginVerifyRoute, async (c) => {
       response as AuthenticationResponseJSON,
     );
 
-    setCookie(c, SESSION_COOKIE_NAME, result.session.sessionId, {
-      ...getSessionCookieOptions(result.session.expiresAt, isLocalhost),
-    });
-
     return c.json(
       {
         success: true,
+        token: result.session.sessionId,
         user: {
           id: result.user.id,
           email: result.user.email,
@@ -319,15 +306,11 @@ const logoutRoute = createRoute({
 });
 
 authRoutes.openapi(logoutRoute, async (c) => {
-  const sessionId = getCookie(c, SESSION_COOKIE_NAME);
+  const sessionId = getTokenFromHeader(c);
 
   if (sessionId) {
     await deleteSession(c.env.DB, sessionId);
   }
-
-  deleteCookie(c, SESSION_COOKIE_NAME, {
-    path: "/",
-  });
 
   return c.json({ success: true }, 200);
 });
@@ -359,7 +342,7 @@ const meRoute = createRoute({
 });
 
 authRoutes.openapi(meRoute, async (c) => {
-  const sessionId = getCookie(c, SESSION_COOKIE_NAME);
+  const sessionId = getTokenFromHeader(c);
 
   if (!sessionId) {
     return c.json({ user: null }, 200);

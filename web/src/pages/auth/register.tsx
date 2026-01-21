@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 
 import "~/index.css";
 import { fetchRegisterOptions, verifyRegistration } from "~/lib/api/auth";
+import { setAuthToken } from "~/lib/auth-token";
 
 const RegisterPage = () => {
   const [error, setError] = useState<string | null>(null);
@@ -36,12 +37,13 @@ const RegisterPage = () => {
       setEmail(invitedEmail);
 
       const regResponse = await startRegistration({ optionsJSON: options });
-      await verifyRegistration({
+      const result = await verifyRegistration({
         challengeId,
         response: regResponse,
         invitationId,
       });
 
+      setAuthToken(result.token);
       window.location.href = "/dashboard";
     } catch (err) {
       if (err instanceof Error) {

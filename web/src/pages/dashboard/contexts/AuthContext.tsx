@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import { type AdminUser, fetchCurrentUser, postLogout } from "~/lib/api/auth";
+import { removeAuthToken } from "~/lib/auth-token";
 
 type AuthState = {
   user: AdminUser | null;
@@ -48,6 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await postLogout();
     } finally {
+      removeAuthToken();
       setState({ user: null, isLoading: false, isAuthenticated: false });
     }
   }, []);
