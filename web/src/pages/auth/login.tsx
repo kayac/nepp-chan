@@ -18,8 +18,8 @@ const LoginPage = () => {
       const authResponse = await startAuthentication({ optionsJSON: options });
       await verifyLogin({ challengeId, response: authResponse });
 
-      // モバイルブラウザでの Set-Cookie 処理完了を待つ
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // ログイン直後フラグを設定（クッキー設定完了前のリダイレクト対策）
+      sessionStorage.setItem("just_logged_in", "true");
 
       window.location.href = "/dashboard";
     } catch (err) {

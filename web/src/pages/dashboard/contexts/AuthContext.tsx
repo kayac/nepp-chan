@@ -41,6 +41,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error("認証チェック失敗:", error);
       setState({ user: null, isLoading: false, isAuthenticated: false });
+    } finally {
+      sessionStorage.removeItem("just_logged_in");
     }
   }, []);
 

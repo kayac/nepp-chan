@@ -34,6 +34,12 @@ const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/dashboard",
   beforeLoad: async ({ context }) => {
+    // ログイン直後はスキップ（クッキー設定完了待ち）
+    const justLoggedIn = sessionStorage.getItem("just_logged_in");
+    if (justLoggedIn) {
+      return;
+    }
+
     // 認証状態が確定している場合はそのまま判定
     if (!context.auth.isLoading) {
       if (!context.auth.isAuthenticated) {
