@@ -18,6 +18,7 @@ type AuthState = {
 type AuthContextType = AuthState & {
   checkAuth: () => Promise<void>;
   logout: () => Promise<void>;
+  setUser: (user: AdminUser | null) => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -51,12 +52,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const setUser = useCallback((user: AdminUser | null) => {
+    setState({
+      user,
+      isLoading: false,
+      isAuthenticated: user !== null,
+    });
+  }, []);
+
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
   return (
-    <AuthContext.Provider value={{ ...state, checkAuth, logout }}>
+    <AuthContext.Provider value={{ ...state, checkAuth, logout, setUser }}>
       {children}
     </AuthContext.Provider>
   );
