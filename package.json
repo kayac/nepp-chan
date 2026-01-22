@@ -6,10 +6,10 @@
   },
   "scripts": {
     "server:dev": "dotenvx run -fk .env.keys -f server/.env -- pnpm --filter @aiss-nepch/server dev",
-    "server:deploy": "pnpm --filter @aiss-nepch/server run deploy",
+    "server:deploy": "dotenvx run -fk .env.keys -f server/.env.production -- pnpm --filter @aiss-nepch/server run deploy",
     "web:dev": "dotenvx run -fk .env.keys -f web/.env -- pnpm --filter @aiss-nepch/web dev",
     "web:build": "pnpm --filter @aiss-nepch/web build",
-    "web:deploy": "pnpm --filter @aiss-nepch/web run deploy",
+    "web:deploy": "dotenvx run -fk .env.keys -f web/.env.production -- pnpm --filter @aiss-nepch/web run deploy",
     "mastra:dev": "pnpm --filter @aiss-nepch/server mastra:dev",
     "mastra:build": "pnpm --filter @aiss-nepch/server mastra:build",
     "mastra:start": "pnpm --filter @aiss-nepch/server mastra:start",
