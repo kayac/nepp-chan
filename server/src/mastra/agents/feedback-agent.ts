@@ -30,7 +30,7 @@ export const feedbackAgent = new Agent({
 ## 利用可能なツール
 - admin-feedback: フィードバック一覧と統計の取得（認証必須）
 `,
-  model: "google/gemini-flash-latest",
+  model: "google/gemini-3-flash-preview",
   tools: {
     adminFeedbackTool,
   },

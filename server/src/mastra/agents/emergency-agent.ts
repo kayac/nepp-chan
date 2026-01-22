@@ -47,7 +47,7 @@ export const emergencyAgent = new Agent({
 - emergency-get: 直近の緊急報告を取得（認証必須）
 - admin-emergency: 管理者向けの詳細な緊急報告取得（認証必須）
 `,
-  model: "google/gemini-flash-latest",
+  model: "google/gemini-3-flash-preview",
   tools: {
     emergencyGetTool,
     adminEmergencyTool,
