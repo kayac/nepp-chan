@@ -137,9 +137,9 @@ export const createNepChanAgent = ({ isAdmin = false }: Props = {}) => {
 
   return new Agent({
     id: "nep-chan",
-    name: "Nep chan",
+    name: "ねっぷちゃん",
     instructions,
-    model: "google/gemini-2.5-flash",
+    model: "google/gemini-flash-latest",
     agents,
     tools,
     memory: ({ requestContext }) =>
