@@ -5,7 +5,6 @@ import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent
 import { feedbackAgent } from "~/mastra/agents/feedback-agent";
 import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
-import { weatherAgent } from "~/mastra/agents/weather-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
@@ -113,6 +112,8 @@ dev-tool を呼び出してユーザーペルソナ（Working Memory）を表示
 
 ## 緊急事態の報告
 ユーザーが緊急事態を報告した場合は emergencyReporterAgent に委譲する。
+委譲時には、会話で得られた情報（何が・どこで・いつ等）を要約して伝える。
+ユーザーに同じ質問を繰り返させないよう、既知の情報を明確に引き継ぐこと。
 `;
 
 const adminInstructions = `
