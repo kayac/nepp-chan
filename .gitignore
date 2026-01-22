@@ -26,6 +26,7 @@ node_modules/
 # Workers 固有
 .dev.vars
 **/.dev.vars
+!.dev.vars.example
 
 # logs
 logs/
@@ -38,8 +39,6 @@ lerna-debug.log*
 
 # misc
 .DS_Store
-
-!.dev.vars.example
 
 # mastra
 .mastra/
