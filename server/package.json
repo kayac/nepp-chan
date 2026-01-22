@@ -9,8 +9,8 @@
     "mastra:dev": "mastra dev",
     "mastra:build": "mastra build",
     "mastra:start": "mastra start",
-    "knowledge:upload": "dotenv -e .dev.vars -- tsx scripts/upload-knowledge.ts",
-    "knowledge:clear": "dotenv -e .dev.vars -- tsx scripts/upload-knowledge.ts --clean",
+    "knowledge:upload": "dotenvx run -f .env -- tsx scripts/upload-knowledge.ts",
+    "knowledge:clear": "dotenvx run -f .env -- tsx scripts/upload-knowledge.ts --clean",
     "admin:invite": "tsx scripts/create-invitation.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "wrangler d1 migrations apply aiss-nepch-dev --remote",
@@ -42,7 +42,6 @@
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
-    "dotenv-cli": "^11.0.0",
     "drizzle-kit": "^0.31.8",
     "mastra": "1.0.0-beta.9",
     "tsx": "^4.21.0",

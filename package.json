@@ -5,9 +5,9 @@
     "node": ">=22.13.0"
   },
   "scripts": {
-    "server:dev": "pnpm --filter @aiss-nepch/server dev",
+    "server:dev": "dotenvx run -fk .env.keys -f server/.env -- pnpm --filter @aiss-nepch/server dev",
     "server:deploy": "pnpm --filter @aiss-nepch/server run deploy",
-    "web:dev": "pnpm --filter @aiss-nepch/web dev",
+    "web:dev": "dotenvx run -fk .env.keys -f web/.env -- pnpm --filter @aiss-nepch/web dev",
     "web:build": "pnpm --filter @aiss-nepch/web build",
     "web:deploy": "pnpm --filter @aiss-nepch/web run deploy",
     "mastra:dev": "pnpm --filter @aiss-nepch/server mastra:dev",
@@ -22,10 +22,11 @@
     "db:studio": "pnpm --filter @aiss-nepch/server db:studio",
     "db:push": "pnpm --filter @aiss-nepch/server db:push",
     "db:check": "pnpm --filter @aiss-nepch/server db:check",
-    "knowledge:upload": "npx tsx --env-file=.env scripts/upload-knowledge.ts",
+    "knowledge:upload": "dotenvx run -fk .env.keys -- tsx scripts/upload-knowledge.ts",
     "test": "pnpm --filter @aiss-nepch/server test"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.8"
+    "@biomejs/biome": "^2.3.8",
+    "@dotenvx/dotenvx": "^1.51.4"
   }
 }
