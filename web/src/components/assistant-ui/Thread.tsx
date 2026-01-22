@@ -127,7 +127,7 @@ const Composer = () => (
   <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
     <ComposerPrimitive.Input
       placeholder="メッセージを入力..."
-      className="aui-composer-input mb-1 max-h-32 min-h-14 w-full resize-none rounded-xl border border-(--color-border) bg-(--color-surface) px-4 pt-4 pb-3 text-sm text-(--color-text) outline-none placeholder:text-(--color-text-faint) focus:border-(--color-accent) focus:ring-2 focus:ring-(--color-accent-light)/20 transition-all"
+      className="aui-composer-input mb-1 max-h-32 min-h-14 w-full resize-none rounded-xl border border-(--color-border) bg-(--color-surface) px-4 pt-4 pb-3 text-base text-(--color-text) outline-none placeholder:text-(--color-text-faint) focus:border-(--color-accent) focus:ring-2 focus:ring-(--color-accent-light)/20 transition-all"
       rows={1}
       autoFocus
       aria-label="メッセージ入力"
