@@ -44,43 +44,31 @@ pnpm install
 
 ### 環境変数の設定
 
-#### ルートディレクトリ
+dotenvx で暗号化された `.env` をコミットしています。復号化には `.env.keys` が必要です。
 
-`.env` を作成：
-
-```env
-# R2 アップロード用
-CLOUDFLARE_ACCOUNT_ID=your-account-id
-R2_BUCKET_NAME=your-bucket-name
-
-# API 呼び出し用
-API_URL=http://localhost:8787
+```text
+/
+├── .env.keys              ← 復号化キー
+├── server/
+│   ├── .env               ← 開発環境
+│   └── .env.production    ← 本番環境
+└── web/
+    ├── .env               ← 開発環境
+    └── .env.production    ← 本番環境
 ```
 
-#### server ディレクトリ
+#### セットアップ手順
 
-`server/.dev.vars` を作成（Workers 開発用）：
+チームから `.env.keys` を受け取り、ルートに配置。
 
-```env
-GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
-GOOGLE_SEARCH_ENGINE_ID=your-engine-id
-MASTER_PASSWORD=your-password
-```
+#### dotenvx コマンド
 
-`server/.env` を作成（Mastra Playground 用）：
+```bash
+# 新しい変数を追加（自動で暗号化）
+dotenvx set NEW_VAR "value" -fk .env.keys -f server/.env
 
-```env
-GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
-GOOGLE_SEARCH_ENGINE_ID=your-engine-id
-MASTER_PASSWORD=your-password
-```
-
-#### web ディレクトリ
-
-`web/.env` を作成：
-
-```env
-VITE_API_URL=http://localhost:8787
+# 復号化して確認
+dotenvx run -fk .env.keys -f server/.env -- printenv NEW_VAR
 ```
 
 ### D1 データベースの初期化
@@ -105,6 +93,8 @@ pnpm mastra:dev
 ```
 
 ## デプロイ
+
+デプロイ時は `.env.production` の値が自動的に使用されます。
 
 ```bash
 # API サーバーをデプロイ

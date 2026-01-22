@@ -62,24 +62,48 @@ const storage = new D1Store({ id: "mastra-storage", binding: db });
 await storage.init(); // 必須
 ```
 
-## 環境変数（シークレット）
+## 環境変数（dotenvx）
 
-### server（Workers）
+dotenvx で暗号化。復号化には `.env.keys` が必要。
 
-| 変数名                         | 用途               |
-| ------------------------------ | ------------------ |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API         |
-| `GOOGLE_SEARCH_ENGINE_ID`      | Custom Search      |
-| `WEBAUTHN_RP_ID`               | WebAuthn RP ID     |
-| `WEBAUTHN_RP_NAME`             | WebAuthn RP 名     |
-| `WEBAUTHN_ORIGIN`              | WebAuthn オリジン  |
+```text
+/
+├── .env.keys              ← 復号化キー
+├── server/
+│   ├── .env               ← 開発環境
+│   └── .env.production    ← 本番環境
+└── web/
+    ├── .env               ← 開発環境
+    └── .env.production    ← 本番環境
+```
 
-### web（Pages）
+### 運用
 
-| 変数名                | 用途       |
-| --------------------- | ---------- |
-| `BASIC_AUTH_USER`     | Basic 認証 |
-| `BASIC_AUTH_PASSWORD` | Basic 認証 |
+```bash
+# 新しい変数を追加（自動で暗号化）
+npx dotenvx set NEW_VAR "value" -fk .env.keys -f server/.env
+
+# 復号化して確認
+npx dotenvx run -fk .env.keys -f server/.env -- printenv NEW_VAR
+
+# CI/CD では環境変数で復号化キーを設定
+export DOTENV_PRIVATE_KEY="<開発用キー>"
+export DOTENV_PRIVATE_KEY_PRODUCTION="<本番用キー>"
+```
+
+### server 環境変数
+
+| 変数名                         | 用途              |
+| ------------------------------ | ----------------- |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API        |
+| `GOOGLE_SEARCH_ENGINE_ID`      | Custom Search     |
+| `PRODUCTION_WEB_URL`           | 本番 Web URL      |
+
+### web 環境変数
+
+| 変数名         | 用途    |
+| -------------- | ------- |
+| `VITE_API_URL` | API URL |
 
 ## ブランチ
 
