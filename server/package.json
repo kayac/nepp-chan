@@ -9,8 +9,6 @@
     "mastra:dev": "mastra dev",
     "mastra:build": "mastra build",
     "mastra:start": "mastra start",
-    "knowledge:upload": "dotenvx run -f .env -- tsx scripts/upload-knowledge.ts",
-    "knowledge:clear": "dotenvx run -f .env -- tsx scripts/upload-knowledge.ts --clean",
     "admin:invite": "tsx scripts/create-invitation.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "wrangler d1 migrations apply aiss-nepch-dev --remote",

@@ -6,7 +6,7 @@
   },
   "scripts": {
     "server:dev": "dotenvx run -fk .env.keys -f server/.env -- pnpm --filter @aiss-nepch/server dev",
-    "server:deploy": "dotenvx run -fk .env.keys -f server/.env.production -- pnpm --filter @aiss-nepch/server run deploy",
+    "server:deploy": "pnpm --filter @aiss-nepch/server run deploy",
     "web:dev": "dotenvx run -fk .env.keys -f web/.env -- pnpm --filter @aiss-nepch/web dev",
     "web:build": "pnpm --filter @aiss-nepch/web build",
     "web:deploy": "dotenvx run -fk .env.keys -f web/.env.production -- pnpm --filter @aiss-nepch/web run deploy",
