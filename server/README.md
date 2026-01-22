@@ -10,11 +10,14 @@ pnpm install
 
 ### 環境変数の設定
 
-`.dev.vars` ファイルを作成：
+dotenvx で暗号化された `.env` を使用。詳細はルートの [README.md](../README.md) を参照。
 
-```
-GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
-GOOGLE_SEARCH_ENGINE_ID=your-engine-id
+### wrangler 用環境変数
+
+`.dev.vars.example` を `.dev.vars` にコピーして値を設定：
+
+```bash
+cp .dev.vars.example .dev.vars
 ```
 
 ### D1 データベースの初期化
@@ -219,10 +222,7 @@ pnpm knowledge:upload --clean --file=mayor-interview.md
 
 **必要な環境変数**
 
-```bash
-export GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
-export API_URL=http://localhost:8787  # デフォルト
-```
+ルートの `.env` または `.env.local` に設定（詳細は [README.md](../README.md) 参照）
 
 ### 管理API
 
