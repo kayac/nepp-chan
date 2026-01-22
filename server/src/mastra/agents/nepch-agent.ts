@@ -132,7 +132,6 @@ const baseAgents = {
   emergencyReporterAgent,
   knowledgeAgent,
   webResearcherAgent,
-  weatherAgent,
 };
 
 const adminAgents = {
