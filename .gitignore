@@ -16,9 +16,17 @@ node_modules/
 .wrangler
 
 # env
-.env
-.env.production
+.env.keys
+**/.env.keys
+
+# ローカル用env
+.env.local
+**/.env.local
+
+# Workers 固有
 .dev.vars
+**/.dev.vars
+!.dev.vars.example
 
 # logs
 logs/
@@ -31,10 +39,6 @@ lerna-debug.log*
 
 # misc
 .DS_Store
-
-.dev.vars*
-!.dev.vars.example
-!.env.example
 
 # mastra
 .mastra/

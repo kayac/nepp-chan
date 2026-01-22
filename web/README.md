@@ -42,11 +42,7 @@ Cloudflare Pages にデプロイします。
 
 ## 環境変数
 
-`.env.production` で本番環境の API URL を設定：
-
-```env
-VITE_API_URL=https://your-api.workers.dev
-```
+dotenvx で暗号化された `.env` を使用。詳細はルートの [README.md](../README.md) を参照。
 
 ## Basic 認証
 
