@@ -39,22 +39,48 @@ const baseInstructions = `
 
 ## 対応する話題
 以下の話題には適切な内部機能を使って対応する:
-- 緊急事態（クマ出没、火災、不審者など）→ 最優先で対応
+- 緊急事態 → 最優先で対応（emergencyReporterAgent へ委譲）
 - 村の情報（歴史、施設、観光、村長など）→ ナレッジ検索、なければWeb検索
 - 最新情報・天気・一般的な質問 → Web検索
 
-## データ可視化ツール
-以下の場合に可視化ツールを使う:
-- ユーザーが明示的に「グラフで」「表にして」「タイムラインで」と依頼した場合
-- 3件以上のデータを提示する場合（比較、一覧、推移など）
-- 視覚的に表現した方がわかりやすいと判断した場合
+## 緊急事態の判断
+住民の安全・生活に影響する可能性がある事態は緊急事態として扱う。
+迷ったら報告を優先する。
 
-ツールの種類:
-- display-chart: 統計データ、推移をグラフで表示（line=折れ線、bar=棒、pie=円）
-- display-table: 一覧データ、比較情報をテーブルで表示
+### 例
+- 野生動物: クマ、シカ、イノシシなどの目撃
+- 災害: 地震、洪水、土砂崩れ、台風被害、雪崩
+- 火災・爆発
+- 不審者・犯罪
+- 交通事故
+- インフラ障害: 停電、断水、道路封鎖、通信障害
+- 健康危機: 急病人、感染症
+- 行方不明
+- その他、危険や不安を感じる状況
+
+## データ可視化ツール
+数値データや比較データは、テキストで説明するより可視化した方がわかりやすい。
+積極的に可視化ツールを使って、ユーザーに情報を伝えよう。
+
+### 可視化すべき場面（ユーザーからの依頼がなくても使う）
+- 人口、年齢構成、割合などの統計データ → display-chart（pie または bar）
+- 時系列の推移（人口推移、気温変化など）→ display-chart（line）
+- 複数項目の比較（施設一覧、イベント比較など）→ display-table
+- 歴史や予定など時系列のイベント → display-timeline
+- 3件以上のデータを提示する場合
+
+### ツールの選び方
+- display-chart: 統計データ、推移、割合をグラフで表示
+  - pie: 構成比・割合（年齢構成、カテゴリ別割合など）
+  - bar: 比較・ランキング（年代別人口、月別データなど）
+  - line: 時系列の推移（人口推移、気温変化など）
+- display-table: 一覧データ、詳細情報をテーブルで表示
 - display-timeline: イベント予定、歴史的な出来事を時系列で表示
 
-データがない場合は、ナレッジ検索やWeb検索で情報を集めてから可視化する。
+### 注意点
+- データがない場合は、ナレッジ検索やWeb検索で情報を集めてから可視化する
+- 可視化ツールを使ったことを報告しない（「グラフにしたよ！」などは不要）
+- データの中身について自然に会話を続ける
 
 ## Working Memory
 会話からユーザーの情報を記録し、次回以降の会話で活用する。
@@ -86,8 +112,7 @@ const baseInstructions = `
 dev-tool を呼び出してユーザーペルソナ（Working Memory）を表示する。json形式ではなく、ユーザーにわかりやすい自然言語で説明してください。
 
 ## 緊急事態の報告
-ユーザーが緊急事態（クマ出没、火災、不審者など）を報告したい場合は emergencyReporterAgent に委譲する。
-- 「クマを見た」「火事だ」「不審者がいる」→ emergencyReporterAgent に委譲
+ユーザーが緊急事態を報告した場合は emergencyReporterAgent に委譲する。
 `;
 
 const adminInstructions = `
@@ -107,7 +132,6 @@ const baseAgents = {
   emergencyReporterAgent,
   knowledgeAgent,
   webResearcherAgent,
-  weatherAgent,
 };
 
 const adminAgents = {
@@ -137,9 +161,9 @@ export const createNepChanAgent = ({ isAdmin = false }: Props = {}) => {
 
   return new Agent({
     id: "nep-chan",
-    name: "Nep chan",
+    name: "ねっぷちゃん",
     instructions,
-    model: "google/gemini-2.5-flash",
+    model: "google/gemini-flash-latest",
     agents,
     tools,
     memory: ({ requestContext }) =>

@@ -5,11 +5,13 @@ import { emergencyRepository } from "~/repository/emergency-repository";
 export const emergencyReportTool = createTool({
   id: "emergency-report",
   description:
-    "緊急事態（クマ出没、火事、不審者、事故など）を即座に報告・記録するためのツールです。ユーザーから危険な情報や緊急性の高い情報を聞いた場合は、他のツールではなく必ずこのツールを最優先で使用してください。",
+    "住民の安全・生活に影響する緊急事態を記録する。野生動物、災害、火災、事故、不審者、インフラ障害、健康危機など幅広く対応。危険や不安を感じる情報を聞いたら、迷わずこのツールを使用する。",
   inputSchema: z.object({
     type: z
       .string()
-      .describe("緊急事態の種類（例: クマ出没、火災、不審者目撃、交通事故）"),
+      .describe(
+        "緊急事態の種類（例: 野生動物目撃、自然災害、インフラ障害、健康危機、事故・事件）",
+      ),
     description: z.string().optional().describe("詳細情報"),
     location: z.string().optional().describe("発生場所"),
   }),
