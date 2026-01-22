@@ -10,7 +10,7 @@
     "web:dev": "dotenvx run -fk .env.keys -f web/.env -- pnpm --filter @aiss-nepch/web dev",
     "web:build": "pnpm --filter @aiss-nepch/web build",
     "web:deploy": "dotenvx run -fk .env.keys -f web/.env.production -- pnpm --filter @aiss-nepch/web run deploy",
-    "mastra:dev": "pnpm --filter @aiss-nepch/server mastra:dev",
+    "mastra:dev": "dotenvx run -fk .env.keys -f server/.env -- pnpm --filter @aiss-nepch/server mastra:dev",
     "mastra:build": "pnpm --filter @aiss-nepch/server mastra:build",
     "mastra:start": "pnpm --filter @aiss-nepch/server mastra:start",
     "lint": "biome check . && pnpm --filter @aiss-nepch/web exec tsc --noEmit && pnpm --filter @aiss-nepch/server exec tsc --noEmit",
