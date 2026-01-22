@@ -7,7 +7,7 @@ import { z } from "zod";
 
 const EMBEDDING_MODEL_NAME = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 1536;
-const RERANK_MODEL_ID = "google/gemini-2.5-flash" as const;
+const RERANK_MODEL_ID = "google/gemini-flash-latest" as const;
 
 const SEARCH_TOP_K = 10;
 

@@ -44,7 +44,7 @@ Google検索は使わず、村の公式サイトのみを検索してくださ�
 - エラーが発生した場合は正直に報告する
 - 情報源（URL）を明記する
 `,
-  model: "google/gemini-2.5-flash",
+  model: "google/gemini-flash-latest",
   tools: async () => ({
     villageSearchTool,
     ...(await playWrightMcp.listTools()),
