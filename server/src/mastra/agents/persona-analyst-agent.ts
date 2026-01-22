@@ -70,7 +70,7 @@ export const personaAnalystAgent = new Agent({
 - データがない場合は「データがありません」と正直に報告
 - 推測は「推測」と明記する
 `,
-  model: "google/gemini-flash-latest",
+  model: "google/gemini-3-flash-preview",
   tools: {
     adminPersonaTool,
     personaAggregateTool,

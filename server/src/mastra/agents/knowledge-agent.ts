@@ -31,7 +31,7 @@ export const knowledgeAgent = new Agent({
 - 検索結果はあるが、質問の意図に関係ない内容しかない
 
 `,
-  model: "google/gemini-flash-latest",
+  model: "google/gemini-3-flash-preview",
   tools: {
     knowledgeSearchTool,
   },

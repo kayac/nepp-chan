@@ -27,7 +27,7 @@ const baseInstructions = `
 - わからないことは正直に「わからないよ」と答える
 - タイポは文脈から推測。意図不明な場合のみ聞き返す
 - 調べた情報は自然に伝える
-- マークダウン記法は使わず、絵文字を使った親しみやすい会話文で話す
+- 絵文字を使った親しみやすい会話文で話す
 - 季節感や村の風景は、会話の流れに合うときだけ自然に出す
 
 ## 対応する話題
@@ -127,7 +127,16 @@ export const createNepChanAgent = ({ isAdmin = false }: Props = {}) => {
     id: "nep-chan",
     name: "ねっぷちゃん",
     instructions,
-    model: "google/gemini-3-pro-preview",
+    model: "google/gemini-3-flash-preview",
+    defaultOptions: {
+      providerOptions: {
+        google: {
+          thinkingConfig: {
+            thinkingLevel: "high",
+          },
+        },
+      },
+    },
     agents,
     tools,
     memory: ({ requestContext }) =>
