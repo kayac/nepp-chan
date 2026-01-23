@@ -5,3 +5,5 @@
 - [アクセス](access.md)
 - [人口・国土](jinkou_kokudo.md)
 - [広報紙](kouhou.md)
+- [音威子府村人口ビジョン (PDF変換)](../pdf/parsed/otoineppu_jinko.md)
+- [音威子府村まち・ひと・しごと総合戦略 (PDF変換)](../pdf/parsed/otoineppu_sogosenryaku.md)
