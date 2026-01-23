@@ -1,5 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+  "account_id": "51544998e04526c4d6cc9e3e08653361",
   "name": "aiss-nepch-web-dev",
   "compatibility_date": "2025-12-11",
   "pages_build_output_dir": "dist"
