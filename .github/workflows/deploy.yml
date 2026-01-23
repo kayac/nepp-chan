@@ -52,9 +52,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Deploy Web
-        run: |
-          pnpm --filter @aiss-nepch/web run build
-          pnpm --filter @aiss-nepch/web exec wrangler pages deploy dist
+        run: pnpm --filter @aiss-nepch/web run deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           DOTENV_PRIVATE_KEY_PRODUCTION: ${{ secrets.DOTENV_PRIVATE_KEY_PRODUCTION }}
