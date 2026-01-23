@@ -29,7 +29,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Deploy Server
-        run: pnpm --filter @aiss-nepch/server run deploy
+        run: pnpm server:deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
@@ -52,7 +52,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Deploy Web
-        run: pnpm --filter @aiss-nepch/web run deploy
+        run: pnpm web:deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
