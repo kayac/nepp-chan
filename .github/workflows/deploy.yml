@@ -29,7 +29,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Deploy Server
-        run: pnpm --filter @aiss-nepch/server deploy
+        run: pnpm --filter @aiss-nepch/server run deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
