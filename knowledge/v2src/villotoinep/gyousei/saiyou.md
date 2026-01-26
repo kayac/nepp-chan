@@ -3,7 +3,7 @@
 ## 令和8年採用職員の募集
 令和8年4月1日採用の一般職、社会福祉士、保育教諭の募集を行っております。
 
-- [令和8年度上川管内町村等職員採用資格試験について](https://www.vill.otoineppu.hokkaido.jp/kakuka/soumuzaisei/oshirase/2025-0701-1217-14.html)
+- [令和8年度上川管内町村等職員採用資格試験について](https://www.vill.otoineppu.hokkaido.jp/gyousei/saiyou/2025-0707-1011-14.html)
 
 ## お問い合わせ
 総務課総務財政室
