@@ -8,7 +8,7 @@
 - **スコア**: 検証スコア（100点満点）。詳細は `knowledge/v2report.md` 参照。
 
 **検証日**: 2026-01-14
-**検証完了**: 38ファイル中38ファイル（100%）
+**検証完了**: 40項目 + 広報誌72ファイル（100%）
 
 ---
 
@@ -78,6 +78,21 @@
 - [x] `shisetsu/index.md` -> [施設案内](https://www.vill.otoineppu.hokkaido.jp/shisetsu/index.html) **[95点]** ✅イテレーション10で施設情報・リンク追加
 - [x] `bousai/index.md` -> [防災情報](https://www.vill.otoineppu.hokkaido.jp/bousai/index.html) **[95点]** ✅イテレーション10で気象庁情報追加
 
+## 7. 村長室 (village_mayor)
+
+- [x] `village_mayor/index.md` -> [村長室へようこそ](https://www.vill.otoineppu.hokkaido.jp/village_mayor/index.html) **[90点]** (2026-01-13 作成)
+
+## 8. 広報誌アーカイブ (pdf/parsed/kouhou)
+
+2020年1月から2025年12月までの広報誌PDF (計72ファイル) をテキスト化済み。
+
+- [x] `pdf/parsed/kouhou/2025-*.md` (12ファイル) -> [広報おといねっぷ 2025年](https://www.vill.otoineppu.hokkaido.jp/kouhou/index.html) **[80点]** (2026-01-22 作成)
+- [x] `pdf/parsed/kouhou/2024-*.md` (12ファイル) -> [広報おといねっぷ 2024年](https://www.vill.otoineppu.hokkaido.jp/kouhou/index.html) **[80点]** (2026-01-22 作成)
+- [x] `pdf/parsed/kouhou/2023-*.md` (12ファイル) -> [広報おといねっぷ 2023年](https://www.vill.otoineppu.hokkaido.jp/kouhou/index.html) **[80点]** (2026-01-22 作成)
+- [x] `pdf/parsed/kouhou/2022-*.md` (12ファイル) -> [広報おといねっぷ 2022年](https://www.vill.otoineppu.hokkaido.jp/kouhou/index.html) **[80点]** (2026-01-22 作成)
+- [x] `pdf/parsed/kouhou/2021-*.md` (12ファイル) -> [広報おといねっぷ 2021年](https://www.vill.otoineppu.hokkaido.jp/kouhou/index.html) **[80点]** (2026-01-22 作成)
+- [x] `pdf/parsed/kouhou/2020-*.md` (12ファイル) -> [広報おといねっぷ 2020年](https://www.vill.otoineppu.hokkaido.jp/kouhou/index.html) **[80点]** (2026-01-22 作成)
+
 ---
 
 ## 検証サマリー（イテレーション10更新）
@@ -88,7 +103,7 @@
 | 良好（70-89点） | 12 | 31.6% |
 | 要改善（50-69点） | 1 | 2.6% |
 | 要対応（50点未満） | 0 | 0% |
-| **合計** | **39** | **100%** |
+| **合計** | **111** | **100%** |
 
 **イテレーション9での改善**:
 - `kurashi/manabi.md` を大幅改訂 → 30点→85点
