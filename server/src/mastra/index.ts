@@ -19,12 +19,17 @@ import {
 } from "~/mastra/scorers/weather-scorer";
 import { weatherWorkflow } from "~/mastra/workflows/weather-workflow";
 
+let cloudflareEnv: CloudflareBindings | null = null;
+
 const getCloudflareEnv = async () => {
+  if (cloudflareEnv) return cloudflareEnv;
+
   try {
     const { env } = await getPlatformProxy<CloudflareBindings>({
       remoteBindings: true,
     });
     console.log("Cloudflare remote bindings initialized");
+    cloudflareEnv = env;
     return env;
   } catch (error) {
     console.warn("Cloudflare bindings not available:", error);
