@@ -23,7 +23,8 @@
   "vectorize": [
     {
       "binding": "VECTORIZE",
-      "index_name": "knowledge"
+      "index_name": "knowledge",
+      "remote": true
     }
   ],
   "r2_buckets": [
