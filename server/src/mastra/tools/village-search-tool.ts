@@ -16,8 +16,8 @@ export const villageSearchTool = createTool({
     searchUrl: z.string(),
     source: z.string(),
   }),
-  execute: async ({ query }) => {
-    const searchUrl = `${BASE_URL}/result.html?q=${encodeURIComponent(query)}`;
+  execute: async (inputData) => {
+    const searchUrl = `${BASE_URL}/result.html?q=${encodeURIComponent(inputData.query)}`;
     return {
       searchUrl,
       source: "音威子府村公式サイト",

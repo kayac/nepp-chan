@@ -65,8 +65,11 @@ threadsRoutes.openapi(getThreadsRoute, async (c) => {
 
   const memory = await getMemory(c.env.DB);
 
-  const result = await memory.listThreadsByResourceId({
-    resourceId,
+  const result = await memory.listThreads({
+    filter: {
+      resourceId: resourceId,
+    },
+
     page,
     perPage,
   });
