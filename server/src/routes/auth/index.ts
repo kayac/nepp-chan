@@ -14,6 +14,87 @@ import {
   type WebAuthnConfig,
 } from "~/services/auth/webauthn";
 
+const RegistrationOptionsSchema = z
+  .object({
+    challenge: z.string(),
+    rp: z.object({
+      name: z.string(),
+      id: z.string().optional(),
+    }),
+    user: z.object({
+      id: z.string(),
+      name: z.string(),
+      displayName: z.string(),
+    }),
+    pubKeyCredParams: z.array(
+      z.object({
+        type: z.literal("public-key"),
+        alg: z.number(),
+      }),
+    ),
+    timeout: z.number().optional(),
+    attestation: z.string().optional(),
+    authenticatorSelection: z
+      .object({
+        authenticatorAttachment: z.string().optional(),
+        residentKey: z.string().optional(),
+        requireResidentKey: z.boolean().optional(),
+        userVerification: z.string().optional(),
+      })
+      .optional(),
+  })
+  .passthrough();
+
+const RegistrationResponseSchema = z
+  .object({
+    id: z.string(),
+    rawId: z.string(),
+    response: z
+      .object({
+        clientDataJSON: z.string(),
+        attestationObject: z.string(),
+      })
+      .passthrough(),
+    type: z.literal("public-key"),
+    clientExtensionResults: z.object({}).passthrough(),
+  })
+  .passthrough();
+
+const AuthenticationOptionsSchema = z
+  .object({
+    challenge: z.string(),
+    timeout: z.number().optional(),
+    rpId: z.string().optional(),
+    userVerification: z.string().optional(),
+    allowCredentials: z
+      .array(
+        z
+          .object({
+            id: z.string(),
+            type: z.literal("public-key"),
+          })
+          .passthrough(),
+      )
+      .optional(),
+  })
+  .passthrough();
+
+const AuthenticationResponseSchema = z
+  .object({
+    id: z.string(),
+    rawId: z.string(),
+    response: z
+      .object({
+        clientDataJSON: z.string(),
+        authenticatorData: z.string(),
+        signature: z.string(),
+      })
+      .passthrough(),
+    type: z.literal("public-key"),
+    clientExtensionResults: z.object({}).passthrough(),
+  })
+  .passthrough();
+
 type AuthBindings = CloudflareBindings & {
   WEBAUTHN_RP_ID: string;
   WEBAUTHN_RP_NAME: string;
@@ -53,7 +134,7 @@ const registerOptionsRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            options: z.any(),
+            options: RegistrationOptionsSchema,
             challengeId: z.string(),
             email: z.string(),
             invitationId: z.string(),
@@ -103,7 +184,7 @@ const registerVerifyRoute = createRoute({
         "application/json": {
           schema: z.object({
             challengeId: z.string(),
-            response: z.any(),
+            response: RegistrationResponseSchema,
             invitationId: z.string(),
           }),
         },
@@ -190,7 +271,7 @@ const loginOptionsRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            options: z.any(),
+            options: AuthenticationOptionsSchema,
             challengeId: z.string(),
           }),
         },
@@ -217,7 +298,7 @@ const loginVerifyRoute = createRoute({
         "application/json": {
           schema: z.object({
             challengeId: z.string(),
-            response: z.any(),
+            response: AuthenticationResponseSchema,
           }),
         },
       },
