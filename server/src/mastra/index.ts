@@ -1,6 +1,11 @@
 import { Mastra } from "@mastra/core/mastra";
 import { LibSQLStore } from "@mastra/libsql";
 import { PinoLogger } from "@mastra/loggers";
+import {
+  DefaultExporter,
+  Observability,
+  SamplingStrategyType,
+} from "@mastra/observability";
 import { getPlatformProxy } from "wrangler";
 import { converterAgent } from "~/mastra/agents/converter-agent";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
@@ -12,6 +17,11 @@ import { personaAgent } from "~/mastra/agents/persona-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { weatherAgent } from "~/mastra/agents/weather-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
+import {
+  knowledgeAccuracyScorer,
+  knowledgeHallucinationScorer,
+  knowledgeSearchQualityScorer,
+} from "~/mastra/scorers/knowledge-scorer";
 import {
   completenessScorer,
   toolCallAppropriatenessScorer,
@@ -28,7 +38,6 @@ const getCloudflareEnv = async () => {
     const { env } = await getPlatformProxy<CloudflareBindings>({
       remoteBindings: true,
     });
-    console.log("Cloudflare remote bindings initialized");
     cloudflareEnv = env;
     return env;
   } catch (error) {
@@ -59,10 +68,22 @@ export const mastra = new Mastra({
     toolCallAppropriatenessScorer,
     completenessScorer,
     translationScorer,
+    knowledgeHallucinationScorer,
+    knowledgeSearchQualityScorer,
+    knowledgeAccuracyScorer,
   },
+  observability: new Observability({
+    configs: {
+      default: {
+        serviceName: "nepch-agent",
+        sampling: { type: SamplingStrategyType.ALWAYS },
+        exporters: [new DefaultExporter()],
+      },
+    },
+  }),
   storage: new LibSQLStore({
     id: "mastra-storage",
-    url: ":memory:",
+    url: "file:mastra.db",
   }),
   logger: new PinoLogger({
     name: "Mastra",
