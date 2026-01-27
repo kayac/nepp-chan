@@ -1,15 +1,31 @@
+import type { MiddlewareHandler } from "hono";
 import { cors } from "hono/cors";
 
-export const corsMiddleware = cors({
-  origin: (origin) => {
-    if (!origin) return null;
-    if (origin === "http://localhost:5173") return origin;
-    if (origin.endsWith(".aiss-nepch-web-dev-8fi.pages.dev")) return origin;
-    if (origin === "https://aiss-nepch-web-dev-8fi.pages.dev") return origin;
-    return null;
-  },
-  allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowHeaders: ["Content-Type", "User-Agent", "Authorization"],
-  credentials: true,
-  maxAge: 86400,
-});
+const isAllowedOrigin = (
+  origin: string,
+  env: CloudflareBindings,
+): string | null => {
+  const allowedOrigins = [
+    "http://localhost:5173",
+    env.PRODUCTION_WEB_URL,
+  ].filter(Boolean);
+
+  return allowedOrigins.includes(origin) ? origin : null;
+};
+
+export const corsMiddleware: MiddlewareHandler<{
+  Bindings: CloudflareBindings;
+}> = async (c, next) => {
+  const corsHandler = cors({
+    origin: (origin) => {
+      if (!origin) return null;
+      return isAllowedOrigin(origin, c.env);
+    },
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "User-Agent", "Authorization"],
+    credentials: true,
+    maxAge: 86400,
+  });
+
+  return corsHandler(c, next);
+};
