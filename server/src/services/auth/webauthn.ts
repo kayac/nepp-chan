@@ -105,6 +105,10 @@ export const verifyWebAuthnRegistration = async (
     throw new Error("無効な招待です");
   }
 
+  if (new Date(invitation.expiresAt) <= new Date()) {
+    throw new Error("招待の有効期限が切れています");
+  }
+
   if (challenge.email !== invitation.email) {
     throw new Error("招待と認証リクエストのメールアドレスが一致しません");
   }

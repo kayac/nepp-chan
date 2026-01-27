@@ -25,17 +25,18 @@ type VectorData = {
   metadata: ChunkMetadata;
 };
 
-const embeddingModelCache = new Map<string, EmbeddingModel>();
+let cachedEmbeddingModel: EmbeddingModel | null = null;
+let cachedApiKey: string | null = null;
 
 const getEmbeddingModel = (apiKey: string): EmbeddingModel => {
-  const cachedModel = embeddingModelCache.get(apiKey);
-  if (cachedModel) {
-    return cachedModel;
+  if (cachedEmbeddingModel && cachedApiKey === apiKey) {
+    return cachedEmbeddingModel;
   }
 
   const google = createGoogleGenerativeAI({ apiKey });
   const model = google.textEmbeddingModel(EMBEDDING_MODEL_NAME);
-  embeddingModelCache.set(apiKey, model);
+  cachedEmbeddingModel = model;
+  cachedApiKey = apiKey;
 
   return model;
 };
