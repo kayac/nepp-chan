@@ -83,7 +83,7 @@ VALUES ('${id}', '${email}', '${token}', 'system', '${role}', '${expiresAt.toISO
 
   try {
     const remoteFlag = isRemote ? "--remote" : "--local";
-    const command = `wrangler d1 execute aiss-nepch-dev ${remoteFlag} --command="${sql}"`;
+    const command = `wrangler d1 execute nepp-chan-db-dev ${remoteFlag} --command="${sql}"`;
 
     execSync(command, { stdio: "inherit", cwd: process.cwd() });
 

@@ -1,4 +1,4 @@
-# @aiss-nepch/web
+# @nepp-chan/web
 
 ねっぷちゃんチャットシステムのフロントエンド。React + Vite で構築し、Cloudflare Pages 上で動作。
 

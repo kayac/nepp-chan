@@ -80,7 +80,7 @@ server/src/
 - **管理者**: 基本機能 + 管理者専用エージェント（emergency, feedback, persona-analyst）
 
 ```typescript
-import { createNepChanAgent } from "~/mastra/agents/nepch-agent";
+import { createNepChanAgent } from "~/mastra/agents/nepp-chan-agent";
 
 const agent = createNepChanAgent({ isAdmin: true });
 ```
