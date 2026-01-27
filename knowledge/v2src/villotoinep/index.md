@@ -50,22 +50,61 @@
 
 ---
 
+## 目的から探す
+
+### [手続き・相談](kurashi/tetsuduki/index.md)
+- [ふるさと納税制度](kurashi/tetsuduki/furusato_nouzei.md)
+- [村有財産使用申請](kurashi/tetsuduki/sonyuzaisan.md)
+- [国土利用計画法の届出](kurashi/tetsuduki/kokudoriyou.md)
+- [各種納付窓口](kurashi/tetsuduki/noufu.md)
+
+### [健康・福祉](kurashi/kenkou_fukushi/index.md)
+- [乳幼児医療助成](kurashi/kenkou_fukushi/nyuuyouji_josei.md)
+
+### [保険・年金](kurashi/hoken_nenkin/index.md)
+- [国民年金について](kurashi/hoken_nenkin/nenkin.md)
+- [国民年金保険料について](kurashi/hoken_nenkin/nenkin_hokenryou.md)
+- [各種年金手続き](kurashi/hoken_nenkin/nenkin_tetsuduki.md)
+- [国民健康保険について](kurashi/hoken_nenkin/kokuho.md)
+
+### [学び](kurashi/manabi/index.md)
+- [音威子府小中学校](http://otosyochu.sakura.ne.jp/) (外部サイト)
+- [北海道おといねっぷ美術工芸高等学校](http://www.otoineppu-h.ed.jp/) (外部サイト)
+
+### [税金](kurashi/zeikin/index.md)
+- [村道民税](kurashi/zeikin/juminzei.md)
+- [固定資産税](kurashi/zeikin/kotei.md)
+- [国民健康保険税](kurashi/zeikin/kokuhozei.md)
+- [軽自動車税](kurashi/zeikin/keijidousya.md)
+- [村税関係証明書等の発行](kurashi/zeikin/syoumeisyo.md)
+
+### [スポーツ](kurashi/sports/index.md)
+- [ベースボール](kurashi/sports/baseball.md)
+- [クロスカントリー](kurashi/sports/cross_country.md)
+- [アルペンスキー](kurashi/sports/alpine.md)
+
+### [くらし・環境](kurashi/gomi_kankyou/index.md)
+- ごみ・リサイクル
+- ペット・動物
+- 環境
+- 地域安全
+
+---
+
 ## お知らせ（最新）
 
-> 詳細は [[/oshirase/index|お知らせ一覧]] を参照
+> 詳細は [お知らせ一覧](https://www.vill.otoineppu.hokkaido.jp/oshirase/index.html) を参照
 
-- 1月14日 - YOKO-CUP 第38回音威子府ジュニアクロスカントリースキー大会
-- 1月9日 - 第47回音威富士大回転競技大会
-- 12月17日 - 地域計画の変更に関する協議の場について
-- 12月17日 - 【12月19日】音威富士スキー場 オープンのお知らせ
-- 11月26日 - 地域おこし協力隊（事業所雇用型隊員：事業承継）募集！
-- 11月18日 - 入札参加資格申請書の受付について
-- 11月17日 - Jクレジット制度プロジェクト登録のお知らせ 修正について
-- 11月14日 - 令和８年度音威子府村職員採用資格試験（テストセンター方式）の実施について
-- 10月31日 - 道の駅ガチャピンズについて
-- 10月24日 - 第43回クロスカントリー音威子府大会について
-- 9月24日 - 乳幼児等医療費助成制度の拡大について
-- 8月7日 - 第３期音威子府村食育推進計画の制定について
+- 1月26日 - [第51回衆議院議員総選挙および第27回最高裁判所裁判官国民審査の執行について](kakuka/senkyokanri/oshirase/2026-0126-senkyo.md)
+- 1月14日 - [YOKO-CUP 第38回音威子府ジュニアクロスカントリースキー大会について](kakuka/kyouikuiin/oshirase/2026-0114-jr-xc.md)
+- 1月9日 - [第47回音威富士大回転競技大会について](kakuka/kyouikuiin/oshirase/2026-0108-alpine.md)
+- 12月17日 - [地域計画の変更に関する協議の場について](kakuka/nougyouiin/oshirase/tiikikeikaku-henkou.md)
+- 12月17日 - [【12月19日】音威富士スキー場 オープンのお知らせ](kakuka/sangyoushinkou/oshirase/ski-open.md)
+- 11月26日 - [地域おこし協力隊（事業所雇用型隊員：事業承継）募集！](kakuka/chiikishinkou/oshirase/chiikiokoshi-jigyoushokei.md)
+- 11月18日 - [入札参加資格申請書の受付について（HP更新）](kakuka/soumuzaisei/oshirase/nyusatsu-uketuke.md)
+- 11月17日 - [Jクレジット制度プロジェクト登録のお知らせ 修正について](kakuka/sangyoushinkou/oshirase/j-credit.md)
+- 11月14日 - [令和８年度音威子府村職員採用資格試験（テストセンター方式）の実施について](kakuka/soumuzaisei/oshirase/saiyou-r8.md)
+- 10月31日 - [道の駅ガチャピンズについて](kakuka/sangyoushinkou/oshirase/gacha-pins.md)
 
 ---
 
@@ -86,6 +125,11 @@
 ---
 
 ## バナーリンク（関連サイト）
+
+### 移住・定住
+
+- [短期移住体験住宅（ちょっと暮らし）](https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/otoineppu_iju.html)
+- [空き家バンク](https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/oshirase/akiya_bank.html)
 
 ### 教育機関
 
