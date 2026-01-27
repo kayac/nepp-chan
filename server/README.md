@@ -1,4 +1,4 @@
-# @aiss-nepch/server
+# @nepp-chan/server
 
 ねっぷちゃんチャットシステムの API サーバー。Mastra AI フレームワークを活用し、Cloudflare Workers 上で動作。
 
