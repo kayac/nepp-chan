@@ -1,4 +1,4 @@
-# CLAUDE.md - aiss-nepch
+# CLAUDE.md - nepp-chan
 
 音威子府村 AI キャラクター「ねっぷちゃん」チャットシステム。
 Cloudflare Workers（API）+ Pages（Web）のモノレポ構成。
@@ -15,9 +15,10 @@ pnpm lint                # Biome + tsc
 pnpm format              # Biome フォーマット
 
 # DB マイグレーション
-pnpm db:generate         # スキーマ → SQL 生成
-pnpm db:migrate:local    # ローカル D1 適用
-pnpm db:migrate          # リモート D1 適用
+pnpm db:generate            # スキーマ → SQL 生成
+pnpm db:migrate:local       # ローカル D1 適用
+pnpm db:migrate             # dev 環境 D1 適用
+pnpm db:migrate:production  # prd 環境 D1 適用
 
 # ナレッジ
 pnpm knowledge:upload    # R2 アップロード → Vectorize 同期
