@@ -57,6 +57,9 @@
    */
   "triggers": {
     "crons": ["0 18 * * *"]
+  },
+  "vars": {
+    "PRODUCTION_WEB_URL": "https://aiss-nepch-web-dev-8fi.pages.dev"
   }
   /**
    * Bindings
