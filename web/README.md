@@ -35,10 +35,12 @@ pnpm build
 ## デプロイ
 
 ```bash
+# dev 環境 (nepp-chan-web-dev)
 pnpm deploy
-```
 
-Cloudflare Pages にデプロイします。
+# prd 環境 (nepp-chan-web-prd)
+pnpm deploy:production
+```
 
 ## 環境変数
 

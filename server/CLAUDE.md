@@ -360,10 +360,11 @@ knowledge/*.md → R2 バケット → Vectorize（embeddings）
 
 ### Cloudflare バインディング
 
-| バインディング     | リソース                          |
-| ------------------ | --------------------------------- |
-| `KNOWLEDGE_BUCKET` | R2 バケット `aiss-nepch-knowledge` |
-| `VECTORIZE`        | Vectorize インデックス `knowledge` |
+| バインディング     | dev                          | prd                          |
+| ------------------ | ---------------------------- | ---------------------------- |
+| `KNOWLEDGE_BUCKET` | `nepp-chan-knowledge-dev`    | `nepp-chan-knowledge-prd`    |
+| `VECTORIZE`        | `nepp-chan-knowledge-dev`    | `nepp-chan-knowledge-prd`    |
+| `DB`               | `nepp-chan-db-dev`           | `nepp-chan-db-prd`           |
 
 ## ペルソナ抽出バッチ処理
 
@@ -392,7 +393,8 @@ thread_persona_status 更新
 ## 開発コマンド
 
 ```bash
-pnpm dev      # 開発サーバー
-pnpm test     # テスト実行
-pnpm deploy   # 本番デプロイ
+pnpm dev               # 開発サーバー
+pnpm test              # テスト実行
+pnpm deploy            # dev 環境（nepp-chan-server-dev）にデプロイ
+pnpm deploy:production # prd 環境（nepp-chan-server-prd）にデプロイ
 ```
