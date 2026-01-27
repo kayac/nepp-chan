@@ -100,14 +100,6 @@ const searchKnowledge = async (
       },
     });
 
-    // デバッグ: embedding の先頭5要素を出力
-    console.log(
-      `[RAG Debug] query="${query}", embedding[0:5]=[${embedding
-        .slice(0, 5)
-        .map((v) => v.toFixed(4))
-        .join(", ")}]`,
-    );
-
     const results = await vectorize.query(embedding, {
       topK: SEARCH_TOP_K,
       returnMetadata: "all",
