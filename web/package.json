@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "deploy": "pnpm build && wrangler pages deploy",
+    "deploy": "pnpm build && wrangler pages deploy --project-name nepp-chan-web-dev",
     "deploy:production": "pnpm build && wrangler pages deploy --project-name nepp-chan-web-prd"
   },
   "dependencies": {
