@@ -5,12 +5,13 @@ import { glob } from "glob";
 const KNOWLEDGE_DIR = "./knowledge";
 const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
 const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
-const VECTORIZE_INDEX_NAME = "knowledge";
+const VECTORIZE_INDEX_NAME = process.env.VECTORIZE_INDEX_NAME;
 
 const validateEnv = () => {
   const missing: string[] = [];
   if (!CLOUDFLARE_ACCOUNT_ID) missing.push("CLOUDFLARE_ACCOUNT_ID");
   if (!R2_BUCKET_NAME) missing.push("R2_BUCKET_NAME");
+  if (!VECTORIZE_INDEX_NAME) missing.push("VECTORIZE_INDEX_NAME");
 
   if (missing.length > 0) {
     console.error(
@@ -44,6 +45,7 @@ Options:
 Environment Variables (required):
   CLOUDFLARE_ACCOUNT_ID  Cloudflare アカウント ID
   R2_BUCKET_NAME         R2 バケット名
+  VECTORIZE_INDEX_NAME   Vectorize インデックス名
 
 Examples:
   pnpm knowledge:upload                    # 全ファイルをR2にアップロード
