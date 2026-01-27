@@ -36,16 +36,11 @@ export const errorHandler: ErrorHandler = (err, c) => {
     stack: err.stack,
   });
 
-  const message =
-    err instanceof Error && err.message
-      ? err.message
-      : "An unexpected error occurred";
-
   return c.json<ErrorResponse>(
     {
       error: {
         code: 500,
-        message,
+        message: "内部エラーが発生しました。しばらく経ってからお試しください。",
       },
     },
     500,
