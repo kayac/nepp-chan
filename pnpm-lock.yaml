@@ -14,6 +14,9 @@ importers:
       '@dotenvx/dotenvx':
         specifier: ^1.51.4
         version: 1.51.4
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
 
   server:
     dependencies:

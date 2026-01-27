@@ -5,7 +5,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "account_id": "51544998e04526c4d6cc9e3e08653361",
-  "name": "dev",
+  "name": "nepp-chan-server-dev",
   "main": "src/index.ts",
   "compatibility_date": "2025-12-02",
   "compatibility_flags": ["nodejs_compat"],
@@ -15,29 +15,28 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "aiss-nepch-dev",
-      "database_id": "c07fe98f-f5df-4f6e-a6c5-ec6354be4677",
+      "database_name": "nepp-chan-db-dev",
+      "database_id": "bd4f1aee-768d-4273-ab72-5aef42f1c199",
       "migrations_dir": "./src/db/migrations"
     }
   ],
   "vectorize": [
     {
       "binding": "VECTORIZE",
-      "index_name": "knowledge",
-      "remote": true
+      "index_name": "nepp-chan-knowledge-dev"
     }
   ],
   "r2_buckets": [
     {
       "binding": "KNOWLEDGE_BUCKET",
-      "bucket_name": "aiss-nepch-knowledge",
-      "preview_bucket_name": "aiss-nepch-knowledge"
+      "bucket_name": "nepp-chan-knowledge-dev",
+      "preview_bucket_name": "nepp-chan-knowledge-dev"
     }
   ],
   "queues": {
     "consumers": [
       {
-        "queue": "knowledge-sync-queue",
+        "queue": "nepp-chan-knowledge-sync-dev",
         "max_batch_size": 10,
         "max_batch_timeout": 30
       }
@@ -59,31 +58,45 @@
     "crons": ["0 18 * * *"]
   },
   "vars": {
-    "PRODUCTION_WEB_URL": "https://aiss-nepch-web-dev-8fi.pages.dev"
+    "ENVIRONMENT": "development",
+    "PRODUCTION_WEB_URL": "https://nepp-chan-web-dev.pages.dev"
+  },
+  "env": {
+    "production": {
+      "name": "nepp-chan-server-prd",
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "nepp-chan-db-prd",
+          "database_id": "239abba6-e30a-4628-97fc-20bf49ca8404",
+          "migrations_dir": "./src/db/migrations"
+        }
+      ],
+      "vectorize": [
+        {
+          "binding": "VECTORIZE",
+          "index_name": "nepp-chan-knowledge-prd"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "KNOWLEDGE_BUCKET",
+          "bucket_name": "nepp-chan-knowledge-prd"
+        }
+      ],
+      "queues": {
+        "consumers": [
+          {
+            "queue": "nepp-chan-knowledge-sync-prd",
+            "max_batch_size": 10,
+            "max_batch_timeout": 30
+          }
+        ]
+      },
+      "vars": {
+        "ENVIRONMENT": "production",
+        "PRODUCTION_WEB_URL": "https://nepp-chan-web-prd.pages.dev"
+      }
+    }
   }
-  /**
-   * Bindings
-   * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
-   * databases, object storage, AI inference, real-time communication and more.
-   * https://developers.cloudflare.com/workers/runtime-apis/bindings/
-   */
-  /**
-   * Environment Variables
-   * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
-   */
-  // "vars": { "MY_VARIABLE": "production_value" }
-  /**
-   * Note: Use secrets to store sensitive data.
-   * https://developers.cloudflare.com/workers/configuration/secrets/
-   */
-  /**
-   * Static Assets
-   * https://developers.cloudflare.com/workers/static-assets/binding/
-   */
-  // "assets": { "directory": "./public/", "binding": "ASSETS" }
-  /**
-   * Service Bindings (communicate between multiple Workers)
-   * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
-   */
-  // "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
 }
