@@ -5,7 +5,7 @@ import { createUIMessageStreamResponse, type UIMessage } from "ai";
 
 import { getTokenFromHeader } from "~/lib/auth-header";
 import { getStorage } from "~/lib/storage";
-import { createNepChanAgent } from "~/mastra/agents/nepch-agent";
+import { createNepChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { getUserFromSession } from "~/services/auth/session";
 

@@ -1,5 +1,5 @@
 {
-  "name": "@aiss-nepch/server",
+  "name": "@nepp-chan/server",
   "type": "module",
   "scripts": {
     "test": "vitest",
