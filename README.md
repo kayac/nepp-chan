@@ -1,4 +1,4 @@
-# aiss-nepch
+# nepp-chan
 
 ## 概要
 
@@ -94,12 +94,27 @@ pnpm mastra:dev
 
 ## デプロイ
 
-デプロイ時は `.env.production` の値が自動的に使用されます。
+### 環境構成
+
+| 環境 | ブランチ | Server | Web |
+|------|----------|--------|-----|
+| dev | develop | `nepp-chan-server-dev` | `nepp-chan-web-dev` |
+| prd | main | `nepp-chan-server-prd` | `nepp-chan-web-prd` |
+
+### 手動デプロイ
 
 ```bash
-# API サーバーをデプロイ
+# dev 環境
 pnpm server:deploy
-
-# Web をデプロイ
 pnpm web:deploy
+
+# prd 環境
+pnpm server:deploy:production
+pnpm web:deploy:production
 ```
+
+### CI/CD
+
+GitHub Actions で自動デプロイ:
+- `develop` ブランチ push → dev 環境
+- `main` ブランチ push → prd 環境

@@ -88,12 +88,13 @@ curl "http://localhost:8787/threads?resourceId=user-123&page=1&perPage=10"
 # 開発
 pnpm dev              # 開発サーバー起動
 pnpm test             # テスト実行
-pnpm deploy           # Cloudflare Workers へデプロイ
+pnpm deploy           # dev 環境 (nepp-chan-server-dev) へデプロイ
+pnpm deploy:production # prd 環境 (nepp-chan-server-prd) へデプロイ
 pnpm cf-typegen       # Cloudflare 型生成
 
 # Drizzle ORM / D1 マイグレーション
 pnpm db:generate      # スキーマから SQL 生成 → src/db/migrations/
-pnpm db:migrate       # リモート D1 (aiss-nepch-dev) に適用
+pnpm db:migrate       # リモート D1 (nepp-chan-db-dev) に適用
 pnpm db:migrate:local # ローカル D1 に適用
 pnpm db:studio        # Drizzle Studio（DB GUI）起動
 pnpm db:check         # スキーマとマイグレーションの整合性チェック
@@ -160,7 +161,7 @@ await db.delete(persona).where(eq(persona.id, "xxx"));
 1. **Vectorize インデックス作成**（初回のみ）
 
 ```bash
-wrangler vectorize create knowledge --dimensions=768 --metric=cosine
+wrangler vectorize create nepp-chan-knowledge-dev --dimensions=1536 --metric=cosine
 ```
 
 2. **管理者アカウントの作成**

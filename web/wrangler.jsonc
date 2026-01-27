@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "aiss-nepch-web-dev",
+  "name": "nepp-chan-web-dev",
   "compatibility_date": "2025-12-11",
   "pages_build_output_dir": "dist"
 }
