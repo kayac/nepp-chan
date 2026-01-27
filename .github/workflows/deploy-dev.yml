@@ -1,9 +1,10 @@
-name: Deploy to Cloudflare
+name: Deploy to Dev
 
 on:
   push:
     branches:
       - develop
+  workflow_dispatch:
 
 jobs:
   deploy-server:
@@ -56,4 +57,4 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          DOTENV_PRIVATE_KEY_PRODUCTION: ${{ secrets.DOTENV_PRIVATE_KEY_PRODUCTION }}
+          DOTENV_PRIVATE_KEY: ${{ secrets.DOTENV_PRIVATE_KEY }}
