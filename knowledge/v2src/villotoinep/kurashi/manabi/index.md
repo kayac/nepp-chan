@@ -83,3 +83,7 @@
 **参照**:
 - 音威子府村公式サイト教育委員会ページ
 - https://www.vill.otoineppu.hokkaido.jp/kakuka/kyouikuiin/index.html
+
+---
+
+[← くらしの情報に戻る](../index.md)
