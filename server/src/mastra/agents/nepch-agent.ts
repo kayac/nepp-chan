@@ -1,3 +1,4 @@
+import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
 
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
@@ -8,6 +9,11 @@ import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
+import {
+  knowledgeAccuracyScorer,
+  knowledgeHallucinationScorer,
+  knowledgeSearchQualityScorer,
+} from "~/mastra/scorers/knowledge-scorer";
 import { devTool } from "~/mastra/tools/dev-tool";
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
@@ -113,11 +119,15 @@ const tools = {
   knowledgeSearchTool,
 };
 
-interface Props {
+interface Props
+  extends Omit<AgentConfig, "id" | "name" | "instructions" | "model"> {
   isAdmin?: boolean;
 }
 
-export const createNepChanAgent = ({ isAdmin = false }: Props = {}) => {
+export const createNepChanAgent = ({
+  isAdmin = false,
+  ...agentOptions
+}: Props = {}) => {
   const instructions = isAdmin
     ? baseInstructions + adminInstructions
     : baseInstructions;
@@ -149,8 +159,25 @@ export const createNepChanAgent = ({ isAdmin = false }: Props = {}) => {
         },
         lastMessages: 20,
       }),
+    ...agentOptions,
   });
 };
 
-// Playground 用（管理者モードで全機能利用可能）
-export const nepChanAgent = createNepChanAgent({ isAdmin: true });
+// Playground 用（管理者モード + Scorer で自動評価）
+export const nepChanAgent = createNepChanAgent({
+  isAdmin: true,
+  scorers: {
+    hallucination: {
+      scorer: knowledgeHallucinationScorer,
+      sampling: { type: "ratio", rate: 1 },
+    },
+    searchQuality: {
+      scorer: knowledgeSearchQualityScorer,
+      sampling: { type: "ratio", rate: 1 },
+    },
+    accuracy: {
+      scorer: knowledgeAccuracyScorer,
+      sampling: { type: "ratio", rate: 1 },
+    },
+  },
+});
