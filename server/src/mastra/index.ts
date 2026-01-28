@@ -18,10 +18,10 @@ import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { weatherAgent } from "~/mastra/agents/weather-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import {
-  knowledgeAccuracyScorer,
-  knowledgeHallucinationScorer,
-  knowledgeSearchQualityScorer,
-} from "~/mastra/scorers/knowledge-scorer";
+  ragContextPrecisionScorer,
+  ragContextRelevanceScorer,
+  ragFaithfulnessScorer,
+} from "~/mastra/scorers/rag-scorer";
 import {
   completenessScorer,
   toolCallAppropriatenessScorer,
@@ -68,9 +68,9 @@ export const mastra = new Mastra({
     toolCallAppropriatenessScorer,
     completenessScorer,
     translationScorer,
-    knowledgeHallucinationScorer,
-    knowledgeSearchQualityScorer,
-    knowledgeAccuracyScorer,
+    ragFaithfulnessScorer,
+    ragContextPrecisionScorer,
+    ragContextRelevanceScorer,
   },
   observability: new Observability({
     configs: {
