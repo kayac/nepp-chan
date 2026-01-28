@@ -9,11 +9,6 @@ import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
-import {
-  knowledgeAccuracyScorer,
-  knowledgeHallucinationScorer,
-  knowledgeSearchQualityScorer,
-} from "~/mastra/scorers/knowledge-scorer";
 import { devTool } from "~/mastra/tools/dev-tool";
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
@@ -163,21 +158,7 @@ export const createNepChanAgent = ({
   });
 };
 
-// Playground 用（管理者モード + Scorer で自動評価）
+// Playground 用（管理者モード）
 export const nepChanAgent = createNepChanAgent({
   isAdmin: true,
-  scorers: {
-    hallucination: {
-      scorer: knowledgeHallucinationScorer,
-      sampling: { type: "ratio", rate: 1 },
-    },
-    searchQuality: {
-      scorer: knowledgeSearchQualityScorer,
-      sampling: { type: "ratio", rate: 1 },
-    },
-    accuracy: {
-      scorer: knowledgeAccuracyScorer,
-      sampling: { type: "ratio", rate: 1 },
-    },
-  },
 });
