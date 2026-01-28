@@ -10,10 +10,10 @@ import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
 import { personaSchema } from "~/mastra/schemas/persona-schema";
 import {
-  knowledgeAccuracyScorer,
-  knowledgeHallucinationScorer,
-  knowledgeSearchQualityScorer,
-} from "~/mastra/scorers/knowledge-scorer";
+  ragContextPrecisionScorer,
+  ragContextRelevanceScorer,
+  ragFaithfulnessScorer,
+} from "~/mastra/scorers/rag-scorer";
 import { devTool } from "~/mastra/tools/dev-tool";
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
@@ -167,16 +167,16 @@ export const createNepChanAgent = ({
 export const nepChanAgent = createNepChanAgent({
   isAdmin: true,
   scorers: {
-    hallucination: {
-      scorer: knowledgeHallucinationScorer,
+    faithfulness: {
+      scorer: ragFaithfulnessScorer,
       sampling: { type: "ratio", rate: 1 },
     },
-    searchQuality: {
-      scorer: knowledgeSearchQualityScorer,
+    contextPrecision: {
+      scorer: ragContextPrecisionScorer,
       sampling: { type: "ratio", rate: 1 },
     },
-    accuracy: {
-      scorer: knowledgeAccuracyScorer,
+    contextRelevance: {
+      scorer: ragContextRelevanceScorer,
       sampling: { type: "ratio", rate: 1 },
     },
   },
