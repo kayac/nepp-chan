@@ -16,14 +16,43 @@ export const retrievedChunkSchema = z.object({
   source: z.string(),
 });
 
+const similarityMatchSchema = z.object({
+  groundTruthUnit: z.string(),
+  outputUnit: z.string().nullable(),
+  matchType: z.enum(["exact", "semantic", "partial", "missing"]),
+  explanation: z.string(),
+});
+
+const similarityContradictionSchema = z.object({
+  groundTruthUnit: z.string(),
+  outputUnit: z.string(),
+  explanation: z.string(),
+});
+
+const faithfulnessVerdictSchema = z.object({
+  verdict: z.string(),
+  reason: z.string(),
+});
+
 export const evalScoresSchema = z.object({
   similarity: z.object({
     score: z.number(),
     reason: z.string(),
+    details: z.object({
+      outputUnits: z.array(z.string()),
+      groundTruthUnits: z.array(z.string()),
+      matches: z.array(similarityMatchSchema),
+      extraInOutput: z.array(z.string()),
+      contradictions: z.array(similarityContradictionSchema),
+    }),
   }),
   faithfulness: z.object({
     score: z.number(),
     reason: z.string(),
+    details: z.object({
+      claims: z.array(z.string()),
+      verdicts: z.array(faithfulnessVerdictSchema),
+    }),
   }),
 });
 
@@ -80,6 +109,45 @@ interface RunEvalScorersParams {
   context: string[];
 }
 
+interface SimilarityResult {
+  score?: number;
+  reason?: string;
+  results?: {
+    preprocessStepResult?: {
+      outputUnits?: string[];
+      groundTruthUnits?: string[];
+    };
+    analyzeStepResult?: {
+      matches?: Array<{
+        groundTruthUnit: string;
+        outputUnit: string | null;
+        matchType: "exact" | "semantic" | "partial" | "missing";
+        explanation: string;
+      }>;
+      extraInOutput?: string[];
+      contradictions?: Array<{
+        groundTruthUnit: string;
+        outputUnit: string;
+        explanation: string;
+      }>;
+    };
+  };
+}
+
+interface FaithfulnessResult {
+  score?: number;
+  reason?: string;
+  results?: {
+    preprocessStepResult?: string[];
+    analyzeStepResult?: {
+      verdicts?: Array<{
+        verdict: string;
+        reason: string;
+      }>;
+    };
+  };
+}
+
 export const runEvalScorers = async ({
   input,
   output,
@@ -99,7 +167,7 @@ export const runEvalScorers = async ({
     input: testRun.input,
     output: testRun.output,
     groundTruth,
-  })) as { score?: number; reason?: string };
+  })) as SimilarityResult;
 
   const faithfulnessScorer = createFaithfulnessScorer({
     model: JUDGE_MODEL,
@@ -109,16 +177,32 @@ export const runEvalScorers = async ({
   const faithfulnessResult = (await faithfulnessScorer.run({
     input: testRun.input,
     output: testRun.output,
-  })) as { score?: number; reason?: string };
+  })) as FaithfulnessResult;
 
   return {
     similarity: {
       score: similarityResult.score ?? 0,
       reason: similarityResult.reason ?? "",
+      details: {
+        outputUnits:
+          similarityResult.results?.preprocessStepResult?.outputUnits ?? [],
+        groundTruthUnits:
+          similarityResult.results?.preprocessStepResult?.groundTruthUnits ??
+          [],
+        matches: similarityResult.results?.analyzeStepResult?.matches ?? [],
+        extraInOutput:
+          similarityResult.results?.analyzeStepResult?.extraInOutput ?? [],
+        contradictions:
+          similarityResult.results?.analyzeStepResult?.contradictions ?? [],
+      },
     },
     faithfulness: {
       score: faithfulnessResult.score ?? 0,
       reason: faithfulnessResult.reason ?? "",
+      details: {
+        claims: faithfulnessResult.results?.preprocessStepResult ?? [],
+        verdicts: faithfulnessResult.results?.analyzeStepResult?.verdicts ?? [],
+      },
     },
   };
 };
