@@ -4,14 +4,12 @@ import { z } from "zod";
 import { testCases } from "~/mastra/data/eval-test-cases";
 
 import {
-  type EvalResult,
-  evalResultSchema,
   extractKnowledgeSearchResults,
   runEvalScorers,
 } from "./utils/eval-helpers";
 
 const batchResultSchema = z.object({
-  results: z.array(evalResultSchema),
+  results: z.any(),
   summary: z.object({
     totalCases: z.number(),
     averageScores: z.object({
@@ -47,26 +45,26 @@ const runBatchEval = createStep({
       throw new Error("nepChanAgent not found");
     }
 
-    const results: EvalResult[] = [];
+    const results = await Promise.all(
+      testCases.map(async (testCase) => {
+        const result = await agent.generate(testCase.input);
+        const retrievedChunks = extractKnowledgeSearchResults(result.steps);
+        const scores = await runEvalScorers({
+          input: testCase.input,
+          output: result.text,
+          groundTruth: testCase.groundTruth,
+          context: retrievedChunks.map((c) => c.content),
+        });
 
-    for (const testCase of testCases) {
-      const result = await agent.generate(testCase.input);
-      const retrievedChunks = extractKnowledgeSearchResults(result.steps);
-      const scores = await runEvalScorers({
-        input: testCase.input,
-        output: result.text,
-        groundTruth: testCase.groundTruth,
-        context: retrievedChunks.map((c) => c.content),
-      });
-
-      results.push({
-        input: testCase.input,
-        groundTruth: testCase.groundTruth,
-        answer: result.text,
-        retrievedChunks,
-        scores,
-      });
-    }
+        return {
+          input: testCase.input,
+          groundTruth: testCase.groundTruth,
+          answer: result.text,
+          retrievedChunks,
+          scores,
+        };
+      }),
+    );
 
     // サマリー計算
     const calcAverage = (scores: number[]) =>

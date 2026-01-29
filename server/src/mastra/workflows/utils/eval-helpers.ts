@@ -19,19 +19,8 @@ import {
   createAgentTestRun,
   createTestMessage,
 } from "@mastra/evals/scorers/utils";
-import { z } from "zod";
 
 const JUDGE_MODEL = "google/gemini-3-flash-preview";
-
-export const evalResultSchema = z.object({
-  input: z.string(),
-  groundTruth: z.string(),
-  answer: z.string(),
-  retrievedChunks: z.any(),
-  scores: z.any(),
-});
-
-export type EvalResult = z.infer<typeof evalResultSchema>;
 
 /**
  * エージェントの生成結果からナレッジ検索ツールの結果を抽出
