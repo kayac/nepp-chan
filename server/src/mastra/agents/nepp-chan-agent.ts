@@ -1,5 +1,6 @@
 import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
+import { GEMINI_FLASH } from "~/lib/llm-models";
 
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
@@ -132,7 +133,7 @@ export const createNepChanAgent = ({
     id: "nep-chan",
     name: "ねっぷちゃん",
     instructions,
-    model: "google/gemini-3-flash-preview",
+    model: GEMINI_FLASH,
     defaultOptions: {
       providerOptions: {
         google: {

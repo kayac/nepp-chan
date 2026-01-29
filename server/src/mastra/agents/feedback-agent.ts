@@ -1,4 +1,5 @@
 import { Agent } from "@mastra/core/agent";
+import { GEMINI_FLASH } from "~/lib/llm-models";
 import { adminFeedbackTool } from "~/mastra/tools/admin-feedback-tool";
 
 export const feedbackAgent = new Agent({
@@ -30,7 +31,7 @@ export const feedbackAgent = new Agent({
 ## 利用可能なツール
 - admin-feedback: フィードバック一覧と統計の取得（認証必須）
 `,
-  model: "google/gemini-3-flash-preview",
+  model: GEMINI_FLASH,
   tools: {
     adminFeedbackTool,
   },

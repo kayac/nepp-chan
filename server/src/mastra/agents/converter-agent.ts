@@ -1,4 +1,5 @@
 import { Agent } from "@mastra/core/agent";
+import { GEMINI_PRO } from "~/lib/llm-models";
 
 const CONVERSION_INSTRUCTIONS = `
 あなたは文書変換のエキスパートです。
@@ -19,5 +20,5 @@ export const converterAgent = new Agent({
   id: "document-converter",
   name: "Document Converter",
   instructions: CONVERSION_INSTRUCTIONS,
-  model: "google/gemini-2.5-pro",
+  model: GEMINI_PRO,
 });
