@@ -1,4 +1,5 @@
 import { Agent } from "@mastra/core/agent";
+import { GEMINI_FLASH } from "~/lib/llm-models";
 import { personaSaveTool } from "~/mastra/tools/persona-save-tool";
 import { personaUpdateTool } from "~/mastra/tools/persona-update-tool";
 
@@ -81,7 +82,7 @@ resourceId には村の識別子 "otoineppu" を使用する。
 - persona-save: 新規のペルソナ情報を保存
 - persona-update: 既存のペルソナ情報を更新
 `,
-  model: "google/gemini-3-flash-preview",
+  model: GEMINI_FLASH,
   tools: {
     personaSaveTool,
     personaUpdateTool,

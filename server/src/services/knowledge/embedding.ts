@@ -1,8 +1,8 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { MDocument } from "@mastra/rag";
 import { embedMany } from "ai";
+import { GEMINI_EMBEDDING } from "~/lib/llm-models";
 
-const EMBEDDING_MODEL_NAME = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 1536;
 const BATCH_SIZE = 100;
 const MIN_CHUNK_LENGTH = 100;
@@ -34,7 +34,7 @@ const getEmbeddingModel = (apiKey: string): EmbeddingModel => {
   }
 
   const google = createGoogleGenerativeAI({ apiKey });
-  const model = google.textEmbeddingModel(EMBEDDING_MODEL_NAME);
+  const model = google.textEmbeddingModel(GEMINI_EMBEDDING);
   cachedEmbeddingModel = model;
   cachedApiKey = apiKey;
 

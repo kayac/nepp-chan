@@ -4,10 +4,9 @@ import { createTool } from "@mastra/core/tools";
 import { rerank } from "@mastra/rag";
 import { embed } from "ai";
 import { z } from "zod";
+import { GEMINI_EMBEDDING, GEMINI_FLASH } from "~/lib/llm-models";
 
-const EMBEDDING_MODEL_NAME = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 1536;
-const RERANK_MODEL_ID = "google/gemini-3-flash-preview" as const;
 
 const SEARCH_TOP_K = 10;
 
@@ -87,7 +86,7 @@ const searchKnowledge = async (
 ): Promise<SearchOutput> => {
   try {
     const google = createGoogleGenerativeAI({ apiKey });
-    const embeddingModel = google.textEmbeddingModel(EMBEDDING_MODEL_NAME);
+    const embeddingModel = google.textEmbeddingModel(GEMINI_EMBEDDING);
 
     const { embedding } = await embed({
       model: embeddingModel,
@@ -127,7 +126,7 @@ const searchKnowledge = async (
       };
     });
 
-    const rerankModel = new ModelRouterLanguageModel(RERANK_MODEL_ID);
+    const rerankModel = new ModelRouterLanguageModel(GEMINI_FLASH);
     const rerankedResults = await rerank(queryResults, query, rerankModel, {
       topK: RERANK_TOP_K,
       weights: {

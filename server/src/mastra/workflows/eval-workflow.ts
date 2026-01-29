@@ -22,9 +22,8 @@ import {
 } from "@mastra/evals/scorers/utils";
 import { z } from "zod";
 
+import { GEMINI_FLASH } from "~/lib/llm-models";
 import { testCases } from "~/mastra/data/eval-test-cases";
-
-const JUDGE_MODEL = "google/gemini-3-flash-preview";
 
 const extractKnowledgeSearchResults = (
   steps: Array<{ toolResults?: unknown[] }> | undefined,
@@ -77,17 +76,19 @@ const runEvalScorers = async ({
     contextRelevance,
     hallucination,
   ] = await Promise.all([
-    createAnswerSimilarityScorer({ model: JUDGE_MODEL }).run({
+    createAnswerSimilarityScorer({ model: GEMINI_FLASH }).run({
       input: testRun.input,
       output: testRun.output,
       groundTruth,
     }),
-    createFaithfulnessScorer({ model: JUDGE_MODEL, options: { context } }).run({
-      input: testRun.input,
-      output: testRun.output,
-    }),
+    createFaithfulnessScorer({ model: GEMINI_FLASH, options: { context } }).run(
+      {
+        input: testRun.input,
+        output: testRun.output,
+      },
+    ),
     createContextPrecisionScorer({
-      model: JUDGE_MODEL,
+      model: GEMINI_FLASH,
       options: { context },
     }).run({
       input: testRun.input,
@@ -95,18 +96,19 @@ const runEvalScorers = async ({
       groundTruth,
     }),
     createContextRelevanceScorerLLM({
-      model: JUDGE_MODEL,
+      model: GEMINI_FLASH,
       options: { context },
     }).run({
       input: testRun.input,
       output: testRun.output,
     }),
-    createHallucinationScorer({ model: JUDGE_MODEL, options: { context } }).run(
-      {
-        input: testRun.input,
-        output: testRun.output,
-      },
-    ),
+    createHallucinationScorer({
+      model: GEMINI_FLASH,
+      options: { context },
+    }).run({
+      input: testRun.input,
+      output: testRun.output,
+    }),
   ]);
 
   return {
