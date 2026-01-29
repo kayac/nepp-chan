@@ -2,7 +2,6 @@ import { createStep, createWorkflow } from "@mastra/core/workflows";
 import { z } from "zod";
 
 import {
-  evalResultSchema,
   extractKnowledgeSearchResults,
   runEvalScorers,
 } from "./utils/eval-helpers";
@@ -16,7 +15,7 @@ const runSingleEval = createStep({
   id: "run-single-eval",
   description: "Run evaluation for a single test case",
   inputSchema: testCaseSchema,
-  outputSchema: evalResultSchema,
+  outputSchema: z.any(),
   execute: async ({ inputData, mastra }) => {
     if (!inputData) {
       throw new Error("Input data not found");
@@ -49,7 +48,7 @@ const runSingleEval = createStep({
 const evalWorkflow = createWorkflow({
   id: "eval-workflow",
   inputSchema: testCaseSchema,
-  outputSchema: evalResultSchema,
+  outputSchema: z.any(),
 }).then(runSingleEval);
 
 evalWorkflow.commit();
