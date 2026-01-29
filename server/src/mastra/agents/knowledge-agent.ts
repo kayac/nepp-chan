@@ -1,4 +1,5 @@
 import { Agent } from "@mastra/core/agent";
+import { GEMINI_FLASH } from "~/lib/llm-models";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 
 export const knowledgeAgent = new Agent({
@@ -31,7 +32,7 @@ export const knowledgeAgent = new Agent({
 - 検索結果はあるが、質問の意図に関係ない内容しかない
 
 `,
-  model: "google/gemini-3-flash-preview",
+  model: GEMINI_FLASH,
   tools: {
     knowledgeSearchTool,
   },

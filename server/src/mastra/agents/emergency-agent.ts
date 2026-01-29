@@ -1,4 +1,5 @@
 import { Agent } from "@mastra/core/agent";
+import { GEMINI_FLASH } from "~/lib/llm-models";
 import { adminEmergencyTool } from "~/mastra/tools/admin-emergency-tool";
 import { emergencyGetTool } from "~/mastra/tools/emergency-get-tool";
 
@@ -47,7 +48,7 @@ export const emergencyAgent = new Agent({
 - emergency-get: 直近の緊急報告を取得（認証必須）
 - admin-emergency: 管理者向けの詳細な緊急報告取得（認証必須）
 `,
-  model: "google/gemini-3-flash-preview",
+  model: GEMINI_FLASH,
   tools: {
     emergencyGetTool,
     adminEmergencyTool,
