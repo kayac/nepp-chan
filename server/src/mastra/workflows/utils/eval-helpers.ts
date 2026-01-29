@@ -1,13 +1,3 @@
-/**
- * RAG評価ヘルパー
- *
- * 5つの観点でRAGシステムの品質を評価:
- * - similarity: 回答が期待回答とどれだけ一致しているか
- * - faithfulness: 回答が取得コンテキストに忠実か
- * - contextPrecision: 関連コンテキストが検索上位にあるか
- * - contextRelevance: 取得コンテキストが質問に対して有用か
- * - hallucination: コンテキストにない情報を捏造していないか
- */
 import {
   createAnswerSimilarityScorer,
   createContextPrecisionScorer,
@@ -22,8 +12,6 @@ import {
 import { z } from "zod";
 
 const JUDGE_MODEL = "google/gemini-3-flash-preview";
-
-// ----- Schemas -----
 
 const similarityMatchSchema = z.object({
   groundTruthUnit: z.string(),
@@ -114,8 +102,6 @@ export const evalResultSchema = z.object({
 export type EvalScores = z.infer<typeof evalScoresSchema>;
 export type RetrievedChunk = z.infer<typeof retrievedChunkSchema>;
 export type EvalResult = z.infer<typeof evalResultSchema>;
-
-// ----- Interfaces -----
 
 interface RunEvalScorersParams {
   input: string;
@@ -210,8 +196,6 @@ interface KnowledgeSearchToolResult {
 interface GenerateStep {
   toolResults?: unknown[];
 }
-
-// ----- Functions -----
 
 /**
  * エージェントの生成結果からナレッジ検索ツールの結果を抽出
