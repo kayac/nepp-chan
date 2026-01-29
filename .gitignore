@@ -10,6 +10,9 @@ dist/
 .idea/workspace.xml
 .idea/usage.statistics.xml
 .idea/shelf
+.brain/
+.agent/
+.claude/settings.local.json
 
 # deps
 node_modules/
