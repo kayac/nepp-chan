@@ -14,13 +14,23 @@ const batchResultSchema = z.object({
   results: z.array(evalResultSchema),
   summary: z.object({
     totalCases: z.number(),
-    averageSimilarityScore: z.number(),
-    averageFaithfulnessScore: z.number(),
+    averageScores: z.object({
+      similarity: z.number(),
+      faithfulness: z.number(),
+      contextPrecision: z.number(),
+      contextRelevance: z.number(),
+      hallucination: z.number(),
+    }),
     lowScoreCases: z.array(
       z.object({
         input: z.string(),
-        similarityScore: z.number(),
-        faithfulnessScore: z.number(),
+        scores: z.object({
+          similarity: z.number(),
+          faithfulness: z.number(),
+          contextPrecision: z.number(),
+          contextRelevance: z.number(),
+          hallucination: z.number(),
+        }),
       }),
     ),
   }),
@@ -59,36 +69,52 @@ const runBatchEval = createStep({
     }
 
     // サマリー計算
-    const similarityScores = results.map((r) => r.scores.similarity.score);
-    const faithfulnessScores = results.map((r) => r.scores.faithfulness.score);
-    const averageSimilarityScore =
-      similarityScores.length > 0
-        ? similarityScores.reduce((a, b) => a + b, 0) / similarityScores.length
-        : 0;
-    const averageFaithfulnessScore =
-      faithfulnessScores.length > 0
-        ? faithfulnessScores.reduce((a, b) => a + b, 0) /
-          faithfulnessScores.length
-        : 0;
+    const calcAverage = (scores: number[]) =>
+      scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
 
-    // 低スコアケース（similarity または faithfulness が 0.7 未満）
+    const averageScores = {
+      similarity: calcAverage(results.map((r) => r.scores.similarity.score)),
+      faithfulness: calcAverage(
+        results.map((r) => r.scores.faithfulness.score),
+      ),
+      contextPrecision: calcAverage(
+        results.map((r) => r.scores.contextPrecision.score),
+      ),
+      contextRelevance: calcAverage(
+        results.map((r) => r.scores.contextRelevance.score),
+      ),
+      hallucination: calcAverage(
+        results.map((r) => r.scores.hallucination.score),
+      ),
+    };
+
+    // 低スコアケース（いずれかのスコアが 0.7 未満）
+    const THRESHOLD = 0.7;
     const lowScoreCases = results
       .filter(
         (r) =>
-          r.scores.similarity.score < 0.7 || r.scores.faithfulness.score < 0.7,
+          r.scores.similarity.score < THRESHOLD ||
+          r.scores.faithfulness.score < THRESHOLD ||
+          r.scores.contextPrecision.score < THRESHOLD ||
+          r.scores.contextRelevance.score < THRESHOLD ||
+          r.scores.hallucination.score < THRESHOLD,
       )
       .map((r) => ({
         input: r.input,
-        similarityScore: r.scores.similarity.score,
-        faithfulnessScore: r.scores.faithfulness.score,
+        scores: {
+          similarity: r.scores.similarity.score,
+          faithfulness: r.scores.faithfulness.score,
+          contextPrecision: r.scores.contextPrecision.score,
+          contextRelevance: r.scores.contextRelevance.score,
+          hallucination: r.scores.hallucination.score,
+        },
       }));
 
     return {
       results,
       summary: {
         totalCases: results.length,
-        averageSimilarityScore,
-        averageFaithfulnessScore,
+        averageScores,
         lowScoreCases,
       },
     };
