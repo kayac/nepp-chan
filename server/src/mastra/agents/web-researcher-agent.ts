@@ -1,5 +1,6 @@
 import { google } from "@ai-sdk/google";
 import { Agent } from "@mastra/core/agent";
+import { GEMINI_FLASH } from "~/lib/llm-models";
 
 export const webResearcherAgent = new Agent({
   id: "web-researcher",
@@ -20,7 +21,7 @@ export const webResearcherAgent = new Agent({
 - 情報が見つからない場合はその旨を正直に伝える
 - 推測や憶測は避け、事実に基づいて回答する
 `,
-  model: google("gemini-2.5-flash"),
+  model: GEMINI_FLASH,
   tools: {
     googleSearch: google.tools.googleSearch({}),
   },

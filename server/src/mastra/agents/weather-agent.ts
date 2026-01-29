@@ -1,4 +1,5 @@
 import { Agent } from "@mastra/core/agent";
+import { GEMINI_PRO } from "~/lib/llm-models";
 import { scorers } from "~/mastra/scorers/weather-scorer";
 import { weatherTool } from "~/mastra/tools/weather-tool";
 
@@ -19,7 +20,7 @@ export const weatherAgent = new Agent({
 
       Use the weatherTool to fetch current weather data.
 `,
-  model: "google/gemini-2.5-pro",
+  model: GEMINI_PRO,
   tools: { weatherTool },
   scorers: {
     toolCallAppropriateness: {
