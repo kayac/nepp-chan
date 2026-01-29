@@ -22,8 +22,10 @@ import {
   toolCallAppropriatenessScorer,
   translationScorer,
 } from "~/mastra/scorers/weather-scorer";
-import { evalBatchWorkflow } from "~/mastra/workflows/eval-batch-workflow";
-import { evalWorkflow } from "~/mastra/workflows/eval-workflow";
+import {
+  evalBatchWorkflow,
+  evalWorkflow,
+} from "~/mastra/workflows/eval-workflow";
 import { weatherWorkflow } from "~/mastra/workflows/weather-workflow";
 
 let cloudflareEnv: CloudflareBindings | null = null;
