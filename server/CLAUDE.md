@@ -390,11 +390,19 @@ thread_persona_status 更新
 | ------------ | -------------------- | ----------------------------- |
 | `0 18 * * *` | handlePersonaExtract | ペルソナ抽出（毎日03:00 JST） |
 
+## デプロイ環境
+
+| 環境 | URL | Worker 名 |
+| ---- | --- | --------- |
+| ローカル | http://localhost:8787 | - |
+| dev | https://dev-api.nepp-chan.ai | nepp-chan-server-dev |
+| prd | https://api.nepp-chan.ai | nepp-chan-server-prd |
+
 ## 開発コマンド
 
 ```bash
-pnpm dev               # 開発サーバー
+pnpm dev               # 開発サーバー（http://localhost:8787）
 pnpm test              # テスト実行
-pnpm deploy            # dev 環境（nepp-chan-server-dev）にデプロイ
-pnpm deploy:production # prd 環境（nepp-chan-server-prd）にデプロイ
+pnpm deploy            # dev 環境にデプロイ
+pnpm deploy:production # prd 環境にデプロイ
 ```
