@@ -109,7 +109,9 @@ VALUES ('${id}', '${email}', '${token}', 'system', '${role}', '${expiresAt.toISO
     console.log(`\n✅ 招待が作成されました！`);
     console.log(`\n📎 登録URL:`);
     console.log(`   ローカル: http://localhost:5173/register?token=${token}`);
-    console.log(`   ${env === "prd" ? "本番" : "開発"}: ${targetUrl}/register?token=${token}`);
+    console.log(
+      `   ${env === "prd" ? "本番" : "開発"}: ${targetUrl}/register?token=${token}`,
+    );
     console.log(`\n⏰ 有効期限: ${expiresAt.toLocaleString("ja-JP")}`);
     console.log(`\n💡 このURLを招待したい人に共有してください。\n`);
   } catch (error) {
