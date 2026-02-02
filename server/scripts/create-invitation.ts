@@ -3,12 +3,14 @@
  * 管理者招待を作成するCLIスクリプト
  *
  * 使用方法:
- *   pnpm admin:invite <email> [--role=admin|super_admin] [--days=7] [--remote]
+ *   pnpm admin:invite:local <email> [--role=admin|super_admin] [--days=7]
+ *   pnpm admin:invite:dev <email> [--role=admin|super_admin] [--days=7] [--remote]
+ *   pnpm admin:invite:prd <email> [--role=admin|super_admin] [--days=7] [--remote]
  *
  * 例:
- *   pnpm admin:invite admin@example.com
- *   pnpm admin:invite admin@example.com --role=super_admin --days=7
- *   pnpm admin:invite admin@example.com --remote
+ *   pnpm admin:invite:local admin@example.com
+ *   pnpm admin:invite:dev admin@example.com --remote
+ *   pnpm admin:invite:prd admin@example.com --remote
  */
 
 import { execSync } from "node:child_process";
@@ -19,12 +21,14 @@ const parseArgs = (args: string[]) => {
   const email = args.find((arg) => !arg.startsWith("--"));
   const roleArg = args.find((arg) => arg.startsWith("--role="));
   const daysArg = args.find((arg) => arg.startsWith("--days="));
+  const envArg = args.find((arg) => arg.startsWith("--env="));
   const isRemote = args.includes("--remote");
 
   return {
     email,
     role: roleArg?.split("=")[1] || "admin",
     days: Number.parseInt(daysArg?.split("=")[1] || "7", 10),
+    env: envArg?.split("=")[1] as "dev" | "prd" | undefined,
     isRemote,
   };
 };
@@ -37,7 +41,9 @@ const main = async () => {
 管理者招待を作成するCLIスクリプト
 
 使用方法:
-  pnpm admin:invite <email> [options]
+  pnpm admin:invite:local <email> [options]  # ローカル環境
+  pnpm admin:invite:dev <email> [options]    # dev環境
+  pnpm admin:invite:prd <email> [options]    # prd環境
 
 オプション:
   --role=<role>   役割 (admin または super_admin、デフォルト: admin)
@@ -46,14 +52,14 @@ const main = async () => {
   --help, -h      このヘルプを表示
 
 例:
-  pnpm admin:invite admin@example.com
-  pnpm admin:invite admin@example.com --role=super_admin --days=7
-  pnpm admin:invite admin@example.com --remote
+  pnpm admin:invite:local admin@example.com
+  pnpm admin:invite:dev admin@example.com --remote
+  pnpm admin:invite:prd admin@example.com --remote
 `);
     process.exit(0);
   }
 
-  const { email, role, days, isRemote } = parseArgs(args);
+  const { email, role, days, env, isRemote } = parseArgs(args);
 
   if (!email || !email.includes("@")) {
     console.error("❌ 有効なメールアドレスを指定してください");
@@ -65,6 +71,13 @@ const main = async () => {
     process.exit(1);
   }
 
+  if (env && !["dev", "prd"].includes(env)) {
+    console.error("❌ 環境は dev または prd を指定してください");
+    process.exit(1);
+  }
+
+  const dbName = `nepp-chan-db-${env || "dev"}`;
+
   const id = generateId();
   const token = generateToken();
   const now = new Date();
@@ -75,23 +88,27 @@ INSERT INTO admin_invitations (id, email, token, invited_by, role, expires_at, c
 VALUES ('${id}', '${email}', '${token}', 'system', '${role}', '${expiresAt.toISOString()}', '${now.toISOString()}');
 `.trim();
 
+  const envLabel = env
+    ? `${env} (${isRemote ? "リモート" : "ローカル"})`
+    : "local";
   console.log(`\n📧 招待を作成しています...`);
   console.log(`   メール: ${email}`);
   console.log(`   役割: ${role}`);
   console.log(`   有効期限: ${days}日`);
-  console.log(`   環境: ${isRemote ? "リモート" : "ローカル"}\n`);
+  console.log(`   環境: ${envLabel}`);
+  console.log(`   DB: ${dbName}\n`);
 
   try {
     const remoteFlag = isRemote ? "--remote" : "--local";
-    const command = `wrangler d1 execute nepp-chan-db-dev ${remoteFlag} --command="${sql}"`;
+    const command = `wrangler d1 execute ${dbName} ${remoteFlag} --command="${sql}"`;
 
     execSync(command, { stdio: "inherit", cwd: process.cwd() });
 
-    const prodUrl = process.env.PRODUCTION_WEB_URL || "https://your-domain.com";
+    const targetUrl = process.env.PRODUCTION_WEB_URL || "http://localhost:5173";
+
     console.log(`\n✅ 招待が作成されました！`);
     console.log(`\n📎 登録URL:`);
-    console.log(`   ローカル: http://localhost:5173/register?token=${token}`);
-    console.log(`   本番: ${prodUrl}/register?token=${token}`);
+    console.log(`   ${targetUrl}/register?token=${token}`);
     console.log(`\n⏰ 有効期限: ${expiresAt.toLocaleString("ja-JP")}`);
     console.log(`\n💡 このURLを招待したい人に共有してください。\n`);
   } catch (error) {

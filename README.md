@@ -96,10 +96,11 @@ pnpm mastra:dev
 
 ### 環境構成
 
-| 環境 | ブランチ | Server | Web |
-|------|----------|--------|-----|
-| dev | develop | `nepp-chan-server-dev` | `nepp-chan-web-dev` |
-| prd | main | `nepp-chan-server-prd` | `nepp-chan-web-prd` |
+| 環境 | ブランチ | Web URL | API URL |
+|------|----------|---------|---------|
+| ローカル | - | http://localhost:5173 | http://localhost:8787 |
+| dev | develop | https://dev-web.nepp-chan.ai | https://dev-api.nepp-chan.ai |
+| prd | main | https://web.nepp-chan.ai | https://api.nepp-chan.ai |
 
 ### 手動デプロイ
 

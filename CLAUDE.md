@@ -106,6 +106,14 @@ export DOTENV_PRIVATE_KEY_PRODUCTION="<本番用キー>"
 | -------------- | ------- |
 | `VITE_API_URL` | API URL |
 
+## デプロイ環境
+
+| 環境 | Web | API |
+| ---- | --- | --- |
+| ローカル | http://localhost:5173 | http://localhost:8787 |
+| dev | https://dev-web.nepp-chan.ai | https://dev-api.nepp-chan.ai |
+| prd | https://web.nepp-chan.ai | https://api.nepp-chan.ai |
+
 ## ブランチ
 
 - メイン: `develop`

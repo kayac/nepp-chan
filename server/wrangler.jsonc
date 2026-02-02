@@ -52,7 +52,10 @@
   },
   "vars": {
     "ENVIRONMENT": "development",
-    "PRODUCTION_WEB_URL": "https://nepp-chan-web-dev.pages.dev"
+    "PRODUCTION_WEB_URL": "https://dev-web.nepp-chan.ai",
+    "WEBAUTHN_RP_ID": "dev-web.nepp-chan.ai",
+    "WEBAUTHN_RP_NAME": "ねっぷちゃん",
+    "WEBAUTHN_ORIGIN": "https://dev-web.nepp-chan.ai"
   },
   "env": {
     "production": {
@@ -88,7 +91,10 @@
       },
       "vars": {
         "ENVIRONMENT": "production",
-        "PRODUCTION_WEB_URL": "https://nepp-chan-web-prd.pages.dev"
+        "PRODUCTION_WEB_URL": "https://web.nepp-chan.ai",
+        "WEBAUTHN_RP_ID": "web.nepp-chan.ai",
+        "WEBAUTHN_RP_NAME": "ねっぷちゃん",
+        "WEBAUTHN_ORIGIN": "https://web.nepp-chan.ai"
       }
     }
   }

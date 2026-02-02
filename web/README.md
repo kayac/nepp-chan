@@ -34,12 +34,15 @@ pnpm build
 
 ## デプロイ
 
-```bash
-# dev 環境 (nepp-chan-web-dev)
-pnpm deploy
+| 環境 | URL |
+| ---- | --- |
+| ローカル | http://localhost:5173 |
+| dev | https://dev-web.nepp-chan.ai |
+| prd | https://web.nepp-chan.ai |
 
-# prd 環境 (nepp-chan-web-prd)
-pnpm deploy:production
+```bash
+pnpm deploy           # dev 環境へデプロイ
+pnpm deploy:production # prd 環境へデプロイ
 ```
 
 ## 環境変数

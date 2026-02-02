@@ -82,14 +82,22 @@ curl -X POST http://localhost:8787/chat \
 curl "http://localhost:8787/threads?resourceId=user-123&page=1&perPage=10"
 ```
 
+## デプロイ環境
+
+| 環境 | URL |
+| ---- | --- |
+| ローカル | http://localhost:8787 |
+| dev | https://dev-api.nepp-chan.ai |
+| prd | https://api.nepp-chan.ai |
+
 ## スクリプト
 
 ```bash
 # 開発
 pnpm dev              # 開発サーバー起動
 pnpm test             # テスト実行
-pnpm deploy           # dev 環境 (nepp-chan-server-dev) へデプロイ
-pnpm deploy:production # prd 環境 (nepp-chan-server-prd) へデプロイ
+pnpm deploy           # dev 環境へデプロイ
+pnpm deploy:production # prd 環境へデプロイ
 pnpm cf-typegen       # Cloudflare 型生成
 
 # Drizzle ORM / D1 マイグレーション
