@@ -93,7 +93,8 @@ describe("グローバルエラーハンドラー", () => {
       expect(json).toEqual({
         error: {
           code: 500,
-          message: "Something went wrong",
+          message:
+            "内部エラーが発生しました。しばらく経ってからお試しください。",
         },
       });
     });
@@ -109,7 +110,9 @@ describe("グローバルエラーハンドラー", () => {
       expect(res.status).toBe(500);
       const json: ErrorResponse = await res.json();
       expect(json.error.code).toBe(500);
-      expect(json.error.message).toBe("An unexpected error occurred");
+      expect(json.error.message).toBe(
+        "内部エラーが発生しました。しばらく経ってからお試しください。",
+      );
     });
   });
 

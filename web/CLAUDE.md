@@ -180,11 +180,19 @@ Tailwind CSS 4 の短縮記法と CSS 変数記法を使用。
 <div className="h-dvh min-h-dvh max-h-[90dvh]" />
 ```
 
+## デプロイ環境
+
+| 環境 | URL | Pages プロジェクト |
+| ---- | --- | ------------------ |
+| ローカル | http://localhost:5173 | - |
+| dev | https://dev-web.nepp-chan.ai | nepp-chan-web-dev |
+| prd | https://web.nepp-chan.ai | nepp-chan-web-prd |
+
 ## 開発コマンド
 
 ```bash
 pnpm dev               # 開発サーバー（http://localhost:5173）
 pnpm build             # ビルド → dist/
-pnpm deploy            # dev 環境（nepp-chan-web-dev）にデプロイ
-pnpm deploy:production # prd 環境（nepp-chan-web-prd）にデプロイ
+pnpm deploy            # dev 環境にデプロイ
+pnpm deploy:production # prd 環境にデプロイ
 ```

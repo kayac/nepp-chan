@@ -2,7 +2,7 @@ import { execSync } from "node:child_process";
 import { basename } from "node:path";
 import { glob } from "glob";
 
-const KNOWLEDGE_DIR = "./knowledge";
+const KNOWLEDGE_DIR = "./dataset/v3/src/villotoinep";
 const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
 const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
 const VECTORIZE_INDEX_NAME = process.env.VECTORIZE_INDEX_NAME;
