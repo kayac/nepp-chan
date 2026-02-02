@@ -2,7 +2,8 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22.13.0"
+    "node": ">=22.13.0",
+    "pnpm": ">=10"
   },
   "scripts": {
     "server:dev": "dotenvx run -fk .env.keys -f server/.env -- pnpm --filter @nepp-chan/server dev",
