@@ -73,18 +73,23 @@ chatRoutes.openapi(chatRoute, async (c) => {
     adminUser: adminUser ?? undefined,
   });
 
-  const stream = await handleChatStream({
-    mastra,
-    agentId: "nepChanAgent",
-    params: {
-      messages: [message] as UIMessage[],
-      requestContext,
-      memory: {
-        resource: resourceId,
-        thread: threadId,
+  try {
+    const stream = await handleChatStream({
+      mastra,
+      agentId: "nepChanAgent",
+      params: {
+        messages: [message] as UIMessage[],
+        requestContext,
+        memory: {
+          resource: resourceId,
+          thread: threadId,
+        },
       },
-    },
-  });
+    });
 
-  return createUIMessageStreamResponse({ stream });
+    return createUIMessageStreamResponse({ stream });
+  } catch (error) {
+    console.error("Chat stream error:", error);
+    throw error;
+  }
 });
