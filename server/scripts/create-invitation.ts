@@ -4,13 +4,13 @@
  *
  * 使用方法:
  *   pnpm admin:invite:local <email> [--role=admin|super_admin] [--days=7]
- *   pnpm admin:invite:dev <email> [--role=admin|super_admin] [--days=7] [--remote]
- *   pnpm admin:invite:prd <email> [--role=admin|super_admin] [--days=7] [--remote]
+ *   pnpm admin:invite:dev <email> [--role=admin|super_admin] [--days=7] [--local]
+ *   pnpm admin:invite:prd <email> [--role=admin|super_admin] [--days=7] [--local]
  *
  * 例:
  *   pnpm admin:invite:local admin@example.com
- *   pnpm admin:invite:dev admin@example.com --remote
- *   pnpm admin:invite:prd admin@example.com --remote
+ *   pnpm admin:invite:dev admin@example.com
+ *   pnpm admin:invite:prd admin@example.com
  */
 
 import { execSync } from "node:child_process";
@@ -22,14 +22,15 @@ const parseArgs = (args: string[]) => {
   const roleArg = args.find((arg) => arg.startsWith("--role="));
   const daysArg = args.find((arg) => arg.startsWith("--days="));
   const envArg = args.find((arg) => arg.startsWith("--env="));
-  const isRemote = args.includes("--remote");
+  const env = envArg?.split("=")[1] as "dev" | "prd" | undefined;
+  const isLocal = args.includes("--local");
 
   return {
     email,
-    role: roleArg?.split("=")[1] || "admin",
+    role: roleArg?.split("=")[1] || "super_admin",
     days: Number.parseInt(daysArg?.split("=")[1] || "7", 10),
-    env: envArg?.split("=")[1] as "dev" | "prd" | undefined,
-    isRemote,
+    env,
+    isRemote: env ? !isLocal : false,
   };
 };
 
@@ -42,19 +43,19 @@ const main = async () => {
 
 使用方法:
   pnpm admin:invite:local <email> [options]  # ローカル環境
-  pnpm admin:invite:dev <email> [options]    # dev環境
-  pnpm admin:invite:prd <email> [options]    # prd環境
+  pnpm admin:invite:dev <email> [options]    # dev環境（リモートD1）
+  pnpm admin:invite:prd <email> [options]    # prd環境（リモートD1）
 
 オプション:
-  --role=<role>   役割 (admin または super_admin、デフォルト: admin)
+  --role=<role>   役割 (admin または super_admin、デフォルト: super_admin)
   --days=<days>   有効期限日数 (デフォルト: 7日)
-  --remote        リモートD1に対して実行 (デフォルト: ローカル)
+  --local         ローカルD1に対して実行 (dev/prdのデフォルトはリモート)
   --help, -h      このヘルプを表示
 
 例:
   pnpm admin:invite:local admin@example.com
-  pnpm admin:invite:dev admin@example.com --remote
-  pnpm admin:invite:prd admin@example.com --remote
+  pnpm admin:invite:dev admin@example.com
+  pnpm admin:invite:prd admin@example.com
 `);
     process.exit(0);
   }
@@ -100,11 +101,11 @@ VALUES ('${id}', '${email}', '${token}', 'system', '${role}', '${expiresAt.toISO
 
   try {
     const remoteFlag = isRemote ? "--remote" : "--local";
-    const command = `wrangler d1 execute ${dbName} ${remoteFlag} --command="${sql}"`;
+    const command = `wrangler d1 execute ${dbName} ${remoteFlag} --config=server/wrangler.jsonc --command="${sql}"`;
 
-    execSync(command, { stdio: "inherit", cwd: process.cwd() });
+    execSync(command, { stdio: "inherit" });
 
-    const targetUrl = process.env.PRODUCTION_WEB_URL || "http://localhost:5173";
+    const targetUrl = process.env.WEB_URL || "http://localhost:5173";
 
     console.log(`\n✅ 招待が作成されました！`);
     console.log(`\n📎 登録URL:`);
