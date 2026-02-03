@@ -10,7 +10,6 @@ import {
 import type { FC, ReactNode } from "react";
 import { useState } from "react";
 
-import { Button } from "~/components/ui/Button";
 import { Spinner } from "~/components/ui/Loading";
 import { cn } from "~/lib/class-merge";
 
@@ -73,7 +72,7 @@ const getToolStatus = (
         label: "完了",
         color: "text-(--color-success)",
         bgColor: "bg-(--color-success-bg)",
-        icon: <CheckCircle2Icon className="size-4" />,
+        icon: <CheckCircle2Icon className="size-3" />,
       };
     case "incomplete":
       if (status.reason === "cancelled") {
@@ -81,7 +80,7 @@ const getToolStatus = (
           label: "キャンセル",
           color: "text-(--color-text-muted)",
           bgColor: "bg-stone-100",
-          icon: <CircleSlashIcon className="size-4" />,
+          icon: <CircleSlashIcon className="size-3" />,
         };
       }
       if (status.reason === "error") {
@@ -89,14 +88,14 @@ const getToolStatus = (
           label: "エラー",
           color: "text-(--color-danger)",
           bgColor: "bg-(--color-danger-bg)",
-          icon: <AlertCircleIcon className="size-4" />,
+          icon: <AlertCircleIcon className="size-3" />,
         };
       }
       return {
         label: "未完了",
         color: "text-(--color-text-muted)",
         bgColor: "bg-stone-100",
-        icon: <AlertCircleIcon className="size-4" />,
+        icon: <AlertCircleIcon className="size-3" />,
       };
     default:
       return {
@@ -115,13 +114,13 @@ type StatusBadgeProps = {
 const StatusBadge: FC<StatusBadgeProps> = ({ status }) => (
   <span
     className={cn(
-      "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium transition-colors",
+      "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-colors",
       status.color,
       status.bgColor,
     )}
   >
     {status.icon}
-    {status.label}
+    <span className="hidden sm:inline">{status.label}</span>
   </span>
 );
 
@@ -150,7 +149,7 @@ export const ToolFallback: ToolCallMessagePartComponent = ({
   return (
     <div
       className={cn(
-        "aui-tool-fallback-root my-4 flex w-full flex-col rounded-xl border transition-colors",
+        "aui-tool-fallback-root my-1 flex w-full flex-col rounded-lg border transition-colors",
         isCancelled && "border-stone-200 bg-stone-50 opacity-70",
         isError && "border-red-200 bg-red-50/50",
         isRunning && "border-(--color-accent-subtle) bg-teal-50/30",
@@ -160,57 +159,45 @@ export const ToolFallback: ToolCallMessagePartComponent = ({
           "border-(--color-border) bg-(--color-surface)",
       )}
     >
-      <div className="aui-tool-fallback-header flex items-center gap-3 px-4 py-3">
-        <div
+      <div className="aui-tool-fallback-header flex items-center gap-1.5 px-2.5 py-1.5">
+        <SearchIcon
           className={cn(
-            "flex items-center justify-center size-8 rounded-lg",
+            "size-3 shrink-0",
             isRunning
-              ? "bg-(--color-accent-subtle)"
-              : "bg-(--color-surface-hover)",
+              ? "text-(--color-accent) animate-pulse-subtle"
+              : "text-(--color-text-muted)",
+          )}
+        />
+
+        <p
+          className={cn(
+            "flex-1 min-w-0 text-xs truncate",
+            isCancelled
+              ? "text-(--color-text-muted) line-through"
+              : "text-(--color-text-secondary)",
           )}
         >
-          <SearchIcon
-            className={cn(
-              "size-4",
-              isRunning
-                ? "text-(--color-accent) animate-pulse-subtle"
-                : "text-(--color-text-muted)",
-            )}
-          />
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <p
-            className={cn(
-              "text-sm font-medium truncate",
-              isCancelled
-                ? "text-(--color-text-muted) line-through"
-                : "text-(--color-text-secondary)",
-            )}
-          >
-            {displayName}
-          </p>
-        </div>
+          {displayName}
+        </p>
 
         <StatusBadge status={toolStatus} />
 
-        <Button
-          variant="ghost"
-          size="icon-sm"
+        <button
+          type="button"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="shrink-0"
+          className="shrink-0 p-0.5 text-(--color-text-muted) hover:text-(--color-text-secondary) transition-colors"
           aria-label={isCollapsed ? "詳細を表示" : "詳細を隠す"}
         >
           {isCollapsed ? (
-            <ChevronDownIcon className="size-4" />
+            <ChevronDownIcon className="size-3" />
           ) : (
-            <ChevronUpIcon className="size-4" />
+            <ChevronUpIcon className="size-3" />
           )}
-        </Button>
+        </button>
       </div>
 
       {!isCollapsed && (
-        <div className="aui-tool-fallback-content flex flex-col gap-3 border-t border-(--color-border) px-4 py-3">
+        <div className="aui-tool-fallback-content flex flex-col gap-2 border-t border-(--color-border) px-3 py-2">
           {cancelledReason && (
             <div className="aui-tool-fallback-cancelled-root">
               <p className="text-xs font-medium text-(--color-text-muted) mb-1.5">
