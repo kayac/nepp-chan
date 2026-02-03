@@ -43,6 +43,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@libsql/client": "^0.17.0",
     "@types/node": "^24.10.1",
     "drizzle-kit": "^0.31.8",
     "mastra": "1.1.0",
