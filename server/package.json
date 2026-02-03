@@ -40,7 +40,7 @@
     "drizzle-orm": "^0.45.1",
     "glob": "^13.0.0",
     "hono": "^4.10.7",
-    "zod": "^4.1.13"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@libsql/client": "^0.17.0",
