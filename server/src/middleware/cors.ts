@@ -5,10 +5,7 @@ const isAllowedOrigin = (
   origin: string,
   env: CloudflareBindings,
 ): string | null => {
-  const allowedOrigins = [
-    "http://localhost:5173",
-    env.PRODUCTION_WEB_URL,
-  ].filter(Boolean);
+  const allowedOrigins = ["http://localhost:5173", env.WEB_URL].filter(Boolean);
 
   return allowedOrigins.includes(origin) ? origin : null;
 };
