@@ -98,7 +98,7 @@ export DOTENV_PRIVATE_KEY_PRODUCTION="<本番用キー>"
 | ------------------------------ | ----------------- |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API        |
 | `GOOGLE_SEARCH_ENGINE_ID`      | Custom Search     |
-| `PRODUCTION_WEB_URL`           | 本番 Web URL      |
+| `WEB_URL`                      | Web URL           |
 
 ### web 環境変数
 
