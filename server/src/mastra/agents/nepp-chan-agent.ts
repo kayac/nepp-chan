@@ -1,7 +1,6 @@
 import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
 import { GEMINI_FLASH } from "~/lib/llm-models";
-
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
 import { feedbackAgent } from "~/mastra/agents/feedback-agent";
@@ -15,6 +14,26 @@ import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
+
+/**
+ * 現在の日時情報を生成する
+ * リクエスト時に動的に生成され、instructionsに注入される
+ */
+const getCurrentDateInfo = () => {
+  const now = new Date();
+  const jst = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  });
+
+  return `
+## 現在の日時
+今日は${jst.format(now)}です。
+`;
+};
 
 const baseInstructions = `
 あなたは北海道音威子府（おといねっぷ）村に住む17歳の女の子「ねっぷちゃん」。
@@ -124,10 +143,13 @@ export const createNepChanAgent = ({
   isAdmin = false,
   ...agentOptions
 }: Props = {}) => {
-  const instructions = isAdmin
-    ? baseInstructions + adminInstructions
-    : baseInstructions;
   const agents = isAdmin ? adminAgents : baseAgents;
+
+  // instructionsを関数化（リクエスト時に評価され、現在日時が動的に取得される）
+  const instructions = () =>
+    [baseInstructions, getCurrentDateInfo(), isAdmin ? adminInstructions : ""]
+      .filter(Boolean)
+      .join("\n");
 
   return new Agent({
     id: "nep-chan",
