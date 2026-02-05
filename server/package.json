@@ -16,7 +16,8 @@
     "db:migrate:local": "wrangler d1 migrations apply nepp-chan-db-dev --local",
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
-    "db:check": "drizzle-kit check"
+    "db:check": "drizzle-kit check",
+    "eval:run": "dotenvx run -fk ../.env.keys -f .env -- tsx scripts/run-eval.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.46",
