@@ -8,6 +8,7 @@
  * - contextRelevance: 取得コンテキストが質問に対して有用か
  * - hallucination: コンテキストにない情報を捏造していないか
  */
+import type { RequestContext } from "@mastra/core/request-context";
 import { createStep, createWorkflow } from "@mastra/core/workflows";
 import {
   createAnswerSimilarityScorer,
@@ -22,35 +23,28 @@ import {
 } from "@mastra/evals/scorers/utils";
 import { z } from "zod";
 
-import { GEMINI_FLASH } from "~/lib/llm-models";
+import { GEMINI_FLASH_LITE } from "~/lib/llm-models";
 import { testCases } from "~/mastra/data/eval-test-cases";
+
+const KNOWLEDGE_TOOL_NAME = "knowledgeSearchTool";
 
 const extractKnowledgeSearchResults = (
   steps: Array<{ toolResults?: unknown[] }> | undefined,
-) => {
-  const chunks: Array<{ score: number; content: string; source: string }> = [];
+): Array<{ score: number; content: string; source: string }> => {
+  // biome-ignore lint/suspicious/noExplicitAny: ツール結果の型は不定
+  const toolResult = steps?.[0]?.toolResults?.[0] as any;
+  const tr = toolResult?.payload ?? toolResult;
 
-  for (const step of steps ?? []) {
-    for (const toolResult of step.toolResults ?? []) {
-      const tr = toolResult as {
-        toolName: string;
-        result?: {
-          results?: Array<{ score: number; content: string; source: string }>;
-        };
-      };
-      if (tr.toolName === "knowledge-search" && tr.result?.results) {
-        chunks.push(
-          ...tr.result.results.map((r) => ({
-            score: r.score,
-            content: r.content.slice(0, 200),
-            source: r.source,
-          })),
-        );
-      }
-    }
+  if (tr?.toolName !== KNOWLEDGE_TOOL_NAME || !tr?.result?.results) {
+    return [];
   }
 
-  return chunks;
+  // biome-ignore lint/suspicious/noExplicitAny: ツール結果の型は不定
+  return tr.result.results.map((r: any) => ({
+    score: r.score,
+    content: r.content,
+    source: r.source,
+  }));
 };
 
 const runEvalScorers = async ({
@@ -69,47 +63,60 @@ const runEvalScorers = async ({
     output: [createTestMessage({ content: output, role: "assistant" })],
   });
 
-  const [
-    similarity,
-    faithfulness,
-    contextPrecision,
-    contextRelevance,
-    hallucination,
-  ] = await Promise.all([
-    createAnswerSimilarityScorer({ model: GEMINI_FLASH }).run({
-      input: testRun.input,
-      output: testRun.output,
-      groundTruth,
-    }),
-    createFaithfulnessScorer({ model: GEMINI_FLASH, options: { context } }).run(
-      {
-        input: testRun.input,
-        output: testRun.output,
-      },
-    ),
-    createContextPrecisionScorer({
-      model: GEMINI_FLASH,
-      options: { context },
+  // context が空の場合、similarity のみ実行
+  if (context.length === 0) {
+    const similarity = await createAnswerSimilarityScorer({
+      model: GEMINI_FLASH_LITE,
     }).run({
       input: testRun.input,
       output: testRun.output,
       groundTruth,
-    }),
-    createContextRelevanceScorerLLM({
-      model: GEMINI_FLASH,
-      options: { context },
-    }).run({
-      input: testRun.input,
-      output: testRun.output,
-    }),
-    createHallucinationScorer({
-      model: GEMINI_FLASH,
-      options: { context },
-    }).run({
-      input: testRun.input,
-      output: testRun.output,
-    }),
-  ]);
+    });
+
+    return { similarity };
+  }
+
+  // スコアラーを直列実行
+  const similarity = await createAnswerSimilarityScorer({
+    model: GEMINI_FLASH_LITE,
+  }).run({
+    input: testRun.input,
+    output: testRun.output,
+    groundTruth,
+  });
+
+  const faithfulness = await createFaithfulnessScorer({
+    model: GEMINI_FLASH_LITE,
+    options: { context },
+  }).run({
+    input: testRun.input,
+    output: testRun.output,
+  });
+
+  const contextPrecision = await createContextPrecisionScorer({
+    model: GEMINI_FLASH_LITE,
+    options: { context },
+  }).run({
+    input: testRun.input,
+    output: testRun.output,
+    groundTruth,
+  });
+
+  const contextRelevance = await createContextRelevanceScorerLLM({
+    model: GEMINI_FLASH_LITE,
+    options: { context },
+  }).run({
+    input: testRun.input,
+    output: testRun.output,
+  });
+
+  const hallucination = await createHallucinationScorer({
+    model: GEMINI_FLASH_LITE,
+    options: { context },
+  }).run({
+    input: testRun.input,
+    output: testRun.output,
+  });
 
   return {
     similarity,
@@ -124,12 +131,15 @@ const runEval = async (
   agent: {
     generate: (
       input: string,
+      options?: { requestContext: RequestContext },
     ) => Promise<{ text: string; steps: Array<{ toolResults?: unknown[] }> }>;
   },
   testCase: { input: string; groundTruth: string },
+  requestContext: RequestContext,
 ) => {
-  const result = await agent.generate(testCase.input);
+  const result = await agent.generate(testCase.input, { requestContext });
   const retrievedChunks = extractKnowledgeSearchResults(result.steps);
+
   const scores = await runEvalScorers({
     input: testCase.input,
     output: result.text,
@@ -157,17 +167,17 @@ const runSingleEval = createStep({
   description: "Run evaluation for a single test case",
   inputSchema: testCaseSchema,
   outputSchema: z.any(),
-  execute: async ({ inputData, mastra }) => {
+  execute: async ({ inputData, mastra, requestContext }) => {
     if (!inputData) {
       throw new Error("Input data not found");
     }
 
-    const agent = mastra?.getAgent("nepChanAgent");
+    const agent = mastra?.getAgent("knowledgeAgent");
     if (!agent) {
-      throw new Error("nepChanAgent not found");
+      throw new Error("knowledgeAgent not found");
     }
 
-    return runEval(agent, inputData);
+    return runEval(agent, inputData, requestContext);
   },
 });
 
@@ -180,102 +190,40 @@ const evalWorkflow = createWorkflow({
 evalWorkflow.commit();
 
 // バッチ評価
-const batchResultSchema = z.object({
-  results: z.any(),
-  summary: z.object({
-    totalCases: z.number(),
-    averageScores: z.object({
-      similarity: z.number(),
-      faithfulness: z.number(),
-      contextPrecision: z.number(),
-      contextRelevance: z.number(),
-      hallucination: z.number(),
-    }),
-    lowScoreCases: z.array(
-      z.object({
-        input: z.string(),
-        scores: z.object({
-          similarity: z.number(),
-          faithfulness: z.number(),
-          contextPrecision: z.number(),
-          contextRelevance: z.number(),
-          hallucination: z.number(),
-        }),
-      }),
-    ),
-  }),
-});
-
 const runBatchEval = createStep({
   id: "run-batch-eval",
   description: "Run evaluation for all predefined test cases",
   inputSchema: z.object({}),
-  outputSchema: batchResultSchema,
-  execute: async ({ mastra }) => {
-    const agent = mastra?.getAgent("nepChanAgent");
+  outputSchema: z.any(),
+  execute: async ({ mastra, requestContext }) => {
+    const agent = mastra?.getAgent("knowledgeAgent");
     if (!agent) {
-      throw new Error("nepChanAgent not found");
+      throw new Error("knowledgeAgent not found");
     }
 
-    const results = await Promise.all(
-      testCases.map((testCase) => runEval(agent, testCase)),
-    );
+    const results = [];
+    for (let i = 0; i < testCases.length; i++) {
+      const testCase = testCases[i];
+      console.log(
+        `[EVAL ${i + 1}/${testCases.length}] 開始: ${testCase.input.slice(0, 30)}...`,
+      );
 
-    const calcAverage = (scores: number[]) =>
-      scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+      const result = await runEval(agent, testCase, requestContext);
 
-    const averageScores = {
-      similarity: calcAverage(results.map((r) => r.scores.similarity.score)),
-      faithfulness: calcAverage(
-        results.map((r) => r.scores.faithfulness.score),
-      ),
-      contextPrecision: calcAverage(
-        results.map((r) => r.scores.contextPrecision.score),
-      ),
-      contextRelevance: calcAverage(
-        results.map((r) => r.scores.contextRelevance.score),
-      ),
-      hallucination: calcAverage(
-        results.map((r) => r.scores.hallucination.score),
-      ),
-    };
+      console.log(
+        `[EVAL ${i + 1}/${testCases.length}] 完了: ${testCase.input.slice(0, 30)}...`,
+      );
+      results.push(result);
+    }
 
-    const THRESHOLD = 0.7;
-    const lowScoreCases = results
-      .filter(
-        (r) =>
-          r.scores.similarity.score < THRESHOLD ||
-          r.scores.faithfulness.score < THRESHOLD ||
-          r.scores.contextPrecision.score < THRESHOLD ||
-          r.scores.contextRelevance.score < THRESHOLD ||
-          r.scores.hallucination.score < THRESHOLD,
-      )
-      .map((r) => ({
-        input: r.input,
-        scores: {
-          similarity: r.scores.similarity.score,
-          faithfulness: r.scores.faithfulness.score,
-          contextPrecision: r.scores.contextPrecision.score,
-          contextRelevance: r.scores.contextRelevance.score,
-          hallucination: r.scores.hallucination.score,
-        },
-      }));
-
-    return {
-      results,
-      summary: {
-        totalCases: results.length,
-        averageScores,
-        lowScoreCases,
-      },
-    };
+    return results;
   },
 });
 
 const evalBatchWorkflow = createWorkflow({
   id: "eval-batch-workflow",
   inputSchema: z.object({}),
-  outputSchema: batchResultSchema,
+  outputSchema: z.any(),
 }).then(runBatchEval);
 
 evalBatchWorkflow.commit();
