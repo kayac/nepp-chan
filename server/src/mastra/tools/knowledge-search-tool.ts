@@ -1,7 +1,7 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { ModelRouterLanguageModel } from "@mastra/core/llm";
 import { createTool } from "@mastra/core/tools";
-import { rerank } from "@mastra/rag";
+import { MastraAgentRelevanceScorer, rerankWithScorer } from "@mastra/rag";
 import { embed } from "ai";
 import { z } from "zod";
 import { GEMINI_EMBEDDING, GEMINI_FLASH } from "~/lib/llm-models";
@@ -127,12 +127,21 @@ const searchKnowledge = async (
     });
 
     const rerankModel = new ModelRouterLanguageModel(GEMINI_FLASH);
-    const rerankedResults = await rerank(queryResults, query, rerankModel, {
-      topK: RERANK_TOP_K,
-      weights: {
-        semantic: 0.5,
-        vector: 0.3,
-        position: 0.2,
+    const scorer = new MastraAgentRelevanceScorer(
+      "knowledge-reranker",
+      rerankModel,
+    );
+    const rerankedResults = await rerankWithScorer({
+      results: queryResults,
+      query,
+      scorer,
+      options: {
+        topK: RERANK_TOP_K,
+        weights: {
+          semantic: 0.5,
+          vector: 0.3,
+          position: 0.2,
+        },
       },
     });
 
