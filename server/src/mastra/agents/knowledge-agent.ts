@@ -27,6 +27,11 @@ const baseInstructions = `
 ## 回答が得られない場合の判断基準
 - 検索結果が空、または結果が0件
 - 検索結果はあるが、質問の意図に関係ない内容しかない
+
+## URLの取り扱い
+- 検索結果のcontentやsource内にURLが含まれている場合、回答に関連するものだけを厳選して含める
+- 重複するURLは1つにまとめる
+- URLは検索結果から得たもののみ使用し、推測や捏造は絶対にしない
 `;
 
 export const knowledgeAgent = new Agent({
