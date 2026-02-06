@@ -4,12 +4,17 @@
  */
 export const getCurrentDateInfo = () => {
   const now = new Date();
-  const jst = new Intl.DateTimeFormat("ja-JP", {
+  const dateFormat = new Intl.DateTimeFormat("ja-JP", {
     timeZone: "Asia/Tokyo",
     year: "numeric",
     month: "long",
     day: "numeric",
     weekday: "long",
   });
-  return `今日は${jst.format(now)}です。`;
+  const timeFormat = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `今日は${dateFormat.format(now)}、現在${timeFormat.format(now)}です。`;
 };
