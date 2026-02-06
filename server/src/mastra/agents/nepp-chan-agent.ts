@@ -1,7 +1,7 @@
 import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
+import { getCurrentDateInfo } from "~/lib/date";
 import { GEMINI_FLASH } from "~/lib/llm-models";
-
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
 import { feedbackAgent } from "~/mastra/agents/feedback-agent";
@@ -124,10 +124,17 @@ export const createNepChanAgent = ({
   isAdmin = false,
   ...agentOptions
 }: Props = {}) => {
-  const instructions = isAdmin
-    ? baseInstructions + adminInstructions
-    : baseInstructions;
   const agents = isAdmin ? adminAgents : baseAgents;
+
+  // instructionsを関数化（リクエスト時に評価され、現在日時が動的に取得される）
+  const instructions = () =>
+    [
+      baseInstructions,
+      `## 現在の日時\n${getCurrentDateInfo()}`,
+      isAdmin ? adminInstructions : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
 
   return new Agent({
     id: "nep-chan",
