@@ -1,21 +1,7 @@
 import { Agent } from "@mastra/core/agent";
+import { getCurrentDateInfo } from "~/lib/date";
 import { GEMINI_FLASH } from "~/lib/llm-models";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
-
-/**
- * 現在の日時情報を生成する
- */
-const getCurrentDateInfo = () => {
-  const now = new Date();
-  const jst = new Intl.DateTimeFormat("ja-JP", {
-    timeZone: "Asia/Tokyo",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    weekday: "long",
-  });
-  return `今日は${jst.format(now)}です。`;
-};
 
 const baseInstructions = `
 あなたは音威子府村の情報検索専門エージェントです。
