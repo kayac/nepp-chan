@@ -16,7 +16,11 @@ import { getResourceId } from "~/lib/resource";
 import { fetchMessages } from "~/repository/thread-repository";
 import type { Thread as ThreadType } from "~/types";
 
-import { AssistantProvider } from "./AssistantProvider";
+import {
+  AssistantProvider,
+  GREETING_PROMPT,
+  ONBOARDING_PROMPT,
+} from "./AssistantProvider";
 import { FeedbackModal } from "./components/FeedbackModal";
 import { FeedbackProvider, useFeedback } from "./FeedbackContext";
 
@@ -48,7 +52,9 @@ export const ChatPage = () => {
 
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [greetingPrompt, setGreetingPrompt] = useState<string>();
   const hasInitialized = useRef(false);
+  const isFirstVisit = useRef(false);
 
   const { data: threadsData, isSuccess: threadsLoaded } =
     useThreads(resourceId);
@@ -67,6 +73,12 @@ export const ChatPage = () => {
     if (createThreadMutation.isPending) return;
     const thread = await createThreadMutation.mutateAsync(undefined);
     setCurrentThreadId(thread.id);
+    if (isFirstVisit.current) {
+      setGreetingPrompt(ONBOARDING_PROMPT);
+      isFirstVisit.current = false;
+    } else {
+      setGreetingPrompt(GREETING_PROMPT);
+    }
     setIsSidebarOpen(false);
   }, [createThreadMutation]);
 
@@ -77,6 +89,7 @@ export const ChatPage = () => {
         return;
       }
       setCurrentThreadId(selectedThreadId);
+      setGreetingPrompt(undefined);
       setIsSidebarOpen(false);
     },
     [currentThreadId],
@@ -98,6 +111,8 @@ export const ChatPage = () => {
         const thread =
           threads.find((t) => t.id === savedThreadId) ?? threads[0];
         setCurrentThreadId(thread.id);
+      } else {
+        isFirstVisit.current = true;
       }
     }
   }, [threadsLoaded, threads, resourceId]);
@@ -295,6 +310,7 @@ export const ChatPage = () => {
             key={currentThreadId}
             threadId={currentThreadId}
             initialMessages={initialMessages}
+            greetingPrompt={greetingPrompt}
           >
             <FeedbackProvider threadId={currentThreadId}>
               <Thread />
