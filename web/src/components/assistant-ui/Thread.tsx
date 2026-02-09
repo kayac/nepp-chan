@@ -6,6 +6,7 @@ import {
   ErrorPrimitive,
   MessagePrimitive,
   ThreadPrimitive,
+  useMessage,
   useMessageRuntime,
 } from "@assistant-ui/react";
 import {
@@ -26,6 +27,7 @@ import { TooltipIconButton } from "~/components/assistant-ui/TooltipIconButton";
 import { toolsByName } from "~/components/assistant-ui/tool-uis";
 import { Button } from "~/components/ui/Button";
 import { cn } from "~/lib/class-merge";
+import { GREETING_PROMPTS } from "~/pages/chat/AssistantProvider";
 import { useFeedback } from "~/pages/chat/FeedbackContext";
 
 export const Thread = () => (
@@ -36,10 +38,6 @@ export const Thread = () => (
     }}
   >
     <ThreadPrimitive.Viewport className="aui-thread-viewport relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth px-4 pt-4">
-      <AssistantIf condition={({ thread }) => thread.isEmpty}>
-        <ThreadWelcome />
-      </AssistantIf>
-
       <ThreadPrimitive.Messages
         components={{
           UserMessage,
@@ -65,62 +63,6 @@ const ThreadScrollToBottom = () => (
       <ArrowDownIcon />
     </TooltipIconButton>
   </ThreadPrimitive.ScrollToBottom>
-);
-
-const ThreadWelcome = () => (
-  <div className="aui-thread-welcome-root mx-auto my-auto flex w-full max-w-(--thread-max-width) grow flex-col">
-    <div className="aui-thread-welcome-center flex w-full grow flex-col items-center justify-center">
-      <div className="aui-thread-welcome-message flex size-full flex-col justify-center px-4">
-        <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in font-semibold text-2xl text-(--color-text) duration-200">
-          こんにちは！
-        </h1>
-        <p className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in text-(--color-text-muted) text-xl delay-75 duration-200">
-          音威子府村のことなんでも聞いてね！
-        </p>
-      </div>
-    </div>
-    <ThreadSuggestions />
-  </div>
-);
-
-const SUGGESTIONS = [
-  {
-    title: "音威子府村ってどんなところ？",
-    label: "村の紹介を聞く",
-    prompt: "音威子府村について教えて",
-  },
-  {
-    title: "今日の天気は？",
-    label: "天気予報を確認",
-    prompt: "音威子府村の今日の天気を教えて",
-  },
-] as const;
-
-const ThreadSuggestions = () => (
-  <div className="aui-thread-welcome-suggestions grid w-full @md:grid-cols-2 gap-2 pb-4">
-    {SUGGESTIONS.map((suggestion, index) => (
-      <div
-        key={suggestion.prompt}
-        className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-2 @md:nth-[n+3]:block nth-[n+3]:hidden animate-in fill-mode-both duration-200"
-        style={{ animationDelay: `${100 + index * 50}ms` }}
-      >
-        <ThreadPrimitive.Suggestion prompt={suggestion.prompt} send asChild>
-          <Button
-            variant="ghost"
-            className="aui-thread-welcome-suggestion h-auto w-full @md:flex-col flex-wrap items-start justify-start gap-1 rounded-xl border border-(--color-border) px-4 py-3 text-left text-sm transition-all hover:bg-(--color-surface-hover) hover:border-(--color-border-subtle)"
-            aria-label={suggestion.prompt}
-          >
-            <span className="aui-thread-welcome-suggestion-text-1 font-medium text-(--color-text-secondary)">
-              {suggestion.title}
-            </span>
-            <span className="aui-thread-welcome-suggestion-text-2 text-(--color-text-muted)">
-              {suggestion.label}
-            </span>
-          </Button>
-        </ThreadPrimitive.Suggestion>
-      </div>
-    ))}
-  </div>
 );
 
 const Composer = () => (
@@ -251,16 +193,25 @@ const AssistantActionBar = () => (
   </ActionBarPrimitive.Root>
 );
 
-const UserMessage = () => (
-  <MessagePrimitive.Root
-    className="aui-user-message-root fade-in slide-in-from-bottom-1 mx-auto flex w-full max-w-(--thread-max-width) animate-in justify-end py-3 duration-150"
-    data-role="user"
-  >
-    <div className="aui-user-message-content wrap-break-word max-w-[85%] rounded-2xl rounded-tr-sm bg-(--color-user-message) px-4 py-2.5 text-white shadow-sm">
-      <MessagePrimitive.Parts />
-    </div>
-  </MessagePrimitive.Root>
-);
+const UserMessage = () => {
+  const message = useMessage();
+  const isGreeting = message.content?.some(
+    (part) => part.type === "text" && GREETING_PROMPTS.includes(part.text),
+  );
+
+  if (isGreeting) return null;
+
+  return (
+    <MessagePrimitive.Root
+      className="aui-user-message-root fade-in slide-in-from-bottom-1 mx-auto flex w-full max-w-(--thread-max-width) animate-in justify-end py-3 duration-150"
+      data-role="user"
+    >
+      <div className="aui-user-message-content wrap-break-word max-w-[85%] rounded-2xl rounded-tr-sm bg-(--color-user-message) px-4 py-2.5 text-white shadow-sm">
+        <MessagePrimitive.Parts />
+      </div>
+    </MessagePrimitive.Root>
+  );
+};
 
 const BranchPicker = ({
   className,
