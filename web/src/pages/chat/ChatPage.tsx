@@ -259,7 +259,7 @@ export const ChatPage = () => {
           {/* メインヘッダー */}
           <div
             className={cn(
-              "h-16 flex items-center justify-between",
+              "h-12 md:h-14 flex items-center justify-between",
               isAdmin && "border-b border-(--color-border)/60",
             )}
           >
