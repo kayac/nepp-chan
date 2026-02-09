@@ -23,6 +23,9 @@ export const createThread = (
     body: { resourceId, title },
   });
 
+export const deleteThread = (threadId: string): Promise<{ success: boolean }> =>
+  apiClient<{ success: boolean }>(`/threads/${threadId}`, { method: "DELETE" });
+
 export const fetchThread = (threadId: string): Promise<Thread> =>
   apiClient<Thread>(`/threads/${threadId}`);
 

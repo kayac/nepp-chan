@@ -145,6 +145,16 @@ export const feedbackRepository = {
     };
   },
 
+  async deleteByThreadId(d1: D1Database, threadId: string) {
+    const db = createDb(d1);
+
+    await db
+      .delete(messageFeedback)
+      .where(eq(messageFeedback.threadId, threadId));
+
+    return { success: true };
+  },
+
   async delete(d1: D1Database, id: string) {
     const db = createDb(d1);
 
