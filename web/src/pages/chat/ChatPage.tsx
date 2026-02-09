@@ -2,6 +2,7 @@ import {
   Bars3Icon,
   Cog6ToothIcon,
   PlusIcon,
+  TrashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useQuery } from "@tanstack/react-query";
@@ -10,7 +11,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Thread } from "~/components/assistant-ui/Thread";
 import { LoadingDots } from "~/components/ui/Loading";
 import { useAdminUser } from "~/hooks/useAdminUser";
-import { threadKeys, useCreateThread, useThreads } from "~/hooks/useThreads";
+import {
+  threadKeys,
+  useCreateThread,
+  useDeleteThread,
+  useThreads,
+} from "~/hooks/useThreads";
 import { cn } from "~/lib/class-merge";
 import { getResourceId } from "~/lib/resource";
 import { fetchMessages } from "~/repository/thread-repository";
@@ -53,6 +59,7 @@ export const ChatPage = () => {
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [greetingPrompt, setGreetingPrompt] = useState<string>();
+  const [threadToDelete, setThreadToDelete] = useState<string | null>(null);
   const hasInitialized = useRef(false);
   const isFirstVisit = useRef(false);
 
@@ -61,6 +68,7 @@ export const ChatPage = () => {
   const threads = threadsData?.threads ?? [];
 
   const createThreadMutation = useCreateThread(resourceId);
+  const deleteThreadMutation = useDeleteThread(resourceId);
 
   const { data: messagesData, isLoading: messagesLoading } = useQuery({
     queryKey: threadKeys.messages(currentThreadId ?? ""),
@@ -94,6 +102,24 @@ export const ChatPage = () => {
     },
     [currentThreadId],
   );
+
+  const handleDeleteThread = useCallback(async () => {
+    if (!threadToDelete || deleteThreadMutation.isPending) return;
+
+    try {
+      await deleteThreadMutation.mutateAsync(threadToDelete);
+
+      if (threadToDelete === currentThreadId) {
+        const remaining = threads.filter((t) => t.id !== threadToDelete);
+        setCurrentThreadId(remaining.length > 0 ? remaining[0].id : null);
+        setGreetingPrompt(undefined);
+      }
+
+      setThreadToDelete(null);
+    } catch {
+      // 削除失敗時はモーダルを維持（isPendingが解除されるので再試行可能）
+    }
+  }, [threadToDelete, deleteThreadMutation, currentThreadId, threads]);
 
   useEffect(() => {
     if (currentThreadId) {
@@ -197,34 +223,59 @@ export const ChatPage = () => {
         </div>
 
         <nav className="flex-1 overflow-y-auto py-3 px-2">
-          {threads.map((thread: ThreadType) => (
-            <button
-              key={thread.id}
-              type="button"
-              onClick={() => handleSelectThread(thread.id)}
-              className={cn(
-                "w-full px-3 py-3 text-left transition-all duration-150 rounded-xl mb-1",
-                "hover:bg-(--color-surface-hover)",
-                thread.id === currentThreadId
-                  ? "bg-(--color-accent-subtle)/50 border-l-[3px] border-(--color-accent)"
-                  : "border-l-[3px] border-transparent",
-              )}
-            >
+          {threads.map((thread: ThreadType) => {
+            const isSelected = thread.id === currentThreadId;
+            return (
               <div
+                key={thread.id}
                 className={cn(
-                  "text-sm font-medium truncate",
-                  thread.id === currentThreadId
-                    ? "text-(--color-text)"
-                    : "text-(--color-text-secondary)",
+                  "group relative flex items-center rounded-xl mb-1 transition-all duration-150",
+                  "hover:bg-(--color-surface-hover)",
+                  isSelected
+                    ? "bg-(--color-accent-subtle)/50 border-l-[3px] border-(--color-accent)"
+                    : "border-l-[3px] border-transparent",
                 )}
               >
-                {thread.title ?? "新しい会話"}
+                <button
+                  type="button"
+                  onClick={() => handleSelectThread(thread.id)}
+                  className="flex-1 min-w-0 px-3 py-3 text-left"
+                >
+                  <div
+                    className={cn(
+                      "text-sm font-medium truncate",
+                      isSelected
+                        ? "text-(--color-text)"
+                        : "text-(--color-text-secondary)",
+                    )}
+                  >
+                    {thread.title ?? "新しい会話"}
+                  </div>
+                  <div className="text-xs text-(--color-text-faint) mt-1">
+                    {new Date(thread.updatedAt).toLocaleDateString("ja-JP")}
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setThreadToDelete(thread.id);
+                  }}
+                  className={cn(
+                    "shrink-0 p-1.5 mr-2 rounded-lg transition-all duration-150",
+                    "hover:bg-red-100 hover:text-red-600",
+                    "text-(--color-text-muted)",
+                    isSelected
+                      ? "opacity-100"
+                      : "opacity-0 group-hover:opacity-100",
+                  )}
+                  aria-label="スレッドを削除"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </button>
               </div>
-              <div className="text-xs text-(--color-text-faint) mt-1">
-                {new Date(thread.updatedAt).toLocaleDateString("ja-JP")}
-              </div>
-            </button>
-          ))}
+            );
+          })}
         </nav>
       </aside>
 
@@ -325,6 +376,44 @@ export const ChatPage = () => {
           </div>
         )}
       </main>
+
+      {/* 削除確認モーダル */}
+      {threadToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <button
+            type="button"
+            className="absolute inset-0 bg-stone-900/25 backdrop-blur-[3px] cursor-default"
+            onClick={() => setThreadToDelete(null)}
+            aria-label="キャンセル"
+          />
+          <div className="relative bg-white rounded-2xl p-6 w-80 shadow-xl">
+            <h2 className="text-base font-semibold text-(--color-text) mb-2">
+              スレッドを削除
+            </h2>
+            <p className="text-sm text-(--color-text-secondary) mb-6">
+              このスレッドを削除しますか？会話履歴は復元できません。
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setThreadToDelete(null)}
+                disabled={deleteThreadMutation.isPending}
+                className="px-4 py-2 text-sm font-medium text-(--color-text-secondary) hover:bg-(--color-surface-hover) rounded-lg transition-colors disabled:opacity-60"
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteThread}
+                disabled={deleteThreadMutation.isPending}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-60"
+              >
+                {deleteThreadMutation.isPending ? "削除中..." : "削除"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
