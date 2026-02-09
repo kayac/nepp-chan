@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createThread,
+  deleteThread,
   fetchMessages,
   fetchThread,
   fetchThreads,
@@ -43,6 +44,19 @@ export const useCreateThread = (resourceId: string) => {
     mutationFn: (title?: string) => createThread(resourceId, title),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: threadKeys.list(resourceId) });
+    },
+  });
+};
+
+export const useDeleteThread = (resourceId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (threadId: string) => deleteThread(threadId),
+    onSuccess: (_data, threadId) => {
+      queryClient.invalidateQueries({ queryKey: threadKeys.list(resourceId) });
+      queryClient.removeQueries({ queryKey: threadKeys.detail(threadId) });
+      queryClient.removeQueries({ queryKey: threadKeys.messages(threadId) });
     },
   });
 };
