@@ -11,12 +11,12 @@ import {
 } from "@assistant-ui/react";
 import {
   ArrowDownIcon,
-  ArrowUpIcon,
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   CopyIcon,
   LightbulbIcon,
+  SendIcon,
   SquareIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
@@ -34,10 +34,10 @@ export const Thread = () => (
   <ThreadPrimitive.Root
     className="aui-root aui-thread-root @container flex h-full flex-col bg-(--color-bg)"
     style={{
-      ["--thread-max-width" as string]: "44rem",
+      ["--thread-max-width" as string]: "42rem",
     }}
   >
-    <ThreadPrimitive.Viewport className="aui-thread-viewport relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth px-4 pt-4">
+    <ThreadPrimitive.Viewport className="aui-thread-viewport relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth px-4 pt-6 md:px-6">
       <ThreadPrimitive.Messages
         components={{
           UserMessage,
@@ -45,7 +45,7 @@ export const Thread = () => (
         }}
       />
 
-      <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mx-auto mt-auto flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible pb-4 md:pb-6">
+      <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mx-auto mt-auto flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible pb-6 md:pb-8">
         <ThreadScrollToBottom />
         <Composer />
       </ThreadPrimitive.ViewportFooter>
@@ -58,18 +58,31 @@ const ThreadScrollToBottom = () => (
     <TooltipIconButton
       tooltip="下にスクロール"
       variant="outline"
-      className="aui-thread-scroll-to-bottom absolute -top-12 z-10 self-center rounded-full p-4 disabled:invisible bg-(--color-surface) shadow-md hover:bg-(--color-surface-hover)"
+      className="aui-thread-scroll-to-bottom absolute -top-14 z-10 self-center rounded-full p-3 disabled:invisible bg-(--color-surface) hover:bg-(--color-surface-hover) border border-(--color-border) transition-all duration-200 hover:scale-105"
+      style={{ boxShadow: "var(--shadow-card)" }}
     >
-      <ArrowDownIcon />
+      <ArrowDownIcon className="size-4" />
     </TooltipIconButton>
   </ThreadPrimitive.ScrollToBottom>
 );
 
 const Composer = () => (
-  <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
+  <ComposerPrimitive.Root
+    className="aui-composer-root relative flex w-full flex-col"
+    style={{ boxShadow: "var(--shadow-card)" }}
+  >
     <ComposerPrimitive.Input
       placeholder="メッセージを入力..."
-      className="aui-composer-input mb-1 max-h-32 min-h-14 w-full resize-none rounded-xl border border-(--color-border) bg-(--color-surface) px-4 pt-4 pb-3 text-base text-(--color-text) outline-none placeholder:text-(--color-text-faint) focus:border-(--color-accent) focus:ring-2 focus:ring-(--color-accent-light)/20 transition-all"
+      className="aui-composer-input mb-1 max-h-36 min-h-[3.5rem] w-full resize-none rounded-2xl border border-(--color-border) bg-(--color-surface) px-5 pt-4 pb-3 pr-14 text-base text-(--color-text) outline-none placeholder:text-(--color-text-faint) focus:border-(--color-accent-light) transition-all duration-200"
+      style={{
+        boxShadow: "var(--shadow-sm)",
+      }}
+      onFocus={(e) => {
+        e.currentTarget.style.boxShadow = "var(--shadow-input-focus)";
+      }}
+      onBlur={(e) => {
+        e.currentTarget.style.boxShadow = "var(--shadow-sm)";
+      }}
       rows={1}
       autoFocus
       aria-label="メッセージ入力"
@@ -79,7 +92,7 @@ const Composer = () => (
 );
 
 const ComposerAction = () => (
-  <div className="aui-composer-action-wrapper absolute right-2 bottom-3 flex items-center">
+  <div className="aui-composer-action-wrapper absolute right-3 bottom-3 flex items-center">
     <AssistantIf condition={({ thread }) => !thread.isRunning}>
       <ComposerPrimitive.Send asChild>
         <TooltipIconButton
@@ -88,10 +101,11 @@ const ComposerAction = () => (
           type="submit"
           variant="default"
           size="icon"
-          className="aui-composer-send size-8 rounded-full bg-(--color-accent) hover:bg-(--color-accent-hover) transition-all active:scale-95"
+          className="aui-composer-send size-9 rounded-full bg-(--color-accent) hover:bg-(--color-accent-hover) transition-all duration-200 hover:scale-105 active:scale-95"
+          style={{ boxShadow: "var(--shadow-sm)" }}
           aria-label="送信"
         >
-          <ArrowUpIcon className="aui-composer-send-icon size-4" />
+          <SendIcon className="aui-composer-send-icon size-4" />
         </TooltipIconButton>
       </ComposerPrimitive.Send>
     </AssistantIf>
@@ -102,7 +116,7 @@ const ComposerAction = () => (
           type="button"
           variant="secondary"
           size="icon"
-          className="aui-composer-cancel size-8 rounded-full"
+          className="aui-composer-cancel size-9 rounded-full transition-all duration-200 hover:scale-105"
           aria-label="停止"
         >
           <SquareIcon className="aui-composer-cancel-icon size-3 fill-current" />
@@ -122,13 +136,16 @@ const MessageError = () => (
 
 const AssistantMessage = () => (
   <MessagePrimitive.Root
-    className="aui-assistant-message-root fade-in slide-in-from-bottom-1 relative mx-auto w-full max-w-(--thread-max-width) animate-in py-3 duration-150"
+    className="aui-assistant-message-root fade-in slide-in-from-bottom-1 relative mx-auto w-full max-w-(--thread-max-width) animate-in py-4 duration-200"
     data-role="assistant"
   >
-    <div className="text-xs text-(--color-text-muted) mb-1.5 font-medium">
+    <div className="text-xs text-(--color-text-muted) mb-2 font-medium tracking-wide">
       ねっぷちゃん
     </div>
-    <div className="aui-assistant-message-content wrap-break-word rounded-xl bg-stone-500/3 px-4 py-3 text-(--color-text) leading-relaxed">
+    <div
+      className="aui-assistant-message-content wrap-break-word rounded-2xl bg-(--color-surface) border border-(--color-border)/60 px-5 py-4 text-(--color-text) leading-relaxed"
+      style={{ boxShadow: "var(--shadow-xs)" }}
+    >
       <MessagePrimitive.Parts
         components={{
           Text: MarkdownText,
@@ -138,7 +155,7 @@ const AssistantMessage = () => (
       <MessageError />
     </div>
 
-    <div className="aui-assistant-message-footer mt-2 flex">
+    <div className="aui-assistant-message-footer mt-2.5 flex">
       <BranchPicker />
       <AssistantActionBar />
     </div>
@@ -155,20 +172,23 @@ const FeedbackButtons = () => {
       <TooltipIconButton
         tooltip="良い回答"
         onClick={() => onFeedbackClick(messageId, "good")}
+        className="hover:text-(--color-success) transition-colors duration-150"
       >
-        <ThumbsUpIcon />
+        <ThumbsUpIcon className="size-3.5" />
       </TooltipIconButton>
       <TooltipIconButton
         tooltip="改善が必要"
         onClick={() => onFeedbackClick(messageId, "bad")}
+        className="hover:text-(--color-danger) transition-colors duration-150"
       >
-        <ThumbsDownIcon />
+        <ThumbsDownIcon className="size-3.5" />
       </TooltipIconButton>
       <TooltipIconButton
         tooltip="アイディア"
         onClick={() => onFeedbackClick(messageId, "idea")}
+        className="hover:text-(--color-warning) transition-colors duration-150"
       >
-        <LightbulbIcon />
+        <LightbulbIcon className="size-3.5" />
       </TooltipIconButton>
     </>
   );
@@ -177,15 +197,18 @@ const FeedbackButtons = () => {
 const AssistantActionBar = () => (
   <ActionBarPrimitive.Root
     hideWhenRunning
-    className="aui-assistant-action-bar-root flex gap-1 text-(--color-text-muted)"
+    className="aui-assistant-action-bar-root flex gap-0.5 text-(--color-text-faint)"
   >
     <ActionBarPrimitive.Copy asChild>
-      <TooltipIconButton tooltip="コピー">
+      <TooltipIconButton
+        tooltip="コピー"
+        className="hover:text-(--color-accent) transition-colors duration-150"
+      >
         <AssistantIf condition={({ message }) => message.isCopied}>
-          <CheckIcon className="text-(--color-success)" />
+          <CheckIcon className="size-3.5 text-(--color-success)" />
         </AssistantIf>
         <AssistantIf condition={({ message }) => !message.isCopied}>
-          <CopyIcon />
+          <CopyIcon className="size-3.5" />
         </AssistantIf>
       </TooltipIconButton>
     </ActionBarPrimitive.Copy>
@@ -203,10 +226,13 @@ const UserMessage = () => {
 
   return (
     <MessagePrimitive.Root
-      className="aui-user-message-root fade-in slide-in-from-bottom-1 mx-auto flex w-full max-w-(--thread-max-width) animate-in justify-end py-3 duration-150"
+      className="aui-user-message-root fade-in slide-in-from-bottom-1 mx-auto flex w-full max-w-(--thread-max-width) animate-in justify-end py-4 duration-200"
       data-role="user"
     >
-      <div className="aui-user-message-content wrap-break-word max-w-[85%] rounded-2xl rounded-tr-sm bg-(--color-user-message) px-4 py-2.5 text-white shadow-sm">
+      <div
+        className="aui-user-message-content wrap-break-word max-w-[80%] rounded-2xl rounded-br-md bg-(--color-user-message) px-5 py-3 text-white/95 leading-relaxed"
+        style={{ boxShadow: "var(--shadow-sm)" }}
+      >
         <MessagePrimitive.Parts />
       </div>
     </MessagePrimitive.Root>
