@@ -44,7 +44,7 @@
     "@libsql/client": "^0.17.0",
     "@types/node": "^25.2.0",
     "drizzle-kit": "^0.31.8",
-    "mastra": "1.1.0",
+    "mastra": "1.2.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^5.1.4",
