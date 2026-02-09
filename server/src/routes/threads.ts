@@ -3,6 +3,8 @@ import { convertMessages } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { HTTPException } from "hono/http-exception";
 import { getStorage } from "~/lib/storage";
+import { feedbackRepository } from "~/repository/feedback-repository";
+import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
 
 export const threadsRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -245,4 +247,51 @@ threadsRoutes.openapi(getMessagesRoute, async (c) => {
   }));
 
   return c.json({ messages });
+});
+
+// DELETE /threads/:threadId - スレッド削除
+const deleteThreadRoute = createRoute({
+  method: "delete",
+  path: "/:threadId",
+  summary: "スレッド削除",
+  description: "スレッドと関連データを削除",
+  tags: ["Threads"],
+  request: {
+    params: z.object({
+      threadId: z.string().min(1),
+    }),
+  },
+  responses: {
+    200: {
+      description: "削除成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.boolean(),
+          }),
+        },
+      },
+    },
+    404: {
+      description: "スレッドが見つからない",
+    },
+  },
+});
+
+threadsRoutes.openapi(deleteThreadRoute, async (c) => {
+  const { threadId } = c.req.valid("param");
+
+  const memory = await getMemory(c.env.DB);
+
+  const thread = await memory.getThreadById({ threadId });
+
+  if (!thread) {
+    throw new HTTPException(404, { message: "Thread not found" });
+  }
+
+  await feedbackRepository.deleteByThreadId(c.env.DB, threadId);
+  await threadPersonaStatusRepository.delete(c.env.DB, threadId);
+  await memory.deleteThread(threadId);
+
+  return c.json({ success: true });
 });
