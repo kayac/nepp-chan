@@ -14,7 +14,7 @@ export const GREETING_PROMPT =
   "新しい会話が始まりました。時間帯や季節に合った短い挨拶をしてください。";
 
 export const ONBOARDING_PROMPT =
-  "はじめてのユーザーとの会話です。自己紹介と、どのようなことができるか簡潔に説明してください。時間帯や季節に合った挨拶も含めてください。";
+  "はじめてのユーザーとの会話です。自己紹介と、どのようなことができるか簡潔に説明してください。";
 
 export const GREETING_PROMPTS = [GREETING_PROMPT, ONBOARDING_PROMPT];
 
