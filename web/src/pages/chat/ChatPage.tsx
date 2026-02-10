@@ -188,7 +188,7 @@ export const ChatPage = () => {
             <button
               type="button"
               onClick={() => setIsSidebarOpen(false)}
-              className="p-1.5 hover:bg-(--color-surface-hover) rounded-sm transition-colors md:hidden"
+              className="p-1.5 hover:bg-(--color-surface-hover) rounded-sm transition-colors"
               aria-label="閉じる"
             >
               <XMarkIcon
