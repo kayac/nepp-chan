@@ -32,7 +32,7 @@ import { useFeedback } from "~/pages/chat/FeedbackContext";
 
 export const Thread = () => (
   <ThreadPrimitive.Root
-    className="aui-root aui-thread-root @container flex h-full flex-col bg-(--color-bg)"
+    className="aui-root aui-thread-root @container flex flex-1 min-h-0 flex-col bg-(--color-bg)"
     style={{
       ["--thread-max-width" as string]: "42rem",
     }}
@@ -45,7 +45,7 @@ export const Thread = () => (
         }}
       />
 
-      <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mx-auto mt-auto flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible pb-6 md:pb-8">
+      <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mx-auto mt-auto flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-4">
         <ThreadScrollToBottom />
         <Composer />
       </ThreadPrimitive.ViewportFooter>
@@ -85,6 +85,11 @@ const Composer = () => (
       }}
       onFocus={(e) => {
         e.currentTarget.style.boxShadow = "var(--shadow-input-focus)";
+        if (isTouchDevice) {
+          setTimeout(() => {
+            e.target.scrollIntoView({ behavior: "smooth", block: "end" });
+          }, 300);
+        }
       }}
       onBlur={(e) => {
         e.currentTarget.style.boxShadow = "var(--shadow-sm)";
