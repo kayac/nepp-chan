@@ -1,0 +1,93 @@
+name: Release PR
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+concurrency:
+  group: release-pr
+  cancel-in-progress: true
+
+jobs:
+  release-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create or update release PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # リモートブランチを明示的に取得
+          git fetch origin main develop
+
+          # 日付を取得（JST）
+          DATE=$(TZ=Asia/Tokyo date +%Y-%m-%d)
+          TITLE="[release] ${DATE}"
+
+          # 差分コミット数を取得
+          COMMIT_COUNT=$(git rev-list --count origin/main..origin/develop 2>/dev/null || echo "0")
+
+          if [ "$COMMIT_COUNT" -eq 0 ]; then
+            echo "No commits to release"
+            exit 0
+          fi
+
+          # develop と main の差分からPR番号を抽出
+          # - マージコミット: "Merge pull request #123"
+          # - squash/rebase: "feat: something (#123)"
+          PR_NUMBERS=$(git log origin/main..origin/develop --pretty=format:"%s" \
+            | grep -oE "(#[0-9]+)" \
+            | grep -oE "#[0-9]+" \
+            | awk '!seen[$0]++' || echo "")
+
+          # PR本文を生成
+          if [ -n "$PR_NUMBERS" ]; then
+            PR_LIST=$(echo "$PR_NUMBERS" | tr '\n' ' ')
+            BODY="## Release PR
+
+          develop → main へのリリース
+
+          ### 含まれるPR
+
+          ${PR_LIST}
+
+          ### コミット数
+
+          ${COMMIT_COUNT} commits"
+          else
+            COMMITS=$(git log origin/main..origin/develop --pretty=format:"- %h %s" 2>/dev/null || echo "")
+            BODY="## Release PR
+
+          develop → main へのリリース
+
+          ### コミット (${COMMIT_COUNT})
+
+          ${COMMITS}"
+          fi
+
+          # インデントを除去
+          BODY=$(echo "$BODY" | sed 's/^[[:space:]]*//')
+
+          # 既存のリリースPRを探す（base=main, head=develop で一意に特定）
+          PR_NUMBER=$(gh pr list --base main --head develop --json number --jq '.[0].number' 2>/dev/null || echo "")
+
+          if [ -n "$PR_NUMBER" ]; then
+            echo "Updating existing PR #$PR_NUMBER"
+            gh pr edit "$PR_NUMBER" --title "$TITLE" --body "$BODY"
+          else
+            echo "Creating new release PR"
+            gh pr create \
+              --base main \
+              --head develop \
+              --title "$TITLE" \
+              --body "$BODY" \
+              --draft
+          fi
