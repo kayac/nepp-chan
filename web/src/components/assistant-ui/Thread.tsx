@@ -11,10 +11,8 @@ import {
 } from "@assistant-ui/react";
 import {
   ArrowDownIcon,
-  CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  CopyIcon,
   LightbulbIcon,
   SendIcon,
   SquareIcon,
@@ -32,7 +30,7 @@ import { useFeedback } from "~/pages/chat/FeedbackContext";
 
 export const Thread = () => (
   <ThreadPrimitive.Root
-    className="aui-root aui-thread-root @container flex h-full flex-col bg-(--color-bg)"
+    className="aui-root aui-thread-root @container flex flex-1 min-h-0 flex-col bg-(--color-bg)"
     style={{
       ["--thread-max-width" as string]: "42rem",
     }}
@@ -45,7 +43,7 @@ export const Thread = () => (
         }}
       />
 
-      <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mx-auto mt-auto flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible pb-6 md:pb-8">
+      <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mx-auto mt-auto flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-4">
         <ThreadScrollToBottom />
         <Composer />
       </ThreadPrimitive.ViewportFooter>
@@ -55,16 +53,21 @@ export const Thread = () => (
 
 const ThreadScrollToBottom = () => (
   <ThreadPrimitive.ScrollToBottom asChild>
-    <TooltipIconButton
-      tooltip="下にスクロール"
+    <Button
       variant="outline"
-      className="aui-thread-scroll-to-bottom absolute -top-14 z-10 self-center rounded-full p-3 disabled:invisible bg-(--color-surface) hover:bg-(--color-surface-hover) border border-(--color-border) transition-all duration-200 hover:scale-105"
-      style={{ boxShadow: "var(--shadow-card)" }}
+      size="icon-sm"
+      className="aui-thread-scroll-to-bottom absolute -top-10 right-0 z-10 rounded-full p-2 disabled:invisible bg-(--color-surface) hover:bg-(--color-surface-hover) border border-(--color-border) transition-all duration-200 hover:scale-105 opacity-80 hover:opacity-100"
+      style={{ boxShadow: "var(--shadow-sm)" }}
+      aria-label="下にスクロール"
     >
-      <ArrowDownIcon className="size-4" />
-    </TooltipIconButton>
+      <ArrowDownIcon className="size-3.5" />
+    </Button>
   </ThreadPrimitive.ScrollToBottom>
 );
+
+const isTouchDevice =
+  typeof window !== "undefined" &&
+  window.matchMedia("(pointer: coarse)").matches;
 
 const Composer = () => (
   <ComposerPrimitive.Root
@@ -73,12 +76,18 @@ const Composer = () => (
   >
     <ComposerPrimitive.Input
       placeholder="メッセージを入力..."
+      submitOnEnter={!isTouchDevice}
       className="aui-composer-input mb-1 max-h-36 min-h-[3.5rem] w-full resize-none rounded-2xl border border-(--color-border) bg-(--color-surface) px-5 pt-4 pb-3 pr-14 text-base text-(--color-text) outline-none placeholder:text-(--color-text-faint) focus:border-(--color-accent-light) transition-all duration-200"
       style={{
         boxShadow: "var(--shadow-sm)",
       }}
       onFocus={(e) => {
         e.currentTarget.style.boxShadow = "var(--shadow-input-focus)";
+        if (isTouchDevice) {
+          setTimeout(() => {
+            e.target.scrollIntoView({ behavior: "smooth", block: "end" });
+          }, 300);
+        }
       }}
       onBlur={(e) => {
         e.currentTarget.style.boxShadow = "var(--shadow-sm)";
@@ -197,21 +206,11 @@ const FeedbackButtons = () => {
 const AssistantActionBar = () => (
   <ActionBarPrimitive.Root
     hideWhenRunning
-    className="aui-assistant-action-bar-root flex gap-0.5 text-(--color-text-faint)"
+    className="aui-assistant-action-bar-root flex items-center gap-1.5 text-(--color-text-faint)"
   >
-    <ActionBarPrimitive.Copy asChild>
-      <TooltipIconButton
-        tooltip="コピー"
-        className="hover:text-(--color-accent) transition-colors duration-150"
-      >
-        <AssistantIf condition={({ message }) => message.isCopied}>
-          <CheckIcon className="size-3.5 text-(--color-success)" />
-        </AssistantIf>
-        <AssistantIf condition={({ message }) => !message.isCopied}>
-          <CopyIcon className="size-3.5" />
-        </AssistantIf>
-      </TooltipIconButton>
-    </ActionBarPrimitive.Copy>
+    <span className="text-xs text-(--color-text-muted)">
+      この回答は役に立ちましたか？
+    </span>
     <FeedbackButtons />
   </ActionBarPrimitive.Root>
 );
