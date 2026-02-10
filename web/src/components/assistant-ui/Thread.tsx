@@ -11,10 +11,8 @@ import {
 } from "@assistant-ui/react";
 import {
   ArrowDownIcon,
-  CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  CopyIcon,
   LightbulbIcon,
   SendIcon,
   SquareIcon,
@@ -208,21 +206,11 @@ const FeedbackButtons = () => {
 const AssistantActionBar = () => (
   <ActionBarPrimitive.Root
     hideWhenRunning
-    className="aui-assistant-action-bar-root flex gap-0.5 text-(--color-text-faint)"
+    className="aui-assistant-action-bar-root flex items-center gap-1.5 text-(--color-text-faint)"
   >
-    <ActionBarPrimitive.Copy asChild>
-      <TooltipIconButton
-        tooltip="コピー"
-        className="hover:text-(--color-accent) transition-colors duration-150"
-      >
-        <AssistantIf condition={({ message }) => message.isCopied}>
-          <CheckIcon className="size-3.5 text-(--color-success)" />
-        </AssistantIf>
-        <AssistantIf condition={({ message }) => !message.isCopied}>
-          <CopyIcon className="size-3.5" />
-        </AssistantIf>
-      </TooltipIconButton>
-    </ActionBarPrimitive.Copy>
+    <span className="text-xs text-(--color-text-muted)">
+      この回答は役に立ちましたか？
+    </span>
     <FeedbackButtons />
   </ActionBarPrimitive.Root>
 );
