@@ -173,22 +173,22 @@ export const ChatPage = () => {
       {/* サイドバー */}
       <aside
         className={cn(
-          "fixed md:relative z-20 w-72 h-full bg-(--color-surface) border-r border-(--color-border)/80 flex flex-col",
+          "fixed md:relative z-20 w-[280px] h-full bg-(--color-surface) border-r border-(--color-border) flex flex-col",
           "transition-transform duration-200 ease-out",
           isSidebarOpen
             ? "translate-x-0"
             : "-translate-x-full md:translate-x-0 md:hidden",
         )}
       >
-        <div className="p-4 border-b border-(--color-border)/60">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-semibold text-(--color-text-secondary) tracking-wide">
+        <div className="flex flex-col gap-3 p-4 border-b border-(--color-border)">
+          <div className="flex items-center justify-between">
+            <span className="text-base font-semibold text-(--color-text)">
               スレッド
             </span>
             <button
               type="button"
               onClick={() => setIsSidebarOpen(false)}
-              className="p-1.5 hover:bg-(--color-surface-hover) rounded-lg transition-all duration-150 hover:scale-105"
+              className="p-1.5 hover:bg-(--color-surface-hover) rounded-sm transition-colors md:hidden"
               aria-label="閉じる"
             >
               <XMarkIcon
@@ -202,14 +202,13 @@ export const ChatPage = () => {
             onClick={handleNewThread}
             disabled={createThreadMutation.isPending}
             className={cn(
-              "w-full py-3 rounded-xl text-sm font-medium transition-all duration-200",
+              "w-full rounded-sm text-sm font-medium transition-colors",
               "bg-(--color-accent) text-white",
-              "hover:bg-(--color-accent-hover) hover:scale-[1.02]",
-              "active:scale-[0.98]",
-              "disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100",
+              "hover:bg-(--color-accent-hover)",
+              "disabled:opacity-60 disabled:cursor-not-allowed",
               "flex items-center justify-center gap-2",
             )}
-            style={{ boxShadow: "var(--shadow-sm)" }}
+            style={{ padding: "10px 16px" }}
           >
             {createThreadMutation.isPending ? (
               <LoadingDots size="sm" />
@@ -222,24 +221,24 @@ export const ChatPage = () => {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-3 px-2">
+        <nav className="flex-1 overflow-y-auto p-2 flex flex-col gap-0.5">
           {threads.map((thread: ThreadType) => {
             const isSelected = thread.id === currentThreadId;
             return (
               <div
                 key={thread.id}
                 className={cn(
-                  "group relative flex items-center rounded-xl mb-1 transition-all duration-150",
-                  "hover:bg-(--color-surface-hover)",
+                  "group relative rounded-sm transition-colors",
                   isSelected
-                    ? "bg-(--color-accent-subtle)/50 border-l-[3px] border-(--color-accent)"
-                    : "border-l-[3px] border-transparent",
+                    ? "bg-(--color-surface-hover)"
+                    : "hover:bg-(--color-surface-hover)",
                 )}
               >
                 <button
                   type="button"
                   onClick={() => handleSelectThread(thread.id)}
-                  className="flex-1 min-w-0 px-3 py-3 text-left"
+                  className="w-full min-w-0 text-left flex flex-col gap-1"
+                  style={{ padding: "10px 16px" }}
                 >
                   <div
                     className={cn(
@@ -251,7 +250,7 @@ export const ChatPage = () => {
                   >
                     {thread.title ?? "新しい会話"}
                   </div>
-                  <div className="text-xs text-(--color-text-faint) mt-1">
+                  <div className="text-xs text-(--color-text-faint)">
                     {new Date(thread.updatedAt).toLocaleDateString("ja-JP")}
                   </div>
                 </button>
@@ -262,7 +261,7 @@ export const ChatPage = () => {
                     setThreadToDelete(thread.id);
                   }}
                   className={cn(
-                    "shrink-0 p-1.5 mr-2 rounded-lg transition-all duration-150",
+                    "absolute top-2 right-2 p-1.5 rounded-sm transition-all duration-150",
                     "hover:bg-red-100 hover:text-red-600",
                     "text-(--color-text-muted)",
                     isSelected
@@ -271,7 +270,7 @@ export const ChatPage = () => {
                   )}
                   aria-label="スレッドを削除"
                 >
-                  <TrashIcon className="w-4 h-4" />
+                  <TrashIcon className="w-3.5 h-3.5" />
                 </button>
               </div>
             );
@@ -284,7 +283,7 @@ export const ChatPage = () => {
         <header
           className={cn(
             "sticky top-0 z-10 bg-(--color-surface) px-4 md:px-6 flex flex-col shrink-0 transition-colors",
-            !isAdmin && "border-b border-(--color-border)/60",
+            !isAdmin && "border-b border-(--color-border)",
           )}
           style={{ boxShadow: isAdmin ? "none" : "var(--shadow-xs)" }}
         >
@@ -311,14 +310,14 @@ export const ChatPage = () => {
           <div
             className={cn(
               "h-12 md:h-14 flex items-center justify-between",
-              isAdmin && "border-b border-(--color-border)/60",
+              isAdmin && "border-b border-(--color-border)",
             )}
           >
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="p-2 -ml-2 hover:bg-(--color-surface-hover) rounded-xl transition-all duration-150 hover:scale-105"
+                className="p-2 -ml-2 hover:bg-(--color-surface-hover) rounded-sm transition-colors"
                 aria-label="メニュー"
               >
                 <Bars3Icon
