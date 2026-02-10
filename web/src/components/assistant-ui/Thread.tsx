@@ -66,6 +66,10 @@ const ThreadScrollToBottom = () => (
   </ThreadPrimitive.ScrollToBottom>
 );
 
+const isTouchDevice =
+  typeof window !== "undefined" &&
+  window.matchMedia("(pointer: coarse)").matches;
+
 const Composer = () => (
   <ComposerPrimitive.Root
     className="aui-composer-root relative flex w-full flex-col"
@@ -73,6 +77,7 @@ const Composer = () => (
   >
     <ComposerPrimitive.Input
       placeholder="メッセージを入力..."
+      submitOnEnter={!isTouchDevice}
       className="aui-composer-input mb-1 max-h-36 min-h-[3.5rem] w-full resize-none rounded-2xl border border-(--color-border) bg-(--color-surface) px-5 pt-4 pb-3 pr-14 text-base text-(--color-text) outline-none placeholder:text-(--color-text-faint) focus:border-(--color-accent-light) transition-all duration-200"
       style={{
         boxShadow: "var(--shadow-sm)",
