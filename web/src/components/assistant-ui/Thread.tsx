@@ -58,10 +58,10 @@ const ThreadScrollToBottom = () => (
     <TooltipIconButton
       tooltip="下にスクロール"
       variant="outline"
-      className="aui-thread-scroll-to-bottom absolute -top-14 z-10 self-center rounded-full p-3 disabled:invisible bg-(--color-surface) hover:bg-(--color-surface-hover) border border-(--color-border) transition-all duration-200 hover:scale-105"
-      style={{ boxShadow: "var(--shadow-card)" }}
+      className="aui-thread-scroll-to-bottom absolute -top-10 right-0 z-10 rounded-full p-2 disabled:invisible bg-(--color-surface) hover:bg-(--color-surface-hover) border border-(--color-border) transition-all duration-200 hover:scale-105 opacity-80 hover:opacity-100"
+      style={{ boxShadow: "var(--shadow-sm)" }}
     >
-      <ArrowDownIcon className="size-4" />
+      <ArrowDownIcon className="size-3.5" />
     </TooltipIconButton>
   </ThreadPrimitive.ScrollToBottom>
 );
