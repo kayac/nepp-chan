@@ -55,14 +55,15 @@ export const Thread = () => (
 
 const ThreadScrollToBottom = () => (
   <ThreadPrimitive.ScrollToBottom asChild>
-    <TooltipIconButton
-      tooltip="下にスクロール"
+    <Button
       variant="outline"
+      size="icon-sm"
       className="aui-thread-scroll-to-bottom absolute -top-10 right-0 z-10 rounded-full p-2 disabled:invisible bg-(--color-surface) hover:bg-(--color-surface-hover) border border-(--color-border) transition-all duration-200 hover:scale-105 opacity-80 hover:opacity-100"
       style={{ boxShadow: "var(--shadow-sm)" }}
+      aria-label="下にスクロール"
     >
       <ArrowDownIcon className="size-3.5" />
-    </TooltipIconButton>
+    </Button>
   </ThreadPrimitive.ScrollToBottom>
 );
 
