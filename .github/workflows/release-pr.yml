@@ -50,19 +50,10 @@ jobs:
 
           # PR本文を生成
           if [ -n "$PR_NUMBERS" ]; then
-            PR_LIST=$(echo "$PR_NUMBERS" | tr '\n' ' ')
-            BODY="## 含まれるPR
-
-          ${PR_LIST}"
+            BODY=$(echo "$PR_NUMBERS" | tr '\n' ' ')
           else
-            COMMITS=$(git log origin/main..origin/develop --pretty=format:"- %h %s" 2>/dev/null || echo "")
-            BODY="## コミット
-
-          ${COMMITS}"
+            BODY=$(git log origin/main..origin/develop --pretty=format:"- %h %s" 2>/dev/null || echo "")
           fi
-
-          # インデントを除去
-          BODY=$(echo "$BODY" | sed 's/^[[:space:]]*//')
 
           # 既存のリリースPRを探す（base=main, head=develop で一意に特定）
           PR_NUMBER=$(gh pr list --base main --head develop --json number --jq '.[0].number' 2>/dev/null || echo "")
