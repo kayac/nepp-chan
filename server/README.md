@@ -65,15 +65,15 @@ curl http://localhost:8787/health
 ```bash
 curl -X POST http://localhost:8787/chat \
   -H "Content-Type: application/json" \
-  -d '{"message": "こんにちは！"}'
-```
-
-オプションパラメータ付き：
-
-```bash
-curl -X POST http://localhost:8787/chat \
-  -H "Content-Type: application/json" \
-  -d '{"message": "こんにちは！", "resourceId": "user-123", "threadId": "thread-abc"}'
+  -d '{
+    "message": {
+      "id": "msg-1",
+      "role": "user",
+      "parts": [{"type": "text", "text": "こんにちは！"}]
+    },
+    "resourceId": "user-123",
+    "threadId": "thread-abc"
+  }'
 ```
 
 ### スレッド一覧取得
@@ -235,11 +235,19 @@ pnpm knowledge:upload --clean --file=mayor-interview.md
 
 ### 管理API
 
-| パス                           | メソッド | 説明                     |
-| ------------------------------ | -------- | ------------------------ |
-| `/admin/knowledge/upsert`      | POST     | ベクトルデータをupsert   |
-| `/admin/knowledge`             | DELETE   | 全ナレッジを削除         |
-| `/admin/knowledge/:source`     | DELETE   | 特定ソース（ファイル）を削除 |
+| パス                             | メソッド | 説明                           |
+| -------------------------------- | -------- | ------------------------------ |
+| `/admin/knowledge`               | DELETE   | 全ナレッジを削除               |
+| `/admin/knowledge/sync`          | POST     | 全ナレッジを同期               |
+| `/admin/knowledge/files`         | GET      | ファイル一覧取得               |
+| `/admin/knowledge/files/:key`    | GET      | ファイル内容取得               |
+| `/admin/knowledge/files/:key`    | PUT      | ファイル保存                   |
+| `/admin/knowledge/files/:key`    | DELETE   | ファイル削除                   |
+| `/admin/knowledge/upload`        | POST     | Markdown アップロード          |
+| `/admin/knowledge/convert`       | POST     | 画像/PDF → Markdown 変換       |
+| `/admin/knowledge/unified`       | GET      | 統合ファイル一覧取得           |
+| `/admin/knowledge/originals/:key`| GET      | 元ファイル取得                 |
+| `/admin/knowledge/reconvert`     | POST     | 元ファイルから Markdown 再生成 |
 
 **認証**: パスキー認証でログインしたセッションが必要です。ダッシュボード（`/dashboard`）からログイン後、管理機能を利用できます。
 
