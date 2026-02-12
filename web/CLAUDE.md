@@ -36,9 +36,6 @@ web/
 │   │   │       ├── ChartToolUI.tsx
 │   │   │       ├── DataTableToolUI.tsx
 │   │   │       ├── TimelineToolUI.tsx
-│   │   │       ├── WeatherToolUI.tsx
-│   │   │       ├── GoogleSearchToolUI.tsx
-│   │   │       ├── KnowledgeSearchToolUI.tsx
 │   │   │       └── ChoiceButtonsToolUI.tsx
 │   │   └── ui/                # shadcn/ui ベース共通コンポーネント
 │   │       ├── button.tsx
