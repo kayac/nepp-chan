@@ -74,15 +74,15 @@ server/src/
 
 ### nep-chan（動的生成）
 
-メインキャラクター「ねっぷちゃん」は `createNepChanAgent({ isAdmin })` で動的に生成される。
+メインキャラクター「ねっぷちゃん」は `createNeppChanAgent({ isAdmin })` で動的に生成される。
 
 - **一般ユーザー**: 基本機能のみ（天気、Web検索、ナレッジ、緊急報告）
 - **管理者**: 基本機能 + 管理者専用エージェント（emergency, feedback, persona-analyst）
 
 ```typescript
-import { createNepChanAgent } from "~/mastra/agents/nepp-chan-agent";
+import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 
-const agent = createNepChanAgent({ isAdmin: true });
+const agent = createNeppChanAgent({ isAdmin: true });
 ```
 
 ### エージェント一覧
