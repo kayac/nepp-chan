@@ -11,7 +11,7 @@
     "server:dev": "dotenvx run -fk .env.keys -f server/.env -- pnpm --filter @nepp-chan/server dev",
     "server:deploy": "pnpm --filter @nepp-chan/server run deploy",
     "server:deploy:production": "pnpm --filter @nepp-chan/server run deploy:production",
-    "web:dev": "dotenvx run -fk .env.keys -f web/.env -- pnpm --filter @nepp-chan/web dev",
+    "web:dev": "pnpm --filter @nepp-chan/web dev",
     "web:build": "pnpm --filter @nepp-chan/web build",
     "web:deploy": "dotenvx run -fk .env.keys -f web/.env -- pnpm --filter @nepp-chan/web run deploy",
     "web:deploy:production": "dotenvx run -fk .env.keys -f web/.env.production -- pnpm --filter @nepp-chan/web run deploy:production",
