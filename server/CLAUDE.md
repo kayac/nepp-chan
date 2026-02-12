@@ -87,42 +87,41 @@ const agent = createNeppChanAgent({ isAdmin: true });
 
 ### エージェント一覧
 
-| ID                     | 説明                                   | モデル           |
-| ---------------------- | -------------------------------------- | ---------------- |
-| `nep-chan`             | メインキャラクター（ねっぷちゃん）     | gemini-2.5-flash |
-| `weather-agent`        | 天気情報取得                           | gemini-2.5-flash |
-| `web-researcher`       | Web 検索（Google Grounding）           | gemini-2.5-flash |
-| `village-info`         | 村情報提供                             | gemini-2.5-flash |
-| `emergency-reporter`   | 緊急事態報告（一般ユーザー）           | gemini-2.5-flash |
-| `emergency`            | 緊急報告取得（管理者専用）             | gemini-2.5-flash |
-| `feedback`             | フィードバック分析（管理者専用）       | gemini-2.5-flash |
-| `persona`              | ペルソナ保存                           | gemini-2.5-flash |
-| `persona-analyst`      | ペルソナ分析（管理者専用）             | gemini-2.5-flash |
-| `knowledge-agent`      | RAG ナレッジ検索                       | gemini-2.5-flash |
-| `document-converter`   | 画像/PDF → Markdown 変換               | gemini-2.5-pro   |
+| ID                         | 説明                               |
+| -------------------------- | ---------------------------------- |
+| `nep-chan`                 | メインキャラクター（ねっぷちゃん） |
+| `weather-agent`            | 天気情報取得                       |
+| `web-researcher`           | Web 検索（Google Grounding）       |
+| `emergency-reporter-agent` | 緊急事態報告（一般ユーザー）       |
+| `emergency-agent`          | 緊急報告取得（管理者専用）         |
+| `feedback-agent`           | フィードバック分析（管理者専用）   |
+| `persona-agent`            | ペルソナ保存                       |
+| `persona-analyst-agent`    | ペルソナ分析（管理者専用）         |
+| `knowledge-agent`          | RAG ナレッジ検索                   |
+| `document-converter`       | 画像/PDF → Markdown 変換           |
 
 ## Mastra ツール
 
-| ツール名               | 説明                                   |
-| ---------------------- | -------------------------------------- |
-| `weatherTool`          | Open-Meteo API で天気取得              |
-| `searchGoogleTool`     | Google Custom Search                   |
-| `devTool`              | Working Memory 表示（デバッグ）        |
-| `displayChartTool`     | グラフ表示（line/bar/pie）             |
-| `displayTableTool`     | テーブル表示                           |
-| `displayTimelineTool`  | タイムライン表示                       |
-| `personaGetTool`       | 村の集合知検索（管理者専用）           |
-| `personaSaveTool`      | ペルソナ保存                           |
-| `personaUpdateTool`    | ペルソナ更新                           |
-| `personaAggregateTool` | ペルソナ集計（管理者専用）             |
-| `adminPersonaTool`     | ペルソナ一覧・統計取得（管理者専用）   |
-| `emergencyReportTool`  | 緊急情報記録                           |
-| `emergencyUpdateTool`  | 緊急情報更新                           |
-| `emergencyGetTool`     | 緊急情報取得（管理者専用）             |
-| `adminEmergencyTool`   | 緊急報告一覧取得（管理者専用）         |
-| `adminFeedbackTool`    | フィードバック一覧・統計（管理者専用） |
-| `villageSearchTool`    | 村検索                                 |
-| `knowledgeSearchTool`  | RAG ナレッジ検索（Vectorize）          |
+| ツール名（変数名）       | ツール ID            | 説明                                   |
+| ------------------------ | -------------------- | -------------------------------------- |
+| `weatherTool`            | `get-weather`        | Open-Meteo API で天気取得              |
+| `searchGoogleTool`       | `searchGoogleTool`   | Google Custom Search                   |
+| `devTool`                | `dev-tool`           | Working Memory 表示（デバッグ）        |
+| `displayChartTool`       | `display-chart`      | グラフ表示（line/bar/pie）             |
+| `displayTableTool`       | `display-table`      | テーブル表示                           |
+| `displayTimelineTool`    | `display-timeline`   | タイムライン表示                       |
+| `personaGetTool`         | `persona-get`        | 村の集合知検索（管理者専用）           |
+| `personaSaveTool`        | `persona-save`       | ペルソナ保存                           |
+| `personaUpdateTool`      | `persona-update`     | ペルソナ更新                           |
+| `personaAggregateTool`   | `persona-aggregate`  | ペルソナ集計（管理者専用）             |
+| `adminPersonaTool`       | `admin-persona`      | ペルソナ一覧・統計取得（管理者専用）   |
+| `emergencyReportTool`    | `emergency-report`   | 緊急情報記録                           |
+| `emergencyUpdateTool`    | `emergency-update`   | 緊急情報更新                           |
+| `emergencyGetTool`       | `emergency-get`      | 緊急情報取得（管理者専用）             |
+| `adminEmergencyTool`     | `admin-emergency`    | 緊急報告一覧取得（管理者専用）         |
+| `adminFeedbackTool`      | `admin-feedback`     | フィードバック一覧・統計（管理者専用） |
+| `villageSearchTool`      | `villageSearchTool`  | 村検索                                 |
+| `knowledgeSearchTool`    | `knowledge-search`   | RAG ナレッジ検索（Vectorize）          |
 
 ## コーディング規約
 
