@@ -15,7 +15,6 @@ export type InvitationsResponse = {
 };
 
 export type CreateInvitationResponse = {
-  success: boolean;
   invitation: { token: string };
 };
 

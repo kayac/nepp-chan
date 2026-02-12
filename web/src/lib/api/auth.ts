@@ -32,7 +32,6 @@ type AuthMeResponse = {
 };
 
 type AuthVerifyResponse = {
-  success: boolean;
   token: string;
   user: AdminUser;
 };
@@ -48,7 +47,9 @@ export const fetchRegisterOptions = async (
 
   if (!res.ok) {
     const data = await res.json();
-    throw new Error(data.error || "登録オプションの取得に失敗しました");
+    throw new Error(
+      data.error?.message || "登録オプションの取得に失敗しました",
+    );
   }
 
   return res.json();
@@ -67,7 +68,7 @@ export const verifyRegistration = async (params: {
 
   if (!res.ok) {
     const data = await res.json();
-    throw new Error(data.error || "登録に失敗しました");
+    throw new Error(data.error?.message || "登録に失敗しました");
   }
 
   return res.json();
@@ -80,7 +81,9 @@ export const fetchLoginOptions = async (): Promise<LoginOptionsResponse> => {
 
   if (!res.ok) {
     const data = await res.json();
-    throw new Error(data.error || "ログインオプションの取得に失敗しました");
+    throw new Error(
+      data.error?.message || "ログインオプションの取得に失敗しました",
+    );
   }
 
   return res.json();
@@ -98,7 +101,7 @@ export const verifyLogin = async (params: {
 
   if (!res.ok) {
     const data = await res.json();
-    throw new Error(data.error || "認証に失敗しました");
+    throw new Error(data.error?.message || "認証に失敗しました");
   }
 
   return res.json();

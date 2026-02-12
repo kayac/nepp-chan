@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 
+import { errorResponse } from "~/lib/openapi-errors";
 import { sessionAuth } from "~/middleware/session-auth";
 import {
   convertAndUpload,
@@ -24,15 +25,8 @@ knowledgeAdminRoutes.use("*", sessionAuth);
 
 // スキーマ定義
 const SuccessResponseSchema = z.object({
-  success: z.boolean(),
   message: z.string(),
   count: z.number().optional(),
-});
-
-const ErrorResponseSchema = z.object({
-  success: z.boolean(),
-  message: z.string(),
-  error: z.string().optional(),
 });
 
 const FileInfoSchema = z.object({
@@ -116,25 +110,21 @@ const deleteAllRoute = createRoute({
       description: "削除成功",
       content: { "application/json": { schema: SuccessResponseSchema } },
     },
-    401: {
-      description: "認証エラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    500: {
-      description: "サーバーエラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
+    401: errorResponse(401),
+    500: errorResponse(500),
   },
 });
 
 knowledgeAdminRoutes.openapi(deleteAllRoute, async (c) => {
   try {
     const result = await deleteAllKnowledge(c.env.VECTORIZE);
-    return c.json({
-      success: true,
-      message: `${result.deleted}件のベクトルを削除しました`,
-      count: result.deleted,
-    });
+    return c.json(
+      {
+        message: `${result.deleted}件のベクトルを削除しました`,
+        count: result.deleted,
+      },
+      200,
+    );
   } catch (error) {
     console.error("Vectorize delete error:", error);
     throw new HTTPException(500, {
@@ -158,7 +148,6 @@ const syncAllRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             message: z.string(),
             results: z.array(
               z.object({
@@ -173,14 +162,8 @@ const syncAllRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    500: {
-      description: "サーバーエラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
+    401: errorResponse(401),
+    500: errorResponse(500),
   },
 });
 
@@ -194,12 +177,14 @@ knowledgeAdminRoutes.openapi(syncAllRoute, async (c) => {
       apiKey,
     });
 
-    return c.json({
-      success: true,
-      message: `${result.totalFiles}ファイル、${result.totalChunks}チャンクを同期しました`,
-      results: result.results,
-      editedCount: result.editedCount,
-    });
+    return c.json(
+      {
+        message: `${result.totalFiles}ファイル、${result.totalChunks}チャンクを同期しました`,
+        results: result.results,
+        editedCount: result.editedCount,
+      },
+      200,
+    );
   } catch (error) {
     console.error("Sync error:", error);
     throw new HTTPException(500, {
@@ -220,14 +205,8 @@ const listFilesRoute = createRoute({
       description: "ファイル一覧",
       content: { "application/json": { schema: FilesListResponseSchema } },
     },
-    401: {
-      description: "認証エラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    500: {
-      description: "サーバーエラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
+    401: errorResponse(401),
+    500: errorResponse(500),
   },
 });
 
@@ -256,18 +235,9 @@ const getFileRoute = createRoute({
       description: "ファイル内容",
       content: { "application/json": { schema: FileContentResponseSchema } },
     },
-    401: {
-      description: "認証エラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    404: {
-      description: "ファイルが見つかりません",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    500: {
-      description: "サーバーエラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
+    401: errorResponse(401),
+    404: errorResponse(404),
+    500: errorResponse(500),
   },
 });
 
@@ -308,21 +278,15 @@ const saveFileRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             message: z.string(),
             chunks: z.number(),
           }),
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    500: {
-      description: "サーバーエラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
+    400: errorResponse(400),
+    401: errorResponse(401),
+    500: errorResponse(500),
   },
 });
 
@@ -346,7 +310,6 @@ knowledgeAdminRoutes.openapi(saveFileRoute, async (c) => {
 
     return c.json(
       {
-        success: true,
         message: `ファイルを保存し、${result.chunks}チャンクを同期しました`,
         chunks: result.chunks,
       },
@@ -375,14 +338,8 @@ const deleteFileRoute = createRoute({
       description: "削除成功",
       content: { "application/json": { schema: SuccessResponseSchema } },
     },
-    401: {
-      description: "認証エラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    500: {
-      description: "サーバーエラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
+    401: errorResponse(401),
+    500: errorResponse(500),
   },
 });
 
@@ -393,10 +350,7 @@ knowledgeAdminRoutes.openapi(deleteFileRoute, async (c) => {
   try {
     await deleteFile(c.env.KNOWLEDGE_BUCKET, c.env.VECTORIZE, key);
     const baseName = key.replace(/\.md$/, "");
-    return c.json(
-      { success: true, message: `${baseName} を完全に削除しました` },
-      200,
-    );
+    return c.json({ message: `${baseName} を完全に削除しました` }, 200);
   } catch (error) {
     if (error instanceof HTTPException) throw error;
     console.error("Delete file error:", error);
@@ -432,7 +386,6 @@ const uploadFileRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             message: z.string(),
             key: z.string(),
             chunks: z.number(),
@@ -440,18 +393,9 @@ const uploadFileRoute = createRoute({
         },
       },
     },
-    400: {
-      description: "リクエストエラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    401: {
-      description: "認証エラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    500: {
-      description: "サーバーエラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
+    400: errorResponse(400),
+    401: errorResponse(401),
+    500: errorResponse(500),
   },
 });
 
@@ -477,7 +421,6 @@ knowledgeAdminRoutes.openapi(uploadFileRoute, async (c) => {
 
     return c.json(
       {
-        success: true,
         message: `ファイルをアップロードし、${result.chunks}チャンクを同期しました`,
         key: result.key,
         chunks: result.chunks,
@@ -521,7 +464,6 @@ const convertFileRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             message: z.string(),
             key: z.string(),
             originalType: z.string(),
@@ -530,18 +472,9 @@ const convertFileRoute = createRoute({
         },
       },
     },
-    400: {
-      description: "リクエストエラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    401: {
-      description: "認証エラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    500: {
-      description: "サーバーエラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
+    400: errorResponse(400),
+    401: errorResponse(401),
+    500: errorResponse(500),
   },
 });
 
@@ -570,7 +503,6 @@ knowledgeAdminRoutes.openapi(convertFileRoute, async (c) => {
 
     return c.json(
       {
-        success: true,
         message: `ファイルを変換し、${result.chunks}チャンクを同期しました`,
         key: result.key,
         originalType: result.originalType,
@@ -602,14 +534,8 @@ const listUnifiedFilesRoute = createRoute({
         "application/json": { schema: UnifiedFilesListResponseSchema },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    500: {
-      description: "サーバーエラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
+    401: errorResponse(401),
+    500: errorResponse(500),
   },
 });
 
@@ -636,18 +562,9 @@ const getOriginalFileRoute = createRoute({
   request: { params: FileKeyParamSchema },
   responses: {
     200: { description: "元ファイル（バイナリ）" },
-    401: {
-      description: "認証エラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    404: {
-      description: "ファイルが見つかりません",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    500: {
-      description: "サーバーエラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
+    401: errorResponse(401),
+    404: errorResponse(404),
+    500: errorResponse(500),
   },
 });
 
@@ -707,7 +624,6 @@ const reconvertFileRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             message: z.string(),
             key: z.string(),
             chunks: z.number(),
@@ -715,22 +631,9 @@ const reconvertFileRoute = createRoute({
         },
       },
     },
-    400: {
-      description: "リクエストエラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    401: {
-      description: "認証エラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    404: {
-      description: "元ファイルが見つかりません",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    500: {
-      description: "サーバーエラー",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
+    400: errorResponse(400),
+    401: errorResponse(401),
+    500: errorResponse(500),
   },
 });
 
@@ -754,7 +657,6 @@ knowledgeAdminRoutes.openapi(reconvertFileRoute, async (c) => {
 
     return c.json(
       {
-        success: true,
         message: `ファイルを再変換し、${result.chunks}チャンクを同期しました`,
         key: result.key,
         chunks: result.chunks,

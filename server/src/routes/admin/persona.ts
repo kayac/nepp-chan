@@ -3,6 +3,7 @@ import { and, count, desc, eq, lt, or, type SQL } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
 import { createDb, mastraThreads, persona, threadPersonaStatus } from "~/db";
+import { errorResponse } from "~/lib/openapi-errors";
 import { sessionAuth } from "~/middleware/session-auth";
 import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
 import {
@@ -57,17 +58,7 @@ const listRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
+    401: errorResponse(401),
   },
 });
 
@@ -141,24 +132,14 @@ const extractAllRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             message: z.string(),
             results: z.array(ExtractResultSchema),
           }),
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
+    401: errorResponse(401),
+    500: errorResponse(500),
   },
 });
 
@@ -173,11 +154,13 @@ personaAdminRoutes.openapi(extractAllRoute, async (c) => {
       (r) => "skipped" in r.result && r.result.skipped,
     ).length;
 
-    return c.json({
-      success: true,
-      message: `${extracted}件のスレッドからペルソナを抽出しました、${skipped}件スキップ`,
-      results,
-    });
+    return c.json(
+      {
+        message: `${extracted}件のスレッドからペルソナを抽出しました、${skipped}件スキップ`,
+        results,
+      },
+      200,
+    );
   } catch (error) {
     console.error("Persona extract error:", error);
     throw new HTTPException(500, {
@@ -204,35 +187,15 @@ const extractOneRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             message: z.string(),
             result: ExtractResultSchema.shape.result,
           }),
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
-    404: {
-      description: "スレッドが見つからない",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
+    401: errorResponse(401),
+    404: errorResponse(404),
+    500: errorResponse(500),
   },
 });
 
@@ -248,10 +211,7 @@ personaAdminRoutes.openapi(extractOneRoute, async (c) => {
       .get();
 
     if (!thread || !thread.resourceId) {
-      return c.json(
-        { success: false, message: "スレッドが見つかりません" },
-        404,
-      );
+      throw new HTTPException(404, { message: "スレッドが見つかりません" });
     }
 
     const status = await threadPersonaStatusRepository.findByThreadId(
@@ -280,11 +240,13 @@ personaAdminRoutes.openapi(extractOneRoute, async (c) => {
         ? `スレッド ${threadId} からペルソナを抽出しました`
         : `スレッド ${threadId} はスキップされました: ${result.reason}`;
 
-    return c.json({
-      success: true,
-      message,
-      result,
-    });
+    return c.json(
+      {
+        message,
+        result,
+      },
+      200,
+    );
   } catch (error) {
     console.error("Persona extract error:", error);
     throw new HTTPException(500, {
@@ -306,24 +268,14 @@ const deleteAllRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             message: z.string(),
             count: z.number(),
           }),
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
+    401: errorResponse(401),
+    500: errorResponse(500),
   },
 });
 
@@ -337,11 +289,13 @@ personaAdminRoutes.openapi(deleteAllRoute, async (c) => {
     await db.delete(persona);
     await db.delete(threadPersonaStatus);
 
-    return c.json({
-      success: true,
-      message: `${totalCount}件のペルソナを削除しました`,
-      count: totalCount,
-    });
+    return c.json(
+      {
+        message: `${totalCount}件のペルソナを削除しました`,
+        count: totalCount,
+      },
+      200,
+    );
   } catch (error) {
     console.error("Persona delete error:", error);
     throw new HTTPException(500, {

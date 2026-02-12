@@ -58,7 +58,6 @@ export type EmergenciesResponse = {
 };
 
 export type SyncResult = {
-  success: boolean;
   message: string;
   results?: {
     file: string;
@@ -70,7 +69,6 @@ export type SyncResult = {
 };
 
 export type DeleteResult = {
-  success: boolean;
   message: string;
   count?: number;
 };
@@ -98,20 +96,17 @@ export type FileContentResponse = {
 };
 
 export type SaveFileResponse = {
-  success: boolean;
   message: string;
   chunks: number;
 };
 
 export type UploadFileResponse = {
-  success: boolean;
   message: string;
   key: string;
   chunks: number;
 };
 
 export type ConvertFileResponse = {
-  success: boolean;
   message: string;
   key: string;
   originalType: string;
@@ -141,7 +136,6 @@ export type UnifiedFilesListResponse = {
 };
 
 export type ReconvertFileResponse = {
-  success: boolean;
   message: string;
   key: string;
   chunks: number;
@@ -196,7 +190,6 @@ export type FeedbackSubmitRequest = {
 };
 
 export type FeedbackSubmitResponse = {
-  success: boolean;
   id: string;
 };
 

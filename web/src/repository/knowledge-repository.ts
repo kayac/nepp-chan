@@ -72,7 +72,7 @@ export const uploadFile = async (
 
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.message || "アップロードに失敗しました");
+    throw new Error(data.error?.message || "アップロードに失敗しました");
   }
 
   return res.json();
@@ -96,7 +96,7 @@ export const convertFile = async (
 
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.message || "変換に失敗しました");
+    throw new Error(data.error?.message || "変換に失敗しました");
   }
 
   return res.json();

@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { convertMessages } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { HTTPException } from "hono/http-exception";
+import { errorResponse } from "~/lib/openapi-errors";
 import { getStorage } from "~/lib/storage";
 import { feedbackRepository } from "~/repository/feedback-repository";
 import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
@@ -170,6 +171,7 @@ const getThreadRoute = createRoute({
         },
       },
     },
+    404: errorResponse(404),
   },
 });
 
@@ -184,14 +186,17 @@ threadsRoutes.openapi(getThreadRoute, async (c) => {
     throw new HTTPException(404, { message: "Thread not found" });
   }
 
-  return c.json({
-    id: thread.id,
-    resourceId: thread.resourceId,
-    title: thread.title ?? null,
-    createdAt: thread.createdAt.toISOString(),
-    updatedAt: thread.updatedAt.toISOString(),
-    metadata: thread.metadata ?? null,
-  });
+  return c.json(
+    {
+      id: thread.id,
+      resourceId: thread.resourceId,
+      title: thread.title ?? null,
+      createdAt: thread.createdAt.toISOString(),
+      updatedAt: thread.updatedAt.toISOString(),
+      metadata: thread.metadata ?? null,
+    },
+    200,
+  );
 });
 
 // GET /threads/:threadId/messages - メッセージ履歴取得
@@ -217,6 +222,7 @@ const getMessagesRoute = createRoute({
         },
       },
     },
+    404: errorResponse(404),
   },
 });
 
@@ -246,7 +252,7 @@ threadsRoutes.openapi(getMessagesRoute, async (c) => {
     parts: msg.parts,
   }));
 
-  return c.json({ messages });
+  return c.json({ messages }, 200);
 });
 
 // DELETE /threads/:threadId - スレッド削除
@@ -267,14 +273,12 @@ const deleteThreadRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
+            message: z.string(),
           }),
         },
       },
     },
-    404: {
-      description: "スレッドが見つからない",
-    },
+    404: errorResponse(404),
   },
 });
 
@@ -293,5 +297,5 @@ threadsRoutes.openapi(deleteThreadRoute, async (c) => {
   await threadPersonaStatusRepository.delete(c.env.DB, threadId);
   await memory.deleteThread(threadId);
 
-  return c.json({ success: true });
+  return c.json({ message: "スレッドを削除しました" }, 200);
 });
