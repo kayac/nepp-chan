@@ -126,7 +126,7 @@ interface Props
   isAdmin?: boolean;
 }
 
-export const createNepChanAgent = ({
+export const createNeppChanAgent = ({
   isAdmin = false,
   ...agentOptions
 }: Props = {}) => {
@@ -173,6 +173,6 @@ export const createNepChanAgent = ({
 };
 
 // Playground 用（管理者モード）
-export const nepChanAgent = createNepChanAgent({
+export const neppChanAgent = createNeppChanAgent({
   isAdmin: true,
 });

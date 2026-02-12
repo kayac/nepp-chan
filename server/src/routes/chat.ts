@@ -5,7 +5,7 @@ import { createUIMessageStreamResponse, type UIMessage } from "ai";
 
 import { getTokenFromHeader } from "~/lib/auth-header";
 import { getStorage } from "~/lib/storage";
-import { createNepChanAgent } from "~/mastra/agents/nepp-chan-agent";
+import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { getUserFromSession } from "~/services/auth/session";
 
@@ -60,9 +60,9 @@ chatRoutes.openapi(chatRoute, async (c) => {
     ? await getUserFromSession(c.env.DB, sessionId)
     : null;
 
-  const nepChanAgent = createNepChanAgent({ isAdmin: !!adminUser });
+  const neppChanAgent = createNeppChanAgent({ isAdmin: !!adminUser });
   const mastra = new Mastra({
-    agents: { nepChanAgent },
+    agents: { neppChanAgent },
     storage,
   });
 
@@ -76,7 +76,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
   try {
     const stream = await handleChatStream({
       mastra,
-      agentId: "nepChanAgent",
+      agentId: "neppChanAgent",
       params: {
         messages: [message] as UIMessage[],
         requestContext,

@@ -37,9 +37,9 @@ app.route("/auth", authRoutes);
 app.doc("/doc", {
   openapi: "3.1.0",
   info: {
-    title: "AISS NEPCH API",
+    title: "AISS NEPPCHAN API",
     version: "1.0.0",
-    description: "AISS NEPCH バックエンド API",
+    description: "AISS NEPPCHAN バックエンド API",
   },
 });
 
