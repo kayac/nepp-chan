@@ -13,10 +13,10 @@
 
 ## 技術スタック
 
-- **フレームワーク**: Hono, Mastra (beta)
+- **フレームワーク**: Hono, Mastra
 - **ランタイム**: Cloudflare Workers / Pages
-- **AI**: Google Generative AI (Gemini 2.5)
-- **フロントエンド**: React 19, Vite, TailwindCSS
+- **AI**: Google Generative AI (Gemini)
+- **フロントエンド**: React, Vite, TailwindCSS
 - **データベース**: Cloudflare D1
 - **言語**: TypeScript
 
