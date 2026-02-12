@@ -1,8 +1,8 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { desc } from "drizzle-orm";
 
-import { createDb, emergencyReports } from "~/db";
+import { errorResponse } from "~/lib/openapi-errors";
 import { sessionAuth } from "~/middleware/session-auth";
+import { emergencyRepository } from "~/repository/emergency-repository";
 
 export const emergencyAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -42,30 +42,14 @@ const listRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
+    401: errorResponse(401),
   },
 });
 
 emergencyAdminRoutes.openapi(listRoute, async (c) => {
   const { limit } = c.req.valid("query");
-  const db = createDb(c.env.DB);
 
-  const results = await db
-    .select()
-    .from(emergencyReports)
-    .orderBy(desc(emergencyReports.reportedAt))
-    .limit(Number(limit))
-    .all();
+  const results = await emergencyRepository.findAll(c.env.DB, Number(limit));
 
   return c.json(
     {
