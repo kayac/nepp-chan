@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, count as drizzleCount, eq, sql } from "drizzle-orm";
 
 import {
   createDb,
@@ -143,6 +143,17 @@ export const feedbackRepository = {
       idea: ideaResult?.count ?? 0,
       byCategory,
     };
+  },
+
+  async count(d1: D1Database): Promise<number> {
+    const db = createDb(d1);
+
+    const result = await db
+      .select({ count: drizzleCount() })
+      .from(messageFeedback)
+      .get();
+
+    return result?.count ?? 0;
   },
 
   async deleteByThreadId(d1: D1Database, threadId: string) {

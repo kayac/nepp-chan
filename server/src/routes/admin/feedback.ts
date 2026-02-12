@@ -1,8 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { count } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
-import { createDb, messageFeedback } from "~/db";
 import { errorResponse } from "~/lib/openapi-errors";
 import { sessionAuth } from "~/middleware/session-auth";
 import { feedbackRepository } from "~/repository/feedback-repository";
@@ -67,7 +65,6 @@ const listRoute = createRoute({
 
 feedbackAdminRoutes.openapi(listRoute, async (c) => {
   const { limit, cursor, rating } = c.req.valid("query");
-  const db = createDb(c.env.DB);
   const limitNum = Number(limit);
 
   const result = await feedbackRepository.list(c.env.DB, {
@@ -77,16 +74,12 @@ feedbackAdminRoutes.openapi(listRoute, async (c) => {
   });
 
   const stats = await feedbackRepository.getStats(c.env.DB);
-
-  const countResult = await db
-    .select({ count: count() })
-    .from(messageFeedback)
-    .get();
+  const total = await feedbackRepository.count(c.env.DB);
 
   return c.json(
     {
       feedbacks: result.feedbacks,
-      total: countResult?.count ?? 0,
+      total,
       nextCursor: result.nextCursor,
       hasMore: result.hasMore,
       stats,
@@ -158,15 +151,8 @@ const deleteAllRoute = createRoute({
 });
 
 feedbackAdminRoutes.openapi(deleteAllRoute, async (c) => {
-  const db = createDb(c.env.DB);
-
   try {
-    const countResult = await db
-      .select({ count: count() })
-      .from(messageFeedback)
-      .get();
-    const totalCount = countResult?.count ?? 0;
-
+    const totalCount = await feedbackRepository.count(c.env.DB);
     await feedbackRepository.deleteAll(c.env.DB);
 
     return c.json(

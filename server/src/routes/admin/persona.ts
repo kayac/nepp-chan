@@ -1,14 +1,13 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { and, count, desc, eq, lt, or, type SQL } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
-import { createDb, mastraThreads, persona, threadPersonaStatus } from "~/db";
 import { errorResponse } from "~/lib/openapi-errors";
 import { sessionAuth } from "~/middleware/session-auth";
-import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
+import { personaRepository } from "~/repository/persona-repository";
 import {
+  deleteAllPersonas,
   extractAllPendingThreads,
-  extractPersonaFromThread,
+  extractPersonaFromThreadById,
 } from "~/services/persona-extractor";
 
 export const personaAdminRoutes = new OpenAPIHono<{
@@ -64,47 +63,11 @@ const listRoute = createRoute({
 
 personaAdminRoutes.openapi(listRoute, async (c) => {
   const { limit, cursor } = c.req.valid("query");
-  const db = createDb(c.env.DB);
-  const limitNum = Number(limit);
-
-  let cursorCondition: SQL | undefined;
-
-  if (cursor) {
-    const [cursorCreatedAt, cursorId] = cursor.split("_");
-    cursorCondition = or(
-      lt(persona.createdAt, cursorCreatedAt),
-      and(eq(persona.createdAt, cursorCreatedAt), lt(persona.id, cursorId)),
-    );
-  }
-
-  const results = await db
-    .select()
-    .from(persona)
-    .where(cursorCondition)
-    .orderBy(desc(persona.createdAt), desc(persona.id))
-    .limit(limitNum + 1)
-    .all();
-
-  const hasMore = results.length > limitNum;
-  const personas = hasMore ? results.slice(0, limitNum) : results;
-
-  const lastPersona = personas[personas.length - 1];
-  const nextCursor =
-    hasMore && lastPersona
-      ? `${lastPersona.createdAt}_${lastPersona.id}`
-      : null;
-
-  const countResult = await db.select({ count: count() }).from(persona).get();
-
-  return c.json(
-    {
-      personas,
-      total: countResult?.count ?? 0,
-      nextCursor,
-      hasMore,
-    },
-    200,
-  );
+  const result = await personaRepository.listForAdmin(c.env.DB, {
+    limit: Number(limit),
+    cursor: cursor ?? undefined,
+  });
+  return c.json(result, 200);
 });
 
 const ExtractResultSchema = z.object({
@@ -201,53 +164,15 @@ const extractOneRoute = createRoute({
 
 personaAdminRoutes.openapi(extractOneRoute, async (c) => {
   const { threadId } = c.req.valid("param");
-  const db = createDb(c.env.DB);
 
   try {
-    const thread = await db
-      .select({ resourceId: mastraThreads.resourceId })
-      .from(mastraThreads)
-      .where(eq(mastraThreads.id, threadId))
-      .get();
-
-    if (!thread || !thread.resourceId) {
-      throw new HTTPException(404, { message: "スレッドが見つかりません" });
-    }
-
-    const status = await threadPersonaStatusRepository.findByThreadId(
-      c.env.DB,
+    const { result, message } = await extractPersonaFromThreadById(
       threadId,
-    );
-    const lastMessageCount = status?.lastMessageCount ?? 0;
-
-    const result = await extractPersonaFromThread(
-      threadId,
-      thread.resourceId,
-      lastMessageCount,
       c.env,
     );
-
-    if ("extracted" in result && result.extracted) {
-      await threadPersonaStatusRepository.upsert(c.env.DB, {
-        threadId,
-        lastExtractedAt: new Date().toISOString(),
-        lastMessageCount: result.messageCount,
-      });
-    }
-
-    const message =
-      "extracted" in result
-        ? `スレッド ${threadId} からペルソナを抽出しました`
-        : `スレッド ${threadId} はスキップされました: ${result.reason}`;
-
-    return c.json(
-      {
-        message,
-        result,
-      },
-      200,
-    );
+    return c.json({ message, result }, 200);
   } catch (error) {
+    if (error instanceof HTTPException) throw error;
     console.error("Persona extract error:", error);
     throw new HTTPException(500, {
       message:
@@ -280,20 +205,10 @@ const deleteAllRoute = createRoute({
 });
 
 personaAdminRoutes.openapi(deleteAllRoute, async (c) => {
-  const db = createDb(c.env.DB);
-
   try {
-    const countResult = await db.select({ count: count() }).from(persona).get();
-    const totalCount = countResult?.count ?? 0;
-
-    await db.delete(persona);
-    await db.delete(threadPersonaStatus);
-
+    const { count } = await deleteAllPersonas(c.env.DB);
     return c.json(
-      {
-        message: `${totalCount}件のペルソナを削除しました`,
-        count: totalCount,
-      },
+      { message: `${count}件のペルソナを削除しました`, count },
       200,
     );
   } catch (error) {
