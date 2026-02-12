@@ -77,5 +77,6 @@ jobs:
               --head develop \
               --title "$TITLE" \
               --body "$BODY" \
-              --draft
+              --draft \
+              || true
           fi
