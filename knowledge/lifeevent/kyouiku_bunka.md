@@ -26,7 +26,7 @@
 
 彫刻家・砂澤ビッキのアトリエを公開しています。
 
-- [エコミュージアムおさしまセンター（外部サイト）](http://bikkyatelier3more.wix.com/atelier3more)
+- [エコミュージアムおさしまセンター（外部サイト）](https://bikkyatelier3more.wixsite.com/atelier3more)
 
 ### 高橋昭五郎彫刻の館
 

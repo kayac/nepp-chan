@@ -22,20 +22,19 @@
 ※時刻表や運行状況は季節ごとに変更されるため、必ず公式サイトで最新情報を確認してください。
 
 ### ✈️ 旭川空港からのアクセス
-- **フライト情報**: [旭川空港ターミナル 公式サイト](https://www.aapb.co.jp/flight_info/)
-- **バス（旭川空港⇔旭川駅）**: [旭川電気軌道 空港バス](https://www.asahikawa-denkikidou.jp/airport/)
+- **フライト情報**: [旭川空港ターミナル 公式サイト](https://www.hokkaido-airports.com/ja/asahikawa/)
+- **バス（旭川空港⇔旭川駅）**: [旭川電気軌道 空港バス](https://www.asahikawa-denkikidou.jp/asahikawa-airport/)
   - ※フライト発着に合わせて運行されます。
-- **レンタカー**: [旭川空港 レンタカー案内](https://www.aapb.co.jp/access_beg/rentacar/)
+- **レンタカー**: [旭川空港 レンタカー案内](https://www.hokkaido-airports.com/ja/asahikawa/access/rentacar/)
   - トヨタ、ニッポン、日産、オリックス、タイムズ等が空港内にカウンターあり。
 
 ### 🚃 JR特急（宗谷・サロベツ）
-- [JR北海道 駅別時刻表・路線図](https://jrhokkaido.co.jp/network/timetable/)
 - **旭川方面から（下り）**:
   - 特急宗谷: 旭川発 13:35頃 / 音威子府着 15:15頃（参考）
   - 特急サロベツ: 旭川発 午後 / 音威子府着（参考）
 - **稚内方面から（上り）**:
   - 音威子府発 旭川行きも1日3本運行
-  - ※[NAVITIME 音威子府駅時刻表](https://www.navitime.co.jp/diagram/depArrTimeList?code=00001859&line=00000109&updown=0) 参照
+  - ※最新の時刻表はJR北海道公式サイトをご確認ください
 
 ### 🚌 都市間バス
 - [宗谷バス 都市間バス案内](http://www.soyabus.co.jp/highway/)
