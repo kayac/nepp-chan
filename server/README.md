@@ -14,7 +14,6 @@ pnpm install
 
 ```bash
 cp .env.example .env
-cp wrangler.jsonc.example wrangler.jsonc
 ```
 
 ### wrangler 用環境変数

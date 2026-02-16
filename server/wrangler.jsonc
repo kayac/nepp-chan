@@ -4,7 +4,7 @@
  */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "account_id": "your-cloudflare-account-id",
+  "account_id": "51544998e04526c4d6cc9e3e08653361",
   "name": "nepp-chan-server-dev",
   "main": "src/index.ts",
   "compatibility_date": "2025-12-02",
@@ -16,7 +16,7 @@
     {
       "binding": "DB",
       "database_name": "nepp-chan-db-dev",
-      "database_id": "your-d1-database-id",
+      "database_id": "bd4f1aee-768d-4273-ab72-5aef42f1c199",
       "migrations_dir": "./src/db/migrations"
     }
   ],
@@ -64,7 +64,7 @@
         {
           "binding": "DB",
           "database_name": "nepp-chan-db-prd",
-          "database_id": "your-d1-database-id-production",
+          "database_id": "239abba6-e30a-4628-97fc-20bf49ca8404",
           "migrations_dir": "./src/db/migrations"
         }
       ],
