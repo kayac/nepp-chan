@@ -6,6 +6,9 @@ on:
     # 毎週月曜日 0:00 UTC (9:00 JST)
     - cron: "0 0 * * 1"
 
+permissions:
+  contents: read
+
 jobs:
   eval:
     name: Run Evaluation
@@ -28,5 +31,4 @@ jobs:
         working-directory: server
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          DOTENV_PRIVATE_KEY: ${{ secrets.DOTENV_PRIVATE_KEY }}
         run: pnpm eval:run
