@@ -63,33 +63,20 @@ const storage = new D1Store({ id: "mastra-storage", binding: db });
 await storage.init(); // 必須
 ```
 
-## 環境変数（dotenvx）
+## 環境変数
 
-dotenvx で暗号化。復号化には `.env.keys` が必要。
-
-```text
-/
-├── .env.keys              ← 復号化キー
-├── server/
-│   ├── .env               ← 開発環境
-│   └── .env.production    ← 本番環境
-└── web/
-    ├── .env               ← 開発環境
-    └── .env.production    ← 本番環境
-```
-
-### 運用
+`.env.example` をコピーして `.env` を作成。
 
 ```bash
-# 新しい変数を追加（自動で暗号化）
-npx dotenvx set NEW_VAR "value" -fk .env.keys -f server/.env
+# ルート
+cp .env.example .env
 
-# 復号化して確認
-npx dotenvx run -fk .env.keys -f server/.env -- printenv NEW_VAR
+# server
+cp server/.env.example server/.env
+cp server/wrangler.jsonc.example server/wrangler.jsonc
 
-# CI/CD では環境変数で復号化キーを設定
-export DOTENV_PRIVATE_KEY="<開発用キー>"
-export DOTENV_PRIVATE_KEY_PRODUCTION="<本番用キー>"
+# web
+cp web/.env.example web/.env
 ```
 
 ### server 環境変数
@@ -105,6 +92,17 @@ export DOTENV_PRIVATE_KEY_PRODUCTION="<本番用キー>"
 | 変数名         | 用途    |
 | -------------- | ------- |
 | `VITE_API_URL` | API URL |
+
+### 本番環境
+
+本番環境の機密情報は Cloudflare の環境変数で管理。
+
+```bash
+# Workers シークレット
+wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
+
+# Pages 環境変数は Cloudflare Dashboard で設定
+```
 
 ## デプロイ環境
 
