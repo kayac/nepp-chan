@@ -18,13 +18,18 @@ dist/
 node_modules/
 .wrangler
 
-# env
+# env files (use .env.example as template)
+.env
+**/.env
+**/.env.production
 .env.keys
 **/.env.keys
-
-# ローカル用env
 .env.local
 **/.env.local
+
+# wrangler config (use wrangler.jsonc.example as template)
+**/wrangler.jsonc
+!**/wrangler.jsonc.example
 
 # Workers 固有
 .dev.vars
