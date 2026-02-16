@@ -87,8 +87,6 @@ cp web/.env.example web/.env
 | `CLOUDFLARE_ACCOUNT_ID`| Cloudflare アカウント ID       |
 | `R2_BUCKET_NAME`       | R2 バケット名                  |
 | `VECTORIZE_INDEX_NAME` | Vectorize インデックス名       |
-| `API_URL`              | API エンドポイント URL         |
-| `ADMIN_KEY`            | 管理 API 認証キー              |
 
 ### server 環境変数
 
