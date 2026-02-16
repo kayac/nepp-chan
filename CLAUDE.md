@@ -74,7 +74,6 @@ cp .env.example .env
 # server
 cp server/.env.example server/.env
 cp server/.dev.vars.example server/.dev.vars
-cp server/wrangler.jsonc.example server/wrangler.jsonc
 
 # web
 cp web/.env.example web/.env
