@@ -27,9 +27,6 @@ node_modules/
 .env.local
 **/.env.local
 
-# wrangler config (use wrangler.jsonc.example as template)
-**/wrangler.jsonc
-!**/wrangler.jsonc.example
 
 # Workers 固有
 .dev.vars
