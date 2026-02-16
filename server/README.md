@@ -10,7 +10,12 @@ pnpm install
 
 ### 環境変数の設定
 
-dotenvx で暗号化された `.env` を使用。詳細はルートの [README.md](../README.md) を参照。
+`.env.example` をコピーして `.env` を作成。詳細はルートの [README.md](../README.md) を参照。
+
+```bash
+cp .env.example .env
+cp wrangler.jsonc.example wrangler.jsonc
+```
 
 ### wrangler 用環境変数
 

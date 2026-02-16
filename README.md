@@ -44,32 +44,22 @@ pnpm install
 
 ### 環境変数の設定
 
-dotenvx で暗号化された `.env` をコミットしています。復号化には `.env.keys` が必要です。
-
-```text
-/
-├── .env.keys              ← 復号化キー
-├── server/
-│   ├── .env               ← 開発環境
-│   └── .env.production    ← 本番環境
-└── web/
-    ├── .env               ← 開発環境
-    └── .env.production    ← 本番環境
-```
-
-#### セットアップ手順
-
-チームから `.env.keys` を受け取り、ルートに配置。
-
-#### dotenvx コマンド
+`.env.example` をコピーして `.env` を作成します。
 
 ```bash
-# 新しい変数を追加（自動で暗号化）
-dotenvx set NEW_VAR "value" -fk .env.keys -f server/.env
+# ルート
+cp .env.example .env
 
-# 復号化して確認
-dotenvx run -fk .env.keys -f server/.env -- printenv NEW_VAR
+# server
+cp server/.env.example server/.env
+cp server/.dev.vars.example server/.dev.vars
+cp server/wrangler.jsonc.example server/wrangler.jsonc
+
+# web
+cp web/.env.example web/.env
 ```
+
+各 `.env` ファイルに適切な値を設定してください。
 
 ### D1 データベースの初期化
 
