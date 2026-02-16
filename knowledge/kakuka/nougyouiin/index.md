@@ -26,10 +26,8 @@
 
 - [JA北はるか](http://www.ja-kitaharuka.or.jp/)
 - [上川総合振興局産業振興部](http://www.kamikawa.pref.hokkaido.lg.jp/ss/index.htm)
-- [北海道農業共済組合連合会](http://www.hknosai.or.jp/cgi-bin/index.pl)
 - [北海道農政事務所](http://www.maff.go.jp/hokkaido/)
 - [公益財団法人北海道農業公社](http://www.adhokkaido.or.jp/index.html)
-- [公益社団法人北海道家畜畜産物衛生指導協会](http://business4.plala.or.jp/eishikyo/)
 - [一般社団法人北海道農業会議](http://www.hca.or.jp/)
 
 ---

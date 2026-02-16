@@ -51,7 +51,7 @@ CCTVカメラの映像で、現在の川の様子が分かり、川に近づか�
 
 - 気象庁 天気予報 → 川の防災情報へリンク: https://www.jma.go.jp/jp/yoho/
 - 国土交通省 川の防災情報: http://www.river.go.jp/kawabou/ipTopGaikyo.do?init=init&gamenId=01-0101&fldCtlParty=no
-- 災害伝言ダイヤル171: http://www.ntt.co.jp/saitai/index.html
+- 災害伝言ダイヤル171
 - 安否情報探索サイト: https://anpi.jp/top
 
 ### 音威子府村の防災情報はこちら
@@ -64,4 +64,4 @@ http://www.vill.otoineppu.hokkaido.jp/bousai/index.html
 
 国土交通省: http://www.river.go.jp/kawabou/ipTopGaikyo.do?init=init&gamenId=01-0101&fldCtlParty=no
 
-RiverNet水防災情報のポータルサイト: http://www.river.or.jp/02pref/index.html
+RiverNet水防災情報のポータルサイト
