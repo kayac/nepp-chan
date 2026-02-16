@@ -29,6 +29,7 @@
     "db:push": "pnpm --filter @nepp-chan/server db:push",
     "db:check": "pnpm --filter @nepp-chan/server db:check",
     "knowledge:upload": "tsx scripts/upload-knowledge.ts",
+    "knowledge:upload:production": "tsx --env-file=.env.production scripts/upload-knowledge.ts",
     "test": "pnpm --filter @nepp-chan/server test",
     "admin:invite:local": "tsx server/scripts/create-invitation.ts",
     "admin:invite:dev": "tsx server/scripts/create-invitation.ts --env=dev",

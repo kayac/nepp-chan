@@ -2,7 +2,7 @@ import { execSync } from "node:child_process";
 import { basename } from "node:path";
 import { glob } from "glob";
 
-const KNOWLEDGE_DIR = "./dataset/v3/src/villotoinep";
+const KNOWLEDGE_DIR = "./knowledge";
 const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
 const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
 const VECTORIZE_INDEX_NAME = process.env.VECTORIZE_INDEX_NAME;
@@ -79,10 +79,10 @@ const deleteVectorizeIndex = (): boolean => {
   try {
     console.log(`  Deleting Vectorize index: ${VECTORIZE_INDEX_NAME}`);
 
-    // wrangler vectorize delete-index でインデックス内の全ベクトルを削除
-    // --force フラグで確認をスキップ
+    // wrangler vectorize delete でインデックスを削除
+    // -y フラグで確認をスキップ
     execSync(
-      `CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler vectorize delete-index ${VECTORIZE_INDEX_NAME} --force`,
+      `CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler vectorize delete ${VECTORIZE_INDEX_NAME} -y`,
       { stdio: "pipe" },
     );
 

@@ -70,6 +70,7 @@ await storage.init(); // 必須
 ```bash
 # ルート
 cp .env.example .env
+cp .env.production.example .env.production  # 本番ナレッジアップロード用（任意）
 
 # server
 cp server/.env.example server/.env
