@@ -47,7 +47,11 @@ pnpm deploy:production # prd 環境へデプロイ
 
 ## 環境変数
 
-dotenvx で暗号化された `.env` を使用。詳細はルートの [README.md](../README.md) を参照。
+`.env.example` をコピーして `.env` を作成。詳細はルートの [README.md](../README.md) を参照。
+
+```bash
+cp .env.example .env
+```
 
 ## Basic 認証
 
