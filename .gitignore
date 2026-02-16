@@ -18,13 +18,15 @@ dist/
 node_modules/
 .wrangler
 
-# env
+# env files (use .env.example as template)
+.env
+**/.env
+**/.env.production
 .env.keys
 **/.env.keys
-
-# ローカル用env
 .env.local
 **/.env.local
+
 
 # Workers 固有
 .dev.vars

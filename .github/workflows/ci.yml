@@ -11,6 +11,9 @@ on:
       - develop
       - main
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint
