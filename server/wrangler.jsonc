@@ -1,0 +1,101 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "account_id": "51544998e04526c4d6cc9e3e08653361",
+  "name": "nepp-chan-server-dev",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-12-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nepp-chan-db-dev",
+      "database_id": "bd4f1aee-768d-4273-ab72-5aef42f1c199",
+      "migrations_dir": "./src/db/migrations"
+    }
+  ],
+  "vectorize": [
+    {
+      "binding": "VECTORIZE",
+      "index_name": "nepp-chan-knowledge-dev",
+      "remote": true
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "KNOWLEDGE_BUCKET",
+      "bucket_name": "nepp-chan-knowledge-dev",
+      "preview_bucket_name": "nepp-chan-knowledge-dev"
+    }
+  ],
+  "queues": {
+    "consumers": [
+      {
+        "queue": "nepp-chan-knowledge-sync-dev",
+        "max_batch_size": 10,
+        "max_batch_timeout": 30
+      }
+    ]
+  },
+  "alias": {
+    "~": "./src"
+  },
+  "placement": { "mode": "smart" },
+  "triggers": {
+    "crons": ["0 18 * * *"]
+  },
+  "vars": {
+    "ENVIRONMENT": "development",
+    "WEB_URL": "https://dev-web.nepp-chan.ai",
+    "WEBAUTHN_RP_ID": "dev-web.nepp-chan.ai",
+    "WEBAUTHN_RP_NAME": "ねっぷちゃん",
+    "WEBAUTHN_ORIGIN": "https://dev-web.nepp-chan.ai"
+  },
+  "env": {
+    "production": {
+      "name": "nepp-chan-server-prd",
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "nepp-chan-db-prd",
+          "database_id": "239abba6-e30a-4628-97fc-20bf49ca8404",
+          "migrations_dir": "./src/db/migrations"
+        }
+      ],
+      "vectorize": [
+        {
+          "binding": "VECTORIZE",
+          "index_name": "nepp-chan-knowledge-prd"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "KNOWLEDGE_BUCKET",
+          "bucket_name": "nepp-chan-knowledge-prd"
+        }
+      ],
+      "queues": {
+        "consumers": [
+          {
+            "queue": "nepp-chan-knowledge-sync-prd",
+            "max_batch_size": 10,
+            "max_batch_timeout": 30
+          }
+        ]
+      },
+      "vars": {
+        "ENVIRONMENT": "production",
+        "WEB_URL": "https://web.nepp-chan.ai",
+        "WEBAUTHN_RP_ID": "web.nepp-chan.ai",
+        "WEBAUTHN_RP_NAME": "ねっぷちゃん",
+        "WEBAUTHN_ORIGIN": "https://web.nepp-chan.ai"
+      }
+    }
+  }
+}
