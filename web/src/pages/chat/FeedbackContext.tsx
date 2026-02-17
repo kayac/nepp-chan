@@ -89,7 +89,7 @@ const extractConversationContext = (
 const extractToolExecutions = (message: UIMessage): ToolExecution[] =>
   message.parts.filter(isToolOrDynamicToolUIPart).map((part) => ({
     toolName: getToolNameFromPart(part),
-    state: part.state,
+    state: part.state ?? "unknown",
     input: "input" in part ? part.input : undefined,
     output: "output" in part ? part.output : undefined,
     errorText: "errorText" in part ? (part.errorText as string) : undefined,
