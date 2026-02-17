@@ -4,7 +4,7 @@
 
 [![AGPLv3 License](https://img.shields.io/badge/License-AGPLv3-blue.svg?style=for-the-badge)](LICENSE)
 [![GitHub release](https://img.shields.io/github/v/release/kayac/nepp-chan?include_prereleases&style=for-the-badge)](https://github.com/kayac/nepp-chan/releases)
-[![Live Demo](https://img.shields.io/badge/Demo-Live-success?style=for-the-badge)](https://web.nepp-chan.ai)
+[![Website](https://img.shields.io/badge/Website-nepp--chan.ai-blue?style=for-the-badge)](https://web.nepp-chan.ai)
 
 A chat application where you can talk with "Nepp-chan," the AI Deputy Mayor of Otoineppu Village, Hokkaido. By learning directly from village-specific official documents to local culture, Nepp-chan delivers natural conversations with a deep understanding of local nicknames, shops, winter snow removal, community events, and other contexts unique to Otoineppu.
 
@@ -12,7 +12,7 @@ In Otoineppu Village, we are experimenting with a world where AI is embraced not
 
 This is an **Open R&D** initiative that fully discloses the development process, serving as a model case for municipalities nationwide to introduce AI-based resident support at low cost.
 
-[Live Demo](https://web.nepp-chan.ai) · [Getting Started](#getting-started) · [Roadmap](#roadmap) · [日本語](README.md)
+[Website](https://web.nepp-chan.ai) · [Getting Started](#getting-started) · [Roadmap](#roadmap) · [日本語](README.md)
 
 ---
 

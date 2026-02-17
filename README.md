@@ -4,7 +4,7 @@
 
 [![AGPLv3 License](https://img.shields.io/badge/License-AGPLv3-blue.svg?style=for-the-badge)](LICENSE)
 [![GitHub release](https://img.shields.io/github/v/release/kayac/nepp-chan?include_prereleases&style=for-the-badge)](https://github.com/kayac/nepp-chan/releases)
-[![Live Demo](https://img.shields.io/badge/Demo-Live-success?style=for-the-badge)](https://web.nepp-chan.ai)
+[![Website](https://img.shields.io/badge/Website-nepp--chan.ai-blue?style=for-the-badge)](https://web.nepp-chan.ai)
 
 北海道音威子府村のAI副村長「ねっぷちゃん」と会話できるチャットアプリケーションです。村独自の公的資料から地域文化まで直接学習することで、地元の通称、お店、冬の除雪相談、コミュニティイベントなど、音威子府村ならではの文脈を深く理解した自然な対話を実現します。
 
@@ -12,7 +12,7 @@
 
 このプロジェクトは、全国の自治体が低コストで「AIによる住民支援」を導入できるモデルケースとして、開発プロセスを全面公開する**オープンR&D**の取り組みです。
 
-[Live Demo](https://web.nepp-chan.ai) · [セットアップ](#セットアップ) · [ロードマップ](#ロードマップ)
+[Website](https://web.nepp-chan.ai) · [セットアップ](#セットアップ) · [ロードマップ](#ロードマップ)
 
 ---
 
