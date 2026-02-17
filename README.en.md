@@ -76,32 +76,22 @@ pnpm install
 
 ### Environment Variables
 
-Encrypted `.env` files are committed using dotenvx. Decryption requires `.env.keys`.
-
-```text
-/
-├── .env.keys              ← Decryption keys
-├── server/
-│   ├── .env               ← Development
-│   └── .env.production    ← Production
-└── web/
-    ├── .env               ← Development
-    └── .env.production    ← Production
-```
-
-#### Setup
-
-Obtain `.env.keys` from the team and place it in the project root.
-
-#### dotenvx Commands
+Copy `.env.example` to create `.env` files.
 
 ```bash
-# Add a new variable (automatically encrypted)
-dotenvx set NEW_VAR "value" -fk .env.keys -f server/.env
+# Root
+cp .env.example .env
+cp .env.production.example .env.production  # For production knowledge upload (optional)
 
-# Decrypt and verify
-dotenvx run -fk .env.keys -f server/.env -- printenv NEW_VAR
+# server
+cp server/.env.example server/.env
+cp server/.dev.vars.example server/.dev.vars
+
+# web
+cp web/.env.example web/.env
 ```
+
+Set appropriate values in each `.env` file.
 
 ### Initialize D1 Database
 
