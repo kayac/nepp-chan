@@ -78,16 +78,14 @@ pnpm install
 Copy `.env.example` to create `.env` files.
 
 ```bash
-# Root
-cp .env.example .env
-cp .env.production.example .env.production  # For production knowledge upload (optional)
-
 # server
 cp server/.env.example server/.env
+cp server/.env.example server/.env.production
 cp server/.dev.vars.example server/.dev.vars
 
 # web
 cp web/.env.example web/.env
+cp web/.env.example web/.env.production
 ```
 
 Set appropriate values in each `.env` file.

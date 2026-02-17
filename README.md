@@ -78,16 +78,14 @@ pnpm install
 `.env.example` をコピーして `.env` を作成します。
 
 ```bash
-# ルート
-cp .env.example .env
-cp .env.production.example .env.production  # 本番ナレッジアップロード用（任意）
-
 # server
 cp server/.env.example server/.env
+cp server/.env.example server/.env.production
 cp server/.dev.vars.example server/.dev.vars
 
 # web
 cp web/.env.example web/.env
+cp web/.env.example web/.env.production
 ```
 
 各 `.env` ファイルに適切な値を設定してください。
