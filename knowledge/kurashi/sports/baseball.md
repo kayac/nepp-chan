@@ -9,7 +9,6 @@
 ### 大会資料
 
 - [開催要項 PDF](https://www.vill.otoineppu.hokkaido.jp/kurashi/sports/baseball/files/70youkou.pdf)
-- [組み合わせ表 PDF](https://www.vill.otoineppu.hokkaido.jp/kurashi/sports/baseball/files/70kumiawase.pdf)
 - [成績表 PDF](https://www.vill.otoineppu.hokkaido.jp/kurashi/sports/baseball/files/70seiseki.pdf)
 
 ---
