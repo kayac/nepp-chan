@@ -1,15 +1,47 @@
-# nepp-chan
+# 🏔️ Nepp-chan.ai
+
+**音威子府村 AI 副村長**
+
+[![AGPLv3 License](https://img.shields.io/badge/License-AGPLv3-blue.svg?style=for-the-badge)](LICENSE)
+[![GitHub release](https://img.shields.io/github/v/release/kayac/nepp-chan?include_prereleases&style=for-the-badge)](https://github.com/kayac/nepp-chan/releases)
+[![Live Demo](https://img.shields.io/badge/Demo-Live-success?style=for-the-badge)](https://web.nepp-chan.ai)
+
+北海道音威子府村のAI副村長「ねっぷちゃん」と会話できるチャットアプリケーションです。村独自の公的資料から地域文化まで直接学習することで、地元の通称、お店、冬の除雪相談、コミュニティイベントなど、音威子府村ならではの文脈を深く理解した自然な対話を実現します。
+
+音威子府村で、AIが「道具」ではなく「村の一員」として受け入れられる。そんな世界を実験するプロジェクトです。コンセプトは「存在するソフトウェア」── 道具ではなく、村民に愛される存在を目指しています。
+
+このプロジェクトは、全国の自治体が低コストで「AIによる住民支援」を導入できるモデルケースとして、開発プロセスを全面公開する**オープンR&D**の取り組みです。
+
+[Live Demo](https://web.nepp-chan.ai) · [セットアップ](#セットアップ) · [ロードマップ](#ロードマップ)
+
+---
 
 ## 概要
 
-北海道音威子府村のマスコット AI「ねっぷちゃん」と会話できるチャットアプリケーションです。
+一般的なAIは地方の細かな情報に精通しておらず、温かみのある会話にも乏しいという課題があります。「ねっぷちゃん」は、汎用的なFAQ自動応答AIとは異なり、自然な対話を通じて気軽に相談できる「AI副村長」という親しみやすい存在として設計されています。
 
-ねっぷちゃんは村のことをなんでも知っていて、村民や観光客の役に立つ情報を教えてくれます。観光スポット、イベント、暮らしの情報などを案内します。
+デジタル操作に不慣れな方も取り残さないよう、Web・モバイル・LINE・電話・対面など、段階的にアクセス方法を拡大する予定です。音威子府村での試行錯誤を公開することで、同様の課題を抱える自治体の横展開を支援します。
 
-### 主要機能
+---
 
-- ねっぷちゃんとのチャット会話
-- 管理者向けデータ分析
+## 特徴
+
+- 🏘️ **地域密着型ナレッジ** — 村独自の公的資料、地域文化、日常の文脈を直接学習
+- 📱 **マルチチャネル対応** — Web、モバイル、LINE、電話、対面端末（段階的に展開）
+- 🤝 **親しみやすいキャラクター** — 単なるツールではなく、人柄と温かみを持った地域の一員
+- 🌐 **オープンR&D** — 全国の自治体が導入できるよう、ソースコードを全面公開
+
+---
+
+## ロードマップ
+
+- [x] **Phase 1**: Web/モバイルチャットのパイロット運用（現在）
+- [ ] **Phase 2**: LINEメッセージ + 電話対応
+- [ ] **Phase 3**: 村役場・公共施設への対面端末の設置
+- [ ] **Phase 4**: 匿名化された会話分析による政策改善
+- [ ] **ビジョン**: 「すべての声が届く村へ」
+
+---
 
 ## 技術スタック
 
@@ -44,22 +76,32 @@ pnpm install
 
 ### 環境変数の設定
 
-`.env.example` をコピーして `.env` を作成します。
+dotenvx で暗号化された `.env` をコミットしています。復号化には `.env.keys` が必要です。
 
-```bash
-# ルート
-cp .env.example .env
-cp .env.production.example .env.production  # 本番ナレッジアップロード用（任意）
-
-# server
-cp server/.env.example server/.env
-cp server/.dev.vars.example server/.dev.vars
-
-# web
-cp web/.env.example web/.env
+```text
+/
+├── .env.keys              ← 復号化キー
+├── server/
+│   ├── .env               ← 開発環境
+│   └── .env.production    ← 本番環境
+└── web/
+    ├── .env               ← 開発環境
+    └── .env.production    ← 本番環境
 ```
 
-各 `.env` ファイルに適切な値を設定してください。
+#### セットアップ手順
+
+チームから `.env.keys` を受け取り、ルートに配置。
+
+#### dotenvx コマンド
+
+```bash
+# 新しい変数を追加（自動で暗号化）
+dotenvx set NEW_VAR "value" -fk .env.keys -f server/.env
+
+# 復号化して確認
+dotenvx run -fk .env.keys -f server/.env -- printenv NEW_VAR
+```
 
 ### D1 データベースの初期化
 
