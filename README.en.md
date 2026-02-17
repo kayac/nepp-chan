@@ -3,7 +3,6 @@
 **AI Deputy Mayor for Otoineppu Village**
 
 [![AGPLv3 License](https://img.shields.io/badge/License-AGPLv3-blue.svg?style=for-the-badge)](LICENSE)
-[![GitHub release](https://img.shields.io/github/v/release/kayac/nepp-chan?include_prereleases&style=for-the-badge)](https://github.com/kayac/nepp-chan/releases)
 [![Website](https://img.shields.io/badge/Website-nepp--chan.ai-blue?style=for-the-badge)](https://web.nepp-chan.ai)
 
 A chat application where you can talk with "Nepp-chan," the AI Deputy Mayor of Otoineppu Village, Hokkaido. By learning directly from village-specific official documents to local culture, Nepp-chan delivers natural conversations with a deep understanding of local nicknames, shops, winter snow removal, community events, and other contexts unique to Otoineppu.
