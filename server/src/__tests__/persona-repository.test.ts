@@ -1,4 +1,4 @@
-import { and, desc, eq, like, or } from "drizzle-orm";
+import { and, count, desc, eq, like, lt, or } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { persona } from "~/db";
@@ -312,6 +312,158 @@ describe("persona Drizzle クエリ", () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe("s1");
+    });
+  });
+
+  describe("listForAdmin", () => {
+    beforeEach(async () => {
+      await db.insert(persona).values([
+        {
+          id: "admin-1",
+          resourceId: "village-1",
+          category: "好み",
+          content: "内容1",
+          createdAt: "2024-01-01T00:00:00Z",
+        },
+        {
+          id: "admin-2",
+          resourceId: "village-1",
+          category: "価値観",
+          content: "内容2",
+          createdAt: "2024-01-02T00:00:00Z",
+        },
+        {
+          id: "admin-3",
+          resourceId: "village-2",
+          category: "好み",
+          content: "内容3",
+          createdAt: "2024-01-03T00:00:00Z",
+        },
+        {
+          id: "admin-4",
+          resourceId: "village-1",
+          category: "意見",
+          content: "内容4",
+          createdAt: "2024-01-03T00:00:00Z", // admin-3 と同じ createdAt
+        },
+      ]);
+    });
+
+    it("total 付きで全件取得できる", async () => {
+      const results = await db
+        .select()
+        .from(persona)
+        .orderBy(desc(persona.createdAt), desc(persona.id))
+        .all();
+
+      const countResult = await db
+        .select({ count: count() })
+        .from(persona)
+        .get();
+
+      expect(results).toHaveLength(4);
+      expect(countResult?.count).toBe(4);
+    });
+
+    it("limit で取得件数を制限できる", async () => {
+      const limit = 2;
+      const results = await db
+        .select()
+        .from(persona)
+        .orderBy(desc(persona.createdAt), desc(persona.id))
+        .limit(limit + 1)
+        .all();
+
+      const hasMore = results.length > limit;
+      const items = hasMore ? results.slice(0, limit) : results;
+
+      expect(items).toHaveLength(2);
+      expect(hasMore).toBe(true);
+    });
+
+    it("複合カーソル（createdAt_id）で次ページを取得できる", async () => {
+      const limit = 2;
+
+      // 1ページ目
+      const page1 = await db
+        .select()
+        .from(persona)
+        .orderBy(desc(persona.createdAt), desc(persona.id))
+        .limit(limit + 1)
+        .all();
+
+      const items1 = page1.slice(0, limit);
+      const lastItem = items1[items1.length - 1];
+      const cursor = `${lastItem.createdAt}_${lastItem.id}`;
+
+      // 2ページ目: 複合カーソル条件
+      const [cursorCreatedAt, cursorId] = cursor.split("_");
+      const page2 = await db
+        .select()
+        .from(persona)
+        .where(
+          or(
+            lt(persona.createdAt, cursorCreatedAt),
+            and(
+              eq(persona.createdAt, cursorCreatedAt),
+              lt(persona.id, cursorId),
+            ),
+          ),
+        )
+        .orderBy(desc(persona.createdAt), desc(persona.id))
+        .limit(limit + 1)
+        .all();
+
+      // 2ページ目のアイテムは1ページ目と重複しない
+      const page1Ids = items1.map((p) => p.id);
+      for (const item of page2) {
+        expect(page1Ids).not.toContain(item.id);
+      }
+    });
+
+    it("空結果の場合", async () => {
+      // 全データ削除
+      await db.delete(persona);
+
+      const results = await db
+        .select()
+        .from(persona)
+        .orderBy(desc(persona.createdAt), desc(persona.id))
+        .all();
+
+      const countResult = await db
+        .select({ count: count() })
+        .from(persona)
+        .get();
+
+      expect(results).toHaveLength(0);
+      expect(countResult?.count).toBe(0);
+    });
+
+    it("hasMore が正しく判定される", async () => {
+      // limit=4 → 4件ちょうどなので hasMore=false
+      const limit = 4;
+      const results = await db
+        .select()
+        .from(persona)
+        .orderBy(desc(persona.createdAt), desc(persona.id))
+        .limit(limit + 1)
+        .all();
+
+      const hasMore = results.length > limit;
+      expect(hasMore).toBe(false);
+
+      // limit=3 → 4件あるので hasMore=true
+      const limit2 = 3;
+      const results2 = await db
+        .select()
+        .from(persona)
+        .orderBy(desc(persona.createdAt), desc(persona.id))
+        .limit(limit2 + 1)
+        .all();
+
+      const hasMore2 = results2.length > limit2;
+      expect(hasMore2).toBe(true);
     });
   });
 

@@ -1,8 +1,8 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
-import type { AdminUser } from "~/db";
 import { feedbackRepository } from "~/repository/feedback-repository";
+import { requireAdmin } from "./helpers";
 
 const feedbackSchema = z.object({
   id: z.string(),
@@ -53,31 +53,17 @@ export const adminFeedbackTool = createTool({
     error: z.string().optional(),
   }),
   execute: async (inputData, context) => {
-    const adminUser = context?.requestContext?.get("adminUser") as
-      | AdminUser
-      | undefined;
-
-    if (!adminUser) {
+    const result = requireAdmin(context);
+    if ("error" in result) {
       return {
         success: false,
         feedbacks: [],
         count: 0,
-        message: "この機能は使用できません",
-        error: "NOT_AUTHORIZED",
+        message: result.error.message,
+        error: result.error.error,
       };
     }
-
-    const db = context?.requestContext?.get("db") as D1Database | undefined;
-
-    if (!db) {
-      return {
-        success: false,
-        feedbacks: [],
-        count: 0,
-        message: "データベース接続がありません",
-        error: "DB_NOT_AVAILABLE",
-      };
-    }
+    const { db } = result;
 
     const { rating, limit, includeStats } = inputData;
 

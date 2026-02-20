@@ -1,8 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { count } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
-import { createDb, messageFeedback } from "~/db";
+import { errorResponse } from "~/lib/openapi-errors";
 import { sessionAuth } from "~/middleware/session-auth";
 import { feedbackRepository } from "~/repository/feedback-repository";
 
@@ -60,23 +59,12 @@ const listRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
+    401: errorResponse(401),
   },
 });
 
 feedbackAdminRoutes.openapi(listRoute, async (c) => {
   const { limit, cursor, rating } = c.req.valid("query");
-  const db = createDb(c.env.DB);
   const limitNum = Number(limit);
 
   const result = await feedbackRepository.list(c.env.DB, {
@@ -86,16 +74,12 @@ feedbackAdminRoutes.openapi(listRoute, async (c) => {
   });
 
   const stats = await feedbackRepository.getStats(c.env.DB);
-
-  const countResult = await db
-    .select({ count: count() })
-    .from(messageFeedback)
-    .get();
+  const total = await feedbackRepository.count(c.env.DB);
 
   return c.json(
     {
       feedbacks: result.feedbacks,
-      total: countResult?.count ?? 0,
+      total,
       nextCursor: result.nextCursor,
       hasMore: result.hasMore,
       stats,
@@ -124,28 +108,8 @@ const getDetailRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
-    404: {
-      description: "フィードバックが見つからない",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
+    401: errorResponse(401),
+    404: errorResponse(404),
   },
 });
 
@@ -155,10 +119,9 @@ feedbackAdminRoutes.openapi(getDetailRoute, async (c) => {
   const feedback = await feedbackRepository.findById(c.env.DB, id);
 
   if (!feedback) {
-    return c.json(
-      { success: false, message: "フィードバックが見つかりません" },
-      404,
-    );
+    throw new HTTPException(404, {
+      message: "フィードバックが見つかりません",
+    });
   }
 
   return c.json(feedback, 200);
@@ -176,44 +139,29 @@ const deleteAllRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             message: z.string(),
             count: z.number(),
           }),
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
+    401: errorResponse(401),
+    500: errorResponse(500),
   },
 });
 
 feedbackAdminRoutes.openapi(deleteAllRoute, async (c) => {
-  const db = createDb(c.env.DB);
-
   try {
-    const countResult = await db
-      .select({ count: count() })
-      .from(messageFeedback)
-      .get();
-    const totalCount = countResult?.count ?? 0;
-
+    const totalCount = await feedbackRepository.count(c.env.DB);
     await feedbackRepository.deleteAll(c.env.DB);
 
-    return c.json({
-      success: true,
-      message: `${totalCount}件のフィードバックを削除しました`,
-      count: totalCount,
-    });
+    return c.json(
+      {
+        message: `${totalCount}件のフィードバックを削除しました`,
+        count: totalCount,
+      },
+      200,
+    );
   } catch (error) {
     console.error("Feedback delete error:", error);
     throw new HTTPException(500, {
@@ -240,34 +188,13 @@ const resolveRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             message: z.string(),
           }),
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
-    404: {
-      description: "フィードバックが見つからない",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
+    401: errorResponse(401),
+    404: errorResponse(404),
   },
 });
 
@@ -276,15 +203,14 @@ feedbackAdminRoutes.openapi(resolveRoute, async (c) => {
 
   const feedback = await feedbackRepository.findById(c.env.DB, id);
   if (!feedback) {
-    return c.json(
-      { success: false, message: "フィードバックが見つかりません" },
-      404,
-    );
+    throw new HTTPException(404, {
+      message: "フィードバックが見つかりません",
+    });
   }
 
   await feedbackRepository.resolve(c.env.DB, id);
 
-  return c.json({ success: true, message: "解決済みに変更しました" }, 200);
+  return c.json({ message: "解決済みに変更しました" }, 200);
 });
 
 const unresolveRoute = createRoute({
@@ -304,34 +230,13 @@ const unresolveRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             message: z.string(),
           }),
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
-    404: {
-      description: "フィードバックが見つからない",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
+    401: errorResponse(401),
+    404: errorResponse(404),
   },
 });
 
@@ -340,13 +245,12 @@ feedbackAdminRoutes.openapi(unresolveRoute, async (c) => {
 
   const feedback = await feedbackRepository.findById(c.env.DB, id);
   if (!feedback) {
-    return c.json(
-      { success: false, message: "フィードバックが見つかりません" },
-      404,
-    );
+    throw new HTTPException(404, {
+      message: "フィードバックが見つかりません",
+    });
   }
 
   await feedbackRepository.unresolve(c.env.DB, id);
 
-  return c.json({ success: true, message: "未解決に戻しました" }, 200);
+  return c.json({ message: "未解決に戻しました" }, 200);
 });

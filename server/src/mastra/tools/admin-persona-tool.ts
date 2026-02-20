@@ -1,22 +1,9 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
-import type { AdminUser } from "~/db";
+import { personaOutputSchema } from "~/mastra/schemas/persona-schema";
 import { personaRepository } from "~/repository/persona-repository";
-
-const personaSchema = z.object({
-  id: z.string(),
-  resourceId: z.string(),
-  category: z.string(),
-  tags: z.string().nullable(),
-  content: z.string(),
-  source: z.string().nullable(),
-  topic: z.string().nullable(),
-  sentiment: z.string().nullable(),
-  demographicSummary: z.string().nullable(),
-  createdAt: z.string(),
-  conversationEndedAt: z.string().nullable(),
-});
+import { requireAdmin } from "./helpers";
 
 export const adminPersonaTool = createTool({
   id: "admin-persona",
@@ -41,7 +28,7 @@ export const adminPersonaTool = createTool({
   }),
   outputSchema: z.object({
     success: z.boolean(),
-    personas: z.array(personaSchema),
+    personas: z.array(personaOutputSchema.omit({ updatedAt: true })),
     count: z.number(),
     message: z.string(),
     summary: z
@@ -54,31 +41,17 @@ export const adminPersonaTool = createTool({
     error: z.string().optional(),
   }),
   execute: async (inputData, context) => {
-    const adminUser = context?.requestContext?.get("adminUser") as
-      | AdminUser
-      | undefined;
-
-    if (!adminUser) {
+    const result = requireAdmin(context);
+    if ("error" in result) {
       return {
         success: false,
         personas: [],
         count: 0,
-        message: "この機能は使用できません",
-        error: "NOT_AUTHORIZED",
+        message: result.error.message,
+        error: result.error.error,
       };
     }
-
-    const db = context?.requestContext?.get("db") as D1Database | undefined;
-
-    if (!db) {
-      return {
-        success: false,
-        personas: [],
-        count: 0,
-        message: "データベース接続がありません",
-        error: "DB_NOT_AVAILABLE",
-      };
-    }
+    const { db } = result;
 
     const { category, sentiment, limit } = inputData;
 

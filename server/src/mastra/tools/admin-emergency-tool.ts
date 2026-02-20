@@ -1,17 +1,9 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
-import type { AdminUser } from "~/db";
+import { emergencyReportSchema } from "~/mastra/schemas/emergency-schema";
 import { emergencyRepository } from "~/repository/emergency-repository";
-
-const emergencyReportSchema = z.object({
-  id: z.string(),
-  type: z.string(),
-  description: z.string().nullable(),
-  location: z.string().nullable(),
-  reportedAt: z.string(),
-  updatedAt: z.string().nullable(),
-});
+import { requireAdmin } from "./helpers";
 
 export const adminEmergencyTool = createTool({
   id: "admin-emergency",
@@ -40,31 +32,17 @@ export const adminEmergencyTool = createTool({
     error: z.string().optional(),
   }),
   execute: async (inputData, context) => {
-    const adminUser = context?.requestContext?.get("adminUser") as
-      | AdminUser
-      | undefined;
-
-    if (!adminUser) {
+    const result = requireAdmin(context);
+    if ("error" in result) {
       return {
         success: false,
         reports: [],
         count: 0,
-        message: "この機能は使用できません",
-        error: "NOT_AUTHORIZED",
+        message: result.error.message,
+        error: result.error.error,
       };
     }
-
-    const db = context?.requestContext?.get("db") as D1Database | undefined;
-
-    if (!db) {
-      return {
-        success: false,
-        reports: [],
-        count: 0,
-        message: "データベース接続がありません",
-        error: "DB_NOT_AVAILABLE",
-      };
-    }
+    const { db } = result;
 
     const { days, limit } = inputData;
 

@@ -1,4 +1,4 @@
-import { and, desc, eq, like, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, like, lt, or, type SQL, sql } from "drizzle-orm";
 
 import { createDb, type Persona, persona } from "~/db";
 
@@ -230,6 +230,54 @@ export const personaRepository = {
 
     return {
       personas: items,
+      nextCursor,
+      hasMore,
+    };
+  },
+
+  async listForAdmin(
+    d1: D1Database,
+    options: { limit?: number; cursor?: string } = {},
+  ): Promise<{
+    personas: Persona[];
+    total: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  }> {
+    const db = createDb(d1);
+    const limit = options.limit ?? 30;
+
+    let cursorCondition: SQL | undefined;
+    if (options.cursor) {
+      const [cursorCreatedAt, cursorId] = options.cursor.split("_");
+      cursorCondition = or(
+        lt(persona.createdAt, cursorCreatedAt),
+        and(eq(persona.createdAt, cursorCreatedAt), lt(persona.id, cursorId)),
+      );
+    }
+
+    const results = await db
+      .select()
+      .from(persona)
+      .where(cursorCondition)
+      .orderBy(desc(persona.createdAt), desc(persona.id))
+      .limit(limit + 1)
+      .all();
+
+    const hasMore = results.length > limit;
+    const personas = hasMore ? results.slice(0, limit) : results;
+
+    const lastPersona = personas[personas.length - 1];
+    const nextCursor =
+      hasMore && lastPersona
+        ? `${lastPersona.createdAt}_${lastPersona.id}`
+        : null;
+
+    const countResult = await db.select({ count: count() }).from(persona).get();
+
+    return {
+      personas,
+      total: countResult?.count ?? 0,
       nextCursor,
       hasMore,
     };

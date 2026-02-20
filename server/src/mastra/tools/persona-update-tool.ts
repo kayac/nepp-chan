@@ -1,6 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { personaRepository } from "~/repository/persona-repository";
+import { requireDb } from "./helpers";
 
 export const personaUpdateTool = createTool({
   id: "persona-update",
@@ -19,15 +20,15 @@ export const personaUpdateTool = createTool({
     error: z.string().optional(),
   }),
   execute: async (inputData, context) => {
-    const db = context?.requestContext?.get("db") as D1Database | undefined;
-
-    if (!db) {
+    const result = requireDb(context);
+    if ("error" in result) {
       return {
         success: false,
-        message: "データベース接続がありません",
-        error: "DB_NOT_AVAILABLE",
+        message: result.error.message,
+        error: result.error.error,
       };
     }
+    const { db } = result;
 
     const { id, category, tags, content, source } = inputData;
 

@@ -38,7 +38,6 @@ export const fetchFeedbackById = (id: string): Promise<MessageFeedback> =>
   apiClient<MessageFeedback>(`/admin/feedback/${id}`);
 
 type DeleteFeedbacksResponse = {
-  success: boolean;
   message: string;
   count: number;
 };
@@ -49,7 +48,6 @@ export const deleteAllFeedbacks = (): Promise<DeleteFeedbacksResponse> =>
   });
 
 type ResolveResponse = {
-  success: boolean;
   message: string;
 };
 

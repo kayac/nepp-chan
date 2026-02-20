@@ -20,7 +20,7 @@ class ApiError extends Error {
 const parseErrorResponse = async (res: Response, fallback: string) => {
   try {
     const data = await res.json();
-    return data.message || data.error || fallback;
+    return data.error?.message || data.message || fallback;
   } catch {
     return fallback;
   }
