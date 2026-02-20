@@ -27,6 +27,11 @@ markdown:
   skip_internal_links: true
   content_filter: none
 
+content:
+  excluded_tags: ["nav", "footer", "header"]
+  excluded_selector: ""
+  word_count_threshold: 10
+
 performance:
   prefetch: false
   stream: true

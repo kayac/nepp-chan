@@ -116,12 +116,26 @@ async def crawl_site(config: dict[str, Any], resume: bool = False) -> list:
     deep_strategy = build_crawl_strategy(config, filter_chain)
     md_generator = build_md_generator(config)
 
+    # Content filtering options
+    content_config = config.get("content", {})
+    content_kwargs: dict[str, Any] = {}
+    excluded_tags = content_config.get("excluded_tags")
+    if excluded_tags:
+        content_kwargs["excluded_tags"] = excluded_tags
+    excluded_selector = content_config.get("excluded_selector")
+    if excluded_selector:
+        content_kwargs["excluded_selector"] = excluded_selector
+    word_count_threshold = content_config.get("word_count_threshold")
+    if word_count_threshold:
+        content_kwargs["word_count_threshold"] = word_count_threshold
+
     run_config = CrawlerRunConfig(
         deep_crawl_strategy=deep_strategy,
         markdown_generator=md_generator,
         stream=config.get("performance", {}).get("stream", True),
         verbose=True,
         cache_mode=CacheMode.BYPASS,
+        **content_kwargs,
     )
 
     recovery_config = config.get("recovery", {})

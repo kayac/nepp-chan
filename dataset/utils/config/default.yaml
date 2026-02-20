@@ -15,6 +15,11 @@ markdown:
   skip_internal_links: false
   content_filter: none
 
+content:
+  excluded_tags: []           # e.g. ["nav", "footer", "header"]
+  excluded_selector: ""       # e.g. "#menu, .breadcrumb"
+  word_count_threshold: 0     # 0 = disabled
+
 performance:
   prefetch: true
   stream: true
