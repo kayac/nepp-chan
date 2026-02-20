@@ -19,6 +19,19 @@ from .filters import BlockedPathFilter
 
 logger = logging.getLogger(__name__)
 
+# Non-HTML extensions to skip (PDFs, images, etc.)
+_SKIP_EXTENSIONS = frozenset({
+    ".pdf", ".jpg", ".jpeg", ".png", ".gif", ".svg",
+    ".webp", ".ico", ".bmp", ".tiff", ".mp4", ".mp3",
+    ".zip", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
+})
+
+
+def _is_binary_url(url: str) -> bool:
+    """Return True if URL points to a non-HTML resource."""
+    path = urlparse(url).path.lower()
+    return any(path.endswith(ext) for ext in _SKIP_EXTENSIONS)
+
 
 def build_filter_chain(config: dict[str, Any]) -> FilterChain | None:
     """Build a FilterChain from config."""
@@ -199,6 +212,11 @@ async def crawl_site(config: dict[str, Any], resume: bool = False) -> list:
             # Skip already crawled pages on resume
             if result.url in already_crawled:
                 logger.debug(f"Skip (already crawled): {result.url}")
+                continue
+
+            # Skip non-HTML resources (PDFs, images, etc.)
+            if _is_binary_url(result.url):
+                logger.debug(f"Skip (binary): {result.url}")
                 continue
 
             filepath = url_to_filepath(result.url, output_dir)
