@@ -22,7 +22,7 @@ crawl:
   include_external: false
 
 markdown:
-  citations: true
+  citations: false
   body_width: 0
   skip_internal_links: true
   content_filter: none

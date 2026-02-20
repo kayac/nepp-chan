@@ -169,13 +169,7 @@ async def crawl_site(config: dict[str, Any], resume: bool = False) -> list:
 
             md_content = ""
             if result.markdown:
-                if result.markdown.markdown_with_citations:
-                    md_content = result.markdown.markdown_with_citations
-                    refs = result.markdown.references_markdown
-                    if refs:
-                        md_content += "\n\n" + refs
-                else:
-                    md_content = result.markdown.raw_markdown
+                md_content = result.markdown.raw_markdown or ""
 
             if md_content:
                 filepath.write_text(md_content, encoding="utf-8")
