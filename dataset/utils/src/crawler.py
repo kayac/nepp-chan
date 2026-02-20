@@ -1,0 +1,178 @@
+"""Crawl4AI wrapper for website-to-markdown conversion."""
+
+from __future__ import annotations
+
+import json
+import logging
+from pathlib import Path
+from typing import Any
+from urllib.parse import urlparse
+
+from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode
+from crawl4ai.deep_crawling import BFSDeepCrawlStrategy, DFSDeepCrawlStrategy
+from crawl4ai.deep_crawling.filters import FilterChain, DomainFilter
+from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
+
+from .filters import BlockedPathFilter
+
+logger = logging.getLogger(__name__)
+
+
+def build_filter_chain(config: dict[str, Any]) -> FilterChain | None:
+    """Build a FilterChain from config."""
+    filters = []
+    target = config.get("target", {})
+
+    allowed_domains = target.get("allowed_domains", [])
+    if allowed_domains:
+        filters.append(DomainFilter(allowed_domains=allowed_domains))
+
+    blocked_paths = target.get("blocked_paths", [])
+    if blocked_paths:
+        filters.append(BlockedPathFilter(blocked_paths=blocked_paths))
+
+    return FilterChain(filters) if filters else None
+
+
+def build_crawl_strategy(config: dict[str, Any], filter_chain: FilterChain | None):
+    """Build deep crawl strategy from config."""
+    crawl_config = config.get("crawl", {})
+    strategy_name = crawl_config.get("strategy", "bfs")
+
+    kwargs: dict[str, Any] = {
+        "max_depth": crawl_config.get("max_depth", 3),
+        "max_pages": crawl_config.get("max_pages", 500),
+        "include_external": crawl_config.get("include_external", False),
+    }
+    if filter_chain:
+        kwargs["filter_chain"] = filter_chain
+
+    strategies = {
+        "bfs": BFSDeepCrawlStrategy,
+        "dfs": DFSDeepCrawlStrategy,
+    }
+    strategy_cls = strategies.get(strategy_name)
+    if not strategy_cls:
+        raise ValueError(f"Unknown strategy: {strategy_name}. Use: {list(strategies)}")
+
+    return strategy_cls(**kwargs)
+
+
+def build_md_generator(config: dict[str, Any]) -> DefaultMarkdownGenerator:
+    """Build markdown generator from config."""
+    md_config = config.get("markdown", {})
+    options: dict[str, Any] = {}
+
+    if md_config.get("citations"):
+        options["citations"] = True
+    body_width = md_config.get("body_width")
+    if body_width is not None:
+        options["body_width"] = body_width
+    if md_config.get("skip_internal_links"):
+        options["skip_internal_links"] = True
+
+    return DefaultMarkdownGenerator(options=options)
+
+
+def url_to_filepath(url: str, output_dir: str) -> Path:
+    """Convert URL to output file path, preserving site directory structure."""
+    parsed = urlparse(url)
+    path = parsed.path.strip("/")
+
+    if not path or path == "index.html":
+        return Path(output_dir) / "index.md"
+
+    if path.endswith(".html"):
+        return Path(output_dir) / path.replace(".html", ".md")
+
+    # Directory-like paths
+    return Path(output_dir) / path / "index.md"
+
+
+def save_state(crawled_urls: list[str], state_file: str) -> None:
+    """Save crawl state for recovery."""
+    path = Path(state_file)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w") as f:
+        json.dump({"crawled_urls": crawled_urls, "count": len(crawled_urls)}, f)
+
+
+def load_state(state_file: str) -> set[str]:
+    """Load crawled URLs from state file."""
+    path = Path(state_file)
+    if path.exists():
+        with open(path) as f:
+            data = json.load(f)
+            return set(data.get("crawled_urls", []))
+    return set()
+
+
+async def crawl_site(config: dict[str, Any], resume: bool = False) -> list:
+    """Crawl a website and save results as markdown files."""
+    target_url = config["target"]["url"]
+    output_dir = config["output"]["dir"]
+
+    filter_chain = build_filter_chain(config)
+    deep_strategy = build_crawl_strategy(config, filter_chain)
+    md_generator = build_md_generator(config)
+
+    run_config = CrawlerRunConfig(
+        deep_crawl_strategy=deep_strategy,
+        markdown_generator=md_generator,
+        stream=config.get("performance", {}).get("stream", True),
+        verbose=True,
+        cache_mode=CacheMode.BYPASS,
+    )
+
+    recovery_config = config.get("recovery", {})
+    state_file = recovery_config.get("state_file", "")
+
+    # Load previously crawled URLs for resume
+    already_crawled: set[str] = set()
+    if resume and recovery_config.get("enabled") and state_file:
+        already_crawled = load_state(state_file)
+        if already_crawled:
+            logger.info(f"Resuming: {len(already_crawled)} pages already crawled")
+
+    results = []
+    crawled_urls: list[str] = list(already_crawled)
+
+    browser_conf = BrowserConfig(headless=True)
+
+    async with AsyncWebCrawler(config=browser_conf) as crawler:
+        async for result in await crawler.arun(target_url, config=run_config):
+            if not result.success:
+                logger.warning(f"Failed: {result.url} - {result.error_message}")
+                continue
+
+            # Skip already crawled pages on resume
+            if result.url in already_crawled:
+                logger.debug(f"Skip (already crawled): {result.url}")
+                continue
+
+            filepath = url_to_filepath(result.url, output_dir)
+            filepath.parent.mkdir(parents=True, exist_ok=True)
+
+            md_content = ""
+            if result.markdown:
+                if result.markdown.markdown_with_citations:
+                    md_content = result.markdown.markdown_with_citations
+                    refs = result.markdown.references_markdown
+                    if refs:
+                        md_content += "\n\n" + refs
+                else:
+                    md_content = result.markdown.raw_markdown
+
+            if md_content:
+                filepath.write_text(md_content, encoding="utf-8")
+                depth = result.metadata.get("depth", 0)
+                logger.info(f"[Depth {depth}] Saved: {filepath} ({len(md_content)} chars)")
+
+            results.append(result)
+            crawled_urls.append(result.url)
+
+            # Save state for recovery
+            if recovery_config.get("enabled") and state_file:
+                save_state(crawled_urls, state_file)
+
+    return results

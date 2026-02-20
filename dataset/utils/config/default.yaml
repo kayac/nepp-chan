@@ -1,0 +1,28 @@
+target:
+  url: ""
+  allowed_domains: []
+  blocked_paths: []
+
+crawl:
+  strategy: bfs
+  max_depth: 3
+  max_pages: 500
+  include_external: false
+
+markdown:
+  citations: true
+  body_width: 0
+  skip_internal_links: false
+  content_filter: none
+
+performance:
+  prefetch: true
+  stream: true
+
+recovery:
+  enabled: true
+  state_file: "output/.crawl_state.json"
+
+output:
+  dir: "output"
+  naming: "url_path"
