@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import re
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -107,6 +109,40 @@ def load_state(state_file: str) -> set[str]:
     return set()
 
 
+def rewrite_links(url_to_file: dict[str, Path], output_dir: str) -> int:
+    """Replace URLs in saved markdown files with relative paths to local files."""
+    output_path = Path(output_dir)
+    replaced_count = 0
+
+    link_pattern = re.compile(r"(!?\[[^\]]*\])\(([^)]+)\)")
+
+    for filepath in output_path.rglob("*.md"):
+        content = filepath.read_text(encoding="utf-8")
+        original = content
+
+        def replace_url(match: re.Match, _fp: Path = filepath) -> str:
+            prefix = match.group(1)
+            url = match.group(2)
+
+            target_file = url_to_file.get(url)
+            if target_file is None:
+                return match.group(0)
+
+            rel_path = os.path.relpath(
+                Path(target_file).resolve(), _fp.resolve().parent
+            )
+            return f"{prefix}({rel_path})"
+
+        content = link_pattern.sub(replace_url, content)
+
+        if content != original:
+            filepath.write_text(content, encoding="utf-8")
+            replaced_count += 1
+            logger.info(f"Rewritten links: {filepath}")
+
+    return replaced_count
+
+
 async def crawl_site(config: dict[str, Any], resume: bool = False) -> list:
     """Crawl a website and save results as markdown files."""
     target_url = config["target"]["url"]
@@ -150,6 +186,7 @@ async def crawl_site(config: dict[str, Any], resume: bool = False) -> list:
 
     results = []
     crawled_urls: list[str] = list(already_crawled)
+    url_to_file: dict[str, Path] = {}
 
     browser_conf = BrowserConfig(headless=True)
 
@@ -178,9 +215,15 @@ async def crawl_site(config: dict[str, Any], resume: bool = False) -> list:
 
             results.append(result)
             crawled_urls.append(result.url)
+            url_to_file[result.url] = filepath
 
             # Save state for recovery
             if recovery_config.get("enabled") and state_file:
                 save_state(crawled_urls, state_file)
+
+    # Rewrite URLs to relative local paths
+    if config.get("output", {}).get("rewrite_links", True) and url_to_file:
+        count = rewrite_links(url_to_file, output_dir)
+        logger.info(f"Rewrote links in {count} files")
 
     return results
