@@ -1,0 +1,40 @@
+# おといねっぷ美術工芸高等学校
+# https://www.otoineppu-h.ed.jp/
+#
+# Usage (from dataset/utils/):
+#   uv run crawl.py --config config/examples/otoko.yaml
+#   uv run crawl.py --config config/examples/otoko.yaml --max-pages 10  # テスト実行
+
+target:
+  url: "https://www.otoineppu-h.ed.jp"
+  allowed_domains:
+    - "www.otoineppu-h.ed.jp"
+  blocked_paths:
+    - "/cgi-bin/"
+    - "/search"
+    - "/parent/"
+    - "/koujityu/"
+
+crawl:
+  strategy: bfs
+  max_depth: 4
+  max_pages: 200
+  include_external: false
+
+markdown:
+  citations: true
+  body_width: 0
+  skip_internal_links: true
+  content_filter: none
+
+performance:
+  prefetch: false
+  stream: true
+
+recovery:
+  enabled: true
+  state_file: "output/.crawl_state_otoko.json"
+
+output:
+  dir: "../v4/src/otoko"
+  naming: "url_path"
