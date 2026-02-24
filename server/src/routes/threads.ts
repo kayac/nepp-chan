@@ -149,10 +149,10 @@ threadsRoutes.openapi(createThreadRoute, async (c) => {
   );
 });
 
-// GET /threads/:threadId - スレッド詳細取得
+// GET /threads/{threadId} - スレッド詳細取得
 const getThreadRoute = createRoute({
   method: "get",
-  path: "/:threadId",
+  path: "/{threadId}",
   summary: "スレッド詳細取得",
   description: "スレッドの詳細情報を取得",
   tags: ["Threads"],
@@ -198,10 +198,10 @@ threadsRoutes.openapi(getThreadRoute, async (c) => {
   );
 });
 
-// GET /threads/:threadId/messages - メッセージ履歴取得
+// GET /threads/{threadId}/messages - メッセージ履歴取得
 const getMessagesRoute = createRoute({
   method: "get",
-  path: "/:threadId/messages",
+  path: "/{threadId}/messages",
   summary: "メッセージ履歴取得",
   description: "スレッド内のメッセージ履歴を取得",
   tags: ["Threads"],
@@ -254,10 +254,10 @@ threadsRoutes.openapi(getMessagesRoute, async (c) => {
   return c.json({ messages }, 200);
 });
 
-// DELETE /threads/:threadId - スレッド削除
+// DELETE /threads/{threadId} - スレッド削除
 const deleteThreadRoute = createRoute({
   method: "delete",
-  path: "/:threadId",
+  path: "/{threadId}",
   summary: "スレッド削除",
   description: "スレッドと関連データを削除",
   tags: ["Threads"],

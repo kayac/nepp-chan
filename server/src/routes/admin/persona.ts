@@ -135,7 +135,7 @@ personaAdminRoutes.openapi(extractAllRoute, async (c) => {
 
 const extractOneRoute = createRoute({
   method: "post",
-  path: "/extract/:threadId",
+  path: "/extract/{threadId}",
   summary: "特定スレッドからペルソナを抽出",
   description: "指定したスレッドからペルソナ情報を抽出します",
   tags: ["Admin - Persona"],

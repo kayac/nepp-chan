@@ -74,7 +74,7 @@ feedbackAdminRoutes.openapi(listRoute, async (c) => {
 
 const getDetailRoute = createRoute({
   method: "get",
-  path: "/:id",
+  path: "/{id}",
   summary: "フィードバック詳細を取得",
   description: "フィードバックの詳細情報を取得します",
   tags: ["Admin - Feedback"],
@@ -157,7 +157,7 @@ feedbackAdminRoutes.openapi(deleteAllRoute, async (c) => {
 
 const resolveRoute = createRoute({
   method: "put",
-  path: "/:id/resolve",
+  path: "/{id}/resolve",
   summary: "フィードバックを解決済みにする",
   description: "指定したフィードバックを解決済みステータスに変更します",
   tags: ["Admin - Feedback"],
@@ -199,7 +199,7 @@ feedbackAdminRoutes.openapi(resolveRoute, async (c) => {
 
 const unresolveRoute = createRoute({
   method: "delete",
-  path: "/:id/resolve",
+  path: "/{id}/resolve",
   summary: "フィードバックを未解決に戻す",
   description: "指定したフィードバックを未解決ステータスに戻します",
   tags: ["Admin - Feedback"],
