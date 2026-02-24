@@ -44,7 +44,7 @@ export const useFeedback = () => {
   return context;
 };
 
-const getMessageContent = (message: UIMessage): string =>
+const getMessageContent = (message: UIMessage) =>
   message.parts
     .filter((part) => part.type === "text")
     .map((part) => part.text)

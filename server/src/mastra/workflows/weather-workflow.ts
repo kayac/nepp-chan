@@ -10,7 +10,7 @@ const forecastSchema = z.object({
   location: z.string(),
 });
 
-const getWeatherCondition = (code: number): string => {
+const getWeatherCondition = (code: number) => {
   const conditions: Record<number, string> = {
     0: "Clear sky",
     1: "Mainly clear",

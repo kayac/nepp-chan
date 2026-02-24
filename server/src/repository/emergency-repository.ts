@@ -31,7 +31,7 @@ export const emergencyRepository = {
     return input.id;
   },
 
-  async update(d1: D1Database, id: string, input: UpdateInput): Promise<void> {
+  async update(d1: D1Database, id: string, input: UpdateInput) {
     const db = createDb(d1);
 
     const updates: Partial<typeof emergencyReports.$inferInsert> = {
@@ -60,7 +60,7 @@ export const emergencyRepository = {
     return result ?? null;
   },
 
-  async findAll(d1: D1Database, limit = 100): Promise<EmergencyReport[]> {
+  async findAll(d1: D1Database, limit = 100) {
     const db = createDb(d1);
 
     return db
@@ -71,11 +71,7 @@ export const emergencyRepository = {
       .all();
   },
 
-  async findRecent(
-    d1: D1Database,
-    days: number,
-    limit = 100,
-  ): Promise<EmergencyReport[]> {
+  async findRecent(d1: D1Database, days: number, limit = 100) {
     const db = createDb(d1);
 
     const since = new Date();

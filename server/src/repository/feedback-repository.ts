@@ -145,7 +145,7 @@ export const feedbackRepository = {
     };
   },
 
-  async count(d1: D1Database): Promise<number> {
+  async count(d1: D1Database) {
     const db = createDb(d1);
 
     const result = await db
@@ -164,19 +164,19 @@ export const feedbackRepository = {
       .where(eq(messageFeedback.threadId, threadId));
   },
 
-  async delete(d1: D1Database, id: string): Promise<void> {
+  async delete(d1: D1Database, id: string) {
     const db = createDb(d1);
 
     await db.delete(messageFeedback).where(eq(messageFeedback.id, id));
   },
 
-  async deleteAll(d1: D1Database): Promise<void> {
+  async deleteAll(d1: D1Database) {
     const db = createDb(d1);
 
     await db.delete(messageFeedback);
   },
 
-  async resolve(d1: D1Database, id: string): Promise<void> {
+  async resolve(d1: D1Database, id: string) {
     const db = createDb(d1);
 
     await db
@@ -185,7 +185,7 @@ export const feedbackRepository = {
       .where(eq(messageFeedback.id, id));
   },
 
-  async unresolve(d1: D1Database, id: string): Promise<void> {
+  async unresolve(d1: D1Database, id: string) {
     const db = createDb(d1);
 
     await db

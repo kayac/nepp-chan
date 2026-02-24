@@ -6,9 +6,7 @@ type FetchPersonasParams = {
   cursor?: string;
 };
 
-export const fetchPersonas = (
-  params: FetchPersonasParams = {},
-): Promise<PersonasResponse> => {
+export const fetchPersonas = (params: FetchPersonasParams = {}) => {
   const searchParams = new URLSearchParams();
   searchParams.set("limit", String(params.limit ?? 30));
   if (params.cursor) {
@@ -29,7 +27,7 @@ export type ExtractPersonasResponse = {
   }>;
 };
 
-export const extractPersonas = (): Promise<ExtractPersonasResponse> =>
+export const extractPersonas = () =>
   apiClient<ExtractPersonasResponse>("/admin/persona/extract", {
     method: "POST",
   });
@@ -39,7 +37,7 @@ export type DeletePersonasResponse = {
   count: number;
 };
 
-export const deleteAllPersonas = (): Promise<DeletePersonasResponse> =>
+export const deleteAllPersonas = () =>
   apiClient<DeletePersonasResponse>("/admin/persona", {
     method: "DELETE",
   });

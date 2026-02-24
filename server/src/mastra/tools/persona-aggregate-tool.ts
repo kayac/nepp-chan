@@ -96,7 +96,7 @@ export const personaAggregateTool = createTool({
   },
 });
 
-const formatDemographics = (demographics: string | null): string => {
+const formatDemographics = (demographics: string | null) => {
   if (!demographics) return "不明";
 
   const items = demographics.split(",").filter(Boolean);

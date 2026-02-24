@@ -94,10 +94,7 @@ const chunkDocument = async (
 /**
  * テキスト配列から embeddings を生成
  */
-const generateEmbeddings = async (
-  texts: string[],
-  apiKey: string,
-): Promise<number[][]> => {
+const generateEmbeddings = async (texts: string[], apiKey: string) => {
   if (texts.length === 0) {
     return [];
   }

@@ -67,7 +67,7 @@ const getWeather = async (location: string) => {
   };
 };
 
-const getWeatherCondition = (code: number): string => {
+const getWeatherCondition = (code: number) => {
   const conditions: Record<number, string> = {
     0: "Clear sky",
     1: "Mainly clear",

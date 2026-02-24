@@ -80,19 +80,19 @@ export const adminSessionRepository = {
       .where(eq(adminSessions.id, id));
   },
 
-  async delete(d1: D1Database, id: string): Promise<void> {
+  async delete(d1: D1Database, id: string) {
     const db = createDb(d1);
 
     await db.delete(adminSessions).where(eq(adminSessions.id, id));
   },
 
-  async deleteByUserId(d1: D1Database, userId: string): Promise<void> {
+  async deleteByUserId(d1: D1Database, userId: string) {
     const db = createDb(d1);
 
     await db.delete(adminSessions).where(eq(adminSessions.userId, userId));
   },
 
-  async deleteExpired(d1: D1Database): Promise<void> {
+  async deleteExpired(d1: D1Database) {
     const db = createDb(d1);
     const now = new Date().toISOString();
 

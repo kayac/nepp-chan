@@ -6,9 +6,7 @@ import type {
   MessageFeedback,
 } from "~/types";
 
-export const submitFeedback = (
-  data: FeedbackSubmitRequest,
-): Promise<FeedbackSubmitResponse> =>
+export const submitFeedback = (data: FeedbackSubmitRequest) =>
   apiClient<FeedbackSubmitResponse>("/feedback", {
     method: "POST",
     body: data,
@@ -20,9 +18,7 @@ type FetchFeedbacksParams = {
   rating?: "good" | "bad" | "idea";
 };
 
-export const fetchFeedbacks = (
-  params: FetchFeedbacksParams = {},
-): Promise<FeedbacksResponse> => {
+export const fetchFeedbacks = (params: FetchFeedbacksParams = {}) => {
   const searchParams = new URLSearchParams();
   searchParams.set("limit", String(params.limit ?? 30));
   if (params.cursor) {
@@ -34,7 +30,7 @@ export const fetchFeedbacks = (
   return apiClient<FeedbacksResponse>(`/admin/feedback?${searchParams}`);
 };
 
-export const fetchFeedbackById = (id: string): Promise<MessageFeedback> =>
+export const fetchFeedbackById = (id: string) =>
   apiClient<MessageFeedback>(`/admin/feedback/${id}`);
 
 type DeleteFeedbacksResponse = {
@@ -42,7 +38,7 @@ type DeleteFeedbacksResponse = {
   count: number;
 };
 
-export const deleteAllFeedbacks = (): Promise<DeleteFeedbacksResponse> =>
+export const deleteAllFeedbacks = () =>
   apiClient<DeleteFeedbacksResponse>("/admin/feedback", {
     method: "DELETE",
   });
@@ -51,12 +47,12 @@ type ResolveResponse = {
   message: string;
 };
 
-export const resolveFeedback = (id: string): Promise<ResolveResponse> =>
+export const resolveFeedback = (id: string) =>
   apiClient<ResolveResponse>(`/admin/feedback/${id}/resolve`, {
     method: "PUT",
   });
 
-export const unresolveFeedback = (id: string): Promise<ResolveResponse> =>
+export const unresolveFeedback = (id: string) =>
   apiClient<ResolveResponse>(`/admin/feedback/${id}/resolve`, {
     method: "DELETE",
   });

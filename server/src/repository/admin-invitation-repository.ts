@@ -122,13 +122,13 @@ export const adminInvitationRepository = {
       .where(eq(adminInvitations.id, id));
   },
 
-  async delete(d1: D1Database, id: string): Promise<void> {
+  async delete(d1: D1Database, id: string) {
     const db = createDb(d1);
 
     await db.delete(adminInvitations).where(eq(adminInvitations.id, id));
   },
 
-  async deleteExpired(d1: D1Database): Promise<void> {
+  async deleteExpired(d1: D1Database) {
     const db = createDb(d1);
     const now = new Date().toISOString();
 

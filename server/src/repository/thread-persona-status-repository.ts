@@ -21,7 +21,7 @@ export const threadPersonaStatusRepository = {
     return result ?? null;
   },
 
-  async findAll(d1: D1Database): Promise<ThreadPersonaStatus[]> {
+  async findAll(d1: D1Database) {
     const db = createDb(d1);
 
     return db.select().from(threadPersonaStatus).all();
@@ -46,7 +46,7 @@ export const threadPersonaStatusRepository = {
       });
   },
 
-  async delete(d1: D1Database, threadId: string): Promise<void> {
+  async delete(d1: D1Database, threadId: string) {
     const db = createDb(d1);
 
     await db

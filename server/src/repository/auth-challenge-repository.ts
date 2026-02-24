@@ -61,7 +61,7 @@ export const authChallengeRepository = {
     await db.delete(authChallenges).where(eq(authChallenges.id, id));
   },
 
-  async deleteExpired(d1: D1Database): Promise<void> {
+  async deleteExpired(d1: D1Database) {
     const db = createDb(d1);
     const now = new Date().toISOString();
 

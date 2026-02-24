@@ -43,7 +43,7 @@ export const personaRepository = {
     return input.id;
   },
 
-  async update(d1: D1Database, id: string, input: UpdateInput): Promise<void> {
+  async update(d1: D1Database, id: string, input: UpdateInput) {
     const db = createDb(d1);
 
     const updates: Partial<typeof persona.$inferInsert> = {
@@ -74,11 +74,7 @@ export const personaRepository = {
     return result ?? null;
   },
 
-  async findByResourceId(
-    d1: D1Database,
-    resourceId: string,
-    limit = 100,
-  ): Promise<Persona[]> {
+  async findByResourceId(d1: D1Database, resourceId: string, limit = 100) {
     const db = createDb(d1);
 
     return db
@@ -99,7 +95,7 @@ export const personaRepository = {
       keyword?: string;
       limit?: number;
     } = {},
-  ): Promise<Persona[]> {
+  ) {
     const db = createDb(d1);
 
     const conditions = [eq(persona.resourceId, resourceId)];

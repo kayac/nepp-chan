@@ -64,13 +64,13 @@ export const adminCredentialRepository = {
       .where(eq(adminCredentials.id, id));
   },
 
-  async delete(d1: D1Database, id: string): Promise<void> {
+  async delete(d1: D1Database, id: string) {
     const db = createDb(d1);
 
     await db.delete(adminCredentials).where(eq(adminCredentials.id, id));
   },
 
-  async deleteByUserId(d1: D1Database, userId: string): Promise<void> {
+  async deleteByUserId(d1: D1Database, userId: string) {
     const db = createDb(d1);
 
     await db

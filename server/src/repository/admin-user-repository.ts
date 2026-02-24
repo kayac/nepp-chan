@@ -67,7 +67,7 @@ export const adminUserRepository = {
       .where(eq(adminUsers.id, id));
   },
 
-  async delete(d1: D1Database, id: string): Promise<void> {
+  async delete(d1: D1Database, id: string) {
     const db = createDb(d1);
 
     await db.delete(adminUsers).where(eq(adminUsers.id, id));
