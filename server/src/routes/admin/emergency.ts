@@ -19,7 +19,7 @@ const listRoute = createRoute({
   tags: ["Admin - Emergency"],
   request: {
     query: z.object({
-      limit: z.string().optional().default("100"),
+      limit: z.coerce.number().int().min(1).optional().default(100),
     }),
   },
   responses: {
@@ -41,7 +41,7 @@ const listRoute = createRoute({
 emergencyAdminRoutes.openapi(listRoute, async (c) => {
   const { limit } = c.req.valid("query");
 
-  const results = await emergencyRepository.findAll(c.env.DB, Number(limit));
+  const results = await emergencyRepository.findAll(c.env.DB, limit);
 
   return c.json(
     {

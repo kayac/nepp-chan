@@ -23,7 +23,7 @@ const listRoute = createRoute({
   tags: ["Admin - Feedback"],
   request: {
     query: z.object({
-      limit: z.string().optional().default("30"),
+      limit: z.coerce.number().int().min(1).optional().default(30),
       cursor: z.string().optional(),
       rating: z.enum(["good", "bad"]).optional(),
     }),
@@ -49,10 +49,9 @@ const listRoute = createRoute({
 
 feedbackAdminRoutes.openapi(listRoute, async (c) => {
   const { limit, cursor, rating } = c.req.valid("query");
-  const limitNum = Number(limit);
 
   const result = await feedbackRepository.list(c.env.DB, {
-    limit: limitNum,
+    limit,
     cursor: cursor ?? undefined,
     rating: rating ?? undefined,
   });

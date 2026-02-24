@@ -39,7 +39,7 @@ const listRoute = createRoute({
   tags: ["Admin - Persona"],
   request: {
     query: z.object({
-      limit: z.string().optional().default("30"),
+      limit: z.coerce.number().int().min(1).optional().default(30),
       cursor: z.string().optional(),
     }),
   },
@@ -64,7 +64,7 @@ const listRoute = createRoute({
 personaAdminRoutes.openapi(listRoute, async (c) => {
   const { limit, cursor } = c.req.valid("query");
   const result = await personaRepository.listForAdmin(c.env.DB, {
-    limit: Number(limit),
+    limit,
     cursor: cursor ?? undefined,
   });
   return c.json(result, 200);
