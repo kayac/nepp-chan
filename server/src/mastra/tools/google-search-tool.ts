@@ -25,7 +25,7 @@ interface SearchOutput {
 const SOURCE = "Google Custom Search API";
 
 export const searchGoogleTool = createTool({
-  id: "searchGoogleTool",
+  id: "google-search",
   description: "Google検索を使ってインターネットから最新の情報を検索します。",
   inputSchema: z.object({
     query: z.string().describe("検索したいキーワードや質問内容"),

@@ -4,32 +4,16 @@ import { HTTPException } from "hono/http-exception";
 import { errorResponse } from "~/lib/openapi-errors";
 import { sessionAuth } from "~/middleware/session-auth";
 import { feedbackRepository } from "~/repository/feedback-repository";
+import {
+  feedbackFullSchema,
+  feedbackStatsSchema,
+} from "~/schemas/feedback-schema";
 
 export const feedbackAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
 }>();
 
 feedbackAdminRoutes.use("*", sessionAuth);
-
-const FeedbackSchema = z.object({
-  id: z.string(),
-  threadId: z.string(),
-  messageId: z.string(),
-  rating: z.string(),
-  category: z.string().nullable(),
-  comment: z.string().nullable(),
-  conversationContext: z.string(),
-  toolExecutions: z.string().nullable(),
-  createdAt: z.string(),
-  resolvedAt: z.string().nullable(),
-});
-
-const StatsSchema = z.object({
-  total: z.number(),
-  good: z.number(),
-  bad: z.number(),
-  byCategory: z.record(z.string(), z.number()),
-});
 
 const listRoute = createRoute({
   method: "get",
@@ -50,11 +34,11 @@ const listRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            feedbacks: z.array(FeedbackSchema),
+            feedbacks: z.array(feedbackFullSchema),
             total: z.number(),
             nextCursor: z.string().nullable(),
             hasMore: z.boolean(),
-            stats: StatsSchema,
+            stats: feedbackStatsSchema,
           }),
         },
       },
@@ -104,7 +88,7 @@ const getDetailRoute = createRoute({
       description: "取得成功",
       content: {
         "application/json": {
-          schema: FeedbackSchema,
+          schema: feedbackFullSchema,
         },
       },
     },

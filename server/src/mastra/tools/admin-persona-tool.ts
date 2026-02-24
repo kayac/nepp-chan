@@ -1,8 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-
-import { personaOutputSchema } from "~/mastra/schemas/persona-schema";
 import { personaRepository } from "~/repository/persona-repository";
+import { personaOutputSchema } from "~/schemas/persona-schema";
 import { requireAdmin } from "./helpers";
 
 export const adminPersonaTool = createTool({

@@ -1,8 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-
-import { emergencyReportSchema } from "~/mastra/schemas/emergency-schema";
 import { emergencyRepository } from "~/repository/emergency-repository";
+import { emergencyReportSchema } from "~/schemas/emergency-schema";
 import { requireAdmin } from "./helpers";
 
 export const emergencyGetTool = createTool({

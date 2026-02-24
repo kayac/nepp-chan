@@ -2,26 +2,11 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
 import { feedbackRepository } from "~/repository/feedback-repository";
+import {
+  feedbackBaseSchema,
+  feedbackStatsSchema,
+} from "~/schemas/feedback-schema";
 import { requireAdmin } from "./helpers";
-
-const feedbackSchema = z.object({
-  id: z.string(),
-  threadId: z.string(),
-  messageId: z.string(),
-  rating: z.string(),
-  category: z.string().nullable(),
-  comment: z.string().nullable(),
-  createdAt: z.string(),
-  resolvedAt: z.string().nullable(),
-});
-
-const statsSchema = z.object({
-  total: z.number(),
-  good: z.number(),
-  bad: z.number(),
-  idea: z.number(),
-  byCategory: z.record(z.string(), z.number()),
-});
 
 export const adminFeedbackTool = createTool({
   id: "admin-feedback",
@@ -46,8 +31,8 @@ export const adminFeedbackTool = createTool({
   }),
   outputSchema: z.object({
     success: z.boolean(),
-    feedbacks: z.array(feedbackSchema),
-    stats: statsSchema.optional(),
+    feedbacks: z.array(feedbackBaseSchema),
+    stats: feedbackStatsSchema.optional(),
     count: z.number(),
     message: z.string(),
     error: z.string().optional(),

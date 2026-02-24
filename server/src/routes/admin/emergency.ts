@@ -3,21 +3,13 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { errorResponse } from "~/lib/openapi-errors";
 import { sessionAuth } from "~/middleware/session-auth";
 import { emergencyRepository } from "~/repository/emergency-repository";
+import { emergencyReportSchema } from "~/schemas/emergency-schema";
 
 export const emergencyAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
 }>();
 
 emergencyAdminRoutes.use("*", sessionAuth);
-
-const EmergencySchema = z.object({
-  id: z.string(),
-  type: z.string(),
-  description: z.string().nullable(),
-  location: z.string().nullable(),
-  reportedAt: z.string(),
-  updatedAt: z.string().nullable(),
-});
 
 const listRoute = createRoute({
   method: "get",
@@ -36,7 +28,7 @@ const listRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            emergencies: z.array(EmergencySchema),
+            emergencies: z.array(emergencyReportSchema),
             total: z.number(),
           }),
         },

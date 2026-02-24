@@ -22,9 +22,9 @@ interface WeatherResponse {
 
 export const weatherTool = createTool({
   id: "get-weather",
-  description: "Get current weather for a location",
+  description: "指定した場所の現在の天気情報を取得します",
   inputSchema: z.object({
-    location: z.string().describe("City name"),
+    location: z.string().describe("都市名"),
   }),
   outputSchema: z.object({
     temperature: z.number(),
@@ -36,15 +36,7 @@ export const weatherTool = createTool({
     location: z.string(),
   }),
   execute: async (inputData) => {
-    console.log("[weatherTool] called with:", inputData);
-    try {
-      const result = await getWeather(inputData.location);
-      console.log("[weatherTool] success:", result);
-      return result;
-    } catch (error) {
-      console.error("[weatherTool] error:", error);
-      throw error;
-    }
+    return await getWeather(inputData.location);
   },
 });
 
