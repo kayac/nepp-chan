@@ -22,7 +22,6 @@ type ExtractResult =
   | { extracted: true; messageCount: number };
 
 export type ExtractPersonasResponse = {
-  success: boolean;
   message: string;
   results: Array<{
     threadId: string;
@@ -36,7 +35,6 @@ export const extractPersonas = (): Promise<ExtractPersonasResponse> =>
   });
 
 export type DeletePersonasResponse = {
-  success: boolean;
   message: string;
   count: number;
 };
