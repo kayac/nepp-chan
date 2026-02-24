@@ -55,38 +55,30 @@ const uploadFileRoute = createRoute({
 knowledgeConvertRoutes.openapi(uploadFileRoute, async (c) => {
   const apiKey = requireApiKey(c.env.GOOGLE_GENERATIVE_AI_API_KEY);
 
-  try {
-    const formData = await c.req.formData();
-    const file = formData.get("file") as File | null;
-    const customFilename = formData.get("filename") as string | null;
+  const formData = await c.req.formData();
+  const file = formData.get("file") as File | null;
+  const customFilename = formData.get("filename") as string | null;
 
-    if (!file) {
-      throw new HTTPException(400, { message: "File is required" });
-    }
-
-    if (customFilename) validateFileKey(customFilename);
-
-    const result = await uploadMarkdownFile(file, customFilename, {
-      bucket: c.env.KNOWLEDGE_BUCKET,
-      vectorize: c.env.VECTORIZE,
-      apiKey,
-    });
-
-    return c.json(
-      {
-        message: `ファイルをアップロードし、${result.chunks}チャンクを同期しました`,
-        key: result.key,
-        chunks: result.chunks,
-      },
-      200,
-    );
-  } catch (error) {
-    if (error instanceof HTTPException) throw error;
-    console.error("Upload file error:", error);
-    throw new HTTPException(500, {
-      message: error instanceof Error ? error.message : "Upload failed",
-    });
+  if (!file) {
+    throw new HTTPException(400, { message: "File is required" });
   }
+
+  if (customFilename) validateFileKey(customFilename);
+
+  const result = await uploadMarkdownFile(file, customFilename, {
+    bucket: c.env.KNOWLEDGE_BUCKET,
+    vectorize: c.env.VECTORIZE,
+    apiKey,
+  });
+
+  return c.json(
+    {
+      message: `ファイルをアップロードし、${result.chunks}チャンクを同期しました`,
+      key: result.key,
+      chunks: result.chunks,
+    },
+    200,
+  );
 });
 
 // POST /admin/knowledge/convert - 画像/PDF → Markdown 変換
@@ -134,42 +126,34 @@ const convertFileRoute = createRoute({
 knowledgeConvertRoutes.openapi(convertFileRoute, async (c) => {
   const apiKey = requireApiKey(c.env.GOOGLE_GENERATIVE_AI_API_KEY);
 
-  try {
-    const formData = await c.req.formData();
-    const file = formData.get("file") as File | null;
-    const filename = formData.get("filename") as string | null;
+  const formData = await c.req.formData();
+  const file = formData.get("file") as File | null;
+  const filename = formData.get("filename") as string | null;
 
-    if (!file) {
-      throw new HTTPException(400, { message: "File is required" });
-    }
-    if (!filename) {
-      throw new HTTPException(400, { message: "Filename is required" });
-    }
-
-    validateFileKey(filename);
-
-    const result = await convertAndUpload(file, filename, {
-      bucket: c.env.KNOWLEDGE_BUCKET,
-      vectorize: c.env.VECTORIZE,
-      apiKey,
-    });
-
-    return c.json(
-      {
-        message: `ファイルを変換し、${result.chunks}チャンクを同期しました`,
-        key: result.key,
-        originalType: result.originalType,
-        chunks: result.chunks,
-      },
-      200,
-    );
-  } catch (error) {
-    if (error instanceof HTTPException) throw error;
-    console.error("Convert file error:", error);
-    throw new HTTPException(500, {
-      message: error instanceof Error ? error.message : "Convert failed",
-    });
+  if (!file) {
+    throw new HTTPException(400, { message: "File is required" });
   }
+  if (!filename) {
+    throw new HTTPException(400, { message: "Filename is required" });
+  }
+
+  validateFileKey(filename);
+
+  const result = await convertAndUpload(file, filename, {
+    bucket: c.env.KNOWLEDGE_BUCKET,
+    vectorize: c.env.VECTORIZE,
+    apiKey,
+  });
+
+  return c.json(
+    {
+      message: `ファイルを変換し、${result.chunks}チャンクを同期しました`,
+      key: result.key,
+      originalType: result.originalType,
+      chunks: result.chunks,
+    },
+    200,
+  );
 });
 
 // POST /admin/knowledge/reconvert - 元ファイルからMarkdownを再生成
@@ -225,26 +209,18 @@ knowledgeConvertRoutes.openapi(reconvertFileRoute, async (c) => {
   }
   validateFileKey(filename);
 
-  try {
-    const result = await reconvertFromOriginal(originalKey, filename, {
-      bucket: c.env.KNOWLEDGE_BUCKET,
-      vectorize: c.env.VECTORIZE,
-      apiKey,
-    });
+  const result = await reconvertFromOriginal(originalKey, filename, {
+    bucket: c.env.KNOWLEDGE_BUCKET,
+    vectorize: c.env.VECTORIZE,
+    apiKey,
+  });
 
-    return c.json(
-      {
-        message: `ファイルを再変換し、${result.chunks}チャンクを同期しました`,
-        key: result.key,
-        chunks: result.chunks,
-      },
-      200,
-    );
-  } catch (error) {
-    if (error instanceof HTTPException) throw error;
-    console.error("Reconvert file error:", error);
-    throw new HTTPException(500, {
-      message: error instanceof Error ? error.message : "Reconvert failed",
-    });
-  }
+  return c.json(
+    {
+      message: `ファイルを再変換し、${result.chunks}チャンクを同期しました`,
+      key: result.key,
+      chunks: result.chunks,
+    },
+    200,
+  );
 });

@@ -1,5 +1,4 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { HTTPException } from "hono/http-exception";
 
 import { errorResponse } from "~/lib/openapi-errors";
 import { sessionAuth } from "~/middleware/session-auth";
@@ -107,30 +106,22 @@ const extractAllRoute = createRoute({
 });
 
 personaAdminRoutes.openapi(extractAllRoute, async (c) => {
-  try {
-    const results = await extractAllPendingThreads(c.env);
+  const results = await extractAllPendingThreads(c.env);
 
-    const extracted = results.filter(
-      (r) => "extracted" in r.result && r.result.extracted,
-    ).length;
-    const skipped = results.filter(
-      (r) => "skipped" in r.result && r.result.skipped,
-    ).length;
+  const extracted = results.filter(
+    (r) => "extracted" in r.result && r.result.extracted,
+  ).length;
+  const skipped = results.filter(
+    (r) => "skipped" in r.result && r.result.skipped,
+  ).length;
 
-    return c.json(
-      {
-        message: `${extracted}件のスレッドからペルソナを抽出しました、${skipped}件スキップ`,
-        results,
-      },
-      200,
-    );
-  } catch (error) {
-    console.error("Persona extract error:", error);
-    throw new HTTPException(500, {
-      message:
-        error instanceof Error ? error.message : "Persona extraction failed",
-    });
-  }
+  return c.json(
+    {
+      message: `${extracted}件のスレッドからペルソナを抽出しました、${skipped}件スキップ`,
+      results,
+    },
+    200,
+  );
 });
 
 const extractOneRoute = createRoute({
@@ -165,20 +156,11 @@ const extractOneRoute = createRoute({
 personaAdminRoutes.openapi(extractOneRoute, async (c) => {
   const { threadId } = c.req.valid("param");
 
-  try {
-    const { result, message } = await extractPersonaFromThreadById(
-      threadId,
-      c.env,
-    );
-    return c.json({ message, result }, 200);
-  } catch (error) {
-    if (error instanceof HTTPException) throw error;
-    console.error("Persona extract error:", error);
-    throw new HTTPException(500, {
-      message:
-        error instanceof Error ? error.message : "Persona extraction failed",
-    });
-  }
+  const { result, message } = await extractPersonaFromThreadById(
+    threadId,
+    c.env,
+  );
+  return c.json({ message, result }, 200);
 });
 
 const deleteAllRoute = createRoute({
@@ -205,17 +187,6 @@ const deleteAllRoute = createRoute({
 });
 
 personaAdminRoutes.openapi(deleteAllRoute, async (c) => {
-  try {
-    const { count } = await deleteAllPersonas(c.env.DB);
-    return c.json(
-      { message: `${count}件のペルソナを削除しました`, count },
-      200,
-    );
-  } catch (error) {
-    console.error("Persona delete error:", error);
-    throw new HTTPException(500, {
-      message:
-        error instanceof Error ? error.message : "Persona deletion failed",
-    });
-  }
+  const { count } = await deleteAllPersonas(c.env.DB);
+  return c.json({ message: `${count}件のペルソナを削除しました`, count }, 200);
 });

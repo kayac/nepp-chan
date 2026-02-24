@@ -1,5 +1,4 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { HTTPException } from "hono/http-exception";
 
 import { errorResponse } from "~/lib/openapi-errors";
 import { deleteAllKnowledge, syncAll } from "~/services/knowledge";
@@ -27,22 +26,14 @@ const deleteAllRoute = createRoute({
 });
 
 knowledgeSyncRoutes.openapi(deleteAllRoute, async (c) => {
-  try {
-    const result = await deleteAllKnowledge(c.env.VECTORIZE);
-    return c.json(
-      {
-        message: `${result.deleted}件のベクトルを削除しました`,
-        count: result.deleted,
-      },
-      200,
-    );
-  } catch (error) {
-    console.error("Vectorize delete error:", error);
-    throw new HTTPException(500, {
-      message:
-        error instanceof Error ? error.message : "Vectorize delete failed",
-    });
-  }
+  const result = await deleteAllKnowledge(c.env.VECTORIZE);
+  return c.json(
+    {
+      message: `${result.deleted}件のベクトルを削除しました`,
+      count: result.deleted,
+    },
+    200,
+  );
 });
 
 // POST /admin/knowledge/sync - 全ナレッジを同期
@@ -81,25 +72,18 @@ const syncAllRoute = createRoute({
 knowledgeSyncRoutes.openapi(syncAllRoute, async (c) => {
   const apiKey = requireApiKey(c.env.GOOGLE_GENERATIVE_AI_API_KEY);
 
-  try {
-    const result = await syncAll({
-      bucket: c.env.KNOWLEDGE_BUCKET,
-      vectorize: c.env.VECTORIZE,
-      apiKey,
-    });
+  const result = await syncAll({
+    bucket: c.env.KNOWLEDGE_BUCKET,
+    vectorize: c.env.VECTORIZE,
+    apiKey,
+  });
 
-    return c.json(
-      {
-        message: `${result.totalFiles}ファイル、${result.totalChunks}チャンクを同期しました`,
-        results: result.results,
-        editedCount: result.editedCount,
-      },
-      200,
-    );
-  } catch (error) {
-    console.error("Sync error:", error);
-    throw new HTTPException(500, {
-      message: error instanceof Error ? error.message : "Sync failed",
-    });
-  }
+  return c.json(
+    {
+      message: `${result.totalFiles}ファイル、${result.totalChunks}チャンクを同期しました`,
+      results: result.results,
+      editedCount: result.editedCount,
+    },
+    200,
+  );
 });

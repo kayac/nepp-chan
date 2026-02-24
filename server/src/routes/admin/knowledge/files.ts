@@ -43,18 +43,11 @@ const listFilesRoute = createRoute({
 });
 
 knowledgeFilesRoutes.openapi(listFilesRoute, async (c) => {
-  try {
-    const result = await listFiles(c.env.KNOWLEDGE_BUCKET);
-    return c.json(result, 200);
-  } catch (error) {
-    console.error("List files error:", error);
-    throw new HTTPException(500, {
-      message: error instanceof Error ? error.message : "List files failed",
-    });
-  }
+  const result = await listFiles(c.env.KNOWLEDGE_BUCKET);
+  return c.json(result, 200);
 });
 
-// GET /admin/knowledge/files/:key - ファイル内容取得
+// GET /admin/knowledge/files/{key} - ファイル内容取得
 const getFileRoute = createRoute({
   method: "get",
   path: "/files/{key}",
@@ -75,23 +68,16 @@ const getFileRoute = createRoute({
 
 knowledgeFilesRoutes.openapi(getFileRoute, async (c) => {
   const { key } = c.req.valid("param");
+  validateFileKey(key);
 
-  try {
-    const result = await getFile(c.env.KNOWLEDGE_BUCKET, key);
-    if (!result) {
-      throw new HTTPException(404, { message: "File not found" });
-    }
-    return c.json(result, 200);
-  } catch (error) {
-    if (error instanceof HTTPException) throw error;
-    console.error("Get file error:", error);
-    throw new HTTPException(500, {
-      message: error instanceof Error ? error.message : "Get file failed",
-    });
+  const result = await getFile(c.env.KNOWLEDGE_BUCKET, key);
+  if (!result) {
+    throw new HTTPException(404, { message: "File not found" });
   }
+  return c.json(result, 200);
 });
 
-// PUT /admin/knowledge/files/:key - ファイル保存（作成・更新）
+// PUT /admin/knowledge/files/{key} - ファイル保存（作成・更新）
 const saveFileRoute = createRoute({
   method: "put",
   path: "/files/{key}",
@@ -129,34 +115,25 @@ knowledgeFilesRoutes.openapi(saveFileRoute, async (c) => {
 
   validateFileKey(key);
 
-  try {
-    await c.env.KNOWLEDGE_BUCKET.put(key, content, {
-      httpMetadata: { contentType: "text/markdown" },
-    });
-    console.log(`[Save] Saved ${key} (${content.length} bytes)`);
+  await c.env.KNOWLEDGE_BUCKET.put(key, content, {
+    httpMetadata: { contentType: "text/markdown" },
+  });
 
-    const result = await syncFile(key, content, {
-      vectorize: c.env.VECTORIZE,
-      apiKey,
-    });
+  const result = await syncFile(key, content, {
+    vectorize: c.env.VECTORIZE,
+    apiKey,
+  });
 
-    return c.json(
-      {
-        message: `ファイルを保存し、${result.chunks}チャンクを同期しました`,
-        chunks: result.chunks,
-      },
-      200,
-    );
-  } catch (error) {
-    if (error instanceof HTTPException) throw error;
-    console.error("Save file error:", error);
-    throw new HTTPException(500, {
-      message: error instanceof Error ? error.message : "Save file failed",
-    });
-  }
+  return c.json(
+    {
+      message: `ファイルを保存し、${result.chunks}チャンクを同期しました`,
+      chunks: result.chunks,
+    },
+    200,
+  );
 });
 
-// DELETE /admin/knowledge/files/:key - ファイル完全削除
+// DELETE /admin/knowledge/files/{key} - ファイル完全削除
 const deleteFileRoute = createRoute({
   method: "delete",
   path: "/files/{key}",
@@ -179,17 +156,9 @@ knowledgeFilesRoutes.openapi(deleteFileRoute, async (c) => {
   const { key } = c.req.valid("param");
   validateFileKey(key);
 
-  try {
-    await deleteFile(c.env.KNOWLEDGE_BUCKET, c.env.VECTORIZE, key);
-    const baseName = key.replace(/\.md$/, "");
-    return c.json({ message: `${baseName} を完全に削除しました` }, 200);
-  } catch (error) {
-    if (error instanceof HTTPException) throw error;
-    console.error("Delete file error:", error);
-    throw new HTTPException(500, {
-      message: error instanceof Error ? error.message : "Delete file failed",
-    });
-  }
+  await deleteFile(c.env.KNOWLEDGE_BUCKET, c.env.VECTORIZE, key);
+  const baseName = key.replace(/\.md$/, "");
+  return c.json({ message: `${baseName} を完全に削除しました` }, 200);
 });
 
 // GET /admin/knowledge/unified - 統合ファイル一覧取得
@@ -213,19 +182,11 @@ const listUnifiedFilesRoute = createRoute({
 });
 
 knowledgeFilesRoutes.openapi(listUnifiedFilesRoute, async (c) => {
-  try {
-    const result = await listUnifiedFiles(c.env.KNOWLEDGE_BUCKET);
-    return c.json(result, 200);
-  } catch (error) {
-    console.error("List unified files error:", error);
-    throw new HTTPException(500, {
-      message:
-        error instanceof Error ? error.message : "List unified files failed",
-    });
-  }
+  const result = await listUnifiedFiles(c.env.KNOWLEDGE_BUCKET);
+  return c.json(result, 200);
 });
 
-// GET /admin/knowledge/originals/:key - 元ファイル取得
+// GET /admin/knowledge/originals/{key} - 元ファイル取得
 const getOriginalFileRoute = createRoute({
   method: "get",
   path: "/originals/{key}",
@@ -245,25 +206,16 @@ knowledgeFilesRoutes.openapi(getOriginalFileRoute, async (c) => {
   const { key } = c.req.valid("param");
   validateFileKey(key);
 
-  try {
-    const result = await getOriginalFile(c.env.KNOWLEDGE_BUCKET, key);
-    if (!result) {
-      throw new HTTPException(404, { message: "File not found" });
-    }
-
-    return new Response(result.body, {
-      headers: {
-        "Content-Type": result.contentType,
-        "Content-Length": result.size.toString(),
-        "Content-Disposition": `inline; filename="${encodeURIComponent(key)}"`,
-      },
-    });
-  } catch (error) {
-    if (error instanceof HTTPException) throw error;
-    console.error("Get original file error:", error);
-    throw new HTTPException(500, {
-      message:
-        error instanceof Error ? error.message : "Get original file failed",
-    });
+  const result = await getOriginalFile(c.env.KNOWLEDGE_BUCKET, key);
+  if (!result) {
+    throw new HTTPException(404, { message: "File not found" });
   }
+
+  return new Response(result.body, {
+    headers: {
+      "Content-Type": result.contentType,
+      "Content-Length": result.size.toString(),
+      "Content-Disposition": `inline; filename="${encodeURIComponent(key)}"`,
+    },
+  });
 });

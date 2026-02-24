@@ -134,24 +134,16 @@ const deleteAllRoute = createRoute({
 });
 
 feedbackAdminRoutes.openapi(deleteAllRoute, async (c) => {
-  try {
-    const totalCount = await feedbackRepository.count(c.env.DB);
-    await feedbackRepository.deleteAll(c.env.DB);
+  const totalCount = await feedbackRepository.count(c.env.DB);
+  await feedbackRepository.deleteAll(c.env.DB);
 
-    return c.json(
-      {
-        message: `${totalCount}件のフィードバックを削除しました`,
-        count: totalCount,
-      },
-      200,
-    );
-  } catch (error) {
-    console.error("Feedback delete error:", error);
-    throw new HTTPException(500, {
-      message:
-        error instanceof Error ? error.message : "Feedback deletion failed",
-    });
-  }
+  return c.json(
+    {
+      message: `${totalCount}件のフィードバックを削除しました`,
+      count: totalCount,
+    },
+    200,
+  );
 });
 
 const resolveRoute = createRoute({
