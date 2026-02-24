@@ -1,6 +1,5 @@
 import { Agent } from "@mastra/core/agent";
 import { GEMINI_FLASH } from "~/lib/llm-models";
-import { EMERGENCY_TYPES_PROMPT } from "~/mastra/constants/emergency-types";
 import { adminEmergencyTool } from "~/mastra/tools/admin-emergency-tool";
 import { emergencyGetTool } from "~/mastra/tools/emergency-get-tool";
 
@@ -16,7 +15,18 @@ export const emergencyAgent = new Agent({
 - 村の危険情報・緊急報告を取得する
 - 緊急報告の詳細情報を提供する
 
-${EMERGENCY_TYPES_PROMPT}
+## 対応する緊急事態（例）
+- 野生動物: クマ、シカ、イノシシなどの目撃
+- 自然災害: 地震、洪水、土砂崩れ、台風被害、大雪、雪崩
+- 火災・爆発
+- 不審者・犯罪
+- 交通事故
+- インフラ障害: 停電、断水、ガス漏れ、道路封鎖、通信障害
+- 健康危機: 急病人発見、感染症発生
+- 行方不明者
+- その他、住民が危険や不安を感じる状況
+
+※上記は例示であり、住民の安全に関わる事態は幅広く受け付ける
 
 ## 対応パターン
 
