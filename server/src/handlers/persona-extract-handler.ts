@@ -1,9 +1,10 @@
+import { logger } from "~/lib/logger";
 import { extractAllPendingThreads } from "~/services/persona-extractor";
 
 export const handlePersonaExtract: ExportedHandlerScheduledHandler<
   CloudflareBindings
 > = async (_event, env, _ctx) => {
-  console.log(`[PersonaExtract] Cron triggered at ${new Date().toISOString()}`);
+  logger.info("[PersonaExtract] Cron triggered");
 
   try {
     const results = await extractAllPendingThreads(env);
@@ -15,11 +16,11 @@ export const handlePersonaExtract: ExportedHandlerScheduledHandler<
       (r) => "skipped" in r.result && r.result.skipped,
     ).length;
 
-    console.log(
-      `[PersonaExtract] Completed: ${extracted} extracted, ${skipped} skipped`,
-    );
+    logger.info("[PersonaExtract] Completed", { extracted, skipped });
   } catch (error) {
-    console.error("[PersonaExtract] Error:", error);
+    logger.error("[PersonaExtract] Error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw error;
   }
 };

@@ -1,3 +1,4 @@
+import { logger } from "~/lib/logger";
 import { deleteKnowledgeBySource } from "./embedding";
 
 const EDIT_THRESHOLD_MS = 5000;
@@ -208,7 +209,7 @@ export const deleteFile = async (
 
   // 1. Markdownファイルを削除
   await bucket.delete(mdKey);
-  console.log(`[Delete] Deleted ${mdKey} from R2`);
+  logger.info("[Delete] Deleted file from R2", { key: mdKey });
 
   // 2. 元ファイル（originals/）を検索して削除
   const listed = await bucket.list({ prefix: `originals/${baseName}` });
@@ -216,11 +217,11 @@ export const deleteFile = async (
     const objBaseName = extractBaseName(obj.key);
     if (objBaseName === baseName) {
       await bucket.delete(obj.key);
-      console.log(`[Delete] Deleted ${obj.key} from R2`);
+      logger.info("[Delete] Deleted original from R2", { key: obj.key });
     }
   }
 
   // 3. Vectorize から削除
   await deleteKnowledgeBySource(vectorize, mdKey);
-  console.log(`[Delete] Deleted ${mdKey} from Vectorize`);
+  logger.info("[Delete] Deleted from Vectorize", { key: mdKey });
 };

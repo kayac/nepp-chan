@@ -1,5 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import { logger } from "~/lib/logger";
 import { personaRepository } from "~/repository/persona-repository";
 import { personaOutputSchema } from "~/schemas/persona-schema";
 import { requireAdmin } from "./helpers";
@@ -95,7 +96,9 @@ export const adminPersonaTool = createTool({
         },
       };
     } catch (error) {
-      console.error("Admin persona fetch failed:", error);
+      logger.error("Admin persona fetch failed", {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return {
         success: false,
         personas: [],

@@ -1,5 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import { logger } from "~/lib/logger";
 import { personaRepository } from "~/repository/persona-repository";
 import { requireDb } from "./helpers";
 
@@ -62,7 +63,9 @@ export const personaUpdateTool = createTool({
         message: `ペルソナ情報を更新しました（ID: ${id}）`,
       };
     } catch (error) {
-      console.error("Persona update failed:", error);
+      logger.error("Persona update failed", {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return {
         success: false,
         message: "ペルソナ情報の更新に失敗しました",

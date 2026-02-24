@@ -1,5 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import { logger } from "~/lib/logger";
 import { emergencyRepository } from "~/repository/emergency-repository";
 import { requireDb } from "./helpers";
 
@@ -53,7 +54,9 @@ export const emergencyReportTool = createTool({
         message: `緊急報告を記録しました（ID: ${reportId}）`,
       };
     } catch (error) {
-      console.error("Emergency report creation failed:", error);
+      logger.error("Emergency report creation failed", {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return {
         success: false,
         message: "緊急報告の記録に失敗しました",

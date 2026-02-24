@@ -1,6 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
+import { logger } from "~/lib/logger";
 import { personaRepository } from "~/repository/persona-repository";
 import { requireAdmin } from "./helpers";
 
@@ -84,7 +85,9 @@ export const personaAggregateTool = createTool({
         message: `${aggregations.length}件のトピックを集計しました（合計${totalCount}件の意見）`,
       };
     } catch (error) {
-      console.error("Persona aggregation failed:", error);
+      logger.error("Persona aggregation failed", {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return {
         success: false,
         aggregations: [],
