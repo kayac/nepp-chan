@@ -1,4 +1,3 @@
-import { logger } from "~/lib/logger";
 import {
   deleteKnowledgeBySource,
   processKnowledgeFile,
@@ -84,7 +83,7 @@ export const handleR2Event = async (
       continue;
     }
 
-    logger.info("Processing R2 event", { action, key });
+    console.log(`Processing R2 event: ${action} for ${key}`);
 
     try {
       switch (action) {
@@ -93,9 +92,9 @@ export const handleR2Event = async (
         case "CopyObject": {
           const result = await handleObjectCreate(key, env);
           if (result.success) {
-            logger.info("Synced file", { key, chunks: result.chunks });
+            console.log(`Synced ${key}: ${result.chunks} chunks`);
           } else {
-            logger.error("Failed to sync file", { key, error: result.error });
+            console.error(`Failed to sync ${key}: ${result.error}`);
           }
           break;
         }
@@ -103,24 +102,18 @@ export const handleR2Event = async (
         case "LifecycleDeletion": {
           const result = await handleObjectDelete(key, env);
           if (result.success) {
-            logger.info("Deleted vectors", { key, deleted: result.deleted });
+            console.log(`Deleted vectors for ${key}: ${result.deleted} items`);
           } else {
-            logger.error("Failed to delete vectors", {
-              key,
-              error: result.error,
-            });
+            console.error(`Failed to delete ${key}: ${result.error}`);
           }
           break;
         }
         default:
-          logger.info("Ignoring action", { action });
+          console.log(`Ignoring action: ${action}`);
       }
       message.ack();
     } catch (error) {
-      logger.error("Error processing R2 event", {
-        key,
-        error: error instanceof Error ? error.message : String(error),
-      });
+      console.error(`Error processing ${key}:`, error);
       message.retry();
     }
   }

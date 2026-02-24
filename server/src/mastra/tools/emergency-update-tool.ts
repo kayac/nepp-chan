@@ -1,6 +1,5 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { logger } from "~/lib/logger";
 import { emergencyRepository } from "~/repository/emergency-repository";
 import { requireDb } from "./helpers";
 
@@ -60,9 +59,7 @@ export const emergencyUpdateTool = createTool({
         message: `報告 ${reportId} を更新しました`,
       };
     } catch (error) {
-      logger.error("Emergency report update failed", {
-        error: error instanceof Error ? error.message : String(error),
-      });
+      console.error("Emergency report update failed:", error);
       return {
         success: false,
         message: "緊急報告の更新に失敗しました",

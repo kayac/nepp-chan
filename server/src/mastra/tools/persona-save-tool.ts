@@ -1,6 +1,5 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { logger } from "~/lib/logger";
 import { personaRepository } from "~/repository/persona-repository";
 import { getConversationEndedAt, requireDb } from "./helpers";
 
@@ -94,9 +93,7 @@ export const personaSaveTool = createTool({
         message: `ペルソナ情報を保存しました（ID: ${personaId}）`,
       };
     } catch (error) {
-      logger.error("Persona save failed", {
-        error: error instanceof Error ? error.message : String(error),
-      });
+      console.error("Persona save failed:", error);
       return {
         success: false,
         message: "ペルソナ情報の保存に失敗しました",

@@ -3,7 +3,6 @@ import { ModelRouterLanguageModel } from "@mastra/core/llm";
 import { MastraAgentRelevanceScorer, rerankWithScorer } from "@mastra/rag";
 import { embed } from "ai";
 import { GEMINI_EMBEDDING, GEMINI_FLASH } from "~/lib/llm-models";
-import { logger } from "~/lib/logger";
 
 const EMBEDDING_DIMENSIONS = 1536;
 
@@ -104,9 +103,7 @@ export const searchKnowledge = async (
       results: knowledgeResults,
     };
   } catch (error) {
-    logger.error("Knowledge search error", {
-      error: error instanceof Error ? error.message : String(error),
-    });
+    console.error("Knowledge search error:", error);
     return {
       results: [],
       error: error instanceof Error ? error.message : "Unknown error",

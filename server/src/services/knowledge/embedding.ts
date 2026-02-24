@@ -2,7 +2,6 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { MDocument } from "@mastra/rag";
 import { embedMany } from "ai";
 import { GEMINI_EMBEDDING } from "~/lib/llm-models";
-import { logger } from "~/lib/logger";
 
 const EMBEDDING_DIMENSIONS = 1536;
 const BATCH_SIZE = 100;
@@ -85,12 +84,9 @@ const chunkDocument = async (
     };
   });
 
-  logger.info("[Knowledge Sync] Chunked document", {
-    filename,
-    totalChunks: allTexts.length,
-    filteredChunks: texts.length,
-    minChunkLength: MIN_CHUNK_LENGTH,
-  });
+  console.log(
+    `[Knowledge Sync] ${filename}: ${allTexts.length} chunks -> ${texts.length} after filtering (min ${MIN_CHUNK_LENGTH} chars)`,
+  );
 
   return { texts, metadata };
 };

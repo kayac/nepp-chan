@@ -1,6 +1,5 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { logger } from "~/lib/logger";
 import { getEnv } from "./helpers";
 
 interface GoogleSearchResponse {
@@ -56,7 +55,7 @@ const searchGoogle = async (
   engineId?: string,
 ): Promise<SearchOutput> => {
   if (!apiKey || !engineId) {
-    logger.error("Google Search API Key or Engine ID is missing");
+    console.error("Google Search API Key or Engine ID is missing.");
     return {
       results: [],
       error: "API_KEY_MISSING",
@@ -76,9 +75,7 @@ const searchGoogle = async (
 
     return { results, source: SOURCE };
   } catch (error) {
-    logger.error("Search tool error", {
-      error: error instanceof Error ? error.message : String(error),
-    });
+    console.error("Search tool error:", error);
     return {
       results: [],
       error: error instanceof Error ? error.message : "Unknown error",
@@ -96,7 +93,7 @@ const handleErrorResponse = async (
   response: Response,
 ): Promise<SearchOutput> => {
   if (response.status === 429) {
-    logger.warn("Google Custom Search API Rate Limit Exceeded");
+    console.warn("Google Custom Search API Rate Limit Exceeded");
     return {
       results: [],
       error: "RATE_LIMIT_EXCEEDED",
@@ -105,7 +102,7 @@ const handleErrorResponse = async (
   }
 
   const errorText = await response.text();
-  logger.error("Google Search API Error", { errorText });
+  console.error("Google Search API Error:", errorText);
 
   let errorMessage = "Unknown error";
   try {

@@ -1,6 +1,5 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { logger } from "~/lib/logger";
 import { emergencyRepository } from "~/repository/emergency-repository";
 import { emergencyReportSchema } from "~/schemas/emergency-schema";
 import { requireAdmin } from "./helpers";
@@ -65,9 +64,7 @@ export const adminEmergencyTool = createTool({
         message: `【管理者】直近${days}日間の緊急報告を${reports.length}件取得しました`,
       };
     } catch (error) {
-      logger.error("Admin emergency reports fetch failed", {
-        error: error instanceof Error ? error.message : String(error),
-      });
+      console.error("Admin emergency reports fetch failed:", error);
       return {
         success: false,
         reports: [],

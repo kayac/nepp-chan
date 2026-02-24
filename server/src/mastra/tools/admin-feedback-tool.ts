@@ -1,7 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
-import { logger } from "~/lib/logger";
 import { feedbackRepository } from "~/repository/feedback-repository";
 import {
   feedbackBaseSchema,
@@ -92,9 +91,7 @@ export const adminFeedbackTool = createTool({
         message,
       };
     } catch (error) {
-      logger.error("Admin feedback fetch failed", {
-        error: error instanceof Error ? error.message : String(error),
-      });
+      console.error("Admin feedback fetch failed:", error);
       return {
         success: false,
         feedbacks: [],

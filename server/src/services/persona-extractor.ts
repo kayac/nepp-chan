@@ -4,7 +4,6 @@ import { count, desc, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
 import { createDb, mastraThreads, persona, threadPersonaStatus } from "~/db";
-import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
 import { personaAgent } from "~/mastra/agents/persona-agent";
 import { getWorkingMemoryByThread } from "~/mastra/memory";
@@ -114,10 +113,7 @@ export const extractPersonaFromThread = async (
       };
     }
     // その他のエラーはログに出力してスキップ
-    logger.error("Persona extraction failed", {
-      threadId,
-      error: error instanceof Error ? error.message : String(error),
-    });
+    console.error(`Persona extraction failed for thread ${threadId}:`, error);
     return {
       skipped: true,
       reason: "extraction_error",

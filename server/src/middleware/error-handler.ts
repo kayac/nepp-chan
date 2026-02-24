@@ -1,7 +1,6 @@
 import type { ErrorHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { StatusCode } from "hono/utils/http-status";
-import { logger } from "~/lib/logger";
 
 type ErrorResponse = {
   error: {
@@ -13,9 +12,9 @@ type ErrorResponse = {
 export const errorHandler: ErrorHandler = (err, c) => {
   if (err instanceof HTTPException) {
     if (err.status >= 500) {
-      logger.error("HTTPException", {
+      console.error("HTTPException", {
+        message: err.message,
         status: err.status,
-        errMessage: err.message,
       });
     }
 
@@ -30,9 +29,9 @@ export const errorHandler: ErrorHandler = (err, c) => {
     );
   }
 
-  logger.error("Unhandled exception", {
+  console.error("Unhandled exception", {
     name: err.name,
-    errMessage: err.message,
+    message: err.message,
     cause: err.cause,
     stack: err.stack,
   });
