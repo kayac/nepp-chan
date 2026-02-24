@@ -1,4 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { HTTPException } from "hono/http-exception";
+import { errorResponse } from "~/lib/openapi-errors";
 import { type SessionVariables, sessionAuth } from "~/middleware/session-auth";
 import { adminInvitationRepository } from "~/repository/admin-invitation-repository";
 import { createInvitation } from "~/services/auth/webauthn";
@@ -36,6 +38,7 @@ const listInvitationsRoute = createRoute({
         },
       },
     },
+    401: errorResponse(401),
   },
 });
 
@@ -82,7 +85,6 @@ const createInvitationRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             invitation: z.object({
               id: z.string(),
               email: z.string(),
@@ -93,16 +95,8 @@ const createInvitationRoute = createRoute({
         },
       },
     },
-    400: {
-      description: "エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
+    400: errorResponse(400),
+    401: errorResponse(401),
   },
 });
 
@@ -121,7 +115,6 @@ invitationRoutes.openapi(createInvitationRoute, async (c) => {
 
     return c.json(
       {
-        success: true,
         invitation: {
           id: invitation.id,
           email: invitation.email,
@@ -134,7 +127,7 @@ invitationRoutes.openapi(createInvitationRoute, async (c) => {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "エラーが発生しました";
-    return c.json({ error: message }, 400);
+    throw new HTTPException(400, { message });
   }
 });
 
@@ -154,21 +147,13 @@ const deleteInvitationRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
+            message: z.string(),
           }),
         },
       },
     },
-    404: {
-      description: "招待が見つかりません",
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
+    401: errorResponse(401),
+    404: errorResponse(404),
   },
 });
 
@@ -177,10 +162,10 @@ invitationRoutes.openapi(deleteInvitationRoute, async (c) => {
 
   const invitation = await adminInvitationRepository.findById(c.env.DB, id);
   if (!invitation) {
-    return c.json({ error: "招待が見つかりません" }, 404);
+    throw new HTTPException(404, { message: "招待が見つかりません" });
   }
 
   await adminInvitationRepository.delete(c.env.DB, id);
 
-  return c.json({ success: true }, 200);
+  return c.json({ message: "招待を削除しました" }, 200);
 });

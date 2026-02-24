@@ -4,7 +4,7 @@ import { z } from "zod";
 const BASE_URL = "https://www.vill.otoineppu.hokkaido.jp";
 
 export const villageSearchTool = createTool({
-  id: "villageSearchTool",
+  id: "village-search",
   description:
     "音威子府村の公式サイトの検索URLを生成します。このURLをPlaywrightで開いて検索結果を取得してください。",
   inputSchema: z.object({

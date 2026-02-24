@@ -2,7 +2,7 @@ import type { D1Store } from "@mastra/cloudflare-d1";
 import { createTool } from "@mastra/core/tools";
 import { Memory } from "@mastra/memory";
 import { z } from "zod";
-import { personaSchema } from "~/mastra/schemas/persona-schema";
+import { personaSchema } from "~/schemas/persona-schema";
 
 export const devTool = createTool({
   id: "dev-tool",

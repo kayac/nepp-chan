@@ -137,7 +137,6 @@ export const verifyWebAuthnRegistration = async (
     name: null,
     role: invitation.role,
     createdAt: now,
-    updatedAt: null,
   });
 
   const publicKeyBase64 = Buffer.from(credential.publicKey).toString(

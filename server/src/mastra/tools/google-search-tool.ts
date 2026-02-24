@@ -1,5 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import { getEnv } from "./helpers";
 
 interface GoogleSearchResponse {
   items?: {
@@ -24,7 +25,7 @@ interface SearchOutput {
 const SOURCE = "Google Custom Search API";
 
 export const searchGoogleTool = createTool({
-  id: "searchGoogleTool",
+  id: "google-search",
   description: "Google検索を使ってインターネットから最新の情報を検索します。",
   inputSchema: z.object({
     query: z.string().describe("検索したいキーワードや質問内容"),
@@ -41,9 +42,7 @@ export const searchGoogleTool = createTool({
     source: z.string(),
   }),
   execute: async (inputData, context) => {
-    const env = context?.requestContext?.get("env") as
-      | CloudflareBindings
-      | undefined;
+    const env = getEnv(context);
     const apiKey = env?.GOOGLE_GENERATIVE_AI_API_KEY;
     const engineId = env?.GOOGLE_SEARCH_ENGINE_ID;
     return await searchGoogle(inputData.query, apiKey, engineId);

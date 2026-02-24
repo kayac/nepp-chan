@@ -15,22 +15,19 @@ export type InvitationsResponse = {
 };
 
 export type CreateInvitationResponse = {
-  success: boolean;
   invitation: { token: string };
 };
 
-export const fetchInvitations = (): Promise<InvitationsResponse> =>
+export const fetchInvitations = () =>
   apiClient<InvitationsResponse>("/admin/invitations");
 
-export const createInvitation = (
-  email: string,
-): Promise<CreateInvitationResponse> =>
+export const createInvitation = (email: string) =>
   apiClient<CreateInvitationResponse>("/admin/invitations", {
     method: "POST",
     body: { email },
   });
 
-export const deleteInvitation = (id: string): Promise<void> =>
+export const deleteInvitation = (id: string) =>
   apiClient<void>(`/admin/invitations/${id}`, {
     method: "DELETE",
   });

@@ -3,7 +3,7 @@ import type { MemoryConfig } from "@mastra/core/memory";
 import type { RequestContext } from "@mastra/core/request-context";
 import { Memory } from "@mastra/memory";
 import { getStorage } from "~/lib/storage";
-import { type Persona, personaSchema } from "~/mastra/schemas/persona-schema";
+import { type Persona, personaSchema } from "~/schemas/persona-schema";
 
 export const getMemoryFromContext = (
   requestContext: RequestContext,

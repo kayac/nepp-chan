@@ -4,10 +4,10 @@ import { cors } from "hono/cors";
 const isAllowedOrigin = (
   origin: string,
   env: CloudflareBindings,
-): string | null => {
+): string | undefined => {
   const allowedOrigins = ["http://localhost:5173", env.WEB_URL].filter(Boolean);
 
-  return allowedOrigins.includes(origin) ? origin : null;
+  return allowedOrigins.includes(origin) ? origin : undefined;
 };
 
 export const corsMiddleware: MiddlewareHandler<{
@@ -15,7 +15,7 @@ export const corsMiddleware: MiddlewareHandler<{
 }> = async (c, next) => {
   const corsHandler = cors({
     origin: (origin) => {
-      if (!origin) return null;
+      if (!origin) return undefined;
       return isAllowedOrigin(origin, c.env);
     },
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

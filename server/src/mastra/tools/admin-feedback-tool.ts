@@ -1,27 +1,12 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
-import type { AdminUser } from "~/db";
 import { feedbackRepository } from "~/repository/feedback-repository";
-
-const feedbackSchema = z.object({
-  id: z.string(),
-  threadId: z.string(),
-  messageId: z.string(),
-  rating: z.string(),
-  category: z.string().nullable(),
-  comment: z.string().nullable(),
-  createdAt: z.string(),
-  resolvedAt: z.string().nullable(),
-});
-
-const statsSchema = z.object({
-  total: z.number(),
-  good: z.number(),
-  bad: z.number(),
-  idea: z.number(),
-  byCategory: z.record(z.string(), z.number()),
-});
+import {
+  feedbackBaseSchema,
+  feedbackStatsSchema,
+} from "~/schemas/feedback-schema";
+import { requireAdmin } from "./helpers";
 
 export const adminFeedbackTool = createTool({
   id: "admin-feedback",
@@ -46,38 +31,24 @@ export const adminFeedbackTool = createTool({
   }),
   outputSchema: z.object({
     success: z.boolean(),
-    feedbacks: z.array(feedbackSchema),
-    stats: statsSchema.optional(),
+    feedbacks: z.array(feedbackBaseSchema),
+    stats: feedbackStatsSchema.optional(),
     count: z.number(),
     message: z.string(),
     error: z.string().optional(),
   }),
   execute: async (inputData, context) => {
-    const adminUser = context?.requestContext?.get("adminUser") as
-      | AdminUser
-      | undefined;
-
-    if (!adminUser) {
+    const result = requireAdmin(context);
+    if ("error" in result) {
       return {
         success: false,
         feedbacks: [],
         count: 0,
-        message: "この機能は使用できません",
-        error: "NOT_AUTHORIZED",
+        message: result.error.message,
+        error: result.error.error,
       };
     }
-
-    const db = context?.requestContext?.get("db") as D1Database | undefined;
-
-    if (!db) {
-      return {
-        success: false,
-        feedbacks: [],
-        count: 0,
-        message: "データベース接続がありません",
-        error: "DB_NOT_AVAILABLE",
-      };
-    }
+    const { db } = result;
 
     const { rating, limit, includeStats } = inputData;
 

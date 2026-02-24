@@ -1,13 +1,12 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { and, count, desc, eq, lt, or, type SQL } from "drizzle-orm";
-import { HTTPException } from "hono/http-exception";
 
-import { createDb, mastraThreads, persona, threadPersonaStatus } from "~/db";
+import { errorResponse } from "~/lib/openapi-errors";
 import { sessionAuth } from "~/middleware/session-auth";
-import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
+import { personaRepository } from "~/repository/persona-repository";
 import {
+  deleteAllPersonas,
   extractAllPendingThreads,
-  extractPersonaFromThread,
+  extractPersonaFromThreadById,
 } from "~/services/persona-extractor";
 
 export const personaAdminRoutes = new OpenAPIHono<{
@@ -39,7 +38,7 @@ const listRoute = createRoute({
   tags: ["Admin - Persona"],
   request: {
     query: z.object({
-      limit: z.string().optional().default("30"),
+      limit: z.coerce.number().int().min(1).optional().default(30),
       cursor: z.string().optional(),
     }),
   },
@@ -57,63 +56,17 @@ const listRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
+    401: errorResponse(401),
   },
 });
 
 personaAdminRoutes.openapi(listRoute, async (c) => {
   const { limit, cursor } = c.req.valid("query");
-  const db = createDb(c.env.DB);
-  const limitNum = Number(limit);
-
-  let cursorCondition: SQL | undefined;
-
-  if (cursor) {
-    const [cursorCreatedAt, cursorId] = cursor.split("_");
-    cursorCondition = or(
-      lt(persona.createdAt, cursorCreatedAt),
-      and(eq(persona.createdAt, cursorCreatedAt), lt(persona.id, cursorId)),
-    );
-  }
-
-  const results = await db
-    .select()
-    .from(persona)
-    .where(cursorCondition)
-    .orderBy(desc(persona.createdAt), desc(persona.id))
-    .limit(limitNum + 1)
-    .all();
-
-  const hasMore = results.length > limitNum;
-  const personas = hasMore ? results.slice(0, limitNum) : results;
-
-  const lastPersona = personas[personas.length - 1];
-  const nextCursor =
-    hasMore && lastPersona
-      ? `${lastPersona.createdAt}_${lastPersona.id}`
-      : null;
-
-  const countResult = await db.select({ count: count() }).from(persona).get();
-
-  return c.json(
-    {
-      personas,
-      total: countResult?.count ?? 0,
-      nextCursor,
-      hasMore,
-    },
-    200,
-  );
+  const result = await personaRepository.listForAdmin(c.env.DB, {
+    limit,
+    cursor: cursor ?? undefined,
+  });
+  return c.json(result, 200);
 });
 
 const ExtractResultSchema = z.object({
@@ -141,55 +94,39 @@ const extractAllRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             message: z.string(),
             results: z.array(ExtractResultSchema),
           }),
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
+    401: errorResponse(401),
+    500: errorResponse(500),
   },
 });
 
 personaAdminRoutes.openapi(extractAllRoute, async (c) => {
-  try {
-    const results = await extractAllPendingThreads(c.env);
+  const results = await extractAllPendingThreads(c.env);
 
-    const extracted = results.filter(
-      (r) => "extracted" in r.result && r.result.extracted,
-    ).length;
-    const skipped = results.filter(
-      (r) => "skipped" in r.result && r.result.skipped,
-    ).length;
+  const extracted = results.filter(
+    (r) => "extracted" in r.result && r.result.extracted,
+  ).length;
+  const skipped = results.filter(
+    (r) => "skipped" in r.result && r.result.skipped,
+  ).length;
 
-    return c.json({
-      success: true,
+  return c.json(
+    {
       message: `${extracted}件のスレッドからペルソナを抽出しました、${skipped}件スキップ`,
       results,
-    });
-  } catch (error) {
-    console.error("Persona extract error:", error);
-    throw new HTTPException(500, {
-      message:
-        error instanceof Error ? error.message : "Persona extraction failed",
-    });
-  }
+    },
+    200,
+  );
 });
 
 const extractOneRoute = createRoute({
   method: "post",
-  path: "/extract/:threadId",
+  path: "/extract/{threadId}",
   summary: "特定スレッドからペルソナを抽出",
   description: "指定したスレッドからペルソナ情報を抽出します",
   tags: ["Admin - Persona"],
@@ -204,94 +141,26 @@ const extractOneRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             message: z.string(),
             result: ExtractResultSchema.shape.result,
           }),
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
-    404: {
-      description: "スレッドが見つからない",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
+    401: errorResponse(401),
+    404: errorResponse(404),
+    500: errorResponse(500),
   },
 });
 
 personaAdminRoutes.openapi(extractOneRoute, async (c) => {
   const { threadId } = c.req.valid("param");
-  const db = createDb(c.env.DB);
 
-  try {
-    const thread = await db
-      .select({ resourceId: mastraThreads.resourceId })
-      .from(mastraThreads)
-      .where(eq(mastraThreads.id, threadId))
-      .get();
-
-    if (!thread || !thread.resourceId) {
-      return c.json(
-        { success: false, message: "スレッドが見つかりません" },
-        404,
-      );
-    }
-
-    const status = await threadPersonaStatusRepository.findByThreadId(
-      c.env.DB,
-      threadId,
-    );
-    const lastMessageCount = status?.lastMessageCount ?? 0;
-
-    const result = await extractPersonaFromThread(
-      threadId,
-      thread.resourceId,
-      lastMessageCount,
-      c.env,
-    );
-
-    if ("extracted" in result && result.extracted) {
-      await threadPersonaStatusRepository.upsert(c.env.DB, {
-        threadId,
-        lastExtractedAt: new Date().toISOString(),
-        lastMessageCount: result.messageCount,
-      });
-    }
-
-    const message =
-      "extracted" in result
-        ? `スレッド ${threadId} からペルソナを抽出しました`
-        : `スレッド ${threadId} はスキップされました: ${result.reason}`;
-
-    return c.json({
-      success: true,
-      message,
-      result,
-    });
-  } catch (error) {
-    console.error("Persona extract error:", error);
-    throw new HTTPException(500, {
-      message:
-        error instanceof Error ? error.message : "Persona extraction failed",
-    });
-  }
+  const { result, message } = await extractPersonaFromThreadById(
+    threadId,
+    c.env,
+  );
+  return c.json({ message, result }, 200);
 });
 
 const deleteAllRoute = createRoute({
@@ -306,47 +175,18 @@ const deleteAllRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             message: z.string(),
             count: z.number(),
           }),
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
+    401: errorResponse(401),
+    500: errorResponse(500),
   },
 });
 
 personaAdminRoutes.openapi(deleteAllRoute, async (c) => {
-  const db = createDb(c.env.DB);
-
-  try {
-    const countResult = await db.select({ count: count() }).from(persona).get();
-    const totalCount = countResult?.count ?? 0;
-
-    await db.delete(persona);
-    await db.delete(threadPersonaStatus);
-
-    return c.json({
-      success: true,
-      message: `${totalCount}件のペルソナを削除しました`,
-      count: totalCount,
-    });
-  } catch (error) {
-    console.error("Persona delete error:", error);
-    throw new HTTPException(500, {
-      message:
-        error instanceof Error ? error.message : "Persona deletion failed",
-    });
-  }
+  const { count } = await deleteAllPersonas(c.env.DB);
+  return c.json({ message: `${count}件のペルソナを削除しました`, count }, 200);
 });

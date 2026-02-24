@@ -55,7 +55,6 @@ const FeedbackCreateRequestSchema = z.object({
 });
 
 const FeedbackResponseSchema = z.object({
-  success: z.boolean(),
   id: z.string(),
 });
 
@@ -93,7 +92,7 @@ feedbackRoutes.openapi(createFeedbackRoute, async (c) => {
   const id = crypto.randomUUID();
   const createdAt = new Date().toISOString();
 
-  const result = await feedbackRepository.create(c.env.DB, {
+  await feedbackRepository.create(c.env.DB, {
     id,
     threadId: body.threadId,
     messageId: body.messageId,
@@ -107,5 +106,5 @@ feedbackRoutes.openapi(createFeedbackRoute, async (c) => {
     createdAt,
   });
 
-  return c.json({ success: result.success, id: result.id }, 201);
+  return c.json({ id }, 201);
 });

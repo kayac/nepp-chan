@@ -3,7 +3,9 @@ import type {
   AuthenticationResponseJSON,
   RegistrationResponseJSON,
 } from "@simplewebauthn/server";
+import { HTTPException } from "hono/http-exception";
 import { getTokenFromHeader } from "~/lib/auth-header";
+import { errorResponse } from "~/lib/openapi-errors";
 import type { SessionVariables } from "~/middleware/session-auth";
 import { deleteSession, getUserFromSession } from "~/services/auth/session";
 import {
@@ -126,6 +128,7 @@ const registerOptionsRoute = createRoute({
           }),
         },
       },
+      required: true,
     },
   },
   responses: {
@@ -142,16 +145,7 @@ const registerOptionsRoute = createRoute({
         },
       },
     },
-    400: {
-      description: "エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
+    400: errorResponse(400),
   },
 });
 
@@ -169,7 +163,7 @@ authRoutes.openapi(registerOptionsRoute, async (c) => {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "エラーが発生しました";
-    return c.json({ error: message }, 400);
+    throw new HTTPException(400, { message });
   }
 });
 
@@ -189,6 +183,7 @@ const registerVerifyRoute = createRoute({
           }),
         },
       },
+      required: true,
     },
   },
   responses: {
@@ -197,7 +192,6 @@ const registerVerifyRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             token: z.string(),
             user: z.object({
               id: z.string(),
@@ -209,16 +203,7 @@ const registerVerifyRoute = createRoute({
         },
       },
     },
-    400: {
-      description: "エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
+    400: errorResponse(400),
   },
 });
 
@@ -237,12 +222,13 @@ authRoutes.openapi(registerVerifyRoute, async (c) => {
 
     const user = result.user;
     if (!user) {
-      return c.json({ error: "ユーザーの作成に失敗しました" }, 400);
+      throw new HTTPException(400, {
+        message: "ユーザーの作成に失敗しました",
+      });
     }
 
     return c.json(
       {
-        success: true,
         token: result.session.sessionId,
         user: {
           id: user.id,
@@ -254,9 +240,10 @@ authRoutes.openapi(registerVerifyRoute, async (c) => {
       200,
     );
   } catch (error) {
+    if (error instanceof HTTPException) throw error;
     const message =
       error instanceof Error ? error.message : "エラーが発生しました";
-    return c.json({ error: message }, 400);
+    throw new HTTPException(400, { message });
   }
 });
 
@@ -302,6 +289,7 @@ const loginVerifyRoute = createRoute({
           }),
         },
       },
+      required: true,
     },
   },
   responses: {
@@ -310,7 +298,6 @@ const loginVerifyRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
             token: z.string(),
             user: z.object({
               id: z.string(),
@@ -322,16 +309,7 @@ const loginVerifyRoute = createRoute({
         },
       },
     },
-    400: {
-      description: "エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
+    400: errorResponse(400),
   },
 });
 
@@ -349,7 +327,6 @@ authRoutes.openapi(loginVerifyRoute, async (c) => {
 
     return c.json(
       {
-        success: true,
         token: result.session.sessionId,
         user: {
           id: result.user.id,
@@ -363,7 +340,7 @@ authRoutes.openapi(loginVerifyRoute, async (c) => {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "エラーが発生しました";
-    return c.json({ error: message }, 400);
+    throw new HTTPException(400, { message });
   }
 });
 
@@ -378,7 +355,7 @@ const logoutRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            success: z.boolean(),
+            message: z.string(),
           }),
         },
       },
@@ -393,7 +370,7 @@ authRoutes.openapi(logoutRoute, async (c) => {
     await deleteSession(c.env.DB, sessionId);
   }
 
-  return c.json({ success: true }, 200);
+  return c.json({ message: "ログアウトしました" }, 200);
 });
 
 const meRoute = createRoute({

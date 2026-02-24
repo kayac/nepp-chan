@@ -9,12 +9,12 @@ import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
-import { personaSchema } from "~/mastra/schemas/persona-schema";
 import { devTool } from "~/mastra/tools/dev-tool";
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
+import { personaSchema } from "~/schemas/persona-schema";
 
 const baseInstructions = `
 あなたは北海道音威子府（おといねっぷ）村に住む17歳の女の子「ねっぷちゃん」。
