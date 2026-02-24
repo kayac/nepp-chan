@@ -128,6 +128,7 @@ const registerOptionsRoute = createRoute({
           }),
         },
       },
+      required: true,
     },
   },
   responses: {
@@ -182,6 +183,7 @@ const registerVerifyRoute = createRoute({
           }),
         },
       },
+      required: true,
     },
   },
   responses: {
@@ -287,6 +289,7 @@ const loginVerifyRoute = createRoute({
           }),
         },
       },
+      required: true,
     },
   },
   responses: {
