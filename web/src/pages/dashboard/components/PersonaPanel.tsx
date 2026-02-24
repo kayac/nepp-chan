@@ -114,133 +114,105 @@ export const PersonaPanel = () => {
           ペルソナデータがありません
         </div>
       ) : (
-        <>
-          {/* Desktop: Table View */}
-          <div className="hidden md:block bg-white rounded-xl border border-stone-200 overflow-auto max-h-[70dvh]">
-            <table className="min-w-[1000px] w-full text-sm">
-              <thead className="bg-stone-50 border-b border-stone-200 sticky top-0">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap w-28">
-                    カテゴリ
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap w-32">
-                    トピック
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap">
-                    内容
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap w-20">
-                    感情
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-stone-600 whitespace-nowrap w-36">
-                    会話日時
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100">
-                {personas.map((persona) => (
-                  <tr key={persona.id} className="hover:bg-stone-50">
-                    <td className="px-4 py-3">
-                      <span className="inline-flex px-2 py-1 text-xs font-medium bg-teal-50 text-teal-700 rounded">
-                        {persona.category}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-stone-600 text-xs">
-                      {persona.topic || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-stone-700 whitespace-pre-wrap break-words">
-                      {persona.content}
-                    </td>
-                    <td className="px-4 py-3">
-                      {persona.sentiment && (
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getSentimentStyle(persona.sentiment)}`}
-                        >
-                          {persona.sentiment}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-stone-500 text-xs whitespace-nowrap">
-                      {persona.conversationEndedAt
-                        ? formatDateTime(persona.conversationEndedAt)
-                        : "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div ref={loadMoreRef} className="py-4 text-center">
-              {isFetchingNextPage && (
-                <div className="text-stone-500 text-sm">読み込み中...</div>
-              )}
-              {!hasNextPage && personas.length > 0 && (
-                <div className="text-stone-400 text-sm">
-                  すべてのペルソナを表示しました
-                </div>
-              )}
+        <div className="bg-white rounded-xl border border-stone-200 overflow-auto max-h-[70dvh]">
+          <div
+            className="grid text-sm"
+            style={{
+              gridTemplateColumns:
+                "minmax(5rem, auto) minmax(5rem, auto) 1fr minmax(4rem, auto) minmax(8rem, auto)",
+            }}
+          >
+            <div className="contents hidden md:[display:contents] font-medium text-stone-600 bg-stone-50 text-xs">
+              <div className="px-4 py-3 border-b border-stone-200 sticky top-0 bg-stone-50">
+                カテゴリ
+              </div>
+              <div className="px-4 py-3 border-b border-stone-200 sticky top-0 bg-stone-50">
+                トピック
+              </div>
+              <div className="px-4 py-3 border-b border-stone-200 sticky top-0 bg-stone-50">
+                内容
+              </div>
+              <div className="px-4 py-3 border-b border-stone-200 sticky top-0 bg-stone-50">
+                感情
+              </div>
+              <div className="px-4 py-3 border-b border-stone-200 sticky top-0 bg-stone-50">
+                会話日時
+              </div>
             </div>
-          </div>
 
-          {/* Mobile: Card View */}
-          <div className="md:hidden space-y-3 max-h-[70dvh] overflow-auto">
             {personas.map((persona) => (
               <div
                 key={persona.id}
-                className="bg-white rounded-xl border border-stone-200 p-4 space-y-3"
+                className="contents md:[&>div]:border-b md:[&>div]:border-stone-100 md:hover:[&>div]:bg-stone-50"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex flex-wrap gap-2">
-                    <span className="inline-flex px-2 py-1 text-xs font-medium bg-teal-50 text-teal-700 rounded">
-                      {persona.category}
+                <div className="col-span-full md:col-span-1 px-4 pt-3 md:py-3 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex px-2 py-1 text-xs font-medium bg-teal-50 text-teal-700 rounded">
+                    {persona.category}
+                  </span>
+                  {persona.sentiment && (
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-medium rounded md:hidden ${getSentimentStyle(persona.sentiment)}`}
+                    >
+                      {persona.sentiment}
                     </span>
-                    {persona.sentiment && (
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getSentimentStyle(persona.sentiment)}`}
-                      >
-                        {persona.sentiment}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-xs text-stone-400 whitespace-nowrap">
+                  )}
+                  <span className="text-xs text-stone-400 whitespace-nowrap md:hidden ml-auto">
                     {persona.conversationEndedAt
                       ? formatDateTime(persona.conversationEndedAt)
                       : "-"}
                   </span>
                 </div>
-
-                {persona.topic && (
-                  <div className="text-xs text-stone-500">
-                    <span className="font-medium">トピック:</span>{" "}
-                    {persona.topic}
-                  </div>
-                )}
-
-                <p className="text-sm text-stone-700 whitespace-pre-wrap break-words">
-                  {persona.content}
-                </p>
-
-                {(persona.demographicSummary || persona.tags) && (
-                  <div className="flex flex-wrap gap-2 text-xs text-stone-500 pt-2 border-t border-stone-100">
-                    {persona.demographicSummary && (
-                      <span>属性: {persona.demographicSummary}</span>
-                    )}
-                    {persona.tags && <span>タグ: {persona.tags}</span>}
-                  </div>
-                )}
+                <div className="hidden md:block px-4 py-3 text-stone-600 text-xs">
+                  {persona.topic || "-"}
+                </div>
+                <div className="col-span-full md:col-span-1 px-4 py-1 md:py-3">
+                  {persona.topic && (
+                    <div className="text-xs text-stone-500 mb-1 md:hidden">
+                      <span className="font-medium">トピック:</span>{" "}
+                      {persona.topic}
+                    </div>
+                  )}
+                  <p className="text-stone-700 whitespace-pre-wrap break-words">
+                    {persona.content}
+                  </p>
+                  {(persona.demographicSummary || persona.tags) && (
+                    <div className="flex flex-wrap gap-2 text-xs text-stone-500 pt-1 md:hidden">
+                      {persona.demographicSummary && (
+                        <span>属性: {persona.demographicSummary}</span>
+                      )}
+                      {persona.tags && <span>タグ: {persona.tags}</span>}
+                    </div>
+                  )}
+                </div>
+                <div className="hidden md:block px-4 py-3">
+                  {persona.sentiment && (
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getSentimentStyle(persona.sentiment)}`}
+                    >
+                      {persona.sentiment}
+                    </span>
+                  )}
+                </div>
+                <div className="hidden md:block px-4 py-3 text-stone-500 text-xs whitespace-nowrap">
+                  {persona.conversationEndedAt
+                    ? formatDateTime(persona.conversationEndedAt)
+                    : "-"}
+                </div>
+                <div className="col-span-full h-px bg-stone-100 md:hidden" />
               </div>
             ))}
-            <div ref={loadMoreRef} className="py-4 text-center">
-              {isFetchingNextPage && (
-                <div className="text-stone-500 text-sm">読み込み中...</div>
-              )}
-              {!hasNextPage && personas.length > 0 && (
-                <div className="text-stone-400 text-sm">
-                  すべてのペルソナを表示しました
-                </div>
-              )}
-            </div>
           </div>
-        </>
+          <div ref={loadMoreRef} className="py-4 text-center">
+            {isFetchingNextPage && (
+              <div className="text-stone-500 text-sm">読み込み中...</div>
+            )}
+            {!hasNextPage && personas.length > 0 && (
+              <div className="text-stone-400 text-sm">
+                すべてのペルソナを表示しました
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
