@@ -32,6 +32,14 @@ export const personaUpdateTool = createTool({
 
     const { id, category, tags, content, source } = inputData;
 
+    if (!category && !tags && !content && !source) {
+      return {
+        success: false,
+        message: "更新する項目を指定してください",
+        error: "NO_UPDATE_FIELDS",
+      };
+    }
+
     try {
       const existing = await personaRepository.findById(db, id);
       if (!existing) {
@@ -42,20 +50,12 @@ export const personaUpdateTool = createTool({
         };
       }
 
-      const result = await personaRepository.update(db, id, {
+      await personaRepository.update(db, id, {
         category,
         tags,
         content,
         source,
       });
-
-      if (!result.success) {
-        return {
-          success: false,
-          message: result.error ?? "更新に失敗しました",
-          error: "UPDATE_FAILED",
-        };
-      }
 
       return {
         success: true,

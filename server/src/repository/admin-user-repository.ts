@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 
 import { type AdminUser, adminUsers, createDb, type NewAdminUser } from "~/db";
 
-type CreateInput = Omit<NewAdminUser, "id"> & { id: string };
+type CreateInput = Omit<NewAdminUser, "id" | "updatedAt"> & { id: string };
 
 export const adminUserRepository = {
   async create(d1: D1Database, input: CreateInput) {
@@ -14,10 +14,9 @@ export const adminUserRepository = {
       name: input.name ?? null,
       role: input.role ?? "admin",
       createdAt: input.createdAt,
-      updatedAt: input.updatedAt ?? null,
     });
 
-    return { success: true, id: input.id };
+    return input.id;
   },
 
   async findById(d1: D1Database, id: string) {
@@ -66,16 +65,12 @@ export const adminUserRepository = {
         updatedAt: new Date().toISOString(),
       })
       .where(eq(adminUsers.id, id));
-
-    return { success: true };
   },
 
-  async delete(d1: D1Database, id: string) {
+  async delete(d1: D1Database, id: string): Promise<void> {
     const db = createDb(d1);
 
     await db.delete(adminUsers).where(eq(adminUsers.id, id));
-
-    return { success: true };
   },
 };
 

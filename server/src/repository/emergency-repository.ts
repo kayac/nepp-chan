@@ -1,13 +1,14 @@
 import { desc, eq, gte } from "drizzle-orm";
 
-import { createDb, type EmergencyReport, emergencyReports } from "~/db";
+import {
+  createDb,
+  type EmergencyReport,
+  emergencyReports,
+  type NewEmergencyReport,
+} from "~/db";
 
-type CreateInput = {
+type CreateInput = Omit<NewEmergencyReport, "id" | "updatedAt"> & {
   id: string;
-  type: string;
-  description?: string;
-  location?: string;
-  reportedAt: string;
 };
 
 type UpdateInput = {
@@ -27,10 +28,10 @@ export const emergencyRepository = {
       reportedAt: input.reportedAt,
     });
 
-    return { success: true, id: input.id };
+    return input.id;
   },
 
-  async update(d1: D1Database, id: string, input: UpdateInput) {
+  async update(d1: D1Database, id: string, input: UpdateInput): Promise<void> {
     const db = createDb(d1);
 
     const updates: Partial<typeof emergencyReports.$inferInsert> = {
@@ -41,17 +42,10 @@ export const emergencyRepository = {
       updates.description = input.description;
     if (input.location !== undefined) updates.location = input.location;
 
-    const hasUpdates = Object.keys(updates).length > 1;
-    if (!hasUpdates) {
-      return { success: false, error: "更新する項目がありません" };
-    }
-
     await db
       .update(emergencyReports)
       .set(updates)
       .where(eq(emergencyReports.id, id));
-
-    return { success: true };
   },
 
   async findById(d1: D1Database, id: string) {

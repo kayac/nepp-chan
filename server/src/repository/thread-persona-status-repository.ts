@@ -44,18 +44,14 @@ export const threadPersonaStatusRepository = {
           lastMessageCount: input.lastMessageCount,
         },
       });
-
-    return { success: true };
   },
 
-  async delete(d1: D1Database, threadId: string) {
+  async delete(d1: D1Database, threadId: string): Promise<void> {
     const db = createDb(d1);
 
     await db
       .delete(threadPersonaStatus)
       .where(eq(threadPersonaStatus.threadId, threadId));
-
-    return { success: true };
   },
 };
 

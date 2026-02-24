@@ -115,9 +115,9 @@ describe("extractPersonaFromThreadById", () => {
         { role: "assistant", content: "はい", createdAt: new Date() },
       ],
     });
-    vi.mocked(threadPersonaStatusRepository.upsert).mockResolvedValue({
-      success: true,
-    });
+    vi.mocked(threadPersonaStatusRepository.upsert).mockResolvedValue(
+      undefined,
+    );
 
     const result = await extractPersonaFromThreadById(threadId, mockEnv);
 

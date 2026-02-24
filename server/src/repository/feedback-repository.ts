@@ -45,7 +45,7 @@ export const feedbackRepository = {
       createdAt: input.createdAt,
     });
 
-    return { success: true, id: input.id };
+    return input.id;
   },
 
   async findById(d1: D1Database, id: string) {
@@ -162,46 +162,36 @@ export const feedbackRepository = {
     await db
       .delete(messageFeedback)
       .where(eq(messageFeedback.threadId, threadId));
-
-    return { success: true };
   },
 
-  async delete(d1: D1Database, id: string) {
+  async delete(d1: D1Database, id: string): Promise<void> {
     const db = createDb(d1);
 
     await db.delete(messageFeedback).where(eq(messageFeedback.id, id));
-
-    return { success: true };
   },
 
-  async deleteAll(d1: D1Database) {
+  async deleteAll(d1: D1Database): Promise<void> {
     const db = createDb(d1);
 
     await db.delete(messageFeedback);
-
-    return { success: true };
   },
 
-  async resolve(d1: D1Database, id: string) {
+  async resolve(d1: D1Database, id: string): Promise<void> {
     const db = createDb(d1);
 
     await db
       .update(messageFeedback)
       .set({ resolvedAt: new Date().toISOString() })
       .where(eq(messageFeedback.id, id));
-
-    return { success: true };
   },
 
-  async unresolve(d1: D1Database, id: string) {
+  async unresolve(d1: D1Database, id: string): Promise<void> {
     const db = createDb(d1);
 
     await db
       .update(messageFeedback)
       .set({ resolvedAt: null })
       .where(eq(messageFeedback.id, id));
-
-    return { success: true };
   },
 };
 

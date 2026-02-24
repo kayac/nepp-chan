@@ -21,7 +21,7 @@ export const adminSessionRepository = {
       lastAccessedAt: input.lastAccessedAt ?? null,
     });
 
-    return { success: true, id: input.id };
+    return input.id;
   },
 
   async findById(d1: D1Database, id: string) {
@@ -78,35 +78,27 @@ export const adminSessionRepository = {
       .update(adminSessions)
       .set({ lastAccessedAt: new Date().toISOString() })
       .where(eq(adminSessions.id, id));
-
-    return { success: true };
   },
 
-  async delete(d1: D1Database, id: string) {
+  async delete(d1: D1Database, id: string): Promise<void> {
     const db = createDb(d1);
 
     await db.delete(adminSessions).where(eq(adminSessions.id, id));
-
-    return { success: true };
   },
 
-  async deleteByUserId(d1: D1Database, userId: string) {
+  async deleteByUserId(d1: D1Database, userId: string): Promise<void> {
     const db = createDb(d1);
 
     await db.delete(adminSessions).where(eq(adminSessions.userId, userId));
-
-    return { success: true };
   },
 
-  async deleteExpired(d1: D1Database) {
+  async deleteExpired(d1: D1Database): Promise<void> {
     const db = createDb(d1);
     const now = new Date().toISOString();
 
     await db
       .delete(adminSessions)
       .where(sql`${adminSessions.expiresAt} < ${now}`);
-
-    return { success: true };
   },
 };
 

@@ -57,17 +57,20 @@ export const getUserFromSession = async (
   return user;
 };
 
-export const deleteSession = async (d1: D1Database, sessionId: string) => {
+export const deleteSession = async (
+  d1: D1Database,
+  sessionId: string,
+): Promise<void> => {
   await adminSessionRepository.delete(d1, sessionId);
-  return { success: true };
 };
 
-export const deleteUserSessions = async (d1: D1Database, userId: string) => {
+export const deleteUserSessions = async (
+  d1: D1Database,
+  userId: string,
+): Promise<void> => {
   await adminSessionRepository.deleteByUserId(d1, userId);
-  return { success: true };
 };
 
-export const cleanupExpiredSessions = async (d1: D1Database) => {
+export const cleanupExpiredSessions = async (d1: D1Database): Promise<void> => {
   await adminSessionRepository.deleteExpired(d1);
-  return { success: true };
 };

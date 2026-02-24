@@ -49,22 +49,14 @@ export const emergencyUpdateTool = createTool({
         };
       }
 
-      const result = await emergencyRepository.update(db, reportId, {
+      await emergencyRepository.update(db, reportId, {
         description,
         location,
       });
 
-      if (result.success) {
-        return {
-          success: true,
-          message: `報告 ${reportId} を更新しました`,
-        };
-      }
-
       return {
-        success: false,
-        message: "更新に失敗しました",
-        error: result.error,
+        success: true,
+        message: `報告 ${reportId} を更新しました`,
       };
     } catch (error) {
       console.error("Emergency report update failed:", error);

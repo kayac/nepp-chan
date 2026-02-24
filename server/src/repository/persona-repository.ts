@@ -1,20 +1,8 @@
 import { and, count, desc, eq, like, lt, or, type SQL, sql } from "drizzle-orm";
 
-import { createDb, type Persona, persona } from "~/db";
+import { createDb, type NewPersona, type Persona, persona } from "~/db";
 
-type CreateInput = {
-  id: string;
-  resourceId: string;
-  category: string;
-  tags?: string;
-  content: string;
-  source?: string;
-  topic?: string;
-  sentiment?: string;
-  demographicSummary?: string;
-  createdAt: string;
-  conversationEndedAt?: string;
-};
+type CreateInput = Omit<NewPersona, "id" | "updatedAt"> & { id: string };
 
 type UpdateInput = {
   category?: string;
@@ -52,10 +40,10 @@ export const personaRepository = {
       conversationEndedAt: input.conversationEndedAt ?? null,
     });
 
-    return { success: true, id: input.id };
+    return input.id;
   },
 
-  async update(d1: D1Database, id: string, input: UpdateInput) {
+  async update(d1: D1Database, id: string, input: UpdateInput): Promise<void> {
     const db = createDb(d1);
 
     const updates: Partial<typeof persona.$inferInsert> = {
@@ -71,14 +59,7 @@ export const personaRepository = {
     if (input.demographicSummary !== undefined)
       updates.demographicSummary = input.demographicSummary;
 
-    const hasUpdates = Object.keys(updates).length > 1; // updatedAt 以外があるか
-    if (!hasUpdates) {
-      return { success: false, error: "更新する項目がありません" };
-    }
-
     await db.update(persona).set(updates).where(eq(persona.id, id));
-
-    return { success: true };
   },
 
   async findById(d1: D1Database, id: string) {
@@ -186,8 +167,6 @@ export const personaRepository = {
     const db = createDb(d1);
 
     await db.delete(persona).where(eq(persona.id, id));
-
-    return { success: true };
   },
 
   async list(
@@ -335,8 +314,6 @@ export const personaRepository = {
     const db = createDb(d1);
 
     await db.delete(persona);
-
-    return { success: true };
   },
 };
 

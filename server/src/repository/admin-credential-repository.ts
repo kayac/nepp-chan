@@ -25,7 +25,7 @@ export const adminCredentialRepository = {
       lastUsedAt: input.lastUsedAt ?? null,
     });
 
-    return { success: true, id: input.id };
+    return input.id;
   },
 
   async findById(d1: D1Database, id: string) {
@@ -62,26 +62,20 @@ export const adminCredentialRepository = {
         lastUsedAt: new Date().toISOString(),
       })
       .where(eq(adminCredentials.id, id));
-
-    return { success: true };
   },
 
-  async delete(d1: D1Database, id: string) {
+  async delete(d1: D1Database, id: string): Promise<void> {
     const db = createDb(d1);
 
     await db.delete(adminCredentials).where(eq(adminCredentials.id, id));
-
-    return { success: true };
   },
 
-  async deleteByUserId(d1: D1Database, userId: string) {
+  async deleteByUserId(d1: D1Database, userId: string): Promise<void> {
     const db = createDb(d1);
 
     await db
       .delete(adminCredentials)
       .where(eq(adminCredentials.userId, userId));
-
-    return { success: true };
   },
 };
 
