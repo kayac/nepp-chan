@@ -244,7 +244,7 @@ gh api "orgs/ORGANIZATION/issue-types" --jq '.[].name'
 ### セットアップコマンド実行（個人リポジトリ）
 
 ```
-@vw-pm-agent 初期設定して
+@np-pm-agent 初期設定して
 
 PMAgent: GitHub Projectsの初期セットアップを開始します。
 
@@ -272,7 +272,7 @@ PMAgent: GitHub Projectsの初期セットアップを開始します。
 ### セットアップコマンド実行（組織リポジトリ）
 
 ```
-@vw-pm-agent 初期設定して
+@np-pm-agent 初期設定して
 
 PMAgent: GitHub Projectsの初期セットアップを開始します。
 
@@ -382,7 +382,7 @@ gh api graphql -f query='
 ### 概要
 
 pm-agentスキルには、Issue一括作成を堅牢に行うためのヘルパースクリプトが含まれています。
-これらのスクリプトは、vw:pmコマンドから自動的に呼び出されます。
+これらのスクリプトは、np:pmコマンドから自動的に呼び出されます。
 
 ### スクリプト配置
 

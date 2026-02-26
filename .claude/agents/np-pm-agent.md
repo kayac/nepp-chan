@@ -1,17 +1,17 @@
 ---
-name: vw-pm-agent
+name: np-pm-agent
 description: |
   GitHub Projects PM Agent。議事録からタスク抽出・Issue化、Projects初期セットアップを行う。
 
   Examples:
   <example>
   Context: 議事録からタスクを作成したい
-  user: "@vw-pm-agent 以下の議事録からタスクを作って [議事録テキスト]"
+  user: "@np-pm-agent 以下の議事録からタスクを作って [議事録テキスト]"
   assistant: "議事録を解析し、4層構造（Epic/Feature/Story/Task）でタスクを提案します"
   </example>
   <example>
   Context: GitHub Projectsの初期設定をしたい
-  user: "@vw-pm-agent 初期設定して"
+  user: "@np-pm-agent 初期設定して"
   assistant: "カスタムフィールド（Type/Priority/Effort）とビューを作成します"
   </example>
 

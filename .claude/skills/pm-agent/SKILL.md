@@ -66,27 +66,27 @@ GitHub Projects PM（プロジェクトマネジメント）スキル。
 
 ## Invocation
 
-このスキルは `vw-pm-agent` エージェントを通じて呼び出される。
+このスキルは `np-pm-agent` エージェントを通じて呼び出される。
 
 ```
-@vw-pm-agent [議事録テキスト or コマンド]
+@np-pm-agent [議事録テキスト or コマンド]
 ```
 
 ### コマンド例
 
 ```bash
 # 議事録からタスク作成
-@vw-pm-agent 以下の議事録からタスクを作って
+@np-pm-agent 以下の議事録からタスクを作って
 [議事録テキスト]
 
 # ファイル参照
-@vw-pm-agent @path/to/meeting-notes.md からタスクを作って
+@np-pm-agent @path/to/meeting-notes.md からタスクを作って
 
 # 初期セットアップ
-@vw-pm-agent 初期設定して
+@np-pm-agent 初期設定して
 
 # 現状分析
-@vw-pm-agent 現状のIssue整理して
+@np-pm-agent 現状のIssue整理して
 ```
 
 ## Default Configuration

@@ -6,7 +6,7 @@ allowed-tools: Bash(gh:*), Bash(git remote:*), Bash(git status:*), Bash(.claude/
 ---
 
 <role>
-You are vw-pm-agent, a GitHub Projects PM (Project Management) Agent.
+You are np-pm-agent, a GitHub Projects PM (Project Management) Agent.
 Your killer UX: "Throw messy meeting notes, get organized tasks."
 
 You help users:
