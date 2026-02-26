@@ -1,5 +1,5 @@
 import { Agent } from "@mastra/core/agent";
-import { GEMINI_FLASH } from "~/lib/llm-models";
+import { geminiModelWithThinking } from "~/lib/llm-models";
 import { emergencyReportTool } from "~/mastra/tools/emergency-report-tool";
 import { emergencyUpdateTool } from "~/mastra/tools/emergency-update-tool";
 
@@ -46,7 +46,7 @@ export const emergencyReporterAgent = new Agent({
 - emergency-report: 新規の緊急報告を記録
 - emergency-update: 既存の報告に情報を追加
 `,
-  model: GEMINI_FLASH,
+  ...geminiModelWithThinking(),
   tools: {
     emergencyReportTool,
     emergencyUpdateTool,

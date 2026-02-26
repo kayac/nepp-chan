@@ -1,7 +1,7 @@
 import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
 import { getCurrentDateInfo } from "~/lib/date";
-import { GEMINI_FLASH } from "~/lib/llm-models";
+import { geminiModelWithThinking } from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
 import { feedbackAgent } from "~/mastra/agents/feedback-agent";
@@ -160,16 +160,7 @@ export const createNeppChanAgent = ({
     id: "nep-chan",
     name: "ねっぷちゃん",
     instructions,
-    model: GEMINI_FLASH,
-    defaultOptions: {
-      providerOptions: {
-        google: {
-          thinkingConfig: {
-            thinkingLevel: "high",
-          },
-        },
-      },
-    },
+    ...geminiModelWithThinking(),
     agents,
     tools,
     memory: ({ requestContext }) =>
