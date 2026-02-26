@@ -5,3 +5,7 @@ GOOGLE_SEARCH_ENGINE_ID=your-engine-id-here
 WEBAUTHN_RP_ID=localhost
 WEBAUTHN_RP_NAME=ねっぷちゃん
 WEBAUTHN_ORIGIN=http://localhost:5173
+
+# LINE Messaging API
+LINE_CHANNEL_SECRET=your-channel-secret-here
+LINE_CHANNEL_ACCESS_TOKEN=your-channel-access-token-here
