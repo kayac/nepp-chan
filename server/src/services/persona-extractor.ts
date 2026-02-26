@@ -1,8 +1,9 @@
 import { Mastra } from "@mastra/core/mastra";
 import { Memory } from "@mastra/memory";
-import { desc } from "drizzle-orm";
+import { count, desc, eq } from "drizzle-orm";
+import { HTTPException } from "hono/http-exception";
 
-import { createDb, mastraThreads } from "~/db";
+import { createDb, mastraThreads, persona, threadPersonaStatus } from "~/db";
 import { getStorage } from "~/lib/storage";
 import { personaAgent } from "~/mastra/agents/persona-agent";
 import { getWorkingMemoryByThread } from "~/mastra/memory";
@@ -178,4 +179,75 @@ export const extractAllPendingThreads = async (env: CloudflareBindings) => {
   }
 
   return results;
+};
+
+const findThreadById = async (
+  d1: D1Database,
+  threadId: string,
+): Promise<ThreadInfo> => {
+  const db = createDb(d1);
+
+  const thread = await db
+    .select({
+      id: mastraThreads.id,
+      resourceId: mastraThreads.resourceId,
+    })
+    .from(mastraThreads)
+    .where(eq(mastraThreads.id, threadId))
+    .get();
+
+  if (!thread || !thread.resourceId) {
+    throw new HTTPException(404, { message: "スレッドが見つかりません" });
+  }
+
+  return thread as ThreadInfo;
+};
+
+export const extractPersonaFromThreadById = async (
+  threadId: string,
+  env: CloudflareBindings,
+): Promise<{ result: ExtractResult; message: string }> => {
+  const thread = await findThreadById(env.DB, threadId);
+
+  const status = await threadPersonaStatusRepository.findByThreadId(
+    env.DB,
+    threadId,
+  );
+  const lastMessageCount = status?.lastMessageCount ?? 0;
+
+  const result = await extractPersonaFromThread(
+    threadId,
+    thread.resourceId,
+    lastMessageCount,
+    env,
+  );
+
+  if ("extracted" in result && result.extracted) {
+    await threadPersonaStatusRepository.upsert(env.DB, {
+      threadId,
+      lastExtractedAt: new Date().toISOString(),
+      lastMessageCount: result.messageCount,
+    });
+  }
+
+  const message =
+    "extracted" in result
+      ? `スレッド ${threadId} からペルソナを抽出しました`
+      : `スレッド ${threadId} はスキップされました: ${result.reason}`;
+
+  return { result, message };
+};
+
+export const deleteAllPersonas = async (
+  d1: D1Database,
+): Promise<{ count: number }> => {
+  const db = createDb(d1);
+
+  const countResult = await db.select({ count: count() }).from(persona).get();
+  const totalCount = countResult?.count ?? 0;
+
+  await db.delete(persona);
+  await db.delete(threadPersonaStatus);
+
+  return { count: totalCount };
 };

@@ -21,7 +21,7 @@ export const threadPersonaStatusRepository = {
     return result ?? null;
   },
 
-  async findAll(d1: D1Database): Promise<ThreadPersonaStatus[]> {
+  async findAll(d1: D1Database) {
     const db = createDb(d1);
 
     return db.select().from(threadPersonaStatus).all();
@@ -44,8 +44,6 @@ export const threadPersonaStatusRepository = {
           lastMessageCount: input.lastMessageCount,
         },
       });
-
-    return { success: true };
   },
 
   async delete(d1: D1Database, threadId: string) {
@@ -54,8 +52,6 @@ export const threadPersonaStatusRepository = {
     await db
       .delete(threadPersonaStatus)
       .where(eq(threadPersonaStatus.threadId, threadId));
-
-    return { success: true };
   },
 };
 

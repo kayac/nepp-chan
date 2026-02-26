@@ -1,6 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { emergencyRepository } from "~/repository/emergency-repository";
+import { requireDb } from "./helpers";
 
 export const emergencyUpdateTool = createTool({
   id: "emergency-update",
@@ -17,15 +18,15 @@ export const emergencyUpdateTool = createTool({
     error: z.string().optional(),
   }),
   execute: async (inputData, context) => {
-    const db = context?.requestContext?.get("db") as D1Database | undefined;
-
-    if (!db) {
+    const result = requireDb(context);
+    if ("error" in result) {
       return {
         success: false,
-        message: "データベース接続がありません",
-        error: "DB_NOT_AVAILABLE",
+        message: result.error.message,
+        error: result.error.error,
       };
     }
+    const { db } = result;
 
     const { reportId, description, location } = inputData;
 
@@ -48,22 +49,14 @@ export const emergencyUpdateTool = createTool({
         };
       }
 
-      const result = await emergencyRepository.update(db, reportId, {
+      await emergencyRepository.update(db, reportId, {
         description,
         location,
       });
 
-      if (result.success) {
-        return {
-          success: true,
-          message: `報告 ${reportId} を更新しました`,
-        };
-      }
-
       return {
-        success: false,
-        message: "更新に失敗しました",
-        error: result.error,
+        success: true,
+        message: `報告 ${reportId} を更新しました`,
       };
     } catch (error) {
       console.error("Emergency report update failed:", error);

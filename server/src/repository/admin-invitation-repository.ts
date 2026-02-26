@@ -24,7 +24,7 @@ export const adminInvitationRepository = {
       createdAt: input.createdAt,
     });
 
-    return { success: true, id: input.id };
+    return input.id;
   },
 
   async findById(d1: D1Database, id: string) {
@@ -120,16 +120,12 @@ export const adminInvitationRepository = {
       .update(adminInvitations)
       .set({ usedAt: new Date().toISOString() })
       .where(eq(adminInvitations.id, id));
-
-    return { success: true };
   },
 
   async delete(d1: D1Database, id: string) {
     const db = createDb(d1);
 
     await db.delete(adminInvitations).where(eq(adminInvitations.id, id));
-
-    return { success: true };
   },
 
   async deleteExpired(d1: D1Database) {
@@ -139,8 +135,6 @@ export const adminInvitationRepository = {
     await db
       .delete(adminInvitations)
       .where(sql`${adminInvitations.expiresAt} < ${now}`);
-
-    return { success: true };
   },
 };
 

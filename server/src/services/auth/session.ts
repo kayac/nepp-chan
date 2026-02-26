@@ -59,15 +59,12 @@ export const getUserFromSession = async (
 
 export const deleteSession = async (d1: D1Database, sessionId: string) => {
   await adminSessionRepository.delete(d1, sessionId);
-  return { success: true };
 };
 
 export const deleteUserSessions = async (d1: D1Database, userId: string) => {
   await adminSessionRepository.deleteByUserId(d1, userId);
-  return { success: true };
 };
 
 export const cleanupExpiredSessions = async (d1: D1Database) => {
   await adminSessionRepository.deleteExpired(d1);
-  return { success: true };
 };

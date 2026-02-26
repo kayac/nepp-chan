@@ -1,6 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { personaRepository } from "~/repository/persona-repository";
+import { requireDb } from "./helpers";
 
 export const personaUpdateTool = createTool({
   id: "persona-update",
@@ -19,17 +20,25 @@ export const personaUpdateTool = createTool({
     error: z.string().optional(),
   }),
   execute: async (inputData, context) => {
-    const db = context?.requestContext?.get("db") as D1Database | undefined;
-
-    if (!db) {
+    const result = requireDb(context);
+    if ("error" in result) {
       return {
         success: false,
-        message: "データベース接続がありません",
-        error: "DB_NOT_AVAILABLE",
+        message: result.error.message,
+        error: result.error.error,
       };
     }
+    const { db } = result;
 
     const { id, category, tags, content, source } = inputData;
+
+    if (!category && !tags && !content && !source) {
+      return {
+        success: false,
+        message: "更新する項目を指定してください",
+        error: "NO_UPDATE_FIELDS",
+      };
+    }
 
     try {
       const existing = await personaRepository.findById(db, id);
@@ -41,20 +50,12 @@ export const personaUpdateTool = createTool({
         };
       }
 
-      const result = await personaRepository.update(db, id, {
+      await personaRepository.update(db, id, {
         category,
         tags,
         content,
         source,
       });
-
-      if (!result.success) {
-        return {
-          success: false,
-          message: result.error ?? "更新に失敗しました",
-          error: "UPDATE_FAILED",
-        };
-      }
 
       return {
         success: true,

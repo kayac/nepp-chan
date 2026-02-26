@@ -13,31 +13,28 @@ import type {
 } from "~/types";
 
 // 全ナレッジ同期
-export const syncKnowledge = (): Promise<SyncResult> =>
+export const syncKnowledge = () =>
   apiClient<SyncResult>("/admin/knowledge/sync", {
     method: "POST",
   });
 
-export const deleteAllKnowledge = (): Promise<DeleteResult> =>
+export const deleteAllKnowledge = () =>
   apiClient<DeleteResult>("/admin/knowledge", {
     method: "DELETE",
   });
 
 // ファイル一覧取得
-export const fetchFiles = (): Promise<FilesListResponse> =>
+export const fetchFiles = () =>
   apiClient<FilesListResponse>("/admin/knowledge/files");
 
 // ファイル内容取得
-export const fetchFileContent = (key: string): Promise<FileContentResponse> =>
+export const fetchFileContent = (key: string) =>
   apiClient<FileContentResponse>(
     `/admin/knowledge/files/${encodeURIComponent(key)}`,
   );
 
 // ファイル保存
-export const saveFile = (
-  key: string,
-  content: string,
-): Promise<SaveFileResponse> =>
+export const saveFile = (key: string, content: string) =>
   apiClient<SaveFileResponse>(
     `/admin/knowledge/files/${encodeURIComponent(key)}`,
     {
@@ -47,16 +44,13 @@ export const saveFile = (
   );
 
 // ファイル削除
-export const deleteFile = (key: string): Promise<DeleteResult> =>
+export const deleteFile = (key: string) =>
   apiClient<DeleteResult>(`/admin/knowledge/files/${encodeURIComponent(key)}`, {
     method: "DELETE",
   });
 
 // ファイルアップロード（multipart/form-data）
-export const uploadFile = async (
-  file: File,
-  filename?: string,
-): Promise<UploadFileResponse> => {
+export const uploadFile = async (file: File, filename?: string) => {
   const formData = new FormData();
   formData.append("file", file);
   if (filename) {
@@ -72,17 +66,14 @@ export const uploadFile = async (
 
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.message || "アップロードに失敗しました");
+    throw new Error(data.error?.message || "アップロードに失敗しました");
   }
 
-  return res.json();
+  return res.json() as Promise<UploadFileResponse>;
 };
 
 // 画像/PDF → Markdown 変換
-export const convertFile = async (
-  file: File,
-  filename: string,
-): Promise<ConvertFileResponse> => {
+export const convertFile = async (file: File, filename: string) => {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("filename", filename);
@@ -96,27 +87,24 @@ export const convertFile = async (
 
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.message || "変換に失敗しました");
+    throw new Error(data.error?.message || "変換に失敗しました");
   }
 
-  return res.json();
+  return res.json() as Promise<ConvertFileResponse>;
 };
 
 // 統合ファイル一覧取得
-export const fetchUnifiedFiles = (): Promise<UnifiedFilesListResponse> =>
+export const fetchUnifiedFiles = () =>
   apiClient<UnifiedFilesListResponse>("/admin/knowledge/unified");
 
 // 元ファイルURL取得
-export const getOriginalFileUrl = (key: string): string => {
+export const getOriginalFileUrl = (key: string) => {
   const encodedKey = encodeURIComponent(key.replace("originals/", ""));
   return `${API_BASE}/admin/knowledge/originals/${encodedKey}`;
 };
 
 // 元ファイルからMarkdownを再生成
-export const reconvertFile = (
-  originalKey: string,
-  filename: string,
-): Promise<ReconvertFileResponse> =>
+export const reconvertFile = (originalKey: string, filename: string) =>
   apiClient<ReconvertFileResponse>("/admin/knowledge/reconvert", {
     method: "POST",
     body: { originalKey, filename },

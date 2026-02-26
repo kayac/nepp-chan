@@ -1,23 +1,15 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { desc } from "drizzle-orm";
 
-import { createDb, emergencyReports } from "~/db";
+import { errorResponse } from "~/lib/openapi-errors";
 import { sessionAuth } from "~/middleware/session-auth";
+import { emergencyRepository } from "~/repository/emergency-repository";
+import { emergencyReportSchema } from "~/schemas/emergency-schema";
 
 export const emergencyAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
 }>();
 
 emergencyAdminRoutes.use("*", sessionAuth);
-
-const EmergencySchema = z.object({
-  id: z.string(),
-  type: z.string(),
-  description: z.string().nullable(),
-  location: z.string().nullable(),
-  reportedAt: z.string(),
-  updatedAt: z.string().nullable(),
-});
 
 const listRoute = createRoute({
   method: "get",
@@ -27,7 +19,7 @@ const listRoute = createRoute({
   tags: ["Admin - Emergency"],
   request: {
     query: z.object({
-      limit: z.string().optional().default("100"),
+      limit: z.coerce.number().int().min(1).optional().default(100),
     }),
   },
   responses: {
@@ -36,36 +28,20 @@ const listRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            emergencies: z.array(EmergencySchema),
+            emergencies: z.array(emergencyReportSchema),
             total: z.number(),
           }),
         },
       },
     },
-    401: {
-      description: "認証エラー",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
-        },
-      },
-    },
+    401: errorResponse(401),
   },
 });
 
 emergencyAdminRoutes.openapi(listRoute, async (c) => {
   const { limit } = c.req.valid("query");
-  const db = createDb(c.env.DB);
 
-  const results = await db
-    .select()
-    .from(emergencyReports)
-    .orderBy(desc(emergencyReports.reportedAt))
-    .limit(Number(limit))
-    .all();
+  const results = await emergencyRepository.findAll(c.env.DB, limit);
 
   return c.json(
     {

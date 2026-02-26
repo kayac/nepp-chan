@@ -9,6 +9,5 @@ export const securityHeaders: MiddlewareHandler = async (c, next) => {
     "Strict-Transport-Security",
     "max-age=31536000; includeSubDomains",
   );
-  c.res.headers.set("X-XSS-Protection", "1; mode=block");
   c.res.headers.set("Permissions-Policy", "geolocation=(), microphone=()");
 };

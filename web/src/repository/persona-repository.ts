@@ -6,9 +6,7 @@ type FetchPersonasParams = {
   cursor?: string;
 };
 
-export const fetchPersonas = (
-  params: FetchPersonasParams = {},
-): Promise<PersonasResponse> => {
+export const fetchPersonas = (params: FetchPersonasParams = {}) => {
   const searchParams = new URLSearchParams();
   searchParams.set("limit", String(params.limit ?? 30));
   if (params.cursor) {
@@ -22,7 +20,6 @@ type ExtractResult =
   | { extracted: true; messageCount: number };
 
 export type ExtractPersonasResponse = {
-  success: boolean;
   message: string;
   results: Array<{
     threadId: string;
@@ -30,18 +27,17 @@ export type ExtractPersonasResponse = {
   }>;
 };
 
-export const extractPersonas = (): Promise<ExtractPersonasResponse> =>
+export const extractPersonas = () =>
   apiClient<ExtractPersonasResponse>("/admin/persona/extract", {
     method: "POST",
   });
 
 export type DeletePersonasResponse = {
-  success: boolean;
   message: string;
   count: number;
 };
 
-export const deleteAllPersonas = (): Promise<DeletePersonasResponse> =>
+export const deleteAllPersonas = () =>
   apiClient<DeletePersonasResponse>("/admin/persona", {
     method: "DELETE",
   });
