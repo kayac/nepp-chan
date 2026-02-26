@@ -95,6 +95,8 @@ cp web/.env.example web/.env
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API        |
 | `GOOGLE_SEARCH_ENGINE_ID`      | Custom Search     |
 | `WEB_URL`                      | Web URL           |
+| `LINE_CHANNEL_SECRET`          | LINE 署名検証     |
+| `LINE_CHANNEL_ACCESS_TOKEN`    | LINE API 認証     |
 
 ### web 環境変数
 

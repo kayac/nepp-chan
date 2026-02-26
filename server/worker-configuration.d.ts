@@ -13,6 +13,8 @@ declare namespace Cloudflare {
 		WEBAUTHN_RP_ID: string;
 		WEBAUTHN_RP_NAME: string;
 		WEBAUTHN_ORIGIN: string;
+		LINE_CHANNEL_SECRET: string;
+		LINE_CHANNEL_ACCESS_TOKEN: string;
 		KNOWLEDGE_BUCKET: R2Bucket;
 		DB: D1Database;
 		VECTORIZE: VectorizeIndex;

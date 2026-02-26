@@ -12,6 +12,7 @@ import {
   healthRoutes,
   invitationRoutes,
   knowledgeAdminRoutes,
+  lineRoutes,
   personaAdminRoutes,
   threadsRoutes,
 } from "~/routes";
@@ -33,6 +34,7 @@ app.route("/admin/persona", personaAdminRoutes);
 app.route("/admin/emergency", emergencyAdminRoutes);
 app.route("/admin/invitations", invitationRoutes);
 app.route("/auth", authRoutes);
+app.route("/line", lineRoutes);
 
 app.doc("/doc", {
   openapi: "3.1.0",
