@@ -10,30 +10,34 @@ const factCategoryEnum = z.enum([
 ]);
 
 export const personaSchema = z.object({
-  // 長期記憶: ユーザーの基本プロフィール
   profile: z
     .object({
-      name: z.string().optional().describe("ユーザーの名前や呼び名"),
+      name: z.string().optional().describe("ユーザーの名前"),
+      preferredName: z
+        .string()
+        .optional()
+        .describe(
+          "ユーザーが希望する呼び方（例: 「たろうくん」「田中さん」）。指定があればnameより優先して使う",
+        ),
       gender: z.string().optional().describe("性別"),
     })
     .optional()
     .describe("ユーザーの基本プロフィール"),
 
-  // 長期記憶: ユーザーについての永続的な事実
   personalFacts: z
     .array(
       z.object({
         fact: z
           .string()
           .describe(
-            "事実の内容（例: 「60代くらい」「そばが好き」「村内に住んでいる」）",
+            "事実の内容（例: 「60代くらい」「そばが好き」「村内に住んでいる」「移住を検討中」）",
           ),
         category: factCategoryEnum.describe("事実のカテゴリ"),
       }),
     )
     .optional()
     .describe(
-      "ユーザーについての永続的な事実。年代、居住地、趣味、家族構成、仕事など",
+      "ユーザーについての永続的な事実。年代、居住地、村との関わり（初めて/観光/移住検討など）、好きな食べ物、家族構成、職業、趣味など",
     ),
 });
 

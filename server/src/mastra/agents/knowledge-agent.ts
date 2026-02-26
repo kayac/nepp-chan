@@ -1,6 +1,6 @@
 import { Agent } from "@mastra/core/agent";
 import { getCurrentDateInfo } from "~/lib/date";
-import { GEMINI_FLASH } from "~/lib/llm-models";
+import { geminiModelWithThinking } from "~/lib/llm-models";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 
 const baseInstructions = `
@@ -71,7 +71,7 @@ ${getCurrentDateInfo()}
 ## 検索クエリ生成ルール
 - 「最新」「現在」「今年」「今日」「今週」「今月」などの曖昧な時間表現は、上記の日時を基準に具体的な日付・年に変換する
 `,
-  model: GEMINI_FLASH,
+  ...geminiModelWithThinking(),
   tools: {
     knowledgeSearchTool,
   },
