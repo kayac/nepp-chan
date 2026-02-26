@@ -441,7 +441,7 @@ process_issue() {
     if [[ -n "$field_id" && -n "$option_id" ]]; then
       update_single_select_field "$PROJECT_ID" "$item_id" "$field_id" "$option_id" >/dev/null && {
         echo "    ↳ Status = $p_status"
-        ((local_update_count++))
+        ((local_update_count++)) || true
       }
     fi
   fi
@@ -453,7 +453,7 @@ process_issue() {
     if [[ -n "$field_id" && -n "$option_id" ]]; then
       update_single_select_field "$PROJECT_ID" "$item_id" "$field_id" "$option_id" >/dev/null && {
         echo "    ↳ Priority = $p_priority"
-        ((local_update_count++))
+        ((local_update_count++)) || true
       }
     fi
   fi
@@ -465,7 +465,7 @@ process_issue() {
     if [[ -n "$field_id" && -n "$option_id" ]]; then
       update_single_select_field "$PROJECT_ID" "$item_id" "$field_id" "$option_id" >/dev/null && {
         echo "    ↳ Size = $p_size"
-        ((local_update_count++))
+        ((local_update_count++)) || true
       }
     fi
   fi
@@ -476,7 +476,7 @@ process_issue() {
     if [[ -n "$field_id" ]]; then
       update_number_field "$PROJECT_ID" "$item_id" "$field_id" "$p_estimate" >/dev/null && {
         echo "    ↳ Estimate = $p_estimate"
-        ((local_update_count++))
+        ((local_update_count++)) || true
       }
     fi
   fi
@@ -488,7 +488,7 @@ process_issue() {
     if [[ -n "$field_id" && -n "$iteration_id" ]]; then
       update_iteration_field "$PROJECT_ID" "$item_id" "$field_id" "$iteration_id" >/dev/null && {
         echo "    ↳ Iteration = $p_iteration"
-        ((local_update_count++))
+        ((local_update_count++)) || true
       }
     fi
   fi
@@ -499,7 +499,7 @@ process_issue() {
     if [[ -n "$field_id" ]]; then
       update_date_field "$PROJECT_ID" "$item_id" "$field_id" "$p_start" >/dev/null && {
         echo "    ↳ Start date = $p_start"
-        ((local_update_count++))
+        ((local_update_count++)) || true
       }
     fi
   fi
@@ -510,7 +510,7 @@ process_issue() {
     if [[ -n "$field_id" ]]; then
       update_date_field "$PROJECT_ID" "$item_id" "$field_id" "$p_target" >/dev/null && {
         echo "    ↳ Target date = $p_target"
-        ((local_update_count++))
+        ((local_update_count++)) || true
       }
     fi
   fi
@@ -557,9 +557,9 @@ if [[ -n "$BULK_FILE" ]]; then
     target_date=$(echo "$entry" | jq -r '.target_date // .targetDate // ""')
 
     if process_issue "$issue_num" "$status" "$priority" "$size" "$estimate" "$iteration" "$start_date" "$target_date"; then
-      ((success_count++))
+      ((success_count++)) || true
     else
-      ((fail_count++))
+      ((fail_count++)) || true
     fi
   done < <(jq -c '.[]' "$BULK_FILE")
 
@@ -622,7 +622,7 @@ if [[ -n "$STATUS_VALUE" ]]; then
   if [[ -n "$field_id" && -n "$option_id" ]]; then
     update_single_select_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$option_id" >/dev/null
     print_success "Status = $STATUS_VALUE"
-    ((update_count++))
+    ((update_count++)) || true
   else
     print_warn "Could not find Status option: $STATUS_VALUE"
   fi
@@ -634,7 +634,7 @@ if [[ -n "$PRIORITY_VALUE" ]]; then
   if [[ -n "$field_id" && -n "$option_id" ]]; then
     update_single_select_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$option_id" >/dev/null
     print_success "Priority = $PRIORITY_VALUE"
-    ((update_count++))
+    ((update_count++)) || true
   else
     print_warn "Could not find Priority option: $PRIORITY_VALUE"
   fi
@@ -646,7 +646,7 @@ if [[ -n "$SIZE_VALUE" ]]; then
   if [[ -n "$field_id" && -n "$option_id" ]]; then
     update_single_select_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$option_id" >/dev/null
     print_success "Size = $SIZE_VALUE"
-    ((update_count++))
+    ((update_count++)) || true
   else
     print_warn "Could not find Size option: $SIZE_VALUE"
   fi
@@ -657,7 +657,7 @@ if [[ -n "$ESTIMATE_VALUE" ]]; then
   if [[ -n "$field_id" ]]; then
     update_number_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$ESTIMATE_VALUE" >/dev/null
     print_success "Estimate = $ESTIMATE_VALUE"
-    ((update_count++))
+    ((update_count++)) || true
   else
     print_warn "Could not find Estimate field"
   fi
@@ -669,7 +669,7 @@ if [[ -n "$ITERATION_VALUE" ]]; then
   if [[ -n "$field_id" && -n "$iteration_id" ]]; then
     update_iteration_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$iteration_id" >/dev/null
     print_success "Iteration = $ITERATION_VALUE"
-    ((update_count++))
+    ((update_count++)) || true
   else
     print_warn "Could not find Iteration: $ITERATION_VALUE"
   fi
@@ -680,7 +680,7 @@ if [[ -n "$START_DATE" ]]; then
   if [[ -n "$field_id" ]]; then
     update_date_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$START_DATE" >/dev/null
     print_success "Start date = $START_DATE"
-    ((update_count++))
+    ((update_count++)) || true
   else
     print_warn "Could not find Start date field"
   fi
@@ -691,7 +691,7 @@ if [[ -n "$TARGET_DATE" ]]; then
   if [[ -n "$field_id" ]]; then
     update_date_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$TARGET_DATE" >/dev/null
     print_success "Target date = $TARGET_DATE"
-    ((update_count++))
+    ((update_count++)) || true
   else
     print_warn "Could not find Target date field"
   fi

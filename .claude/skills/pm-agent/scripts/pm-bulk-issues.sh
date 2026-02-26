@@ -173,7 +173,7 @@ while IFS= read -r issue; do
   # Check checkpoint (idempotency)
   if is_already_created "$CHECKPOINT_FILE" "$title"; then
     print_skip "Skip (exists): $title"
-    ((skipped_count++))
+    ((skipped_count++)) || true
     continue
   fi
 
@@ -232,7 +232,7 @@ while IFS= read -r issue; do
   fi
 
   # Batch delay for rate limit protection
-  ((count++))
+  ((count++)) || true
   if ((count % BATCH_SIZE == 0)); then
     print_wait "Batch complete ($count issues), waiting ${DELAY_SEC}s..."
     sleep "$DELAY_SEC"

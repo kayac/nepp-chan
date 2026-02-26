@@ -214,13 +214,13 @@ if [[ "$RECURSIVE" == true ]]; then
       # Check if already has the same iteration
       if [[ "$sub_iteration_id" == "$PARENT_ITERATION_ID" ]]; then
         print_skip "#$sub_issue: $sub_issue_title (already $PARENT_ITERATION_TITLE)"
-        ((skipped_count++))
+        ((skipped_count++)) || true
         continue
       fi
 
       if [[ "$DRY_RUN" == true ]]; then
         echo "  Would update #$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
-        ((updated_count++))
+        ((updated_count++)) || true
         continue
       fi
 
@@ -237,7 +237,7 @@ if [[ "$RECURSIVE" == true ]]; then
       # Update iteration
       if update_iteration_field "$PROJECT_ID" "$sub_item_id" "$ITERATION_FIELD_ID" "$PARENT_ITERATION_ID" >/dev/null 2>&1; then
         print_success "#$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
-        ((updated_count++))
+        ((updated_count++)) || true
       else
         print_warn "Failed to update #$sub_issue"
       fi
@@ -260,13 +260,13 @@ else
     # Check if already has the same iteration
     if [[ "$sub_iteration_id" == "$PARENT_ITERATION_ID" ]]; then
       print_skip "#$sub_issue: $sub_issue_title (already $PARENT_ITERATION_TITLE)"
-      ((skipped_count++))
+      ((skipped_count++)) || true
       continue
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
       echo "Would update #$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
-      ((updated_count++))
+      ((updated_count++)) || true
       continue
     fi
 
@@ -283,7 +283,7 @@ else
     # Update iteration
     if update_iteration_field "$PROJECT_ID" "$sub_item_id" "$ITERATION_FIELD_ID" "$PARENT_ITERATION_ID" >/dev/null 2>&1; then
       print_success "#$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
-      ((updated_count++))
+      ((updated_count++)) || true
     else
       print_warn "Failed to update #$sub_issue"
     fi

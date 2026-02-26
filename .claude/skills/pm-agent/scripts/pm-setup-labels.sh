@@ -87,10 +87,10 @@ create_labels() {
     IFS=':' read -r name color desc <<<"$item"
     if gh label create "$name" --color "$color" --description "$desc" --repo "$REPO" 2>/dev/null; then
       print_success "Created: $name"
-      ((created++))
+      ((created++)) || true
     else
       print_skip "Exists: $name"
-      ((skipped++))
+      ((skipped++)) || true
     fi
   done
 

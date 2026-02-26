@@ -183,7 +183,7 @@ while IFS= read -r item; do
   num=$(echo "$item" | jq -r '.number')
   title=$(echo "$item" | jq -r '.title')
   echo "  $idx. #$num - $title"
-  ((idx++))
+  ((idx++)) || true
 done < <(echo "$CHILDREN_JSON" | jq -c 'sort_by(.number) | .[]')
 
 echo ""
@@ -310,7 +310,7 @@ for ((i = 0; i < ITERATION_COUNT; i++)); do
     # Update iteration
     if update_iteration_field "$PROJECT_ID" "$item_id" "$ITERATION_FIELD_ID" "$iter_id" >/dev/null 2>&1; then
       print_success "#$issue_num: $issue_title → $iter_name"
-      ((updated_count++))
+      ((updated_count++)) || true
     else
       print_warn "Failed to set iteration for #$issue_num"
       continue
@@ -338,7 +338,7 @@ for ((i = 0; i < ITERATION_COUNT; i++)); do
           if [[ -n "$desc_item_id" && "$desc_item_id" != "null" ]]; then
             if update_iteration_field "$PROJECT_ID" "$desc_item_id" "$ITERATION_FIELD_ID" "$iter_id" >/dev/null 2>&1; then
               echo "    └── #$desc_num: $desc_title → $iter_name"
-              ((cascade_count++))
+              ((cascade_count++)) || true
             fi
           fi
         done < <(echo "$descendants" | jq -c '.[]')

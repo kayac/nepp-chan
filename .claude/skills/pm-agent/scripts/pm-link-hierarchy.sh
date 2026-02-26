@@ -133,7 +133,7 @@ while IFS= read -r relation; do
       if [[ "$existing_parent" == "$parent" ]]; then
         # Already linked to the same parent - skip
         print_skip "#$child already linked to #$parent"
-        ((skip_count++))
+        ((skip_count++)) || true
         continue
       elif [[ "$FORCE" == true ]]; then
         # Remove existing parent and set new one
@@ -142,13 +142,13 @@ while IFS= read -r relation; do
           print_success "Removed #$child from #$existing_parent"
         else
           print_warn "Failed to remove #$child from #$existing_parent"
-          ((fail_count++))
+          ((fail_count++)) || true
           continue
         fi
       else
         # Default: skip issues with existing parent
         print_skip "#$child (already has parent #$existing_parent)"
-        ((skip_count++))
+        ((skip_count++)) || true
         continue
       fi
     fi
@@ -157,13 +157,13 @@ while IFS= read -r relation; do
     error_output=""
     if error_output=$(add_sub_issue "$REPO" "$parent" "$child" 2>&1); then
       print_success "#$parent ← #$child (sub-issue)"
-      ((success_count++))
+      ((success_count++)) || true
     else
       print_warn "Failed: #$parent ← #$child"
       if [[ "$VERBOSE" == true ]]; then
         echo "   └─ Error: $error_output" >&2
       fi
-      ((fail_count++))
+      ((fail_count++)) || true
     fi
   done
 done < <(jq -c '.[]' "$HIERARCHY_FILE")

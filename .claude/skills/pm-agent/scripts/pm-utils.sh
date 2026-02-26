@@ -268,7 +268,7 @@ get_all_descendants() {
     done < <(echo "$current_queue" | jq -c '.[]')
 
     current_queue="$next_queue"
-    ((current_depth++))
+    ((current_depth++)) || true
   done
 
   echo "$result"
