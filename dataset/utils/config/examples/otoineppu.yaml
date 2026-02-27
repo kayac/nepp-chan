@@ -1,0 +1,36 @@
+# 音威子府村公式サイト
+# https://www.vill.otoineppu.hokkaido.jp/
+#
+# Usage (from dataset/utils/):
+#   uv run crawl.py --config config/examples/otoineppu.yaml
+
+target:
+  url: "https://www.vill.otoineppu.hokkaido.jp"
+  allowed_domains:
+    - "www.vill.otoineppu.hokkaido.jp"
+  blocked_paths:
+    - "/cgi-bin/"
+    - "/search/"
+
+crawl:
+  strategy: bfs
+  max_depth: 3
+  max_pages: 500
+  include_external: false
+
+markdown:
+  citations: true
+  body_width: 0
+  skip_internal_links: false
+
+performance:
+  prefetch: true
+  stream: true
+
+recovery:
+  enabled: true
+  state_file: "output/.crawl_state_otoineppu.json"
+
+output:
+  dir: "output"
+  naming: "url_path"
