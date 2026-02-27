@@ -40,7 +40,8 @@
       "r2_buckets": [
         {
           "binding": "KNOWLEDGE_BUCKET",
-          "bucket_name": "nepp-chan-knowledge-local"
+          "bucket_name": "nepp-chan-knowledge-local",
+          "remote": true
         }
       ],
       "vars": {
