@@ -560,6 +560,7 @@ const main = async () => {
 
         const result = await agent.generate(testCase.input, {
           requestContext,
+          maxSteps: 5,
         });
 
         const retrievedChunks = extractKnowledgeSearchResults(
