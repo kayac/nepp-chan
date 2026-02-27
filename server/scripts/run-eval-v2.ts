@@ -483,10 +483,14 @@ const main = async () => {
   console.log(`   テストケース数: ${testCases.length}`);
   console.log(`   各N回: ${args.n}\n`);
 
-  // Cloudflare バインディング取得
+  // Cloudflare バインディング取得（Vectorize 等はリモート接続が必要）
   const { env } = await getPlatformProxy<CloudflareBindings>({
     configPath: "wrangler.jsonc",
+    remoteBindings: true,
   });
+
+  // AI SDK が process.env から API キーを参照するため明示的に設定
+  process.env.GOOGLE_GENERATIVE_AI_API_KEY = env.GOOGLE_GENERATIVE_AI_API_KEY;
 
   // LibSQLStore 作成
   const libsqlStore = new LibSQLStore({
