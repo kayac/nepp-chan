@@ -1,13 +1,9 @@
 import { google } from "@ai-sdk/google";
 import { Agent } from "@mastra/core/agent";
-import { GEMINI_FLASH } from "~/lib/llm-models";
+import { getCurrentDateInfo } from "~/lib/date";
+import { geminiModelWithThinking } from "~/lib/llm-models";
 
-export const webResearcherAgent = new Agent({
-  id: "web-researcher",
-  name: "Web Researcher",
-  description: `インターネットから最新情報を収集するエージェント。
-    Google検索グラウンディングを使って、リアルタイムの情報を取得し要約を提供する。`,
-  instructions: `
+const baseInstructions = `
 あなたはインターネットから最新情報を収集する専門エージェントです。
 
 【役割】
@@ -21,8 +17,22 @@ export const webResearcherAgent = new Agent({
 - URLは検索結果から得たもののみ使用し、推測や捏造は絶対にしない
 - 情報が見つからない場合はその旨を正直に伝える
 - 推測や憶測は避け、事実に基づいて回答する
+
+【定期的に変わりうる情報の扱い】
+- ごみ収集日、料金、イベント日程など毎年・毎月変わりうる情報は、検索結果にない具体的なスケジュールや日程を推測・捏造しない
+- 検索結果の年度・日付が古い場合は「最新情報は直接確認をおすすめします」と補足する
+`;
+
+export const webResearcherAgent = new Agent({
+  id: "web-researcher",
+  name: "Web Researcher",
+  description: `インターネットから最新情報を収集するエージェント。
+    Google検索グラウンディングを使って、リアルタイムの情報を取得し要約を提供する。`,
+  instructions: () => `${baseInstructions}
+## 現在の日時
+${getCurrentDateInfo()}
 `,
-  model: GEMINI_FLASH,
+  ...geminiModelWithThinking(),
   tools: {
     googleSearch: google.tools.googleSearch({}),
   },

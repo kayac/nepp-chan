@@ -11,7 +11,7 @@ Cloudflare Workers で動作するバックエンド API。Hono + Mastra AI フ�
 | ツール           | `mastra/tools/*-tool.ts`               |
 | DB スキーマ      | `db/schema.ts`                         |
 | ビジネスロジック | `services/`                            |
-| 型定義           | 各ファイル内、または `mastra/schemas/` |
+| 型定義           | 各ファイル内、または `schemas/`        |
 
 ## ディレクトリ構成
 
@@ -21,12 +21,12 @@ server/src/
 ├── middleware/              # Hono ミドルウェア
 ├── routes/                  # API ルート定義
 │   └── admin/               # 管理 API
+├── schemas/                 # 共有 Zod スキーマ（ツール・ルート共通）
 ├── mastra/                  # Mastra プリミティブ
 │   ├── agents/              # AI エージェント
 │   ├── tools/               # ツール
 │   ├── workflows/           # ワークフロー
 │   ├── scorers/             # 評価スコアラー
-│   ├── schemas/             # Zod スキーマ
 │   └── mcp/                 # MCP 設定
 ├── services/                # ビジネスロジック
 │   ├── knowledge/           # RAG ナレッジ処理
@@ -105,7 +105,7 @@ const agent = createNeppChanAgent({ isAdmin: true });
 | ツール名（変数名）       | ツール ID            | 説明                                   |
 | ------------------------ | -------------------- | -------------------------------------- |
 | `weatherTool`            | `get-weather`        | Open-Meteo API で天気取得              |
-| `searchGoogleTool`       | `searchGoogleTool`   | Google Custom Search                   |
+| `searchGoogleTool`       | `google-search`      | Google Custom Search                   |
 | `devTool`                | `dev-tool`           | Working Memory 表示（デバッグ）        |
 | `displayChartTool`       | `display-chart`      | グラフ表示（line/bar/pie）             |
 | `displayTableTool`       | `display-table`      | テーブル表示                           |
@@ -120,7 +120,7 @@ const agent = createNeppChanAgent({ isAdmin: true });
 | `emergencyGetTool`       | `emergency-get`      | 緊急情報取得（管理者専用）             |
 | `adminEmergencyTool`     | `admin-emergency`    | 緊急報告一覧取得（管理者専用）         |
 | `adminFeedbackTool`      | `admin-feedback`     | フィードバック一覧・統計（管理者専用） |
-| `villageSearchTool`      | `villageSearchTool`  | 村検索                                 |
+| `villageSearchTool`      | `village-search`     | 村検索                                 |
 | `knowledgeSearchTool`    | `knowledge-search`   | RAG ナレッジ検索（Vectorize）          |
 
 ## コーディング規約
@@ -179,6 +179,31 @@ throw new HTTPException(404, { message: "Not found" });
 
 // グローバルエラーハンドラーで一元的に処理
 ```
+
+### ツール命名規約
+
+| 項目 | 規約 | 例 |
+|------|------|-----|
+| ファイル名 | `{domain}-{action}-tool.ts` (kebab-case) | `emergency-get-tool.ts` |
+| 変数名 | `{domain}{Action}Tool` (camelCase) | `emergencyGetTool` |
+| Tool ID | `{domain}-{action}` (kebab-case) | `emergency-get` |
+| description | 日本語、句点で終わる | `"緊急報告の一覧を取得します。"` |
+| inputSchema.describe | 日本語 | `"取得する最大件数"` |
+| 管理者専用 | description に `【管理者専用】` プレフィックス | `"【管理者専用】緊急報告の一覧を取得します。"` |
+| 共通スキーマ | `schemas/` から import | `import { ... } from "~/schemas/emergency-schema"` |
+
+### エージェント規約
+
+- instructions: 日本語で記述、セクションは `##` で区分
+- model: デフォルト `GEMINI_FLASH`、推論精度重視なら `GEMINI_PRO`
+- 動的 instructions: 現在日時が必要な場合のみ関数化（`lib/date.ts` の `getCurrentDateInfo()` を使用）
+
+### ルート規約
+
+- エラー: `throw new HTTPException(code, { message })` でスロー（グローバルエラーハンドラーが `{ error: { code, message } }` 形式に変換）
+- OpenAPI エラーレスポンス: `lib/openapi-errors.ts` の `errorResponse(code)` を使用
+- 認証必須ルート: `sessionAuth` ミドルウェアを適用
+- 共通スキーマ: `schemas/` から import（インライン定義を避ける）
 
 ## データベーステーブル
 
@@ -403,5 +428,5 @@ thread_persona_status 更新
 pnpm dev               # 開発サーバー（http://localhost:8787）
 pnpm test              # テスト実行
 pnpm deploy            # dev 環境にデプロイ
-pnpm deploy:production # prd 環境にデプロイ
+pnpm deploy:prd        # prd 環境にデプロイ
 ```

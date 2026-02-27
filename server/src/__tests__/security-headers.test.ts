@@ -42,11 +42,11 @@ describe("securityHeaders ミドルウェア", () => {
     );
   });
 
-  it("X-XSS-Protection ヘッダーを設定する", async () => {
+  it("X-XSS-Protection ヘッダーを設定しない（非推奨のため）", async () => {
     const app = createApp();
     const res = await app.request("/test");
 
-    expect(res.headers.get("X-XSS-Protection")).toBe("1; mode=block");
+    expect(res.headers.get("X-XSS-Protection")).toBeNull();
   });
 
   it("Permissions-Policy ヘッダーを設定する", async () => {
@@ -70,7 +70,7 @@ describe("securityHeaders ミドルウェア", () => {
     expect(res.headers.get("Strict-Transport-Security")).toBe(
       "max-age=31536000; includeSubDomains",
     );
-    expect(res.headers.get("X-XSS-Protection")).toBe("1; mode=block");
+    expect(res.headers.get("X-XSS-Protection")).toBeNull();
     expect(res.headers.get("Permissions-Policy")).toBe(
       "geolocation=(), microphone=()",
     );

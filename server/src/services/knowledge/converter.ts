@@ -17,7 +17,7 @@ export const isSupportedMimeType = (mimeType: string) =>
 export const convertToMarkdown = async (
   fileData: ArrayBuffer,
   mimeType: string,
-): Promise<string> => {
+) => {
   if (!isSupportedMimeType(mimeType)) {
     throw new Error(
       `Unsupported mime type: ${mimeType}. Supported types: ${SUPPORTED_MIME_TYPES.join(", ")}`,

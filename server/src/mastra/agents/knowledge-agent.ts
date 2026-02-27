@@ -1,6 +1,6 @@
 import { Agent } from "@mastra/core/agent";
 import { getCurrentDateInfo } from "~/lib/date";
-import { GEMINI_FLASH } from "~/lib/llm-models";
+import { geminiModelWithThinking } from "~/lib/llm-models";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 
 const baseInstructions = `
@@ -42,11 +42,14 @@ const baseInstructions = `
 - 月範囲や季節表現は、現在の月日が範囲内かどうかで判断する
 - 「年度」は日本の会計年度（4月～翌年3月）として扱う（例：令和6年度 = 2024年4月～2025年3月）
 
+### 定期的に変わりうる情報の扱い
+ごみ収集カレンダー、料金、イベント日程、届出期限など毎年・毎月変わりうる情報は:
+- 検索結果に記載のない具体的な曜日・日程・スケジュールは推測せず、関連するURLやPDFリンクがあればそれを案内する
+- 検索結果の年度・日付が古い場合は「最新情報は直接確認をおすすめします」と補足する
+
 ### 判断に迷う場合
 - 時間非依存の情報で日付情報がない場合は有効な情報として扱う
-- 時間依存の情報で日付情報が不明な場合は、情報を提示しつつ「最新情報は直接確認をおすすめします」と補足する
-- 「毎年」「例年」の表記がある期間情報は、例年の傾向として回答に含め、「変更の可能性があるため最新情報の確認をおすすめします」と補足する
-- その他判断に迷った場合は情報を残し、「最新情報は直接確認をおすすめします」と補足する
+- その他判断に迷った場合は情報を残し「最新情報は直接確認をおすすめします」と補足する
 
 ## 回答が得られない場合の判断基準
 - 検索結果が空、または結果が0件
@@ -71,7 +74,7 @@ ${getCurrentDateInfo()}
 ## 検索クエリ生成ルール
 - 「最新」「現在」「今年」「今日」「今週」「今月」などの曖昧な時間表現は、上記の日時を基準に具体的な日付・年に変換する
 `,
-  model: GEMINI_FLASH,
+  ...geminiModelWithThinking(),
   tools: {
     knowledgeSearchTool,
   },

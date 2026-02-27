@@ -1,20 +1,8 @@
-import { and, desc, eq, like, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, like, lt, or, type SQL, sql } from "drizzle-orm";
 
-import { createDb, type Persona, persona } from "~/db";
+import { createDb, type NewPersona, type Persona, persona } from "~/db";
 
-type CreateInput = {
-  id: string;
-  resourceId: string;
-  category: string;
-  tags?: string;
-  content: string;
-  source?: string;
-  topic?: string;
-  sentiment?: string;
-  demographicSummary?: string;
-  createdAt: string;
-  conversationEndedAt?: string;
-};
+type CreateInput = Omit<NewPersona, "id" | "updatedAt"> & { id: string };
 
 type UpdateInput = {
   category?: string;
@@ -52,7 +40,7 @@ export const personaRepository = {
       conversationEndedAt: input.conversationEndedAt ?? null,
     });
 
-    return { success: true, id: input.id };
+    return input.id;
   },
 
   async update(d1: D1Database, id: string, input: UpdateInput) {
@@ -71,14 +59,7 @@ export const personaRepository = {
     if (input.demographicSummary !== undefined)
       updates.demographicSummary = input.demographicSummary;
 
-    const hasUpdates = Object.keys(updates).length > 1; // updatedAt 以外があるか
-    if (!hasUpdates) {
-      return { success: false, error: "更新する項目がありません" };
-    }
-
     await db.update(persona).set(updates).where(eq(persona.id, id));
-
-    return { success: true };
   },
 
   async findById(d1: D1Database, id: string) {
@@ -93,11 +74,7 @@ export const personaRepository = {
     return result ?? null;
   },
 
-  async findByResourceId(
-    d1: D1Database,
-    resourceId: string,
-    limit = 100,
-  ): Promise<Persona[]> {
+  async findByResourceId(d1: D1Database, resourceId: string, limit = 100) {
     const db = createDb(d1);
 
     return db
@@ -118,7 +95,7 @@ export const personaRepository = {
       keyword?: string;
       limit?: number;
     } = {},
-  ): Promise<Persona[]> {
+  ) {
     const db = createDb(d1);
 
     const conditions = [eq(persona.resourceId, resourceId)];
@@ -186,8 +163,6 @@ export const personaRepository = {
     const db = createDb(d1);
 
     await db.delete(persona).where(eq(persona.id, id));
-
-    return { success: true };
   },
 
   async list(
@@ -230,6 +205,54 @@ export const personaRepository = {
 
     return {
       personas: items,
+      nextCursor,
+      hasMore,
+    };
+  },
+
+  async listForAdmin(
+    d1: D1Database,
+    options: { limit?: number; cursor?: string } = {},
+  ): Promise<{
+    personas: Persona[];
+    total: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  }> {
+    const db = createDb(d1);
+    const limit = options.limit ?? 30;
+
+    let cursorCondition: SQL | undefined;
+    if (options.cursor) {
+      const [cursorCreatedAt, cursorId] = options.cursor.split("_");
+      cursorCondition = or(
+        lt(persona.createdAt, cursorCreatedAt),
+        and(eq(persona.createdAt, cursorCreatedAt), lt(persona.id, cursorId)),
+      );
+    }
+
+    const results = await db
+      .select()
+      .from(persona)
+      .where(cursorCondition)
+      .orderBy(desc(persona.createdAt), desc(persona.id))
+      .limit(limit + 1)
+      .all();
+
+    const hasMore = results.length > limit;
+    const personas = hasMore ? results.slice(0, limit) : results;
+
+    const lastPersona = personas[personas.length - 1];
+    const nextCursor =
+      hasMore && lastPersona
+        ? `${lastPersona.createdAt}_${lastPersona.id}`
+        : null;
+
+    const countResult = await db.select({ count: count() }).from(persona).get();
+
+    return {
+      personas,
+      total: countResult?.count ?? 0,
       nextCursor,
       hasMore,
     };
@@ -287,8 +310,6 @@ export const personaRepository = {
     const db = createDb(d1);
 
     await db.delete(persona);
-
-    return { success: true };
   },
 };
 

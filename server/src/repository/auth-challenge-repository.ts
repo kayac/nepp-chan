@@ -22,7 +22,7 @@ export const authChallengeRepository = {
       createdAt: input.createdAt,
     });
 
-    return { success: true, id: input.id };
+    return input.id;
   },
 
   async findById(d1: D1Database, id: string) {
@@ -59,8 +59,6 @@ export const authChallengeRepository = {
     const db = createDb(d1);
 
     await db.delete(authChallenges).where(eq(authChallenges.id, id));
-
-    return { success: true };
   },
 
   async deleteExpired(d1: D1Database) {
@@ -70,8 +68,6 @@ export const authChallengeRepository = {
     await db
       .delete(authChallenges)
       .where(sql`${authChallenges.expiresAt} < ${now}`);
-
-    return { success: true };
   },
 };
 

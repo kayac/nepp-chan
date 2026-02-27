@@ -124,14 +124,10 @@ describe("webauthn service", () => {
           origin: mockConfig.origin,
         },
       });
-      vi.mocked(adminUserRepository.create).mockResolvedValue({
-        success: true,
-        id: "user-1",
-      });
-      vi.mocked(adminCredentialRepository.create).mockResolvedValue({
-        success: true,
-        id: expectedCredentialId,
-      });
+      vi.mocked(adminUserRepository.create).mockResolvedValue("user-1");
+      vi.mocked(adminCredentialRepository.create).mockResolvedValue(
+        expectedCredentialId,
+      );
       vi.mocked(adminUserRepository.findById).mockResolvedValue({
         id: "user-1",
         email: "test@example.com",
@@ -320,14 +316,10 @@ describe("webauthn service", () => {
           origin: mockConfig.origin,
         },
       });
-      vi.mocked(adminUserRepository.create).mockResolvedValue({
-        success: true,
-        id: "user-1",
-      });
-      vi.mocked(adminCredentialRepository.create).mockResolvedValue({
-        success: true,
-        id: "test-credential-id",
-      });
+      vi.mocked(adminUserRepository.create).mockResolvedValue("user-1");
+      vi.mocked(adminCredentialRepository.create).mockResolvedValue(
+        "test-credential-id",
+      );
       vi.mocked(adminUserRepository.findById).mockResolvedValue({
         id: "user-1",
         email: "test@example.com",
@@ -735,10 +727,9 @@ describe("webauthn service", () => {
           authenticatorAttachment: "platform",
         },
       });
-      vi.mocked(authChallengeRepository.create).mockResolvedValue({
-        success: true,
-        id: "challenge-1",
-      });
+      vi.mocked(authChallengeRepository.create).mockResolvedValue(
+        "challenge-1",
+      );
 
       const result = await webauthn.generateWebAuthnRegistrationOptions(
         mockDb,
@@ -810,10 +801,9 @@ describe("webauthn service", () => {
           authenticatorAttachment: "platform",
         },
       });
-      vi.mocked(authChallengeRepository.create).mockResolvedValue({
-        success: true,
-        id: "challenge-1",
-      });
+      vi.mocked(authChallengeRepository.create).mockResolvedValue(
+        "challenge-1",
+      );
 
       await webauthn.generateWebAuthnRegistrationOptions(
         mockDb,
@@ -840,10 +830,9 @@ describe("webauthn service", () => {
         rpId: "localhost",
         userVerification: "required",
       });
-      vi.mocked(authChallengeRepository.create).mockResolvedValue({
-        success: true,
-        id: "challenge-1",
-      });
+      vi.mocked(authChallengeRepository.create).mockResolvedValue(
+        "challenge-1",
+      );
 
       const result = await webauthn.generateWebAuthnAuthenticationOptions(
         mockDb,
@@ -862,10 +851,9 @@ describe("webauthn service", () => {
         rpId: "localhost",
         userVerification: "required",
       });
-      vi.mocked(authChallengeRepository.create).mockResolvedValue({
-        success: true,
-        id: "challenge-1",
-      });
+      vi.mocked(authChallengeRepository.create).mockResolvedValue(
+        "challenge-1",
+      );
 
       await webauthn.generateWebAuthnAuthenticationOptions(mockDb, mockConfig);
 
@@ -884,10 +872,9 @@ describe("webauthn service", () => {
     it("新しい招待を作成できる", async () => {
       vi.mocked(adminUserRepository.findByEmail).mockResolvedValue(null);
       vi.mocked(adminInvitationRepository.findByEmail).mockResolvedValue(null);
-      vi.mocked(adminInvitationRepository.create).mockResolvedValue({
-        success: true,
-        id: "new-invitation",
-      });
+      vi.mocked(adminInvitationRepository.create).mockResolvedValue(
+        "new-invitation",
+      );
 
       const result = await webauthn.createInvitation(
         mockDb,
@@ -932,13 +919,10 @@ describe("webauthn service", () => {
         usedAt: null,
         createdAt: new Date().toISOString(),
       });
-      vi.mocked(adminInvitationRepository.delete).mockResolvedValue({
-        success: true,
-      });
-      vi.mocked(adminInvitationRepository.create).mockResolvedValue({
-        success: true,
-        id: "new-invitation",
-      });
+      vi.mocked(adminInvitationRepository.delete).mockResolvedValue(undefined);
+      vi.mocked(adminInvitationRepository.create).mockResolvedValue(
+        "new-invitation",
+      );
 
       await webauthn.createInvitation(
         mockDb,
@@ -965,10 +949,9 @@ describe("webauthn service", () => {
         usedAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
       });
-      vi.mocked(adminInvitationRepository.create).mockResolvedValue({
-        success: true,
-        id: "new-invitation",
-      });
+      vi.mocked(adminInvitationRepository.create).mockResolvedValue(
+        "new-invitation",
+      );
 
       await webauthn.createInvitation(
         mockDb,
@@ -983,10 +966,9 @@ describe("webauthn service", () => {
     it("カスタムの役割と有効期限を指定できる", async () => {
       vi.mocked(adminUserRepository.findByEmail).mockResolvedValue(null);
       vi.mocked(adminInvitationRepository.findByEmail).mockResolvedValue(null);
-      vi.mocked(adminInvitationRepository.create).mockResolvedValue({
-        success: true,
-        id: "new-invitation",
-      });
+      vi.mocked(adminInvitationRepository.create).mockResolvedValue(
+        "new-invitation",
+      );
 
       await webauthn.createInvitation(
         mockDb,

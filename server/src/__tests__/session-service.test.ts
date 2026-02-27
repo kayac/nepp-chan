@@ -48,10 +48,7 @@ describe("sessionService", () => {
 
   describe("createSession", () => {
     it("新しいセッションを作成できる", async () => {
-      vi.mocked(adminSessionRepository.create).mockResolvedValue({
-        success: true,
-        id: "session-new",
-      });
+      vi.mocked(adminSessionRepository.create).mockResolvedValue("session-new");
 
       const result = await sessionService.createSession(mockDb, testUser.id);
 
@@ -63,10 +60,7 @@ describe("sessionService", () => {
     });
 
     it("セッションIDは64文字の16進数文字列である", async () => {
-      vi.mocked(adminSessionRepository.create).mockResolvedValue({
-        success: true,
-        id: "test",
-      });
+      vi.mocked(adminSessionRepository.create).mockResolvedValue("test");
 
       const result = await sessionService.createSession(mockDb, testUser.id);
 
@@ -74,10 +68,7 @@ describe("sessionService", () => {
     });
 
     it("有効期限は30日後である", async () => {
-      vi.mocked(adminSessionRepository.create).mockResolvedValue({
-        success: true,
-        id: "test",
-      });
+      vi.mocked(adminSessionRepository.create).mockResolvedValue("test");
 
       const before = Date.now();
       const result = await sessionService.createSession(mockDb, testUser.id);
@@ -93,10 +84,7 @@ describe("sessionService", () => {
     });
 
     it("リポジトリの create が正しく呼び出される", async () => {
-      vi.mocked(adminSessionRepository.create).mockResolvedValue({
-        success: true,
-        id: "test",
-      });
+      vi.mocked(adminSessionRepository.create).mockResolvedValue("test");
 
       await sessionService.createSession(mockDb, testUser.id);
 
@@ -117,9 +105,9 @@ describe("sessionService", () => {
       vi.mocked(adminSessionRepository.findValidById).mockResolvedValue(
         testSession,
       );
-      vi.mocked(adminSessionRepository.updateLastAccessed).mockResolvedValue({
-        success: true,
-      });
+      vi.mocked(adminSessionRepository.updateLastAccessed).mockResolvedValue(
+        undefined,
+      );
 
       const result = await sessionService.validateSession(
         mockDb,
@@ -138,9 +126,9 @@ describe("sessionService", () => {
       vi.mocked(adminSessionRepository.findValidById).mockResolvedValue(
         testSession,
       );
-      vi.mocked(adminSessionRepository.updateLastAccessed).mockResolvedValue({
-        success: true,
-      });
+      vi.mocked(adminSessionRepository.updateLastAccessed).mockResolvedValue(
+        undefined,
+      );
 
       await sessionService.validateSession(mockDb, testSession.id);
 
@@ -168,9 +156,9 @@ describe("sessionService", () => {
       vi.mocked(adminSessionRepository.findValidById).mockResolvedValue(
         testSession,
       );
-      vi.mocked(adminSessionRepository.updateLastAccessed).mockResolvedValue({
-        success: true,
-      });
+      vi.mocked(adminSessionRepository.updateLastAccessed).mockResolvedValue(
+        undefined,
+      );
       vi.mocked(adminUserRepository.findById).mockResolvedValue(testUser);
 
       const result = await sessionService.getUserFromSession(
@@ -201,9 +189,9 @@ describe("sessionService", () => {
       vi.mocked(adminSessionRepository.findValidById).mockResolvedValue(
         testSession,
       );
-      vi.mocked(adminSessionRepository.updateLastAccessed).mockResolvedValue({
-        success: true,
-      });
+      vi.mocked(adminSessionRepository.updateLastAccessed).mockResolvedValue(
+        undefined,
+      );
       vi.mocked(adminUserRepository.findById).mockResolvedValue(null);
 
       const result = await sessionService.getUserFromSession(
@@ -217,13 +205,10 @@ describe("sessionService", () => {
 
   describe("deleteSession", () => {
     it("セッションを削除できる", async () => {
-      vi.mocked(adminSessionRepository.delete).mockResolvedValue({
-        success: true,
-      });
+      vi.mocked(adminSessionRepository.delete).mockResolvedValue(undefined);
 
-      const result = await sessionService.deleteSession(mockDb, testSession.id);
+      await sessionService.deleteSession(mockDb, testSession.id);
 
-      expect(result).toEqual({ success: true });
       expect(adminSessionRepository.delete).toHaveBeenCalledWith(
         mockDb,
         testSession.id,
@@ -233,16 +218,12 @@ describe("sessionService", () => {
 
   describe("deleteUserSessions", () => {
     it("ユーザーの全セッションを削除できる", async () => {
-      vi.mocked(adminSessionRepository.deleteByUserId).mockResolvedValue({
-        success: true,
-      });
-
-      const result = await sessionService.deleteUserSessions(
-        mockDb,
-        testUser.id,
+      vi.mocked(adminSessionRepository.deleteByUserId).mockResolvedValue(
+        undefined,
       );
 
-      expect(result).toEqual({ success: true });
+      await sessionService.deleteUserSessions(mockDb, testUser.id);
+
       expect(adminSessionRepository.deleteByUserId).toHaveBeenCalledWith(
         mockDb,
         testUser.id,
@@ -252,13 +233,12 @@ describe("sessionService", () => {
 
   describe("cleanupExpiredSessions", () => {
     it("期限切れセッションをクリーンアップできる", async () => {
-      vi.mocked(adminSessionRepository.deleteExpired).mockResolvedValue({
-        success: true,
-      });
+      vi.mocked(adminSessionRepository.deleteExpired).mockResolvedValue(
+        undefined,
+      );
 
-      const result = await sessionService.cleanupExpiredSessions(mockDb);
+      await sessionService.cleanupExpiredSessions(mockDb);
 
-      expect(result).toEqual({ success: true });
       expect(adminSessionRepository.deleteExpired).toHaveBeenCalledWith(mockDb);
     });
   });

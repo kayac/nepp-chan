@@ -15,18 +15,11 @@ import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { neppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { personaAgent } from "~/mastra/agents/persona-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
-import { weatherAgent } from "~/mastra/agents/weather-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
-import {
-  completenessScorer,
-  toolCallAppropriatenessScorer,
-  translationScorer,
-} from "~/mastra/scorers/weather-scorer";
 import {
   evalBatchWorkflow,
   evalWorkflow,
 } from "~/mastra/workflows/eval-workflow";
-import { weatherWorkflow } from "~/mastra/workflows/weather-workflow";
 
 let cloudflareEnv: CloudflareBindings | null = null;
 
@@ -50,7 +43,7 @@ const getCloudflareEnv = async () => {
  * アプリケーション側で利用する時は、各呼び出し箇所で new Mastra() を直接使用してください
  */
 export const mastra = new Mastra({
-  workflows: { evalBatchWorkflow, evalWorkflow, weatherWorkflow },
+  workflows: { evalBatchWorkflow, evalWorkflow },
   agents: {
     converterAgent,
     emergencyAgent,
@@ -60,13 +53,7 @@ export const mastra = new Mastra({
     neppChanAgent,
     personaAgent,
     personaAnalystAgent,
-    weatherAgent,
     webResearcherAgent,
-  },
-  scorers: {
-    toolCallAppropriatenessScorer,
-    completenessScorer,
-    translationScorer,
   },
   observability: new Observability({
     configs: {

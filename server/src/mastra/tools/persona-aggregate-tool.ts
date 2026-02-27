@@ -1,8 +1,8 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
-import type { AdminUser } from "~/db";
 import { personaRepository } from "~/repository/persona-repository";
+import { requireAdmin } from "./helpers";
 
 export const personaAggregateTool = createTool({
   id: "persona-aggregate",
@@ -38,31 +38,17 @@ export const personaAggregateTool = createTool({
     error: z.string().optional(),
   }),
   execute: async (inputData, context) => {
-    const adminUser = context?.requestContext?.get("adminUser") as
-      | AdminUser
-      | undefined;
-
-    if (!adminUser) {
+    const result = requireAdmin(context);
+    if ("error" in result) {
       return {
         success: false,
         aggregations: [],
         totalCount: 0,
-        message: "この機能は使用できません",
-        error: "NOT_AUTHORIZED",
+        message: result.error.message,
+        error: result.error.error,
       };
     }
-
-    const db = context?.requestContext?.get("db") as D1Database | undefined;
-
-    if (!db) {
-      return {
-        success: false,
-        aggregations: [],
-        totalCount: 0,
-        message: "データベース接続がありません",
-        error: "DB_NOT_AVAILABLE",
-      };
-    }
+    const { db } = result;
 
     const { resourceId, category, limit } = inputData;
 
@@ -110,7 +96,7 @@ export const personaAggregateTool = createTool({
   },
 });
 
-const formatDemographics = (demographics: string | null): string => {
+const formatDemographics = (demographics: string | null) => {
   if (!demographics) return "不明";
 
   const items = demographics.split(",").filter(Boolean);

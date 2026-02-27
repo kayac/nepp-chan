@@ -1,6 +1,7 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { MDocument } from "@mastra/rag";
 import { embedMany } from "ai";
+import matter from "gray-matter";
 import { GEMINI_EMBEDDING } from "~/lib/llm-models";
 
 const EMBEDDING_DIMENSIONS = 1536;
@@ -17,6 +18,7 @@ type ChunkMetadata = {
   section?: string;
   subsection?: string;
   content: string;
+  [key: string]: string | number | boolean | string[] | undefined;
 };
 
 type VectorData = {
@@ -49,7 +51,8 @@ const chunkDocument = async (
   filename: string,
   content: string,
 ): Promise<{ texts: string[]; metadata: ChunkMetadata[] }> => {
-  const doc = MDocument.fromMarkdown(content);
+  const { data: frontmatter, content: body } = matter(content);
+  const doc = MDocument.fromMarkdown(body);
 
   await doc.chunk({
     strategy: "markdown",
@@ -76,6 +79,7 @@ const chunkDocument = async (
       | Record<string, unknown>
       | undefined;
     return {
+      ...frontmatter,
       source: filename,
       title: chunkMeta?.title as string | undefined,
       section: chunkMeta?.section as string | undefined,
@@ -94,10 +98,7 @@ const chunkDocument = async (
 /**
  * テキスト配列から embeddings を生成
  */
-const generateEmbeddings = async (
-  texts: string[],
-  apiKey: string,
-): Promise<number[][]> => {
+const generateEmbeddings = async (texts: string[], apiKey: string) => {
   if (texts.length === 0) {
     return [];
   }
@@ -152,7 +153,9 @@ export const processKnowledgeFile = async (
         batch.map((v) => ({
           id: v.id,
           values: v.values,
-          metadata: v.metadata,
+          metadata: Object.fromEntries(
+            Object.entries(v.metadata).filter(([, val]) => val !== undefined),
+          ) as Record<string, string | number | boolean | string[]>,
         })),
       );
     }
