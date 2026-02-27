@@ -17,7 +17,8 @@
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
     "db:check": "drizzle-kit check",
-    "eval:run": "tsx scripts/run-eval.ts"
+    "eval:run": "tsx scripts/run-eval.ts",
+    "eval:v2": "tsx scripts/run-eval-v2.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.46",

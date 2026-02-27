@@ -50,5 +50,9 @@ lerna-debug.log*
 server/todos/
 **/mastra/public/
 
+# eval results
+dataset/eval/results/*.json
+dataset/eval/results/*.html
+
 # web build output
 server/public/
