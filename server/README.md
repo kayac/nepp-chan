@@ -28,7 +28,7 @@ cp .dev.vars.example .dev.vars
 
 ```bash
 # 初回セットアップ（既存マイグレーション適用）
-pnpm db:migrate
+pnpm db:migrate:dev
 ```
 
 ## 開発
@@ -101,18 +101,18 @@ curl "http://localhost:8787/threads?resourceId=user-123&page=1&perPage=10"
 pnpm dev              # 開発サーバー起動
 pnpm test             # テスト実行
 pnpm deploy           # dev 環境へデプロイ
-pnpm deploy:production # prd 環境へデプロイ
+pnpm deploy:prd       # prd 環境へデプロイ
 pnpm cf-typegen       # Cloudflare 型生成
 
 # Drizzle ORM / D1 マイグレーション
 pnpm db:generate      # スキーマから SQL 生成 → src/db/migrations/
-pnpm db:migrate       # リモート D1 (nepp-chan-db-dev) に適用
+pnpm db:migrate:dev   # リモート D1 (nepp-chan-db-dev) に適用
 pnpm db:migrate:local # ローカル D1 に適用
 pnpm db:studio        # Drizzle Studio（DB GUI）起動
 pnpm db:check         # スキーマとマイグレーションの整合性チェック
 
 # ナレッジ管理
-pnpm knowledge:upload # ナレッジアップロード
+pnpm knowledge:upload:dev # ナレッジアップロード（dev 環境）
 pnpm knowledge:clear  # ナレッジ全削除して再アップロード
 ```
 
@@ -130,7 +130,7 @@ pnpm knowledge:clear  # ナレッジ全削除して再アップロード
 pnpm db:generate   # → src/db/migrations/ に SQL 生成
 
 # 3. D1 に適用
-pnpm db:migrate        # リモート D1
+pnpm db:migrate:dev    # リモート D1
 pnpm db:migrate:local  # ローカル D1
 ```
 
@@ -220,17 +220,17 @@ knowledge/
 ### アップロード
 
 ```bash
-# 全ファイルアップロード
-pnpm knowledge:upload
+# 全ファイルアップロード（環境別: local/dev/prd）
+pnpm knowledge:upload:dev
 
 # クリーンアップして再アップロード（全削除→再登録）
-pnpm knowledge:upload --clean
+pnpm knowledge:upload:dev --clean
 
 # 特定ファイルのみアップロード
-pnpm knowledge:upload --file=mayor-interview.md
+pnpm knowledge:upload:dev --file=mayor-interview.md
 
 # 特定ファイルをクリーンアップして再アップロード
-pnpm knowledge:upload --clean --file=mayor-interview.md
+pnpm knowledge:upload:dev --clean --file=mayor-interview.md
 ```
 
 **必要な環境変数**

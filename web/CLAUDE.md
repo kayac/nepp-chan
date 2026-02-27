@@ -191,5 +191,5 @@ Tailwind CSS 4 の短縮記法と CSS 変数記法を使用。
 pnpm dev               # 開発サーバー（http://localhost:5173）
 pnpm build             # ビルド → dist/
 pnpm deploy            # dev 環境にデプロイ
-pnpm deploy:production # prd 環境にデプロイ
+pnpm deploy:prd        # prd 環境にデプロイ
 ```

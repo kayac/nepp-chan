@@ -17,7 +17,7 @@ const validateEnv = () => {
       `Error: Missing required environment variables: ${missing.join(", ")}`,
     );
     console.error(
-      "Please set them in .env file or export them before running this script.",
+      "Please set them in .env.local/.env.development/.env.production file.",
     );
     process.exit(1);
   }
@@ -34,22 +34,22 @@ const parseArgs = () => {
 
 const printUsage = () => {
   console.log(`
-Usage: pnpm run knowledge:upload [options]
+Usage: pnpm knowledge:upload:<local|dev|prd> [options]
 
 Options:
   --clean           Vectorizeのナレッジを全削除（wrangler経由）
   --file=<filename> 特定のファイルのみアップロード
   --help, -h        ヘルプを表示
 
-Environment Variables (required):
+Environment Variables (required, set via .env.local/.env.development/.env.production):
   CLOUDFLARE_ACCOUNT_ID  Cloudflare アカウント ID
   R2_BUCKET_NAME         R2 バケット名
   VECTORIZE_INDEX_NAME   Vectorize インデックス名
 
 Examples:
-  pnpm knowledge:upload                    # 全ファイルをR2にアップロード
-  pnpm knowledge:upload --file=foo.md      # 特定ファイルのみ
-  pnpm knowledge:upload --clean            # 全ナレッジを削除
+  pnpm knowledge:upload:dev                    # 全ファイルをR2にアップロード
+  pnpm knowledge:upload:dev --file=foo.md      # 特定ファイルのみ
+  pnpm knowledge:upload:dev --clean            # 全ナレッジを削除
 
 Note:
   R2へのアップロード後、R2 Event Notificationsにより
