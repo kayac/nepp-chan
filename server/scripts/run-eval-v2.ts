@@ -483,9 +483,10 @@ const main = async () => {
   console.log(`   テストケース数: ${testCases.length}`);
   console.log(`   各N回: ${args.n}\n`);
 
-  // Cloudflare バインディング取得（Vectorize 等はリモート接続が必要）
+  // Cloudflare バインディング取得（local env の Vectorize/R2 にリモート接続）
   const { env } = await getPlatformProxy<CloudflareBindings>({
     configPath: "wrangler.jsonc",
+    environment: "local",
     remoteBindings: true,
   });
 
