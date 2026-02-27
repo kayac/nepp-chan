@@ -42,7 +42,7 @@ pnpm build
 
 ```bash
 pnpm deploy           # dev 環境へデプロイ
-pnpm deploy:production # prd 環境へデプロイ
+pnpm deploy:prd       # prd 環境へデプロイ
 ```
 
 ## 環境変数
