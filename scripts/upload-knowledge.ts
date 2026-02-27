@@ -1,5 +1,4 @@
 import { execSync } from "node:child_process";
-import { basename } from "node:path";
 import { glob } from "glob";
 
 const KNOWLEDGE_DIR = "./knowledge";
@@ -146,7 +145,7 @@ const main = async () => {
 
   let uploadedCount = 0;
   for (const filepath of files) {
-    const key = basename(filepath);
+    const key = filepath.replace("knowledge/", "");
     if (uploadToR2(filepath, key)) {
       uploadedCount++;
     }
