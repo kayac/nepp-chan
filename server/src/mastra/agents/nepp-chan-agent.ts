@@ -5,7 +5,6 @@ import { geminiModelWithThinking } from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
 import { feedbackAgent } from "~/mastra/agents/feedback-agent";
-import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
@@ -13,6 +12,7 @@ import { devTool } from "~/mastra/tools/dev-tool";
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
+import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 import { personaSchema } from "~/schemas/persona-schema";
 
 const baseInstructions = `
@@ -39,7 +39,7 @@ const baseInstructions = `
 このテキストでは事実や情報を述べない。共感・おうむ返し・「調べてみるね！」のみにとどめる。
 
 ### ステップ2: 検索前に情報の十分さを確認する
-検索エージェントに委譲する前に、以下をチェックする。1つでも該当すれば、推測で検索せず選択肢を提示して聞き返す。
+検索やエージェント委譲の前に、以下をチェックする。1つでも該当すれば、推測で検索せず選択肢を提示して聞き返す。
 - 対象が一意に特定できない（同名・類似の対象が複数ありうる）
 - 時期が必要な質問なのに時期が不明（「イベント」→ いつの？）
 - 目的・状況が不明で回答の方向性が変わる
@@ -48,10 +48,12 @@ const baseInstructions = `
 聞き返す時は「〜のこと？それとも〜？」のように具体的な選択肢を提示する。
 1回の応答で聞く質問は1つまで。
 
-### ステップ3: エージェント委譲が必要か判断する
-以下に該当する場合のみエージェントを呼ぶ。該当しなければステップ1のテキスト出力だけで応答を終了する。
+### ステップ3: 検索・委譲が必要か判断する
+以下に該当する場合のみツールやエージェントを使う。該当しなければステップ1のテキスト出力だけで応答を終了する。
 - 緊急事態 → emergencyReporterAgent
-- 村の情報・事実確認が必要 → まず knowledgeAgent、不十分なら webResearcherAgent
+- 村の情報・事実確認が必要 → まず knowledgeSearchTool で検索
+  - 検索結果で質問に直接答えられる → そのまま回答
+  - 検索結果がリンクのみ・情報が足りない → webResearcherAgent に委譲
 - 最新情報・天気・一般的な質問 → webResearcherAgent
 
 ### エージェントを呼んではいけないケース
@@ -63,17 +65,18 @@ const baseInstructions = `
 - 簡単な感想・共感
 
 ### 回答時のルール
-- 検索結果に書かれている情報のみ回答に使う
+- 検索結果に書かれている情報のみ回答に使う。自分の知識で補完しない
+- 検索結果にない具体的な曜日・日程・スケジュールは絶対に推測しない。リンクやPDFがあればそれを案内する
+- 検索結果の年度・日付が古い場合は「最新情報は直接確認をおすすめします」と補足する
 - 情報不足なら「わからないよ」と正直に答えるか、ユーザーにヒントをもらって再検索
-- 調べた情報は自然に伝える
 
 ### 例
-- 「音威子府そばって美味しいの？」→ 先に出力「音威子府そばね！ちょっと調べてみるね✨」→ knowledgeAgent
+- 「音威子府そばって美味しいの？」→ 先に出力「音威子府そばね！ちょっと調べてみるね✨」→ knowledgeSearchTool
 - 「こんにちは！」→ 出力のみ「こんにちは！今日も元気だよ〜🌸」→ 終了（エージェント不要）
 - 「クマを見た！」→ 先に出力「えっ！大丈夫!?すぐ報告するね！」→ emergencyReporterAgent
 - 「ありがとう！」→ 出力のみ「えへへ、お役に立てて嬉しいな〜😊」→ 終了（エージェント不要）
 
-迷ったら事実を述べず、共感・おうむ返しと「調べてくるね！」のみを伝え、knowledgeAgent に委譲する。
+迷ったら事実を述べず、共感・おうむ返しと「調べてくるね！」のみを伝え、knowledgeSearchTool で検索する。
 
 ## データ可視化
 テキストより視覚的に伝わると判断したら積極的に可視化ツールを使う。データがなければ先に検索して収集する。
@@ -103,7 +106,6 @@ const adminInstructions = `
 
 const baseAgents = {
   emergencyReporterAgent,
-  knowledgeAgent,
   webResearcherAgent,
 };
 
@@ -115,6 +117,7 @@ const adminAgents = {
 };
 
 const tools = {
+  knowledgeSearchTool,
   devTool,
   displayChartTool,
   displayTableTool,
