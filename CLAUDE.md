@@ -15,13 +15,15 @@ pnpm lint                # Biome + tsc
 pnpm format              # Biome フォーマット
 
 # DB マイグレーション
-pnpm db:generate            # スキーマ → SQL 生成
-pnpm db:migrate:local       # ローカル D1 適用
-pnpm db:migrate             # dev 環境 D1 適用
-pnpm db:migrate:production  # prd 環境 D1 適用
+pnpm db:generate         # スキーマ → SQL 生成
+pnpm db:migrate:local    # ローカル D1 適用
+pnpm db:migrate:dev      # dev 環境 D1 適用
+pnpm db:migrate:prd      # prd 環境 D1 適用
 
 # ナレッジ
-pnpm knowledge:upload    # R2 アップロード → Vectorize 同期
+pnpm knowledge:upload:local  # ローカル R2 → Vectorize 同期
+pnpm knowledge:upload:dev    # dev 環境
+pnpm knowledge:upload:prd    # prd 環境
 ```
 
 ## プロジェクト構造

@@ -68,6 +68,9 @@ importers:
       glob:
         specifier: ^13.0.0
         version: 13.0.0
+      gray-matter:
+        specifier: ^4.0.3
+        version: 4.0.3
       hono:
         specifier: ^4.11.7
         version: 4.11.7

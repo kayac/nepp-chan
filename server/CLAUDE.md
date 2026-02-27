@@ -428,5 +428,5 @@ thread_persona_status 更新
 pnpm dev               # 開発サーバー（http://localhost:8787）
 pnpm test              # テスト実行
 pnpm deploy            # dev 環境にデプロイ
-pnpm deploy:production # prd 環境にデプロイ
+pnpm deploy:prd        # prd 環境にデプロイ
 ```
