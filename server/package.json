@@ -20,7 +20,7 @@
     "eval:run": "tsx scripts/run-eval.ts"
   },
   "dependencies": {
-    "@ai-sdk/google": "^2.0.46",
+    "@ai-sdk/google": "^3.0.29",
     "@hono/swagger-ui": "^0.5.2",
     "@hono/zod-openapi": "^1.1.5",
     "@mastra/ai-sdk": "1.0.3",
