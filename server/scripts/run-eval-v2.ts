@@ -48,11 +48,18 @@ const SCORE_NAMES = [
 type ScoreName = (typeof SCORE_NAMES)[number];
 type Scores = Record<ScoreName, number | null>;
 
+interface TokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
 interface IterationResult {
   iteration: number;
   answer: string;
   scores: Scores;
   durationMs: number;
+  usage: TokenUsage | null;
   error: string | null;
 }
 
@@ -65,6 +72,11 @@ interface EvalResult {
     completedIterations: number;
     timestamp: string;
     totalDurationMs: number;
+    totalTokens: {
+      prompt: number;
+      completion: number;
+      total: number;
+    };
   };
   summary: {
     averageScores: Record<ScoreName, number | null>;
@@ -386,7 +398,8 @@ const generateHtml = (result: EvalResult): string => {
   <strong>質問:</strong> ${metadata.question}<br>
   <strong>期待回答:</strong> ${metadata.groundTruth}<br>
   <strong>エージェント:</strong> ${metadata.agent} | <strong>実行回数:</strong> ${metadata.completedIterations}/${metadata.iterations}<br>
-  <strong>所要時間:</strong> ${(metadata.totalDurationMs / 1000).toFixed(1)}s | <strong>タイムスタンプ:</strong> ${metadata.timestamp}
+  <strong>所要時間:</strong> ${(metadata.totalDurationMs / 1000).toFixed(1)}s | <strong>トークン:</strong> ${metadata.totalTokens.total.toLocaleString()} (prompt: ${metadata.totalTokens.prompt.toLocaleString()}, completion: ${metadata.totalTokens.completion.toLocaleString()})<br>
+  <strong>タイムスタンプ:</strong> ${metadata.timestamp}
 </div>
 
 <div class="grid">
@@ -484,7 +497,7 @@ const main = async () => {
   console.log(`   各N回: ${args.n}\n`);
 
   // Cloudflare バインディング取得（local env の Vectorize/R2 にリモート接続）
-  const { env } = await getPlatformProxy<CloudflareBindings>({
+  const { env, dispose } = await getPlatformProxy<CloudflareBindings>({
     configPath: "wrangler.jsonc",
     environment: "local",
     remoteBindings: true,
@@ -565,16 +578,31 @@ const main = async () => {
         });
 
         const durationMs = Date.now() - iterStart;
+        // biome-ignore lint/suspicious/noExplicitAny: usage の型は不定
+        const rawUsage = (result as any).usage;
+        const usage: TokenUsage | null = rawUsage
+          ? {
+              promptTokens: rawUsage.promptTokens ?? 0,
+              completionTokens: rawUsage.completionTokens ?? 0,
+              totalTokens:
+                (rawUsage.totalTokens ?? 0) ||
+                (rawUsage.promptTokens ?? 0) +
+                  (rawUsage.completionTokens ?? 0),
+            }
+          : null;
+
         timeline.push({
           iteration: iterNum,
           answer: result.text,
           scores,
           durationMs,
+          usage,
           error: null,
         });
 
         const simScore = scores.similarity?.toFixed(3) ?? "N/A";
-        console.log(` ✅ (${durationMs}ms) sim=${simScore}`);
+        const tokenInfo = usage ? ` tok=${usage.totalTokens}` : "";
+        console.log(` ✅ (${durationMs}ms) sim=${simScore}${tokenInfo}`);
       } catch (e) {
         const durationMs = Date.now() - iterStart;
         const errorMsg = (e as Error).message;
@@ -589,6 +617,7 @@ const main = async () => {
             hallucination: null,
           },
           durationMs,
+          usage: null,
           error: errorMsg,
         });
         console.log(` ❌ (${durationMs}ms) ${errorMsg}`);
@@ -599,6 +628,18 @@ const main = async () => {
     const summary = calcStats(timeline);
     const timestamp = new Date().toISOString();
 
+    const totalTokens = timeline.reduce(
+      (acc, r) => {
+        if (r.usage) {
+          acc.prompt += r.usage.promptTokens;
+          acc.completion += r.usage.completionTokens;
+          acc.total += r.usage.totalTokens;
+        }
+        return acc;
+      },
+      { prompt: 0, completion: 0, total: 0 },
+    );
+
     const evalResult: EvalResult = {
       metadata: {
         question: testCase.input,
@@ -608,6 +649,7 @@ const main = async () => {
         completedIterations: timeline.filter((r) => !r.error).length,
         timestamp,
         totalDurationMs,
+        totalTokens,
       },
       summary,
       timeline,
@@ -629,11 +671,15 @@ const main = async () => {
         console.log(`   ${name}: ${avg.toFixed(3)} (±${sd?.toFixed(3)})`);
       }
     }
+    console.log(
+      `\n🪙 トークン消費: ${totalTokens.total.toLocaleString()} (prompt: ${totalTokens.prompt.toLocaleString()}, completion: ${totalTokens.completion.toLocaleString()})`,
+    );
     console.log(`\n📁 JSON: ${jsonPath}`);
     console.log(`📁 HTML: ${htmlPath}\n`);
   }
 
   console.log("✅ Eval V2 完了");
+  await dispose();
 };
 
 main().catch((error) => {
