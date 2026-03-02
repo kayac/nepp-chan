@@ -135,6 +135,7 @@ const getTools = (channel: "web" | "line") => {
 const lineInstructions = `
 ## LINE チャットの制約
 - LINEのチャットに適した長さ（目安: 500文字以内）で簡潔に回答する
+- LINEはMarkdownを表示できない。**太字**、# 見出し、- リスト、\`コード\`などのMarkdown記法は一切使わず、プレーンテキストのみで回答する
 `;
 
 interface Props
