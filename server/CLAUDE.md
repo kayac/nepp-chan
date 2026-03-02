@@ -67,6 +67,7 @@ server/src/
 | `/auth/login/verify`               | POST     | WebAuthn ログイン検証          |
 | `/auth/me`                         | GET      | 認証状態確認                   |
 | `/auth/logout`                     | POST     | ログアウト                     |
+| `/line/webhook`                    | POST     | LINE Webhook 受信              |
 | `/swagger`                         | GET      | Swagger UI                     |
 | `/doc`                             | GET      | OpenAPI スキーマ               |
 
@@ -74,7 +75,7 @@ server/src/
 
 ### nep-chan（動的生成）
 
-メインキャラクター「ねっぷちゃん」は `createNeppChanAgent({ isAdmin })` で動的に生成される。
+メインキャラクター「ねっぷちゃん」は `createNeppChanAgent({ isAdmin, channel })` で動的に生成される。
 
 - **一般ユーザー**: 基本機能のみ（天気、Web検索、ナレッジ、緊急報告）
 - **管理者**: 基本機能 + 管理者専用エージェント（emergency, feedback, persona-analyst）
