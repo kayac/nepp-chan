@@ -4,6 +4,7 @@ import { messagingApi } from "@line/bot-sdk";
 import { Mastra } from "@mastra/core/mastra";
 
 import { getStorage } from "~/lib/storage";
+import { stripMarkdown } from "~/lib/strip-markdown";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { lineSignatureVerify } from "~/middleware";
@@ -100,10 +101,10 @@ const generateReply = async (params: {
   const texts = extractReplyTexts(response.steps ?? []);
 
   if (texts.length === 0 && response.text) {
-    return splitMessage(response.text);
+    return splitMessage(response.text).map(stripMarkdown);
   }
 
-  return texts;
+  return texts.map(stripMarkdown);
 };
 
 const extractReplyTexts = (steps: Array<{ text: string }>): string[] => {
