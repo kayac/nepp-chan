@@ -44,6 +44,15 @@
           "remote": true
         }
       ],
+      "queues": {
+        "consumers": [
+          {
+            "queue": "nepp-chan-knowledge-sync-local",
+            "max_batch_size": 10,
+            "max_batch_timeout": 30
+          }
+        ]
+      },
       "vars": {
         "ENVIRONMENT": "local",
         "WEB_URL": "http://localhost:5173",
