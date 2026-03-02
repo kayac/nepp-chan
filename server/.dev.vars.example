@@ -8,4 +8,6 @@ WEBAUTHN_ORIGIN=http://localhost:5173
 
 # LINE Messaging API
 LINE_CHANNEL_SECRET=your-channel-secret-here
-LINE_CHANNEL_ACCESS_TOKEN=your-channel-access-token-here
+LINE_CHANNEL_ACCESS_TOKEN=your-chan=======
+
+
