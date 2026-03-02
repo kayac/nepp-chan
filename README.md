@@ -125,12 +125,12 @@ pnpm mastra:dev
 
 ```bash
 # dev 環境
-pnpm server:deploy
-pnpm web:deploy
+pnpm server:deploy:dev
+pnpm web:deploy:dev
 
 # prd 環境
-pnpm server:deploy:production
-pnpm web:deploy:production
+pnpm server:deploy:prd
+pnpm web:deploy:prd
 ```
 
 ### CI/CD
