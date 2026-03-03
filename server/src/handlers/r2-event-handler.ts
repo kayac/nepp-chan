@@ -16,7 +16,7 @@ type R2EventObject = {
   eTag: string;
 };
 
-type R2EventMessage = {
+export type R2EventMessage = {
   account: string;
   bucket: string;
   eventTime: string;

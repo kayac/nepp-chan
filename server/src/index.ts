@@ -1,7 +1,9 @@
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { handleR2Event } from "~/handlers";
+import { handleLineEvent, handleR2Event } from "~/handlers";
+import type { LineEventMessage } from "~/handlers/line-event-handler";
 import { handlePersonaExtract } from "~/handlers/persona-extract-handler";
+import type { R2EventMessage } from "~/handlers/r2-event-handler";
 import { corsMiddleware, errorHandler, securityHeaders } from "~/middleware";
 import {
   authRoutes,
@@ -49,6 +51,14 @@ app.get("/swagger", swaggerUI({ url: "/doc" }));
 
 export default {
   fetch: app.fetch,
-  queue: handleR2Event,
+  queue: async (batch: MessageBatch, env: CloudflareBindings) => {
+    if (batch.queue.startsWith("nepp-chan-line-queue")) {
+      return handleLineEvent(batch as MessageBatch<LineEventMessage>, env);
+    }
+    if (batch.queue.startsWith("nepp-chan-knowledge-sync")) {
+      return handleR2Event(batch as MessageBatch<R2EventMessage>, env);
+    }
+    console.error(`Unknown queue: ${batch.queue}`);
+  },
   scheduled: handlePersonaExtract,
 };
