@@ -1,4 +1,3 @@
-import { google } from "@ai-sdk/google";
 import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
 import { getCurrentDateInfo } from "~/lib/date";
@@ -13,6 +12,7 @@ import { devTool } from "~/mastra/tools/dev-tool";
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
+import { searchGoogleTool } from "~/mastra/tools/google-search-tool";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 import { personaSchema } from "~/schemas/persona-schema";
 
@@ -129,7 +129,7 @@ const webTools = {
 
 const getTools = (channel: "web" | "line") => {
   if (channel === "line") {
-    return { ...defaultTools, googleSearch: google.tools.googleSearch({}) };
+    return { ...defaultTools, searchGoogleTool };
   }
   return { ...defaultTools, ...webTools };
 };
@@ -159,9 +159,9 @@ const lineInstructions = `
 - 箇条書きには「・」を使い、装飾なしで読みやすく整形する
 
 ### 検索ルールの上書き
-ステップ3で「webResearcherAgent に委譲」と書かれている箇所は、LINE では googleSearch ツールで直接検索する。
-- 村の情報・事実確認 → まず knowledgeSearchTool → 不十分なら googleSearch で検索
-- 最新情報・天気・一般的な質問 → googleSearch で検索
+ステップ3で「webResearcherAgent に委譲」と書かれている箇所は、LINE では searchGoogleTool で直接検索する。
+- 村の情報・事実確認 → まず knowledgeSearchTool → 不十分なら searchGoogleTool で検索
+- 最新情報・天気・一般的な質問 → searchGoogleTool で検索
 - 検索結果の情報源（URL）があれば明記する。関連するURLだけを厳選し、重複は1つにまとめる
 - URLは検索結果から得たもののみ使用し、推測や捏造は絶対にしない
 `;
