@@ -1,8 +1,8 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import type { WebhookEvent, WebhookRequestBody } from "@line/bot-sdk";
 
-import type { LineEventMessage } from "~/handlers/line-event-handler";
 import { lineSignatureVerify } from "~/middleware";
+import type { LineEventMessage } from "~/schemas/line-schema";
 
 export const lineRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
