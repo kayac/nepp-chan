@@ -12,7 +12,6 @@ import { devTool } from "~/mastra/tools/dev-tool";
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
-import { searchGoogleTool } from "~/mastra/tools/google-search-tool";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 import { personaSchema } from "~/schemas/persona-schema";
 
@@ -105,15 +104,16 @@ const adminInstructions = `
 - デモグラフィック分析（例: 「年代別の傾向は？」「属性別に分析して」）→ personaAnalystAgent
 `;
 
-const getAgents = (channel: "web" | "line", isAdmin: boolean) => {
-  if (channel === "line") {
-    const base = { emergencyReporterAgent };
-    if (!isAdmin) return base;
-    return { ...base, emergencyAgent, feedbackAgent, personaAnalystAgent };
-  }
-  const base = { emergencyReporterAgent, webResearcherAgent };
-  if (!isAdmin) return base;
-  return { ...base, emergencyAgent, feedbackAgent, personaAnalystAgent };
+const baseAgents = {
+  emergencyReporterAgent,
+  webResearcherAgent,
+};
+
+const adminAgents = {
+  ...baseAgents,
+  emergencyAgent,
+  feedbackAgent,
+  personaAnalystAgent,
 };
 
 const defaultTools = {
@@ -128,9 +128,7 @@ const webTools = {
 };
 
 const getTools = (channel: "web" | "line") => {
-  if (channel === "line") {
-    return { ...defaultTools, searchGoogleTool };
-  }
+  if (channel === "line") return defaultTools;
   return { ...defaultTools, ...webTools };
 };
 
@@ -157,13 +155,6 @@ const lineInstructions = `
   × \`コード\` → ○ そのまま書く
   × [リンク](URL) → ○ URLをそのまま貼る
 - 箇条書きには「・」を使い、装飾なしで読みやすく整形する
-
-### 検索ルールの上書き
-ステップ3で「webResearcherAgent に委譲」と書かれている箇所は、LINE では searchGoogleTool で直接検索する。
-- 村の情報・事実確認 → まず knowledgeSearchTool → 不十分なら searchGoogleTool で検索
-- 最新情報・天気・一般的な質問 → searchGoogleTool で検索
-- 検索結果の情報源（URL）があれば明記する。関連するURLだけを厳選し、重複は1つにまとめる
-- URLは検索結果から得たもののみ使用し、推測や捏造は絶対にしない
 `;
 
 interface Props
@@ -177,7 +168,7 @@ export const createNeppChanAgent = ({
   channel = "web",
   ...agentOptions
 }: Props = {}) => {
-  const agents = getAgents(channel, isAdmin);
+  const agents = isAdmin ? adminAgents : baseAgents;
   const tools = getTools(channel);
 
   // instructionsを関数化（リクエスト時に評価され、現在日時が動的に取得される）
