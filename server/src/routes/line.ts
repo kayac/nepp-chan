@@ -29,11 +29,13 @@ const enqueueLineEvents = async (
 ) => {
   for (const event of events) {
     if (event.type !== "message" || event.message.type !== "text") continue;
+    if (!("replyToken" in event) || !event.replyToken) continue;
     if (!event.source.userId) continue;
 
     const message: LineEventMessage = {
       userId: event.source.userId,
       userMessage: event.message.text,
+      replyToken: event.replyToken,
     };
 
     await env.LINE_QUEUE.send(message);
