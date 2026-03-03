@@ -1,7 +1,6 @@
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { handleLineEvent, handleR2Event } from "~/handlers";
-import type { LineEventMessage } from "~/handlers/line-event-handler";
 import { handlePersonaExtract } from "~/handlers/persona-extract-handler";
 import type { R2EventMessage } from "~/handlers/r2-event-handler";
 import { corsMiddleware, errorHandler, securityHeaders } from "~/middleware";
@@ -18,6 +17,7 @@ import {
   personaAdminRoutes,
   threadsRoutes,
 } from "~/routes";
+import type { LineEventMessage } from "~/schemas/line-schema";
 
 const app = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
 
