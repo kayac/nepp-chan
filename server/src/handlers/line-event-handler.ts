@@ -12,6 +12,7 @@ const LINE_MAX_CHARS = 5000;
 export type LineEventMessage = {
   userId: string;
   userMessage: string;
+  replyToken: string;
 };
 
 export const handleLineEvent = async (
@@ -23,7 +24,7 @@ export const handleLineEvent = async (
   });
 
   for (const message of batch.messages) {
-    const { userId, userMessage } = message.body;
+    const { userId, userMessage, replyToken } = message.body;
 
     try {
       const replyTexts = await generateReply({
@@ -38,7 +39,9 @@ export const handleLineEvent = async (
           type: "text" as const,
           text,
         }));
-        await client.pushMessage({ to: userId, messages });
+        await client
+          .replyMessage({ replyToken, messages })
+          .catch(() => client.pushMessage({ to: userId, messages }));
       }
 
       message.ack();
