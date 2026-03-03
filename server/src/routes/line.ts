@@ -26,7 +26,7 @@ lineRoutes.post("/webhook", async (c) => {
     return c.json({ status: "ok" });
   }
 
-  c.executionCtx.waitUntil(handleLineEvents(body.events, c.env));
+  await handleLineEvents(body.events, c.env);
 
   return c.json({ status: "ok" });
 });
@@ -63,11 +63,9 @@ const handleLineEvents = async (
         type: "text" as const,
         text,
       }));
-      try {
-        await client.replyMessage({ replyToken: event.replyToken, messages });
-      } catch {
-        await client.pushMessage({ to: userId, messages });
-      }
+      await client
+        .replyMessage({ replyToken: event.replyToken, messages })
+        .catch(() => client.pushMessage({ to: userId, messages }));
     } catch (error) {
       console.error(`LINE reply failed for user ${userId}:`, error);
     }
