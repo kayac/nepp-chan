@@ -11,7 +11,7 @@ export const GEMINI_EMBEDDING = "gemini-embedding-001";
  * @param level - 思考レベル (デフォルト: "low")
  */
 export const geminiModelWithThinking = (
-  level: "high" | "medium" | "low" = "high",
+  level: "high" | "medium" | "low" = "low",
 ) => ({
   model: GEMINI_FLASH,
   providerOptions: {

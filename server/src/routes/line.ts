@@ -59,10 +59,15 @@ const handleLineEvents = async (
 
       if (replyTexts.length === 0) continue;
 
-      await client.replyMessage({
-        replyToken: event.replyToken,
-        messages: replyTexts.map((text) => ({ type: "text", text })),
-      });
+      const messages = replyTexts.map((text) => ({
+        type: "text" as const,
+        text,
+      }));
+      try {
+        await client.replyMessage({ replyToken: event.replyToken, messages });
+      } catch {
+        await client.pushMessage({ to: userId, messages });
+      }
     } catch (error) {
       console.error(`LINE reply failed for user ${userId}:`, error);
     }
