@@ -41,7 +41,11 @@ export const handleLineEvent = async (
         }));
         await client
           .replyMessage({ replyToken, messages })
-          .catch(() => client.pushMessage({ to: userId, messages }));
+          .then(() => console.log(`LINE replyMessage sent to ${userId}`))
+          .catch(async () => {
+            await client.pushMessage({ to: userId, messages });
+            console.log(`LINE pushMessage sent to ${userId}`);
+          });
       }
 
       message.ack();
