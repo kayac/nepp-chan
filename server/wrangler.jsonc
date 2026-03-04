@@ -45,11 +45,19 @@
         }
       ],
       "queues": {
+        "producers": [
+          { "binding": "LINE_QUEUE", "queue": "nepp-chan-line-queue-local" }
+        ],
         "consumers": [
           {
             "queue": "nepp-chan-knowledge-sync-local",
             "max_batch_size": 10,
             "max_batch_timeout": 30
+          },
+          {
+            "queue": "nepp-chan-line-queue-local",
+            "max_batch_size": 1,
+            "max_batch_timeout": 0
           }
         ]
       },
@@ -85,11 +93,19 @@
         }
       ],
       "queues": {
+        "producers": [
+          { "binding": "LINE_QUEUE", "queue": "nepp-chan-line-queue-dev" }
+        ],
         "consumers": [
           {
             "queue": "nepp-chan-knowledge-sync-dev",
             "max_batch_size": 10,
             "max_batch_timeout": 30
+          },
+          {
+            "queue": "nepp-chan-line-queue-dev",
+            "max_batch_size": 1,
+            "max_batch_timeout": 0
           }
         ]
       },
@@ -124,11 +140,19 @@
         }
       ],
       "queues": {
+        "producers": [
+          { "binding": "LINE_QUEUE", "queue": "nepp-chan-line-queue-prd" }
+        ],
         "consumers": [
           {
             "queue": "nepp-chan-knowledge-sync-prd",
             "max_batch_size": 10,
             "max_batch_timeout": 30
+          },
+          {
+            "queue": "nepp-chan-line-queue-prd",
+            "max_batch_size": 1,
+            "max_batch_timeout": 0
           }
         ]
       },
