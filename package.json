@@ -35,7 +35,8 @@
     "admin:invite:local": "tsx server/scripts/create-invitation.ts",
     "admin:invite:dev": "tsx server/scripts/create-invitation.ts --env=dev",
     "admin:invite:prd": "tsx server/scripts/create-invitation.ts --env=prd",
-    "eval:v2": "pnpm --filter @nepp-chan/server eval:v2"
+    "eval:v2": "pnpm --filter @nepp-chan/server eval:v2",
+    "eval:v3": "pnpm --filter @nepp-chan/server eval:v3"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.8",
