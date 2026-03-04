@@ -141,7 +141,7 @@ export const processKnowledgeFile = async (
 
     // 3. ベクトルデータの作成
     const vectors: VectorData[] = texts.map((_, i) => ({
-      id: `${filename}-${i}`,
+      id: crypto.randomUUID(),
       values: embeddings[i],
       metadata: metadata[i],
     }));
