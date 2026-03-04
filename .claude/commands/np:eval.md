@@ -18,20 +18,24 @@ You run repeated scoring tests, visualize results, and provide actionable improv
 ## eval V2 コマンド
 
 ```bash
-pnpm eval:v2 -- --question "<質問>" --truth "<正解>" --n <回数> --agent <knowledge|nepp-chan>
-pnpm eval:v2 -- --case <index> --n <回数>    # プリセットテストケース
+# 単一環境
+pnpm eval:v2 -- --question "<質問>" --truth "<正解>" --n <回数>
+pnpm eval:v2 -- --env development --question "<質問>" --truth "<正解>" --n <回数>
+pnpm eval:v2 -- --case <index> --n <回数>
+
+# 3環境比較
+pnpm eval:v2 -- --compare --question "<質問>" --truth "<正解>" --n <回数>
 ```
 
-## 接続先と environment
+## 環境と接続先
 
-eval V2 スクリプトは `getPlatformProxy({ environment: "local" })` で接続。
-wrangler.jsonc の env 設定に従う:
-
-| environment | Vectorize | R2 |
+| env | Vectorize | R2 |
 |---|---|---|
-| local | `nepp-chan-knowledge-local` | `nepp-chan-knowledge-local` |
+| `local` | `nepp-chan-knowledge-local` | `nepp-chan-knowledge-local` |
+| `development` | `nepp-chan-knowledge-dev` | `nepp-chan-knowledge-dev` |
+| `production` | `nepp-chan-knowledge-prd` | `nepp-chan-knowledge-prd` |
 
-※ 現時点では local のみ対応。接続先を変えるにはコード修正が必要。
+`--env` オプションで環境指定（デフォルト: `local`）。`--compare` で local → development → production の順に実行し比較HTMLを生成。
 
 ## 5つのスコア指標
 
@@ -58,6 +62,14 @@ wrangler.jsonc の env 設定に従う:
 ```yaml
 AskUserQuestion:
   questions:
+    - question: "テストモードを選んでください"
+      header: "モード"
+      multiSelect: false
+      options:
+        - label: "3環境比較（推奨）"
+          description: "local/dev/prd を順次実行し比較HTMLレポートを生成"
+        - label: "単一環境テスト"
+          description: "特定の環境のみでテスト（環境を別途選択）"
     - question: "テストする質問は何ですか？"
       header: "質問"
       multiSelect: false
@@ -79,10 +91,21 @@ AskUserQuestion:
 ```
 
 カスタム質問の場合、追加で質問テキストと正解（groundTruth）を聞く。
+単一環境テストの場合、環境（local / development / production）を追加で聞く。
 
 ### Step 2: テスト実行
 
-`pnpm eval:v2` を `run_in_background` で実行。完了通知を待つ。
+3環境比較:
+```bash
+pnpm eval:v2 -- --compare --question "<質問>" --truth "<正解>" --n <回数>
+```
+
+単一環境:
+```bash
+pnpm eval:v2 -- --env <環境> --question "<質問>" --truth "<正解>" --n <回数>
+```
+
+`run_in_background` で実行。完了通知を待つ。
 
 **重要**: プロセス完了後、出力された JSON ファイルを読み取って結果を取得する。
 
@@ -98,7 +121,7 @@ AskUserQuestion:
       multiSelect: false
       options:
         - label: "HTMLレポートを開く"
-          description: "ブラウザでレーダーチャート＋時系列グラフを表示"
+          description: "ブラウザでレーダーチャート＋比較テーブルを表示"
         - label: "ターミナルで確認"
           description: "ASCIIバーグラフ＋サマリーをここに表示"
         - label: "両方"
@@ -107,7 +130,7 @@ AskUserQuestion:
 
 ### Step 4: ASCII可視化（ターミナル表示の場合）
 
-以下の形式でサマリーを表示:
+#### 単一環境モード
 
 ```
 ═══════════════════════════════════════════
@@ -115,6 +138,7 @@ AskUserQuestion:
 ═══════════════════════════════════════════
 質問: {question}
 正解: {groundTruth}
+環境: {environment}
 実行: {completedIterations}/{iterations} 回
 時間: {totalDurationMs/1000}s
 
@@ -139,19 +163,45 @@ halluc.    0.100  0.040 0.050  0.200
 ═══════════════════════════════════════════
 ```
 
+#### 3環境比較モード
+
+```
+═══════════════════════════════════════════════════
+📊 Eval V2 3環境比較レポート
+═══════════════════════════════════════════════════
+質問: {question}
+正解: {groundTruth}
+
+─── スコア比較 ────────────────────────────────────
+               local    dev      prd      改善率
+similarity     0.850    0.820    0.700    +21.4%
+faithfulness   0.700    0.650    0.600    +16.7%
+ctx.precision  1.000    0.950    0.900    +11.1%
+ctx.relevance  0.800    0.750    0.700    +14.3%
+hallucination  0.050    0.100    0.200    +75.0%
+
+─── 性能比較 ──────────────────────────────────────
+         完了    時間      トークン
+local    3/3     45.2s     37,500
+dev      3/3     48.1s     38,200
+prd      3/3     47.5s     37,800
+═══════════════════════════════════════════════════
+```
+
 ### Step 5: 診断コメント
 
 結果を分析して以下を提供:
 
 1. **一言コメント**: 全体的な品質を一文で評価
 2. **指標ごとの解説**: 各スコアが何を意味するか日本語で説明
-3. **改善アドバイス**: スコアが低い指標について具体的な改善提案
+3. **環境間の差分分析**（比較モード時）: どの環境のナレッジが最も品質が高いか
+4. **改善アドバイス**: スコアが低い指標について具体的な改善提案
    - similarity 低い → 回答フォーマットの調整、instructions の改善
    - faithfulness 低い → ナレッジの充実、エージェントのプロンプト改善
    - contextPrecision 低い → ナレッジのチャンク分割戦略の見直し
    - contextRelevance 低い → 検索クエリの改善、embedding の品質
    - hallucination 高い → instructions に「検索結果のみに基づいて回答」を強化
-4. **壁打ち**: ユーザーに改善の方向性を提案し、対話で深掘り
+5. **壁打ち**: ユーザーに改善の方向性を提案し、対話で深掘り
 
 ### Step 6: 壁打ち（任意）
 
@@ -180,4 +230,5 @@ AskUserQuestion:
 - 結果 JSON/HTML は `dataset/eval/results/` に自動保存される（.gitignore 対象）
 - 30回以上のテストは時間がかかることを事前に伝える（1回あたり約60秒）
 - 壁打ちでは推測ではなくデータに基づいた提案をする
+- 3環境比較は3倍の時間がかかることを事前に伝える
 </constraints>

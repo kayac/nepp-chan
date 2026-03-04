@@ -10,6 +10,8 @@
  *   pnpm eval:v2 -- --question "音威子府村の人口は？" --truth "約588人" --n 50
  *   pnpm eval:v2 -- --case 0 --n 30                      # テストケース指定
  *   pnpm eval:v2 -- --agent nepp-chan                     # エージェント選択
+ *   pnpm eval:v2 -- --env development --n 10              # dev 環境で実行
+ *   pnpm eval:v2 -- --compare --question "..." --truth "..." --n 3  # 3環境比較
  */
 
 import * as fs from "node:fs";
@@ -48,6 +50,21 @@ const SCORE_NAMES = [
 type ScoreName = (typeof SCORE_NAMES)[number];
 type Scores = Record<ScoreName, number | null>;
 
+const ENV_NAMES = ["local", "development", "production"] as const;
+type EnvName = (typeof ENV_NAMES)[number];
+
+const ENV_LABELS: Record<EnvName, string> = {
+  local: "local",
+  development: "dev",
+  production: "prd",
+};
+
+const ENV_COLORS: Record<EnvName, string> = {
+  local: "rgb(54, 162, 235)",
+  development: "rgb(75, 192, 192)",
+  production: "rgb(255, 99, 132)",
+};
+
 interface TokenUsage {
   promptTokens: number;
   completionTokens: number;
@@ -68,6 +85,7 @@ interface EvalResult {
     question: string;
     groundTruth: string;
     agent: string;
+    environment: string;
     iterations: number;
     completedIterations: number;
     timestamp: string;
@@ -87,19 +105,31 @@ interface EvalResult {
   timeline: IterationResult[];
 }
 
+interface CompareEntry {
+  env: EnvName;
+  result: EvalResult;
+}
+
 interface CliArgs {
   question?: string;
   truth?: string;
   n: number;
   agent: "knowledge" | "nepp-chan";
   caseIndex?: number;
+  env: EnvName;
+  compare: boolean;
 }
 
 // ─── CLI引数パース ────────────────────────────────────────
 
 const parseArgs = (): CliArgs => {
   const args = process.argv.slice(2);
-  const result: CliArgs = { n: 100, agent: "knowledge" };
+  const result: CliArgs = {
+    n: 100,
+    agent: "knowledge",
+    env: "local",
+    compare: false,
+  };
 
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
@@ -117,6 +147,12 @@ const parseArgs = (): CliArgs => {
         break;
       case "--case":
         result.caseIndex = Number.parseInt(args[++i], 10);
+        break;
+      case "--env":
+        result.env = args[++i] as EnvName;
+        break;
+      case "--compare":
+        result.compare = true;
         break;
     }
   }
@@ -289,6 +325,7 @@ const calcStats = (timeline: IterationResult[]) => {
 // ─── ファイル名生成 ───────────────────────────────────────
 
 const generateFilePrefix = (
+  envLabel: string,
   agent: string,
   question: string,
   n: number,
@@ -297,7 +334,7 @@ const generateFilePrefix = (
   const date = now.toISOString().slice(0, 10).replace(/-/g, "");
   const time = now.toTimeString().slice(0, 8).replace(/:/g, "");
   const slug = question.slice(0, 10).replace(/[?？\s/\\]/g, "");
-  return `${date}_${time}_${agent}_${slug}_n${n}`;
+  return `${date}_${time}_${envLabel}_${agent}_${slug}_n${n}`;
 };
 
 // ─── HTML生成 ─────────────────────────────────────────────
@@ -371,7 +408,7 @@ const generateHtml = (result: EvalResult): string => {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Eval V2: ${metadata.question}</title>
+<title>Eval V2: ${metadata.question} (${metadata.environment})</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -397,7 +434,7 @@ const generateHtml = (result: EvalResult): string => {
 <div class="meta">
   <strong>質問:</strong> ${metadata.question}<br>
   <strong>期待回答:</strong> ${metadata.groundTruth}<br>
-  <strong>エージェント:</strong> ${metadata.agent} | <strong>実行回数:</strong> ${metadata.completedIterations}/${metadata.iterations}<br>
+  <strong>エージェント:</strong> ${metadata.agent} | <strong>環境:</strong> ${metadata.environment} | <strong>実行回数:</strong> ${metadata.completedIterations}/${metadata.iterations}<br>
   <strong>所要時間:</strong> ${(metadata.totalDurationMs / 1000).toFixed(1)}s | <strong>トークン:</strong> ${metadata.totalTokens.total.toLocaleString()} (prompt: ${metadata.totalTokens.prompt.toLocaleString()}, completion: ${metadata.totalTokens.completion.toLocaleString()})<br>
   <strong>タイムスタンプ:</strong> ${metadata.timestamp}
 </div>
@@ -468,6 +505,305 @@ new Chart(document.getElementById('timelineChart'), {
 </html>`;
 };
 
+// ─── 比較HTML生成 ──────────────────────────────────────────
+
+const generateCompareHtml = (
+  entries: CompareEntry[],
+  question: string,
+  groundTruth: string,
+): string => {
+  const scoreLabels = JSON.stringify(SCORE_NAMES);
+
+  const radarDatasets = entries.map(({ env, result }) => ({
+    label: ENV_LABELS[env],
+    data: SCORE_NAMES.map((n) => result.summary.averageScores[n] ?? 0),
+    backgroundColor: ENV_COLORS[env]
+      .replace("rgb", "rgba")
+      .replace(")", ", 0.15)"),
+    borderColor: ENV_COLORS[env],
+    pointBackgroundColor: ENV_COLORS[env],
+  }));
+
+  const comparisonRows = SCORE_NAMES.map((name) => {
+    const cells = entries
+      .map(({ result }) => {
+        const val = result.summary.averageScores[name];
+        return `<td>${val?.toFixed(3) ?? "N/A"}</td>`;
+      })
+      .join("\n        ");
+
+    const localVal = entries.find((e) => e.env === "local")?.result.summary
+      .averageScores[name];
+    const prdVal = entries.find((e) => e.env === "production")?.result.summary
+      .averageScores[name];
+    let improvementHtml = "<td>N/A</td>";
+    if (localVal != null && prdVal != null && prdVal !== 0) {
+      const isInverse = name === "hallucination";
+      const diff = isInverse ? prdVal - localVal : localVal - prdVal;
+      const pct = (diff / Math.abs(prdVal)) * 100;
+      const sign = pct >= 0 ? "+" : "";
+      const color = pct >= 0 ? "#22c55e" : "#ef4444";
+      improvementHtml = `<td style="color:${color};font-weight:600;">${sign}${pct.toFixed(1)}%</td>`;
+    }
+
+    return `<tr>
+        <td>${name}</td>
+        ${cells}
+        ${improvementHtml}
+      </tr>`;
+  }).join("\n");
+
+  const perfRows = entries
+    .map(({ env, result }) => {
+      const m = result.metadata;
+      return `<tr>
+        <td>${ENV_LABELS[env]}</td>
+        <td>${m.completedIterations}/${m.iterations}</td>
+        <td>${(m.totalDurationMs / 1000).toFixed(1)}s</td>
+        <td>${m.totalTokens.total.toLocaleString()}</td>
+        <td>${m.totalTokens.prompt.toLocaleString()}</td>
+        <td>${m.totalTokens.completion.toLocaleString()}</td>
+      </tr>`;
+    })
+    .join("\n");
+
+  const sampleAnswersHtml = entries
+    .map(({ env, result }) => {
+      const firstSuccess = result.timeline.find((r) => !r.error);
+      const answer = firstSuccess?.answer ?? "(回答なし)";
+      const escapedAnswer = answer
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\n/g, "<br>");
+      const scoresText = firstSuccess
+        ? SCORE_NAMES.map(
+            (n) => `${n}: ${firstSuccess.scores[n]?.toFixed(3) ?? "N/A"}`,
+          ).join(" | ")
+        : "";
+      return `<div class="env-answer">
+      <h3>${ENV_LABELS[env]}</h3>
+      <p class="scores-line">${scoresText}</p>
+      <p>${escapedAnswer}</p>
+    </div>`;
+    })
+    .join("\n");
+
+  const envHeaders = entries
+    .map(({ env }) => `<th>${ENV_LABELS[env]}</th>`)
+    .join("");
+
+  return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eval V2 Compare: ${question}</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; padding: 24px; }
+  h1 { font-size: 1.4rem; margin-bottom: 8px; }
+  .meta { color: #666; font-size: 0.9rem; margin-bottom: 24px; line-height: 1.6; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px; }
+  .card h2 { font-size: 1.1rem; margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #eee; }
+  th { background: #f8f8f8; font-weight: 600; }
+  canvas { max-height: 400px; }
+  .env-answer { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .env-answer h3 { font-size: 0.95rem; margin-bottom: 8px; color: #374151; }
+  .env-answer .scores-line { font-size: 0.8rem; color: #6b7280; font-family: monospace; margin-bottom: 8px; }
+  .env-answer p { font-size: 0.85rem; line-height: 1.6; }
+  .legend-item { display: inline-flex; align-items: center; margin-right: 16px; font-size: 0.85rem; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; }
+</style>
+</head>
+<body>
+
+<h1>Eval V2 環境比較レポート</h1>
+<div class="meta">
+  <strong>質問:</strong> ${question}<br>
+  <strong>期待回答:</strong> ${groundTruth}<br>
+  <strong>環境:</strong>
+  <span class="legend-item"><span class="legend-dot" style="background:${ENV_COLORS.local}"></span>local</span>
+  <span class="legend-item"><span class="legend-dot" style="background:${ENV_COLORS.development}"></span>dev</span>
+  <span class="legend-item"><span class="legend-dot" style="background:${ENV_COLORS.production}"></span>prd</span>
+</div>
+
+<div class="grid">
+  <div class="card" style="margin-bottom:0;">
+    <h2>レーダーチャート（3環境比較）</h2>
+    <canvas id="radarChart"></canvas>
+  </div>
+  <div class="card" style="margin-bottom:0;">
+    <h2>スコア比較</h2>
+    <table>
+      <thead><tr><th>指標</th>${envHeaders}<th>改善率<br><small>(prd→local)</small></th></tr></thead>
+      <tbody>${comparisonRows}</tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2>性能比較</h2>
+  <table>
+    <thead><tr><th>環境</th><th>完了</th><th>所要時間</th><th>総トークン</th><th>Prompt</th><th>Completion</th></tr></thead>
+    <tbody>${perfRows}</tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>回答サンプル（各環境の初回成功回答）</h2>
+  ${sampleAnswersHtml}
+</div>
+
+<script>
+new Chart(document.getElementById('radarChart'), {
+  type: 'radar',
+  data: {
+    labels: ${scoreLabels},
+    datasets: ${JSON.stringify(radarDatasets)}
+  },
+  options: {
+    scales: { r: { min: 0, max: 1, ticks: { stepSize: 0.2 } } },
+    plugins: { legend: { position: 'bottom' } }
+  }
+});
+</script>
+
+</body>
+</html>`;
+};
+
+// ─── テストケース実行 ────────────────────────────────────────
+
+const runTestCaseEval = async (params: {
+  testCase: TestCase;
+  agent: typeof knowledgeAgent;
+  requestContext: RequestContext;
+  n: number;
+  agentName: string;
+  envName: EnvName;
+}): Promise<EvalResult> => {
+  const { testCase, agent, requestContext, n, agentName, envName } = params;
+
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log(`📝 質問: ${testCase.input}`);
+  console.log(`📋 期待: ${testCase.groundTruth}`);
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+
+  const timeline: IterationResult[] = [];
+  const totalStart = Date.now();
+
+  for (let i = 0; i < n; i++) {
+    const iterStart = Date.now();
+    const iterNum = i + 1;
+
+    try {
+      process.stdout.write(`  [${iterNum}/${n}] 生成中...`);
+
+      const result = await agent.generate(testCase.input, {
+        requestContext,
+        maxSteps: 5,
+      });
+
+      const retrievedChunks = extractKnowledgeSearchResults(
+        // biome-ignore lint/suspicious/noExplicitAny: agent.generate の戻り値型は不定
+        (result as any).steps,
+      );
+      const context = retrievedChunks.map((c) => c.content);
+
+      process.stdout.write(" スコアリング中...");
+
+      const scores = await runEvalScorers({
+        input: testCase.input,
+        output: result.text,
+        groundTruth: testCase.groundTruth,
+        context,
+      });
+
+      const durationMs = Date.now() - iterStart;
+      // biome-ignore lint/suspicious/noExplicitAny: usage の型は不定
+      const rawUsage = (result as any).usage;
+      const usage: TokenUsage | null = rawUsage
+        ? {
+            promptTokens: rawUsage.promptTokens ?? 0,
+            completionTokens: rawUsage.completionTokens ?? 0,
+            totalTokens:
+              (rawUsage.totalTokens ?? 0) ||
+              (rawUsage.promptTokens ?? 0) + (rawUsage.completionTokens ?? 0),
+          }
+        : null;
+
+      timeline.push({
+        iteration: iterNum,
+        answer: result.text,
+        scores,
+        durationMs,
+        usage,
+        error: null,
+      });
+
+      const simScore = scores.similarity?.toFixed(3) ?? "N/A";
+      const tokenInfo = usage ? ` tok=${usage.totalTokens}` : "";
+      console.log(` ✅ (${durationMs}ms) sim=${simScore}${tokenInfo}`);
+    } catch (e) {
+      const durationMs = Date.now() - iterStart;
+      const errorMsg = (e as Error).message;
+      timeline.push({
+        iteration: iterNum,
+        answer: "",
+        scores: {
+          similarity: null,
+          faithfulness: null,
+          contextPrecision: null,
+          contextRelevance: null,
+          hallucination: null,
+        },
+        durationMs,
+        usage: null,
+        error: errorMsg,
+      });
+      console.log(` ❌ (${durationMs}ms) ${errorMsg}`);
+    }
+  }
+
+  const totalDurationMs = Date.now() - totalStart;
+  const summary = calcStats(timeline);
+  const timestamp = new Date().toISOString();
+
+  const totalTokens = timeline.reduce(
+    (acc, r) => {
+      if (r.usage) {
+        acc.prompt += r.usage.promptTokens;
+        acc.completion += r.usage.completionTokens;
+        acc.total += r.usage.totalTokens;
+      }
+      return acc;
+    },
+    { prompt: 0, completion: 0, total: 0 },
+  );
+
+  return {
+    metadata: {
+      question: testCase.input,
+      groundTruth: testCase.groundTruth,
+      agent: agentName,
+      environment: envName,
+      iterations: n,
+      completedIterations: timeline.filter((r) => !r.error).length,
+      timestamp,
+      totalDurationMs,
+      totalTokens,
+    },
+    summary,
+    timeline,
+  };
+};
+
 // ─── メイン ───────────────────────────────────────────────
 
 const main = async () => {
@@ -491,20 +827,13 @@ const main = async () => {
     testCases = evalV2TestCases;
   }
 
-  console.log(`🔄 Eval V2 開始`);
+  console.log("🔄 Eval V2 開始");
   console.log(`   エージェント: ${args.agent}`);
   console.log(`   テストケース数: ${testCases.length}`);
-  console.log(`   各N回: ${args.n}\n`);
-
-  // Cloudflare バインディング取得（local env の Vectorize/R2 にリモート接続）
-  const { env, dispose } = await getPlatformProxy<CloudflareBindings>({
-    configPath: "wrangler.jsonc",
-    environment: "local",
-    remoteBindings: true,
-  });
-
-  // AI SDK が process.env から API キーを参照するため明示的に設定
-  process.env.GOOGLE_GENERATIVE_AI_API_KEY = env.GOOGLE_GENERATIVE_AI_API_KEY;
+  console.log(`   各N回: ${args.n}`);
+  console.log(
+    `   環境: ${args.compare ? "3環境比較 (local → dev → prd)" : args.env}\n`,
+  );
 
   // LibSQLStore 作成
   const libsqlStore = new LibSQLStore({
@@ -531,9 +860,6 @@ const main = async () => {
     process.exit(1);
   }
 
-  const requestContext = new RequestContext();
-  requestContext.set("env", env);
-
   // 出力ディレクトリ
   const outputDir = path.resolve(
     import.meta.dirname,
@@ -541,146 +867,137 @@ const main = async () => {
   );
   fs.mkdirSync(outputDir, { recursive: true });
 
-  // テストケースごとに実行
-  for (const testCase of testCases) {
-    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-    console.log(`📝 質問: ${testCase.input}`);
-    console.log(`📋 期待: ${testCase.groundTruth}`);
-    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
-
-    const timeline: IterationResult[] = [];
-    const totalStart = Date.now();
-
-    for (let i = 0; i < args.n; i++) {
-      const iterStart = Date.now();
-      const iterNum = i + 1;
-
-      try {
-        process.stdout.write(`  [${iterNum}/${args.n}] 生成中...`);
-
-        const result = await agent.generate(testCase.input, {
-          requestContext,
-          maxSteps: 5,
-        });
-
-        const retrievedChunks = extractKnowledgeSearchResults(
-          // biome-ignore lint/suspicious/noExplicitAny: agent.generate の戻り値型は不定
-          (result as any).steps,
-        );
-        const context = retrievedChunks.map((c) => c.content);
-
-        process.stdout.write(" スコアリング中...");
-
-        const scores = await runEvalScorers({
-          input: testCase.input,
-          output: result.text,
-          groundTruth: testCase.groundTruth,
-          context,
-        });
-
-        const durationMs = Date.now() - iterStart;
-        // biome-ignore lint/suspicious/noExplicitAny: usage の型は不定
-        const rawUsage = (result as any).usage;
-        const usage: TokenUsage | null = rawUsage
-          ? {
-              promptTokens: rawUsage.promptTokens ?? 0,
-              completionTokens: rawUsage.completionTokens ?? 0,
-              totalTokens:
-                (rawUsage.totalTokens ?? 0) ||
-                (rawUsage.promptTokens ?? 0) +
-                  (rawUsage.completionTokens ?? 0),
-            }
-          : null;
-
-        timeline.push({
-          iteration: iterNum,
-          answer: result.text,
-          scores,
-          durationMs,
-          usage,
-          error: null,
-        });
-
-        const simScore = scores.similarity?.toFixed(3) ?? "N/A";
-        const tokenInfo = usage ? ` tok=${usage.totalTokens}` : "";
-        console.log(` ✅ (${durationMs}ms) sim=${simScore}${tokenInfo}`);
-      } catch (e) {
-        const durationMs = Date.now() - iterStart;
-        const errorMsg = (e as Error).message;
-        timeline.push({
-          iteration: iterNum,
-          answer: "",
-          scores: {
-            similarity: null,
-            faithfulness: null,
-            contextPrecision: null,
-            contextRelevance: null,
-            hallucination: null,
-          },
-          durationMs,
-          usage: null,
-          error: errorMsg,
-        });
-        console.log(` ❌ (${durationMs}ms) ${errorMsg}`);
-      }
+  if (args.compare) {
+    // ─── 3環境比較モード ───────────────────────────────────
+    if (testCases.length !== 1) {
+      console.error(
+        "❌ --compare モードではテストケースを1つ指定してください（--question/--truth または --case）",
+      );
+      process.exit(1);
     }
+    const testCase = testCases[0];
+    const entries: CompareEntry[] = [];
 
-    const totalDurationMs = Date.now() - totalStart;
-    const summary = calcStats(timeline);
-    const timestamp = new Date().toISOString();
+    for (const envName of ENV_NAMES) {
+      console.log(`\n🌐 環境: ${envName} (${ENV_LABELS[envName]})`);
 
-    const totalTokens = timeline.reduce(
-      (acc, r) => {
-        if (r.usage) {
-          acc.prompt += r.usage.promptTokens;
-          acc.completion += r.usage.completionTokens;
-          acc.total += r.usage.totalTokens;
+      const { env, dispose } = await getPlatformProxy<CloudflareBindings>({
+        configPath: "wrangler.jsonc",
+        environment: envName,
+        remoteBindings: true,
+      });
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY =
+        env.GOOGLE_GENERATIVE_AI_API_KEY;
+
+      const requestContext = new RequestContext();
+      requestContext.set("env", env);
+
+      const result = await runTestCaseEval({
+        testCase,
+        agent,
+        requestContext,
+        n: args.n,
+        agentName: args.agent,
+        envName,
+      });
+
+      // 個別結果の保存
+      const envLabel = ENV_LABELS[envName];
+      const prefix = generateFilePrefix(
+        envLabel,
+        args.agent,
+        testCase.input,
+        args.n,
+      );
+      const jsonPath = path.join(outputDir, `${prefix}.json`);
+      fs.writeFileSync(jsonPath, JSON.stringify(result, null, 2));
+      console.log(`📁 JSON: ${jsonPath}`);
+
+      // サマリー表示
+      console.log(`\n📊 ${envLabel} 結果サマリー:`);
+      for (const name of SCORE_NAMES) {
+        const avg = result.summary.averageScores[name];
+        const sd = result.summary.stdDev[name];
+        if (avg !== null) {
+          console.log(`   ${name}: ${avg.toFixed(3)} (±${sd?.toFixed(3)})`);
         }
-        return acc;
-      },
-      { prompt: 0, completion: 0, total: 0 },
-    );
-
-    const evalResult: EvalResult = {
-      metadata: {
-        question: testCase.input,
-        groundTruth: testCase.groundTruth,
-        agent: args.agent,
-        iterations: args.n,
-        completedIterations: timeline.filter((r) => !r.error).length,
-        timestamp,
-        totalDurationMs,
-        totalTokens,
-      },
-      summary,
-      timeline,
-    };
-
-    // ファイル出力
-    const prefix = generateFilePrefix(args.agent, testCase.input, args.n);
-    const jsonPath = path.join(outputDir, `${prefix}.json`);
-    const htmlPath = path.join(outputDir, `${prefix}.html`);
-
-    fs.writeFileSync(jsonPath, JSON.stringify(evalResult, null, 2));
-    fs.writeFileSync(htmlPath, generateHtml(evalResult));
-
-    console.log(`\n📊 結果サマリー:`);
-    for (const name of SCORE_NAMES) {
-      const avg = summary.averageScores[name];
-      const sd = summary.stdDev[name];
-      if (avg !== null) {
-        console.log(`   ${name}: ${avg.toFixed(3)} (±${sd?.toFixed(3)})`);
       }
+
+      entries.push({ env: envName, result });
+      await dispose();
     }
-    console.log(
-      `\n🪙 トークン消費: ${totalTokens.total.toLocaleString()} (prompt: ${totalTokens.prompt.toLocaleString()}, completion: ${totalTokens.completion.toLocaleString()})`,
+
+    // 比較HTMLの生成
+    const comparePrefix = generateFilePrefix(
+      "compare",
+      args.agent,
+      testCases[0].input,
+      args.n,
     );
-    console.log(`\n📁 JSON: ${jsonPath}`);
-    console.log(`📁 HTML: ${htmlPath}\n`);
+    const compareHtmlPath = path.join(outputDir, `${comparePrefix}.html`);
+    fs.writeFileSync(
+      compareHtmlPath,
+      generateCompareHtml(
+        entries,
+        testCases[0].input,
+        testCases[0].groundTruth,
+      ),
+    );
+    console.log(`\n📊 比較レポート: ${compareHtmlPath}`);
+  } else {
+    // ─── 単一環境モード ────────────────────────────────────
+    const { env, dispose } = await getPlatformProxy<CloudflareBindings>({
+      configPath: "wrangler.jsonc",
+      environment: args.env,
+      remoteBindings: true,
+    });
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = env.GOOGLE_GENERATIVE_AI_API_KEY;
+
+    const requestContext = new RequestContext();
+    requestContext.set("env", env);
+
+    for (const testCase of testCases) {
+      const result = await runTestCaseEval({
+        testCase,
+        agent,
+        requestContext,
+        n: args.n,
+        agentName: args.agent,
+        envName: args.env,
+      });
+
+      const envLabel = ENV_LABELS[args.env];
+      const prefix = generateFilePrefix(
+        envLabel,
+        args.agent,
+        testCase.input,
+        args.n,
+      );
+      const jsonPath = path.join(outputDir, `${prefix}.json`);
+      const htmlPath = path.join(outputDir, `${prefix}.html`);
+
+      fs.writeFileSync(jsonPath, JSON.stringify(result, null, 2));
+      fs.writeFileSync(htmlPath, generateHtml(result));
+
+      console.log(`\n📊 結果サマリー:`);
+      for (const name of SCORE_NAMES) {
+        const avg = result.summary.averageScores[name];
+        const sd = result.summary.stdDev[name];
+        if (avg !== null) {
+          console.log(`   ${name}: ${avg.toFixed(3)} (±${sd?.toFixed(3)})`);
+        }
+      }
+      console.log(
+        `\n🪙 トークン消費: ${result.metadata.totalTokens.total.toLocaleString()} (prompt: ${result.metadata.totalTokens.prompt.toLocaleString()}, completion: ${result.metadata.totalTokens.completion.toLocaleString()})`,
+      );
+      console.log(`\n📁 JSON: ${jsonPath}`);
+      console.log(`📁 HTML: ${htmlPath}\n`);
+    }
+
+    await dispose();
   }
 
   console.log("✅ Eval V2 完了");
-  await dispose();
 };
 
 main().catch((error) => {
