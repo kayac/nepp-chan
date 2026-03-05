@@ -198,6 +198,18 @@ interface CliArgs {
   compare: boolean;
 }
 
+// ─── Eval用APIキー解決 ───────────────────────────────────
+
+const resolveEvalApiKey = (env: CloudflareBindings): string => {
+  // biome-ignore lint/suspicious/noExplicitAny: .dev.vars の追加キーは CloudflareBindings に未定義
+  const evalKey = (env as any).EVAL_GOOGLE_API_KEY as string | undefined;
+  const key = evalKey || env.GOOGLE_GENERATIVE_AI_API_KEY;
+  if (evalKey) {
+    console.log("🔑 Eval専用APIキーを使用");
+  }
+  return key;
+};
+
 // ─── CLI引数パース ────────────────────────────────────────
 
 const parseArgs = (): CliArgs => {
@@ -1419,8 +1431,7 @@ const main = async () => {
         environment: envName,
         remoteBindings: true,
       });
-      process.env.GOOGLE_GENERATIVE_AI_API_KEY =
-        env.GOOGLE_GENERATIVE_AI_API_KEY;
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY = resolveEvalApiKey(env);
 
       const requestContext = new RequestContext();
       requestContext.set("env", env);
@@ -1473,7 +1484,7 @@ const main = async () => {
       environment: args.env,
       remoteBindings: true,
     });
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY = env.GOOGLE_GENERATIVE_AI_API_KEY;
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = resolveEvalApiKey(env);
 
     const requestContext = new RequestContext();
     requestContext.set("env", env);

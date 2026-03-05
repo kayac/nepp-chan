@@ -71,6 +71,19 @@ interface TokenUsage {
   totalTokens: number;
 }
 
+interface ToolCall {
+  toolName: string;
+  // biome-ignore lint/suspicious/noExplicitAny: ツール引数の型は不定
+  args: Record<string, any>;
+  // biome-ignore lint/suspicious/noExplicitAny: ツール結果の型は不定
+  result: any;
+}
+
+interface TranscriptStep {
+  stepNumber: number;
+  toolCalls: ToolCall[];
+}
+
 interface IterationResult {
   iteration: number;
   answer: string;
@@ -78,6 +91,10 @@ interface IterationResult {
   durationMs: number;
   usage: TokenUsage | null;
   error: string | null;
+  transcript: TranscriptStep[];
+  stepCount: number;
+  toolCallCount: number;
+  hasAnswer: boolean;
 }
 
 interface EvalResult {
@@ -101,6 +118,12 @@ interface EvalResult {
     stdDev: Record<ScoreName, number | null>;
     min: Record<ScoreName, number | null>;
     max: Record<ScoreName, number | null>;
+    metrics: {
+      avgStepCount: number;
+      avgToolCallCount: number;
+      emptyAnswerCount: number;
+      emptyAnswerRate: number;
+    };
   };
   timeline: IterationResult[];
 }
@@ -119,6 +142,18 @@ interface CliArgs {
   env: EnvName;
   compare: boolean;
 }
+
+// ─── Eval用APIキー解決 ───────────────────────────────────
+
+const resolveEvalApiKey = (env: CloudflareBindings): string => {
+  // biome-ignore lint/suspicious/noExplicitAny: .dev.vars の追加キーは CloudflareBindings に未定義
+  const evalKey = (env as any).EVAL_GOOGLE_API_KEY as string | undefined;
+  const key = evalKey || env.GOOGLE_GENERATIVE_AI_API_KEY;
+  if (evalKey) {
+    console.log("🔑 Eval専用APIキーを使用");
+  }
+  return key;
+};
 
 // ─── CLI引数パース ────────────────────────────────────────
 
@@ -186,6 +221,29 @@ const extractKnowledgeSearchResults = (
     }
   }
   return [];
+};
+
+// ─── Transcript 抽出 ────────────────────────────────────
+
+const extractTranscript = (
+  // biome-ignore lint/suspicious/noExplicitAny: agent.generate の戻り値型は不定
+  steps: Array<{ toolResults?: any[]; toolCalls?: any[] }> | undefined,
+): TranscriptStep[] => {
+  if (!steps) return [];
+  return steps.map((step, index) => ({
+    stepNumber: index + 1,
+    toolCalls: (step.toolCalls ?? step.toolResults ?? []).map(
+      // biome-ignore lint/suspicious/noExplicitAny: ツール結果の型は不定
+      (tc: any) => {
+        const payload = tc?.payload ?? tc;
+        return {
+          toolName: payload?.toolName ?? "unknown",
+          args: payload?.args ?? {},
+          result: payload?.result ?? null,
+        };
+      },
+    ),
+  }));
 };
 
 // ─── スコアラー実行 ───────────────────────────────────────
@@ -319,7 +377,41 @@ const calcStats = (timeline: IterationResult[]) => {
     stdDev[name] = Math.round(Math.sqrt(variance) * 1000) / 1000;
   }
 
-  return { averageScores: avg, stdDev, min, max };
+  const completed = timeline.filter((r) => !r.error);
+  const avgStepCount =
+    completed.length > 0
+      ? Math.round(
+          (completed.reduce((sum, r) => sum + r.stepCount, 0) /
+            completed.length) *
+            100,
+        ) / 100
+      : 0;
+  const avgToolCallCount =
+    completed.length > 0
+      ? Math.round(
+          (completed.reduce((sum, r) => sum + r.toolCallCount, 0) /
+            completed.length) *
+            100,
+        ) / 100
+      : 0;
+  const emptyAnswerCount = timeline.filter((r) => !r.hasAnswer).length;
+  const emptyAnswerRate =
+    timeline.length > 0
+      ? Math.round((emptyAnswerCount / timeline.length) * 1000) / 1000
+      : 0;
+
+  return {
+    averageScores: avg,
+    stdDev,
+    min,
+    max,
+    metrics: {
+      avgStepCount,
+      avgToolCallCount,
+      emptyAnswerCount,
+      emptyAnswerRate,
+    },
+  };
 };
 
 // ─── ファイル名生成 ───────────────────────────────────────
@@ -373,6 +465,7 @@ const generateHtml = (result: EvalResult): string => {
         (n) =>
           `${n}: ${r.scores[n] !== null ? r.scores[n]?.toFixed(3) : "N/A"}`,
       ).join(" | ");
+      const metricsText = `steps=${r.stepCount} tools=${r.toolCallCount}${r.hasAnswer ? "" : " [empty]"}`;
       const escapedAnswer = r.answer
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -381,11 +474,19 @@ const generateHtml = (result: EvalResult): string => {
       const errorHtml = r.error
         ? `<p style="color:red;">Error: ${r.error}</p>`
         : "";
+      const transcriptHtml =
+        r.transcript.length > 0
+          ? `<details style="margin-top:8px;">
+        <summary style="font-size:0.8rem;color:#6b7280;">Transcript (${r.transcript.length} steps)</summary>
+        <pre style="font-size:0.75rem;background:#f3f4f6;padding:8px;border-radius:4px;overflow-x:auto;max-height:400px;">${JSON.stringify(r.transcript, null, 2).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
+      </details>`
+          : "";
       return `<details>
-  <summary>#${r.iteration} (${r.durationMs}ms) — ${scoresText}</summary>
+  <summary>#${r.iteration} (${r.durationMs}ms) ${metricsText} — ${scoresText}</summary>
   <div class="answer-detail">
     ${errorHtml}
     <p>${escapedAnswer}</p>
+    ${transcriptHtml}
   </div>
 </details>`;
     })
@@ -402,6 +503,22 @@ const generateHtml = (result: EvalResult): string => {
         <td>${summary.max[name]?.toFixed(3) ?? "N/A"}</td>
       </tr>`,
   ).join("\n");
+
+  // 計測指標テーブル
+  const { metrics } = summary;
+  const metricsHtml = `
+    <div class="card" style="margin-bottom:0;">
+      <h2>計測指標</h2>
+      <table>
+        <thead><tr><th>指標</th><th>値</th></tr></thead>
+        <tbody>
+          <tr><td>平均ステップ数</td><td>${metrics.avgStepCount}</td></tr>
+          <tr><td>平均ツール呼び出し数</td><td>${metrics.avgToolCallCount}</td></tr>
+          <tr><td>空回答数</td><td>${metrics.emptyAnswerCount} / ${metadata.completedIterations + (timeline.length - metadata.completedIterations)}</td></tr>
+          <tr><td>空回答率</td><td>${(metrics.emptyAnswerRate * 100).toFixed(1)}%</td></tr>
+        </tbody>
+      </table>
+    </div>`;
 
   return `<!DOCTYPE html>
 <html lang="ja">
@@ -451,6 +568,10 @@ const generateHtml = (result: EvalResult): string => {
       <tbody>${summaryRows}</tbody>
     </table>
   </div>
+</div>
+
+<div class="grid">
+  ${metricsHtml}
 </div>
 
 <div class="card" style="margin-bottom:24px;">
@@ -707,14 +828,16 @@ const runTestCaseEval = async (params: {
 
       const result = await agent.generate(testCase.input, {
         requestContext,
-        maxSteps: 5,
+        maxSteps: 3,
       });
 
-      const retrievedChunks = extractKnowledgeSearchResults(
-        // biome-ignore lint/suspicious/noExplicitAny: agent.generate の戻り値型は不定
-        (result as any).steps,
-      );
+      // biome-ignore lint/suspicious/noExplicitAny: agent.generate の戻り値型は不定
+      const steps = (result as any).steps;
+
+      const retrievedChunks = extractKnowledgeSearchResults(steps);
       const context = retrievedChunks.map((c) => c.content);
+
+      const transcript = extractTranscript(steps);
 
       process.stdout.write(" スコアリング中...");
 
@@ -738,6 +861,13 @@ const runTestCaseEval = async (params: {
           }
         : null;
 
+      const stepCount = transcript.length;
+      const toolCallCount = transcript.reduce(
+        (sum, s) => sum + s.toolCalls.length,
+        0,
+      );
+      const hasAnswer = result.text.trim().length > 0;
+
       timeline.push({
         iteration: iterNum,
         answer: result.text,
@@ -745,11 +875,18 @@ const runTestCaseEval = async (params: {
         durationMs,
         usage,
         error: null,
+        transcript,
+        stepCount,
+        toolCallCount,
+        hasAnswer,
       });
 
       const simScore = scores.similarity?.toFixed(3) ?? "N/A";
       const tokenInfo = usage ? ` tok=${usage.totalTokens}` : "";
-      console.log(` ✅ (${durationMs}ms) sim=${simScore}${tokenInfo}`);
+      const answerIcon = hasAnswer ? "" : " [empty]";
+      console.log(
+        ` ✅ (${durationMs}ms) sim=${simScore} steps=${stepCount} tools=${toolCallCount}${answerIcon}${tokenInfo}`,
+      );
     } catch (e) {
       const durationMs = Date.now() - iterStart;
       const errorMsg = (e as Error).message;
@@ -766,6 +903,10 @@ const runTestCaseEval = async (params: {
         durationMs,
         usage: null,
         error: errorMsg,
+        transcript: [],
+        stepCount: 0,
+        toolCallCount: 0,
+        hasAnswer: false,
       });
       console.log(` ❌ (${durationMs}ms) ${errorMsg}`);
     }
@@ -886,8 +1027,7 @@ const main = async () => {
         environment: envName,
         remoteBindings: true,
       });
-      process.env.GOOGLE_GENERATIVE_AI_API_KEY =
-        env.GOOGLE_GENERATIVE_AI_API_KEY;
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY = resolveEvalApiKey(env);
 
       const requestContext = new RequestContext();
       requestContext.set("env", env);
@@ -922,6 +1062,10 @@ const main = async () => {
           console.log(`   ${name}: ${avg.toFixed(3)} (±${sd?.toFixed(3)})`);
         }
       }
+      const m = result.summary.metrics;
+      console.log(
+        `   📏 steps=${m.avgStepCount} tools=${m.avgToolCallCount} empty=${m.emptyAnswerCount}(${(m.emptyAnswerRate * 100).toFixed(1)}%)`,
+      );
 
       entries.push({ env: envName, result });
       await dispose();
@@ -951,7 +1095,7 @@ const main = async () => {
       environment: args.env,
       remoteBindings: true,
     });
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY = env.GOOGLE_GENERATIVE_AI_API_KEY;
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = resolveEvalApiKey(env);
 
     const requestContext = new RequestContext();
     requestContext.set("env", env);
@@ -987,6 +1131,10 @@ const main = async () => {
           console.log(`   ${name}: ${avg.toFixed(3)} (±${sd?.toFixed(3)})`);
         }
       }
+      const m = result.summary.metrics;
+      console.log(
+        `   📏 steps=${m.avgStepCount} tools=${m.avgToolCallCount} empty=${m.emptyAnswerCount}(${(m.emptyAnswerRate * 100).toFixed(1)}%)`,
+      );
       console.log(
         `\n🪙 トークン消費: ${result.metadata.totalTokens.total.toLocaleString()} (prompt: ${result.metadata.totalTokens.prompt.toLocaleString()}, completion: ${result.metadata.totalTokens.completion.toLocaleString()})`,
       );
