@@ -35,7 +35,11 @@ import { getPlatformProxy } from "wrangler";
 import { GEMINI_FLASH_LITE } from "../src/lib/llm-models";
 import { knowledgeAgent } from "../src/mastra/agents/knowledge-agent";
 import { createNeppChanAgent } from "../src/mastra/agents/nepp-chan-agent";
-import type { TestCase } from "../src/mastra/data/eval-test-cases";
+import type {
+  TestCase,
+  TestCategory,
+} from "../src/mastra/data/eval-test-cases";
+import { evalTestCases } from "../src/mastra/data/eval-test-cases";
 import { evalV2TestCases } from "../src/mastra/data/eval-v2-test-cases";
 
 // ─── Types ───────────────────────────────────────────────
@@ -140,6 +144,7 @@ interface CliArgs {
   n: number;
   agent: "knowledge" | "nepp-chan";
   caseIndex?: number;
+  category?: TestCategory;
   env: EnvName;
   compare: boolean;
 }
@@ -203,6 +208,9 @@ const parseArgs = (): CliArgs => {
         break;
       case "--compare":
         result.compare = true;
+        break;
+      case "--category":
+        result.category = args[++i] as TestCategory;
         break;
     }
   }
@@ -481,7 +489,11 @@ const generateHtml = (result: EvalResult): string => {
           `${n}: ${r.scores[n] !== null ? r.scores[n]?.toFixed(3) : "N/A"}`,
       ).join(" | ");
       const metricsText = `steps=${r.stepCount} tools=${r.toolCallCount}${r.isAbstention ? " [abstention]" : ""}`;
-      const escapedAnswer = (r.isAbstention && r.answer.trim().length === 0 ? "Abstention（該当なし）" : r.answer)
+      const escapedAnswer = (
+        r.isAbstention && r.answer.trim().length === 0
+          ? "Abstention（該当なし）"
+          : r.answer
+      )
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
@@ -982,6 +994,16 @@ const main = async () => {
       process.exit(1);
     }
     testCases = [tc];
+  } else if (args.category) {
+    testCases = evalTestCases
+      .filter((c) => c.category === args.category)
+      .map(({ input, groundTruth }) => ({ input, groundTruth }));
+    if (testCases.length === 0) {
+      console.error(
+        `❌ カテゴリ "${args.category}" のテストケースが見つかりません`,
+      );
+      process.exit(1);
+    }
   } else {
     testCases = evalV2TestCases;
   }

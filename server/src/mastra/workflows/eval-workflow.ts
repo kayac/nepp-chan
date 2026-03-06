@@ -24,7 +24,7 @@ import {
 import { z } from "zod";
 
 import { GEMINI_FLASH_LITE } from "~/lib/llm-models";
-import { testCases } from "~/mastra/data/eval-test-cases";
+import { evalTestCases } from "~/mastra/data/eval-test-cases";
 
 const KNOWLEDGE_TOOL_NAME = "knowledgeSearchTool";
 
@@ -202,16 +202,16 @@ const runBatchEval = createStep({
     }
 
     const results = [];
-    for (let i = 0; i < testCases.length; i++) {
-      const testCase = testCases[i];
+    for (let i = 0; i < evalTestCases.length; i++) {
+      const testCase = evalTestCases[i];
       console.log(
-        `[EVAL ${i + 1}/${testCases.length}] 開始: ${testCase.input.slice(0, 30)}...`,
+        `[EVAL ${i + 1}/${evalTestCases.length}] 開始: ${testCase.input.slice(0, 30)}...`,
       );
 
       const result = await runEval(agent, testCase, requestContext);
 
       console.log(
-        `[EVAL ${i + 1}/${testCases.length}] 完了: ${testCase.input.slice(0, 30)}...`,
+        `[EVAL ${i + 1}/${evalTestCases.length}] 完了: ${testCase.input.slice(0, 30)}...`,
       );
       results.push(result);
     }
