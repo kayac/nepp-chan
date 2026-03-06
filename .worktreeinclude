@@ -1,0 +1,17 @@
+# Environment files (gitignored, need to be copied to worktrees)
+
+# root
+.env.development
+.env.local
+.env.production
+
+# server
+server/.dev.vars
+server/.env
+server/.env.local
+server/.env.production
+
+# web
+web/.env
+web/.env.local
+web/.env.production

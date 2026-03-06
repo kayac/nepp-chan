@@ -1,6 +1,9 @@
 GOOGLE_GENERATIVE_AI_API_KEY=your-api-key-here
 GOOGLE_SEARCH_ENGINE_ID=your-engine-id-here
 
+# Eval専用（省略時は GOOGLE_GENERATIVE_AI_API_KEY を使用）
+EVAL_GOOGLE_API_KEY=
+
 # WebAuthn
 WEBAUTHN_RP_ID=localhost
 WEBAUTHN_RP_NAME=ねっぷちゃん

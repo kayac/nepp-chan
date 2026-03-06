@@ -1,0 +1,33 @@
+target:
+  url: ""
+  allowed_domains: []
+  blocked_paths: []
+
+crawl:
+  strategy: bfs
+  max_depth: 3
+  max_pages: 500
+  include_external: false
+
+markdown:
+  citations: true
+  body_width: 0
+  skip_internal_links: false
+  content_filter: none
+
+content:
+  excluded_tags: []           # e.g. ["nav", "footer", "header"]
+  excluded_selector: ""       # e.g. "#menu, .breadcrumb"
+  word_count_threshold: 0     # 0 = disabled
+
+performance:
+  prefetch: true
+  stream: true
+
+recovery:
+  enabled: true
+  state_file: "output/.crawl_state.json"
+
+output:
+  dir: "output"
+  naming: "url_path"
