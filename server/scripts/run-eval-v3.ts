@@ -1197,7 +1197,7 @@ const runTestCaseEval = async (params: {
 
       const result = await agent.generate(testCase.input, {
         requestContext,
-        maxSteps: 5,
+        maxSteps: 3,
       });
 
       const retrievedChunks = extractKnowledgeSearchResults(
