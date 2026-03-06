@@ -262,7 +262,7 @@ const extractTranscript = (
   if (!steps) return [];
   return steps.map((step, index) => ({
     stepNumber: index + 1,
-    toolCalls: (step.toolCalls ?? step.toolResults ?? []).map(
+    toolCalls: (step.toolResults ?? step.toolCalls ?? []).map(
       // biome-ignore lint/suspicious/noExplicitAny: ツール結果の型は不定
       (tc: any) => {
         const payload = tc?.payload ?? tc;
