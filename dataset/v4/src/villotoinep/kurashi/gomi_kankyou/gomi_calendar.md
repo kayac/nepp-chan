@@ -4,12 +4,19 @@
 
 ## ダウンロード
 
+### 令和8年度
+
+| 種類 | ファイル |
+|------|----------|
+| 家庭用配布版（A3横両面6ヶ月タイプ） | [PDF](https://www.vill.otoineppu.hokkaido.jp/kurashi/gomi_kankyou/files/2026gomi_calender1.pdf) / [テキスト版](gomi_calendar_r8.md) |
+| 事業所配布版（A3縦両面1年タイプ） | [PDF](https://www.vill.otoineppu.hokkaido.jp/kurashi/gomi_kankyou/files/2026gomi_calender2.pdf) / [テキスト版](gomi_calendar_r8.md) |
+
 ### 令和7年度
 
 | 種類 | ファイル |
 |------|----------|
-| 家庭用配布版（A3横両面6ヶ月タイプ） | [PDF（598KB）](https://www.vill.otoineppu.hokkaido.jp/kurashi/gomi_kankyou/files/2025gomi_calender1.pdf) |
-| 事業所配布版（A3縦両面1年タイプ） | [PDF（628KB）](https://www.vill.otoineppu.hokkaido.jp/kurashi/gomi_kankyou/files/2025gomi_calender2.pdf) |
+| 家庭用配布版（A3横両面6ヶ月タイプ） | [PDF（598KB）](https://www.vill.otoineppu.hokkaido.jp/kurashi/gomi_kankyou/files/2025gomi_calender1.pdf) / [テキスト版](gomi_calendar_r7.md) |
+| 事業所配布版（A3縦両面1年タイプ） | [PDF（628KB）](https://www.vill.otoineppu.hokkaido.jp/kurashi/gomi_kankyou/files/2025gomi_calender2.pdf) / [テキスト版](gomi_calendar_r7.md) |
 
 ### 令和6年度（4月26日修正）
 
