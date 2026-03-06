@@ -122,7 +122,7 @@ interface IterationResult {
 interface PassMetrics {
   passCount: number;
   failCount: number;
-  emptyAnswerCount: number;
+  abstentionCount: number;
   passRate: number;
   keywordPassRate: number;
   passAtK: { k1: number; k3: number; k5: number };
@@ -300,7 +300,17 @@ const checkRequiredKeywords = (
   };
 };
 
-const isEmptyAnswer = (answer: string): boolean => answer.trim().length === 0;
+const ABSTENTION_PATTERNS = [
+  "見つかりませんでした",
+  "該当する情報",
+  "わかりませんでした",
+];
+
+const isAbstention = (answer: string): boolean => {
+  if (answer.trim().length === 0) return true;
+  const lower = answer.toLowerCase();
+  return ABSTENTION_PATTERNS.some((p) => lower.includes(p));
+};
 
 const isPass = (
   scores: Scores,
@@ -308,7 +318,7 @@ const isPass = (
   answer: string,
   threshold: number,
 ): boolean => {
-  if (isEmptyAnswer(answer)) return false;
+  if (isAbstention(answer)) return false;
   if (!keywordResult.pass) return false;
   const sim = scores.similarity;
   if (sim === null || sim < threshold) return false;
@@ -525,13 +535,15 @@ const calcPassMetrics = (timeline: IterationResult[]): PassMetrics => {
   const n = completed.length;
   const passCount = completed.filter((r) => r.pass).length;
   const failCount = n - passCount;
-  const emptyCount = completed.filter((r) => isEmptyAnswer(r.answer)).length;
+  const abstentionCount = completed.filter((r) =>
+    isAbstention(r.answer),
+  ).length;
   const kwPassCount = completed.filter((r) => r.keywordCheck.pass).length;
 
   return {
     passCount,
     failCount,
-    emptyAnswerCount: emptyCount,
+    abstentionCount,
     passRate: n > 0 ? Math.round((passCount / n) * 1000) / 1000 : 0,
     keywordPassRate: n > 0 ? Math.round((kwPassCount / n) * 1000) / 1000 : 0,
     passAtK: {

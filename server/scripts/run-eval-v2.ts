@@ -95,6 +95,7 @@ interface IterationResult {
   stepCount: number;
   toolCallCount: number;
   hasAnswer: boolean;
+  isAbstention: boolean;
 }
 
 interface EvalResult {
@@ -121,8 +122,8 @@ interface EvalResult {
     metrics: {
       avgStepCount: number;
       avgToolCallCount: number;
-      emptyAnswerCount: number;
-      emptyAnswerRate: number;
+      abstentionCount: number;
+      abstentionRate: number;
     };
   };
   timeline: IterationResult[];
@@ -142,6 +143,20 @@ interface CliArgs {
   env: EnvName;
   compare: boolean;
 }
+
+// ─── Abstention 判定 ─────────────────────────────────────
+
+const ABSTENTION_PATTERNS = [
+  "見つかりませんでした",
+  "該当する情報",
+  "わかりませんでした",
+];
+
+const isAbstention = (answer: string): boolean => {
+  if (answer.trim().length === 0) return true;
+  const lower = answer.toLowerCase();
+  return ABSTENTION_PATTERNS.some((p) => lower.includes(p));
+};
 
 // ─── Eval用APIキー解決 ───────────────────────────────────
 
@@ -394,10 +409,10 @@ const calcStats = (timeline: IterationResult[]) => {
             100,
         ) / 100
       : 0;
-  const emptyAnswerCount = timeline.filter((r) => !r.hasAnswer).length;
-  const emptyAnswerRate =
+  const abstentionCount = timeline.filter((r) => r.isAbstention).length;
+  const abstentionRate =
     timeline.length > 0
-      ? Math.round((emptyAnswerCount / timeline.length) * 1000) / 1000
+      ? Math.round((abstentionCount / timeline.length) * 1000) / 1000
       : 0;
 
   return {
@@ -408,8 +423,8 @@ const calcStats = (timeline: IterationResult[]) => {
     metrics: {
       avgStepCount,
       avgToolCallCount,
-      emptyAnswerCount,
-      emptyAnswerRate,
+      abstentionCount,
+      abstentionRate,
     },
   };
 };
@@ -465,8 +480,8 @@ const generateHtml = (result: EvalResult): string => {
         (n) =>
           `${n}: ${r.scores[n] !== null ? r.scores[n]?.toFixed(3) : "N/A"}`,
       ).join(" | ");
-      const metricsText = `steps=${r.stepCount} tools=${r.toolCallCount}${r.hasAnswer ? "" : " [empty]"}`;
-      const escapedAnswer = r.answer
+      const metricsText = `steps=${r.stepCount} tools=${r.toolCallCount}${r.isAbstention ? " [abstention]" : ""}`;
+      const escapedAnswer = (r.isAbstention && r.answer.trim().length === 0 ? "Abstention（該当なし）" : r.answer)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
@@ -514,8 +529,8 @@ const generateHtml = (result: EvalResult): string => {
         <tbody>
           <tr><td>平均ステップ数</td><td>${metrics.avgStepCount}</td></tr>
           <tr><td>平均ツール呼び出し数</td><td>${metrics.avgToolCallCount}</td></tr>
-          <tr><td>空回答数</td><td>${metrics.emptyAnswerCount} / ${metadata.completedIterations + (timeline.length - metadata.completedIterations)}</td></tr>
-          <tr><td>空回答率</td><td>${(metrics.emptyAnswerRate * 100).toFixed(1)}%</td></tr>
+          <tr><td>Abstention（該当なし）</td><td>${metrics.abstentionCount} / ${metadata.completedIterations + (timeline.length - metadata.completedIterations)}</td></tr>
+          <tr><td>Abstention率</td><td>${(metrics.abstentionRate * 100).toFixed(1)}%</td></tr>
         </tbody>
       </table>
     </div>`;
@@ -867,6 +882,7 @@ const runTestCaseEval = async (params: {
         0,
       );
       const hasAnswer = result.text.trim().length > 0;
+      const abstention = isAbstention(result.text);
 
       timeline.push({
         iteration: iterNum,
@@ -879,13 +895,14 @@ const runTestCaseEval = async (params: {
         stepCount,
         toolCallCount,
         hasAnswer,
+        isAbstention: abstention,
       });
 
       const simScore = scores.similarity?.toFixed(3) ?? "N/A";
       const tokenInfo = usage ? ` tok=${usage.totalTokens}` : "";
-      const answerIcon = hasAnswer ? "" : " [empty]";
+      const abstentionIcon = abstention ? " [abstention]" : "";
       console.log(
-        ` ✅ (${durationMs}ms) sim=${simScore} steps=${stepCount} tools=${toolCallCount}${answerIcon}${tokenInfo}`,
+        ` ✅ (${durationMs}ms) sim=${simScore} steps=${stepCount} tools=${toolCallCount}${abstentionIcon}${tokenInfo}`,
       );
     } catch (e) {
       const durationMs = Date.now() - iterStart;
@@ -907,6 +924,7 @@ const runTestCaseEval = async (params: {
         stepCount: 0,
         toolCallCount: 0,
         hasAnswer: false,
+        isAbstention: true,
       });
       console.log(` ❌ (${durationMs}ms) ${errorMsg}`);
     }
@@ -1064,7 +1082,7 @@ const main = async () => {
       }
       const m = result.summary.metrics;
       console.log(
-        `   📏 steps=${m.avgStepCount} tools=${m.avgToolCallCount} empty=${m.emptyAnswerCount}(${(m.emptyAnswerRate * 100).toFixed(1)}%)`,
+        `   📏 steps=${m.avgStepCount} tools=${m.avgToolCallCount} abstention=${m.abstentionCount}(${(m.abstentionRate * 100).toFixed(1)}%)`,
       );
 
       entries.push({ env: envName, result });
@@ -1133,7 +1151,7 @@ const main = async () => {
       }
       const m = result.summary.metrics;
       console.log(
-        `   📏 steps=${m.avgStepCount} tools=${m.avgToolCallCount} empty=${m.emptyAnswerCount}(${(m.emptyAnswerRate * 100).toFixed(1)}%)`,
+        `   📏 steps=${m.avgStepCount} tools=${m.avgToolCallCount} abstention=${m.abstentionCount}(${(m.abstentionRate * 100).toFixed(1)}%)`,
       );
       console.log(
         `\n🪙 トークン消費: ${result.metadata.totalTokens.total.toLocaleString()} (prompt: ${result.metadata.totalTokens.prompt.toLocaleString()}, completion: ${result.metadata.totalTokens.completion.toLocaleString()})`,
