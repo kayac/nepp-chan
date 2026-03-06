@@ -25,6 +25,8 @@ pnpm eval:v2 -- --case <index> --n <回数>
 
 # 3環境比較
 pnpm eval:v2 -- --compare --question "<質問>" --truth "<正解>" --n <回数>
+pnpm eval:v2 -- --compare --category <education|garbage|village> --n <回数>
+pnpm eval:v2 -- --compare --n <回数>  # 全テストケース
 ```
 
 ## 環境と接続先
@@ -47,9 +49,17 @@ pnpm eval:v2 -- --compare --question "<質問>" --truth "<正解>" --n <回数>
 | 文脈関連度 | contextRelevance | 検索結果が質問にどれだけ関連しているか | 1.0 |
 | 幻覚度 | hallucination | 検索結果にない情報を捏造していないか | 0.0 |
 
-## プリセットテストケース
+## テストケースマスター
 
-`server/src/mastra/data/eval-v2-test-cases.ts` を参照。
+`server/src/mastra/data/eval-test-cases.ts`（22個）。V2/V3 共有。
+
+| カテゴリ | 件数 | 内容 |
+|---------|:----:|------|
+| education | 12 | 高校（寮費、入試、部活、Wi-Fi等） |
+| garbage | 4 | ゴミ（ペットボトル、分別、カレンダー） |
+| village | 6 | 村全体（村長、宿泊、食事、アクセス等） |
+
+`--category` でカテゴリ別実行可能。
 
 </reference>
 
@@ -74,8 +84,10 @@ AskUserQuestion:
       header: "質問"
       multiSelect: false
       options:
-        - label: "プリセットから選ぶ"
-          description: "eval-v2-test-cases.ts のテストケースを使用"
+        - label: "全テストケース（22個）"
+          description: "education/garbage/village 全カテゴリをまとめて実行"
+        - label: "カテゴリから選ぶ"
+          description: "education(12個)/garbage(4個)/village(6個) を選択"
         - label: "カスタム質問を入力"
           description: "質問と正解を直接指定"
     - question: "何回繰り返しますか？"
@@ -90,20 +102,44 @@ AskUserQuestion:
           description: "統計的に信頼できる結果"
 ```
 
+「カテゴリから選ぶ」の場合、追加で AskUserQuestion:
+
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "テストするカテゴリを選んでください"
+      header: "カテゴリ"
+      multiSelect: false
+      options:
+        - label: "education（12個）"
+          description: "高校関連（寮費、入試、部活、Wi-Fi等）"
+        - label: "garbage（4個）"
+          description: "ゴミ関連（ペットボトル、分別、カレンダー）"
+        - label: "village（6個）"
+          description: "村全体（村長、宿泊、食事、アクセス等）"
+```
+
 カスタム質問の場合、追加で質問テキストと正解（groundTruth）を聞く。
 単一環境テストの場合、環境（local / development / production）を追加で聞く。
+3環境比較モードは全テストケース・カテゴリ・カスタム質問のいずれとも組み合わせ可能。複数テストケースの場合、個別比較HTML＋統合サマリーHTMLが生成される。
 
 ### Step 2: テスト実行
 
-3環境比較:
+単一環境モード:
 ```bash
-pnpm eval:v2 -- --compare --question "<質問>" --truth "<正解>" --n <回数>
+pnpm eval:v2 -- --env <環境> --n <回数>                                          # 全テストケース
+pnpm eval:v2 -- --env <環境> --category <education|garbage|village> --n <回数>    # カテゴリ指定
+pnpm eval:v2 -- --env <環境> --question "<質問>" --truth "<正解>" --n <回数>      # カスタム質問
 ```
 
-単一環境:
+3環境比較モード（`--compare`）:
 ```bash
-pnpm eval:v2 -- --env <環境> --question "<質問>" --truth "<正解>" --n <回数>
+pnpm eval:v2 -- --compare --n <回数>                                             # 全テストケース
+pnpm eval:v2 -- --compare --category <education|garbage|village> --n <回数>       # カテゴリ指定
+pnpm eval:v2 -- --compare --question "<質問>" --truth "<正解>" --n <回数>         # カスタム質問
 ```
+
+複数テストケース × 3環境比較の場合、個別比較HTML＋統合サマリーHTMLが自動生成される。
 
 `run_in_background` で実行。完了通知を待つ。
 

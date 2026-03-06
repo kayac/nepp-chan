@@ -11,7 +11,9 @@
  *   pnpm eval:v2 -- --case 0 --n 30                      # テストケース指定
  *   pnpm eval:v2 -- --agent nepp-chan                     # エージェント選択
  *   pnpm eval:v2 -- --env development --n 10              # dev 環境で実行
- *   pnpm eval:v2 -- --compare --question "..." --truth "..." --n 3  # 3環境比較
+ *   pnpm eval:v2 -- --compare --question "..." --truth "..." --n 3  # 3環境比較（単一質問）
+ *   pnpm eval:v2 -- --compare --category education --n 3            # 3環境比較（カテゴリ）
+ *   pnpm eval:v2 -- --compare --n 3                                 # 3環境比較（全テストケース）
  */
 
 import * as fs from "node:fs";
@@ -136,6 +138,11 @@ interface EvalResult {
 interface CompareEntry {
   env: EnvName;
   result: EvalResult;
+}
+
+interface MultiCaseCompareEntry {
+  testCase: TestCase;
+  entries: CompareEntry[];
 }
 
 interface CliArgs {
@@ -826,6 +833,263 @@ new Chart(document.getElementById('radarChart'), {
 </html>`;
 };
 
+// ─── 複数テストケース統合比較HTML生成 ────────────────────────
+
+const generateMultiCaseCompareHtml = (
+  allResults: MultiCaseCompareEntry[],
+  n: number,
+  agentName: string,
+): string => {
+  // 環境ごとの全体平均を算出
+  const envScoreValues: Record<EnvName, Record<ScoreName, number[]>> = {
+    local: {
+      similarity: [],
+      faithfulness: [],
+      contextPrecision: [],
+      contextRelevance: [],
+      hallucination: [],
+    },
+    development: {
+      similarity: [],
+      faithfulness: [],
+      contextPrecision: [],
+      contextRelevance: [],
+      hallucination: [],
+    },
+    production: {
+      similarity: [],
+      faithfulness: [],
+      contextPrecision: [],
+      contextRelevance: [],
+      hallucination: [],
+    },
+  };
+
+  for (const { entries } of allResults) {
+    for (const { env, result } of entries) {
+      for (const name of SCORE_NAMES) {
+        const val = result.summary.averageScores[name];
+        if (val !== null) {
+          envScoreValues[env][name].push(val);
+        }
+      }
+    }
+  }
+
+  const overallAvg = {} as Record<EnvName, Record<ScoreName, number | null>>;
+  for (const env of ENV_NAMES) {
+    overallAvg[env] = {} as Record<ScoreName, number | null>;
+    for (const name of SCORE_NAMES) {
+      const vals = envScoreValues[env][name];
+      overallAvg[env][name] =
+        vals.length > 0
+          ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 1000) /
+            1000
+          : null;
+    }
+  }
+
+  // レーダーチャートデータ
+  const scoreLabels = JSON.stringify(SCORE_NAMES);
+  const radarDatasets = ENV_NAMES.map((env) => ({
+    label: ENV_LABELS[env],
+    data: SCORE_NAMES.map((name) => overallAvg[env][name] ?? 0),
+    backgroundColor: ENV_COLORS[env]
+      .replace("rgb", "rgba")
+      .replace(")", ", 0.15)"),
+    borderColor: ENV_COLORS[env],
+    pointBackgroundColor: ENV_COLORS[env],
+  }));
+
+  // 全体平均テーブル
+  const envHeaders = ENV_NAMES.map((env) => `<th>${ENV_LABELS[env]}</th>`).join(
+    "",
+  );
+
+  const overallRows = SCORE_NAMES.map((name) => {
+    const cells = ENV_NAMES.map((env) => {
+      const val = overallAvg[env][name];
+      return `<td>${val?.toFixed(3) ?? "N/A"}</td>`;
+    }).join("");
+
+    const localVal = overallAvg.local[name];
+    const prdVal = overallAvg.production[name];
+    let improvementHtml = "<td>N/A</td>";
+    if (localVal != null && prdVal != null && prdVal !== 0) {
+      const isInverse = name === "hallucination";
+      const diff = isInverse ? prdVal - localVal : localVal - prdVal;
+      const pct = (diff / Math.abs(prdVal)) * 100;
+      const sign = pct >= 0 ? "+" : "";
+      const color = pct >= 0 ? "#22c55e" : "#ef4444";
+      improvementHtml = `<td style="color:${color};font-weight:600;">${sign}${pct.toFixed(1)}%</td>`;
+    }
+
+    return `<tr><td>${name}</td>${cells}${improvementHtml}</tr>`;
+  }).join("\n");
+
+  // ヒートマップ色
+  const heatmapColor = (value: number | null, inverse = false): string => {
+    if (value === null) return "#f3f4f6";
+    const v = inverse ? 1 - value : value;
+    const hue = Math.round(v * 120);
+    return `hsl(${hue}, 70%, 85%)`;
+  };
+
+  // テストケース別ヒートマップ（主要指標）
+  const keyMetrics: ScoreName[] = [
+    "similarity",
+    "faithfulness",
+    "hallucination",
+  ];
+  const heatmapHeaderRow = keyMetrics
+    .map((m) => `<th colspan="3">${m}</th>`)
+    .join("");
+  const heatmapSubHeader = keyMetrics
+    .map(() => ENV_NAMES.map((env) => `<th>${ENV_LABELS[env]}</th>`).join(""))
+    .join("");
+
+  const heatmapRows = allResults
+    .map(({ testCase, entries }) => {
+      const questionSlug =
+        testCase.input.length > 30
+          ? `${testCase.input.slice(0, 30)}…`
+          : testCase.input;
+
+      const cells = keyMetrics
+        .map((metric) => {
+          return ENV_NAMES.map((env) => {
+            const entry = entries.find((e) => e.env === env);
+            const val = entry?.result.summary.averageScores[metric] ?? null;
+            const isInverse = metric === "hallucination";
+            const bg = heatmapColor(val, isInverse);
+            return `<td style="background:${bg};text-align:center;">${val?.toFixed(3) ?? "N/A"}</td>`;
+          }).join("");
+        })
+        .join("");
+
+      return `<tr><td title="${testCase.input.replace(/"/g, "&quot;")}">${questionSlug}</td>${cells}</tr>`;
+    })
+    .join("\n");
+
+  // 性能比較
+  const perfRows = ENV_NAMES.map((envName) => {
+    let totalCompleted = 0;
+    let totalIterations = 0;
+    let totalDuration = 0;
+    let totalTokens = 0;
+    let totalAbstention = 0;
+
+    for (const { entries } of allResults) {
+      const entry = entries.find((e) => e.env === envName);
+      if (entry) {
+        totalCompleted += entry.result.metadata.completedIterations;
+        totalIterations += entry.result.metadata.iterations;
+        totalDuration += entry.result.metadata.totalDurationMs;
+        totalTokens += entry.result.metadata.totalTokens.total;
+        totalAbstention += entry.result.summary.metrics.abstentionCount;
+      }
+    }
+
+    return `<tr>
+      <td>${ENV_LABELS[envName]}</td>
+      <td>${totalCompleted}/${totalIterations}</td>
+      <td>${(totalDuration / 1000).toFixed(1)}s</td>
+      <td>${totalTokens.toLocaleString()}</td>
+      <td>${totalAbstention}</td>
+    </tr>`;
+  }).join("\n");
+
+  return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eval V2 Compare Summary: ${allResults.length} cases</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; padding: 24px; }
+  h1 { font-size: 1.4rem; margin-bottom: 8px; }
+  .meta { color: #666; font-size: 0.9rem; margin-bottom: 24px; line-height: 1.6; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px; }
+  .card h2 { font-size: 1.1rem; margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th, td { padding: 6px 10px; text-align: left; border-bottom: 1px solid #eee; }
+  th { background: #f8f8f8; font-weight: 600; }
+  canvas { max-height: 400px; }
+  .legend-item { display: inline-flex; align-items: center; margin-right: 16px; font-size: 0.85rem; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; }
+  .heatmap td { font-family: monospace; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<h1>Eval V2 環境比較サマリー</h1>
+<div class="meta">
+  <strong>テストケース:</strong> ${allResults.length}件 |
+  <strong>エージェント:</strong> ${agentName} |
+  <strong>各N回:</strong> ${n}<br>
+  <strong>環境:</strong>
+  <span class="legend-item"><span class="legend-dot" style="background:${ENV_COLORS.local}"></span>local</span>
+  <span class="legend-item"><span class="legend-dot" style="background:${ENV_COLORS.development}"></span>dev</span>
+  <span class="legend-item"><span class="legend-dot" style="background:${ENV_COLORS.production}"></span>prd</span>
+</div>
+
+<div class="grid">
+  <div class="card" style="margin-bottom:0;">
+    <h2>全体平均スコア（3環境比較）</h2>
+    <canvas id="radarChart"></canvas>
+  </div>
+  <div class="card" style="margin-bottom:0;">
+    <h2>全体平均スコア</h2>
+    <table>
+      <thead><tr><th>指標</th>${envHeaders}<th>改善率<br><small>(prd→local)</small></th></tr></thead>
+      <tbody>${overallRows}</tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2>テストケース別スコア（ヒートマップ）</h2>
+  <div style="overflow-x:auto;">
+    <table class="heatmap">
+      <thead>
+        <tr><th rowspan="2">質問</th>${heatmapHeaderRow}</tr>
+        <tr>${heatmapSubHeader}</tr>
+      </thead>
+      <tbody>${heatmapRows}</tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2>性能比較（合計）</h2>
+  <table>
+    <thead><tr><th>環境</th><th>完了</th><th>所要時間</th><th>総トークン</th><th>Abstention</th></tr></thead>
+    <tbody>${perfRows}</tbody>
+  </table>
+</div>
+
+<script>
+new Chart(document.getElementById('radarChart'), {
+  type: 'radar',
+  data: {
+    labels: ${scoreLabels},
+    datasets: ${JSON.stringify(radarDatasets)}
+  },
+  options: {
+    scales: { r: { min: 0, max: 1, ticks: { stepSize: 0.2 } } },
+    plugins: { legend: { position: 'bottom' } }
+  }
+});
+</script>
+
+</body>
+</html>`;
+};
+
 // ─── テストケース実行 ────────────────────────────────────────
 
 const runTestCaseEval = async (params: {
@@ -1050,14 +1314,10 @@ const main = async () => {
 
   if (args.compare) {
     // ─── 3環境比較モード ───────────────────────────────────
-    if (testCases.length !== 1) {
-      console.error(
-        "❌ --compare モードではテストケースを1つ指定してください（--question/--truth または --case）",
-      );
-      process.exit(1);
-    }
-    const testCase = testCases[0];
-    const entries: CompareEntry[] = [];
+    const allResults: MultiCaseCompareEntry[] = testCases.map((tc) => ({
+      testCase: tc,
+      entries: [],
+    }));
 
     for (const envName of ENV_NAMES) {
       console.log(`\n🌐 環境: ${envName} (${ENV_LABELS[envName]})`);
@@ -1072,62 +1332,87 @@ const main = async () => {
       const requestContext = new RequestContext();
       requestContext.set("env", env);
 
-      const result = await runTestCaseEval({
-        testCase,
-        agent,
-        requestContext,
-        n: args.n,
-        agentName: args.agent,
-        envName,
-      });
+      for (let tcIdx = 0; tcIdx < testCases.length; tcIdx++) {
+        const testCase = testCases[tcIdx];
+        if (testCases.length > 1) {
+          console.log(
+            `\n  📝 [${tcIdx + 1}/${testCases.length}] ${testCase.input}`,
+          );
+        }
 
-      // 個別結果の保存
-      const envLabel = ENV_LABELS[envName];
-      const prefix = generateFilePrefix(
-        envLabel,
+        const result = await runTestCaseEval({
+          testCase,
+          agent,
+          requestContext,
+          n: args.n,
+          agentName: args.agent,
+          envName,
+        });
+
+        // 個別結果の保存
+        const envLabel = ENV_LABELS[envName];
+        const prefix = generateFilePrefix(
+          envLabel,
+          args.agent,
+          testCase.input,
+          args.n,
+        );
+        const jsonPath = path.join(outputDir, `${prefix}.json`);
+        fs.writeFileSync(jsonPath, JSON.stringify(result, null, 2));
+        console.log(`  📁 JSON: ${jsonPath}`);
+
+        // サマリー表示
+        console.log(`  📊 ${envLabel} 結果サマリー:`);
+        for (const name of SCORE_NAMES) {
+          const avg = result.summary.averageScores[name];
+          const sd = result.summary.stdDev[name];
+          if (avg !== null) {
+            console.log(`     ${name}: ${avg.toFixed(3)} (±${sd?.toFixed(3)})`);
+          }
+        }
+        const m = result.summary.metrics;
+        console.log(
+          `     📏 steps=${m.avgStepCount} tools=${m.avgToolCallCount} abstention=${m.abstentionCount}(${(m.abstentionRate * 100).toFixed(1)}%)`,
+        );
+
+        allResults[tcIdx].entries.push({ env: envName, result });
+      }
+
+      await dispose();
+    }
+
+    // 各テストケースの比較HTMLを生成
+    for (const { testCase, entries } of allResults) {
+      const comparePrefix = generateFilePrefix(
+        "compare",
         args.agent,
         testCase.input,
         args.n,
       );
-      const jsonPath = path.join(outputDir, `${prefix}.json`);
-      fs.writeFileSync(jsonPath, JSON.stringify(result, null, 2));
-      console.log(`📁 JSON: ${jsonPath}`);
-
-      // サマリー表示
-      console.log(`\n📊 ${envLabel} 結果サマリー:`);
-      for (const name of SCORE_NAMES) {
-        const avg = result.summary.averageScores[name];
-        const sd = result.summary.stdDev[name];
-        if (avg !== null) {
-          console.log(`   ${name}: ${avg.toFixed(3)} (±${sd?.toFixed(3)})`);
-        }
-      }
-      const m = result.summary.metrics;
-      console.log(
-        `   📏 steps=${m.avgStepCount} tools=${m.avgToolCallCount} abstention=${m.abstentionCount}(${(m.abstentionRate * 100).toFixed(1)}%)`,
+      const compareHtmlPath = path.join(outputDir, `${comparePrefix}.html`);
+      fs.writeFileSync(
+        compareHtmlPath,
+        generateCompareHtml(entries, testCase.input, testCase.groundTruth),
       );
-
-      entries.push({ env: envName, result });
-      await dispose();
+      console.log(`📊 比較レポート: ${compareHtmlPath}`);
     }
 
-    // 比較HTMLの生成
-    const comparePrefix = generateFilePrefix(
-      "compare",
-      args.agent,
-      testCases[0].input,
-      args.n,
-    );
-    const compareHtmlPath = path.join(outputDir, `${comparePrefix}.html`);
-    fs.writeFileSync(
-      compareHtmlPath,
-      generateCompareHtml(
-        entries,
-        testCases[0].input,
-        testCases[0].groundTruth,
-      ),
-    );
-    console.log(`\n📊 比較レポート: ${compareHtmlPath}`);
+    // 複数テストケースの場合、統合サマリーHTMLも生成
+    if (allResults.length > 1) {
+      const summarySlug = args.category ?? `${testCases.length}cases`;
+      const summaryPrefix = generateFilePrefix(
+        "compare-summary",
+        args.agent,
+        summarySlug,
+        args.n,
+      );
+      const summaryHtmlPath = path.join(outputDir, `${summaryPrefix}.html`);
+      fs.writeFileSync(
+        summaryHtmlPath,
+        generateMultiCaseCompareHtml(allResults, args.n, args.agent),
+      );
+      console.log(`📊 統合サマリー: ${summaryHtmlPath}`);
+    }
   } else {
     // ─── 単一環境モード ────────────────────────────────────
     const { env, dispose } = await getPlatformProxy<CloudflareBindings>({
