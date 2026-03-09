@@ -86,6 +86,8 @@ export const handleR2Event = async (
     console.log(`Processing R2 event: ${action} for ${key}`);
 
     try {
+      let success = true;
+
       switch (action) {
         case "PutObject":
         case "CompleteMultipartUpload":
@@ -95,6 +97,7 @@ export const handleR2Event = async (
             console.log(`Synced ${key}: ${result.chunks} chunks`);
           } else {
             console.error(`Failed to sync ${key}: ${result.error}`);
+            success = false;
           }
           break;
         }
@@ -105,13 +108,19 @@ export const handleR2Event = async (
             console.log(`Deleted vectors for ${key}: ${result.deleted} items`);
           } else {
             console.error(`Failed to delete ${key}: ${result.error}`);
+            success = false;
           }
           break;
         }
         default:
           console.log(`Ignoring action: ${action}`);
       }
-      message.ack();
+
+      if (success) {
+        message.ack();
+      } else {
+        message.retry();
+      }
     } catch (error) {
       console.error(`Error processing ${key}:`, error);
       message.retry();
