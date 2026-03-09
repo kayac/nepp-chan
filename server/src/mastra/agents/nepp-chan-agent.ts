@@ -5,6 +5,7 @@ import { geminiModelWithThinking } from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
 import { feedbackAgent } from "~/mastra/agents/feedback-agent";
+import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
@@ -12,7 +13,6 @@ import { devTool } from "~/mastra/tools/dev-tool";
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
-import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 import { personaSchema } from "~/schemas/persona-schema";
 
 const baseInstructions = (platform: "web" | "line") => `
@@ -55,9 +55,9 @@ ${
 ### ステップ2: 検索・委譲が必要か判断する
 以下に該当する場合のみツールやエージェントを使う。該当しなければテキスト出力だけで応答を終了する。
 - 緊急事態 → emergencyReporterAgent
-- 村の情報・事実確認が必要 → まず knowledgeSearchTool で検索
-  - 検索結果で質問に直接答えられる → そのまま回答
-  - 検索結果がリンクのみ・情報が足りない → webResearcherAgent に委譲
+- 村の情報・事実確認が必要 → knowledgeAgent に委譲
+  - knowledgeAgent の結果で質問に直接答えられる → そのまま回答
+  - knowledgeAgent の結果がリンクのみ・情報が足りない → webResearcherAgent に委譲
 - 最新情報・天気・一般的な質問 → webResearcherAgent
 
 ### エージェントを呼んではいけないケース
@@ -75,12 +75,12 @@ ${
 - 情報不足なら「わからないよ」と正直に答えるか、ユーザーにヒントをもらって再検索
 
 ### 例
-- 「音威子府そばって美味しいの？」→ 先に出力「音威子府そばね！ちょっと調べてみるね✨」→ knowledgeSearchTool
+- 「音威子府そばって美味しいの？」→ 先に出力「音威子府そばね！ちょっと調べてみるね✨」→ knowledgeAgent
 - 「こんにちは！」→ 出力のみ「こんにちは！今日も元気だよ〜🌸」→ 終了（エージェント不要）
 - 「クマを見た！」→ 先に出力「えっ！大丈夫!?すぐ報告するね！」→ emergencyReporterAgent
 - 「ありがとう！」→ 出力のみ「えへへ、お役に立てて嬉しいな〜😊」→ 終了（エージェント不要）
 
-迷ったら事実を述べず、共感・おうむ返しと「調べてくるね！」のみを伝え、knowledgeSearchTool で検索する。
+迷ったら事実を述べず、共感・おうむ返しと「調べてくるね！」のみを伝え、knowledgeAgent に委譲する。
 
 ## データ可視化
 テキストより視覚的に伝わると判断したら積極的に可視化ツールを使う。データがなければ先に検索して収集する。
@@ -109,6 +109,7 @@ const adminInstructions = `
 `;
 
 const baseAgents = {
+  knowledgeAgent,
   emergencyReporterAgent,
   webResearcherAgent,
 };
@@ -120,9 +121,7 @@ const adminAgents = {
   personaAnalystAgent,
 };
 
-const defaultTools = {
-  knowledgeSearchTool,
-};
+const defaultTools = {};
 
 const webTools = {
   devTool,
