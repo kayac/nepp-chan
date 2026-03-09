@@ -104,19 +104,24 @@ const generateEmbeddings = async (texts: string[], apiKey: string) => {
   }
 
   const model = getEmbeddingModel(apiKey);
+  const allEmbeddings: number[][] = [];
 
-  const { embeddings } = await embedMany({
-    model,
-    values: texts,
-    providerOptions: {
-      google: {
-        outputDimensionality: EMBEDDING_DIMENSIONS,
-        taskType: "RETRIEVAL_DOCUMENT",
+  for (let i = 0; i < texts.length; i += BATCH_SIZE) {
+    const batch = texts.slice(i, i + BATCH_SIZE);
+    const { embeddings } = await embedMany({
+      model,
+      values: batch,
+      providerOptions: {
+        google: {
+          outputDimensionality: EMBEDDING_DIMENSIONS,
+          taskType: "RETRIEVAL_DOCUMENT",
+        },
       },
-    },
-  });
+    });
+    allEmbeddings.push(...embeddings);
+  }
 
-  return embeddings;
+  return allEmbeddings;
 };
 
 /**
