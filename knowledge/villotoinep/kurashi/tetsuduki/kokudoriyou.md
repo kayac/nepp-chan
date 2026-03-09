@@ -14,11 +14,22 @@
 
 ## 届出書類
 
-| 書類 | ダウンロード |
-|------|-------------|
-| 土地売買等届出書 | [Excel](https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/files/youshikinew.xlsx) / [PDF](https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/files/YOUSHIKIPDFNEW.pdf) |
-| 委任状（代理人が届出する場合） | [Word](https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/files/ininjyo.docx) / [PDF](https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/files/ininjyo.pdf) |
-| 記載例 | [PDF](https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/files/YOUSHIKImihonNEW.pdf) |
+```json
+[
+  {
+    "書類": "土地売買等届出書",
+    "ダウンロード": "[Excel](https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/files/youshikinew.xlsx) / [PDF](https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/files/YOUSHIKIPDFNEW.pdf)"
+  },
+  {
+    "書類": "委任状（代理人が届出する場合）",
+    "ダウンロード": "[Word](https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/files/ininjyo.docx) / [PDF](https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/files/ininjyo.pdf)"
+  },
+  {
+    "書類": "記載例",
+    "ダウンロード": "[PDF](https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/files/YOUSHIKImihonNEW.pdf)"
+  }
+]
+```
 
 ### その他必要書類
 
@@ -40,11 +51,22 @@
 
 ### 1. 一定面積以上とは
 
-| 区域 | 面積 |
-|------|------|
-| 市街化区域 | 2,000㎡以上 |
-| 市街化区域以外の都市計画区域 | 5,000㎡以上 |
-| 都市計画以外の区域 | 10,000㎡以上 |
+```json
+[
+  {
+    "区域": "市街化区域",
+    "面積": "2,000㎡以上"
+  },
+  {
+    "区域": "市街化区域以外の都市計画区域",
+    "面積": "5,000㎡以上"
+  },
+  {
+    "区域": "都市計画以外の区域",
+    "面積": "10,000㎡以上"
+  }
+]
+```
 
 > 取得する面積の合計が一定面積以上となる一団の土地の一部を取得する場合にも、届出が必要です。
 

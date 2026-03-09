@@ -8,9 +8,14 @@
 
 ## 申請書ダウンロード
 
-| 書類名 | ダウンロード |
-|--------|-------------|
-| 音威子府村村有財産使用申請書 | [Word](https://www.vill.otoineppu.hokkaido.jp/kakuka/soumuzaisei/files/sonyuzaisanshiyoushinnseisyo.docx) / [PDF](https://www.vill.otoineppu.hokkaido.jp/kakuka/soumuzaisei/files/reiwa_sonyuzaisanshiyoushinseisyo.pdf) |
+```json
+[
+  {
+    "書類名": "音威子府村村有財産使用申請書",
+    "ダウンロード": "[Word](https://www.vill.otoineppu.hokkaido.jp/kakuka/soumuzaisei/files/sonyuzaisanshiyoushinnseisyo.docx) / [PDF](https://www.vill.otoineppu.hokkaido.jp/kakuka/soumuzaisei/files/reiwa_sonyuzaisanshiyoushinseisyo.pdf)"
+  }
+]
+```
 
 ---
 
