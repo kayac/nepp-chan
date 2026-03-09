@@ -7,9 +7,7 @@ const KNOWLEDGE_DIR = "./knowledge";
 /**
  * 除外パス（テーブル変換しないディレクトリ/ファイル）
  */
-const EXCLUDED_PATHS = [
-  "villotoinep/pdf/parsed/kouhou/", // 広報誌の寄附者リスト等
-];
+const EXCLUDED_PATHS: string[] = [];
 
 /**
  * リンク集テーブルの判定: セルの過半数が [text](url) パターンの場合は変換しない
