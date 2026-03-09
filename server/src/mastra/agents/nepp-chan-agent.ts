@@ -15,7 +15,7 @@ import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 import { personaSchema } from "~/schemas/persona-schema";
 
-const baseInstructions = `
+const baseInstructions = (platform: "web" | "line") => `
 あなたは北海道音威子府（おといねっぷ）村に住む17歳の女の子「ねっぷちゃん」。
 村の魅力を伝え、村民の話し相手になるのが仕事。明るく元気に、語尾は「〜だよ」「〜だね」で話す。
 
@@ -32,13 +32,17 @@ const baseInstructions = `
 
 ## 応答戦略（最重要）
 村に関する事実は検索結果・ナレッジのみを情報源とする。自分の知識で補完しない。
-
-### ステップ1: 必ずテキストを先に出力する
+${
+  platform === "web"
+    ? `
+### ステップ0: 必ずテキストを先に出力する
 エージェントやツールを呼ぶ前に、必ずまず一言リアクション（1〜3文）をテキストとして出力する。
 テキスト出力前にエージェントを呼んではいけない。
 このテキストでは事実や情報を述べない。共感・おうむ返し・「調べてみるね！」のみにとどめる。
-
-### ステップ2: 検索前に情報の十分さを確認する
+`
+    : ""
+}
+### ステップ1: 検索前に情報の十分さを確認する
 検索やエージェント委譲の前に、以下をチェックする。1つでも該当すれば、推測で検索せず選択肢を提示して聞き返す。
 - 対象が一意に特定できない（同名・類似の対象が複数ありうる）
 - 時期が必要な質問なのに時期が不明（「イベント」→ いつの？）
@@ -48,8 +52,8 @@ const baseInstructions = `
 聞き返す時は「〜のこと？それとも〜？」のように具体的な選択肢を提示する。
 1回の応答で聞く質問は1つまで。
 
-### ステップ3: 検索・委譲が必要か判断する
-以下に該当する場合のみツールやエージェントを使う。該当しなければステップ1のテキスト出力だけで応答を終了する。
+### ステップ2: 検索・委譲が必要か判断する
+以下に該当する場合のみツールやエージェントを使う。該当しなければテキスト出力だけで応答を終了する。
 - 緊急事態 → emergencyReporterAgent
 - 村の情報・事実確認が必要 → まず knowledgeSearchTool で検索
   - 検索結果で質問に直接答えられる → そのまま回答
@@ -127,8 +131,8 @@ const webTools = {
   displayTimelineTool,
 };
 
-const getTools = (channel: "web" | "line") => {
-  if (channel === "line") return defaultTools;
+const getTools = (platform: "web" | "line") => {
+  if (platform === "line") return defaultTools;
   return { ...defaultTools, ...webTools };
 };
 
@@ -160,24 +164,24 @@ const lineInstructions = `
 interface Props
   extends Omit<AgentConfig, "id" | "name" | "instructions" | "model"> {
   isAdmin?: boolean;
-  channel?: "web" | "line";
+  platform?: "web" | "line";
 }
 
 export const createNeppChanAgent = ({
   isAdmin = false,
-  channel = "web",
+  platform = "web",
   ...agentOptions
 }: Props = {}) => {
   const agents = isAdmin ? adminAgents : baseAgents;
-  const tools = getTools(channel);
+  const tools = getTools(platform);
 
   // instructionsを関数化（リクエスト時に評価され、現在日時が動的に取得される）
   const instructions = () =>
     [
-      baseInstructions,
+      baseInstructions(platform),
+      platform === "line" ? lineInstructions : "",
       `## 現在の日時\n${getCurrentDateInfo()}`,
       isAdmin ? adminInstructions : "",
-      channel === "line" ? lineInstructions : "",
     ]
       .filter(Boolean)
       .join("\n");

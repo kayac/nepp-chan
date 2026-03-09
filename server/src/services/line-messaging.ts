@@ -24,7 +24,7 @@ export const generateReply = async (params: {
     env: params.env,
   });
 
-  const neppChanAgent = createNeppChanAgent({ channel: "line" });
+  const neppChanAgent = createNeppChanAgent({ platform: "line" });
   const mastra = new Mastra({
     agents: { neppChanAgent },
     storage,
