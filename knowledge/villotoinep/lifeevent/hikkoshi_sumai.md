@@ -10,12 +10,26 @@
 
 ### 関連書類
 
-| 書類名 | ダウンロード |
-|--------|-------------|
-| 持家住宅促進奨励補助金交付要綱 | [PDF](https://www.vill.otoineppu.hokkaido.jp/lifeevent/files/mochiie.pdf) |
-| 補助申請をされる方へ | [PDF](https://www.vill.otoineppu.hokkaido.jp/lifeevent/jimurenraku.pdf) |
-| 補助金申請書（様式1） | [Excel](https://www.vill.otoineppu.hokkaido.jp/lifeevent/sinsei_1.xlsx) |
-| 補助金請求書（様式3） | [Excel](https://www.vill.otoineppu.hokkaido.jp/lifeevent/files/koufuseikyuusyo.xlsx) |
+```json
+[
+  {
+    "書類名": "持家住宅促進奨励補助金交付要綱",
+    "ダウンロード": "[PDF](https://www.vill.otoineppu.hokkaido.jp/lifeevent/files/mochiie.pdf)"
+  },
+  {
+    "書類名": "補助申請をされる方へ",
+    "ダウンロード": "[PDF](https://www.vill.otoineppu.hokkaido.jp/lifeevent/jimurenraku.pdf)"
+  },
+  {
+    "書類名": "補助金申請書（様式1）",
+    "ダウンロード": "[Excel](https://www.vill.otoineppu.hokkaido.jp/lifeevent/sinsei_1.xlsx)"
+  },
+  {
+    "書類名": "補助金請求書（様式3）",
+    "ダウンロード": "[Excel](https://www.vill.otoineppu.hokkaido.jp/lifeevent/files/koufuseikyuusyo.xlsx)"
+  }
+]
+```
 
 ---
 
@@ -25,11 +39,22 @@
 
 ### 関連書類
 
-| 書類名 | ダウンロード |
-|--------|-------------|
-| 住宅増改築経費補助事業要綱 | [PDF](https://www.vill.otoineppu.hokkaido.jp/lifeevent/files/zoukaichiku.pdf) |
-| 補助金交付申請書 | [Word](https://www.vill.otoineppu.hokkaido.jp/lifeevent/files/shinseisyo.docx) |
-| 事業完了届 | [Word](https://www.vill.otoineppu.hokkaido.jp/lifeevent/files/reform_fin.docx) |
+```json
+[
+  {
+    "書類名": "住宅増改築経費補助事業要綱",
+    "ダウンロード": "[PDF](https://www.vill.otoineppu.hokkaido.jp/lifeevent/files/zoukaichiku.pdf)"
+  },
+  {
+    "書類名": "補助金交付申請書",
+    "ダウンロード": "[Word](https://www.vill.otoineppu.hokkaido.jp/lifeevent/files/shinseisyo.docx)"
+  },
+  {
+    "書類名": "事業完了届",
+    "ダウンロード": "[Word](https://www.vill.otoineppu.hokkaido.jp/lifeevent/files/reform_fin.docx)"
+  }
+]
+```
 
 ---
 
@@ -39,11 +64,22 @@
 
 ### 関連書類
 
-| 書類名 | ダウンロード |
-|--------|-------------|
-| 廃屋解体撤去経費補助事業要綱 | [PDF](https://www.vill.otoineppu.hokkaido.jp/lifeevent/files/haiokukaitaitekkyo.pdf) |
-| 補助金交付申請書 | [Word](https://www.vill.otoineppu.hokkaido.jp/lifeevent/files/koufushinsei.docx) |
-| 事業完了届 | [Word](https://www.vill.otoineppu.hokkaido.jp/lifeevent/files/haioku_fin.docx) |
+```json
+[
+  {
+    "書類名": "廃屋解体撤去経費補助事業要綱",
+    "ダウンロード": "[PDF](https://www.vill.otoineppu.hokkaido.jp/lifeevent/files/haiokukaitaitekkyo.pdf)"
+  },
+  {
+    "書類名": "補助金交付申請書",
+    "ダウンロード": "[Word](https://www.vill.otoineppu.hokkaido.jp/lifeevent/files/koufushinsei.docx)"
+  },
+  {
+    "書類名": "事業完了届",
+    "ダウンロード": "[Word](https://www.vill.otoineppu.hokkaido.jp/lifeevent/files/haioku_fin.docx)"
+  }
+]
+```
 
 ---
 
