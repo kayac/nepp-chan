@@ -8,7 +8,7 @@ const EMBEDDING_DIMENSIONS = 1536;
 
 const SEARCH_TOP_K = 10;
 
-const RERANK_TOP_K = 3;
+const RERANK_TOP_K = 5;
 
 export interface KnowledgeResult {
   content: string;
