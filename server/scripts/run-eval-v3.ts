@@ -25,7 +25,6 @@ import {
   createAnswerSimilarityScorer,
   createContextPrecisionScorer,
   createContextRelevanceScorerLLM,
-  createFaithfulnessScorer,
   createHallucinationScorer,
 } from "@mastra/evals/scorers/prebuilt";
 import {
@@ -406,11 +405,13 @@ const runEvalScorers = async ({
   output,
   groundTruth,
   context,
+  abstention = false,
 }: {
   input: string;
   output: string;
   groundTruth: string;
   context: string[];
+  abstention?: boolean;
 }): Promise<Scores> => {
   const testRun = createAgentTestRun({
     inputMessages: [createTestMessage({ content: input, role: "user" })],
@@ -440,18 +441,9 @@ const runEvalScorers = async ({
 
   if (context.length === 0) return scores;
 
-  try {
-    const result = await createFaithfulnessScorer({
-      model: GEMINI_SCORER,
-      options: { context },
-    }).run({
-      input: testRun.input,
-      output: testRun.output,
-    });
-    scores.faithfulness = result?.score ?? null;
-  } catch (e) {
-    console.warn("  ⚠ faithfulness scorer failed:", (e as Error).message);
-  }
+  // faithfulness: 常に 0.000 を返す既知バグのためスキップ
+  // see: Phase 1 スコアラー検証結果（完璧な回答でも 0.000）
+  // TODO: Mastra/Gemini のバグ修正後に再有効化
 
   try {
     const result = await createContextPrecisionScorer({
@@ -467,30 +459,46 @@ const runEvalScorers = async ({
     console.warn("  ⚠ contextPrecision scorer failed:", (e as Error).message);
   }
 
-  try {
-    const result = await createContextRelevanceScorerLLM({
-      model: GEMINI_SCORER,
-      options: { context },
-    }).run({
-      input: testRun.input,
-      output: testRun.output,
-    });
-    scores.contextRelevance = result?.score ?? null;
-  } catch (e) {
-    console.warn("  ⚠ contextRelevance scorer failed:", (e as Error).message);
+  // contextRelevance: Gemini の構造化出力が間欠的に失敗するためリトライ付き
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const result = await createContextRelevanceScorerLLM({
+        model: GEMINI_SCORER,
+        options: { context },
+      }).run({
+        input: testRun.input,
+        output: testRun.output,
+      });
+      scores.contextRelevance = result?.score ?? null;
+      break;
+    } catch (e) {
+      if (attempt === 0) {
+        // 1回目失敗 → リトライ
+      } else {
+        console.warn(
+          "  ⚠ contextRelevance scorer failed (2 attempts):",
+          (e as Error).message,
+        );
+      }
+    }
   }
 
-  try {
-    const result = await createHallucinationScorer({
-      model: GEMINI_FLASH_LITE,
-      options: { context },
-    }).run({
-      input: testRun.input,
-      output: testRun.output,
-    });
-    scores.hallucination = result?.score ?? null;
-  } catch (e) {
-    console.warn("  ⚠ hallucination scorer failed:", (e as Error).message);
+  // hallucination: 棄権回答では誤判定（1.000）するためスキップ
+  if (abstention) {
+    // 棄権回答は捏造ではないため null（スキップ）
+  } else {
+    try {
+      const result = await createHallucinationScorer({
+        model: GEMINI_FLASH_LITE,
+        options: { context },
+      }).run({
+        input: testRun.input,
+        output: testRun.output,
+      });
+      scores.hallucination = result?.score ?? null;
+    } catch (e) {
+      console.warn("  ⚠ hallucination scorer failed:", (e as Error).message);
+    }
   }
 
   return scores;
@@ -1211,11 +1219,14 @@ const runTestCaseEval = async (params: {
         (result as any).steps,
       );
 
+      const abstentionDetected = isAbstention(result.text);
+
       const scores = await runEvalScorers({
         input: testCase.input,
         output: result.text,
         groundTruth: testCase.groundTruth,
         context,
+        abstention: abstentionDetected,
       });
 
       const keywordCheck = checkRequiredKeywords(
