@@ -1,7 +1,7 @@
 import { google } from "@ai-sdk/google";
 import { Agent } from "@mastra/core/agent";
 import { getCurrentDateInfo } from "~/lib/date";
-import { geminiModelWithThinking } from "~/lib/llm-models";
+import { GEMINI_FLASH, geminiModelWithThinking } from "~/lib/llm-models";
 
 const baseInstructions = `
 あなたはインターネットから最新情報を収集する専門エージェントです。
@@ -32,7 +32,7 @@ export const webResearcherAgent = new Agent({
 ## 現在の日時
 ${getCurrentDateInfo()}
 `,
-  ...geminiModelWithThinking(),
+  ...geminiModelWithThinking({ model: GEMINI_FLASH, level: "high" }),
   tools: {
     googleSearch: google.tools.googleSearch({}),
   },

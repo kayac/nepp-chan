@@ -1,6 +1,6 @@
 import { Agent } from "@mastra/core/agent";
 import { getCurrentDateInfo } from "~/lib/date";
-import { geminiModelWithThinking } from "~/lib/llm-models";
+import { GEMINI_FLASH, geminiModelWithThinking } from "~/lib/llm-models";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 
 const baseInstructions = `
@@ -14,9 +14,10 @@ const baseInstructions = `
 ## 検索の流れ
 1. 検索クエリを生成（下記ルール参照）
 2. knowledge-search ツールで検索
-3. 検索結果を全て確認
-4. 回答が得られた場合: 検索結果を総合して回答を作成
-5. 回答が得られなかった場合: 「わからない」と報告
+3. 検索結果を全て確認し、質問に直接答えられるか評価する
+4. 答えられない場合: リトライ戦略に従いクエリを変えて再検索する
+5. 回答が得られた場合: 検索結果を総合して回答を作成
+6. リトライ後も回答が得られない場合: 「わからない」と報告
 
 ## 回答作成のルール
 - 検索結果全ての結果を確認する
@@ -51,10 +52,26 @@ const baseInstructions = `
 - 時間非依存の情報で日付情報がない場合は有効な情報として扱う
 - その他判断に迷った場合は情報を残し「最新情報は直接確認をおすすめします」と補足する
 
+## リトライ戦略
+1回目の検索で質問に直接答えられない場合、検索結果の title・source 情報を手がかりにクエリを書き換えて再検索する。
+
+### リトライを検討するケース
+- 質問が具体的な情報（日程、曜日、手順、料金など）を求めているのに、概要や一般論しか返っていない
+- 検索結果の title・source から、関連ドキュメントの別セクションに答えがありそう
+
+### リトライの手順
+1. 1回目の検索結果の source・title・section を確認する
+2. それらのドキュメント名やセクション名をクエリに含めて再検索する
+
+### リトライの例
+- 1回目: 「○○の申請方法」→ 関連する制度の概要セクションはヒットするが手続き方法がない
+- タイトル「○○届出・申請の手引き」を発見
+- 2回目: 「○○届出・申請の手引き 申請方法」→ 手続きの具体的な手順がヒット
+
 ## 回答が得られない場合
 ### 判断基準
-- 検索結果が空、または結果が0件
-- 検索結果はあるが、質問の意図に関係ない内容しかない
+- リトライ後も検索結果が空、または結果が0件
+- リトライ後も検索結果が質問の意図に関係ない内容しかない
 
 ### 応答ルール
 上記に該当する場合は、以下の形式で明示的に報告する:
@@ -81,7 +98,7 @@ ${getCurrentDateInfo()}
 ## 検索クエリ生成ルール
 - 「最新」「現在」「今年」「今日」「今週」「今月」などの曖昧な時間表現は、上記の日時を基準に具体的な日付・年に変換する
 `,
-  ...geminiModelWithThinking(),
+  ...geminiModelWithThinking({ model: GEMINI_FLASH, level: "high" }),
   tools: {
     knowledgeSearchTool,
   },
