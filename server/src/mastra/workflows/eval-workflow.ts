@@ -23,7 +23,7 @@ import {
 } from "@mastra/evals/scorers/utils";
 import { z } from "zod";
 
-import { GEMINI_FLASH_LITE } from "~/lib/llm-models";
+import { GEMINI_FLASH_LITE, GEMINI_SCORER } from "~/lib/llm-models";
 import { evalTestCases } from "~/mastra/data/eval-test-cases";
 
 const KNOWLEDGE_TOOL_NAME = "knowledgeSearchTool";
@@ -86,7 +86,7 @@ const runEvalScorers = async ({
   });
 
   const faithfulness = await createFaithfulnessScorer({
-    model: GEMINI_FLASH_LITE,
+    model: GEMINI_SCORER,
     options: { context },
   }).run({
     input: testRun.input,
@@ -103,7 +103,7 @@ const runEvalScorers = async ({
   });
 
   const contextRelevance = await createContextRelevanceScorerLLM({
-    model: GEMINI_FLASH_LITE,
+    model: GEMINI_SCORER,
     options: { context },
   }).run({
     input: testRun.input,

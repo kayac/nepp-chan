@@ -34,7 +34,7 @@ import { LibSQLStore } from "@mastra/libsql";
 import { Memory } from "@mastra/memory";
 import { getPlatformProxy } from "wrangler";
 
-import { GEMINI_FLASH_LITE } from "../src/lib/llm-models";
+import { GEMINI_FLASH_LITE, GEMINI_SCORER } from "../src/lib/llm-models";
 import { knowledgeAgent } from "../src/mastra/agents/knowledge-agent";
 import { createNeppChanAgent } from "../src/mastra/agents/nepp-chan-agent";
 import type {
@@ -322,7 +322,7 @@ const runEvalScorers = async ({
   // 残りのスコアラーを直列実行
   try {
     const result = await createFaithfulnessScorer({
-      model: GEMINI_FLASH_LITE,
+      model: GEMINI_SCORER,
       options: { context },
     }).run({
       input: testRun.input,
@@ -349,7 +349,7 @@ const runEvalScorers = async ({
 
   try {
     const result = await createContextRelevanceScorerLLM({
-      model: GEMINI_FLASH_LITE,
+      model: GEMINI_SCORER,
       options: { context },
     }).run({
       input: testRun.input,
