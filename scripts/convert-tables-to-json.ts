@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { relative } from "node:path";
 import { glob } from "glob";
 
@@ -241,9 +241,7 @@ const main = async () => {
     const { converted, skipped } = convertFile(filepath, args.dryRun);
 
     if (converted > 0 || skipped > 0) {
-      console.log(
-        `  ${relPath}: ${converted} converted, ${skipped} skipped`,
-      );
+      console.log(`  ${relPath}: ${converted} converted, ${skipped} skipped`);
       if (converted > 0) filesModified++;
     }
 
@@ -260,9 +258,7 @@ const main = async () => {
 
   if (args.dryRun) {
     console.log(`\nThis was a dry run. No files were modified.`);
-    console.log(
-      `Run without --dry-run to apply changes.`,
-    );
+    console.log(`Run without --dry-run to apply changes.`);
   }
 };
 
