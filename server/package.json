@@ -1,5 +1,6 @@
 {
   "name": "@nepp-chan/server",
+  "version": "0.3.0",
   "type": "module",
   "scripts": {
     "test": "vitest",
