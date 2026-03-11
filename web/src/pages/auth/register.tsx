@@ -2,9 +2,13 @@ import { startRegistration } from "@simplewebauthn/browser";
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
+import { SentryErrorBoundary } from "~/components/SentryErrorBoundary";
 import "~/index.css";
 import { fetchRegisterOptions, verifyRegistration } from "~/lib/api/auth";
 import { setAuthToken } from "~/lib/auth-token";
+import { initSentry } from "~/lib/sentry";
+
+initSentry();
 
 const RegisterPage = () => {
   const [error, setError] = useState<string | null>(null);
@@ -118,6 +122,8 @@ if (!root) throw new Error("Root element not found");
 
 createRoot(root).render(
   <StrictMode>
-    <RegisterPage />
+    <SentryErrorBoundary>
+      <RegisterPage />
+    </SentryErrorBoundary>
   </StrictMode>,
 );

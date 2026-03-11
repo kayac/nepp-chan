@@ -19,6 +19,7 @@ declare namespace Cloudflare {
 		GOOGLE_SEARCH_ENGINE_ID: string;
 		LINE_CHANNEL_SECRET: string;
 		LINE_CHANNEL_ACCESS_TOKEN: string;
+		SENTRY_DSN: string;
 	}
 }
 interface CloudflareBindings extends Cloudflare.Env {}
