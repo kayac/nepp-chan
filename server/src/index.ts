@@ -1,8 +1,10 @@
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
+import * as Sentry from "@sentry/cloudflare";
 import { handleLineEvent, handleR2Event } from "~/handlers";
 import { handlePersonaExtract } from "~/handlers/persona-extract-handler";
 import type { R2EventMessage } from "~/handlers/r2-event-handler";
+import { getSentryOptions } from "~/lib/sentry";
 import { corsMiddleware, errorHandler, securityHeaders } from "~/middleware";
 import {
   authRoutes,
@@ -49,9 +51,9 @@ app.doc("/doc", {
 
 app.get("/swagger", swaggerUI({ url: "/doc" }));
 
-export default {
+const handler: ExportedHandler<CloudflareBindings> = {
   fetch: app.fetch,
-  queue: async (batch: MessageBatch, env: CloudflareBindings) => {
+  queue: async (batch, env) => {
     if (batch.queue.startsWith("nepp-chan-line-queue")) {
       return handleLineEvent(batch as MessageBatch<LineEventMessage>, env);
     }
@@ -62,3 +64,8 @@ export default {
   },
   scheduled: handlePersonaExtract,
 };
+
+export default Sentry.withSentry<CloudflareBindings>(
+  (env) => getSentryOptions(env),
+  handler,
+);

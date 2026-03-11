@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
@@ -16,13 +17,30 @@ const spaFallback = (): Plugin => ({
 });
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), spaFallback()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    spaFallback(),
+    ...(process.env.SENTRY_AUTH_TOKEN
+      ? [
+          sentryVitePlugin({
+            org: process.env.SENTRY_ORG,
+            project: process.env.SENTRY_PROJECT_WEB,
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+            sourcemaps: {
+              filesToDeleteAfterUpload: ["./dist/**/*.map"],
+            },
+          }),
+        ]
+      : []),
+  ],
   resolve: {
     alias: {
       "~": resolve(__dirname, "src"),
     },
   },
   build: {
+    sourcemap: "hidden",
     outDir: "dist",
     emptyOutDir: true,
     rollupOptions: {

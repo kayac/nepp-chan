@@ -13,4 +13,5 @@ WEBAUTHN_ORIGIN=http://localhost:5173
 LINE_CHANNEL_SECRET=your-channel-secret-here
 LINE_CHANNEL_ACCESS_TOKEN=your-chan=======
 
-
+# Sentry
+SENTRY_DSN=

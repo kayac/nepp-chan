@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/cloudflare";
 import type { LineEventMessage } from "~/schemas/line-schema";
 import {
   createLineClient,
@@ -33,6 +34,7 @@ export const handleLineEvent = async (
 
       message.ack();
     } catch (error) {
+      Sentry.captureException(error, { tags: { handler: "line-event" } });
       console.error(`LINE reply failed for user ${userId}:`, error);
       message.retry();
     }
