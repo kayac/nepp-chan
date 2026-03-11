@@ -40,7 +40,7 @@
     "@simplewebauthn/server": "^13.2.2",
     "ai": "^5.0.112",
     "drizzle-orm": "^0.45.1",
-    "glob": "^13.0.0",
+    "glob": "^13.0.6",
     "gray-matter": "^4.0.3",
     "hono": "^4.12.3",
     "zod": "^4.3.6"
