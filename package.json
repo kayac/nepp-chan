@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.8",
-    "glob": "^13.0.0",
+    "glob": "^13.0.6",
     "tsx": "^4.21.0",
     "wrangler": "^4.66.0"
   }
