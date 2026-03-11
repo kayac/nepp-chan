@@ -34,6 +34,15 @@ web/                 → フロントエンド（詳細: web/CLAUDE.md）
 knowledge/           → RAG 用 Markdown ファイル
 ```
 
+### ナレッジ Vectorize ベクター数の基準値
+
+knowledge/ 配下 329 ファイルを clean アップロードした場合の正しいベクター数。
+大幅に乖離している場合はアップロード失敗やバグの可能性がある。
+
+| 日付 | ファイル数 | ベクター数 | 備考 |
+|------|:---------:|:---------:|------|
+| 2026-03-09 | 329 | 2,891 | clean 後の正確な値 |
+
 ## 重要な規約
 
 ### パス別名
@@ -97,6 +106,8 @@ cp web/.env.example web/.env
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API        |
 | `GOOGLE_SEARCH_ENGINE_ID`      | Custom Search     |
 | `WEB_URL`                      | Web URL           |
+| `LINE_CHANNEL_SECRET`          | LINE 署名検証     |
+| `LINE_CHANNEL_ACCESS_TOKEN`    | LINE API 認証     |
 
 ### web 環境変数
 

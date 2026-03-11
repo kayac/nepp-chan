@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/cloudflare";
 import type { ErrorHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { StatusCode } from "hono/utils/http-status";
@@ -12,6 +13,7 @@ type ErrorResponse = {
 export const errorHandler: ErrorHandler = (err, c) => {
   if (err instanceof HTTPException) {
     if (err.status >= 500) {
+      Sentry.captureException(err);
       console.error("HTTPException", {
         message: err.message,
         status: err.status,
@@ -29,6 +31,7 @@ export const errorHandler: ErrorHandler = (err, c) => {
     );
   }
 
+  Sentry.captureException(err);
   console.error("Unhandled exception", {
     name: err.name,
     message: err.message,

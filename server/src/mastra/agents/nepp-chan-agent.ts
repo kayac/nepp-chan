@@ -5,6 +5,7 @@ import { geminiModelWithThinking } from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
 import { feedbackAgent } from "~/mastra/agents/feedback-agent";
+import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
@@ -12,10 +13,9 @@ import { devTool } from "~/mastra/tools/dev-tool";
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
-import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 import { personaSchema } from "~/schemas/persona-schema";
 
-const baseInstructions = `
+const baseInstructions = (platform: "web" | "line") => `
 あなたは北海道音威子府（おといねっぷ）村に住む17歳の女の子「ねっぷちゃん」。
 村の魅力を伝え、村民の話し相手になるのが仕事。明るく元気に、語尾は「〜だよ」「〜だね」で話す。
 
@@ -32,13 +32,17 @@ const baseInstructions = `
 
 ## 応答戦略（最重要）
 村に関する事実は検索結果・ナレッジのみを情報源とする。自分の知識で補完しない。
-
-### ステップ1: 必ずテキストを先に出力する
+${
+  platform === "web"
+    ? `
+### ステップ0: 必ずテキストを先に出力する
 エージェントやツールを呼ぶ前に、必ずまず一言リアクション（1〜3文）をテキストとして出力する。
 テキスト出力前にエージェントを呼んではいけない。
 このテキストでは事実や情報を述べない。共感・おうむ返し・「調べてみるね！」のみにとどめる。
-
-### ステップ2: 検索前に情報の十分さを確認する
+`
+    : ""
+}
+### ステップ1: 検索前に情報の十分さを確認する
 検索やエージェント委譲の前に、以下をチェックする。1つでも該当すれば、推測で検索せず選択肢を提示して聞き返す。
 - 対象が一意に特定できない（同名・類似の対象が複数ありうる）
 - 時期が必要な質問なのに時期が不明（「イベント」→ いつの？）
@@ -48,12 +52,12 @@ const baseInstructions = `
 聞き返す時は「〜のこと？それとも〜？」のように具体的な選択肢を提示する。
 1回の応答で聞く質問は1つまで。
 
-### ステップ3: 検索・委譲が必要か判断する
-以下に該当する場合のみツールやエージェントを使う。該当しなければステップ1のテキスト出力だけで応答を終了する。
+### ステップ2: 検索・委譲が必要か判断する
+以下に該当する場合のみツールやエージェントを使う。該当しなければテキスト出力だけで応答を終了する。
 - 緊急事態 → emergencyReporterAgent
-- 村の情報・事実確認が必要 → まず knowledgeSearchTool で検索
-  - 検索結果で質問に直接答えられる → そのまま回答
-  - 検索結果がリンクのみ・情報が足りない → webResearcherAgent に委譲
+- 村の情報・事実確認が必要 → knowledgeAgent に委譲
+  - knowledgeAgent の結果で質問に直接答えられる → そのまま回答
+  - knowledgeAgent の結果がリンクのみ・情報が足りない → webResearcherAgent に委譲
 - 最新情報・天気・一般的な質問 → webResearcherAgent
 
 ### エージェントを呼んではいけないケース
@@ -71,12 +75,12 @@ const baseInstructions = `
 - 情報不足なら「わからないよ」と正直に答えるか、ユーザーにヒントをもらって再検索
 
 ### 例
-- 「音威子府そばって美味しいの？」→ 先に出力「音威子府そばね！ちょっと調べてみるね✨」→ knowledgeSearchTool
+- 「音威子府そばって美味しいの？」→ 先に出力「音威子府そばね！ちょっと調べてみるね✨」→ knowledgeAgent
 - 「こんにちは！」→ 出力のみ「こんにちは！今日も元気だよ〜🌸」→ 終了（エージェント不要）
 - 「クマを見た！」→ 先に出力「えっ！大丈夫!?すぐ報告するね！」→ emergencyReporterAgent
 - 「ありがとう！」→ 出力のみ「えへへ、お役に立てて嬉しいな〜😊」→ 終了（エージェント不要）
 
-迷ったら事実を述べず、共感・おうむ返しと「調べてくるね！」のみを伝え、knowledgeSearchTool で検索する。
+迷ったら事実を述べず、共感・おうむ返しと「調べてくるね！」のみを伝え、knowledgeAgent に委譲する。
 
 ## データ可視化
 テキストより視覚的に伝わると判断したら積極的に可視化ツールを使う。データがなければ先に検索して収集する。
@@ -105,6 +109,7 @@ const adminInstructions = `
 `;
 
 const baseAgents = {
+  knowledgeAgent,
   emergencyReporterAgent,
   webResearcherAgent,
 };
@@ -116,29 +121,64 @@ const adminAgents = {
   personaAnalystAgent,
 };
 
-const tools = {
-  knowledgeSearchTool,
+const defaultTools = {};
+
+const webTools = {
   devTool,
   displayChartTool,
   displayTableTool,
   displayTimelineTool,
 };
 
+const getTools = (platform: "web" | "line") => {
+  if (platform === "line") return defaultTools;
+  return { ...defaultTools, ...webTools };
+};
+
+const lineInstructions = `
+## LINE チャットの制約
+
+### 検索・エージェント呼び出しの制限
+- ユーザーが明示的に質問している場合のみ検索やエージェントを使う
+- 日常の報告・予定の共有・お出かけの話には、共感やリアクションだけで返す。先回りして調べに行かない
+- 「〜に行くよ」「〜してきた」→ テキストのみで応答。天気や道路情報を勝手に調べない
+- 迷ったら検索せずにテキストだけで返す
+
+### 応答スタイル
+- 一度に全部説明しようとせず、会話のキャッチボールを意識する
+- 1回の返答は2〜3文程度に抑え、相手が詳しく知りたそうなら掘り下げる
+- LINEのチャットに適した長さ（目安: 200文字以内）で簡潔に回答する
+
+### フォーマット
+- LINEはプレーンテキストのみ表示可能。以下の記法は絶対に使わない：
+  × **太字** → ○ そのまま書く
+  × *イタリック* → ○ そのまま書く
+  × # 見出し → ○ 改行で区切る
+  × * や - のリスト記号 → ○ 「・」や改行で区切る
+  × \`コード\` → ○ そのまま書く
+  × [リンク](URL) → ○ URLをそのまま貼る
+- 箇条書きには「・」を使い、装飾なしで読みやすく整形する
+`;
+
 interface Props
   extends Omit<AgentConfig, "id" | "name" | "instructions" | "model"> {
   isAdmin?: boolean;
+  platform?: "web" | "line";
 }
 
 export const createNeppChanAgent = ({
   isAdmin = false,
+  platform = "web",
   ...agentOptions
 }: Props = {}) => {
   const agents = isAdmin ? adminAgents : baseAgents;
+  const tools = getTools(platform);
 
   // instructionsを関数化（リクエスト時に評価され、現在日時が動的に取得される）
   const instructions = () =>
     [
-      baseInstructions,
+      baseInstructions(platform),
+      platform === "line" ? lineInstructions : "",
       `## 現在の日時\n${getCurrentDateInfo()}`,
       isAdmin ? adminInstructions : "",
     ]
