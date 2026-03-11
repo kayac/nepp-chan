@@ -39,7 +39,7 @@
     "eval:v3": "pnpm --filter @nepp-chan/server eval:v3"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.8",
+    "@biomejs/biome": "^2.4.6",
     "glob": "^13.0.6",
     "tsx": "^4.21.0",
     "wrangler": "^4.66.0"
