@@ -51,10 +51,17 @@ pnpm dev
 | ----------------------------- | -------- | -------------------------------- |
 | `/health`                     | GET      | ヘルスチェック                   |
 | `/chat`                       | POST     | チャットメッセージ送信（ストリーミング） |
-| `/threads`                    | GET      | スレッド一覧取得（ページング対応） |
-| `/threads`                    | POST     | スレッド作成                     |
-| `/threads/:threadId`          | GET      | スレッド詳細取得                 |
+| `/threads`                    | GET/POST | スレッド一覧取得・作成           |
+| `/threads/:threadId`          | GET/DELETE | スレッド詳細取得・削除         |
 | `/threads/:threadId/messages` | GET      | メッセージ履歴取得               |
+| `/feedback`                   | POST     | フィードバック送信               |
+| `/auth/register/options`      | POST     | WebAuthn 登録オプション取得      |
+| `/auth/register/verify`       | POST     | WebAuthn 登録検証                |
+| `/auth/login/options`         | POST     | WebAuthn ログインオプション      |
+| `/auth/login/verify`          | POST     | WebAuthn ログイン検証            |
+| `/auth/me`                    | GET      | 認証状態確認                     |
+| `/auth/logout`                | POST     | ログアウト                       |
+| `/line/webhook`               | POST     | LINE Webhook 受信                |
 
 ## API テスト（curl）
 
@@ -112,8 +119,11 @@ pnpm db:studio        # Drizzle Studio（DB GUI）起動
 pnpm db:check         # スキーマとマイグレーションの整合性チェック
 
 # ナレッジ管理
-pnpm knowledge:upload:dev # ナレッジアップロード（dev 環境）
-pnpm knowledge:clear  # ナレッジ全削除して再アップロード
+pnpm knowledge:upload:dev   # ナレッジアップロード（dev 環境）
+
+# 評価
+pnpm eval:v2          # Eval V2 実行
+pnpm eval:v3          # Eval V3 実行
 ```
 
 ## Drizzle ORM
@@ -182,7 +192,7 @@ wrangler vectorize create nepp-chan-knowledge-dev --dimensions=1536 --metric=cos
 初期管理者は招待スクリプトで作成します：
 
 ```bash
-pnpm admin:invite admin@example.com
+pnpm admin:invite:local admin@example.com
 ```
 
 ### ナレッジファイルの配置
@@ -239,19 +249,26 @@ pnpm knowledge:upload:dev --clean --file=mayor-interview.md
 
 ### 管理API
 
-| パス                             | メソッド | 説明                           |
-| -------------------------------- | -------- | ------------------------------ |
-| `/admin/knowledge`               | DELETE   | 全ナレッジを削除               |
-| `/admin/knowledge/sync`          | POST     | 全ナレッジを同期               |
-| `/admin/knowledge/files`         | GET      | ファイル一覧取得               |
-| `/admin/knowledge/files/:key`    | GET      | ファイル内容取得               |
-| `/admin/knowledge/files/:key`    | PUT      | ファイル保存                   |
-| `/admin/knowledge/files/:key`    | DELETE   | ファイル削除                   |
-| `/admin/knowledge/upload`        | POST     | Markdown アップロード          |
-| `/admin/knowledge/convert`       | POST     | 画像/PDF → Markdown 変換       |
-| `/admin/knowledge/unified`       | GET      | 統合ファイル一覧取得           |
-| `/admin/knowledge/originals/:key`| GET      | 元ファイル取得                 |
-| `/admin/knowledge/reconvert`     | POST     | 元ファイルから Markdown 再生成 |
+| パス                              | メソッド   | 説明                           |
+| --------------------------------- | ---------- | ------------------------------ |
+| `/admin/knowledge`                | DELETE     | 全ナレッジを削除               |
+| `/admin/knowledge/sync`           | POST       | 全ナレッジを同期               |
+| `/admin/knowledge/files`          | GET        | ファイル一覧取得               |
+| `/admin/knowledge/files/:key`     | GET/PUT/DELETE | ファイル取得・保存・削除   |
+| `/admin/knowledge/upload`         | POST       | Markdown アップロード          |
+| `/admin/knowledge/convert`        | POST       | 画像/PDF → Markdown 変換       |
+| `/admin/knowledge/unified`        | GET        | 統合ファイル一覧取得           |
+| `/admin/knowledge/originals/:key` | GET        | 元ファイル取得                 |
+| `/admin/knowledge/reconvert`      | POST       | 元ファイルから Markdown 再生成 |
+| `/admin/persona`                  | GET/DELETE | ペルソナ一覧・全削除           |
+| `/admin/persona/extract`          | POST       | ペルソナ抽出                   |
+| `/admin/persona/extract/:threadId`| POST       | 特定スレッドのペルソナ抽出     |
+| `/admin/emergency`                | GET        | 緊急報告一覧取得               |
+| `/admin/feedback`                 | GET/DELETE | フィードバック一覧・全削除     |
+| `/admin/feedback/:id`             | GET        | フィードバック詳細             |
+| `/admin/feedback/:id/resolve`     | PUT/DELETE | フィードバック解決・未解決に戻す |
+| `/admin/invitations`              | GET/POST   | 招待一覧・作成                 |
+| `/admin/invitations/:id`          | DELETE     | 招待削除                       |
 
 **認証**: パスキー認証でログインしたセッションが必要です。ダッシュボード（`/dashboard`）からログイン後、管理機能を利用できます。
 

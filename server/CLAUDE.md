@@ -26,7 +26,6 @@ server/src/
 │   ├── agents/              # AI エージェント
 │   ├── tools/               # ツール
 │   ├── workflows/           # ワークフロー
-│   ├── scorers/             # 評価スコアラー
 │   └── mcp/                 # MCP 設定
 ├── services/                # ビジネスロジック
 │   ├── knowledge/           # RAG ナレッジ処理
@@ -47,17 +46,18 @@ server/src/
 | `/health`                          | GET      | ヘルスチェック                 |
 | `/chat`                            | POST     | チャット（ストリーミング）     |
 | `/threads`                         | GET/POST | スレッド一覧・作成             |
-| `/threads/:threadId`               | GET      | スレッド詳細                   |
+| `/threads/:threadId`               | GET/DELETE | スレッド詳細・削除           |
 | `/threads/:threadId/messages`      | GET      | メッセージ履歴                 |
 | `/feedback`                        | POST     | フィードバック送信             |
 | `/admin/knowledge/sync`            | POST     | ナレッジ同期                   |
 | `/admin/knowledge`                 | DELETE   | ナレッジ削除                   |
-| `/admin/persona`                   | GET      | ペルソナ一覧                   |
+| `/admin/persona`                   | GET/DELETE | ペルソナ一覧・全削除         |
 | `/admin/persona/extract`           | POST     | ペルソナ抽出                   |
+| `/admin/persona/extract/:threadId` | POST     | 特定スレッドのペルソナ抽出     |
 | `/admin/emergency`                 | GET      | 緊急情報一覧（認証必須）       |
 | `/admin/feedback`                  | GET      | フィードバック一覧（認証必須） |
 | `/admin/feedback/:id`              | GET      | フィードバック詳細             |
-| `/admin/feedback/:id/resolve`      | PUT      | フィードバック解決             |
+| `/admin/feedback/:id/resolve`      | PUT/DELETE | フィードバック解決・未解決に戻す |
 | `/admin/feedback`                  | DELETE   | 全フィードバック削除           |
 | `/admin/invitations`               | GET/POST | 招待一覧・作成                 |
 | `/admin/invitations/:id`           | DELETE   | 招待削除                       |
@@ -91,7 +91,6 @@ const agent = createNeppChanAgent({ isAdmin: true });
 | ID                         | 説明                               |
 | -------------------------- | ---------------------------------- |
 | `nep-chan`                 | メインキャラクター（ねっぷちゃん） |
-| `weather-agent`            | 天気情報取得                       |
 | `web-researcher`           | Web 検索（Google Grounding）       |
 | `emergency-reporter-agent` | 緊急事態報告（一般ユーザー）       |
 | `emergency-agent`          | 緊急報告取得（管理者専用）         |
@@ -105,7 +104,6 @@ const agent = createNeppChanAgent({ isAdmin: true });
 
 | ツール名（変数名）       | ツール ID            | 説明                                   |
 | ------------------------ | -------------------- | -------------------------------------- |
-| `weatherTool`            | `get-weather`        | Open-Meteo API で天気取得              |
 | `searchGoogleTool`       | `google-search`      | Google Custom Search                   |
 | `devTool`                | `dev-tool`           | Working Memory 表示（デバッグ）        |
 | `displayChartTool`       | `display-chart`      | グラフ表示（line/bar/pie）             |
@@ -145,7 +143,6 @@ app.openapi(route, async (c) => { ... });
 - エージェントは `mastra/agents/` に配置
 - ツールは `mastra/tools/` に配置
 - ワークフローは `mastra/workflows/` に配置
-- スコアラーは `mastra/scorers/` に配置
 - **サービスロジックは `services/` に配置**（`mastra/` には Mastra プリミティブのみ）
 
 ### createTool の execute シグネチャ
