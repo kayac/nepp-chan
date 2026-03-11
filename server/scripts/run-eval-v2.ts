@@ -14,6 +14,7 @@
  *   pnpm eval:v2 -- --compare --question "..." --truth "..." --n 3  # 3環境比較（単一質問）
  *   pnpm eval:v2 -- --compare --category education --n 3            # 3環境比較（カテゴリ）
  *   pnpm eval:v2 -- --compare --n 3                                 # 3環境比較（全テストケース）
+ *   pnpm eval:v2 -- --interval 10 --n 3                              # テストケース間に10秒インターバル
  */
 
 import * as fs from "node:fs";
@@ -183,7 +184,11 @@ interface CliArgs {
   category?: TestCategory;
   env: EnvName;
   compare: boolean;
+  /** テストケース間のインターバル（秒）。デフォルト5秒 */
+  interval: number;
 }
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // ─── Abstention 判定 ─────────────────────────────────────
 
@@ -220,6 +225,7 @@ const parseArgs = (): CliArgs => {
     agent: "knowledge",
     env: "local",
     compare: false,
+    interval: 5,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -247,6 +253,9 @@ const parseArgs = (): CliArgs => {
         break;
       case "--category":
         result.category = args[++i] as TestCategory;
+        break;
+      case "--interval":
+        result.interval = Number.parseInt(args[++i], 10);
         break;
     }
   }
@@ -1319,8 +1328,12 @@ const main = async () => {
   console.log(`   テストケース数: ${testCases.length}`);
   console.log(`   各N回: ${args.n}`);
   console.log(
-    `   環境: ${args.compare ? "3環境比較 (local → dev → prd)" : args.env}\n`,
+    `   環境: ${args.compare ? "3環境比較 (local → dev → prd)" : args.env}`,
   );
+  if (testCases.length > 1 && args.interval > 0) {
+    console.log(`   インターバル: ${args.interval}秒（テストケース間）`);
+  }
+  console.log();
 
   // LibSQLStore 作成
   const libsqlStore = new LibSQLStore({
@@ -1418,6 +1431,12 @@ const main = async () => {
         );
 
         allResults[tcIdx].entries.push({ env: envName, result });
+
+        // テストケース間のインターバル（最後のケース以外）
+        if (args.interval > 0 && tcIdx < testCases.length - 1) {
+          console.log(`  ⏳ ${args.interval}秒インターバル...`);
+          await sleep(args.interval * 1000);
+        }
       }
 
       await dispose();
@@ -1467,7 +1486,8 @@ const main = async () => {
     const requestContext = new RequestContext();
     requestContext.set("env", env);
 
-    for (const testCase of testCases) {
+    for (let tcIdx = 0; tcIdx < testCases.length; tcIdx++) {
+      const testCase = testCases[tcIdx];
       const result = await runTestCaseEval({
         testCase,
         agent,
@@ -1507,6 +1527,12 @@ const main = async () => {
       );
       console.log(`\n📁 JSON: ${jsonPath}`);
       console.log(`📁 HTML: ${htmlPath}\n`);
+
+      // テストケース間のインターバル（最後のケース以外）
+      if (args.interval > 0 && tcIdx < testCases.length - 1) {
+        console.log(`⏳ ${args.interval}秒インターバル...`);
+        await sleep(args.interval * 1000);
+      }
     }
 
     await dispose();
