@@ -176,11 +176,23 @@ export const PersonaPanel = () => {
                     {persona.content}
                   </p>
                   {(persona.demographicSummary || persona.tags) && (
-                    <div className="flex flex-wrap gap-2 text-xs text-stone-500 pt-1 md:hidden">
-                      {persona.demographicSummary && (
-                        <span>属性: {persona.demographicSummary}</span>
-                      )}
-                      {persona.tags && <span>タグ: {persona.tags}</span>}
+                    <div className="flex flex-wrap gap-1.5 text-xs pt-1">
+                      {persona.demographicSummary?.split(",").map((attr) => (
+                        <span
+                          key={attr}
+                          className="inline-flex px-1.5 py-0.5 bg-stone-100 text-stone-600 rounded"
+                        >
+                          {attr.trim()}
+                        </span>
+                      ))}
+                      {persona.tags?.split(",").map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex px-1.5 py-0.5 bg-teal-50 text-teal-600 rounded"
+                        >
+                          {tag.trim()}
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>
