@@ -6,7 +6,7 @@ import { GEMINI_EMBEDDING } from "~/lib/llm-models";
 
 const EMBEDDING_DIMENSIONS = 1536;
 const BATCH_SIZE = 100;
-const MIN_CHUNK_LENGTH = 100;
+const MIN_CHUNK_LENGTH = 50;
 
 type EmbeddingModel = ReturnType<
   ReturnType<typeof createGoogleGenerativeAI>["textEmbeddingModel"]
