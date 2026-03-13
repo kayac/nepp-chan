@@ -1255,6 +1255,11 @@ const runTestCaseEval = async (params: {
       });
       console.log(` ❌ (${durationMs}ms) ${errorMsg}`);
     }
+
+    // イテレーション間インターバル（最後のイテレーション以外）
+    if (i < n - 1) {
+      await sleep(2000);
+    }
   }
 
   const totalDurationMs = Date.now() - totalStart;
