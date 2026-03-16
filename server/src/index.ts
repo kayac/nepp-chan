@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/cloudflare";
 import { handleLineEvent, handleR2Event } from "~/handlers";
 import { handlePersonaExtract } from "~/handlers/persona-extract-handler";
 import type { R2EventMessage } from "~/handlers/r2-event-handler";
+import { logger } from "~/lib/logger";
 import { getSentryOptions } from "~/lib/sentry";
 import { corsMiddleware, errorHandler, securityHeaders } from "~/middleware";
 import {
@@ -60,7 +61,7 @@ const handler: ExportedHandler<CloudflareBindings> = {
     if (batch.queue.startsWith("nepp-chan-knowledge-sync")) {
       return handleR2Event(batch as MessageBatch<R2EventMessage>, env);
     }
-    console.error(`Unknown queue: ${batch.queue}`);
+    logger.error(`Unknown queue: ${batch.queue}`);
   },
   scheduled: handlePersonaExtract,
 };

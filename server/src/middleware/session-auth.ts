@@ -2,6 +2,7 @@ import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
 import type { AdminUser } from "~/db";
 import { getTokenFromHeader } from "~/lib/auth-header";
+import { logger } from "~/lib/logger";
 import { getUserFromSession } from "~/services/auth/session";
 
 type SessionVariables = {
@@ -15,12 +16,14 @@ export const sessionAuth = createMiddleware<{
   const sessionId = getTokenFromHeader(c);
 
   if (!sessionId) {
+    logger.warn("[Auth] missing session token");
     throw new HTTPException(401, { message: "セッションがありません" });
   }
 
   const user = await getUserFromSession(c.env.DB, sessionId);
 
   if (!user) {
+    logger.warn("[Auth] invalid or expired session");
     throw new HTTPException(401, { message: "無効なセッションです" });
   }
 

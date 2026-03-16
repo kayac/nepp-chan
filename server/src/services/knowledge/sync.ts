@@ -1,3 +1,4 @@
+import { logger } from "~/lib/logger";
 import { deleteKnowledgeBySource, processKnowledgeFile } from "./embedding";
 
 const EDIT_THRESHOLD_MS = 5000;
@@ -60,7 +61,7 @@ export const syncAll = async ({
   );
   const originalsMap = buildOriginalsMap(allObjects);
 
-  console.log(`[Sync] Found ${mdFiles.length} markdown files`);
+  logger.info(`[Sync] Found ${mdFiles.length} markdown files`);
 
   const results: SyncResult[] = [];
 
@@ -73,7 +74,7 @@ export const syncAll = async ({
 
     const edited = isFileEdited(obj, originalsMap);
     const content = await file.text();
-    console.log(
+    logger.info(
       `[Sync] Processing ${obj.key} (${content.length} bytes)${edited ? " [EDITED]" : ""}`,
     );
 
