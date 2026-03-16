@@ -6,6 +6,9 @@ export const getSentryOptions = (
   dsn: env.SENTRY_DSN,
   environment: env.ENVIRONMENT,
   tracesSampleRate: (env.ENVIRONMENT as string) === "production" ? 0.1 : 1.0,
+  _experiments: {
+    enableLogs: true,
+  },
   beforeSend(event) {
     if (event.request?.data) {
       event.request.data = "[Filtered]";
