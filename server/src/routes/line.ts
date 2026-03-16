@@ -1,6 +1,7 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import type { WebhookEvent, WebhookRequestBody } from "@line/bot-sdk";
 
+import { logger } from "~/lib/logger";
 import { lineSignatureVerify } from "~/middleware";
 import type { LineEventMessage } from "~/schemas/line-schema";
 
@@ -13,8 +14,10 @@ lineRoutes.use("/*", lineSignatureVerify);
 
 lineRoutes.post("/webhook", async (c) => {
   const body = c.get("parsedBody") as WebhookRequestBody;
+  const eventCount = body.events?.length ?? 0;
+  logger.info(`[LINE] webhook received`, { eventCount });
 
-  if (!body.events || body.events.length === 0) {
+  if (!body.events || eventCount === 0) {
     return c.json({ status: "ok" });
   }
 

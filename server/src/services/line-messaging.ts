@@ -31,6 +31,7 @@ export const generateReply = async (params: {
     storage,
   });
   const agent = mastra.getAgent("neppChanAgent");
+  logger.info(`[LINE] generating reply`, { threadId: params.threadId });
 
   const response = await agent.generate(params.userMessage, {
     requestContext,
@@ -44,6 +45,9 @@ export const generateReply = async (params: {
   const texts = splitMessagesForLine(stepTexts);
 
   if (texts.length === 0 && response.text) {
+    logger.warn(`[LINE] step texts empty, using fallback`, {
+      threadId: params.threadId,
+    });
     return splitMessagesForLine([response.text]).map(stripMarkdown);
   }
 

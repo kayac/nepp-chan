@@ -4,6 +4,7 @@ import { Mastra } from "@mastra/core/mastra";
 import { createUIMessageStreamResponse, type UIMessage } from "ai";
 
 import { getTokenFromHeader } from "~/lib/auth-header";
+import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
@@ -53,6 +54,8 @@ const chatRoute = createRoute({
 
 chatRoutes.openapi(chatRoute, async (c) => {
   const { message, resourceId, threadId } = c.req.valid("json");
+  logger.info(`[Chat] request received`, { threadId, resourceId });
+
   const storage = await getStorage(c.env.DB);
 
   const sessionId = getTokenFromHeader(c);
