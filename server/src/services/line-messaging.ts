@@ -1,6 +1,7 @@
 import { messagingApi } from "@line/bot-sdk";
 import { Mastra } from "@mastra/core/mastra";
 
+import { logger } from "~/lib/logger";
 import { splitMessagesForLine } from "~/lib/split-message";
 import { getStorage } from "~/lib/storage";
 import { stripMarkdown } from "~/lib/strip-markdown";
@@ -65,13 +66,12 @@ export const sendLineMessages = async (params: {
       replyToken: params.replyToken,
       messages,
     });
-    console.log(`LINE replyMessage sent to ${params.userId}`);
-  } catch (replyError) {
-    console.log(
-      `LINE replyMessage failed for ${params.userId}, falling back to pushMessage:`,
-      replyError,
+    logger.info(`LINE replyMessage sent to ${params.userId}`);
+  } catch {
+    logger.warn(
+      `LINE replyMessage failed for ${params.userId}, falling back to pushMessage`,
     );
     await params.client.pushMessage({ to: params.userId, messages });
-    console.log(`LINE pushMessage sent to ${params.userId}`);
+    logger.info(`LINE pushMessage sent to ${params.userId}`);
   }
 };

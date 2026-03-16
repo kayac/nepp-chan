@@ -1,3 +1,4 @@
+import { logger } from "~/lib/logger";
 import { convertToMarkdown, isSupportedMimeType } from "./converter";
 import { syncFile } from "./sync";
 
@@ -47,7 +48,7 @@ export const uploadMarkdownFile = async (
     httpMetadata: { contentType: "text/markdown" },
   });
 
-  console.log(`[Upload] Uploaded ${key} (${content.length} bytes)`);
+  logger.info(`[Upload] Uploaded ${key} (${content.length} bytes)`);
 
   const result = await syncFile(key, content, {
     vectorize: deps.vectorize,
@@ -83,12 +84,12 @@ export const convertAndUpload = async (
     key = `${key}.md`;
   }
 
-  console.log(`[Convert] Converting ${file.name} (${mimeType}) to ${key}`);
+  logger.info(`[Convert] Converting ${file.name} (${mimeType}) to ${key}`);
 
   const fileData = await file.arrayBuffer();
   const markdown = await convertToMarkdown(fileData, mimeType);
 
-  console.log(`[Convert] Generated ${markdown.length} bytes of markdown`);
+  logger.info(`[Convert] Generated ${markdown.length} bytes of markdown`);
 
   // 元ファイルを originals/ に保存
   const originalExtension = file.name.split(".").pop() || "bin";
@@ -96,7 +97,7 @@ export const convertAndUpload = async (
   await deps.bucket.put(originalKey, fileData, {
     httpMetadata: { contentType: mimeType },
   });
-  console.log(`[Convert] Saved original to ${originalKey}`);
+  logger.info(`[Convert] Saved original to ${originalKey}`);
 
   // Markdown を R2 に保存
   await deps.bucket.put(key, markdown, {
@@ -140,12 +141,12 @@ export const reconvertFromOriginal = async (
     key = `${key}.md`;
   }
 
-  console.log(`[Reconvert] Converting ${originalKey} (${mimeType}) to ${key}`);
+  logger.info(`[Reconvert] Converting ${originalKey} (${mimeType}) to ${key}`);
 
   const fileData = await object.arrayBuffer();
   const markdown = await convertToMarkdown(fileData, mimeType);
 
-  console.log(`[Reconvert] Generated ${markdown.length} bytes of markdown`);
+  logger.info(`[Reconvert] Generated ${markdown.length} bytes of markdown`);
 
   await deps.bucket.put(key, markdown, {
     httpMetadata: { contentType: "text/markdown" },
