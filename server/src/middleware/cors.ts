@@ -1,5 +1,6 @@
 import type { MiddlewareHandler } from "hono";
 import { cors } from "hono/cors";
+import { logger } from "~/lib/logger";
 
 const isAllowedOrigin = (
   origin: string,
@@ -16,7 +17,11 @@ export const corsMiddleware: MiddlewareHandler<{
   const corsHandler = cors({
     origin: (origin) => {
       if (!origin) return undefined;
-      return isAllowedOrigin(origin, c.env);
+      const allowed = isAllowedOrigin(origin, c.env);
+      if (!allowed) {
+        logger.warn("[CORS] rejected origin", { origin });
+      }
+      return allowed;
     },
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "User-Agent", "Authorization"],

@@ -3,6 +3,7 @@ import { MDocument } from "@mastra/rag";
 import { embedMany } from "ai";
 import matter from "gray-matter";
 import { GEMINI_EMBEDDING } from "~/lib/llm-models";
+import { logger } from "~/lib/logger";
 
 const EMBEDDING_DIMENSIONS = 1536;
 const BATCH_SIZE = 100;
@@ -88,7 +89,7 @@ const chunkDocument = async (
     };
   });
 
-  console.log(
+  logger.info(
     `[Knowledge Sync] ${filename}: ${allTexts.length} chunks -> ${texts.length} after filtering (min ${MIN_CHUNK_LENGTH} chars)`,
   );
 

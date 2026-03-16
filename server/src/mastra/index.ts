@@ -7,6 +7,7 @@ import {
   SamplingStrategyType,
 } from "@mastra/observability";
 import { getPlatformProxy } from "wrangler";
+import { logger } from "~/lib/logger";
 import { converterAgent } from "~/mastra/agents/converter-agent";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
@@ -32,8 +33,8 @@ const getCloudflareEnv = async () => {
     });
     cloudflareEnv = env;
     return env;
-  } catch (error) {
-    console.warn("Cloudflare bindings not available:", error);
+  } catch {
+    logger.warn("Cloudflare bindings not available");
     return null;
   }
 };
