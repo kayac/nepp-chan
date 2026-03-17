@@ -16,6 +16,7 @@
  *   pnpm eval:v3 -- --question "..." --truth "..." --n 3  # アドホック質問
  *   pnpm eval:v3 -- --env development --n 3               # 環境指定
  *   pnpm eval:v3 -- --compare --case-id vo-01 --n 3       # 環境比較
+ *   pnpm eval:v3 -- --interval 10 --n 3                  # テストケース間に10秒インターバル
  */
 
 import * as fs from "node:fs";
@@ -25,7 +26,6 @@ import {
   createAnswerSimilarityScorer,
   createContextPrecisionScorer,
   createContextRelevanceScorerLLM,
-  createFaithfulnessScorer,
   createHallucinationScorer,
 } from "@mastra/evals/scorers/prebuilt";
 import {
@@ -36,7 +36,7 @@ import { LibSQLStore } from "@mastra/libsql";
 import { Memory } from "@mastra/memory";
 import { getPlatformProxy } from "wrangler";
 
-import { GEMINI_FLASH_LITE } from "../src/lib/llm-models";
+import { GEMINI_FLASH_LITE, GEMINI_SCORER } from "../src/lib/llm-models";
 import { knowledgeAgent } from "../src/mastra/agents/knowledge-agent";
 import { createNeppChanAgent } from "../src/mastra/agents/nepp-chan-agent";
 import type {
@@ -196,7 +196,11 @@ interface CliArgs {
   category?: TestCategory;
   env: EnvName;
   compare: boolean;
+  /** テストケース間のインターバル（秒）。デフォルト5秒 */
+  interval: number;
 }
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // ─── Eval用APIキー解決 ───────────────────────────────────
 
@@ -219,6 +223,7 @@ const parseArgs = (): CliArgs => {
     agent: "knowledge",
     env: "local",
     compare: false,
+    interval: 5,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -249,6 +254,9 @@ const parseArgs = (): CliArgs => {
         break;
       case "--compare":
         result.compare = true;
+        break;
+      case "--interval":
+        result.interval = Number.parseInt(args[++i], 10);
         break;
     }
   }
@@ -406,11 +414,13 @@ const runEvalScorers = async ({
   output,
   groundTruth,
   context,
+  abstention = false,
 }: {
   input: string;
   output: string;
   groundTruth: string;
   context: string[];
+  abstention?: boolean;
 }): Promise<Scores> => {
   const testRun = createAgentTestRun({
     inputMessages: [createTestMessage({ content: input, role: "user" })],
@@ -440,18 +450,9 @@ const runEvalScorers = async ({
 
   if (context.length === 0) return scores;
 
-  try {
-    const result = await createFaithfulnessScorer({
-      model: GEMINI_FLASH_LITE,
-      options: { context },
-    }).run({
-      input: testRun.input,
-      output: testRun.output,
-    });
-    scores.faithfulness = result?.score ?? null;
-  } catch (e) {
-    console.warn("  ⚠ faithfulness scorer failed:", (e as Error).message);
-  }
+  // faithfulness: 常に 0.000 を返す既知バグのためスキップ
+  // see: Phase 1 スコアラー検証結果（完璧な回答でも 0.000）
+  // TODO: Mastra/Gemini のバグ修正後に再有効化
 
   try {
     const result = await createContextPrecisionScorer({
@@ -467,30 +468,46 @@ const runEvalScorers = async ({
     console.warn("  ⚠ contextPrecision scorer failed:", (e as Error).message);
   }
 
-  try {
-    const result = await createContextRelevanceScorerLLM({
-      model: GEMINI_FLASH_LITE,
-      options: { context },
-    }).run({
-      input: testRun.input,
-      output: testRun.output,
-    });
-    scores.contextRelevance = result?.score ?? null;
-  } catch (e) {
-    console.warn("  ⚠ contextRelevance scorer failed:", (e as Error).message);
+  // contextRelevance: Gemini の構造化出力が間欠的に失敗するためリトライ付き
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const result = await createContextRelevanceScorerLLM({
+        model: GEMINI_SCORER,
+        options: { context },
+      }).run({
+        input: testRun.input,
+        output: testRun.output,
+      });
+      scores.contextRelevance = result?.score ?? null;
+      break;
+    } catch (e) {
+      if (attempt === 0) {
+        // 1回目失敗 → リトライ
+      } else {
+        console.warn(
+          "  ⚠ contextRelevance scorer failed (2 attempts):",
+          (e as Error).message,
+        );
+      }
+    }
   }
 
-  try {
-    const result = await createHallucinationScorer({
-      model: GEMINI_FLASH_LITE,
-      options: { context },
-    }).run({
-      input: testRun.input,
-      output: testRun.output,
-    });
-    scores.hallucination = result?.score ?? null;
-  } catch (e) {
-    console.warn("  ⚠ hallucination scorer failed:", (e as Error).message);
+  // hallucination: 棄権回答では誤判定（1.000）するためスキップ
+  if (abstention) {
+    // 棄権回答は捏造ではないため null（スキップ）
+  } else {
+    try {
+      const result = await createHallucinationScorer({
+        model: GEMINI_FLASH_LITE,
+        options: { context },
+      }).run({
+        input: testRun.input,
+        output: testRun.output,
+      });
+      scores.hallucination = result?.score ?? null;
+    } catch (e) {
+      console.warn("  ⚠ hallucination scorer failed:", (e as Error).message);
+    }
   }
 
   return scores;
@@ -1211,11 +1228,14 @@ const runTestCaseEval = async (params: {
         (result as any).steps,
       );
 
+      const abstentionDetected = isAbstention(result.text);
+
       const scores = await runEvalScorers({
         input: testCase.input,
         output: result.text,
         groundTruth: testCase.groundTruth,
         context,
+        abstention: abstentionDetected,
       });
 
       const keywordCheck = checkRequiredKeywords(
@@ -1289,6 +1309,11 @@ const runTestCaseEval = async (params: {
         transcript: [],
       });
       console.log(`❌ ERROR (${durationMs}ms) ${errorMsg}`);
+    }
+
+    // イテレーション間インターバル（最後のイテレーション以外）
+    if (i < n - 1) {
+      await sleep(2000);
     }
   }
 
@@ -1394,6 +1419,9 @@ const main = async () => {
   console.log(
     `   環境: ${args.compare ? "環境比較 (local → dev → prd)" : args.env}`,
   );
+  if (testCases.length > 1 && args.interval > 0) {
+    console.log(`   インターバル: ${args.interval}秒（テストケース間）`);
+  }
 
   const libsqlStore = new LibSQLStore({
     id: "mastra-storage",
@@ -1503,7 +1531,8 @@ const main = async () => {
 
     const allResults: EvalResult[] = [];
 
-    for (const testCase of testCases) {
+    for (let tcIdx = 0; tcIdx < testCases.length; tcIdx++) {
+      const testCase = testCases[tcIdx];
       const result = await runTestCaseEval({
         testCase,
         agent,
@@ -1529,6 +1558,12 @@ const main = async () => {
       fs.writeFileSync(htmlPath, generateHtml(result));
       console.log(`📁 JSON: ${jsonPath}`);
       console.log(`📁 HTML: ${htmlPath}`);
+
+      // テストケース間のインターバル（最後のケース以外）
+      if (args.interval > 0 && tcIdx < testCases.length - 1) {
+        console.log(`\n⏳ ${args.interval}秒インターバル...`);
+        await sleep(args.interval * 1000);
+      }
     }
 
     // 全体サマリー（複数テストケースの場合）

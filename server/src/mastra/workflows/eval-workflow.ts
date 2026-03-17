@@ -14,7 +14,6 @@ import {
   createAnswerSimilarityScorer,
   createContextPrecisionScorer,
   createContextRelevanceScorerLLM,
-  createFaithfulnessScorer,
   createHallucinationScorer,
 } from "@mastra/evals/scorers/prebuilt";
 import {
@@ -22,7 +21,8 @@ import {
   createTestMessage,
 } from "@mastra/evals/scorers/utils";
 import { z } from "zod";
-import { GEMINI_FLASH_LITE } from "~/lib/llm-models";
+
+import { GEMINI_FLASH_LITE, GEMINI_SCORER } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { evalTestCases } from "~/mastra/data/eval-test-cases";
 
@@ -52,11 +52,13 @@ const runEvalScorers = async ({
   output,
   groundTruth,
   context,
+  abstention = false,
 }: {
   input: string;
   output: string;
   groundTruth: string;
   context: string[];
+  abstention?: boolean;
 }) => {
   const testRun = createAgentTestRun({
     inputMessages: [createTestMessage({ content: input, role: "user" })],
@@ -85,13 +87,8 @@ const runEvalScorers = async ({
     groundTruth,
   });
 
-  const faithfulness = await createFaithfulnessScorer({
-    model: GEMINI_FLASH_LITE,
-    options: { context },
-  }).run({
-    input: testRun.input,
-    output: testRun.output,
-  });
+  // faithfulness: 常に 0.000 を返す既知バグのためスキップ
+  // TODO: Mastra/Gemini のバグ修正後に再有効化
 
   const contextPrecision = await createContextPrecisionScorer({
     model: GEMINI_FLASH_LITE,
@@ -102,25 +99,40 @@ const runEvalScorers = async ({
     groundTruth,
   });
 
-  const contextRelevance = await createContextRelevanceScorerLLM({
-    model: GEMINI_FLASH_LITE,
-    options: { context },
-  }).run({
-    input: testRun.input,
-    output: testRun.output,
-  });
+  // contextRelevance: Gemini の構造化出力が間欠的に失敗するためリトライ付き
+  let contextRelevance:
+    | Awaited<
+        ReturnType<ReturnType<typeof createContextRelevanceScorerLLM>["run"]>
+      >
+    | undefined;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      contextRelevance = await createContextRelevanceScorerLLM({
+        model: GEMINI_SCORER,
+        options: { context },
+      }).run({
+        input: testRun.input,
+        output: testRun.output,
+      });
+      break;
+    } catch {
+      if (attempt === 1) contextRelevance = undefined;
+    }
+  }
 
-  const hallucination = await createHallucinationScorer({
-    model: GEMINI_FLASH_LITE,
-    options: { context },
-  }).run({
-    input: testRun.input,
-    output: testRun.output,
-  });
+  // hallucination: 棄権回答では誤判定するためスキップ
+  const hallucination = abstention
+    ? undefined
+    : await createHallucinationScorer({
+        model: GEMINI_FLASH_LITE,
+        options: { context },
+      }).run({
+        input: testRun.input,
+        output: testRun.output,
+      });
 
   return {
     similarity,
-    faithfulness,
     contextPrecision,
     contextRelevance,
     hallucination,

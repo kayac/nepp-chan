@@ -14,6 +14,7 @@
  *   pnpm eval:v2 -- --compare --question "..." --truth "..." --n 3  # 3環境比較（単一質問）
  *   pnpm eval:v2 -- --compare --category education --n 3            # 3環境比較（カテゴリ）
  *   pnpm eval:v2 -- --compare --n 3                                 # 3環境比較（全テストケース）
+ *   pnpm eval:v2 -- --interval 10 --n 3                              # テストケース間に10秒インターバル
  */
 
 import * as fs from "node:fs";
@@ -23,7 +24,6 @@ import {
   createAnswerSimilarityScorer,
   createContextPrecisionScorer,
   createContextRelevanceScorerLLM,
-  createFaithfulnessScorer,
   createHallucinationScorer,
 } from "@mastra/evals/scorers/prebuilt";
 import {
@@ -34,7 +34,7 @@ import { LibSQLStore } from "@mastra/libsql";
 import { Memory } from "@mastra/memory";
 import { getPlatformProxy } from "wrangler";
 
-import { GEMINI_FLASH_LITE } from "../src/lib/llm-models";
+import { GEMINI_FLASH_LITE, GEMINI_SCORER } from "../src/lib/llm-models";
 import { knowledgeAgent } from "../src/mastra/agents/knowledge-agent";
 import { createNeppChanAgent } from "../src/mastra/agents/nepp-chan-agent";
 import type {
@@ -55,6 +55,36 @@ const SCORE_NAMES = [
 ] as const;
 type ScoreName = (typeof SCORE_NAMES)[number];
 type Scores = Record<ScoreName, number | null>;
+
+/** 各指標の日本語名と1行説明 */
+const SCORE_DESCRIPTIONS: Record<
+  ScoreName,
+  { label: string; description: string }
+> = {
+  similarity: {
+    label: "類似度",
+    description: "回答と正解の意味的な近さ（1.0 = 完全一致）",
+  },
+  faithfulness: {
+    label: "忠実度",
+    description:
+      "回答が検索結果に基づいているか（⚠ 既知バグにより常に0 — スキップ中）",
+  },
+  contextPrecision: {
+    label: "文脈精度",
+    description:
+      "検索結果のうち正解に関連するものが上位に来ているか（1.0 = 最適な順位）",
+  },
+  contextRelevance: {
+    label: "文脈関連度",
+    description: "検索結果が質問にどれだけ関連しているか（1.0 = 全て関連）",
+  },
+  hallucination: {
+    label: "幻覚度",
+    description:
+      "検索結果にない情報を捏造していないか（0.0 = 捏造なし ← 低いほど良い）",
+  },
+};
 
 const ENV_NAMES = ["local", "development", "production"] as const;
 type EnvName = (typeof ENV_NAMES)[number];
@@ -154,7 +184,11 @@ interface CliArgs {
   category?: TestCategory;
   env: EnvName;
   compare: boolean;
+  /** テストケース間のインターバル（秒）。デフォルト5秒 */
+  interval: number;
 }
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // ─── Abstention 判定 ─────────────────────────────────────
 
@@ -191,6 +225,7 @@ const parseArgs = (): CliArgs => {
     agent: "knowledge",
     env: "local",
     compare: false,
+    interval: 5,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -218,6 +253,9 @@ const parseArgs = (): CliArgs => {
         break;
       case "--category":
         result.category = args[++i] as TestCategory;
+        break;
+      case "--interval":
+        result.interval = Number.parseInt(args[++i], 10);
         break;
     }
   }
@@ -283,11 +321,13 @@ const runEvalScorers = async ({
   output,
   groundTruth,
   context,
+  abstention = false,
 }: {
   input: string;
   output: string;
   groundTruth: string;
   context: string[];
+  abstention?: boolean;
 }): Promise<Scores> => {
   const testRun = createAgentTestRun({
     inputMessages: [createTestMessage({ content: input, role: "user" })],
@@ -319,19 +359,9 @@ const runEvalScorers = async ({
   // context が空の場合は similarity のみ
   if (context.length === 0) return scores;
 
-  // 残りのスコアラーを直列実行
-  try {
-    const result = await createFaithfulnessScorer({
-      model: GEMINI_FLASH_LITE,
-      options: { context },
-    }).run({
-      input: testRun.input,
-      output: testRun.output,
-    });
-    scores.faithfulness = result?.score ?? null;
-  } catch (e) {
-    console.warn("  ⚠ faithfulness scorer failed:", (e as Error).message);
-  }
+  // faithfulness: 常に 0.000 を返す既知バグのためスキップ
+  // see: Phase 1 スコアラー検証結果（完璧な回答でも 0.000）
+  // TODO: Mastra/Gemini のバグ修正後に再有効化
 
   try {
     const result = await createContextPrecisionScorer({
@@ -347,30 +377,47 @@ const runEvalScorers = async ({
     console.warn("  ⚠ contextPrecision scorer failed:", (e as Error).message);
   }
 
-  try {
-    const result = await createContextRelevanceScorerLLM({
-      model: GEMINI_FLASH_LITE,
-      options: { context },
-    }).run({
-      input: testRun.input,
-      output: testRun.output,
-    });
-    scores.contextRelevance = result?.score ?? null;
-  } catch (e) {
-    console.warn("  ⚠ contextRelevance scorer failed:", (e as Error).message);
+  // contextRelevance: Gemini の構造化出力が間欠的に失敗するためリトライ付き
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const result = await createContextRelevanceScorerLLM({
+        model: GEMINI_SCORER,
+        options: { context },
+      }).run({
+        input: testRun.input,
+        output: testRun.output,
+      });
+      scores.contextRelevance = result?.score ?? null;
+      break;
+    } catch (e) {
+      if (attempt === 0) {
+        // 1回目失敗 → リトライ
+      } else {
+        console.warn(
+          "  ⚠ contextRelevance scorer failed (2 attempts):",
+          (e as Error).message,
+        );
+      }
+    }
   }
 
-  try {
-    const result = await createHallucinationScorer({
-      model: GEMINI_FLASH_LITE,
-      options: { context },
-    }).run({
-      input: testRun.input,
-      output: testRun.output,
-    });
-    scores.hallucination = result?.score ?? null;
-  } catch (e) {
-    console.warn("  ⚠ hallucination scorer failed:", (e as Error).message);
+  // hallucination: 棄権回答では誤判定（1.000）するためスキップ
+  // see: Phase 1 スコアラー検証結果（棄権回答に hallucination=1.000）
+  if (abstention) {
+    // 棄権回答は捏造ではないため null（スキップ）
+  } else {
+    try {
+      const result = await createHallucinationScorer({
+        model: GEMINI_FLASH_LITE,
+        options: { context },
+      }).run({
+        input: testRun.input,
+        output: testRun.output,
+      });
+      scores.hallucination = result?.score ?? null;
+    } catch (e) {
+      console.warn("  ⚠ hallucination scorer failed:", (e as Error).message);
+    }
   }
 
   return scores;
@@ -527,16 +574,16 @@ const generateHtml = (result: EvalResult): string => {
     .join("\n");
 
   // サマリーテーブル行
-  const summaryRows = SCORE_NAMES.map(
-    (name) =>
-      `<tr>
-        <td>${name}</td>
+  const summaryRows = SCORE_NAMES.map((name) => {
+    const desc = SCORE_DESCRIPTIONS[name];
+    return `<tr>
+        <td><strong>${desc.label}</strong><br><small style="color:#888">${desc.description}</small></td>
         <td>${summary.averageScores[name]?.toFixed(3) ?? "N/A"}</td>
         <td>${summary.stdDev[name]?.toFixed(3) ?? "N/A"}</td>
         <td>${summary.min[name]?.toFixed(3) ?? "N/A"}</td>
         <td>${summary.max[name]?.toFixed(3) ?? "N/A"}</td>
-      </tr>`,
-  ).join("\n");
+      </tr>`;
+  }).join("\n");
 
   // 計測指標テーブル
   const { metrics } = summary;
@@ -701,8 +748,9 @@ const generateCompareHtml = (
       improvementHtml = `<td style="color:${color};font-weight:600;">${sign}${pct.toFixed(1)}%</td>`;
     }
 
+    const desc = SCORE_DESCRIPTIONS[name];
     return `<tr>
-        <td>${name}</td>
+        <td><strong>${desc.label}</strong><br><small style="color:#888">${desc.description}</small></td>
         ${cells}
         ${improvementHtml}
       </tr>`;
@@ -924,7 +972,8 @@ const generateMultiCaseCompareHtml = (
       improvementHtml = `<td style="color:${color};font-weight:600;">${sign}${pct.toFixed(1)}%</td>`;
     }
 
-    return `<tr><td>${name}</td>${cells}${improvementHtml}</tr>`;
+    const desc = SCORE_DESCRIPTIONS[name];
+    return `<tr><td><strong>${desc.label}</strong><br><small style="color:#888">${desc.description}</small></td>${cells}${improvementHtml}</tr>`;
   }).join("\n");
 
   // ヒートマップ色
@@ -1130,6 +1179,8 @@ const runTestCaseEval = async (params: {
 
       const transcript = extractTranscript(steps);
 
+      const abstention = isAbstention(result.text);
+
       process.stdout.write(" スコアリング中...");
 
       const scores = await runEvalScorers({
@@ -1137,6 +1188,7 @@ const runTestCaseEval = async (params: {
         output: result.text,
         groundTruth: testCase.groundTruth,
         context,
+        abstention,
       });
 
       const durationMs = Date.now() - iterStart;
@@ -1158,7 +1210,6 @@ const runTestCaseEval = async (params: {
         0,
       );
       const hasAnswer = result.text.trim().length > 0;
-      const abstention = isAbstention(result.text);
 
       timeline.push({
         iteration: iterNum,
@@ -1203,6 +1254,11 @@ const runTestCaseEval = async (params: {
         isAbstention: true,
       });
       console.log(` ❌ (${durationMs}ms) ${errorMsg}`);
+    }
+
+    // イテレーション間インターバル（最後のイテレーション以外）
+    if (i < n - 1) {
+      await sleep(2000);
     }
   }
 
@@ -1277,8 +1333,12 @@ const main = async () => {
   console.log(`   テストケース数: ${testCases.length}`);
   console.log(`   各N回: ${args.n}`);
   console.log(
-    `   環境: ${args.compare ? "3環境比較 (local → dev → prd)" : args.env}\n`,
+    `   環境: ${args.compare ? "3環境比較 (local → dev → prd)" : args.env}`,
   );
+  if (testCases.length > 1 && args.interval > 0) {
+    console.log(`   インターバル: ${args.interval}秒（テストケース間）`);
+  }
+  console.log();
 
   // LibSQLStore 作成
   const libsqlStore = new LibSQLStore({
@@ -1376,6 +1436,12 @@ const main = async () => {
         );
 
         allResults[tcIdx].entries.push({ env: envName, result });
+
+        // テストケース間のインターバル（最後のケース以外）
+        if (args.interval > 0 && tcIdx < testCases.length - 1) {
+          console.log(`  ⏳ ${args.interval}秒インターバル...`);
+          await sleep(args.interval * 1000);
+        }
       }
 
       await dispose();
@@ -1425,7 +1491,8 @@ const main = async () => {
     const requestContext = new RequestContext();
     requestContext.set("env", env);
 
-    for (const testCase of testCases) {
+    for (let tcIdx = 0; tcIdx < testCases.length; tcIdx++) {
+      const testCase = testCases[tcIdx];
       const result = await runTestCaseEval({
         testCase,
         agent,
@@ -1465,6 +1532,12 @@ const main = async () => {
       );
       console.log(`\n📁 JSON: ${jsonPath}`);
       console.log(`📁 HTML: ${htmlPath}\n`);
+
+      // テストケース間のインターバル（最後のケース以外）
+      if (args.interval > 0 && tcIdx < testCases.length - 1) {
+        console.log(`⏳ ${args.interval}秒インターバル...`);
+        await sleep(args.interval * 1000);
+      }
     }
 
     await dispose();
