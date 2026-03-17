@@ -108,8 +108,6 @@ export type UnifiedFilesListResponse = GetOk<"/admin/knowledge/unified">;
 export type UnifiedFileInfo = UnifiedFilesListResponse["files"][number];
 
 // multipart レスポンス型（raw fetch で使用）
-export type UploadFileResponse = PostOk<"/admin/knowledge/upload">;
-export type ConvertFileResponse = PostOk<"/admin/knowledge/convert">;
 export type ReconvertFileResponse = PostOk<"/admin/knowledge/reconvert">;
 
 // 招待

@@ -1,6 +1,4 @@
 import { API_BASE, client } from "~/lib/api/client";
-import { getAuthToken } from "~/lib/auth-token";
-import type { ConvertFileResponse, UploadFileResponse } from "~/types";
 
 export const syncKnowledge = async () => {
   const { data, error } = await client.POST("/admin/knowledge/sync");
@@ -45,48 +43,30 @@ export const deleteFile = async (key: string) => {
   return data;
 };
 
-// multipart/form-data — raw fetch を維持
 export const uploadFile = async (file: File, filename?: string) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  if (filename) {
-    formData.append("filename", filename);
-  }
-
-  const token = getAuthToken();
-  const res = await fetch(`${API_BASE}/admin/knowledge/upload`, {
-    method: "POST",
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: formData,
+  const { data, error } = await client.POST("/admin/knowledge/upload", {
+    body: { file: file as unknown as string, filename },
+    bodySerializer: toFormData,
   });
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error?.message || "アップロードに失敗しました");
-  }
-
-  return res.json() as Promise<UploadFileResponse>;
+  if (error) throw error;
+  return data;
 };
 
-// multipart/form-data — raw fetch を維持
 export const convertFile = async (file: File, filename: string) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("filename", filename);
-
-  const token = getAuthToken();
-  const res = await fetch(`${API_BASE}/admin/knowledge/convert`, {
-    method: "POST",
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: formData,
+  const { data, error } = await client.POST("/admin/knowledge/convert", {
+    body: { file: file as unknown as string, filename },
+    bodySerializer: toFormData,
   });
+  if (error) throw error;
+  return data;
+};
 
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error?.message || "変換に失敗しました");
+const toFormData = (body: unknown) => {
+  const fd = new FormData();
+  for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
+    if (value != null) fd.append(key, value as string | Blob);
   }
-
-  return res.json() as Promise<ConvertFileResponse>;
+  return fd;
 };
 
 export const fetchUnifiedFiles = async () => {
