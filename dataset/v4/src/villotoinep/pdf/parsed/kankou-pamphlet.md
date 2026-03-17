@@ -1,3 +1,7 @@
+---
+title: 音威子府村取扱説明書
+category: 資料
+---
 # 音威子府村取扱説明書
 
 otoineppu village instruction manual

@@ -1,3 +1,8 @@
+---
+title: スポーツ
+category: 住民生活
+subcategory: sports
+---
 # スポーツ
 
 音威子府村のスポーツ情報です。

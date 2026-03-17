@@ -1,3 +1,8 @@
+---
+category: 教育
+subcategory: 中学生向け
+url: 'https://www.otoineppu-h.ed.jp/junior/'
+---
 本文へ移動
 Junior High School Student
 ##  中学生のみなさまへ

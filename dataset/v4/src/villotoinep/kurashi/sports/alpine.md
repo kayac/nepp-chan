@@ -1,3 +1,8 @@
+---
+title: アルペンスキー
+category: 住民生活
+subcategory: sports
+---
 # アルペンスキー
 
 ## 音威富士大回転競技大会

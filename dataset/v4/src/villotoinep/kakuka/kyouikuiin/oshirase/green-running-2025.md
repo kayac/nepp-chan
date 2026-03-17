@@ -1,3 +1,8 @@
+---
+title: OTOINEPPU GreenRunning 2025について
+category: 各課案内
+subcategory: 教育委員会
+---
 # OTOINEPPU GreenRunning 2025について
 
 OTOINEPPU GreenRunningについてのお知らせです。

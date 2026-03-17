@@ -1,3 +1,8 @@
+---
+title: くらしの情報
+category: 住民生活
+subcategory: index.md
+---
 # くらしの情報
 
 住民の皆様への生活情報です。

@@ -1,3 +1,8 @@
+---
+category: 教育
+subcategory: 入試
+url: 'https://www.otoineppu-h.ed.jp/entrance/'
+---
 本文へ移動
 入試情報
 ##  入試情報

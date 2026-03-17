@@ -1,3 +1,7 @@
+---
+title: jinkou_kokudo
+category: 村の概要
+---
 # jinkou_kokudo
 
 ## 人口と世帯数

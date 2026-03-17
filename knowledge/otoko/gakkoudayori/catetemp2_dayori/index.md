@@ -1,3 +1,8 @@
+---
+category: 教育
+subcategory: 学校便り
+url: 'https://www.otoineppu-h.ed.jp/gakkoudayori/catetemp2_dayori/'
+---
 本文へ移動
 ##  学校便り
 School Bulletin

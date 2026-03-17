@@ -1,3 +1,8 @@
+---
+category: 教育
+subcategory: 学校便り
+url: 'https://www.otoineppu-h.ed.jp/gakkoudayori/'
+---
 本文へ移動
 School Bulletin
 ##  学校便り

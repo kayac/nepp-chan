@@ -1,3 +1,8 @@
+---
+category: 教育
+subcategory: 中学生向け
+url: 'https://www.otoineppu-h.ed.jp/junior/kengaku.html'
+---
 本文へ移動
 ##  中学生のみなさまへ
 Junior High School Student

@@ -1,3 +1,8 @@
+---
+title: 各課案内
+category: 各課案内
+subcategory: index.md
+---
 # 各課案内
 
 音威子府村役場の組織・各課一覧。

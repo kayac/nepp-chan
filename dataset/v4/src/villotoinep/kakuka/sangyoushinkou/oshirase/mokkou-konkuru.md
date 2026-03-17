@@ -1,3 +1,8 @@
+---
+title: LEGACY OF MOKKOU（木工コンクール）の開催について
+category: 各課案内
+subcategory: 産業振興課
+---
 # LEGACY OF MOKKOU（木工コンクール）の開催について
 
 木工コンクールについてのお知らせです。
