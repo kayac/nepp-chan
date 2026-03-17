@@ -22,7 +22,6 @@ export const broadcastAdminRoutes = new OpenAPIHono<{
 
 broadcastAdminRoutes.use("*", sessionAuth);
 
-// 一覧
 const listRoute = createRoute({
   method: "get",
   path: "/",
@@ -75,7 +74,6 @@ broadcastAdminRoutes.openapi(listRoute, async (c) => {
   );
 });
 
-// 作成
 const createBroadcastRoute = createRoute({
   method: "post",
   path: "/",
@@ -122,7 +120,6 @@ broadcastAdminRoutes.openapi(createBroadcastRoute, async (c) => {
   }
 });
 
-// 詳細
 const getDetailRoute = createRoute({
   method: "get",
   path: "/{id}",
@@ -161,7 +158,6 @@ broadcastAdminRoutes.openapi(getDetailRoute, async (c) => {
   return c.json(broadcast, 200);
 });
 
-// 更新
 const updateRoute = createRoute({
   method: "put",
   path: "/{id}",
@@ -215,7 +211,6 @@ broadcastAdminRoutes.openapi(updateRoute, async (c) => {
   return c.json(updated, 200);
 });
 
-// 削除
 const deleteRoute = createRoute({
   method: "delete",
   path: "/{id}",
@@ -261,7 +256,6 @@ broadcastAdminRoutes.openapi(deleteRoute, async (c) => {
   return c.json({ message: "配信メッセージを削除しました" }, 200);
 });
 
-// 即時送信
 const sendRoute = createRoute({
   method: "post",
   path: "/{id}/send",
