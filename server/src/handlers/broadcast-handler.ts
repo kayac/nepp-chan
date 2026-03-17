@@ -1,6 +1,6 @@
 import { logger } from "~/lib/logger";
 import { broadcastRepository } from "~/repository/broadcast-repository";
-import { sendBroadcast } from "~/services/broadcast-sender";
+import { sendBroadcast } from "~/services/broadcast-service";
 
 export const handleBroadcastCheck: ExportedHandlerScheduledHandler<
   CloudflareBindings

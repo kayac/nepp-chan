@@ -10,7 +10,11 @@ import {
   createBroadcastSchema,
   updateBroadcastSchema,
 } from "~/schemas/broadcast-schema";
-import { sendBroadcast } from "~/services/broadcast-sender";
+import {
+  createBroadcastMessage,
+  sendBroadcast,
+  updateBroadcastMessage,
+} from "~/services/broadcast-service";
 
 export const broadcastAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -58,7 +62,6 @@ broadcastAdminRoutes.openapi(listRoute, async (c) => {
     cursor: cursor ?? undefined,
     status: status ?? undefined,
   });
-
   const total = await broadcastRepository.count(c.env.DB);
 
   return c.json(
@@ -102,48 +105,21 @@ const createBroadcastRoute = createRoute({
   },
 });
 
-const generateTitle = (text: string) =>
-  text.slice(0, 50) + (text.length > 50 ? "…" : "");
-
 broadcastAdminRoutes.openapi(createBroadcastRoute, async (c) => {
   const body = c.req.valid("json");
   const adminUser = c.get("adminUser" as never) as { id: string };
 
-  const id = crypto.randomUUID();
-  const now = new Date().toISOString();
-
-  const status = body.sendNow
-    ? "draft"
-    : body.scheduledAt
-      ? "scheduled"
-      : "draft";
-
-  await broadcastRepository.create(c.env.DB, {
-    id,
-    title: generateTitle(body.body),
-    body: body.body,
-    status,
-    scheduledAt: body.scheduledAt ?? null,
-    createdBy: adminUser.id,
-    createdAt: now,
-  });
-
-  if (body.sendNow) {
-    const result = await sendBroadcast(c.env, id);
-    if (!result.success) {
-      throw new HTTPException(500, {
-        message: `配信に失敗しました: ${result.error}`,
-      });
-    }
-  }
-
-  const broadcast = await broadcastRepository.findById(c.env.DB, id);
-  if (!broadcast) {
+  try {
+    const broadcast = await createBroadcastMessage(c.env, {
+      ...body,
+      createdBy: adminUser.id,
+    });
+    return c.json(broadcast, 201);
+  } catch (error) {
     throw new HTTPException(500, {
-      message: "作成した配信メッセージの取得に失敗しました",
+      message: `配信に失敗しました: ${error instanceof Error ? error.message : "Unknown error"}`,
     });
   }
-  return c.json(broadcast, 201);
 });
 
 // 詳細
@@ -174,7 +150,6 @@ const getDetailRoute = createRoute({
 
 broadcastAdminRoutes.openapi(getDetailRoute, async (c) => {
   const { id } = c.req.valid("param");
-
   const broadcast = await broadcastRepository.findById(c.env.DB, id);
 
   if (!broadcast) {
@@ -224,48 +199,19 @@ broadcastAdminRoutes.openapi(updateRoute, async (c) => {
   const { id } = c.req.valid("param");
   const body = c.req.valid("json");
 
-  const broadcast = await broadcastRepository.findById(c.env.DB, id);
-
-  if (!broadcast) {
+  const existing = await broadcastRepository.findById(c.env.DB, id);
+  if (!existing) {
     throw new HTTPException(404, {
       message: "配信メッセージが見つかりません",
     });
   }
-
-  if (broadcast.status === "sent") {
+  if (existing.status === "sent") {
     throw new HTTPException(400, {
       message: "送信済みのメッセージは更新できません",
     });
   }
 
-  const updateData: {
-    title?: string;
-    body?: string;
-    scheduledAt?: string | null;
-    status?: string;
-  } = {};
-
-  if (body.body !== undefined) {
-    updateData.body = body.body;
-    updateData.title = generateTitle(body.body);
-  }
-  if (body.scheduledAt !== undefined) {
-    updateData.scheduledAt = body.scheduledAt;
-    if (body.scheduledAt) {
-      updateData.status = "scheduled";
-    } else {
-      updateData.status = "draft";
-    }
-  }
-
-  await broadcastRepository.update(c.env.DB, id, updateData);
-
-  const updated = await broadcastRepository.findById(c.env.DB, id);
-  if (!updated) {
-    throw new HTTPException(500, {
-      message: "更新した配信メッセージの取得に失敗しました",
-    });
-  }
+  const updated = await updateBroadcastMessage(c.env.DB, id, body);
   return c.json(updated, 200);
 });
 
@@ -300,13 +246,11 @@ broadcastAdminRoutes.openapi(deleteRoute, async (c) => {
   const { id } = c.req.valid("param");
 
   const broadcast = await broadcastRepository.findById(c.env.DB, id);
-
   if (!broadcast) {
     throw new HTTPException(404, {
       message: "配信メッセージが見つかりません",
     });
   }
-
   if (broadcast.status === "sent" || broadcast.status === "scheduled") {
     throw new HTTPException(400, {
       message: "送信済みまたは予約済みのメッセージは削除できません",
@@ -314,7 +258,6 @@ broadcastAdminRoutes.openapi(deleteRoute, async (c) => {
   }
 
   await broadcastRepository.delete(c.env.DB, id);
-
   return c.json({ message: "配信メッセージを削除しました" }, 200);
 });
 
@@ -350,21 +293,16 @@ broadcastAdminRoutes.openapi(sendRoute, async (c) => {
   const { id } = c.req.valid("param");
 
   const broadcast = await broadcastRepository.findById(c.env.DB, id);
-
   if (!broadcast) {
     throw new HTTPException(404, {
       message: "配信メッセージが見つかりません",
     });
   }
-
   if (broadcast.status === "sent") {
-    throw new HTTPException(400, {
-      message: "既に送信済みです",
-    });
+    throw new HTTPException(400, { message: "既に送信済みです" });
   }
 
   const result = await sendBroadcast(c.env, id);
-
   if (!result.success) {
     throw new HTTPException(500, {
       message: `配信に失敗しました: ${result.error}`,
