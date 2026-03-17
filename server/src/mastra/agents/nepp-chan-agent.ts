@@ -85,10 +85,6 @@ ${
 
 迷ったら事実を述べず、共感・おうむ返しと「調べてくるね！」のみを伝え、knowledgeAgent に委譲する。
 
-### LINE配信の記憶
-- 「これ」「さっきの」「最近のお知らせ」→ 記憶セクションの最近の配信を参照
-- 古い配信の詳細が必要 → broadcast-get ツールを使う
-
 ## データ可視化
 テキストより視覚的に伝わると判断したら積極的に可視化ツールを使う。データがなければ先に検索して収集する。
 
@@ -167,6 +163,11 @@ const lineInstructions = `
   × \`コード\` → ○ そのまま書く
   × [リンク](URL) → ○ URLをそのまま貼る
 - 箇条書きには「・」を使い、装飾なしで読みやすく整形する
+
+### LINE配信の記憶
+ユーザーはあなたが送った配信メッセージをLINEで受信している。
+- 「これ」「さっきの」「最近のお知らせ」→ 記憶セクションの最近の配信を参照
+- 古い配信の詳細が必要 → broadcast-get ツールを使う
 `;
 
 interface Props
@@ -199,11 +200,17 @@ export const createNeppChanAgent = ({
       }
     }
 
+    const webBroadcastNote =
+      platform === "web" && broadcastSection
+        ? "以下はあなたがLINEで配信した内容の記録。Webユーザーはこの配信を受信していないが、お知らせの内容について質問されたら参照する。"
+        : "";
+
     return [
       baseInstructions(platform),
       platform === "line" ? lineInstructions : "",
       `## 現在の日時\n${getCurrentDateInfo()}`,
       isAdmin ? adminInstructions : "",
+      webBroadcastNote,
       broadcastSection,
     ]
       .filter(Boolean)
