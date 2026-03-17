@@ -4,6 +4,13 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import {
+  createBroadcast,
+  deleteBroadcast,
+  fetchBroadcasts,
+  sendBroadcastNow,
+  updateBroadcast,
+} from "~/repository/broadcast-repository";
 import { fetchEmergencies } from "~/repository/emergency-repository";
 import {
   deleteAllFeedbacks,
@@ -31,6 +38,8 @@ import {
 } from "~/repository/persona-repository";
 
 export const dashboardKeys = {
+  broadcasts: ["dashboard", "broadcasts"] as const,
+  broadcastDetail: (id: string) => ["dashboard", "broadcast", id] as const,
   personas: ["dashboard", "personas"] as const,
   emergencies: ["dashboard", "emergencies"] as const,
   feedbacks: ["dashboard", "feedbacks"] as const,
@@ -232,6 +241,65 @@ export const useUnresolveFeedback = () => {
     mutationFn: unresolveFeedback,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.feedbacks });
+    },
+  });
+};
+
+// 配信メッセージ関連 hooks
+export const useBroadcasts = (
+  limit = 30,
+  options?: { status?: "draft" | "scheduled" | "sent" | "failed" },
+) =>
+  useInfiniteQuery({
+    queryKey: [...dashboardKeys.broadcasts, limit, options?.status],
+    queryFn: ({ pageParam }) =>
+      fetchBroadcasts({ limit, cursor: pageParam, status: options?.status }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
+
+export const useCreateBroadcast = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createBroadcast,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.broadcasts });
+    },
+  });
+};
+
+export const useUpdateBroadcast = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Parameters<typeof updateBroadcast>[1];
+    }) => updateBroadcast(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.broadcasts });
+    },
+  });
+};
+
+export const useDeleteBroadcast = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteBroadcast,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.broadcasts });
+    },
+  });
+};
+
+export const useSendBroadcast = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: sendBroadcastNow,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.broadcasts });
     },
   });
 };

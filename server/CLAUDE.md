@@ -59,6 +59,9 @@ server/src/
 | `/admin/feedback/:id`              | GET      | フィードバック詳細             |
 | `/admin/feedback/:id/resolve`      | PUT/DELETE | フィードバック解決・未解決に戻す |
 | `/admin/feedback`                  | DELETE   | 全フィードバック削除           |
+| `/admin/broadcast`                 | GET/POST | 配信一覧・作成                 |
+| `/admin/broadcast/:id`             | GET/PUT/DELETE | 配信詳細・更新・削除     |
+| `/admin/broadcast/:id/send`        | POST     | 配信即時送信                   |
 | `/admin/invitations`               | GET/POST | 招待一覧・作成                 |
 | `/admin/invitations/:id`           | DELETE   | 招待削除                       |
 | `/auth/register/options`           | POST     | WebAuthn 登録オプション取得    |
@@ -121,6 +124,7 @@ const agent = createNeppChanAgent({ isAdmin: true });
 | `adminFeedbackTool`      | `admin-feedback`     | フィードバック一覧・統計（管理者専用） |
 | `villageSearchTool`      | `village-search`     | 村検索                                 |
 | `knowledgeSearchTool`    | `knowledge-search`   | RAG ナレッジ検索（Vectorize）          |
+| `broadcastGetTool`       | `broadcast-get`      | 過去の配信メッセージ取得               |
 
 ## コーディング規約
 
@@ -302,6 +306,21 @@ throw new HTTPException(404, { message: "Not found" });
 | created_at           | TEXT | 作成日時（NOT NULL）           |
 | resolved_at          | TEXT | 解決日時                       |
 
+### broadcast_messages
+
+| カラム        | 型   | 説明                                        |
+| ------------- | ---- | ------------------------------------------- |
+| id            | TEXT | PRIMARY KEY                                 |
+| title         | TEXT | タイトル（本文先頭50文字、NOT NULL）         |
+| body          | TEXT | 本文（NOT NULL）                            |
+| status        | TEXT | ステータス（draft/scheduled/sent/failed）   |
+| scheduled_at  | TEXT | 予約送信日時                                |
+| sent_at       | TEXT | 送信日時                                    |
+| error_message | TEXT | エラーメッセージ                            |
+| created_by    | TEXT | 作成者 admin ID（NOT NULL）                 |
+| created_at    | TEXT | 作成日時（NOT NULL）                        |
+| updated_at    | TEXT | 更新日時                                    |
+
 ## Drizzle ORM
 
 ### スキーマ定義
@@ -408,9 +427,10 @@ thread_persona_status 更新
 
 ### Cron Trigger
 
-| スケジュール | ハンドラー           | 説明                          |
-| ------------ | -------------------- | ----------------------------- |
-| `0 18 * * *` | handlePersonaExtract | ペルソナ抽出（毎日03:00 JST） |
+| スケジュール   | ハンドラー           | 説明                          |
+| -------------- | -------------------- | ----------------------------- |
+| `*/5 * * * *`  | handleBroadcastCheck | 配信予約チェック（5分ごと）   |
+| `0 18 * * *`   | handlePersonaExtract | ペルソナ抽出（毎日03:00 JST） |
 
 ## デプロイ環境
 

@@ -141,6 +141,40 @@ export type ReconvertFileResponse = {
   chunks: number;
 };
 
+// LINE配信関連
+export type BroadcastStatus = "draft" | "scheduled" | "sent" | "failed";
+
+export type BroadcastMessage = {
+  id: string;
+  title: string;
+  body: string;
+  status: BroadcastStatus;
+  scheduledAt: string | null;
+  sentAt: string | null;
+  errorMessage: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string | null;
+};
+
+export type BroadcastsResponse = {
+  broadcasts: BroadcastMessage[];
+  total: number;
+  nextCursor: string | null;
+  hasMore: boolean;
+};
+
+export type CreateBroadcastRequest = {
+  body: string;
+  scheduledAt?: string;
+  sendNow?: boolean;
+};
+
+export type UpdateBroadcastRequest = {
+  body?: string;
+  scheduledAt?: string | null;
+};
+
 // フィードバック関連
 export type FeedbackRating = "good" | "bad" | "idea";
 

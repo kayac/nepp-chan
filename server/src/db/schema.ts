@@ -129,6 +129,23 @@ export const adminSessions = sqliteTable("admin_sessions", {
 export type AdminSession = typeof adminSessions.$inferSelect;
 export type NewAdminSession = typeof adminSessions.$inferInsert;
 
+// LINE配信メッセージ
+export const broadcastMessages = sqliteTable("broadcast_messages", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  status: text("status").notNull().default("draft"), // draft | scheduled | sent | failed
+  scheduledAt: text("scheduled_at"),
+  sentAt: text("sent_at"),
+  errorMessage: text("error_message"),
+  createdBy: text("created_by").notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at"),
+});
+
+export type BroadcastMessage = typeof broadcastMessages.$inferSelect;
+export type NewBroadcastMessage = typeof broadcastMessages.$inferInsert;
+
 // 認証リクエスト（一時保存、WebAuthn challenge）
 export const authChallenges = sqliteTable("auth_challenges", {
   id: text("id").primaryKey(),
