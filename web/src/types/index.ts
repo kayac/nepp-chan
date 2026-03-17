@@ -1,183 +1,73 @@
-import type { UIMessage } from "ai";
+import type { paths } from "./api";
 
-export type Thread = {
-  id: string;
-  resourceId: string;
-  title: string | null;
-  createdAt: string;
-  updatedAt: string;
-  metadata: Record<string, unknown> | null;
-};
+// パスベース型抽出ヘルパー
+type GetOk<P extends keyof paths> = paths[P] extends {
+  get: { responses: { 200: { content: { "application/json": infer R } } } };
+}
+  ? R
+  : never;
 
-export type ThreadsResponse = {
-  threads: Thread[];
-  hasMore: boolean;
-  total: number;
-  page: number;
-  perPage: number;
-};
+type PostCreated<P extends keyof paths> = paths[P] extends {
+  post: { responses: { 201: { content: { "application/json": infer R } } } };
+}
+  ? R
+  : never;
 
-export type MessagesResponse = {
-  messages: UIMessage[];
-};
+type PostOk<P extends keyof paths> = paths[P] extends {
+  post: { responses: { 200: { content: { "application/json": infer R } } } };
+}
+  ? R
+  : never;
 
-export type Persona = {
-  id: string;
-  resourceId: string;
-  category: string;
-  tags: string | null;
-  content: string;
-  source: string | null;
-  topic: string | null;
-  sentiment: string | null;
-  demographicSummary: string | null;
-  createdAt: string;
-  updatedAt: string | null;
-  conversationEndedAt: string | null;
-};
-
-export type PersonasResponse = {
-  personas: Persona[];
-  total: number;
-  nextCursor: string | null;
-  hasMore: boolean;
-};
-
-export type EmergencyReport = {
-  id: string;
-  type: string;
-  description: string | null;
-  location: string | null;
-  reportedAt: string;
-  updatedAt: string | null;
-};
-
-export type EmergenciesResponse = {
-  emergencies: EmergencyReport[];
-  total: number;
-};
-
-export type SyncResult = {
-  message: string;
-  results?: {
-    file: string;
-    chunks: number;
-    error?: string;
-    edited?: boolean;
-  }[];
-  editedCount?: number;
-};
-
-export type DeleteResult = {
-  message: string;
-  count?: number;
-};
-
-// ナレッジファイル関連
-export type FileInfo = {
-  key: string;
-  size: number;
-  lastModified: string;
-  etag: string;
-  edited?: boolean;
-};
-
-export type FilesListResponse = {
-  files: FileInfo[];
-  truncated: boolean;
-};
-
-export type FileContentResponse = {
-  key: string;
-  content: string;
-  contentType: string;
-  size: number;
-  lastModified: string;
-};
-
-export type SaveFileResponse = {
-  message: string;
-  chunks: number;
-};
-
-export type UploadFileResponse = {
-  message: string;
-  key: string;
-  chunks: number;
-};
-
-export type ConvertFileResponse = {
-  message: string;
-  key: string;
-  originalType: string;
-  chunks: number;
-};
-
-// 統合ファイル情報
-export type UnifiedFileInfo = {
-  baseName: string;
-  original?: {
-    key: string;
-    size: number;
-    lastModified: string;
-    contentType: string;
+type PostBody<P extends keyof paths> = paths[P] extends {
+  post: {
+    requestBody?: { content: { "application/json": infer B } };
   };
-  markdown?: {
-    key: string;
-    size: number;
-    lastModified: string;
+}
+  ? B
+  : never;
+
+type PutOk<P extends keyof paths> = paths[P] extends {
+  put: { responses: { 200: { content: { "application/json": infer R } } } };
+}
+  ? R
+  : never;
+
+type DeleteOk<P extends keyof paths> = paths[P] extends {
+  delete: {
+    responses: { 200: { content: { "application/json": infer R } } };
   };
-  hasMarkdown: boolean;
-};
+}
+  ? R
+  : never;
 
-export type UnifiedFilesListResponse = {
-  files: UnifiedFileInfo[];
-  truncated: boolean;
-};
+type PutBody<P extends keyof paths> = paths[P] extends {
+  put: {
+    requestBody?: { content: { "application/json": infer B } };
+  };
+}
+  ? B
+  : never;
 
-export type ReconvertFileResponse = {
-  message: string;
-  key: string;
-  chunks: number;
-};
+// スレッド
+export type ThreadsResponse = GetOk<"/threads">;
+export type Thread = ThreadsResponse["threads"][number];
+export type MessagesResponse = GetOk<"/threads/{threadId}/messages">;
 
-// LINE配信関連
+// 配信
+export type BroadcastsResponse = GetOk<"/admin/broadcast">;
+export type BroadcastMessage = BroadcastsResponse["broadcasts"][number];
 export type BroadcastStatus = "draft" | "scheduled" | "sent" | "failed";
+export type CreateBroadcastRequest = PostBody<"/admin/broadcast">;
+export type UpdateBroadcastRequest = PutBody<"/admin/broadcast/{id}">;
 
-export type BroadcastMessage = {
-  id: string;
-  title: string;
-  body: string;
-  status: BroadcastStatus;
-  scheduledAt: string | null;
-  sentAt: string | null;
-  errorMessage: string | null;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string | null;
-};
-
-export type BroadcastsResponse = {
-  broadcasts: BroadcastMessage[];
-  total: number;
-  nextCursor: string | null;
-  hasMore: boolean;
-};
-
-export type CreateBroadcastRequest = {
-  body: string;
-  scheduledAt?: string;
-  sendNow?: boolean;
-};
-
-export type UpdateBroadcastRequest = {
-  body?: string;
-  scheduledAt?: string | null;
-};
-
-// フィードバック関連
+// フィードバック
+export type FeedbacksResponse = GetOk<"/admin/feedback">;
+export type MessageFeedback = FeedbacksResponse["feedbacks"][number];
+export type FeedbackStats = FeedbacksResponse["stats"];
+export type FeedbackSubmitRequest = PostBody<"/feedback">;
+export type FeedbackSubmitResponse = PostCreated<"/feedback">;
 export type FeedbackRating = "good" | "bad" | "idea";
-
 export type FeedbackCategory =
   | "incorrect_fact"
   | "outdated_info"
@@ -193,65 +83,34 @@ export const FEEDBACK_CATEGORY_LABELS: Record<FeedbackCategory, string> = {
   other: "その他",
 };
 
-export type ConversationContextMessage = {
-  id: string;
-  role: string;
-  content: string;
-};
+export type ConversationContext = MessageFeedback["conversationContext"];
+export type ConversationContextMessage = ConversationContext["targetMessage"];
+export type ToolExecution = NonNullable<
+  MessageFeedback["toolExecutions"]
+>[number];
 
-export type ConversationContext = {
-  targetMessage: ConversationContextMessage;
-  previousMessages: ConversationContextMessage[];
-  nextMessages: ConversationContextMessage[];
-};
+// 緊急情報
+export type EmergenciesResponse = GetOk<"/admin/emergency">;
+export type EmergencyReport = EmergenciesResponse["emergencies"][number];
 
-export type ToolExecution = {
-  toolName: string;
-  state: string;
-  input?: unknown;
-  output?: unknown;
-  errorText?: string;
-};
+// ペルソナ
+export type PersonasResponse = GetOk<"/admin/persona">;
+export type Persona = PersonasResponse["personas"][number];
 
-export type FeedbackSubmitRequest = {
-  threadId: string;
-  messageId: string;
-  rating: FeedbackRating;
-  category?: FeedbackCategory;
-  comment?: string;
-  conversationContext: ConversationContext;
-  toolExecutions?: ToolExecution[];
-};
+// ナレッジ
+export type SyncResult = PostOk<"/admin/knowledge/sync">;
+export type DeleteResult = DeleteOk<"/admin/knowledge">;
+export type FilesListResponse = GetOk<"/admin/knowledge/files">;
+export type FileInfo = FilesListResponse["files"][number];
+export type FileContentResponse = GetOk<"/admin/knowledge/files/{key}">;
+export type SaveFileResponse = PutOk<"/admin/knowledge/files/{key}">;
+export type UnifiedFilesListResponse = GetOk<"/admin/knowledge/unified">;
+export type UnifiedFileInfo = UnifiedFilesListResponse["files"][number];
 
-export type FeedbackSubmitResponse = {
-  id: string;
-};
+// multipart レスポンス型（raw fetch で使用）
+export type ReconvertFileResponse = PostOk<"/admin/knowledge/reconvert">;
 
-export type MessageFeedback = {
-  id: string;
-  threadId: string;
-  messageId: string;
-  rating: string;
-  category: string | null;
-  comment: string | null;
-  conversationContext: string;
-  toolExecutions: string | null;
-  createdAt: string;
-  resolvedAt: string | null;
-};
-
-export type FeedbackStats = {
-  total: number;
-  good: number;
-  bad: number;
-  idea: number;
-  byCategory: Record<string, number>;
-};
-
-export type FeedbacksResponse = {
-  feedbacks: MessageFeedback[];
-  total: number;
-  nextCursor: string | null;
-  hasMore: boolean;
-  stats: FeedbackStats;
-};
+// 招待
+export type InvitationsResponse = GetOk<"/admin/invitations">;
+export type Invitation = InvitationsResponse["invitations"][number];
+export type CreateInvitationResponse = PostCreated<"/admin/invitations">;

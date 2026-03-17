@@ -26,7 +26,7 @@ const ThreadSchema = z.object({
 
 const MessageSchema = z.object({
   id: z.string(),
-  role: z.enum(["user", "assistant", "system", "tool", "data"]),
+  role: z.enum(["user", "assistant", "system"]),
   parts: z.array(z.record(z.string(), z.unknown())),
 });
 

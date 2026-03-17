@@ -1,26 +1,45 @@
-import { apiClient } from "~/lib/api/client";
-import type { MessagesResponse, Thread, ThreadsResponse } from "~/types";
+import { client } from "~/lib/api/client";
 
-export const fetchThreads = (resourceId: string, page = 0, perPage = 20) => {
-  const params = new URLSearchParams({
-    resourceId,
-    page: String(page),
-    perPage: String(perPage),
+export const fetchThreads = async (
+  resourceId: string,
+  page = 0,
+  perPage = 20,
+) => {
+  const { data, error } = await client.GET("/threads", {
+    params: { query: { resourceId, page, perPage } },
   });
-  return apiClient<ThreadsResponse>(`/threads?${params}`);
+  if (error) throw error;
+  return data;
 };
 
-export const createThread = (resourceId: string, title?: string) =>
-  apiClient<Thread>("/threads", {
-    method: "POST",
+export const createThread = async (resourceId: string, title?: string) => {
+  const { data, error } = await client.POST("/threads", {
     body: { resourceId, title },
   });
+  if (error) throw error;
+  return data;
+};
 
-export const deleteThread = (threadId: string) =>
-  apiClient<{ message: string }>(`/threads/${threadId}`, { method: "DELETE" });
+export const deleteThread = async (threadId: string) => {
+  const { data, error } = await client.DELETE("/threads/{threadId}", {
+    params: { path: { threadId } },
+  });
+  if (error) throw error;
+  return data;
+};
 
-export const fetchThread = (threadId: string) =>
-  apiClient<Thread>(`/threads/${threadId}`);
+export const fetchThread = async (threadId: string) => {
+  const { data, error } = await client.GET("/threads/{threadId}", {
+    params: { path: { threadId } },
+  });
+  if (error) throw error;
+  return data;
+};
 
-export const fetchMessages = (threadId: string) =>
-  apiClient<MessagesResponse>(`/threads/${threadId}/messages`);
+export const fetchMessages = async (threadId: string) => {
+  const { data, error } = await client.GET("/threads/{threadId}/messages", {
+    params: { path: { threadId } },
+  });
+  if (error) throw error;
+  return data;
+};

@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 
+import type { MessageFeedback } from "~/db";
 import { errorResponse } from "~/lib/openapi-errors";
 import { sessionAuth } from "~/middleware/session-auth";
 import { feedbackRepository } from "~/repository/feedback-repository";
@@ -8,6 +9,39 @@ import {
   feedbackFullSchema,
   feedbackStatsSchema,
 } from "~/schemas/feedback-schema";
+
+type FeedbackFull = z.infer<typeof feedbackFullSchema>;
+type Rating = FeedbackFull["rating"];
+type Category = FeedbackFull["category"];
+type ConversationContext = FeedbackFull["conversationContext"];
+type ToolExecution = NonNullable<FeedbackFull["toolExecutions"]>[number];
+
+const safeParse = <T>(json: string, fallback: T): T => {
+  try {
+    return JSON.parse(json);
+  } catch {
+    return fallback;
+  }
+};
+
+const defaultConversationContext: ConversationContext = {
+  targetMessage: { id: "", role: "", content: "" },
+  previousMessages: [],
+  nextMessages: [],
+};
+
+const parseFeedback = (f: MessageFeedback): FeedbackFull => ({
+  ...f,
+  rating: f.rating as Rating,
+  category: f.category as Category,
+  conversationContext: safeParse<ConversationContext>(
+    f.conversationContext,
+    defaultConversationContext,
+  ),
+  toolExecutions: f.toolExecutions
+    ? safeParse<ToolExecution[]>(f.toolExecutions, [])
+    : null,
+});
 
 export const feedbackAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -25,7 +59,7 @@ const listRoute = createRoute({
     query: z.object({
       limit: z.coerce.number().int().min(1).optional().default(30),
       cursor: z.string().optional(),
-      rating: z.enum(["good", "bad"]).optional(),
+      rating: z.enum(["good", "bad", "idea"]).optional(),
     }),
   },
   responses: {
@@ -61,7 +95,7 @@ feedbackAdminRoutes.openapi(listRoute, async (c) => {
 
   return c.json(
     {
-      feedbacks: result.feedbacks,
+      feedbacks: result.feedbacks.map(parseFeedback),
       total,
       nextCursor: result.nextCursor,
       hasMore: result.hasMore,
@@ -107,7 +141,7 @@ feedbackAdminRoutes.openapi(getDetailRoute, async (c) => {
     });
   }
 
-  return c.json(feedback, 200);
+  return c.json(parseFeedback(feedback), 200);
 });
 
 const deleteAllRoute = createRoute({

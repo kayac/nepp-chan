@@ -1,40 +1,14 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
 import { feedbackRepository } from "~/repository/feedback-repository";
+import {
+  conversationContextSchema,
+  toolExecutionSchema,
+} from "~/schemas/feedback-schema";
 
 export const feedbackRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
 }>();
-
-const ConversationContextSchema = z.object({
-  targetMessage: z.object({
-    id: z.string(),
-    role: z.string(),
-    content: z.string(),
-  }),
-  previousMessages: z.array(
-    z.object({
-      id: z.string(),
-      role: z.string(),
-      content: z.string(),
-    }),
-  ),
-  nextMessages: z.array(
-    z.object({
-      id: z.string(),
-      role: z.string(),
-      content: z.string(),
-    }),
-  ),
-});
-
-const ToolExecutionSchema = z.object({
-  toolName: z.string(),
-  state: z.string(),
-  input: z.unknown().optional(),
-  output: z.unknown().optional(),
-  errorText: z.string().optional(),
-});
 
 const FeedbackCreateRequestSchema = z.object({
   threadId: z.string().min(1, "threadId is required"),
@@ -50,8 +24,8 @@ const FeedbackCreateRequestSchema = z.object({
     ])
     .optional(),
   comment: z.string().max(1000).optional(),
-  conversationContext: ConversationContextSchema,
-  toolExecutions: z.array(ToolExecutionSchema).optional(),
+  conversationContext: conversationContextSchema,
+  toolExecutions: z.array(toolExecutionSchema).optional(),
 });
 
 const FeedbackResponseSchema = z.object({
