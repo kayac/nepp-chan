@@ -8,10 +8,18 @@
 
 ## ダウンロード
 
-| 資料 | ファイル |
-|------|----------|
-| 家庭ごみの分け方、出し方 | [PDF（948KB）](https://www.vill.otoineppu.hokkaido.jp/kurashi/gomi_kankyou/files/bunbetu2020.pdf) |
-| 小型家電について | [PDF（163KB）](https://www.vill.otoineppu.hokkaido.jp/kurashi/gomi_kankyou/files/kogata.pdf) |
+```json
+[
+  {
+    "資料": "家庭ごみの分け方、出し方",
+    "ファイル": "[PDF（948KB）](https://www.vill.otoineppu.hokkaido.jp/kurashi/gomi_kankyou/files/bunbetu2020.pdf)"
+  },
+  {
+    "資料": "小型家電について",
+    "ファイル": "[PDF（163KB）](https://www.vill.otoineppu.hokkaido.jp/kurashi/gomi_kankyou/files/kogata.pdf)"
+  }
+]
+```
 
 ---
 
