@@ -17,7 +17,7 @@
   },
   "placement": { "mode": "smart" },
   "triggers": {
-    "crons": ["0 18 * * *"]
+    "crons": ["*/5 * * * *", "0 18 * * *"]
   },
   "env": {
     "local": {
