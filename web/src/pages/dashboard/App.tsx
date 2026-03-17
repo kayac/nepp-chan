@@ -5,6 +5,7 @@ import {
   ChatBubbleLeftIcon,
   EnvelopeIcon,
   ExclamationTriangleIcon,
+  MegaphoneIcon,
   UserGroupIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -12,6 +13,7 @@ import { useState } from "react";
 
 import { cn } from "~/lib/class-merge";
 
+import { BroadcastPanel } from "./components/BroadcastPanel";
 import { EmergencyPanel } from "./components/EmergencyPanel";
 import { FeedbackPanel } from "./components/FeedbackPanel";
 import { InvitationsPanel } from "./components/InvitationsPanel";
@@ -19,7 +21,13 @@ import { KnowledgePanel } from "./components/KnowledgePanel";
 import { PersonaPanel } from "./components/PersonaPanel";
 import { useAuth } from "./contexts/AuthContext";
 
-type Tab = "knowledge" | "persona" | "feedback" | "emergency" | "invitations";
+type Tab =
+  | "knowledge"
+  | "persona"
+  | "feedback"
+  | "emergency"
+  | "broadcast"
+  | "invitations";
 
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   {
@@ -41,6 +49,11 @@ const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     id: "emergency",
     label: "緊急情報",
     icon: <ExclamationTriangleIcon className="w-5 h-5" aria-hidden="true" />,
+  },
+  {
+    id: "broadcast",
+    label: "LINE配信",
+    icon: <MegaphoneIcon className="w-5 h-5" aria-hidden="true" />,
   },
   {
     id: "invitations",
@@ -183,6 +196,7 @@ export const App = () => {
             {activeTab === "persona" && <PersonaPanel />}
             {activeTab === "feedback" && <FeedbackPanel />}
             {activeTab === "emergency" && <EmergencyPanel />}
+            {activeTab === "broadcast" && <BroadcastPanel />}
             {activeTab === "invitations" && <InvitationsPanel />}
           </div>
         </div>
