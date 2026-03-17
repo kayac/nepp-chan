@@ -202,7 +202,7 @@ export const createNeppChanAgent = ({
 
     const webBroadcastNote =
       platform === "web" && broadcastSection
-        ? "以下はあなたがLINEで配信した内容の記録。Webユーザーはこの配信を受信していないが、お知らせの内容について質問されたら参照する。"
+        ? "以下はあなたがLINEで配信した公式のお知らせ記録。Webユーザーはこの配信を直接受信していないが、あなたはこれらを自分が発信した情報として認識している。"
         : "";
 
     return [
