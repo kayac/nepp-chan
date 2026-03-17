@@ -1,55 +1,51 @@
-import { API_BASE, apiClient } from "~/lib/api/client";
+import { API_BASE, client } from "~/lib/api/client";
 import { getAuthToken } from "~/lib/auth-token";
-import type {
-  ConvertFileResponse,
-  DeleteResult,
-  FileContentResponse,
-  FilesListResponse,
-  ReconvertFileResponse,
-  SaveFileResponse,
-  SyncResult,
-  UnifiedFilesListResponse,
-  UploadFileResponse,
-} from "~/types";
+import type { ConvertFileResponse, UploadFileResponse } from "~/types";
 
-// 全ナレッジ同期
-export const syncKnowledge = () =>
-  apiClient<SyncResult>("/admin/knowledge/sync", {
-    method: "POST",
+export const syncKnowledge = async () => {
+  const { data, error } = await client.POST("/admin/knowledge/sync");
+  if (error) throw error;
+  return data;
+};
+
+export const deleteAllKnowledge = async () => {
+  const { data, error } = await client.DELETE("/admin/knowledge");
+  if (error) throw error;
+  return data;
+};
+
+export const fetchFiles = async () => {
+  const { data, error } = await client.GET("/admin/knowledge/files");
+  if (error) throw error;
+  return data;
+};
+
+export const fetchFileContent = async (key: string) => {
+  const { data, error } = await client.GET("/admin/knowledge/files/{key}", {
+    params: { path: { key } },
   });
+  if (error) throw error;
+  return data;
+};
 
-export const deleteAllKnowledge = () =>
-  apiClient<DeleteResult>("/admin/knowledge", {
-    method: "DELETE",
+export const saveFile = async (key: string, content: string) => {
+  const { data, error } = await client.PUT("/admin/knowledge/files/{key}", {
+    params: { path: { key } },
+    body: { content },
   });
+  if (error) throw error;
+  return data;
+};
 
-// ファイル一覧取得
-export const fetchFiles = () =>
-  apiClient<FilesListResponse>("/admin/knowledge/files");
-
-// ファイル内容取得
-export const fetchFileContent = (key: string) =>
-  apiClient<FileContentResponse>(
-    `/admin/knowledge/files/${encodeURIComponent(key)}`,
-  );
-
-// ファイル保存
-export const saveFile = (key: string, content: string) =>
-  apiClient<SaveFileResponse>(
-    `/admin/knowledge/files/${encodeURIComponent(key)}`,
-    {
-      method: "PUT",
-      body: { content },
-    },
-  );
-
-// ファイル削除
-export const deleteFile = (key: string) =>
-  apiClient<DeleteResult>(`/admin/knowledge/files/${encodeURIComponent(key)}`, {
-    method: "DELETE",
+export const deleteFile = async (key: string) => {
+  const { data, error } = await client.DELETE("/admin/knowledge/files/{key}", {
+    params: { path: { key } },
   });
+  if (error) throw error;
+  return data;
+};
 
-// ファイルアップロード（multipart/form-data）
+// multipart/form-data — raw fetch を維持
 export const uploadFile = async (file: File, filename?: string) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -72,7 +68,7 @@ export const uploadFile = async (file: File, filename?: string) => {
   return res.json() as Promise<UploadFileResponse>;
 };
 
-// 画像/PDF → Markdown 変換
+// multipart/form-data — raw fetch を維持
 export const convertFile = async (file: File, filename: string) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -93,19 +89,21 @@ export const convertFile = async (file: File, filename: string) => {
   return res.json() as Promise<ConvertFileResponse>;
 };
 
-// 統合ファイル一覧取得
-export const fetchUnifiedFiles = () =>
-  apiClient<UnifiedFilesListResponse>("/admin/knowledge/unified");
+export const fetchUnifiedFiles = async () => {
+  const { data, error } = await client.GET("/admin/knowledge/unified");
+  if (error) throw error;
+  return data;
+};
 
-// 元ファイルURL取得
 export const getOriginalFileUrl = (key: string) => {
   const encodedKey = encodeURIComponent(key.replace("originals/", ""));
   return `${API_BASE}/admin/knowledge/originals/${encodedKey}`;
 };
 
-// 元ファイルからMarkdownを再生成
-export const reconvertFile = (originalKey: string, filename: string) =>
-  apiClient<ReconvertFileResponse>("/admin/knowledge/reconvert", {
-    method: "POST",
+export const reconvertFile = async (originalKey: string, filename: string) => {
+  const { data, error } = await client.POST("/admin/knowledge/reconvert", {
     body: { originalKey, filename },
   });
+  if (error) throw error;
+  return data;
+};

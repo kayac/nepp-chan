@@ -1,7 +1,9 @@
-import { apiClient } from "~/lib/api/client";
-import type { EmergenciesResponse } from "~/types";
+import { client } from "~/lib/api/client";
 
-export const fetchEmergencies = (limit = 100) => {
-  const params = new URLSearchParams({ limit: String(limit) });
-  return apiClient<EmergenciesResponse>(`/admin/emergency?${params}`);
+export const fetchEmergencies = async (limit = 100) => {
+  const { data, error } = await client.GET("/admin/emergency", {
+    params: { query: { limit } },
+  });
+  if (error) throw error;
+  return data;
 };

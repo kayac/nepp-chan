@@ -1,8 +1,6 @@
-import { apiClient } from "~/lib/api/client";
+import { client } from "~/lib/api/client";
 import type {
-  BroadcastMessage,
   BroadcastStatus,
-  BroadcastsResponse,
   CreateBroadcastRequest,
   UpdateBroadcastRequest,
 } from "~/types";
@@ -13,39 +11,58 @@ type FetchBroadcastsParams = {
   status?: BroadcastStatus;
 };
 
-export const fetchBroadcasts = (params: FetchBroadcastsParams = {}) => {
-  const searchParams = new URLSearchParams();
-  searchParams.set("limit", String(params.limit ?? 30));
-  if (params.cursor) {
-    searchParams.set("cursor", params.cursor);
-  }
-  if (params.status) {
-    searchParams.set("status", params.status);
-  }
-  return apiClient<BroadcastsResponse>(`/admin/broadcast?${searchParams}`);
+export const fetchBroadcasts = async (params: FetchBroadcastsParams = {}) => {
+  const { data, error } = await client.GET("/admin/broadcast", {
+    params: {
+      query: {
+        limit: params.limit ?? 30,
+        cursor: params.cursor,
+        status: params.status,
+      },
+    },
+  });
+  if (error) throw error;
+  return data;
 };
 
-export const fetchBroadcastById = (id: string) =>
-  apiClient<BroadcastMessage>(`/admin/broadcast/${id}`);
-
-export const createBroadcast = (data: CreateBroadcastRequest) =>
-  apiClient<BroadcastMessage>("/admin/broadcast", {
-    method: "POST",
-    body: data,
+export const fetchBroadcastById = async (id: string) => {
+  const { data, error } = await client.GET("/admin/broadcast/{id}", {
+    params: { path: { id } },
   });
+  if (error) throw error;
+  return data;
+};
 
-export const updateBroadcast = (id: string, data: UpdateBroadcastRequest) =>
-  apiClient<BroadcastMessage>(`/admin/broadcast/${id}`, {
-    method: "PUT",
-    body: data,
-  });
+export const createBroadcast = async (body: CreateBroadcastRequest) => {
+  const { data, error } = await client.POST("/admin/broadcast", { body });
+  if (error) throw error;
+  return data;
+};
 
-export const deleteBroadcast = (id: string) =>
-  apiClient<{ message: string }>(`/admin/broadcast/${id}`, {
-    method: "DELETE",
+export const updateBroadcast = async (
+  id: string,
+  body: UpdateBroadcastRequest,
+) => {
+  const { data, error } = await client.PUT("/admin/broadcast/{id}", {
+    params: { path: { id } },
+    body,
   });
+  if (error) throw error;
+  return data;
+};
 
-export const sendBroadcastNow = (id: string) =>
-  apiClient<{ message: string }>(`/admin/broadcast/${id}/send`, {
-    method: "POST",
+export const deleteBroadcast = async (id: string) => {
+  const { data, error } = await client.DELETE("/admin/broadcast/{id}", {
+    params: { path: { id } },
   });
+  if (error) throw error;
+  return data;
+};
+
+export const sendBroadcastNow = async (id: string) => {
+  const { data, error } = await client.POST("/admin/broadcast/{id}/send", {
+    params: { path: { id } },
+  });
+  if (error) throw error;
+  return data;
+};

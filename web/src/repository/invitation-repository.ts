@@ -1,33 +1,22 @@
-import { apiClient } from "~/lib/api/client";
+import { client } from "~/lib/api/client";
 
-export type Invitation = {
-  id: string;
-  email: string;
-  role: string;
-  invitedBy: string;
-  expiresAt: string;
-  usedAt: string | null;
-  createdAt: string;
+export const fetchInvitations = async () => {
+  const { data, error } = await client.GET("/admin/invitations");
+  if (error) throw error;
+  return data;
 };
 
-export type InvitationsResponse = {
-  invitations: Invitation[];
-};
-
-export type CreateInvitationResponse = {
-  invitation: { token: string };
-};
-
-export const fetchInvitations = () =>
-  apiClient<InvitationsResponse>("/admin/invitations");
-
-export const createInvitation = (email: string) =>
-  apiClient<CreateInvitationResponse>("/admin/invitations", {
-    method: "POST",
+export const createInvitation = async (email: string) => {
+  const { data, error } = await client.POST("/admin/invitations", {
     body: { email },
   });
+  if (error) throw error;
+  return data;
+};
 
-export const deleteInvitation = (id: string) =>
-  apiClient<void>(`/admin/invitations/${id}`, {
-    method: "DELETE",
+export const deleteInvitation = async (id: string) => {
+  const { error } = await client.DELETE("/admin/invitations/{id}", {
+    params: { path: { id } },
   });
+  if (error) throw error;
+};

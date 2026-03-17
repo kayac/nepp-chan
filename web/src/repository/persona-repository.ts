@@ -1,43 +1,31 @@
-import { apiClient } from "~/lib/api/client";
-import type { PersonasResponse } from "~/types";
+import { client } from "~/lib/api/client";
 
 type FetchPersonasParams = {
   limit?: number;
   cursor?: string;
 };
 
-export const fetchPersonas = (params: FetchPersonasParams = {}) => {
-  const searchParams = new URLSearchParams();
-  searchParams.set("limit", String(params.limit ?? 30));
-  if (params.cursor) {
-    searchParams.set("cursor", params.cursor);
-  }
-  return apiClient<PersonasResponse>(`/admin/persona?${searchParams}`);
-};
-
-type ExtractResult =
-  | { skipped: true; reason: string }
-  | { extracted: true; messageCount: number };
-
-export type ExtractPersonasResponse = {
-  message: string;
-  results: Array<{
-    threadId: string;
-    result: ExtractResult;
-  }>;
-};
-
-export const extractPersonas = () =>
-  apiClient<ExtractPersonasResponse>("/admin/persona/extract", {
-    method: "POST",
+export const fetchPersonas = async (params: FetchPersonasParams = {}) => {
+  const { data, error } = await client.GET("/admin/persona", {
+    params: {
+      query: {
+        limit: params.limit ?? 30,
+        cursor: params.cursor,
+      },
+    },
   });
-
-export type DeletePersonasResponse = {
-  message: string;
-  count: number;
+  if (error) throw error;
+  return data;
 };
 
-export const deleteAllPersonas = () =>
-  apiClient<DeletePersonasResponse>("/admin/persona", {
-    method: "DELETE",
-  });
+export const extractPersonas = async () => {
+  const { data, error } = await client.POST("/admin/persona/extract");
+  if (error) throw error;
+  return data;
+};
+
+export const deleteAllPersonas = async () => {
+  const { data, error } = await client.DELETE("/admin/persona");
+  if (error) throw error;
+  return data;
+};
