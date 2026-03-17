@@ -1,14 +1,14 @@
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import * as Sentry from "@sentry/cloudflare";
-import { handleLineEvent, handleR2Event } from "~/handlers";
-import { handlePersonaExtract } from "~/handlers/persona-extract-handler";
+import { handleLineEvent, handleR2Event, handleScheduled } from "~/handlers";
 import type { R2EventMessage } from "~/handlers/r2-event-handler";
 import { logger } from "~/lib/logger";
 import { getSentryOptions } from "~/lib/sentry";
 import { corsMiddleware, errorHandler, securityHeaders } from "~/middleware";
 import {
   authRoutes,
+  broadcastAdminRoutes,
   chatRoutes,
   emergencyAdminRoutes,
   feedbackAdminRoutes,
@@ -33,6 +33,7 @@ app.route("/health", healthRoutes);
 app.route("/chat", chatRoutes);
 app.route("/feedback", feedbackRoutes);
 app.route("/threads", threadsRoutes);
+app.route("/admin/broadcast", broadcastAdminRoutes);
 app.route("/admin/feedback", feedbackAdminRoutes);
 app.route("/admin/knowledge", knowledgeAdminRoutes);
 app.route("/admin/persona", personaAdminRoutes);
@@ -63,7 +64,7 @@ const handler: ExportedHandler<CloudflareBindings> = {
     }
     logger.error(`Unknown queue: ${batch.queue}`);
   },
-  scheduled: handlePersonaExtract,
+  scheduled: handleScheduled,
 };
 
 export default Sentry.withSentry<CloudflareBindings>(
