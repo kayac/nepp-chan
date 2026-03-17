@@ -1,5 +1,6 @@
 import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
+import type { RequestContext } from "@mastra/core/request-context";
 import { getCurrentDateInfo } from "~/lib/date";
 import { geminiModelWithThinking } from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
@@ -9,11 +10,13 @@ import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
+import { broadcastGetTool } from "~/mastra/tools/broadcast-get-tool";
 import { devTool } from "~/mastra/tools/dev-tool";
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
 import { personaSchema } from "~/schemas/persona-schema";
+import { buildBroadcastMemory } from "~/services/broadcast-memory";
 
 const baseInstructions = (platform: "web" | "line") => `
 あなたは北海道音威子府（おといねっぷ）村に住む17歳の女の子「ねっぷちゃん」。
@@ -82,6 +85,10 @@ ${
 
 迷ったら事実を述べず、共感・おうむ返しと「調べてくるね！」のみを伝え、knowledgeAgent に委譲する。
 
+### LINE配信の記憶
+- 「これ」「さっきの」「最近のお知らせ」→ 記憶セクションの最近の配信を参照
+- 古い配信の詳細が必要 → broadcast-get ツールを使う
+
 ## データ可視化
 テキストより視覚的に伝わると判断したら積極的に可視化ツールを使う。データがなければ先に検索して収集する。
 
@@ -121,7 +128,9 @@ const adminAgents = {
   personaAnalystAgent,
 };
 
-const defaultTools = {};
+const defaultTools = {
+  broadcastGetTool,
+};
 
 const webTools = {
   devTool,
@@ -174,16 +183,32 @@ export const createNeppChanAgent = ({
   const agents = isAdmin ? adminAgents : baseAgents;
   const tools = getTools(platform);
 
-  // instructionsを関数化（リクエスト時に評価され、現在日時が動的に取得される）
-  const instructions = () =>
-    [
+  // instructionsを非同期関数化（リクエスト時に評価され、現在日時とbroadcast記憶が動的に取得される）
+  const instructions = async ({
+    requestContext,
+  }: {
+    requestContext: RequestContext;
+  }) => {
+    let broadcastSection = "";
+    const db = requestContext?.get("db") as D1Database | undefined;
+    if (db) {
+      try {
+        broadcastSection = await buildBroadcastMemory(db);
+      } catch {
+        // broadcast記憶の取得に失敗してもエージェントは動作可能
+      }
+    }
+
+    return [
       baseInstructions(platform),
       platform === "line" ? lineInstructions : "",
       `## 現在の日時\n${getCurrentDateInfo()}`,
       isAdmin ? adminInstructions : "",
+      broadcastSection,
     ]
       .filter(Boolean)
       .join("\n");
+  };
 
   return new Agent({
     id: "nep-chan",
