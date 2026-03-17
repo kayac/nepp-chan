@@ -36,7 +36,9 @@ const FeedbackDetailModal = ({
     feedback.conversationContext,
   ) as ConversationContext;
   const toolExecutions = feedback.toolExecutions
-    ? (JSON.parse(feedback.toolExecutions) as ToolExecution[])
+    ? (JSON.parse(feedback.toolExecutions) as ToolExecution[]).map(
+        (tool, i) => ({ ...tool, id: `${tool.toolName}-${i}` }),
+      )
     : [];
 
   return (
@@ -174,9 +176,9 @@ const FeedbackDetailModal = ({
                 ツール実行結果
               </h3>
               <div className="space-y-2">
-                {toolExecutions.map((tool, index) => (
+                {toolExecutions.map((tool) => (
                   <div
-                    key={`${tool.toolName}-${index}`}
+                    key={tool.id}
                     className="bg-stone-50 rounded-lg p-3 text-sm"
                   >
                     <div className="flex items-center gap-2 mb-2">

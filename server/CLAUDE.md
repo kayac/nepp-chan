@@ -26,7 +26,6 @@ server/src/
 │   ├── agents/              # AI エージェント
 │   ├── tools/               # ツール
 │   ├── workflows/           # ワークフロー
-│   ├── scorers/             # 評価スコアラー
 │   └── mcp/                 # MCP 設定
 ├── services/                # ビジネスロジック
 │   ├── knowledge/           # RAG ナレッジ処理
@@ -47,18 +46,22 @@ server/src/
 | `/health`                          | GET      | ヘルスチェック                 |
 | `/chat`                            | POST     | チャット（ストリーミング）     |
 | `/threads`                         | GET/POST | スレッド一覧・作成             |
-| `/threads/:threadId`               | GET      | スレッド詳細                   |
+| `/threads/:threadId`               | GET/DELETE | スレッド詳細・削除           |
 | `/threads/:threadId/messages`      | GET      | メッセージ履歴                 |
 | `/feedback`                        | POST     | フィードバック送信             |
 | `/admin/knowledge/sync`            | POST     | ナレッジ同期                   |
 | `/admin/knowledge`                 | DELETE   | ナレッジ削除                   |
-| `/admin/persona`                   | GET      | ペルソナ一覧                   |
+| `/admin/persona`                   | GET/DELETE | ペルソナ一覧・全削除         |
 | `/admin/persona/extract`           | POST     | ペルソナ抽出                   |
+| `/admin/persona/extract/:threadId` | POST     | 特定スレッドのペルソナ抽出     |
 | `/admin/emergency`                 | GET      | 緊急情報一覧（認証必須）       |
 | `/admin/feedback`                  | GET      | フィードバック一覧（認証必須） |
 | `/admin/feedback/:id`              | GET      | フィードバック詳細             |
-| `/admin/feedback/:id/resolve`      | PUT      | フィードバック解決             |
+| `/admin/feedback/:id/resolve`      | PUT/DELETE | フィードバック解決・未解決に戻す |
 | `/admin/feedback`                  | DELETE   | 全フィードバック削除           |
+| `/admin/broadcast`                 | GET/POST | 配信一覧・作成                 |
+| `/admin/broadcast/:id`             | GET/PUT/DELETE | 配信詳細・更新・削除     |
+| `/admin/broadcast/:id/send`        | POST     | 配信即時送信                   |
 | `/admin/invitations`               | GET/POST | 招待一覧・作成                 |
 | `/admin/invitations/:id`           | DELETE   | 招待削除                       |
 | `/auth/register/options`           | POST     | WebAuthn 登録オプション取得    |
@@ -91,7 +94,6 @@ const agent = createNeppChanAgent({ isAdmin: true });
 | ID                         | 説明                               |
 | -------------------------- | ---------------------------------- |
 | `nep-chan`                 | メインキャラクター（ねっぷちゃん） |
-| `weather-agent`            | 天気情報取得                       |
 | `web-researcher`           | Web 検索（Google Grounding）       |
 | `emergency-reporter-agent` | 緊急事態報告（一般ユーザー）       |
 | `emergency-agent`          | 緊急報告取得（管理者専用）         |
@@ -105,7 +107,6 @@ const agent = createNeppChanAgent({ isAdmin: true });
 
 | ツール名（変数名）       | ツール ID            | 説明                                   |
 | ------------------------ | -------------------- | -------------------------------------- |
-| `weatherTool`            | `get-weather`        | Open-Meteo API で天気取得              |
 | `searchGoogleTool`       | `google-search`      | Google Custom Search                   |
 | `devTool`                | `dev-tool`           | Working Memory 表示（デバッグ）        |
 | `displayChartTool`       | `display-chart`      | グラフ表示（line/bar/pie）             |
@@ -123,6 +124,7 @@ const agent = createNeppChanAgent({ isAdmin: true });
 | `adminFeedbackTool`      | `admin-feedback`     | フィードバック一覧・統計（管理者専用） |
 | `villageSearchTool`      | `village-search`     | 村検索                                 |
 | `knowledgeSearchTool`    | `knowledge-search`   | RAG ナレッジ検索（Vectorize）          |
+| `broadcastGetTool`       | `broadcast-get`      | 過去の配信メッセージ取得               |
 
 ## コーディング規約
 
@@ -145,7 +147,6 @@ app.openapi(route, async (c) => { ... });
 - エージェントは `mastra/agents/` に配置
 - ツールは `mastra/tools/` に配置
 - ワークフローは `mastra/workflows/` に配置
-- スコアラーは `mastra/scorers/` に配置
 - **サービスロジックは `services/` に配置**（`mastra/` には Mastra プリミティブのみ）
 
 ### createTool の execute シグネチャ
@@ -305,6 +306,21 @@ throw new HTTPException(404, { message: "Not found" });
 | created_at           | TEXT | 作成日時（NOT NULL）           |
 | resolved_at          | TEXT | 解決日時                       |
 
+### broadcast_messages
+
+| カラム        | 型   | 説明                                        |
+| ------------- | ---- | ------------------------------------------- |
+| id            | TEXT | PRIMARY KEY                                 |
+| title         | TEXT | タイトル（本文先頭50文字、NOT NULL）         |
+| body          | TEXT | 本文（NOT NULL）                            |
+| status        | TEXT | ステータス（draft/scheduled/sent/failed）   |
+| scheduled_at  | TEXT | 予約送信日時                                |
+| sent_at       | TEXT | 送信日時                                    |
+| error_message | TEXT | エラーメッセージ                            |
+| created_by    | TEXT | 作成者 admin ID（NOT NULL）                 |
+| created_at    | TEXT | 作成日時（NOT NULL）                        |
+| updated_at    | TEXT | 更新日時                                    |
+
 ## Drizzle ORM
 
 ### スキーマ定義
@@ -411,9 +427,10 @@ thread_persona_status 更新
 
 ### Cron Trigger
 
-| スケジュール | ハンドラー           | 説明                          |
-| ------------ | -------------------- | ----------------------------- |
-| `0 18 * * *` | handlePersonaExtract | ペルソナ抽出（毎日03:00 JST） |
+| スケジュール   | ハンドラー           | 説明                          |
+| -------------- | -------------------- | ----------------------------- |
+| `*/5 * * * *`  | handleBroadcastCheck | 配信予約チェック（5分ごと）   |
+| `0 18 * * *`   | handlePersonaExtract | ペルソナ抽出（毎日03:00 JST） |
 
 ## デプロイ環境
 

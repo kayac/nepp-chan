@@ -1,11 +1,14 @@
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { handleLineEvent, handleR2Event } from "~/handlers";
-import { handlePersonaExtract } from "~/handlers/persona-extract-handler";
+import * as Sentry from "@sentry/cloudflare";
+import { handleLineEvent, handleR2Event, handleScheduled } from "~/handlers";
 import type { R2EventMessage } from "~/handlers/r2-event-handler";
+import { logger } from "~/lib/logger";
+import { getSentryOptions } from "~/lib/sentry";
 import { corsMiddleware, errorHandler, securityHeaders } from "~/middleware";
 import {
   authRoutes,
+  broadcastAdminRoutes,
   chatRoutes,
   emergencyAdminRoutes,
   feedbackAdminRoutes,
@@ -30,6 +33,7 @@ app.route("/health", healthRoutes);
 app.route("/chat", chatRoutes);
 app.route("/feedback", feedbackRoutes);
 app.route("/threads", threadsRoutes);
+app.route("/admin/broadcast", broadcastAdminRoutes);
 app.route("/admin/feedback", feedbackAdminRoutes);
 app.route("/admin/knowledge", knowledgeAdminRoutes);
 app.route("/admin/persona", personaAdminRoutes);
@@ -49,16 +53,21 @@ app.doc("/doc", {
 
 app.get("/swagger", swaggerUI({ url: "/doc" }));
 
-export default {
+const handler: ExportedHandler<CloudflareBindings> = {
   fetch: app.fetch,
-  queue: async (batch: MessageBatch, env: CloudflareBindings) => {
+  queue: async (batch, env) => {
     if (batch.queue.startsWith("nepp-chan-line-queue")) {
       return handleLineEvent(batch as MessageBatch<LineEventMessage>, env);
     }
     if (batch.queue.startsWith("nepp-chan-knowledge-sync")) {
       return handleR2Event(batch as MessageBatch<R2EventMessage>, env);
     }
-    console.error(`Unknown queue: ${batch.queue}`);
+    logger.error(`Unknown queue: ${batch.queue}`);
   },
-  scheduled: handlePersonaExtract,
+  scheduled: handleScheduled,
 };
+
+export default Sentry.withSentry<CloudflareBindings>(
+  (env) => getSentryOptions(env),
+  handler,
+);

@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import { getAuthToken } from "~/lib/auth-token";
 
 const API_BASE = import.meta.env.VITE_API_URL || "";
@@ -54,6 +55,11 @@ export const apiClient = async <T>(
       res,
       `リクエストに失敗しました (${res.status})`,
     );
+    if (res.status >= 500) {
+      Sentry.captureException(new ApiError(message, res.status), {
+        tags: { endpoint, method },
+      });
+    }
     throw new ApiError(message, res.status);
   }
 

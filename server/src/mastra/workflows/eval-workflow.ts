@@ -23,6 +23,7 @@ import {
 import { z } from "zod";
 
 import { GEMINI_FLASH_LITE, GEMINI_SCORER } from "~/lib/llm-models";
+import { logger } from "~/lib/logger";
 import { evalTestCases } from "~/mastra/data/eval-test-cases";
 
 const KNOWLEDGE_TOOL_NAME = "knowledgeSearchTool";
@@ -99,9 +100,11 @@ const runEvalScorers = async ({
   });
 
   // contextRelevance: Gemini の構造化出力が間欠的に失敗するためリトライ付き
-  let contextRelevance: Awaited<
-    ReturnType<ReturnType<typeof createContextRelevanceScorerLLM>["run"]>
-  >;
+  let contextRelevance:
+    | Awaited<
+        ReturnType<ReturnType<typeof createContextRelevanceScorerLLM>["run"]>
+      >
+    | undefined;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       contextRelevance = await createContextRelevanceScorerLLM({
@@ -213,13 +216,13 @@ const runBatchEval = createStep({
     const results = [];
     for (let i = 0; i < evalTestCases.length; i++) {
       const testCase = evalTestCases[i];
-      console.log(
+      logger.info(
         `[EVAL ${i + 1}/${evalTestCases.length}] 開始: ${testCase.input.slice(0, 30)}...`,
       );
 
       const result = await runEval(agent, testCase, requestContext);
 
-      console.log(
+      logger.info(
         `[EVAL ${i + 1}/${evalTestCases.length}] 完了: ${testCase.input.slice(0, 30)}...`,
       );
       results.push(result);

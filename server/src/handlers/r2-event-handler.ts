@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/cloudflare";
+import { logger } from "~/lib/logger";
 import {
   deleteKnowledgeBySource,
   processKnowledgeFile,
@@ -83,7 +85,7 @@ export const handleR2Event = async (
       continue;
     }
 
-    console.log(`Processing R2 event: ${action} for ${key}`);
+    logger.info(`Processing R2 event: ${action} for ${key}`);
 
     try {
       let success = true;
@@ -94,9 +96,9 @@ export const handleR2Event = async (
         case "CopyObject": {
           const result = await handleObjectCreate(key, env);
           if (result.success) {
-            console.log(`Synced ${key}: ${result.chunks} chunks`);
+            logger.info(`Synced ${key}: ${result.chunks} chunks`);
           } else {
-            console.error(`Failed to sync ${key}: ${result.error}`);
+            logger.error(`Failed to sync ${key}`, result.error);
             success = false;
           }
           break;
@@ -105,15 +107,15 @@ export const handleR2Event = async (
         case "LifecycleDeletion": {
           const result = await handleObjectDelete(key, env);
           if (result.success) {
-            console.log(`Deleted vectors for ${key}: ${result.deleted} items`);
+            logger.info(`Deleted vectors for ${key}: ${result.deleted} items`);
           } else {
-            console.error(`Failed to delete ${key}: ${result.error}`);
+            logger.error(`Failed to delete ${key}`, result.error);
             success = false;
           }
           break;
         }
         default:
-          console.log(`Ignoring action: ${action}`);
+          logger.info(`Ignoring action: ${action}`);
       }
 
       if (success) {
@@ -122,7 +124,8 @@ export const handleR2Event = async (
         message.retry();
       }
     } catch (error) {
-      console.error(`Error processing ${key}:`, error);
+      Sentry.captureException(error, { tags: { handler: "r2-event" } });
+      logger.error(`Error processing ${key}`, error);
       message.retry();
     }
   }

@@ -382,7 +382,8 @@ const main = async () => {
       console.log(`\n  ⚠ ${name}:`);
       for (const r of results) {
         if (!r.passed[name]) {
-          const tc = TEST_CASES.find((c) => c.name === r.caseName)!;
+          const tc = TEST_CASES.find((c) => c.name === r.caseName);
+          if (!tc) continue;
           const expected = tc.expected[name];
           const actual = r.scores[name];
           const err = r.errors[name];

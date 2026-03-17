@@ -1,3 +1,4 @@
+export { broadcastAdminRoutes } from "./broadcast";
 export { emergencyAdminRoutes } from "./emergency";
 export { feedbackAdminRoutes } from "./feedback";
 export { invitationRoutes } from "./invitations";

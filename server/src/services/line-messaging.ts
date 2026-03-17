@@ -1,6 +1,7 @@
 import { messagingApi } from "@line/bot-sdk";
 import { Mastra } from "@mastra/core/mastra";
 
+import { logger } from "~/lib/logger";
 import { splitMessagesForLine } from "~/lib/split-message";
 import { getStorage } from "~/lib/storage";
 import { stripMarkdown } from "~/lib/strip-markdown";
@@ -30,6 +31,7 @@ export const generateReply = async (params: {
     storage,
   });
   const agent = mastra.getAgent("neppChanAgent");
+  logger.info(`[LINE] generating reply`, { threadId: params.threadId });
 
   const response = await agent.generate(params.userMessage, {
     requestContext,
@@ -43,6 +45,9 @@ export const generateReply = async (params: {
   const texts = splitMessagesForLine(stepTexts);
 
   if (texts.length === 0 && response.text) {
+    logger.warn(`[LINE] step texts empty, using fallback`, {
+      threadId: params.threadId,
+    });
     return splitMessagesForLine([response.text]).map(stripMarkdown);
   }
 
@@ -65,13 +70,12 @@ export const sendLineMessages = async (params: {
       replyToken: params.replyToken,
       messages,
     });
-    console.log(`LINE replyMessage sent to ${params.userId}`);
-  } catch (replyError) {
-    console.log(
-      `LINE replyMessage failed for ${params.userId}, falling back to pushMessage:`,
-      replyError,
+    logger.info(`LINE replyMessage sent to ${params.userId}`);
+  } catch {
+    logger.warn(
+      `LINE replyMessage failed for ${params.userId}, falling back to pushMessage`,
     );
     await params.client.pushMessage({ to: params.userId, messages });
-    console.log(`LINE pushMessage sent to ${params.userId}`);
+    logger.info(`LINE pushMessage sent to ${params.userId}`);
   }
 };
