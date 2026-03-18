@@ -6,7 +6,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@sentry/cloudflare": new URL(
-        "./__mocks__/@sentry/cloudflare.ts",
+        "./src/__mocks__/@sentry/cloudflare.ts",
         import.meta.url,
       ).pathname,
     },
