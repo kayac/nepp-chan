@@ -1,16 +1,11 @@
-import { apiClient } from "~/lib/api/client";
-import type {
-  FeedbackSubmitRequest,
-  FeedbackSubmitResponse,
-  FeedbacksResponse,
-  MessageFeedback,
-} from "~/types";
+import { client } from "~/lib/api/client";
+import type { FeedbackSubmitRequest } from "~/types";
 
-export const submitFeedback = (data: FeedbackSubmitRequest) =>
-  apiClient<FeedbackSubmitResponse>("/feedback", {
-    method: "POST",
-    body: data,
-  });
+export const submitFeedback = async (body: FeedbackSubmitRequest) => {
+  const { data, error } = await client.POST("/feedback", { body });
+  if (error) throw error;
+  return data;
+};
 
 type FetchFeedbacksParams = {
   limit?: number;
@@ -18,41 +13,46 @@ type FetchFeedbacksParams = {
   rating?: "good" | "bad" | "idea";
 };
 
-export const fetchFeedbacks = (params: FetchFeedbacksParams = {}) => {
-  const searchParams = new URLSearchParams();
-  searchParams.set("limit", String(params.limit ?? 30));
-  if (params.cursor) {
-    searchParams.set("cursor", params.cursor);
-  }
-  if (params.rating) {
-    searchParams.set("rating", params.rating);
-  }
-  return apiClient<FeedbacksResponse>(`/admin/feedback?${searchParams}`);
+export const fetchFeedbacks = async (params: FetchFeedbacksParams = {}) => {
+  const { data, error } = await client.GET("/admin/feedback", {
+    params: {
+      query: {
+        limit: params.limit ?? 30,
+        cursor: params.cursor,
+        rating: params.rating,
+      },
+    },
+  });
+  if (error) throw error;
+  return data;
 };
 
-export const fetchFeedbackById = (id: string) =>
-  apiClient<MessageFeedback>(`/admin/feedback/${id}`);
-
-type DeleteFeedbacksResponse = {
-  message: string;
-  count: number;
+export const fetchFeedbackById = async (id: string) => {
+  const { data, error } = await client.GET("/admin/feedback/{id}", {
+    params: { path: { id } },
+  });
+  if (error) throw error;
+  return data;
 };
 
-export const deleteAllFeedbacks = () =>
-  apiClient<DeleteFeedbacksResponse>("/admin/feedback", {
-    method: "DELETE",
-  });
-
-type ResolveResponse = {
-  message: string;
+export const deleteAllFeedbacks = async () => {
+  const { data, error } = await client.DELETE("/admin/feedback");
+  if (error) throw error;
+  return data;
 };
 
-export const resolveFeedback = (id: string) =>
-  apiClient<ResolveResponse>(`/admin/feedback/${id}/resolve`, {
-    method: "PUT",
+export const resolveFeedback = async (id: string) => {
+  const { data, error } = await client.PUT("/admin/feedback/{id}/resolve", {
+    params: { path: { id } },
   });
+  if (error) throw error;
+  return data;
+};
 
-export const unresolveFeedback = (id: string) =>
-  apiClient<ResolveResponse>(`/admin/feedback/${id}/resolve`, {
-    method: "DELETE",
+export const unresolveFeedback = async (id: string) => {
+  const { data, error } = await client.DELETE("/admin/feedback/{id}/resolve", {
+    params: { path: { id } },
   });
+  if (error) throw error;
+  return data;
+};

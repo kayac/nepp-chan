@@ -45,9 +45,9 @@ app.route("/line", lineRoutes);
 app.doc("/doc", {
   openapi: "3.1.0",
   info: {
-    title: "AISS NEPPCHAN API",
+    title: "nepp-chan API",
     version: "1.0.0",
-    description: "AISS NEPPCHAN バックエンド API",
+    description: "nepp-chan バックエンド API",
   },
 });
 

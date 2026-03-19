@@ -1,6 +1,26 @@
 import { z } from "zod";
 
-/** ツール用: 軽量版（conversationContext/toolExecutions を含まない） */
+export const conversationContextMessageSchema = z.object({
+  id: z.string(),
+  role: z.string(),
+  content: z.string(),
+});
+
+export const conversationContextSchema = z.object({
+  targetMessage: conversationContextMessageSchema,
+  previousMessages: z.array(conversationContextMessageSchema),
+  nextMessages: z.array(conversationContextMessageSchema),
+});
+
+export const toolExecutionSchema = z.object({
+  toolName: z.string(),
+  state: z.string(),
+  input: z.unknown().optional(),
+  output: z.unknown().optional(),
+  errorText: z.string().optional(),
+});
+
+/** ツールの outputSchema 用。会話コンテキストを含まない軽量版 */
 export const feedbackBaseSchema = z.object({
   id: z.string(),
   threadId: z.string(),
@@ -12,10 +32,26 @@ export const feedbackBaseSchema = z.object({
   resolvedAt: z.string().nullable(),
 });
 
-/** ルート用: 全フィールド版 */
-export const feedbackFullSchema = feedbackBaseSchema.extend({
-  conversationContext: z.string(),
-  toolExecutions: z.string().nullable(),
+/** API レスポンス用。会話コンテキスト・ツール実行履歴を含む */
+export const feedbackFullSchema = z.object({
+  id: z.string(),
+  threadId: z.string(),
+  messageId: z.string(),
+  rating: z.enum(["good", "bad", "idea"]),
+  category: z
+    .enum([
+      "incorrect_fact",
+      "outdated_info",
+      "nonexistent_info",
+      "off_topic",
+      "other",
+    ])
+    .nullable(),
+  comment: z.string().nullable(),
+  createdAt: z.string(),
+  resolvedAt: z.string().nullable(),
+  conversationContext: conversationContextSchema,
+  toolExecutions: z.array(toolExecutionSchema).nullable(),
 });
 
 /** 統計情報 */

@@ -192,8 +192,7 @@ export const evalTestCases: TestCaseV3[] = [
     category: "garbage",
     type: "positive",
     input: "今日3月18日は何のゴミの日ですか？",
-    groundTruth:
-      "3月18日は水曜日なので、紙製容器包装・その他紙の収集日です",
+    groundTruth: "3月18日は水曜日なので、紙製容器包装・その他紙の収集日です",
     requiredKeywords: ["紙製容器包装", "水曜"],
     threshold: 0.3,
   },
@@ -232,8 +231,7 @@ export const evalTestCases: TestCaseV3[] = [
     category: "garbage",
     type: "positive",
     input: "年末年始のゴミ収集はどうなりますか？",
-    groundTruth:
-      "令和8年度（2026年12月31日〜2027年1月4日）は収集休みです",
+    groundTruth: "令和8年度（2026年12月31日〜2027年1月4日）は収集休みです",
     requiredKeywords: ["12月31日", "1月4日", "収集休み"],
     threshold: 0.3,
   },
@@ -252,8 +250,7 @@ export const evalTestCases: TestCaseV3[] = [
     category: "garbage",
     type: "positive",
     input: "来週の月曜日3月23日は何のゴミの日ですか？",
-    groundTruth:
-      "月曜日はゴミの収集がありません。日曜・月曜は収集なしです",
+    groundTruth: "月曜日はゴミの収集がありません。日曜・月曜は収集なしです",
     requiredKeywords: ["月曜", "収集なし"],
     threshold: 0.5,
   },

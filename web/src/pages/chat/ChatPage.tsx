@@ -6,6 +6,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useQuery } from "@tanstack/react-query";
+import type { UIMessage } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Thread } from "~/components/assistant-ui/Thread";
@@ -75,7 +76,7 @@ export const ChatPage = () => {
     queryFn: () => fetchMessages(currentThreadId ?? ""),
     enabled: !!currentThreadId,
   });
-  const initialMessages = messagesData?.messages;
+  const initialMessages = messagesData?.messages as UIMessage[] | undefined;
 
   const handleNewThread = useCallback(async () => {
     if (createThreadMutation.isPending) return;

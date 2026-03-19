@@ -16,11 +16,9 @@ import {
 import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
 import { formatDateTime } from "~/lib/format";
 import {
-  type ConversationContext,
   FEEDBACK_CATEGORY_LABELS,
   type FeedbackCategory,
   type MessageFeedback,
-  type ToolExecution,
 } from "~/types";
 
 type FeedbackDetailModalProps = {
@@ -32,13 +30,12 @@ const FeedbackDetailModal = ({
   feedback,
   onClose,
 }: FeedbackDetailModalProps) => {
-  const conversationContext = JSON.parse(
-    feedback.conversationContext,
-  ) as ConversationContext;
+  const conversationContext = feedback.conversationContext;
   const toolExecutions = feedback.toolExecutions
-    ? (JSON.parse(feedback.toolExecutions) as ToolExecution[]).map(
-        (tool, i) => ({ ...tool, id: `${tool.toolName}-${i}` }),
-      )
+    ? feedback.toolExecutions.map((tool, i) => ({
+        ...tool,
+        id: `${tool.toolName}-${i}`,
+      }))
     : [];
 
   return (
@@ -94,9 +91,8 @@ const FeedbackDetailModal = ({
             </span>
             {feedback.category && (
               <span className="inline-flex px-2 py-1 text-xs font-medium bg-stone-100 text-stone-600 rounded">
-                {FEEDBACK_CATEGORY_LABELS[
-                  feedback.category as FeedbackCategory
-                ] || feedback.category}
+                {FEEDBACK_CATEGORY_LABELS[feedback.category] ||
+                  feedback.category}
               </span>
             )}
             <span className="text-sm text-stone-500">
@@ -554,9 +550,8 @@ export const FeedbackPanel = () => {
                     {ratingBadge}
                     {feedback.category && (
                       <span className="inline-flex px-2 py-1 text-xs font-medium bg-stone-100 text-stone-600 rounded md:hidden">
-                        {FEEDBACK_CATEGORY_LABELS[
-                          feedback.category as FeedbackCategory
-                        ] || feedback.category}
+                        {FEEDBACK_CATEGORY_LABELS[feedback.category] ||
+                          feedback.category}
                       </span>
                     )}
                     <span className="text-xs text-stone-400 whitespace-nowrap ml-auto md:hidden">
@@ -565,9 +560,8 @@ export const FeedbackPanel = () => {
                   </div>
                   <div className="hidden md:block px-4 py-3 text-stone-600 text-xs border-b border-stone-100">
                     {feedback.category
-                      ? FEEDBACK_CATEGORY_LABELS[
-                          feedback.category as FeedbackCategory
-                        ] || feedback.category
+                      ? FEEDBACK_CATEGORY_LABELS[feedback.category] ||
+                        feedback.category
                       : "-"}
                   </div>
                   <div className="col-span-full md:col-span-1 px-4 py-1 md:py-3 md:border-b md:border-stone-100 text-stone-700">
