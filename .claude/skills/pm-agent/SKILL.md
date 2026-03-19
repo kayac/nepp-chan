@@ -353,8 +353,7 @@ EOF
 **Projectsに追加されていないIssueがある場合**:
 ```bash
 # 単一Issueを追加してStatus設定
-.claude/skills/pm-agent/scripts/pm-project-fields.sh \
-  --issue 123 \
+.claude/skills/pm-agent/scripts/pm-project-fields.sh 123 \
   --status "Todo" \
   --project 1 --owner @me
 ```
@@ -624,8 +623,7 @@ AskUserQuestion:
 承認後に実行:
 
 ```bash
-.claude/skills/pm-agent/scripts/pm-project-fields.sh \
-  --issue {number} \
+.claude/skills/pm-agent/scripts/pm-project-fields.sh {number} \
   --status "{new_status}" \
   --project 1 --owner @me
 ```
@@ -650,8 +648,7 @@ Issue #{number}: {old_status} → **{new_status}**
 
 ```bash
 # 直接リクエスト例
-.claude/skills/pm-agent/scripts/pm-project-fields.sh \
-  --issue 123 \
+.claude/skills/pm-agent/scripts/pm-project-fields.sh 123 \
   --status "Done" \
   --project 1 --owner @me
 ```

@@ -26,7 +26,8 @@ sanitize_string() {
     input="${input:0:$max_length}"
   fi
 
-  printf '%s' "$input" | tr -cd '[:alnum:] _.,:/@#\n-'
+  # 危険なシェルメタ文字のみ削除（日本語・絵文字は保持）
+  printf '%s' "$input" | sed "s/[\$\`;&|()<>\\\\\"']//g"
 }
 
 # Markdown コンテンツのサニタイズ（Issue body 用）

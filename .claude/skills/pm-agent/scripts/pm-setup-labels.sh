@@ -61,30 +61,27 @@ done
 
 REPO="${REPO:-$(get_repo)}"
 
-# ラベル定義: 名前:色:説明
+# ラベル定義: 名前|色|説明
 type_labels=(
-  "type:epic:5319E7:マイルストーン"
-  "type:feature:0052CC:機能要件"
-  "type:story:00875A:ユーザーストーリー"
-  "type:task:97A0AF:実装タスク"
-  "type:bug:D73A4A:バグ修正"
+  "type:epic|5319E7|マイルストーン"
+  "type:feature|0052CC|機能要件"
+  "type:story|00875A|ユーザーストーリー"
+  "type:task|97A0AF|実装タスク"
+  "type:bug|D73A4A|バグ修正"
 )
 
 priority_labels=(
-  "priority:high:B60205:最優先"
-  "priority:medium:FBCA04:通常"
-  "priority:low:0E8A16:低優先度"
+  "priority:high|B60205|最優先"
+  "priority:medium|FBCA04|通常"
+  "priority:low|0E8A16|低優先度"
 )
 
-# 引数で渡された配列からラベルを作成
-# 使い方: create_labels "name:color:desc" "name:color:desc" ...
-# 戻り値: "created_count skipped_count"
 create_labels() {
   local created=0
   local skipped=0
 
   for item in "$@"; do
-    IFS=':' read -r name color desc <<<"$item"
+    IFS='|' read -r name color desc <<<"$item"
     if gh label create "$name" --color "$color" --description "$desc" --repo "$REPO" 2>/dev/null; then
       print_success "作成: $name"
       ((created++)) || true

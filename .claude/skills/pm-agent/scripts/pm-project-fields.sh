@@ -289,24 +289,12 @@ process_issue() {
   local p_start="$7"
   local p_target="$8"
 
-  local issue_node_id item_id option_id iteration_id
+  local item_id option_id iteration_id
 
-  # Issue のノード ID を取得
-  issue_node_id=$(get_issue_node_id "$REPO" "$issue_num") || {
-    print_warn "#$issue_num のノード ID の取得に失敗しました"
-    return 1
-  }
-
-  # Issue をプロジェクトに追加
-  item_id=$(add_issue_to_project "$PROJECT_ID" "$issue_node_id") || {
+  item_id=$(ensure_project_item "$REPO" "$issue_num" "$PROJECT_ID" "$PROJECT_NUMBER") || {
     print_warn "#$issue_num のプロジェクトへの追加に失敗しました"
     return 1
   }
-
-  if [[ -z "$item_id" || "$item_id" == "null" ]]; then
-    print_warn "#$issue_num のプロジェクトへの追加に失敗しました"
-    return 1
-  fi
 
   echo "  #$issue_num → プロジェクト（アイテム: ${item_id:0:20}...）"
 
