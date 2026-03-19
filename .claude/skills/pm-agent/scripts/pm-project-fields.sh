@@ -219,7 +219,7 @@ update_date_field() {
 
 find_field_id() {
   local fields_json="$1" field_name="$2"
-  echo "$fields_json" | jq -r --arg fn "$field_name" '.[] | select(.name == $fn) | .id'
+  echo "$fields_json" | jq -r --arg fn "$field_name" '.[] | select(.name == $fn) | .id' | head -1
 }
 
 find_option_id() {
