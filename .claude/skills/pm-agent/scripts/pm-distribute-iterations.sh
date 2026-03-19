@@ -229,7 +229,8 @@ echo ""
 # 振り分けの計算
 CHUNK_SIZE=$(((${#ORDERED_ISSUES[@]} + ITERATION_COUNT - 1) / ITERATION_COUNT))
 
-# イテレーションの存在確認
+# イテレーションの存在確認 + ID キャッシュ
+declare -a ITERATION_IDS=()
 for iter_name in "${ITERATION_NAMES[@]}"; do
   iter_name=$(echo "$iter_name" | xargs) # 前後の空白を除去
   iter_id=$(find_iteration_id_by_title "$FIELDS_JSON" "$iter_name")
@@ -242,6 +243,7 @@ for iter_name in "${ITERATION_NAMES[@]}"; do
     done
     exit 1
   fi
+  ITERATION_IDS+=("$iter_id")
 done
 
 # 振り分け計画を表示
@@ -279,7 +281,7 @@ cascade_count=0
 
 for ((i = 0; i < ITERATION_COUNT; i++)); do
   iter_name=$(echo "${ITERATION_NAMES[$i]}" | xargs)
-  iter_id=$(find_iteration_id_by_title "$FIELDS_JSON" "$iter_name")
+  iter_id="${ITERATION_IDS[$i]}"
 
   start=$((i * CHUNK_SIZE))
   end=$((start + CHUNK_SIZE))

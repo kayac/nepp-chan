@@ -217,7 +217,11 @@ update_date_field() {
     -f date="$date_value" -f query="$mutation" --jq '.data.updateProjectV2ItemFieldValue.projectV2Item.id'
 }
 
-# 名前からオプション ID を検索
+find_field_id() {
+  local fields_json="$1" field_name="$2"
+  echo "$fields_json" | jq -r --arg fn "$field_name" '.[] | select(.name == $fn) | .id'
+}
+
 find_option_id() {
   local fields_json="$1" field_name="$2" option_name="$3"
   echo "$fields_json" | jq -r --arg fn "$field_name" --arg on "$option_name" '
@@ -225,13 +229,7 @@ find_option_id() {
   '
 }
 
-# 名前からフィールド ID を検索
-find_field_id() {
-  local fields_json="$1" field_name="$2"
-  echo "$fields_json" | jq -r --arg fn "$field_name" '.[] | select(.name == $fn) | .id'
-}
-
-# タイトルからイテレーション ID を検索
+# タイトルからイテレーション ID を検索（field_name 指定版）
 find_iteration_id() {
   local fields_json="$1" field_name="$2" iteration_title="$3"
   echo "$fields_json" | jq -r --arg fn "$field_name" --arg it "$iteration_title" '
@@ -270,6 +268,15 @@ if [[ "$LIST_FIELDS" == true ]]; then
   exit 0
 fi
 
+# フィールド ID を事前キャッシュ（Issue に依存しないため一度だけ検索）
+FID_STATUS=$(find_field_id "$FIELDS_JSON" "Status")
+FID_PRIORITY=$(find_field_id "$FIELDS_JSON" "Priority")
+FID_SIZE=$(find_field_id "$FIELDS_JSON" "Size")
+FID_ESTIMATE=$(find_field_id "$FIELDS_JSON" "Estimate")
+FID_ITERATION=$(find_field_id "$FIELDS_JSON" "Iteration")
+FID_START_DATE=$(find_field_id "$FIELDS_JSON" "Start date")
+FID_TARGET_DATE=$(find_field_id "$FIELDS_JSON" "Target date")
+
 # 単一 Issue のフィールド更新処理
 # 引数: issue_number status priority size estimate iteration start_date target_date
 process_issue() {
@@ -282,7 +289,7 @@ process_issue() {
   local p_start="$7"
   local p_target="$8"
 
-  local issue_node_id item_id field_id option_id iteration_id local_update_count=0
+  local issue_node_id item_id option_id iteration_id
 
   # Issue のノード ID を取得
   issue_node_id=$(get_issue_node_id "$REPO" "$issue_num") || {
@@ -304,84 +311,57 @@ process_issue() {
   echo "  #$issue_num → プロジェクト（アイテム: ${item_id:0:20}...）"
 
   # Status を更新
-  if [[ -n "$p_status" ]]; then
-    field_id=$(find_field_id "$FIELDS_JSON" "Status")
+  if [[ -n "$p_status" && -n "$FID_STATUS" ]]; then
     option_id=$(find_option_id "$FIELDS_JSON" "Status" "$p_status")
-    if [[ -n "$field_id" && -n "$option_id" ]]; then
-      update_single_select_field "$PROJECT_ID" "$item_id" "$field_id" "$option_id" >/dev/null && {
+    if [[ -n "$option_id" ]]; then
+      update_single_select_field "$PROJECT_ID" "$item_id" "$FID_STATUS" "$option_id" >/dev/null && \
         echo "    ↳ Status = $p_status"
-        ((local_update_count++)) || true
-      }
     fi
   fi
 
   # Priority を更新
-  if [[ -n "$p_priority" ]]; then
-    field_id=$(find_field_id "$FIELDS_JSON" "Priority")
+  if [[ -n "$p_priority" && -n "$FID_PRIORITY" ]]; then
     option_id=$(find_option_id "$FIELDS_JSON" "Priority" "$p_priority")
-    if [[ -n "$field_id" && -n "$option_id" ]]; then
-      update_single_select_field "$PROJECT_ID" "$item_id" "$field_id" "$option_id" >/dev/null && {
+    if [[ -n "$option_id" ]]; then
+      update_single_select_field "$PROJECT_ID" "$item_id" "$FID_PRIORITY" "$option_id" >/dev/null && \
         echo "    ↳ Priority = $p_priority"
-        ((local_update_count++)) || true
-      }
     fi
   fi
 
   # Size を更新
-  if [[ -n "$p_size" ]]; then
-    field_id=$(find_field_id "$FIELDS_JSON" "Size")
+  if [[ -n "$p_size" && -n "$FID_SIZE" ]]; then
     option_id=$(find_option_id "$FIELDS_JSON" "Size" "$p_size")
-    if [[ -n "$field_id" && -n "$option_id" ]]; then
-      update_single_select_field "$PROJECT_ID" "$item_id" "$field_id" "$option_id" >/dev/null && {
+    if [[ -n "$option_id" ]]; then
+      update_single_select_field "$PROJECT_ID" "$item_id" "$FID_SIZE" "$option_id" >/dev/null && \
         echo "    ↳ Size = $p_size"
-        ((local_update_count++)) || true
-      }
     fi
   fi
 
   # Estimate を更新
-  if [[ -n "$p_estimate" ]]; then
-    field_id=$(find_field_id "$FIELDS_JSON" "Estimate")
-    if [[ -n "$field_id" ]]; then
-      update_number_field "$PROJECT_ID" "$item_id" "$field_id" "$p_estimate" >/dev/null && {
-        echo "    ↳ Estimate = $p_estimate"
-        ((local_update_count++)) || true
-      }
-    fi
+  if [[ -n "$p_estimate" && -n "$FID_ESTIMATE" ]]; then
+    update_number_field "$PROJECT_ID" "$item_id" "$FID_ESTIMATE" "$p_estimate" >/dev/null && \
+      echo "    ↳ Estimate = $p_estimate"
   fi
 
   # Iteration を更新
-  if [[ -n "$p_iteration" ]]; then
-    field_id=$(find_field_id "$FIELDS_JSON" "Iteration")
+  if [[ -n "$p_iteration" && -n "$FID_ITERATION" ]]; then
     iteration_id=$(find_iteration_id "$FIELDS_JSON" "Iteration" "$p_iteration")
-    if [[ -n "$field_id" && -n "$iteration_id" ]]; then
-      update_iteration_field "$PROJECT_ID" "$item_id" "$field_id" "$iteration_id" >/dev/null && {
+    if [[ -n "$iteration_id" ]]; then
+      update_iteration_field "$PROJECT_ID" "$item_id" "$FID_ITERATION" "$iteration_id" >/dev/null && \
         echo "    ↳ Iteration = $p_iteration"
-        ((local_update_count++)) || true
-      }
     fi
   fi
 
   # 開始日を更新
-  if [[ -n "$p_start" ]]; then
-    field_id=$(find_field_id "$FIELDS_JSON" "Start date")
-    if [[ -n "$field_id" ]]; then
-      update_date_field "$PROJECT_ID" "$item_id" "$field_id" "$p_start" >/dev/null && {
-        echo "    ↳ 開始日 = $p_start"
-        ((local_update_count++)) || true
-      }
-    fi
+  if [[ -n "$p_start" && -n "$FID_START_DATE" ]]; then
+    update_date_field "$PROJECT_ID" "$item_id" "$FID_START_DATE" "$p_start" >/dev/null && \
+      echo "    ↳ 開始日 = $p_start"
   fi
 
   # 目標日を更新
-  if [[ -n "$p_target" ]]; then
-    field_id=$(find_field_id "$FIELDS_JSON" "Target date")
-    if [[ -n "$field_id" ]]; then
-      update_date_field "$PROJECT_ID" "$item_id" "$field_id" "$p_target" >/dev/null && {
-        echo "    ↳ 目標日 = $p_target"
-        ((local_update_count++)) || true
-      }
-    fi
+  if [[ -n "$p_target" && -n "$FID_TARGET_DATE" ]]; then
+    update_date_field "$PROJECT_ID" "$item_id" "$FID_TARGET_DATE" "$p_target" >/dev/null && \
+      echo "    ↳ 目標日 = $p_target"
   fi
 
   return 0

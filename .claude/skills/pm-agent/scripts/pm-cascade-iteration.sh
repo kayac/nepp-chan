@@ -194,93 +194,63 @@ updated_count=0
 skipped_count=0
 max_depth_reached=0
 
+# 子 Issue 1件のイテレーション更新処理
+process_child_iteration() {
+  local item="$1"
+  [[ -z "$item" ]] && return
+
+  local sub_issue sub_issue_title
+  sub_issue=$(echo "$item" | jq -r '.number')
+  sub_issue_title=$(echo "$item" | jq -r '.title')
+
+  # 子 Issue の現在のイテレーションを取得
+  local sub_iteration_json sub_iteration_id sub_item_id
+  sub_iteration_json=$(get_issue_iteration "$REPO" "$sub_issue" "$PROJECT_NUMBER")
+  sub_iteration_id=$(echo "$sub_iteration_json" | jq -r '.iterationId // empty')
+  sub_item_id=$(echo "$sub_iteration_json" | jq -r '.itemId // empty')
+
+  # 同じイテレーションが既に設定されているか確認
+  if [[ "$sub_iteration_id" == "$PARENT_ITERATION_ID" ]]; then
+    print_skip "#$sub_issue: $sub_issue_title（既に $PARENT_ITERATION_TITLE）"
+    ((skipped_count++)) || true
+    return
+  fi
+
+  if [[ "$DRY_RUN" == true ]]; then
+    echo "  更新予定 #$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
+    ((updated_count++)) || true
+    return
+  fi
+
+  # プロジェクトに未追加の場合は追加してからイテレーションを更新
+  if [[ -z "$sub_item_id" || "$sub_item_id" == "null" ]]; then
+    sub_item_id=$(ensure_project_item "$REPO" "$sub_issue" "$PROJECT_ID" "$PROJECT_NUMBER") || {
+      print_warn "#$sub_issue のプロジェクトへの追加に失敗しました"
+      return
+    }
+  fi
+
+  if update_iteration_field "$PROJECT_ID" "$sub_item_id" "$ITERATION_FIELD_ID" "$PARENT_ITERATION_ID" >/dev/null 2>&1; then
+    print_success "#$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
+    ((updated_count++)) || true
+  else
+    print_warn "#$sub_issue の更新に失敗しました"
+  fi
+}
+
 # 深さレベルごとに処理（出力を見やすくするため）
 if [[ "$RECURSIVE" == true ]]; then
   for depth in $(echo "$DESCENDANTS_JSON" | jq -r '.[].depth' | sort -u); do
     echo "レベル $depth:"
     max_depth_reached=$depth
-
     while IFS= read -r item; do
-      [[ -z "$item" ]] && continue
-
-      sub_issue=$(echo "$item" | jq -r '.number')
-      sub_issue_title=$(echo "$item" | jq -r '.title')
-
-      # 子 Issue の現在のイテレーションを取得
-      sub_iteration_json=$(get_issue_iteration "$REPO" "$sub_issue" "$PROJECT_NUMBER")
-      sub_iteration_id=$(echo "$sub_iteration_json" | jq -r '.iterationId // empty')
-      sub_item_id=$(echo "$sub_iteration_json" | jq -r '.itemId // empty')
-
-      # 同じイテレーションが既に設定されているか確認
-      if [[ "$sub_iteration_id" == "$PARENT_ITERATION_ID" ]]; then
-        print_skip "#$sub_issue: $sub_issue_title（既に $PARENT_ITERATION_TITLE）"
-        ((skipped_count++)) || true
-        continue
-      fi
-
-      if [[ "$DRY_RUN" == true ]]; then
-        echo "  更新予定 #$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
-        ((updated_count++)) || true
-        continue
-      fi
-
-      # プロジェクトに未追加の場合は追加してからイテレーションを更新
-      if [[ -z "$sub_item_id" || "$sub_item_id" == "null" ]]; then
-        sub_item_id=$(ensure_project_item "$REPO" "$sub_issue" "$PROJECT_ID" "$PROJECT_NUMBER") || {
-          print_warn "#$sub_issue のプロジェクトへの追加に失敗しました"
-          continue
-        }
-      fi
-
-      if update_iteration_field "$PROJECT_ID" "$sub_item_id" "$ITERATION_FIELD_ID" "$PARENT_ITERATION_ID" >/dev/null 2>&1; then
-        print_success "#$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
-        ((updated_count++)) || true
-      else
-        print_warn "#$sub_issue の更新に失敗しました"
-      fi
+      process_child_iteration "$item"
     done < <(echo "$DESCENDANTS_JSON" | jq -c --argjson d "$depth" '.[] | select(.depth == $d)')
     echo ""
   done
 else
-  # 非再帰モード: 直接の子のみ処理
   while IFS= read -r item; do
-    [[ -z "$item" ]] && continue
-
-    sub_issue=$(echo "$item" | jq -r '.number')
-    sub_issue_title=$(echo "$item" | jq -r '.title')
-
-    # 子 Issue の現在のイテレーションを取得
-    sub_iteration_json=$(get_issue_iteration "$REPO" "$sub_issue" "$PROJECT_NUMBER")
-    sub_iteration_id=$(echo "$sub_iteration_json" | jq -r '.iterationId // empty')
-    sub_item_id=$(echo "$sub_iteration_json" | jq -r '.itemId // empty')
-
-    # 同じイテレーションが既に設定されているか確認
-    if [[ "$sub_iteration_id" == "$PARENT_ITERATION_ID" ]]; then
-      print_skip "#$sub_issue: $sub_issue_title（既に $PARENT_ITERATION_TITLE）"
-      ((skipped_count++)) || true
-      continue
-    fi
-
-    if [[ "$DRY_RUN" == true ]]; then
-      echo "更新予定 #$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
-      ((updated_count++)) || true
-      continue
-    fi
-
-    # プロジェクトに未追加の場合は追加してからイテレーションを更新
-    if [[ -z "$sub_item_id" || "$sub_item_id" == "null" ]]; then
-      sub_item_id=$(ensure_project_item "$REPO" "$sub_issue" "$PROJECT_ID" "$PROJECT_NUMBER") || {
-        print_warn "#$sub_issue のプロジェクトへの追加に失敗しました"
-        continue
-      }
-    fi
-
-    if update_iteration_field "$PROJECT_ID" "$sub_item_id" "$ITERATION_FIELD_ID" "$PARENT_ITERATION_ID" >/dev/null 2>&1; then
-      print_success "#$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
-      ((updated_count++)) || true
-    else
-      print_warn "#$sub_issue の更新に失敗しました"
-    fi
+    process_child_iteration "$item"
   done < <(echo "$DESCENDANTS_JSON" | jq -c '.[]')
 fi
 
