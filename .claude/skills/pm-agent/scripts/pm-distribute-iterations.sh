@@ -1,11 +1,11 @@
 #!/bin/bash
-# pm-distribute-iterations.sh - Distribute child issues across iterations
-# Usage: pm-distribute-iterations.sh <parent_issue_number> [options]
+# pm-distribute-iterations.sh - 子 Issue を複数イテレーションに振り分け
+# 使い方: pm-distribute-iterations.sh <parent_issue_number> [オプション]
 #
-# Distributes child issues (e.g., Features under an Epic) across multiple
-# iterations, with optional cascading to descendants.
+# 子 Issue（例: Epic 配下の Feature）を複数のイテレーションに振り分ける。
+# オプションで子孫への伝播も可能。
 #
-# Reference: https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/using-the-api-to-manage-projects
+# 参考: https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/using-the-api-to-manage-projects
 
 set -euo pipefail
 
@@ -14,31 +14,31 @@ source "$SCRIPT_DIR/pm-utils.sh"
 
 usage() {
   cat <<EOF
-Usage: $0 <parent_issue_number> [options]
+使い方: $0 <parent_issue_number> [オプション]
 
-Distribute child issues across multiple iterations.
+子 Issue を複数のイテレーションに振り分ける。
 
-Options:
-  --repo <owner/repo>        Repository (default: auto-detect from git remote)
-  --project <number>         Project number (required)
-  --owner <login>            Project owner (@me for user, or org name)
-  --iterations <list>        Comma-separated iteration names (required)
-                             Example: "Sprint 1,Sprint 2,Sprint 3"
-  --order <issue_numbers>    Custom order of issues (comma-separated)
-                             Example: "15,12,18,14,16,13"
-  --cascade                  Also cascade iteration to descendants of each issue
-  --list                     List child issues and exit (for planning)
-  --dry-run                  Show what would be done without executing
-  -h, --help                 Show this help
+オプション:
+  --repo <owner/repo>        リポジトリ（デフォルト: git remote から自動検出）
+  --project <number>         プロジェクト番号（必須）
+  --owner <login>            プロジェクトオーナー（@me でユーザー、または組織名）
+  --iterations <list>        カンマ区切りのイテレーション名（必須）
+                             例: "Sprint 1,Sprint 2,Sprint 3"
+  --order <issue_numbers>    Issue の順序を指定（カンマ区切り）
+                             例: "15,12,18,14,16,13"
+  --cascade                  各 Issue の子孫にもイテレーションを伝播
+  --list                     子 Issue を一覧表示して終了（計画用）
+  --dry-run                  実行せずに予定内容を表示
+  -h, --help                 このヘルプを表示
 
-Examples:
-  # List Features under Epic #10
+使用例:
+  # Epic #10 配下の Feature を一覧表示
   $0 10 --project 1 --owner @me --list
 
-  # Distribute Features across 3 sprints
+  # Feature を 3 つのスプリントに振り分け
   $0 10 --project 1 --owner @me --iterations "Sprint 1,Sprint 2,Sprint 3"
 
-  # Custom order with cascade
+  # カスタム順序で振り分け + 子孫にも伝播
   $0 10 --project 1 --owner @me \\
     --iterations "Sprint 1,Sprint 2,Sprint 3" \\
     --order "15,12,18,14,16,13" \\
@@ -47,7 +47,7 @@ EOF
   exit 1
 }
 
-# Default values
+# デフォルト値
 PARENT_ISSUE=""
 REPO=""
 PROJECT_NUMBER=""
@@ -58,7 +58,7 @@ CASCADE=false
 LIST_ONLY=false
 DRY_RUN=false
 
-# Parse arguments
+# 引数の解析
 while [[ $# -gt 0 ]]; do
   case $1 in
     --repo)
@@ -95,7 +95,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     -h | --help) usage ;;
     -*)
-      echo "Unknown option: $1"
+      echo "不明なオプション: $1"
       usage
       ;;
     *)
@@ -105,50 +105,46 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Validate required arguments
+# 必須引数の検証
 [[ -z "$PARENT_ISSUE" ]] && {
-  echo "Error: parent_issue_number is required"
+  echo "エラー: parent_issue_number は必須です"
   usage
 }
 [[ -z "$PROJECT_NUMBER" ]] && {
-  echo "Error: --project is required"
+  echo "エラー: --project は必須です"
   usage
 }
 [[ -z "$PROJECT_OWNER" ]] && {
-  echo "Error: --owner is required"
+  echo "エラー: --owner は必須です"
   usage
 }
 
 REPO="${REPO:-$(get_repo)}"
 
-# Note: GraphQL functions are now in pm-utils.sh (DRY refactoring)
-# Available: get_project_id, get_project_fields, get_issue_node_id,
-#            add_issue_to_project, update_iteration_field, find_iteration_field_id,
-#            find_iteration_id_by_title, get_available_iterations, get_issue_item_id,
-#            get_child_issues, get_all_descendants
+# 注: GraphQL 関数は pm-utils.sh に集約済み（DRY リファクタリング）
 
 # ============================================================
-# Main Execution
+# メイン処理
 # ============================================================
 
 echo ""
 echo "═══════════════════════════════════════════════"
 echo "📋 pm-distribute-iterations.sh"
 echo "───────────────────────────────────────────────"
-echo "  Repository: $REPO"
-echo "  Project: #$PROJECT_NUMBER"
-echo "  Parent: #$PARENT_ISSUE"
-[[ "$CASCADE" == true ]] && echo "  Cascade: enabled"
-[[ "$DRY_RUN" == true ]] && echo "  Mode: DRY RUN"
+echo "  リポジトリ: $REPO"
+echo "  プロジェクト: #$PROJECT_NUMBER"
+echo "  親 Issue: #$PARENT_ISSUE"
+[[ "$CASCADE" == true ]] && echo "  子孫への伝播: 有効"
+[[ "$DRY_RUN" == true ]] && echo "  モード: ドライラン"
 echo "═══════════════════════════════════════════════"
 echo ""
 
-# Step 1: Get project ID and fields
-echo "Fetching project information..."
+# ステップ 1: プロジェクト ID とフィールドを取得
+echo "プロジェクト情報を取得中..."
 PROJECT_ID=$(get_project_id "$PROJECT_OWNER" "$PROJECT_NUMBER")
 
 if [[ -z "$PROJECT_ID" || "$PROJECT_ID" == "null" ]]; then
-  echo "Error: Could not find project #$PROJECT_NUMBER for owner $PROJECT_OWNER" >&2
+  echo "エラー: オーナー $PROJECT_OWNER のプロジェクト #$PROJECT_NUMBER が見つかりません" >&2
   exit 1
 fi
 
@@ -156,28 +152,28 @@ FIELDS_JSON=$(get_project_fields "$PROJECT_ID")
 ITERATION_FIELD_ID=$(find_iteration_field_id "$FIELDS_JSON")
 
 if [[ -z "$ITERATION_FIELD_ID" || "$ITERATION_FIELD_ID" == "null" ]]; then
-  echo "Error: Project #$PROJECT_NUMBER does not have an Iteration field" >&2
+  echo "エラー: プロジェクト #$PROJECT_NUMBER に Iteration フィールドがありません" >&2
   exit 1
 fi
 
-# Step 2: Get parent issue info
-PARENT_TITLE=$(gh api "repos/$REPO/issues/$PARENT_ISSUE" --jq '.title' 2>/dev/null || echo "Unknown")
-echo "  Parent: #$PARENT_ISSUE - $PARENT_TITLE"
+# ステップ 2: 親 Issue の情報を取得
+PARENT_TITLE=$(gh api "repos/$REPO/issues/$PARENT_ISSUE" --jq '.title' 2>/dev/null || echo "不明")
+echo "  親: #$PARENT_ISSUE - $PARENT_TITLE"
 echo ""
 
-# Step 3: Get child issues
+# ステップ 3: 子 Issue を取得
 CHILDREN_JSON=$(get_child_issues "$REPO" "$PARENT_ISSUE")
 CHILD_COUNT=$(echo "$CHILDREN_JSON" | jq 'length')
 
 if [[ "$CHILD_COUNT" -eq 0 ]]; then
-  echo "Error: No child issues found for #$PARENT_ISSUE" >&2
+  echo "エラー: #$PARENT_ISSUE の子 Issue が見つかりません" >&2
   exit 1
 fi
 
-echo "Found $CHILD_COUNT child issue(s):"
+echo "$CHILD_COUNT 件の子 Issue が見つかりました:"
 echo ""
 
-# Display child issues
+# 子 Issue を表示
 idx=1
 while IFS= read -r item; do
   num=$(echo "$item" | jq -r '.number')
@@ -188,59 +184,59 @@ done < <(echo "$CHILDREN_JSON" | jq -c 'sort_by(.number) | .[]')
 
 echo ""
 
-# List-only mode
+# 一覧表示のみモード
 if [[ "$LIST_ONLY" == true ]]; then
-  echo "Use --order to specify custom order, e.g.:"
+  echo "--order でカスタム順序を指定できます。例:"
   echo "  --order \"$(echo "$CHILDREN_JSON" | jq -r '[.[].number] | join(",")')\""
   exit 0
 fi
 
-# Validate iterations
+# イテレーションの検証
 if [[ -z "$ITERATIONS" ]]; then
-  echo "Error: --iterations is required" >&2
+  echo "エラー: --iterations は必須です" >&2
   echo ""
-  echo "Available iterations:"
+  echo "利用可能なイテレーション:"
   get_available_iterations "$FIELDS_JSON" | while read -r iter; do
     echo "  - $iter"
   done
   exit 1
 fi
 
-# Parse iterations into array
+# イテレーションを配列にパース
 IFS=',' read -ra ITERATION_NAMES <<<"$ITERATIONS"
 ITERATION_COUNT=${#ITERATION_NAMES[@]}
 
-echo "Distribution plan:"
-echo "  $CHILD_COUNT issue(s) → $ITERATION_COUNT iteration(s)"
+echo "振り分け計画:"
+echo "  $CHILD_COUNT 件の Issue → $ITERATION_COUNT 個のイテレーション"
 echo ""
 
-# Build ordered list of issues
+# Issue の順序リストを構築
 if [[ -n "$CUSTOM_ORDER" ]]; then
   IFS=',' read -ra ORDERED_ISSUES <<<"$CUSTOM_ORDER"
-  echo "Using custom order: $CUSTOM_ORDER"
+  echo "カスタム順序を使用: $CUSTOM_ORDER"
 else
-  # Default: sort by issue number
-  # Note: Using while loop instead of mapfile for macOS bash 3.x compatibility
+  # デフォルト: Issue 番号でソート
+  # 注: macOS bash 3.x 互換性のため mapfile ではなく while ループを使用
   ORDERED_ISSUES=()
   while IFS= read -r num; do
     ORDERED_ISSUES+=("$num")
   done < <(echo "$CHILDREN_JSON" | jq -r '.[].number' | sort -n)
-  echo "Using default order (by issue number)"
+  echo "デフォルト順序を使用（Issue 番号順）"
 fi
 
 echo ""
 
-# Calculate distribution
+# 振り分けの計算
 CHUNK_SIZE=$(((${#ORDERED_ISSUES[@]} + ITERATION_COUNT - 1) / ITERATION_COUNT))
 
-# Validate iterations exist
+# イテレーションの存在確認
 for iter_name in "${ITERATION_NAMES[@]}"; do
-  iter_name=$(echo "$iter_name" | xargs) # Trim whitespace
+  iter_name=$(echo "$iter_name" | xargs) # 前後の空白を除去
   iter_id=$(find_iteration_id_by_title "$FIELDS_JSON" "$iter_name")
   if [[ -z "$iter_id" || "$iter_id" == "null" ]]; then
-    echo "Error: Iteration '$iter_name' not found in project" >&2
+    echo "エラー: イテレーション '$iter_name' がプロジェクトに見つかりません" >&2
     echo ""
-    echo "Available iterations:"
+    echo "利用可能なイテレーション:"
     get_available_iterations "$FIELDS_JSON" | while read -r iter; do
       echo "  - $iter"
     done
@@ -248,8 +244,8 @@ for iter_name in "${ITERATION_NAMES[@]}"; do
   fi
 done
 
-# Show distribution plan
-echo "Distribution:"
+# 振り分け計画を表示
+echo "振り分け内容:"
 for ((i = 0; i < ITERATION_COUNT; i++)); do
   iter_name=$(echo "${ITERATION_NAMES[$i]}" | xargs)
   start=$((i * CHUNK_SIZE))
@@ -262,20 +258,20 @@ for ((i = 0; i < ITERATION_COUNT; i++)); do
     issues_in_iter=("${ORDERED_ISSUES[@]:$start:$((end - start))}")
     echo "  $iter_name: ${issues_in_iter[*]}"
   else
-    echo "  $iter_name: (none)"
+    echo "  $iter_name: (なし)"
   fi
 done
 
 echo ""
 
-# Dry run mode
+# ドライランモード
 if [[ "$DRY_RUN" == true ]]; then
-  echo "DRY RUN - no changes made"
+  echo "ドライラン - 変更は行われていません"
   exit 0
 fi
 
-# Execute distribution
-echo "Executing distribution..."
+# 振り分けを実行
+echo "振り分けを実行中..."
 echo ""
 
 updated_count=0
@@ -295,16 +291,16 @@ for ((i = 0; i < ITERATION_COUNT; i++)); do
     issue_num="${ORDERED_ISSUES[$j]}"
     issue_title=$(echo "$CHILDREN_JSON" | jq -r --argjson n "$issue_num" '.[] | select(.number == $n) | .title')
 
-    # Ensure issue is in project and update iteration
+    # プロジェクトへの追加を保証し、イテレーションを更新
     if ensure_and_update_iteration "$REPO" "$issue_num" "$PROJECT_ID" "$PROJECT_NUMBER" "$ITERATION_FIELD_ID" "$iter_id"; then
       print_success "#$issue_num: $issue_title → $iter_name"
       ((updated_count++)) || true
     else
-      print_warn "Failed to set iteration for #$issue_num"
+      print_warn "#$issue_num のイテレーション設定に失敗しました"
       continue
     fi
 
-    # Cascade to descendants if enabled
+    # 子孫への伝播（有効な場合）
     if [[ "$CASCADE" == true ]]; then
       descendants=$(get_all_descendants "$REPO" "$issue_num" 10)
       desc_count=$(echo "$descendants" | jq 'length')
@@ -326,13 +322,13 @@ for ((i = 0; i < ITERATION_COUNT; i++)); do
   done
 done
 
-# Summary
+# 結果サマリー
 echo ""
 echo "═══════════════════════════════════════════════"
-echo "📊 Summary"
+echo "📊 結果サマリー"
 echo "───────────────────────────────────────────────"
-echo "  Parent: #$PARENT_ISSUE"
-echo "  Issues distributed: $updated_count"
-[[ "$CASCADE" == true ]] && echo "  Cascade updates: $cascade_count"
-echo "  Iterations used: $ITERATION_COUNT"
+echo "  親: #$PARENT_ISSUE"
+echo "  振り分け済み: $updated_count 件"
+[[ "$CASCADE" == true ]] && echo "  子孫への伝播: $cascade_count 件"
+echo "  使用イテレーション数: $ITERATION_COUNT"
 echo "═══════════════════════════════════════════════"

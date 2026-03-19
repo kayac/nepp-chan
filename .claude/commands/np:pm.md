@@ -5,7 +5,7 @@ model: sonnet
 allowed-tools: Bash(gh:*), Bash(git remote:*), Bash(git status:*), Bash(.claude/skills/pm-agent/scripts/*:*), Bash(cat:*)
 ---
 
-Read the file `.claude/skills/pm-agent/COMMAND.md` using the Read tool and follow all instructions in it.
+`.claude/skills/pm-agent/COMMAND.md` を Read ツールで読み込み、記載されたすべての手順に従うこと。
 
-The user's input follows below.
+以下はユーザーの入力です。
 $ARGUMENTS

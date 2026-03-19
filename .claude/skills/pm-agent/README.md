@@ -1,14 +1,14 @@
 # PM Agent Skill
 
-GitHub Projects PM Agent - 議事録からタスク抽出・Issue化、Projects初期セットアップを行う Claude Code skill。
+GitHub Projects PM Agent - 議事録からタスク抽出・Issue化、Projects初期セットアップを行う Claude Code スキル。
 
-## Prerequisites
+## 前提条件
 
 - [gh CLI](https://cli.github.com/) (GitHub CLI)
-- [jq](https://jqlang.github.io/jq/) (JSON processor)
+- [jq](https://jqlang.github.io/jq/) (JSON プロセッサ)
 - `gh auth status` で認証済みであること（`project` スコープ必要）
 
-## Installation
+## インストール
 
 ### 1. skill フォルダをコピー
 
@@ -24,25 +24,22 @@ mkdir -p /path/to/your-project/.claude/commands
 cp .claude/commands/np:pm.md /path/to/your-project/.claude/commands/np:pm.md
 ```
 
-## Quick Start
+## クイックスタート
 
 ```bash
-# Agent として呼び出し
-@np-pm-agent 以下の議事録からタスクを作って
-[議事録テキスト]
-
-# Command として呼び出し
+# コマンドとして呼び出し
 /np:pm 初期設定して
 
 # スクリプト単体実行
 .claude/skills/pm-agent/scripts/pm-bulk-issues.sh --help
 ```
 
-## Structure
+## 構成
 
 ```
 .claude/skills/pm-agent/
 ├── README.md           # このファイル
+├── SKILL.md            # スキル定義（フロントマター）
 ├── COMMAND.md          # Agent/Command 本体（SSoT）
 ├── PARSER.md           # 議事録パース詳細ロジック
 ├── SETUP.md            # セットアップ手順・トラブルシューティング
@@ -58,7 +55,7 @@ cp .claude/commands/np:pm.md /path/to/your-project/.claude/commands/np:pm.md
     └── pm-distribute-iterations.sh # Iteration 分散配置
 ```
 
-## Key Features
+## 主な機能
 
 - **議事録 → タスク変換**: テキストを 4 層構造（Epic/Feature/Story/Task）に自動分類
 - **GitHub Projects セットアップ**: カスタムフィールド・ビューを自動作成
