@@ -719,4 +719,3 @@ Issue #{number}: {old_status} → **{new_status}**
 - .claude/skills/pm-agent/scripts/pm-link-hierarchy.sh: 階層関係設定（必須）
 - .claude/skills/pm-agent/scripts/pm-project-fields.sh: Projects V2フィールド設定（--bulk対応）
 </skill_references>
-</output>
