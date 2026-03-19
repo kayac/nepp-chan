@@ -295,20 +295,8 @@ for ((i = 0; i < ITERATION_COUNT; i++)); do
     issue_num="${ORDERED_ISSUES[$j]}"
     issue_title=$(echo "$CHILDREN_JSON" | jq -r --argjson n "$issue_num" '.[] | select(.number == $n) | .title')
 
-    # Get or create project item
-    item_id=$(get_issue_item_id "$REPO" "$issue_num" "$PROJECT_NUMBER")
-    if [[ -z "$item_id" || "$item_id" == "null" ]]; then
-      node_id=$(get_issue_node_id "$REPO" "$issue_num")
-      item_id=$(add_issue_to_project "$PROJECT_ID" "$node_id")
-    fi
-
-    if [[ -z "$item_id" || "$item_id" == "null" ]]; then
-      print_warn "Failed to add #$issue_num to project"
-      continue
-    fi
-
-    # Update iteration
-    if update_iteration_field "$PROJECT_ID" "$item_id" "$ITERATION_FIELD_ID" "$iter_id" >/dev/null 2>&1; then
+    # Ensure issue is in project and update iteration
+    if ensure_and_update_iteration "$REPO" "$issue_num" "$PROJECT_ID" "$PROJECT_NUMBER" "$ITERATION_FIELD_ID" "$iter_id"; then
       print_success "#$issue_num: $issue_title → $iter_name"
       ((updated_count++)) || true
     else
@@ -328,18 +316,9 @@ for ((i = 0; i < ITERATION_COUNT; i++)); do
           desc_num=$(echo "$desc" | jq -r '.number')
           desc_title=$(echo "$desc" | jq -r '.title')
 
-          # Get or create project item for descendant
-          desc_item_id=$(get_issue_item_id "$REPO" "$desc_num" "$PROJECT_NUMBER")
-          if [[ -z "$desc_item_id" || "$desc_item_id" == "null" ]]; then
-            desc_node_id=$(get_issue_node_id "$REPO" "$desc_num")
-            desc_item_id=$(add_issue_to_project "$PROJECT_ID" "$desc_node_id")
-          fi
-
-          if [[ -n "$desc_item_id" && "$desc_item_id" != "null" ]]; then
-            if update_iteration_field "$PROJECT_ID" "$desc_item_id" "$ITERATION_FIELD_ID" "$iter_id" >/dev/null 2>&1; then
-              echo "    └── #$desc_num: $desc_title → $iter_name"
-              ((cascade_count++)) || true
-            fi
+          if ensure_and_update_iteration "$REPO" "$desc_num" "$PROJECT_ID" "$PROJECT_NUMBER" "$ITERATION_FIELD_ID" "$iter_id"; then
+            echo "    └── #$desc_num: $desc_title → $iter_name"
+            ((cascade_count++)) || true
           fi
         done < <(echo "$descendants" | jq -c '.[]')
       fi

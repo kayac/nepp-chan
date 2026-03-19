@@ -5,13 +5,10 @@
 # This file provides common functions for pm-agent scripts.
 # All functions are designed to work with sandbox restrictions.
 
-# Load security utilities (required)
+# Load security utilities (bundled within skill)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SECURITY_UTILS="${SCRIPT_DIR}/../../../scripts/security-utils.sh"
-if [[ -f "$SECURITY_UTILS" ]]; then
-  # shellcheck source=../../../scripts/security-utils.sh
-  source "$SECURITY_UTILS"
-fi
+# shellcheck source=pm-security.sh
+source "$SCRIPT_DIR/pm-security.sh"
 
 # Extract issue number from URL
 # Input: https://github.com/owner/repo/issues/123
@@ -504,6 +501,42 @@ get_issue_iteration() {
   else
     echo "{\"iterationId\": null, \"title\": null, \"fieldId\": null, \"itemId\": \"$item_id\", \"issueTitle\": \"$issue_title\"}"
   fi
+}
+
+# ============================================================
+# High-level Iteration Helpers
+# ============================================================
+
+# Ensure an issue is added to a project, returns item_id
+# Usage: item_id=$(ensure_project_item "$repo" "$issue_number" "$project_id" "$project_number")
+ensure_project_item() {
+  local repo="$1" issue_number="$2" project_id="$3" project_number="$4"
+
+  local item_id
+  item_id=$(get_issue_item_id "$repo" "$issue_number" "$project_number")
+
+  if [[ -z "$item_id" || "$item_id" == "null" ]]; then
+    local node_id
+    node_id=$(get_issue_node_id "$repo" "$issue_number")
+    item_id=$(add_issue_to_project "$project_id" "$node_id")
+  fi
+
+  if [[ -z "$item_id" || "$item_id" == "null" ]]; then
+    return 1
+  fi
+
+  echo "$item_id"
+}
+
+# Ensure issue is in project and update its iteration
+# Usage: ensure_and_update_iteration "$repo" "$issue_num" "$project_id" "$project_number" "$field_id" "$iteration_id"
+ensure_and_update_iteration() {
+  local repo="$1" issue_num="$2" project_id="$3" project_number="$4" field_id="$5" iteration_id="$6"
+
+  local item_id
+  item_id=$(ensure_project_item "$repo" "$issue_num" "$project_id" "$project_number") || return 1
+
+  update_iteration_field "$project_id" "$item_id" "$field_id" "$iteration_id" >/dev/null 2>&1
 }
 
 # Get issue's project item ID (for updating fields)

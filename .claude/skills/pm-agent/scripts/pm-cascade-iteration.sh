@@ -224,17 +224,14 @@ if [[ "$RECURSIVE" == true ]]; then
         continue
       fi
 
-      # Add to project if not already added
+      # Add to project if not already added, then update iteration
       if [[ -z "$sub_item_id" || "$sub_item_id" == "null" ]]; then
-        node_id=$(get_issue_node_id "$REPO" "$sub_issue")
-        sub_item_id=$(add_issue_to_project "$PROJECT_ID" "$node_id")
-        if [[ -z "$sub_item_id" || "$sub_item_id" == "null" ]]; then
+        sub_item_id=$(ensure_project_item "$REPO" "$sub_issue" "$PROJECT_ID" "$PROJECT_NUMBER") || {
           print_warn "Failed to add #$sub_issue to project"
           continue
-        fi
+        }
       fi
 
-      # Update iteration
       if update_iteration_field "$PROJECT_ID" "$sub_item_id" "$ITERATION_FIELD_ID" "$PARENT_ITERATION_ID" >/dev/null 2>&1; then
         print_success "#$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
         ((updated_count++)) || true
@@ -270,17 +267,14 @@ else
       continue
     fi
 
-    # Add to project if not already added
+    # Add to project if not already added, then update iteration
     if [[ -z "$sub_item_id" || "$sub_item_id" == "null" ]]; then
-      node_id=$(get_issue_node_id "$REPO" "$sub_issue")
-      sub_item_id=$(add_issue_to_project "$PROJECT_ID" "$node_id")
-      if [[ -z "$sub_item_id" || "$sub_item_id" == "null" ]]; then
+      sub_item_id=$(ensure_project_item "$REPO" "$sub_issue" "$PROJECT_ID" "$PROJECT_NUMBER") || {
         print_warn "Failed to add #$sub_issue to project"
         continue
-      fi
+      }
     fi
 
-    # Update iteration
     if update_iteration_field "$PROJECT_ID" "$sub_item_id" "$ITERATION_FIELD_ID" "$PARENT_ITERATION_ID" >/dev/null 2>&1; then
       print_success "#$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
       ((updated_count++)) || true

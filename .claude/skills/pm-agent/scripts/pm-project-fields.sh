@@ -151,115 +151,6 @@ done
 
 REPO="${REPO:-$(get_repo)}"
 
-# Determine if owner is user or organization
-get_project_id() {
-  local owner="$1" number="$2"
-  local query result
-
-  if [[ "$owner" == "@me" ]]; then
-    # User project
-    query='query($number: Int!) {
-      viewer {
-        projectV2(number: $number) {
-          id
-        }
-      }
-    }'
-    result=$(gh api graphql -F number="$number" -f query="$query" --jq '.data.viewer.projectV2.id')
-  else
-    # Try organization first, then user
-    query='query($login: String!, $number: Int!) {
-      organization(login: $login) {
-        projectV2(number: $number) {
-          id
-        }
-      }
-    }'
-    result=$(gh api graphql -f login="$owner" -F number="$number" -f query="$query" --jq '.data.organization.projectV2.id' 2>/dev/null) || true
-
-    if [[ -z "$result" || "$result" == "null" ]]; then
-      # Try as user
-      query='query($login: String!, $number: Int!) {
-        user(login: $login) {
-          projectV2(number: $number) {
-            id
-          }
-        }
-      }'
-      result=$(gh api graphql -f login="$owner" -F number="$number" -f query="$query" --jq '.data.user.projectV2.id')
-    fi
-  fi
-
-  echo "$result"
-}
-
-# Get all fields and their options
-get_project_fields() {
-  local project_id="$1"
-  local query='query($projectId: ID!) {
-    node(id: $projectId) {
-      ... on ProjectV2 {
-        fields(first: 50) {
-          nodes {
-            ... on ProjectV2Field {
-              id
-              name
-              dataType
-            }
-            ... on ProjectV2IterationField {
-              id
-              name
-              dataType
-              configuration {
-                iterations {
-                  id
-                  title
-                  startDate
-                }
-              }
-            }
-            ... on ProjectV2SingleSelectField {
-              id
-              name
-              dataType
-              options {
-                id
-                name
-              }
-            }
-          }
-        }
-      }
-    }
-  }'
-
-  gh api graphql -f projectId="$project_id" -f query="$query" --jq '.data.node.fields.nodes'
-}
-
-# Get issue node ID
-get_issue_node_id() {
-  local repo="$1" issue_number="$2"
-  gh api "repos/$repo/issues/$issue_number" --jq '.node_id'
-}
-
-# Add issue to project, returns item ID
-add_issue_to_project() {
-  local project_id="$1" content_id="$2"
-  local mutation='mutation($projectId: ID!, $contentId: ID!) {
-    addProjectV2ItemById(input: {
-      projectId: $projectId
-      contentId: $contentId
-    }) {
-      item {
-        id
-      }
-    }
-  }'
-
-  gh api graphql -f projectId="$project_id" -f contentId="$content_id" -f query="$mutation" \
-    --jq '.data.addProjectV2ItemById.item.id'
-}
-
 # Update a single select field
 update_single_select_field() {
   local project_id="$1" item_id="$2" field_id="$3" option_id="$4"
@@ -324,28 +215,6 @@ update_date_field() {
 
   gh api graphql -f projectId="$project_id" -f itemId="$item_id" -f fieldId="$field_id" \
     -f date="$date_value" -f query="$mutation" --jq '.data.updateProjectV2ItemFieldValue.projectV2Item.id'
-}
-
-# Update an iteration field
-update_iteration_field() {
-  local project_id="$1" item_id="$2" field_id="$3" iteration_id="$4"
-  local mutation='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $iterationId: String!) {
-    updateProjectV2ItemFieldValue(input: {
-      projectId: $projectId
-      itemId: $itemId
-      fieldId: $fieldId
-      value: {
-        iterationId: $iterationId
-      }
-    }) {
-      projectV2Item {
-        id
-      }
-    }
-  }'
-
-  gh api graphql -f projectId="$project_id" -f itemId="$item_id" -f fieldId="$field_id" \
-    -f iterationId="$iteration_id" -f query="$mutation" --jq '.data.updateProjectV2ItemFieldValue.projectV2Item.id'
 }
 
 # Find option ID by name
@@ -584,12 +453,7 @@ echo "  Repository: $REPO"
 echo "  Issue: #$ISSUE_NUMBER"
 echo ""
 
-# Get issue node ID
-ISSUE_NODE_ID=$(get_issue_node_id "$REPO" "$ISSUE_NUMBER")
-echo "  Issue Node ID: $ISSUE_NODE_ID"
-
 if [[ "$DRY_RUN" == true ]]; then
-  echo ""
   echo "🔍 DRY RUN MODE - no changes will be made"
   echo ""
   echo "Would perform:"
@@ -604,103 +468,15 @@ if [[ "$DRY_RUN" == true ]]; then
   exit 0
 fi
 
-# Add issue to project
-echo "Adding issue to project..."
-ITEM_ID=$(add_issue_to_project "$PROJECT_ID" "$ISSUE_NODE_ID")
-if [[ -z "$ITEM_ID" || "$ITEM_ID" == "null" ]]; then
-  echo "Error: Failed to add issue to project" >&2
+if process_issue "$ISSUE_NUMBER" "$STATUS_VALUE" "$PRIORITY_VALUE" "$SIZE_VALUE" "$ESTIMATE_VALUE" "$ITERATION_VALUE" "$START_DATE" "$TARGET_DATE"; then
+  echo ""
+  echo "═══════════════════════════════════════════════"
+  echo "📊 Summary"
+  echo "───────────────────────────────────────────────"
+  echo "  Issue #$ISSUE_NUMBER added to project #$PROJECT_NUMBER"
+  echo "═══════════════════════════════════════════════"
+else
+  echo ""
+  echo "Error: Failed to process issue #$ISSUE_NUMBER" >&2
   exit 1
 fi
-print_success "Added to project (Item ID: $ITEM_ID)"
-
-# Update fields
-update_count=0
-
-if [[ -n "$STATUS_VALUE" ]]; then
-  field_id=$(find_field_id "$FIELDS_JSON" "Status")
-  option_id=$(find_option_id "$FIELDS_JSON" "Status" "$STATUS_VALUE")
-  if [[ -n "$field_id" && -n "$option_id" ]]; then
-    update_single_select_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$option_id" >/dev/null
-    print_success "Status = $STATUS_VALUE"
-    ((update_count++)) || true
-  else
-    print_warn "Could not find Status option: $STATUS_VALUE"
-  fi
-fi
-
-if [[ -n "$PRIORITY_VALUE" ]]; then
-  field_id=$(find_field_id "$FIELDS_JSON" "Priority")
-  option_id=$(find_option_id "$FIELDS_JSON" "Priority" "$PRIORITY_VALUE")
-  if [[ -n "$field_id" && -n "$option_id" ]]; then
-    update_single_select_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$option_id" >/dev/null
-    print_success "Priority = $PRIORITY_VALUE"
-    ((update_count++)) || true
-  else
-    print_warn "Could not find Priority option: $PRIORITY_VALUE"
-  fi
-fi
-
-if [[ -n "$SIZE_VALUE" ]]; then
-  field_id=$(find_field_id "$FIELDS_JSON" "Size")
-  option_id=$(find_option_id "$FIELDS_JSON" "Size" "$SIZE_VALUE")
-  if [[ -n "$field_id" && -n "$option_id" ]]; then
-    update_single_select_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$option_id" >/dev/null
-    print_success "Size = $SIZE_VALUE"
-    ((update_count++)) || true
-  else
-    print_warn "Could not find Size option: $SIZE_VALUE"
-  fi
-fi
-
-if [[ -n "$ESTIMATE_VALUE" ]]; then
-  field_id=$(find_field_id "$FIELDS_JSON" "Estimate")
-  if [[ -n "$field_id" ]]; then
-    update_number_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$ESTIMATE_VALUE" >/dev/null
-    print_success "Estimate = $ESTIMATE_VALUE"
-    ((update_count++)) || true
-  else
-    print_warn "Could not find Estimate field"
-  fi
-fi
-
-if [[ -n "$ITERATION_VALUE" ]]; then
-  field_id=$(find_field_id "$FIELDS_JSON" "Iteration")
-  iteration_id=$(find_iteration_id "$FIELDS_JSON" "Iteration" "$ITERATION_VALUE")
-  if [[ -n "$field_id" && -n "$iteration_id" ]]; then
-    update_iteration_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$iteration_id" >/dev/null
-    print_success "Iteration = $ITERATION_VALUE"
-    ((update_count++)) || true
-  else
-    print_warn "Could not find Iteration: $ITERATION_VALUE"
-  fi
-fi
-
-if [[ -n "$START_DATE" ]]; then
-  field_id=$(find_field_id "$FIELDS_JSON" "Start date")
-  if [[ -n "$field_id" ]]; then
-    update_date_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$START_DATE" >/dev/null
-    print_success "Start date = $START_DATE"
-    ((update_count++)) || true
-  else
-    print_warn "Could not find Start date field"
-  fi
-fi
-
-if [[ -n "$TARGET_DATE" ]]; then
-  field_id=$(find_field_id "$FIELDS_JSON" "Target date")
-  if [[ -n "$field_id" ]]; then
-    update_date_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$TARGET_DATE" >/dev/null
-    print_success "Target date = $TARGET_DATE"
-    ((update_count++)) || true
-  else
-    print_warn "Could not find Target date field"
-  fi
-fi
-
-echo ""
-echo "═══════════════════════════════════════════════"
-echo "📊 Summary"
-echo "───────────────────────────────────────────────"
-echo "  Issue #$ISSUE_NUMBER added to project #$PROJECT_NUMBER"
-echo "  Fields updated: $update_count"
-echo "═══════════════════════════════════════════════"

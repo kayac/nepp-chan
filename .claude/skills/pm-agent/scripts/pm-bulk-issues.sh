@@ -14,14 +14,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/pm-utils.sh"
 
-# Load security utilities (required)
-SECURITY_UTILS="${SCRIPT_DIR}/../../../scripts/security-utils.sh"
-# shellcheck source=../../../scripts/security-utils.sh
-source "$SECURITY_UTILS" || {
-  echo "Error: security-utils.sh not found" >&2
-  exit 1
-}
-
 usage() {
   cat <<EOF
 Usage: $0 <issues.json> [options]
@@ -155,7 +147,7 @@ while IFS= read -r issue; do
 
   body=""
   if [[ -n "$raw_body" ]] && [[ "$raw_body" != "null" ]]; then
-    body=$(sanitize_string "$raw_body" 65536)
+    body=$(sanitize_markdown "$raw_body" 65536)
   fi
 
   labels=""
