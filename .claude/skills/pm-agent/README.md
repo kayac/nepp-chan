@@ -39,8 +39,7 @@ cp .claude/commands/np:pm.md /path/to/your-project/.claude/commands/np:pm.md
 ```
 .claude/skills/pm-agent/
 ├── README.md           # このファイル
-├── SKILL.md            # スキル定義（フロントマター）
-├── COMMAND.md          # Agent/Command 本体（SSoT）
+├── SKILL.md            # スキル定義 + 全手順（SSoT）
 ├── PARSER.md           # 議事録パース詳細ロジック
 ├── SETUP.md            # セットアップ手順・トラブルシューティング
 ├── GRAPHQL.md          # GraphQL API リファレンス
