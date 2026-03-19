@@ -1,3 +1,8 @@
+---
+category: 教育
+subcategory: 問合せ
+url: 'https://www.otoineppu-h.ed.jp/contact/'
+---
 本文へ移動
 お問い合わせ
 ##  お問い合わせ

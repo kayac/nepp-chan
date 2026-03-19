@@ -155,7 +155,7 @@ export const evalTestCases: TestCaseV3[] = [
     threshold: 0.5,
   },
 
-  // ─── garbage: ゴミ関連（4個） ────────────────────────────
+  // ─── garbage: ゴミ関連（14個） ───────────────────────────
 
   {
     id: "gb-01",
@@ -190,11 +190,98 @@ export const evalTestCases: TestCaseV3[] = [
   {
     id: "gb-04",
     category: "garbage",
-    type: "negative",
-    input: "今日は何のゴミの日ですか？",
+    type: "positive",
+    input: "今日3月18日は何のゴミの日ですか？",
+    groundTruth: "3月18日は水曜日なので、紙製容器包装・その他紙の収集日です",
+    requiredKeywords: ["紙製容器包装", "水曜"],
+    threshold: 0.3,
+  },
+  {
+    id: "gb-05",
+    category: "garbage",
+    type: "positive",
+    input: "生ごみは何曜日に出せますか？",
     groundTruth:
-      "ゴミカレンダーはPDFで公開されているが、具体的な日別の収集スケジュールはナレッジにない。最新のゴミカレンダーPDFを確認してほしい旨を回答すべき",
-    requiredKeywords: ["カレンダー", "確認"],
+      "生ごみは火曜日と金曜日の毎週収集です。炭化ごみも同時に収集されます",
+    requiredKeywords: ["火曜", "金曜", "毎週"],
+    threshold: 0.5,
+  },
+  {
+    id: "gb-06",
+    category: "garbage",
+    type: "positive",
+    input: "ペットボトルのゴミ袋は何色ですか？",
+    groundTruth:
+      "令和7年1月10日より市販の白色半透明袋での収集に変更。旧指定袋（オレンジ色の半透明袋）も引き続き使用可",
+    requiredKeywords: ["白色", "半透明", "オレンジ"],
+    threshold: 0.5,
+  },
+  {
+    id: "gb-07",
+    category: "garbage",
+    type: "positive",
+    input: "粗大ごみはいつ出せますか？",
+    groundTruth:
+      "基本は毎月第1土曜日に収集。ただし12月と1月は粗大ごみの収集なし。3月は第3・第4土曜に収集。粗大ごみは役場で処理券を購入する必要がある",
+    requiredKeywords: ["第1土曜", "処理券"],
+    threshold: 0.3,
+  },
+  {
+    id: "gb-08",
+    category: "garbage",
+    type: "positive",
+    input: "年末年始のゴミ収集はどうなりますか？",
+    groundTruth: "令和8年度（2026年12月31日〜2027年1月4日）は収集休みです",
+    requiredKeywords: ["12月31日", "1月4日", "収集休み"],
+    threshold: 0.3,
+  },
+  {
+    id: "gb-09",
+    category: "garbage",
+    type: "positive",
+    input: "カン・ビンは何曜日に出せますか？",
+    groundTruth:
+      "カン・ビンは金曜日の隔週で収集。ペットボトルと交互に隔週で金曜日に収集される。村指定の専用ごみ袋を使用",
+    requiredKeywords: ["金曜", "隔週", "専用"],
+    threshold: 0.3,
+  },
+  {
+    id: "gb-10",
+    category: "garbage",
+    type: "positive",
+    input: "来週の月曜日3月23日は何のゴミの日ですか？",
+    groundTruth: "月曜日はゴミの収集がありません。日曜・月曜は収集なしです",
+    requiredKeywords: ["月曜", "収集なし"],
+    threshold: 0.5,
+  },
+  {
+    id: "gb-11",
+    category: "garbage",
+    type: "positive",
+    input: "引っ越しで大量のゴミが出たのですが、どうすればいいですか？",
+    groundTruth:
+      "名寄地区広域最終処分場（TEL:01654-2-1598）へ直接搬入してください。受入時間は8:45〜16:30。または音威子府村の許可業者である旭光運輸（TEL:5-3141）へ依頼",
+    requiredKeywords: ["名寄", "処分場", "旭光運輸"],
+    threshold: 0.5,
+  },
+  {
+    id: "gb-12",
+    category: "garbage",
+    type: "positive",
+    input: "プラスチック製の容器包装は何の袋に入れて出せばいいですか？",
+    groundTruth:
+      "市販の白色の半透明のごみ袋又はレジ袋に入れて出す。木曜日に毎週収集",
+    requiredKeywords: ["白色", "半透明", "木曜"],
+    threshold: 0.3,
+  },
+  {
+    id: "gb-13",
+    category: "garbage",
+    type: "positive",
+    input: "4月の粗大ごみ収集日はいつですか？",
+    groundTruth:
+      "令和8年度（2026年4月）の粗大ごみ収集日は4月4日（土）第1土曜日です。使用済み小型家電も同時に収集",
+    requiredKeywords: ["4月4日", "第1土曜"],
     threshold: 0.3,
   },
 

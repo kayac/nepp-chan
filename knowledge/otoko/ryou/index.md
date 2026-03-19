@@ -1,3 +1,8 @@
+---
+category: 教育
+subcategory: 寮
+url: 'https://www.otoineppu-h.ed.jp/ryou/'
+---
 本文へ移動
 Chiseneshiri Ryou
 ##  チセネシリ寮の紹介

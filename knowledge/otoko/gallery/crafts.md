@@ -1,3 +1,8 @@
+---
+category: 教育
+subcategory: ギャラリー
+url: 'https://www.otoineppu-h.ed.jp/gallery/crafts.html'
+---
 本文へ移動
 ##  作品紹介
 Gallery

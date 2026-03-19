@@ -1,3 +1,8 @@
+---
+title: 税金
+category: 住民生活
+subcategory: 税金
+---
 # 税金
 
 音威子府村の税金に関する情報です。

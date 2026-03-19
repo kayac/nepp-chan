@@ -1,3 +1,7 @@
+---
+title: 行財政報告
+category: 行政
+---
 # 行財政報告
 
 音威子府村の財政に関する各種報告書を公開しています。
@@ -6,14 +10,34 @@
 
 地方公共団体の財政の健全性を示す指標です。
 
-| 年度 | 資料 |
-|------|------|
-| 令和6年度 | [PDF](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R6kenzenkahantei.pdf) |
-| 令和5年度 | [PDF](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R5kenzenkahantei.pdf) |
-| 令和4年度 | [PDF](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R4kenzenkahantei.pdf) |
-| 令和3年度 | [PDF](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R3kenzenkahantei.pdf) |
-| 令和2年度 | [PDF](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R2kenzenkahantei.pdf) |
-| 令和元年度 | [PDF](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R1kenzenkahantei.pdf) |
+```json
+[
+  {
+    "年度": "令和6年度",
+    "資料": "[PDF](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R6kenzenkahantei.pdf)"
+  },
+  {
+    "年度": "令和5年度",
+    "資料": "[PDF](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R5kenzenkahantei.pdf)"
+  },
+  {
+    "年度": "令和4年度",
+    "資料": "[PDF](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R4kenzenkahantei.pdf)"
+  },
+  {
+    "年度": "令和3年度",
+    "資料": "[PDF](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R3kenzenkahantei.pdf)"
+  },
+  {
+    "年度": "令和2年度",
+    "資料": "[PDF](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R2kenzenkahantei.pdf)"
+  },
+  {
+    "年度": "令和元年度",
+    "資料": "[PDF](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R1kenzenkahantei.pdf)"
+  }
+]
+```
 
 > ※過去年度（平成19年度〜平成30年度）の資料は[公式サイト](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/gyouzaiseihoukoku.html)をご覧ください。
 
@@ -38,24 +62,48 @@
 
 ### 簡易水道事業
 
-| 年度 | 資料 |
-|------|------|
-| 令和5年度 | [Excel](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R5kansuikeiei.xlsx) |
-| 令和4年度 | [Excel](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R4kansuikeiei.xlsx) |
+```json
+[
+  {
+    "年度": "令和5年度",
+    "資料": "[Excel](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R5kansuikeiei.xlsx)"
+  },
+  {
+    "年度": "令和4年度",
+    "資料": "[Excel](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R4kansuikeiei.xlsx)"
+  }
+]
+```
 
 ### 農業集落排水事業
 
-| 年度 | 資料 |
-|------|------|
-| 令和5年度 | [Excel](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R5nousyuukeiei.xlsx) |
-| 令和4年度 | [Excel](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R4nousyuukeiei.xlsx) |
+```json
+[
+  {
+    "年度": "令和5年度",
+    "資料": "[Excel](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R5nousyuukeiei.xlsx)"
+  },
+  {
+    "年度": "令和4年度",
+    "資料": "[Excel](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R4nousyuukeiei.xlsx)"
+  }
+]
+```
 
 ## 財務諸表
 
-| 年度 | 資料 |
-|------|------|
-| 令和4年度 | [PDF](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R4zaimu.pdf) |
-| 令和3年度 | [PDF](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R3zaimu.pdf) |
+```json
+[
+  {
+    "年度": "令和4年度",
+    "資料": "[PDF](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R4zaimu.pdf)"
+  },
+  {
+    "年度": "令和3年度",
+    "資料": "[PDF](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/R3zaimu.pdf)"
+  }
+]
+```
 
 ---
 

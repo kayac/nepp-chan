@@ -1,3 +1,8 @@
+---
+title: muranoko presentのご案内
+category: 各課案内
+subcategory: 産業振興課
+---
 # muranoko presentのご案内
 
 muranoko presentについてのお知らせです。

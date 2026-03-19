@@ -1,3 +1,8 @@
+---
+category: 教育
+subcategory: その他
+url: 'https://www.otoineppu-h.ed.jp/'
+---
 本文へ移動
 ![](https://www.otoineppu-h.ed.jp/assets/image/top/catchcopy.png)
 ![北海道おといねっぷ美術工芸高等学校](https://www.otoineppu-h.ed.jp/assets/image/slide/item/schooltit.png)

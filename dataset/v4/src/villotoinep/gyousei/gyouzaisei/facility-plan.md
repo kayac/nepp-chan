@@ -1,3 +1,7 @@
+---
+title: 音威子府村公共施設等総合管理計画
+category: 行政
+---
 # 音威子府村公共施設等総合管理計画
 
 音威子府村ではこれまで、拡大する行政需要や住民ニーズの多様化に対応するべく、数多くの公共施設等を整備してきました。
@@ -14,11 +18,22 @@
 
 ## ダウンロード
 
-| 種別 | 資料 |
-|------|------|
-| 一括ダウンロード | [音威子府村公共施設等総合管理計画 PDF (2742KB)](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/ksk_plan.pdf) |
-| 分割ダウンロード | [P01〜16](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/ksk_plan_01-16.pdf) / [P17〜40](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/ksk_plan_17-40.pdf) / [P41〜68](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/ksk_plan_41-68.pdf) |
-| 概要版 | [音威子府村公共施設等総合管理計画（概要版）PDF (778KB)](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/ksk_plan_gaiyou.pdf) |
+```json
+[
+  {
+    "種別": "一括ダウンロード",
+    "資料": "[音威子府村公共施設等総合管理計画 PDF (2742KB)](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/ksk_plan.pdf)"
+  },
+  {
+    "種別": "分割ダウンロード",
+    "資料": "[P01〜16](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/ksk_plan_01-16.pdf) / [P17〜40](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/ksk_plan_17-40.pdf) / [P41〜68](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/ksk_plan_41-68.pdf)"
+  },
+  {
+    "種別": "概要版",
+    "資料": "[音威子府村公共施設等総合管理計画（概要版）PDF (778KB)](https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/files/ksk_plan_gaiyou.pdf)"
+  }
+]
+```
 
 ---
 

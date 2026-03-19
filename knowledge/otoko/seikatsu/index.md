@@ -1,3 +1,8 @@
+---
+category: 教育
+subcategory: 学校生活
+url: 'https://www.otoineppu-h.ed.jp/seikatsu/'
+---
 本文へ移動
 School Life
 ##  学校生活

@@ -1,3 +1,8 @@
+---
+title: 会計課
+category: 各課案内
+subcategory: 出納室
+---
 # 会計課
 
 会計・出納を担当しています。

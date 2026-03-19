@@ -1,3 +1,8 @@
+---
+title: 音威子府村議会
+category: 各課案内
+subcategory: 議会事務局
+---
 # 音威子府村議会
 
 ---

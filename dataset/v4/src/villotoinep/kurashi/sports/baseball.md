@@ -1,3 +1,8 @@
+---
+title: ベースボール
+category: 住民生活
+subcategory: sports
+---
 # ベースボール
 
 ## 道北中学校野球大会
