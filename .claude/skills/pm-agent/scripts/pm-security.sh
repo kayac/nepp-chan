@@ -13,8 +13,8 @@ set -euo pipefail
 # ============================================================
 
 # シェル安全な文字列にサニタイズ（タイトル、ラベル等）
-# シェルメタ文字を除去: $ ` ; | & ( ) { } [ ] < > \ " '
-# 保持: 英数字、スペース、改行、一般的な記号
+# 危険なシェルメタ文字を除去: $ ` ; & | ( ) < > \ " '
+# 日本語・絵文字・その他の文字は保持
 # 使用方法: safe=$(sanitize_string "$input" [最大長])
 sanitize_string() {
   local input="$1"
@@ -81,10 +81,9 @@ validate_labels() {
   [[ "$labels" =~ ^[a-zA-Z0-9_:,\ -]+$ ]]
 }
 
-# Issue タイプを許可値に対して検証
-# 使用方法: validate_issue_type "task" && echo "有効"
+# Issue タイプのフォーマット検証（英小文字・ハイフンのみ許可）
 validate_issue_type() {
   local type="$1"
   [[ -z "$type" ]] && return 0
-  [[ "$type" =~ ^(task|bug|feature|epic|story|enhancement|documentation)$ ]]
+  [[ "$type" =~ ^[a-z][a-z0-9-]*$ ]]
 }

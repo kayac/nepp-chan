@@ -304,6 +304,8 @@ process_issue() {
     if [[ -n "$option_id" ]]; then
       update_single_select_field "$PROJECT_ID" "$item_id" "$FID_STATUS" "$option_id" >/dev/null && \
         echo "    ↳ Status = $p_status"
+    else
+      print_warn "Status の選択肢 '$p_status' が見つかりません"
     fi
   fi
 
@@ -313,6 +315,8 @@ process_issue() {
     if [[ -n "$option_id" ]]; then
       update_single_select_field "$PROJECT_ID" "$item_id" "$FID_PRIORITY" "$option_id" >/dev/null && \
         echo "    ↳ Priority = $p_priority"
+    else
+      print_warn "Priority の選択肢 '$p_priority' が見つかりません"
     fi
   fi
 
@@ -322,6 +326,8 @@ process_issue() {
     if [[ -n "$option_id" ]]; then
       update_single_select_field "$PROJECT_ID" "$item_id" "$FID_SIZE" "$option_id" >/dev/null && \
         echo "    ↳ Size = $p_size"
+    else
+      print_warn "Size の選択肢 '$p_size' が見つかりません"
     fi
   fi
 
@@ -337,6 +343,8 @@ process_issue() {
     if [[ -n "$iteration_id" ]]; then
       update_iteration_field "$PROJECT_ID" "$item_id" "$FID_ITERATION" "$iteration_id" >/dev/null && \
         echo "    ↳ Iteration = $p_iteration"
+    else
+      print_warn "Iteration '$p_iteration' が見つかりません"
     fi
   fi
 

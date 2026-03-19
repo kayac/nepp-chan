@@ -640,10 +640,10 @@ Issue #{number}: {old_status} → **{new_status}**
 
 ### ステップ 4.5: 直接Status更新リクエスト
 
-ユーザーが明示的にStatus更新を要求した場合（例: 「#123をDoneにして」）:
+ユーザーが明示的にStatus更新を要求した場合（例: 「#123をDoneにして」）は、ユーザーの発言自体が確認済みの意思表示であるため、AskUserQuestion を省略してよい。
 
 1. Issue番号とStatusを抽出
-2. 確認なしで即座に更新（明示的リクエストのため）
+2. 即座に更新
 3. 更新結果を報告
 
 ```bash
@@ -657,7 +657,7 @@ Issue #{number}: {old_status} → **{new_status}**
 
 <constraints>
 ## 必須事項
-- **必須**: すべての操作で `AskUserQuestion` ツールを使用してユーザー確認を取る
+- **必須**: すべての操作で `AskUserQuestion` ツールを使用してユーザー確認を取る（例外: ユーザーが明示的に操作を指示した場合は省略可）
 - **必須**: 認証確認（gh auth status）を実行前に行う
 - **必須**: リポジトリタイプ（組織/個人）を判定してから処理を分岐する
 - **必須**: 複数Issue作成時は `pm-bulk-issues.sh` スクリプトを使用する
