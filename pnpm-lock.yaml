@@ -148,8 +148,8 @@ importers:
         specifier: ^10.43.0
         version: 10.43.0(react@19.2.1)
       '@simplewebauthn/browser':
-        specifier: ^13.2.2
-        version: 13.2.2
+        specifier: ^13.3.0
+        version: 13.3.0
       '@tanstack/react-query':
         specifier: ^5.90.12
         version: 5.90.12(react@19.2.1)
@@ -2581,8 +2581,8 @@ packages:
     resolution: {integrity: sha512-i6NWUDi2SDikfSUeMJvJTRdwEKYSfTd+mvBO2Ja51S1YK+hnickBuDfD+RvPerIXLuyRu3GamgNPbNqgCGUg/Q==}
     engines: {node: '>= 18'}
 
-  '@simplewebauthn/browser@13.2.2':
-    resolution: {integrity: sha512-FNW1oLQpTJyqG5kkDg5ZsotvWgmBaC6jCHR7Ej0qUNep36Wl9tj2eZu7J5rP+uhXgHaLk+QQ3lqcw2vS5MX1IA==}
+  '@simplewebauthn/browser@13.3.0':
+    resolution: {integrity: sha512-BE/UWv6FOToAdVk0EokzkqQQDOWtNydYlY6+OrmiZ5SCNmb41VehttboTetUM3T/fr6EAFYVXjz4My2wg230rQ==}
 
   '@simplewebauthn/server@13.2.2':
     resolution: {integrity: sha512-HcWLW28yTMGXpwE9VLx9J+N2KEUaELadLrkPEEI9tpI5la70xNEVEsu/C+m3u7uoq4FulLqZQhgBCzR9IZhFpA==}
@@ -7757,7 +7757,7 @@ snapshots:
       - rollup
       - supports-color
 
-  '@simplewebauthn/browser@13.2.2': {}
+  '@simplewebauthn/browser@13.3.0': {}
 
   '@simplewebauthn/server@13.2.2':
     dependencies:
