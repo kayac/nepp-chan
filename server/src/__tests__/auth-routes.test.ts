@@ -23,7 +23,7 @@ vi.mock("~/repository/admin-user-repository", () => ({
   },
 }));
 
-vi.mock("~/services/auth/session", () => ({
+vi.mock("~/services/auth/token", () => ({
   generateAccessToken: vi.fn(),
   verifyAccessToken: vi.fn(),
 }));
@@ -35,8 +35,12 @@ const { adminInvitationRepository } = await import(
 const { adminUserRepository } = await import(
   "~/repository/admin-user-repository"
 );
-const sessionService = await import("~/services/auth/session");
-const { authRoutes } = await import("~/routes/auth");
+const tokenService = await import("~/services/auth/token");
+const { authRoutes: rawAuthRoutes } = await import("~/routes/auth");
+
+import { withResolveAuth } from "./helpers/test-app";
+
+const authRoutes = await withResolveAuth(rawAuthRoutes);
 
 const mockEnv = {
   DB: {} as D1Database,
@@ -86,7 +90,7 @@ describe("auth routes", () => {
       vi.mocked(adminUserRepository.findByUsername).mockResolvedValue(null);
       vi.mocked(hashPassword).mockResolvedValue("hashed-password");
       vi.mocked(adminUserRepository.create).mockResolvedValue("user-1");
-      vi.mocked(sessionService.generateAccessToken).mockResolvedValue(
+      vi.mocked(tokenService.generateAccessToken).mockResolvedValue(
         "access-token-jwt",
       );
 
@@ -165,7 +169,7 @@ describe("auth routes", () => {
     it("正しい認証情報でログインできる", async () => {
       vi.mocked(adminUserRepository.findByUsername).mockResolvedValue(testUser);
       vi.mocked(verifyPassword).mockResolvedValue(true);
-      vi.mocked(sessionService.generateAccessToken).mockResolvedValue(
+      vi.mocked(tokenService.generateAccessToken).mockResolvedValue(
         "access-token-jwt",
       );
 
@@ -236,16 +240,7 @@ describe("auth routes", () => {
 
   describe("GET /me", () => {
     it("有効な Access Token でユーザー情報を返す", async () => {
-      vi.mocked(sessionService.verifyAccessToken).mockResolvedValue({
-        sub: testUser.id,
-        username: testUser.username,
-        name: testUser.name,
-        role: testUser.role,
-        iss: "nepp-chan",
-        aud: "nepp-chan-admin",
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + 900,
-      });
+      vi.mocked(tokenService.verifyAccessToken).mockResolvedValue(testUser);
 
       const res = await authRoutes.request(
         new Request("http://localhost/me", {
@@ -280,7 +275,7 @@ describe("auth routes", () => {
     });
 
     it("無効なトークンで user: null を返す", async () => {
-      vi.mocked(sessionService.verifyAccessToken).mockRejectedValue(
+      vi.mocked(tokenService.verifyAccessToken).mockRejectedValue(
         new Error("invalid"),
       );
 

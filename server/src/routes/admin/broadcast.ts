@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 
 import { errorResponse } from "~/lib/openapi-errors";
-import { sessionAuth } from "~/middleware/session-auth";
+import { type AuthVariables, requireAuth } from "~/middleware/auth";
 import { broadcastRepository } from "~/repository/broadcast-repository";
 import {
   broadcastMessageSchema,
@@ -18,9 +18,10 @@ import {
 
 export const broadcastAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
+  Variables: AuthVariables;
 }>();
 
-broadcastAdminRoutes.use("*", sessionAuth);
+broadcastAdminRoutes.use("*", requireAuth);
 
 const listRoute = createRoute({
   method: "get",
@@ -105,7 +106,7 @@ const createBroadcastRoute = createRoute({
 
 broadcastAdminRoutes.openapi(createBroadcastRoute, async (c) => {
   const body = c.req.valid("json");
-  const adminUser = c.get("adminUser" as never) as { id: string };
+  const adminUser = c.get("adminUser");
 
   try {
     const broadcast = await createBroadcastMessage(c.env, {

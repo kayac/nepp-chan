@@ -3,12 +3,11 @@ import { handleChatStream } from "@mastra/ai-sdk";
 import { Mastra } from "@mastra/core/mastra";
 import { createUIMessageStreamResponse, type UIMessage } from "ai";
 
-import { getTokenFromHeader } from "~/lib/auth-header";
 import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
-import { type AuthUser, verifyAccessToken } from "~/services/auth/session";
+import type { AuthVariables } from "~/middleware/auth";
 
 const ChatSendRequestSchema = z.object({
   message: z.object({
@@ -21,7 +20,10 @@ const ChatSendRequestSchema = z.object({
   threadId: z.string().min(1, "threadId is required"),
 });
 
-export const chatRoutes = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
+export const chatRoutes = new OpenAPIHono<{
+  Bindings: CloudflareBindings;
+  Variables: Partial<AuthVariables>;
+}>();
 
 const chatRoute = createRoute({
   method: "post",
@@ -57,22 +59,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
   logger.info(`[Chat] request received`, { threadId, resourceId });
 
   const storage = await getStorage(c.env.DB);
-
-  const token = getTokenFromHeader(c);
-  let adminUser: AuthUser | null = null;
-  if (token) {
-    try {
-      const payload = await verifyAccessToken(token, c.env.JWT_SECRET);
-      adminUser = {
-        id: payload.sub,
-        username: payload.username,
-        name: payload.name,
-        role: payload.role,
-      };
-    } catch {
-      // トークンが無効でもチャットは続行
-    }
-  }
+  const adminUser = c.get("adminUser");
 
   const neppChanAgent = createNeppChanAgent({ isAdmin: !!adminUser });
   const mastra = new Mastra({
@@ -84,7 +71,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
     storage,
     db: c.env.DB,
     env: c.env,
-    adminUser: adminUser ?? undefined,
+    adminUser,
   });
 
   const stream = await handleChatStream({

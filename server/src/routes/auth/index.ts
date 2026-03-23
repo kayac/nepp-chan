@@ -1,21 +1,17 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
-import { getTokenFromHeader } from "~/lib/auth-header";
 import { generateId } from "~/lib/crypto";
 import { errorResponse } from "~/lib/openapi-errors";
 import { hashPassword, verifyPassword } from "~/lib/password";
-import type { SessionVariables } from "~/middleware/session-auth";
+import type { AuthVariables } from "~/middleware/auth";
 import { adminInvitationRepository } from "~/repository/admin-invitation-repository";
 import { adminUserRepository } from "~/repository/admin-user-repository";
 import { AdminUserSchema } from "~/schemas/auth-schema";
-import {
-  generateAccessToken,
-  verifyAccessToken,
-} from "~/services/auth/session";
+import { generateAccessToken } from "~/services/auth/token";
 
 export const authRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
-  Variables: SessionVariables;
+  Variables: Partial<AuthVariables>;
 }>();
 
 const toUserResponse = (user: {
@@ -195,29 +191,8 @@ const meRoute = createRoute({
 });
 
 authRoutes.openapi(meRoute, async (c) => {
-  const token = getTokenFromHeader(c);
-
-  if (!token) {
-    return c.json({ user: null }, 200);
-  }
-
-  try {
-    const payload = await verifyAccessToken(token, c.env.JWT_SECRET);
-
-    return c.json(
-      {
-        user: {
-          id: payload.sub,
-          username: payload.username,
-          name: payload.name,
-          role: payload.role,
-        },
-      },
-      200,
-    );
-  } catch {
-    return c.json({ user: null }, 200);
-  }
+  const user = c.get("adminUser");
+  return c.json({ user: user ? toUserResponse(user) : null }, 200);
 });
 
 // --- Logout ---

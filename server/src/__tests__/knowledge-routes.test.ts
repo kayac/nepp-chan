@@ -6,7 +6,7 @@ import {
   validateFileKey,
 } from "~/routes/admin/knowledge/schemas";
 
-// services/knowledge と session のモック
+// services/knowledge と auth/token のモック
 vi.mock("~/services/knowledge", () => ({
   listFiles: vi.fn(),
   getFile: vi.fn(),
@@ -21,7 +21,7 @@ vi.mock("~/services/knowledge", () => ({
   reconvertFromOriginal: vi.fn(),
 }));
 
-vi.mock("~/services/auth/session", () => ({
+vi.mock("~/services/auth/token", () => ({
   verifyAccessToken: vi.fn(),
 }));
 
@@ -32,11 +32,15 @@ vi.mock("~/repository/admin-user-repository", () => ({
 }));
 
 const knowledgeService = await import("~/services/knowledge");
-const sessionService = await import("~/services/auth/session");
+const tokenService = await import("~/services/auth/token");
 const { adminUserRepository } = await import(
   "~/repository/admin-user-repository"
 );
 const { knowledgeAdminRoutes } = await import("~/routes/admin/knowledge");
+
+import { withResolveAuth } from "./helpers/test-app";
+
+const app = await withResolveAuth(knowledgeAdminRoutes);
 
 const testUser = {
   id: "user-1",
@@ -60,7 +64,7 @@ const mockEnv = {
 
 const authedRequest = (path: string, init?: RequestInit) => {
   const req = new Request(`http://localhost${path}`, init);
-  req.headers.set("Authorization", "Bearer valid-session");
+  req.headers.set("Authorization", "Bearer valid-token");
   return req;
 };
 
@@ -94,16 +98,7 @@ describe("knowledge schemas ユーティリティ", () => {
 describe("knowledge routes 統合テスト", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(sessionService.verifyAccessToken).mockResolvedValue({
-      sub: testUser.id,
-      username: testUser.username,
-      name: testUser.name,
-      role: testUser.role,
-      iss: "nepp-chan",
-      aud: "nepp-chan-admin",
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 900,
-    });
+    vi.mocked(tokenService.verifyAccessToken).mockResolvedValue(testUser);
     vi.mocked(adminUserRepository.findById).mockResolvedValue(testUser);
   });
 
@@ -121,7 +116,7 @@ describe("knowledge routes 統合テスト", () => {
       { method: "POST", path: "/convert" },
       { method: "POST", path: "/reconvert" },
     ])("$method $path - 認証なしは 401", async ({ method, path }) => {
-      const res = await knowledgeAdminRoutes.request(
+      const res = await app.request(
         new Request(`http://localhost${path}`, { method }),
         undefined,
         mockEnv,
@@ -145,7 +140,7 @@ describe("knowledge routes 統合テスト", () => {
       };
       vi.mocked(knowledgeService.listFiles).mockResolvedValue(mockFiles);
 
-      const res = await knowledgeAdminRoutes.request(
+      const res = await app.request(
         authedRequest("/files"),
         undefined,
         mockEnv,
@@ -168,7 +163,7 @@ describe("knowledge routes 統合テスト", () => {
       };
       vi.mocked(knowledgeService.getFile).mockResolvedValue(mockFile);
 
-      const res = await knowledgeAdminRoutes.request(
+      const res = await app.request(
         authedRequest("/files/test.md"),
         undefined,
         mockEnv,
@@ -182,7 +177,7 @@ describe("knowledge routes 統合テスト", () => {
     it("ファイルが見つからない場合は 404 を返す", async () => {
       vi.mocked(knowledgeService.getFile).mockResolvedValue(null);
 
-      const res = await knowledgeAdminRoutes.request(
+      const res = await app.request(
         authedRequest("/files/notfound.md"),
         undefined,
         mockEnv,
@@ -196,7 +191,7 @@ describe("knowledge routes 統合テスト", () => {
     it("ファイルを削除する", async () => {
       vi.mocked(knowledgeService.deleteFile).mockResolvedValue();
 
-      const res = await knowledgeAdminRoutes.request(
+      const res = await app.request(
         authedRequest("/files/test.md", { method: "DELETE" }),
         undefined,
         mockEnv,
@@ -213,7 +208,7 @@ describe("knowledge routes 統合テスト", () => {
         deleted: 5,
       });
 
-      const res = await knowledgeAdminRoutes.request(
+      const res = await app.request(
         authedRequest("/", { method: "DELETE" }),
         undefined,
         mockEnv,
@@ -237,7 +232,7 @@ describe("knowledge routes 統合テスト", () => {
         editedCount: 0,
       });
 
-      const res = await knowledgeAdminRoutes.request(
+      const res = await app.request(
         authedRequest("/sync", { method: "POST" }),
         undefined,
         mockEnv,
@@ -257,7 +252,7 @@ describe("knowledge routes 統合テスト", () => {
       };
       vi.mocked(knowledgeService.listUnifiedFiles).mockResolvedValue(mockFiles);
 
-      const res = await knowledgeAdminRoutes.request(
+      const res = await app.request(
         authedRequest("/unified"),
         undefined,
         mockEnv,
@@ -273,7 +268,7 @@ describe("knowledge routes 統合テスト", () => {
     it("元ファイルが見つからない場合は 404 を返す", async () => {
       vi.mocked(knowledgeService.getOriginalFile).mockResolvedValue(null);
 
-      const res = await knowledgeAdminRoutes.request(
+      const res = await app.request(
         authedRequest("/originals/notfound.pdf"),
         undefined,
         mockEnv,

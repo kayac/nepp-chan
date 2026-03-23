@@ -1,5 +1,5 @@
 import type { ToolExecutionContext } from "@mastra/core/tools";
-import type { AuthUser } from "~/services/auth/session";
+import type { AuthUser } from "~/schemas/auth-schema";
 
 type ToolContext = ToolExecutionContext | undefined;
 

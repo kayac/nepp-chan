@@ -1,7 +1,7 @@
 import type { D1Store } from "@mastra/cloudflare-d1";
 import { RequestContext } from "@mastra/core/request-context";
 
-import type { AuthUser } from "~/services/auth/session";
+import type { AuthUser } from "~/schemas/auth-schema";
 
 export type MastraRequestContextType = {
   storage: D1Store;

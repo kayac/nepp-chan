@@ -1,16 +1,16 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 import { errorResponse } from "~/lib/openapi-errors";
-import { type SessionVariables, sessionAuth } from "~/middleware/session-auth";
+import { type AuthVariables, requireAuth } from "~/middleware/auth";
 import { adminInvitationRepository } from "~/repository/admin-invitation-repository";
 import { createInvitation } from "~/services/auth/invitation";
 
 export const invitationRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
-  Variables: SessionVariables;
+  Variables: AuthVariables;
 }>();
 
-invitationRoutes.use("*", sessionAuth);
+invitationRoutes.use("*", requireAuth);
 
 const listInvitationsRoute = createRoute({
   method: "get",
