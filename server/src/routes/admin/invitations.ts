@@ -67,13 +67,14 @@ const createInvitationRoute = createRoute({
   tags: ["Admin - Invitations"],
   summary: "新規招待作成",
   description:
-    "管理者を招待します。super_admin の招待はスクリプト経由でのみ可能です。",
+    "管理者を招待します。super_admin ロールの招待は super_admin のみ可能です。",
   request: {
     body: {
       content: {
         "application/json": {
           schema: z.object({
             username: z.string().min(1),
+            role: z.enum(["admin", "super_admin"]).optional().default("admin"),
           }),
         },
       },
@@ -97,19 +98,26 @@ const createInvitationRoute = createRoute({
     },
     400: errorResponse(400),
     401: errorResponse(401),
+    403: errorResponse(403),
   },
 });
 
 invitationRoutes.openapi(createInvitationRoute, async (c) => {
-  const { username } = c.req.valid("json");
+  const { username, role } = c.req.valid("json");
   const adminUser = c.get("adminUser");
+
+  if (role === "super_admin" && adminUser.role !== "super_admin") {
+    throw new HTTPException(403, {
+      message: "super_admin の招待は super_admin のみ可能です",
+    });
+  }
 
   try {
     const invitation = await createInvitation(
       c.env.DB,
       username,
       adminUser.id,
-      "admin",
+      role,
       1,
     );
 
