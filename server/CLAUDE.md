@@ -202,7 +202,7 @@ throw new HTTPException(404, { message: "Not found" });
 
 - エラー: `throw new HTTPException(code, { message })` でスロー（グローバルエラーハンドラーが `{ error: { code, message } }` 形式に変換）
 - OpenAPI エラーレスポンス: `lib/openapi-errors.ts` の `errorResponse(code)` を使用
-- 認証必須ルート: `sessionAuth` ミドルウェアを適用
+- 認証必須ルート: `requireAuth` ミドルウェアを適用
 - 共通スキーマ: `schemas/` から import（インライン定義を避ける）
 
 ## データベーステーブル

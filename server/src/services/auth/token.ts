@@ -34,14 +34,17 @@ export const generateAccessToken = async (
 export const verifyAccessToken = async (
   token: string,
   secret: string,
-): Promise<JwtPayload> => {
+): Promise<AuthUser> => {
   const payload = (await verify(token, secret, "HS256")) as JwtPayload;
 
   if (payload.iss !== JWT_ISSUER || payload.aud !== JWT_AUDIENCE) {
     throw new Error("無効なトークンです");
   }
 
-  return payload;
+  return {
+    id: payload.sub,
+    username: payload.username,
+    name: payload.name,
+    role: payload.role,
+  };
 };
-
-export type { AuthUser };
