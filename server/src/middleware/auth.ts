@@ -20,7 +20,7 @@ export const resolveAuth = createMiddleware<{
       const user = await verifyAccessToken(token, c.env.JWT_SECRET);
       c.set("adminUser", user);
     } catch {
-      // トークンが無効でもリクエストは続行
+      logger.warn("[Auth] invalid access token, continuing as unauthenticated");
     }
   }
 
@@ -38,4 +38,4 @@ export const requireAuth = createMiddleware<{
   await next();
 });
 
-export type { AuthUser, AuthVariables };
+export type { AuthVariables };
