@@ -14,7 +14,7 @@ type AuthContext = {
   setUser: (
     user: {
       id: string;
-      email: string;
+      username: string;
       name: string | null;
       role: string;
     } | null,

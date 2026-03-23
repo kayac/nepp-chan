@@ -2603,7 +2603,7 @@ export interface paths {
                         "application/json": {
                             invitations: {
                                 id: string;
-                                email: string;
+                                username: string;
                                 role: string;
                                 invitedBy: string;
                                 expiresAt: string;
@@ -2644,8 +2644,7 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
-                        /** Format: email */
-                        email: string;
+                        username: string;
                     };
                 };
             };
@@ -2659,7 +2658,7 @@ export interface paths {
                         "application/json": {
                             invitation: {
                                 id: string;
-                                email: string;
+                                username: string;
                                 token: string;
                                 expiresAt: string;
                             };
@@ -2770,7 +2769,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/register/options": {
+    "/auth/register": {
         parameters: {
             query?: never;
             header?: never;
@@ -2779,7 +2778,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** パスキー登録オプション生成 */
+        /** ユーザー登録 */
         post: {
             parameters: {
                 query?: never;
@@ -2792,111 +2791,8 @@ export interface paths {
                     "application/json": {
                         /** @description 招待トークン */
                         token: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description 登録オプション */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            options: {
-                                challenge: string;
-                                rp: {
-                                    name: string;
-                                    id?: string;
-                                };
-                                user: {
-                                    id: string;
-                                    name: string;
-                                    displayName: string;
-                                };
-                                pubKeyCredParams: {
-                                    /** @enum {string} */
-                                    type: "public-key";
-                                    alg: number;
-                                }[];
-                                timeout?: number;
-                                attestation?: string;
-                                authenticatorSelection?: {
-                                    authenticatorAttachment?: string;
-                                    residentKey?: string;
-                                    requireResidentKey?: boolean;
-                                    userVerification?: string;
-                                };
-                            } & {
-                                [key: string]: unknown;
-                            };
-                            challengeId: string;
-                            email: string;
-                            invitationId: string;
-                        };
-                    };
-                };
-                /** @description リクエストエラー */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: {
-                                code: number;
-                                message: string;
-                            };
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/register/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** パスキー登録検証 */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        challengeId: string;
-                        response: {
-                            id: string;
-                            rawId: string;
-                            response: {
-                                clientDataJSON: string;
-                                attestationObject: string;
-                            } & {
-                                [key: string]: unknown;
-                            };
-                            /** @enum {string} */
-                            type: "public-key";
-                            clientExtensionResults: {
-                                [key: string]: unknown;
-                            };
-                        } & {
-                            [key: string]: unknown;
-                        };
-                        invitationId: string;
+                        /** @description パスワード（8文字以上） */
+                        password: string;
                     };
                 };
             };
@@ -2908,10 +2804,10 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            token: string;
+                            accessToken: string;
                             user: {
                                 id: string;
-                                email: string;
+                                username: string;
                                 name: string | null;
                                 role: string;
                             };
@@ -2940,7 +2836,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/login/options": {
+    "/auth/login": {
         parameters: {
             query?: never;
             header?: never;
@@ -2949,60 +2845,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** ログインオプション生成 */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description ログインオプション */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            options: {
-                                challenge: string;
-                                timeout?: number;
-                                rpId?: string;
-                                userVerification?: string;
-                                allowCredentials?: ({
-                                    id: string;
-                                    /** @enum {string} */
-                                    type: "public-key";
-                                } & {
-                                    [key: string]: unknown;
-                                })[];
-                            } & {
-                                [key: string]: unknown;
-                            };
-                            challengeId: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/login/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** ログイン検証 */
+        /** ログイン */
         post: {
             parameters: {
                 query?: never;
@@ -3013,25 +2856,8 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        challengeId: string;
-                        response: {
-                            id: string;
-                            rawId: string;
-                            response: {
-                                clientDataJSON: string;
-                                authenticatorData: string;
-                                signature: string;
-                            } & {
-                                [key: string]: unknown;
-                            };
-                            /** @enum {string} */
-                            type: "public-key";
-                            clientExtensionResults: {
-                                [key: string]: unknown;
-                            };
-                        } & {
-                            [key: string]: unknown;
-                        };
+                        username: string;
+                        password: string;
                     };
                 };
             };
@@ -3043,18 +2869,18 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            token: string;
+                            accessToken: string;
                             user: {
                                 id: string;
-                                email: string;
+                                username: string;
                                 name: string | null;
                                 role: string;
                             };
                         };
                     };
                 };
-                /** @description リクエストエラー */
-                400: {
+                /** @description 認証エラー */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3139,7 +2965,7 @@ export interface paths {
                         "application/json": {
                             user: {
                                 id: string;
-                                email: string;
+                                username: string;
                                 name: string | null;
                                 role: string;
                             } | null;

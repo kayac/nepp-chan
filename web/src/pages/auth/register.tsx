@@ -1,19 +1,19 @@
-import { startRegistration } from "@simplewebauthn/browser";
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import { SentryErrorBoundary } from "~/components/SentryErrorBoundary";
 import "~/index.css";
-import { fetchRegisterOptions, verifyRegistration } from "~/lib/api/auth";
+import { register } from "~/lib/api/auth";
 import { setAuthToken } from "~/lib/auth-token";
 import { initSentry } from "~/lib/sentry";
 
 initSentry();
 
 const RegisterPage = () => {
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState<string | null>(null);
 
   const params = new URLSearchParams(window.location.search);
   const token = params.get("token");
@@ -24,40 +24,30 @@ const RegisterPage = () => {
     }
   }, [token]);
 
-  const handleRegister = async () => {
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!token) return;
+
+    if (password !== confirmPassword) {
+      setError("パスワードが一致しません");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("パスワードは8文字以上で入力してください");
+      return;
+    }
 
     setError(null);
     setIsLoading(true);
 
     try {
-      const {
-        options,
-        challengeId,
-        email: invitedEmail,
-        invitationId,
-      } = await fetchRegisterOptions(token);
-
-      setEmail(invitedEmail);
-
-      const regResponse = await startRegistration({ optionsJSON: options });
-      const result = await verifyRegistration({
-        challengeId,
-        response: regResponse,
-        invitationId,
-      });
-
-      setAuthToken(result.token);
+      const result = await register(token, password);
+      setAuthToken(result.accessToken);
       window.location.href = "/dashboard";
     } catch (err) {
       if (err instanceof Error) {
-        if (err.name === "NotAllowedError") {
-          setError("パスキー登録がキャンセルされました");
-        } else if (err.name === "InvalidStateError") {
-          setError("このデバイスには既にパスキーが登録されています");
-        } else {
-          setError(err.message);
-        }
+        setError(err.message);
       } else {
         setError("登録中にエラーが発生しました");
       }
@@ -72,7 +62,7 @@ const RegisterPage = () => {
         <div className="bg-white rounded-xl shadow-sm p-8">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-stone-900">管理者登録</h1>
-            <p className="text-stone-600 mt-2">パスキーを登録してください</p>
+            <p className="text-stone-600 mt-2">パスワードを設定してください</p>
           </div>
 
           {error && (
@@ -81,22 +71,55 @@ const RegisterPage = () => {
             </div>
           )}
 
-          {email && (
-            <div className="mb-6 p-4 bg-teal-50 border border-teal-200 rounded-lg">
-              <p className="text-sm text-stone-600">登録メールアドレス</p>
-              <p className="font-medium text-stone-900">{email}</p>
-            </div>
-          )}
-
           {token ? (
-            <button
-              type="button"
-              onClick={handleRegister}
-              disabled={isLoading}
-              className="w-full py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? "登録中..." : "パスキーを登録"}
-            </button>
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-stone-700 mb-1"
+                >
+                  パスワード
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+                <p className="mt-1 text-xs text-stone-500">8文字以上</p>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="confirm-password"
+                  className="block text-sm font-medium text-stone-700 mb-1"
+                >
+                  パスワード（確認）
+                </label>
+                <input
+                  id="confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? "登録中..." : "登録する"}
+              </button>
+            </form>
           ) : (
             <div className="text-center text-stone-500">
               <p>有効な招待リンクが必要です</p>
