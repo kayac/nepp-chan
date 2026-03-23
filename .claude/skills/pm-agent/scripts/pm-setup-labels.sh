@@ -1,12 +1,12 @@
 #!/bin/bash
-# pm-setup-labels.sh - Context-aware label creation for pm-agent
+# pm-setup-labels.sh - リポジトリ種別に応じたラベル作成
 # Usage: pm-setup-labels.sh [owner/repo] [options]
 #
-# Creates labels based on repository type:
-# - Personal repos: type:* labels (priority managed via Projects V2 Fields)
-# - Org repos: No type labels (use Issue Types), no priority labels
+# リポジトリ種別に応じてラベルを作成:
+# - 個人リポジトリ: type:* ラベル（priority は Projects V2 フィールドで管理）
+# - Organization リポジトリ: type ラベルなし（Issue Types を使用）、priority ラベルなし
 #
-# Idempotent: skips existing labels.
+# 冪等: 既存のラベルはスキップ。
 
 set -euo pipefail
 
@@ -15,28 +15,28 @@ source "$SCRIPT_DIR/pm-utils.sh"
 
 usage() {
   cat <<EOF
-Usage: $0 [owner/repo] [options]
+使い方: $0 [owner/repo] [オプション]
 
-Options:
-  --force-labels         Create all labels regardless of repo type (legacy mode)
-  --with-priority        Also create priority:* labels (deprecated)
-  -h, --help             Show this help
+オプション:
+  --force-labels         リポジトリ種別に関係なく全ラベルを作成（レガシーモード）
+  --with-priority        priority:* ラベルも作成（非推奨）
+  -h, --help             このヘルプを表示
 
-Behavior by repository type:
-  Personal repos: Creates type:* labels only
-  Org repos:      No labels created (use Issue Types instead)
+リポジトリ種別ごとの動作:
+  個人リポジトリ:       type:* ラベルのみ作成
+  Organization リポジトリ: ラベル作成なし（代わりに Issue Types を使用）
 
-Priority is always managed via Projects V2 Fields, not labels.
+priority は常に Projects V2 フィールドで管理し、ラベルは使用しません。
 EOF
   exit 1
 }
 
-# Default values
+# デフォルト値
 REPO=""
 FORCE_LABELS=false
 WITH_PRIORITY=false
 
-# Parse arguments
+# 引数の解析
 while [[ $# -gt 0 ]]; do
   case $1 in
     --force-labels)
@@ -49,7 +49,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     -h | --help) usage ;;
     -*)
-      echo "Unknown option: $1"
+      echo "不明なオプション: $1"
       usage
       ;;
     *)
@@ -61,35 +61,32 @@ done
 
 REPO="${REPO:-$(get_repo)}"
 
-# Label definitions: name:color:description
+# ラベル定義: 名前|色|説明
 type_labels=(
-  "type:epic:5319E7:マイルストーン"
-  "type:feature:0052CC:機能要件"
-  "type:story:00875A:ユーザーストーリー"
-  "type:task:97A0AF:実装タスク"
-  "type:bug:D73A4A:バグ修正"
+  "type:epic|5319E7|マイルストーン"
+  "type:feature|0052CC|機能要件"
+  "type:story|00875A|ユーザーストーリー"
+  "type:task|97A0AF|実装タスク"
+  "type:bug|D73A4A|バグ修正"
 )
 
 priority_labels=(
-  "priority:high:B60205:最優先"
-  "priority:medium:FBCA04:通常"
-  "priority:low:0E8A16:低優先度"
+  "priority:high|B60205|最優先"
+  "priority:medium|FBCA04|通常"
+  "priority:low|0E8A16|低優先度"
 )
 
-# Create labels from array passed as arguments
-# Usage: create_labels "name:color:desc" "name:color:desc" ...
-# Returns: "created_count skipped_count"
 create_labels() {
   local created=0
   local skipped=0
 
   for item in "$@"; do
-    IFS=':' read -r name color desc <<<"$item"
+    IFS='|' read -r name color desc <<<"$item"
     if gh label create "$name" --color "$color" --description "$desc" --repo "$REPO" 2>/dev/null; then
-      print_success "Created: $name"
+      print_success "作成: $name"
       ((created++)) || true
     else
-      print_skip "Exists: $name"
+      print_skip "既存: $name"
       ((skipped++)) || true
     fi
   done
@@ -100,15 +97,15 @@ create_labels() {
 echo "═══════════════════════════════════════════════"
 echo "📋 pm-setup-labels.sh"
 echo "───────────────────────────────────────────────"
-echo "  Repository: $REPO"
+echo "  リポジトリ: $REPO"
 
-# Determine repository type
+# リポジトリ種別を判定
 IS_ORG=false
 if is_org_repo "$REPO"; then
   IS_ORG=true
-  echo "  Type: 📋 Organization repository"
+  echo "  種別: 📋 Organization リポジトリ"
 else
-  echo "  Type: 👤 Personal repository"
+  echo "  種別: 👤 個人リポジトリ"
 fi
 echo "═══════════════════════════════════════════════"
 echo ""
@@ -117,26 +114,26 @@ total_created=0
 total_skipped=0
 
 if [[ "$FORCE_LABELS" == true ]]; then
-  # Legacy mode: create all labels
-  echo "⚠️ Force mode: Creating all labels (legacy behavior)"
+  # レガシーモード: すべてのラベルを作成
+  echo "⚠️ 強制モード: すべてのラベルを作成します（レガシー動作）"
   echo ""
 
-  echo "Creating type:* labels..."
+  echo "type:* ラベルを作成中..."
   read -r created skipped <<<"$(create_labels "${type_labels[@]}")"
   ((total_created += created))
   ((total_skipped += skipped))
 
   if [[ "$WITH_PRIORITY" == true ]]; then
     echo ""
-    echo "Creating priority:* labels..."
+    echo "priority:* ラベルを作成中..."
     read -r created skipped <<<"$(create_labels "${priority_labels[@]}")"
     ((total_created += created))
     ((total_skipped += skipped))
   fi
 
 elif [[ "$IS_ORG" == true ]]; then
-  # Organization repository
-  echo "📋 Organization repository detected"
+  # Organization リポジトリ
+  echo "📋 Organization リポジトリを検出しました"
   echo ""
   echo "→ type:* ラベルは作成しません"
   echo "  代わりに GitHub Issue Types を使用してください:"
@@ -145,7 +142,7 @@ elif [[ "$IS_ORG" == true ]]; then
   echo "→ priority は Projects V2 フィールドで管理します"
   echo ""
 
-  # Check if Issue Types are available
+  # Issue Types の確認
   owner=$(get_repo_owner "$REPO")
   issue_types=$(get_org_issue_types "$owner")
   if [[ -n "$issue_types" ]]; then
@@ -162,22 +159,22 @@ elif [[ "$IS_ORG" == true ]]; then
   print_info "ラベル作成をスキップしました"
 
 else
-  # Personal repository
-  echo "👤 Personal repository detected"
+  # 個人リポジトリ
+  echo "👤 個人リポジトリを検出しました"
   echo ""
   echo "→ type:* ラベルを作成します"
   echo "→ priority は Projects V2 フィールドで管理します"
   echo ""
 
-  echo "Creating type:* labels..."
+  echo "type:* ラベルを作成中..."
   read -r created skipped <<<"$(create_labels "${type_labels[@]}")"
   ((total_created += created))
   ((total_skipped += skipped))
 
   if [[ "$WITH_PRIORITY" == true ]]; then
     echo ""
-    echo "⚠️ --with-priority is deprecated. Use Projects V2 Fields instead."
-    echo "Creating priority:* labels..."
+    echo "⚠️ --with-priority は非推奨です。代わりに Projects V2 フィールドを使用してください。"
+    echo "priority:* ラベルを作成中..."
     read -r created skipped <<<"$(create_labels "${priority_labels[@]}")"
     ((total_created += created))
     ((total_skipped += skipped))
@@ -186,13 +183,13 @@ fi
 
 echo ""
 echo "═══════════════════════════════════════════════"
-echo "📊 Summary"
+echo "📊 結果サマリー"
 echo "───────────────────────────────────────────────"
 if [[ "$IS_ORG" == true ]] && [[ "$FORCE_LABELS" != true ]]; then
-  echo "  Mode: Organization (Issue Types recommended)"
-  echo "  Labels created: 0 (skipped)"
+  echo "  モード: Organization（Issue Types 推奨）"
+  echo "  作成したラベル: 0（スキップ）"
 else
-  echo "  Labels created: $total_created"
-  echo "  Labels skipped: $total_skipped"
+  echo "  作成したラベル: $total_created"
+  echo "  スキップしたラベル: $total_skipped"
 fi
 echo "═══════════════════════════════════════════════"
