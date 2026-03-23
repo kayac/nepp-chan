@@ -1,16 +1,16 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 import { errorResponse } from "~/lib/openapi-errors";
-import { type SessionVariables, sessionAuth } from "~/middleware/session-auth";
+import { type AuthVariables, requireAuth } from "~/middleware/auth";
 import { adminInvitationRepository } from "~/repository/admin-invitation-repository";
-import { createInvitation } from "~/services/auth/webauthn";
+import { createInvitation } from "~/services/auth/invitation";
 
 export const invitationRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
-  Variables: SessionVariables;
+  Variables: AuthVariables;
 }>();
 
-invitationRoutes.use("*", sessionAuth);
+invitationRoutes.use("*", requireAuth);
 
 const listInvitationsRoute = createRoute({
   method: "get",
@@ -26,7 +26,7 @@ const listInvitationsRoute = createRoute({
             invitations: z.array(
               z.object({
                 id: z.string(),
-                email: z.string(),
+                username: z.string(),
                 role: z.string(),
                 invitedBy: z.string(),
                 expiresAt: z.string(),
@@ -49,7 +49,7 @@ invitationRoutes.openapi(listInvitationsRoute, async (c) => {
     {
       invitations: invitations.map((inv) => ({
         id: inv.id,
-        email: inv.email,
+        username: inv.username,
         role: inv.role,
         invitedBy: inv.invitedBy,
         expiresAt: inv.expiresAt,
@@ -67,13 +67,14 @@ const createInvitationRoute = createRoute({
   tags: ["Admin - Invitations"],
   summary: "新規招待作成",
   description:
-    "管理者を招待します。super_admin の招待はスクリプト経由でのみ可能です。",
+    "管理者を招待します。super_admin ロールの招待は super_admin のみ可能です。",
   request: {
     body: {
       content: {
         "application/json": {
           schema: z.object({
-            email: z.string().email(),
+            username: z.string().min(1),
+            role: z.enum(["admin", "super_admin"]).optional().default("admin"),
           }),
         },
       },
@@ -87,7 +88,7 @@ const createInvitationRoute = createRoute({
           schema: z.object({
             invitation: z.object({
               id: z.string(),
-              email: z.string(),
+              username: z.string(),
               token: z.string(),
               expiresAt: z.string(),
             }),
@@ -97,19 +98,26 @@ const createInvitationRoute = createRoute({
     },
     400: errorResponse(400),
     401: errorResponse(401),
+    403: errorResponse(403),
   },
 });
 
 invitationRoutes.openapi(createInvitationRoute, async (c) => {
-  const { email } = c.req.valid("json");
+  const { username, role } = c.req.valid("json");
   const adminUser = c.get("adminUser");
+
+  if (role === "super_admin" && adminUser.role !== "super_admin") {
+    throw new HTTPException(403, {
+      message: "super_admin の招待は super_admin のみ可能です",
+    });
+  }
 
   try {
     const invitation = await createInvitation(
       c.env.DB,
-      email,
+      username,
       adminUser.id,
-      "admin",
+      role,
       1,
     );
 
@@ -117,7 +125,7 @@ invitationRoutes.openapi(createInvitationRoute, async (c) => {
       {
         invitation: {
           id: invitation.id,
-          email: invitation.email,
+          username: invitation.username,
           token: invitation.token,
           expiresAt: invitation.expiresAt.toISOString(),
         },

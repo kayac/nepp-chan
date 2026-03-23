@@ -14,7 +14,7 @@ export const InvitationsPanel = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { copyToClipboard } = useCopyToClipboard();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,12 +24,12 @@ export const InvitationsPanel = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: (email: string) => createInvitation(email),
+    mutationFn: (username: string) => createInvitation(username),
     onSuccess: (data) => {
       const baseUrl = window.location.origin;
       const url = `${baseUrl}/register?token=${data.invitation.token}`;
       setCreatedUrl(url);
-      setEmail("");
+      setUsername("");
       setError(null);
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
     },
@@ -48,8 +48,8 @@ export const InvitationsPanel = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
-    createMutation.mutate(email.trim());
+    if (!username.trim()) return;
+    createMutation.mutate(username.trim());
   };
 
   const isExpired = (expiresAt: string) => {
@@ -96,10 +96,10 @@ export const InvitationsPanel = () => {
 
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="メールアドレス"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="ユーザー名"
             required
             className="flex-1 px-3 py-2 border border-stone-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
@@ -130,7 +130,7 @@ export const InvitationsPanel = () => {
                 <thead className="bg-stone-50">
                   <tr>
                     <th className="px-4 py-3 text-left font-medium text-stone-600">
-                      メール
+                      ユーザー名
                     </th>
                     <th className="px-4 py-3 text-left font-medium text-stone-600">
                       役割
@@ -149,7 +149,9 @@ export const InvitationsPanel = () => {
                 <tbody className="divide-y divide-stone-200">
                   {data.invitations.map((inv) => (
                     <tr key={inv.id} className="hover:bg-stone-50">
-                      <td className="px-4 py-3 text-stone-900">{inv.email}</td>
+                      <td className="px-4 py-3 text-stone-900">
+                        {inv.username}
+                      </td>
                       <td className="px-4 py-3 text-stone-600">
                         {inv.role === "super_admin"
                           ? "スーパー管理者"
@@ -197,7 +199,7 @@ export const InvitationsPanel = () => {
                 <div key={inv.id} className="p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="text-sm text-stone-900 font-medium break-all">
-                      {inv.email}
+                      {inv.username}
                     </div>
                     {inv.usedAt ? (
                       <span className="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded shrink-0">

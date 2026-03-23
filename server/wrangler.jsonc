@@ -63,10 +63,7 @@
       },
       "vars": {
         "ENVIRONMENT": "local",
-        "WEB_URL": "http://localhost:5173",
-        "WEBAUTHN_RP_ID": "localhost",
-        "WEBAUTHN_RP_NAME": "ねっぷちゃん",
-        "WEBAUTHN_ORIGIN": "http://localhost:5173"
+        "WEB_URL": "http://localhost:5173"
       }
     },
     "development": {
@@ -111,10 +108,7 @@
       },
       "vars": {
         "ENVIRONMENT": "development",
-        "WEB_URL": "https://dev-web.nepp-chan.ai",
-        "WEBAUTHN_RP_ID": "dev-web.nepp-chan.ai",
-        "WEBAUTHN_RP_NAME": "ねっぷちゃん",
-        "WEBAUTHN_ORIGIN": "https://dev-web.nepp-chan.ai"
+        "WEB_URL": "https://dev-web.nepp-chan.ai"
       }
     },
     "production": {
@@ -158,10 +152,7 @@
       },
       "vars": {
         "ENVIRONMENT": "production",
-        "WEB_URL": "https://web.nepp-chan.ai",
-        "WEBAUTHN_RP_ID": "web.nepp-chan.ai",
-        "WEBAUTHN_RP_NAME": "ねっぷちゃん",
-        "WEBAUTHN_ORIGIN": "https://web.nepp-chan.ai"
+        "WEB_URL": "https://web.nepp-chan.ai"
       }
     }
   }

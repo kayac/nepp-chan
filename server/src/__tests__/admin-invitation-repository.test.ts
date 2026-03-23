@@ -23,7 +23,7 @@ describe("adminInvitations Drizzle クエリ", () => {
     it("新しい招待を作成できる", async () => {
       await db.insert(adminInvitations).values({
         id: "inv-1",
-        email: "invite@example.com",
+        username: "invite@example.com",
         token: "token-abc123",
         invitedBy: "system",
         role: "admin",
@@ -38,7 +38,7 @@ describe("adminInvitations Drizzle クエリ", () => {
         .get();
 
       expect(saved).not.toBeNull();
-      expect(saved?.email).toBe("invite@example.com");
+      expect(saved?.username).toBe("invite@example.com");
       expect(saved?.token).toBe("token-abc123");
       expect(saved?.invitedBy).toBe("system");
       expect(saved?.role).toBe("admin");
@@ -48,7 +48,7 @@ describe("adminInvitations Drizzle クエリ", () => {
     it("super_admin ロールで招待を作成できる", async () => {
       await db.insert(adminInvitations).values({
         id: "inv-super",
-        email: "super@example.com",
+        username: "super@example.com",
         token: "token-super",
         invitedBy: "admin-1",
         role: "super_admin",
@@ -68,7 +68,7 @@ describe("adminInvitations Drizzle クエリ", () => {
     it("同じメールアドレスで重複作成するとエラーになる", async () => {
       await db.insert(adminInvitations).values({
         id: "inv-dup-1",
-        email: "duplicate@example.com",
+        username: "duplicate@example.com",
         token: "token-1",
         invitedBy: "system",
         role: "admin",
@@ -79,7 +79,7 @@ describe("adminInvitations Drizzle クエリ", () => {
       await expect(
         db.insert(adminInvitations).values({
           id: "inv-dup-2",
-          email: "duplicate@example.com",
+          username: "duplicate@example.com",
           token: "token-2",
           invitedBy: "system",
           role: "admin",
@@ -92,7 +92,7 @@ describe("adminInvitations Drizzle クエリ", () => {
     it("同じトークンで重複作成するとエラーになる", async () => {
       await db.insert(adminInvitations).values({
         id: "inv-tok-1",
-        email: "token1@example.com",
+        username: "token1@example.com",
         token: "same-token",
         invitedBy: "system",
         role: "admin",
@@ -103,7 +103,7 @@ describe("adminInvitations Drizzle クエリ", () => {
       await expect(
         db.insert(adminInvitations).values({
           id: "inv-tok-2",
-          email: "token2@example.com",
+          username: "token2@example.com",
           token: "same-token",
           invitedBy: "system",
           role: "admin",
@@ -118,7 +118,7 @@ describe("adminInvitations Drizzle クエリ", () => {
     beforeEach(async () => {
       await db.insert(adminInvitations).values({
         id: "find-by-token",
-        email: "token-search@example.com",
+        username: "token-search@example.com",
         token: "unique-token",
         invitedBy: "system",
         role: "admin",
@@ -149,12 +149,12 @@ describe("adminInvitations Drizzle クエリ", () => {
     });
   });
 
-  describe("select by email", () => {
+  describe("select by username", () => {
     beforeEach(async () => {
       await db.insert(adminInvitations).values({
-        id: "find-by-email",
-        email: "email-search@example.com",
-        token: "email-token",
+        id: "find-by-username",
+        username: "username-search@example.com",
+        token: "username-token",
         invitedBy: "system",
         role: "admin",
         expiresAt: futureDate,
@@ -166,11 +166,11 @@ describe("adminInvitations Drizzle クエリ", () => {
       const result = await db
         .select()
         .from(adminInvitations)
-        .where(eq(adminInvitations.email, "email-search@example.com"))
+        .where(eq(adminInvitations.username, "username-search@example.com"))
         .get();
 
       expect(result).not.toBeNull();
-      expect(result?.id).toBe("find-by-email");
+      expect(result?.id).toBe("find-by-username");
     });
   });
 
@@ -178,7 +178,7 @@ describe("adminInvitations Drizzle クエリ", () => {
     it("未使用かつ期限内の招待を取得できる", async () => {
       await db.insert(adminInvitations).values({
         id: "valid-inv",
-        email: "valid@example.com",
+        username: "valid@example.com",
         token: "valid-token",
         invitedBy: "system",
         role: "admin",
@@ -207,7 +207,7 @@ describe("adminInvitations Drizzle クエリ", () => {
     it("使用済みの招待は取得できない", async () => {
       await db.insert(adminInvitations).values({
         id: "used-inv",
-        email: "used@example.com",
+        username: "used@example.com",
         token: "used-token",
         invitedBy: "system",
         role: "admin",
@@ -235,7 +235,7 @@ describe("adminInvitations Drizzle クエリ", () => {
     it("期限切れの招待は取得できない", async () => {
       await db.insert(adminInvitations).values({
         id: "expired-inv",
-        email: "expired@example.com",
+        username: "expired@example.com",
         token: "expired-token",
         invitedBy: "system",
         role: "admin",
@@ -267,7 +267,7 @@ describe("adminInvitations Drizzle クエリ", () => {
         // 有効な招待
         {
           id: "pending-1",
-          email: "pending1@example.com",
+          username: "pending1@example.com",
           token: "pending-token-1",
           invitedBy: "system",
           role: "admin",
@@ -278,7 +278,7 @@ describe("adminInvitations Drizzle クエリ", () => {
         // 有効な招待
         {
           id: "pending-2",
-          email: "pending2@example.com",
+          username: "pending2@example.com",
           token: "pending-token-2",
           invitedBy: "system",
           role: "admin",
@@ -289,7 +289,7 @@ describe("adminInvitations Drizzle クエリ", () => {
         // 使用済み
         {
           id: "used-1",
-          email: "used1@example.com",
+          username: "used1@example.com",
           token: "used-token-1",
           invitedBy: "system",
           role: "admin",
@@ -300,7 +300,7 @@ describe("adminInvitations Drizzle クエリ", () => {
         // 期限切れ
         {
           id: "expired-1",
-          email: "expired1@example.com",
+          username: "expired1@example.com",
           token: "expired-token-1",
           invitedBy: "system",
           role: "admin",
@@ -337,7 +337,7 @@ describe("adminInvitations Drizzle クエリ", () => {
     beforeEach(async () => {
       await db.insert(adminInvitations).values({
         id: "mark-used",
-        email: "markused@example.com",
+        username: "markused@example.com",
         token: "markused-token",
         invitedBy: "system",
         role: "admin",
@@ -368,7 +368,7 @@ describe("adminInvitations Drizzle クエリ", () => {
     beforeEach(async () => {
       await db.insert(adminInvitations).values({
         id: "delete-inv",
-        email: "delete@example.com",
+        username: "delete@example.com",
         token: "delete-token",
         invitedBy: "system",
         role: "admin",
@@ -397,7 +397,7 @@ describe("adminInvitations Drizzle クエリ", () => {
       await db.insert(adminInvitations).values([
         {
           id: "valid-for-delete",
-          email: "valid@example.com",
+          username: "valid@example.com",
           token: "valid-delete-token",
           invitedBy: "system",
           role: "admin",
@@ -406,7 +406,7 @@ describe("adminInvitations Drizzle クエリ", () => {
         },
         {
           id: "expired-for-delete",
-          email: "expired@example.com",
+          username: "expired@example.com",
           token: "expired-delete-token",
           invitedBy: "system",
           role: "admin",

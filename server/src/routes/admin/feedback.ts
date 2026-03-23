@@ -3,7 +3,7 @@ import { HTTPException } from "hono/http-exception";
 
 import type { MessageFeedback } from "~/db";
 import { errorResponse } from "~/lib/openapi-errors";
-import { sessionAuth } from "~/middleware/session-auth";
+import { requireAuth } from "~/middleware/auth";
 import { feedbackRepository } from "~/repository/feedback-repository";
 import {
   feedbackFullSchema,
@@ -47,7 +47,7 @@ export const feedbackAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
 }>();
 
-feedbackAdminRoutes.use("*", sessionAuth);
+feedbackAdminRoutes.use("*", requireAuth);
 
 const listRoute = createRoute({
   method: "get",

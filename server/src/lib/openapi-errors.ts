@@ -14,6 +14,7 @@ export const ErrorResponseSchema = z.object({
 const descriptions = {
   400: "リクエストエラー",
   401: "認証エラー",
+  403: "権限エラー",
   404: "リソースが見つかりません",
   500: "サーバーエラー",
 } as const;

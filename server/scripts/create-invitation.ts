@@ -3,14 +3,14 @@
  * 管理者招待を作成するCLIスクリプト
  *
  * 使用方法:
- *   pnpm admin:invite:local <email> [--role=admin|super_admin] [--days=7]
- *   pnpm admin:invite:dev <email> [--role=admin|super_admin] [--days=7] [--local]
- *   pnpm admin:invite:prd <email> [--role=admin|super_admin] [--days=7] [--local]
+ *   pnpm admin:invite:local <username> [--role=admin|super_admin] [--days=7]
+ *   pnpm admin:invite:dev <username> [--role=admin|super_admin] [--days=7] [--local]
+ *   pnpm admin:invite:prd <username> [--role=admin|super_admin] [--days=7] [--local]
  *
  * 例:
- *   pnpm admin:invite:local admin@example.com
- *   pnpm admin:invite:dev admin@example.com
- *   pnpm admin:invite:prd admin@example.com
+ *   pnpm admin:invite:local admin01
+ *   pnpm admin:invite:dev admin01
+ *   pnpm admin:invite:prd admin01
  */
 
 import { execSync } from "node:child_process";
@@ -18,7 +18,7 @@ import { execSync } from "node:child_process";
 import { generateId, generateToken } from "../src/lib/crypto";
 
 const parseArgs = (args: string[]) => {
-  const email = args.find((arg) => !arg.startsWith("--"));
+  const username = args.find((arg) => !arg.startsWith("--"));
   const roleArg = args.find((arg) => arg.startsWith("--role="));
   const daysArg = args.find((arg) => arg.startsWith("--days="));
   const envArg = args.find((arg) => arg.startsWith("--env="));
@@ -26,7 +26,7 @@ const parseArgs = (args: string[]) => {
   const isLocal = args.includes("--local");
 
   return {
-    email,
+    username,
     role: roleArg?.split("=")[1] || "super_admin",
     days: Number.parseInt(daysArg?.split("=")[1] || "7", 10),
     env,
@@ -42,9 +42,9 @@ const main = async () => {
 管理者招待を作成するCLIスクリプト
 
 使用方法:
-  pnpm admin:invite:local <email> [options]  # ローカル環境
-  pnpm admin:invite:dev <email> [options]    # dev環境（リモートD1）
-  pnpm admin:invite:prd <email> [options]    # prd環境（リモートD1）
+  pnpm admin:invite:local <username> [options]  # ローカル環境
+  pnpm admin:invite:dev <username> [options]    # dev環境（リモートD1）
+  pnpm admin:invite:prd <username> [options]    # prd環境（リモートD1）
 
 オプション:
   --role=<role>   役割 (admin または super_admin、デフォルト: super_admin)
@@ -53,17 +53,24 @@ const main = async () => {
   --help, -h      このヘルプを表示
 
 例:
-  pnpm admin:invite:local admin@example.com
-  pnpm admin:invite:dev admin@example.com
-  pnpm admin:invite:prd admin@example.com
+  pnpm admin:invite:local admin01
+  pnpm admin:invite:dev admin01 --role=admin
+  pnpm admin:invite:prd admin01
 `);
     process.exit(0);
   }
 
-  const { email, role, days, env, isRemote } = parseArgs(args);
+  const { username, role, days, env, isRemote } = parseArgs(args);
 
-  if (!email || !email.includes("@")) {
-    console.error("❌ 有効なメールアドレスを指定してください");
+  if (!username) {
+    console.error("❌ ユーザー名を指定してください");
+    process.exit(1);
+  }
+
+  if (!/^[a-zA-Z0-9_.+@-]+$/.test(username)) {
+    console.error(
+      "❌ ユーザー名に使用できない文字が含まれています（英数字、_、.、+、@、- のみ）",
+    );
     process.exit(1);
   }
 
@@ -78,6 +85,8 @@ const main = async () => {
   }
 
   const dbName = `nepp-chan-db-${env || "dev"}`;
+  const wranglerEnvMap = { dev: "development", prd: "production" } as const;
+  const wranglerEnv = env ? wranglerEnvMap[env] : "local";
 
   const id = generateId();
   const token = generateToken();
@@ -85,15 +94,15 @@ const main = async () => {
   const expiresAt = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
 
   const sql = `
-INSERT INTO admin_invitations (id, email, token, invited_by, role, expires_at, created_at)
-VALUES ('${id}', '${email}', '${token}', 'system', '${role}', '${expiresAt.toISOString()}', '${now.toISOString()}');
+INSERT INTO admin_invitations (id, username, token, invited_by, role, expires_at, created_at)
+VALUES ('${id}', '${username}', '${token}', 'system', '${role}', '${expiresAt.toISOString()}', '${now.toISOString()}');
 `.trim();
 
   const envLabel = env
     ? `${env} (${isRemote ? "リモート" : "ローカル"})`
     : "local";
-  console.log(`\n📧 招待を作成しています...`);
-  console.log(`   メール: ${email}`);
+  console.log(`\n👤 招待を作成しています...`);
+  console.log(`   ユーザー名: ${username}`);
   console.log(`   役割: ${role}`);
   console.log(`   有効期限: ${days}日`);
   console.log(`   環境: ${envLabel}`);
@@ -101,7 +110,7 @@ VALUES ('${id}', '${email}', '${token}', 'system', '${role}', '${expiresAt.toISO
 
   try {
     const remoteFlag = isRemote ? "--remote" : "--local";
-    const command = `wrangler d1 execute ${dbName} ${remoteFlag} --config=server/wrangler.jsonc --command="${sql}"`;
+    const command = `wrangler d1 execute ${dbName} --env=${wranglerEnv} ${remoteFlag} --config=server/wrangler.jsonc --command="${sql}"`;
 
     execSync(command, { stdio: "inherit" });
 

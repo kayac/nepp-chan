@@ -58,30 +58,18 @@ export const createTestDb = async () => {
     -- 管理者ユーザー
     CREATE TABLE IF NOT EXISTS admin_users (
       id TEXT PRIMARY KEY,
-      email TEXT NOT NULL UNIQUE,
+      username TEXT NOT NULL UNIQUE,
       name TEXT,
       role TEXT NOT NULL DEFAULT 'admin',
+      password_hash TEXT NOT NULL,
       created_at TEXT NOT NULL,
       updated_at TEXT
-    );
-
-    -- 管理者クレデンシャル（WebAuthn）
-    CREATE TABLE IF NOT EXISTS admin_credentials (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
-      public_key TEXT NOT NULL,
-      counter INTEGER NOT NULL DEFAULT 0,
-      device_type TEXT NOT NULL,
-      backed_up INTEGER NOT NULL DEFAULT 0,
-      transports TEXT,
-      created_at TEXT NOT NULL,
-      last_used_at TEXT
     );
 
     -- 管理者招待
     CREATE TABLE IF NOT EXISTS admin_invitations (
       id TEXT PRIMARY KEY,
-      email TEXT NOT NULL UNIQUE,
+      username TEXT NOT NULL UNIQUE,
       token TEXT NOT NULL UNIQUE,
       invited_by TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'admin',
@@ -90,24 +78,6 @@ export const createTestDb = async () => {
       created_at TEXT NOT NULL
     );
 
-    -- 管理者セッション
-    CREATE TABLE IF NOT EXISTS admin_sessions (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
-      expires_at TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      last_accessed_at TEXT
-    );
-
-    -- 認証チャレンジ
-    CREATE TABLE IF NOT EXISTS auth_challenges (
-      id TEXT PRIMARY KEY,
-      challenge TEXT NOT NULL,
-      type TEXT NOT NULL,
-      email TEXT,
-      expires_at TEXT NOT NULL,
-      created_at TEXT NOT NULL
-    );
   `);
 
   return drizzle(client, { schema });

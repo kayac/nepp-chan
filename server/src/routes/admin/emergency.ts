@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
 import { errorResponse } from "~/lib/openapi-errors";
-import { sessionAuth } from "~/middleware/session-auth";
+import { requireAuth } from "~/middleware/auth";
 import { emergencyRepository } from "~/repository/emergency-repository";
 import { emergencyReportSchema } from "~/schemas/emergency-schema";
 
@@ -9,7 +9,7 @@ export const emergencyAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
 }>();
 
-emergencyAdminRoutes.use("*", sessionAuth);
+emergencyAdminRoutes.use("*", requireAuth);
 
 const listRoute = createRoute({
   method: "get",

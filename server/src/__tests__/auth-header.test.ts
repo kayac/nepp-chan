@@ -18,13 +18,13 @@ describe("getTokenFromHeader", () => {
     expect(result).toBe("abc123token");
   });
 
-  it("64文字のセッションIDを正しく抽出する", () => {
-    const sessionId = "a".repeat(64);
-    const context = createMockContext(`Bearer ${sessionId}`);
+  it("64文字のトークンを正しく抽出する", () => {
+    const token = "a".repeat(64);
+    const context = createMockContext(`Bearer ${token}`);
 
     const result = getTokenFromHeader(context);
 
-    expect(result).toBe(sessionId);
+    expect(result).toBe(token);
   });
 
   it("Authorization ヘッダーがない場合は null を返す", () => {

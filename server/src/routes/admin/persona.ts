@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
 import { errorResponse } from "~/lib/openapi-errors";
-import { sessionAuth } from "~/middleware/session-auth";
+import { requireAuth } from "~/middleware/auth";
 import { personaRepository } from "~/repository/persona-repository";
 import {
   deleteAllPersonas,
@@ -13,7 +13,7 @@ export const personaAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
 }>();
 
-personaAdminRoutes.use("*", sessionAuth);
+personaAdminRoutes.use("*", requireAuth);
 
 const PersonaSchema = z.object({
   id: z.string(),

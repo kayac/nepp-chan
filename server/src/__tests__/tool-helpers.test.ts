@@ -47,7 +47,12 @@ describe("ツールヘルパー関数", () => {
 
   describe("getAdminUser", () => {
     it("context から adminUser を取得できる", () => {
-      const mockUser = { id: "admin-1", email: "admin@example.com" };
+      const mockUser = {
+        id: "admin-1",
+        username: "admin01",
+        name: null,
+        role: "admin",
+      };
       const context = createMockContext({ adminUser: mockUser });
       expect(getAdminUser(context as never)).toBe(mockUser);
     });
@@ -106,11 +111,9 @@ describe("ツールヘルパー関数", () => {
     it("adminUser と db が存在する場合は { adminUser, db } を返す", () => {
       const mockUser = {
         id: "admin-1",
-        email: "admin@example.com",
+        username: "admin01",
         name: null,
         role: "admin",
-        createdAt: "2024-01-01",
-        updatedAt: null,
       };
       const mockDb = { prepare: () => {} };
       const context = createMockContext({
@@ -141,11 +144,9 @@ describe("ツールヘルパー関数", () => {
     it("db が存在しない場合は DB_NOT_AVAILABLE エラーを返す", () => {
       const mockUser = {
         id: "admin-1",
-        email: "admin@example.com",
+        username: "admin01",
         name: null,
         role: "admin",
-        createdAt: "2024-01-01",
-        updatedAt: null,
       };
       const context = createMockContext({ adminUser: mockUser });
 

@@ -152,7 +152,9 @@ export const App = () => {
 
         <div className="p-4 border-t border-stone-200 space-y-3">
           {user && (
-            <div className="text-xs text-stone-500 truncate">{user.email}</div>
+            <div className="text-xs text-stone-500 truncate">
+              {user.username}
+            </div>
           )}
           <div className="flex flex-col gap-2">
             <a

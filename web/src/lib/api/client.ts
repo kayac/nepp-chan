@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/react";
 import createClient from "openapi-fetch";
-import { getAuthToken } from "~/lib/auth-token";
+import { getAuthToken, removeAuthToken } from "~/lib/auth-token";
 import type { paths } from "~/types/api";
 
 class ApiError extends Error {
@@ -29,6 +29,11 @@ client.use({
 client.use({
   async onResponse({ response }) {
     if (!response.ok) {
+      if (response.status === 401) {
+        removeAuthToken();
+        window.location.href = "/login";
+        return response;
+      }
       const message = await parseErrorResponse(response);
       if (response.status >= 500) {
         Sentry.captureException(new ApiError(message, response.status));
@@ -39,7 +44,7 @@ client.use({
   },
 });
 
-const parseErrorResponse = async (res: Response) => {
+export const parseErrorResponse = async (res: Response) => {
   try {
     const data = await res.json();
     return (
