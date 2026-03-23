@@ -60,8 +60,8 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          VITE_API_URL: https://dev-api.nepp-chan.ai
-          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN_WEB }}
+          PUBLIC_API_URL: https://dev-api.nepp-chan.ai
+          PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN_WEB }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT_WEB: ${{ secrets.SENTRY_PROJECT_WEB }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}

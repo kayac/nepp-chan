@@ -1,11 +1,11 @@
 # @nepp-chan/web
 
-ねっぷちゃんチャットシステムのフロントエンド。React + Vite で構築し、Cloudflare Pages 上で動作。
+ねっぷちゃんチャットシステムのフロントエンド。Astro + React で構築し、Cloudflare Pages 上で動作。
 
 ## 技術スタック
 
-- React 19
-- Vite 7
+- Astro 6
+- React 19（client:only で CSR）
 - TailwindCSS 4
 - AI SDK React (@ai-sdk/react)
 - TypeScript

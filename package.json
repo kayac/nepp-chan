@@ -18,7 +18,7 @@
     "mastra:dev": "pnpm --filter @nepp-chan/server mastra:dev",
     "mastra:build": "pnpm --filter @nepp-chan/server mastra:build",
     "mastra:start": "pnpm --filter @nepp-chan/server mastra:start",
-    "lint": "biome check . && pnpm --filter @nepp-chan/web exec tsc --noEmit && pnpm --filter @nepp-chan/server exec tsc --noEmit",
+    "lint": "biome check . && pnpm --filter @nepp-chan/web check && pnpm --filter @nepp-chan/server exec tsc --noEmit",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "db:generate": "pnpm --filter @nepp-chan/server db:generate",

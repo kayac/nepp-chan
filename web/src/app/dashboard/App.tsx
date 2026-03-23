@@ -65,11 +65,11 @@ const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
 export const App = () => {
   const [activeTab, setActiveTab] = useState<Tab>("knowledge");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { user, isLoading, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
-    window.location.href = "/dashboard/login";
+    window.location.href = "/login";
   };
 
   const handleTabChange = (tabId: Tab) => {
@@ -78,6 +78,11 @@ export const App = () => {
   };
 
   if (isLoading) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    window.location.href = "/login";
     return null;
   }
 
