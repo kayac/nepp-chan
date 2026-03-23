@@ -11,7 +11,7 @@ pnpm server:dev          # API 開発サーバー（8787）
 pnpm web:dev             # Web 開発サーバー（5173）
 
 # 品質チェック
-pnpm lint                # Biome + tsc
+pnpm lint                # Biome + astro check + tsc
 pnpm format              # Biome フォーマット
 
 # DB マイグレーション
@@ -113,7 +113,7 @@ cp web/.env.example web/.env
 
 | 変数名         | 用途    |
 | -------------- | ------- |
-| `VITE_API_URL` | API URL |
+| `PUBLIC_API_URL` | API URL |
 
 ### 本番環境
 
