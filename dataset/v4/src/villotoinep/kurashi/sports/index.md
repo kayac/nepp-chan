@@ -2,6 +2,9 @@
 title: スポーツ
 category: 住民生活
 subcategory: sports
+date: '2026-03-18'
+date_type: observed
+contact: 生涯学習係
 ---
 # スポーツ
 

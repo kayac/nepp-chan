@@ -2,6 +2,8 @@
 title: 総務課地域振興室
 category: 各課案内
 subcategory: 地域振興課
+date: '2026-03-18'
+date_type: observed
 ---
 # 総務課地域振興室
 

@@ -2,6 +2,8 @@
 title: 音威富士スキー場
 category: 各課案内
 subcategory: 産業振興課
+date: '2026-03-18'
+date_type: observed
 ---
 # 音威富士スキー場
 

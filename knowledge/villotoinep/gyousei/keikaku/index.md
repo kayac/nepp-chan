@@ -1,6 +1,7 @@
 ---
 title: 各種計画
 category: 行政
+date_type: evergreen
 ---
 # 各種計画
 

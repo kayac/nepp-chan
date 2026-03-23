@@ -2,6 +2,9 @@
 category: 教育
 subcategory: 中学生向け
 url: 'https://www.otoineppu-h.ed.jp/junior/kengaku.html'
+date: '2026-03-18'
+date_type: observed
+contact: 教頭
 ---
 本文へ移動
 ##  中学生のみなさまへ

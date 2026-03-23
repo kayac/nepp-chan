@@ -2,6 +2,7 @@
 category: 教育
 subcategory: 学校便り
 url: 'https://www.otoineppu-h.ed.jp/gakkoudayori/r6/'
+date_type: evergreen
 ---
 本文へ移動
 ##  学校便り

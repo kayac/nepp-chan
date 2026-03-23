@@ -1,6 +1,9 @@
 ---
 title: 地方創生臨時交付金について
 category: 行政
+date: '2026-03-18'
+date_type: observed
+contact: 総務課総務財政室　財政管理係
 ---
 # 地方創生臨時交付金について
 

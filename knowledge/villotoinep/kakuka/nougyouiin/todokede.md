@@ -2,6 +2,9 @@
 title: 農地相続の届出
 category: 各課案内
 subcategory: 農業委員会
+date: '2026-03-18'
+date_type: observed
+contact: 農業委員会
 ---
 # 農地相続の届出
 

@@ -1,6 +1,7 @@
 ---
 title: 幼児センター
 category: 施設案内
+date_type: evergreen
 ---
 # 幼児センター
 

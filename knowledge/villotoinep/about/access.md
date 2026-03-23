@@ -1,6 +1,8 @@
 ---
 title: アクセス
 category: 村の概要
+date: '2026-03-18'
+date_type: observed
 ---
 # アクセス
 

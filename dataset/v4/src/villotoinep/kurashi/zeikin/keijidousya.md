@@ -2,6 +2,8 @@
 title: 軽自動車税
 category: 住民生活
 subcategory: 税金
+date: '2026-03-18'
+date_type: observed
 ---
 # 軽自動車税
 

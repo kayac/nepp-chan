@@ -2,6 +2,8 @@
 title: 各課案内
 category: 各課案内
 subcategory: index.md
+date: '2026-03-18'
+date_type: observed
 ---
 # 各課案内
 

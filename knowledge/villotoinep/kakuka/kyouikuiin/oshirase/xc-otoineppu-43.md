@@ -2,6 +2,8 @@
 title: 第43回クロスカントリー音威子府大会について
 category: 各課案内
 subcategory: 教育委員会
+date_type: evergreen
+contact: 教育委員会
 ---
 # 第43回クロスカントリー音威子府大会について
 

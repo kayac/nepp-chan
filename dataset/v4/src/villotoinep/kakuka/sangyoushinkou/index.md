@@ -2,6 +2,9 @@
 title: 経済課産業振興室
 category: 各課案内
 subcategory: 産業振興課
+date: '2025-12-17'
+date_type: exact
+contact: 経済課産業振興室
 ---
 # 経済課産業振興室
 

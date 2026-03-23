@@ -2,6 +2,8 @@
 title: 道路・橋梁
 category: 各課案内
 subcategory: 環境整備課
+date: '2026-03-18'
+date_type: observed
 ---
 # 道路・橋梁
 

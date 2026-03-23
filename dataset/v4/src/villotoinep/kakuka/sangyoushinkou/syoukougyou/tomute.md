@@ -2,6 +2,9 @@
 title: 青少年宿泊研修施設（トムテ）
 category: 各課案内
 subcategory: 産業振興課
+date: '2026-03-18'
+date_type: observed
+contact: 青少年宿泊研修施設
 ---
 # 青少年宿泊研修施設（トムテ）
 

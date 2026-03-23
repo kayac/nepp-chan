@@ -2,6 +2,9 @@
 title: 音威子府村村有財産使用申請について
 category: 住民生活
 subcategory: 手続き
+date: '2014-05-01'
+date_type: exact
+contact: 総務課総務財政室
 ---
 # 音威子府村村有財産使用申請について
 

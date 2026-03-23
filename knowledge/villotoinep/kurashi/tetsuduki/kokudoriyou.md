@@ -2,6 +2,8 @@
 title: 国土利用計画法の届出
 category: 住民生活
 subcategory: 手続き
+date: '2026-03-18'
+date_type: observed
 ---
 # 国土利用計画法の届出
 

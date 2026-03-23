@@ -2,6 +2,9 @@
 title: 総務課総務財政室
 category: 各課案内
 subcategory: 総務財政課
+date: '2025-11-18'
+date_type: exact
+contact: 総務課総務財政室
 ---
 # 総務課総務財政室
 

@@ -2,6 +2,9 @@
 title: 農地の賃借、売買
 category: 各課案内
 subcategory: 農業委員会
+date: '2026-03-18'
+date_type: observed
+contact: 村産業振興室農政係
 ---
 # 農地の賃借、売買
 

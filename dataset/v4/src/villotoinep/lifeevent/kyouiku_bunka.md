@@ -1,6 +1,9 @@
 ---
 title: 教育・文化
 category: ライフイベント
+date: '2025-03-31'
+date_type: exact
+contact: 音威子府村教育委員会
 ---
 # 教育・文化
 

@@ -1,6 +1,7 @@
 ---
 title: jinkou_kokudo
 category: 村の概要
+date_type: evergreen
 ---
 # jinkou_kokudo
 

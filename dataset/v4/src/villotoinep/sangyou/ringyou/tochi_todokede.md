@@ -1,6 +1,8 @@
 ---
 title: 森林の土地所有者届出制度
 category: 産業
+date: '2026-03-18'
+date_type: observed
 ---
 # 森林の土地所有者届出制度
 

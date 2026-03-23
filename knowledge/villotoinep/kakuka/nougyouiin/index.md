@@ -2,6 +2,9 @@
 title: 農業委員会
 category: 各課案内
 subcategory: 農業委員会
+date: '2025-12-17'
+date_type: exact
+contact: 農業委員会
 ---
 # 農業委員会
 

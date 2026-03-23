@@ -2,6 +2,9 @@
 title: 税金
 category: 住民生活
 subcategory: 税金
+date: '2026-03-18'
+date_type: observed
+contact: 住民課 住民生活室
 ---
 # 税金
 

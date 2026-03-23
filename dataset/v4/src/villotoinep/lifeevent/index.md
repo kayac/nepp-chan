@@ -1,6 +1,8 @@
 ---
 title: ライフイベント（人生の節目）
 category: ライフイベント
+date: '2026-03-18'
+date_type: observed
 ---
 # ライフイベント（人生の節目）
 

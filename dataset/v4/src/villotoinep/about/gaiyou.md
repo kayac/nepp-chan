@@ -1,6 +1,8 @@
 ---
 title: 村の概要
 category: 村の概要
+date: '1972-09-30'
+date_type: exact
 ---
 # 村の概要
 

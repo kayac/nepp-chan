@@ -2,6 +2,8 @@
 title: 詐欺被害の防止について（名寄警察署）
 category: 各課案内
 subcategory: 駐在所
+date: '2022-07-29'
+date_type: exact
 ---
 # 詐欺被害の防止について（名寄警察署）
 

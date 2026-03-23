@@ -1,6 +1,9 @@
 ---
 title: 就職・退職
 category: ライフイベント
+date: '2013-11-20'
+date_type: exact
+contact: 住民課住民生活室 住民係
 ---
 # 就職・退職
 

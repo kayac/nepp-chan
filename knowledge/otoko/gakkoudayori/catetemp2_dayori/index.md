@@ -2,6 +2,8 @@
 category: 教育
 subcategory: 学校便り
 url: 'https://www.otoineppu-h.ed.jp/gakkoudayori/catetemp2_dayori/'
+date: '2026-03-18'
+date_type: observed
 ---
 本文へ移動
 ##  学校便り

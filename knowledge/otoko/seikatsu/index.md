@@ -2,6 +2,8 @@
 category: 教育
 subcategory: 学校生活
 url: 'https://www.otoineppu-h.ed.jp/seikatsu/'
+date: '2025-04-01'
+date_type: exact
 ---
 本文へ移動
 School Life

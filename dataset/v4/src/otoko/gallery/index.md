@@ -2,6 +2,7 @@
 category: 教育
 subcategory: ギャラリー
 url: 'https://www.otoineppu-h.ed.jp/gallery/'
+date_type: evergreen
 ---
 本文へ移動
 Gallery

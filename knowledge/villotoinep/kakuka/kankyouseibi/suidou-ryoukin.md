@@ -2,6 +2,9 @@
 title: 水道・下水道について
 category: 各課案内
 subcategory: 環境整備課
+date: '2026-03-18'
+date_type: observed
+contact: 経済課環境整備室
 ---
 # 水道・下水道について
 

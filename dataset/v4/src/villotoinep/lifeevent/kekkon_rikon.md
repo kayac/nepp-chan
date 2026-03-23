@@ -1,6 +1,9 @@
 ---
 title: 結婚・離婚
 category: ライフイベント
+date: '2026-03-18'
+date_type: observed
+contact: 住民課住民生活室
 ---
 # 結婚・離婚
 

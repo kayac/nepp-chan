@@ -2,6 +2,8 @@
 title: 農地賃借料
 category: 各課案内
 subcategory: 農業委員会
+date: '2026-03-18'
+date_type: observed
 ---
 # 農地賃借料
 

@@ -1,6 +1,9 @@
 ---
 title: おくやみ
 category: ライフイベント
+date: '2014-01-09'
+date_type: estimated
+contact: 住民課住民生活室 住民係
 ---
 # おくやみ
 

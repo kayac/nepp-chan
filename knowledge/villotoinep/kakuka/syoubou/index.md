@@ -2,6 +2,9 @@
 title: 消防支署
 category: 各課案内
 subcategory: 消防
+date: '2026-03-18'
+date_type: observed
+contact: 音威子府支署
 ---
 # 消防支署
 

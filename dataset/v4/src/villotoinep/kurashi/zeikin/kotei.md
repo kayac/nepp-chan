@@ -2,6 +2,9 @@
 title: 固定資産税
 category: 住民生活
 subcategory: 税金
+date: '2024-01-01'
+date_type: exact
+contact: 住民課住民生活室
 ---
 # 固定資産税
 

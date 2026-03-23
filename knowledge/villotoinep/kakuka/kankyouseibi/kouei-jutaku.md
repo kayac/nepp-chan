@@ -2,6 +2,8 @@
 title: 公営住宅の申し込み
 category: 各課案内
 subcategory: 環境整備課
+date: '2026-03-18'
+date_type: observed
 ---
 # 公営住宅の申し込み
 

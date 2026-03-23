@@ -2,6 +2,9 @@
 title: おといねっぷ議会だより 第69号
 category: 各課案内
 subcategory: 議会事務局
+date: '2025-06-13'
+date_type: exact
+contact: 議会事務局
 ---
 # おといねっぷ議会だより 第69号
 

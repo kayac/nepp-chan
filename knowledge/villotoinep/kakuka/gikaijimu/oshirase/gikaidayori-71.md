@@ -2,6 +2,9 @@
 title: おといねっぷ議会だより 第71号
 category: 各課案内
 subcategory: 議会事務局
+date: '2025-11-21'
+date_type: exact
+contact: 議会事務局
 ---
 # おといねっぷ議会だより 第71号
 

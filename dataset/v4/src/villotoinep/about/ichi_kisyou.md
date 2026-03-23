@@ -1,6 +1,7 @@
 ---
 title: 位置、気象
 category: 村の概要
+date_type: evergreen
 ---
 # 位置、気象
 

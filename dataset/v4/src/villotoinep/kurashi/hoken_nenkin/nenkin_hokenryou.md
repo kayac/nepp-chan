@@ -2,6 +2,9 @@
 title: 国民年金保険料について
 category: 住民生活
 subcategory: 保険・年金
+date: '2026-03-18'
+date_type: observed
+contact: 住民課住民生活室
 ---
 # 国民年金保険料について
 

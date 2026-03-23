@@ -2,6 +2,8 @@
 title: 音威子府村中小企業振興基本条例補助対象事業について
 category: 各課案内
 subcategory: 産業振興課
+date: '2026-03-18'
+date_type: observed
 ---
 # 音威子府村中小企業振興基本条例補助対象事業について
 

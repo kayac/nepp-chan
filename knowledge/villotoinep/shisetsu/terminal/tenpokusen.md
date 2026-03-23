@@ -1,6 +1,9 @@
 ---
 title: 天北線資料室
 category: 施設案内
+date: '2026-03-18'
+date_type: observed
+contact: 総務課地域振興室
 ---
 # 天北線資料室
 

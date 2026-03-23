@@ -2,6 +2,8 @@
 title: 蛾（マイマイガ・クスサン）の大量発生について
 category: 各課案内
 subcategory: 住民生活課
+date: '2026-03-18'
+date_type: observed
 ---
 # 蛾（マイマイガ・クスサン）の大量発生について
 

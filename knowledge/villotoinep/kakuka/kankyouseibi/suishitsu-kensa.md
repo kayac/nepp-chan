@@ -2,6 +2,8 @@
 title: 水質検査計画および水質検査結果について
 category: 各課案内
 subcategory: 環境整備課
+date: '2026-03-18'
+date_type: observed
 ---
 # 水質検査計画および水質検査結果について
 

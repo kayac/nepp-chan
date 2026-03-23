@@ -2,6 +2,8 @@
 title: LEGACY OF MOKKOU（木工コンクール）の開催について
 category: 各課案内
 subcategory: 産業振興課
+date_type: evergreen
+contact: 産業振興室
 ---
 # LEGACY OF MOKKOU（木工コンクール）の開催について
 

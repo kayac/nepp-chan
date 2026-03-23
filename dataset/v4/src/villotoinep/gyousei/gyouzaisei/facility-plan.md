@@ -1,6 +1,8 @@
 ---
 title: 音威子府村公共施設等総合管理計画
 category: 行政
+date: '2026-03-18'
+date_type: observed
 ---
 # 音威子府村公共施設等総合管理計画
 

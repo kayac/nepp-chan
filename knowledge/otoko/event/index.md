@@ -2,6 +2,8 @@
 category: 教育
 subcategory: イベント
 url: 'https://www.otoineppu-h.ed.jp/event/'
+date: '2026-03-18'
+date_type: observed
 ---
 本文へ移動
 ##  イベント情報

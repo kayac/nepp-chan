@@ -2,6 +2,9 @@
 title: 地域計画（案）の広告・縦覧について
 category: 各課案内
 subcategory: 農業委員会
+date: '2026-03-18'
+date_type: observed
+contact: 農業委員会
 ---
 # 地域計画（案）の広告・縦覧について
 

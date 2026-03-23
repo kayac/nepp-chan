@@ -2,6 +2,8 @@
 title: 音威子府村議会
 category: 各課案内
 subcategory: 議会事務局
+date: '2026-03-18'
+date_type: observed
 ---
 # 音威子府村議会
 

@@ -2,6 +2,9 @@
 title: 地域おこし協力隊（事業所雇用型隊員：事業承継）募集！
 category: 各課案内
 subcategory: 地域振興課
+date: '2025-11-25'
+date_type: exact
+contact: 総務課地域振興室
 ---
 # 地域おこし協力隊（事業所雇用型隊員：事業承継）募集！
 

@@ -2,6 +2,9 @@
 title: ごみカレンダー
 category: 住民生活
 subcategory: ごみ・環境
+date: '2024-04-26'
+date_type: exact
+contact: 住民生活室 生活環境係
 ---
 # ごみカレンダー
 

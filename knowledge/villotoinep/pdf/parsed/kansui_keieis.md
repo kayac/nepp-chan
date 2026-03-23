@@ -1,6 +1,8 @@
 ---
 title: 音威子府村簡易水道事業経営戦略
 category: 資料
+date: '2026-03-18'
+date_type: observed
 ---
 # 音威子府村簡易水道事業経営戦略
 

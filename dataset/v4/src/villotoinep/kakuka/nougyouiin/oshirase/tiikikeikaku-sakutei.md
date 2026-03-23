@@ -2,6 +2,9 @@
 title: 地域計画の策定について
 category: 各課案内
 subcategory: 農業委員会
+date: '2025-03-31'
+date_type: exact
+contact: 農業委員会
 ---
 # 地域計画の策定について
 

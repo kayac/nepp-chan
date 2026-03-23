@@ -2,6 +2,9 @@
 title: 地域バス
 category: 各課案内
 subcategory: 産業振興課
+date: '2024-05-01'
+date_type: exact
+contact: 経済課産業振興室 商工観光労働係
 ---
 # 地域バス
 

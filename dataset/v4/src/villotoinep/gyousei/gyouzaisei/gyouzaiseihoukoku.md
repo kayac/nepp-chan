@@ -1,6 +1,9 @@
 ---
 title: 行財政報告
 category: 行政
+date: '2025-04-01'
+date_type: exact
+contact: 総務課総務財政室
 ---
 # 行財政報告
 
