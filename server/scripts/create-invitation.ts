@@ -85,6 +85,8 @@ const main = async () => {
   }
 
   const dbName = `nepp-chan-db-${env || "dev"}`;
+  const wranglerEnvMap = { dev: "development", prd: "production" } as const;
+  const wranglerEnv = env ? wranglerEnvMap[env] : "local";
 
   const id = generateId();
   const token = generateToken();
@@ -108,7 +110,7 @@ VALUES ('${id}', '${username}', '${token}', 'system', '${role}', '${expiresAt.to
 
   try {
     const remoteFlag = isRemote ? "--remote" : "--local";
-    const command = `wrangler d1 execute ${dbName} ${remoteFlag} --config=server/wrangler.jsonc --command="${sql}"`;
+    const command = `wrangler d1 execute ${dbName} --env=${wranglerEnv} ${remoteFlag} --config=server/wrangler.jsonc --command="${sql}"`;
 
     execSync(command, { stdio: "inherit" });
 
