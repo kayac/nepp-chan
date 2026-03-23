@@ -69,8 +69,8 @@ importers:
         specifier: 2.1.2
         version: 2.1.2(@mastra/core@1.10.0(@standard-community/standard-json@0.3.5(@standard-schema/spec@1.1.0)(@types/json-schema@7.0.15)(quansync@0.2.11)(zod-to-json-schema@3.25.1(zod@4.3.6))(zod@4.3.6))(@standard-community/standard-openapi@0.2.9(@standard-community/standard-json@0.3.5(@standard-schema/spec@1.1.0)(@types/json-schema@7.0.15)(quansync@0.2.11)(zod-to-json-schema@3.25.1(zod@4.3.6))(zod@4.3.6))(@standard-schema/spec@1.1.0)(openapi-types@12.1.3)(zod@4.3.6))(@types/json-schema@7.0.15)(openapi-types@12.1.3)(zod@4.3.6))(zod@4.3.6)
       '@sentry/cloudflare':
-        specifier: ^10.43.0
-        version: 10.43.0
+        specifier: ^10.45.0
+        version: 10.45.0
       ai:
         specifier: ^5.0.112
         version: 5.0.120(zod@4.3.6)
@@ -2503,8 +2503,8 @@ packages:
     engines: {node: '>= 10'}
     hasBin: true
 
-  '@sentry/cloudflare@10.43.0':
-    resolution: {integrity: sha512-l0IuXDSLzck++Qyl4IlxrpKO7NVEe0zHXazrnHUAvwM+WPbo1XQ7RwArD67LVTkLmjZjrAc4GZ9gieUkaZWYfg==}
+  '@sentry/cloudflare@10.45.0':
+    resolution: {integrity: sha512-4rXUCSnBu9MITm7Uj27tYxEhmHczamdMLfeipBjvgeFBJ3LUJBKqrfolCOL5d3q9in/CopgyhMxY7pgUwlCJ8w==}
     engines: {node: '>=18'}
     peerDependencies:
       '@cloudflare/workers-types': ^4.x
@@ -2514,6 +2514,10 @@ packages:
 
   '@sentry/core@10.43.0':
     resolution: {integrity: sha512-l0SszQAPiQGWl/ferw8GP3ALyHXiGiRKJaOvNmhGO+PrTQyZTZ6OYyPnGijAFRg58dE1V3RCH/zw5d2xSUIiNg==}
+    engines: {node: '>=18'}
+
+  '@sentry/core@10.45.0':
+    resolution: {integrity: sha512-s69UXxvefeQxuZ5nY7/THtTrIEvJxNVCp3ns4kwoCw1qMpgpvn/296WCKVmM7MiwnaAdzEKnAvLAwaxZc2nM7Q==}
     engines: {node: '>=18'}
 
   '@sentry/react@10.43.0':
@@ -7549,12 +7553,14 @@ snapshots:
       - encoding
       - supports-color
 
-  '@sentry/cloudflare@10.43.0':
+  '@sentry/cloudflare@10.45.0':
     dependencies:
       '@opentelemetry/api': 1.9.0
-      '@sentry/core': 10.43.0
+      '@sentry/core': 10.45.0
 
   '@sentry/core@10.43.0': {}
+
+  '@sentry/core@10.45.0': {}
 
   '@sentry/react@10.43.0(react@19.2.1)':
     dependencies:
