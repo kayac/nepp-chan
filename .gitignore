@@ -12,6 +12,7 @@ dist/
 .idea/shelf
 .brain/
 .agent/
+review/
 .claude/settings.local.json
 
 # deps
