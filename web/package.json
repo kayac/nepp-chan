@@ -37,7 +37,7 @@
   "devDependencies": {
     "@sentry/vite-plugin": "^5.1.1",
     "@tailwindcss/vite": "^4.1.17",
-    "@types/node": "^25.2.0",
+    "@types/node": "^25.5.0",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.3",
