@@ -1,5 +1,5 @@
 import type { ToolExecutionContext } from "@mastra/core/tools";
-import type { AdminUser } from "~/db";
+import type { AuthUser } from "~/services/auth/session";
 
 type ToolContext = ToolExecutionContext | undefined;
 
@@ -9,8 +9,8 @@ export const getDb = (context: ToolContext): D1Database | undefined =>
 export const getEnv = (context: ToolContext): CloudflareBindings | undefined =>
   context?.requestContext?.get("env") as CloudflareBindings | undefined;
 
-export const getAdminUser = (context: ToolContext): AdminUser | undefined =>
-  context?.requestContext?.get("adminUser") as AdminUser | undefined;
+export const getAdminUser = (context: ToolContext): AuthUser | undefined =>
+  context?.requestContext?.get("adminUser") as AuthUser | undefined;
 
 export const getConversationEndedAt = (
   context: ToolContext,
@@ -22,7 +22,7 @@ interface RequireDbResult {
 }
 
 interface RequireAdminResult {
-  adminUser: AdminUser;
+  adminUser: AuthUser;
   db: D1Database;
 }
 

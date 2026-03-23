@@ -8,7 +8,7 @@ import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
-import { getUserFromSession } from "~/services/auth/session";
+import { type AuthUser, verifyAccessToken } from "~/services/auth/session";
 
 const ChatSendRequestSchema = z.object({
   message: z.object({
@@ -58,10 +58,21 @@ chatRoutes.openapi(chatRoute, async (c) => {
 
   const storage = await getStorage(c.env.DB);
 
-  const sessionId = getTokenFromHeader(c);
-  const adminUser = sessionId
-    ? await getUserFromSession(c.env.DB, sessionId)
-    : null;
+  const token = getTokenFromHeader(c);
+  let adminUser: AuthUser | null = null;
+  if (token) {
+    try {
+      const payload = await verifyAccessToken(token, c.env.JWT_SECRET);
+      adminUser = {
+        id: payload.sub,
+        username: payload.username,
+        name: payload.name,
+        role: payload.role,
+      };
+    } catch {
+      // トークンが無効でもチャットは続行
+    }
+  }
 
   const neppChanAgent = createNeppChanAgent({ isAdmin: !!adminUser });
   const mastra = new Mastra({

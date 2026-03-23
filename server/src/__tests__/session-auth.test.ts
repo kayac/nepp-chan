@@ -4,25 +4,24 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as sessionService from "~/services/auth/session";
 
 vi.mock("~/services/auth/session", () => ({
-  getUserFromSession: vi.fn(),
+  verifyAccessToken: vi.fn(),
 }));
 
-// テスト対象をモック後にインポート
 const { sessionAuth, optionalSessionAuth } = await import(
   "~/middleware/session-auth"
 );
 
 describe("session-auth ミドルウェア", () => {
-  const mockDb = {} as D1Database;
-  const mockEnv = { DB: mockDb } as CloudflareBindings;
+  const mockEnv = {
+    DB: {} as D1Database,
+    JWT_SECRET: "test-secret-32-chars-long-enough",
+  } as unknown as CloudflareBindings;
 
   const testUser = {
     id: "user-1",
-    email: "admin@example.com",
+    username: "admin01",
     name: "管理者",
-    role: "admin" as const,
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: null,
+    role: "admin",
   };
 
   beforeEach(() => {
@@ -50,16 +49,18 @@ describe("session-auth ミドルウェア", () => {
 
       expect(res.status).toBe(401);
       const body = await res.text();
-      expect(body).toBe("セッションがありません");
+      expect(body).toBe("認証トークンがありません");
     });
 
-    it("無効なセッションの場合は401を返す", async () => {
-      vi.mocked(sessionService.getUserFromSession).mockResolvedValue(null);
+    it("無効なトークンの場合は401を返す", async () => {
+      vi.mocked(sessionService.verifyAccessToken).mockRejectedValue(
+        new Error("invalid"),
+      );
 
       const app = createApp();
       const req = new Request("http://localhost/protected", {
         headers: {
-          Authorization: "Bearer invalid-session-id",
+          Authorization: "Bearer invalid-jwt-token",
         },
       });
 
@@ -67,20 +68,25 @@ describe("session-auth ミドルウェア", () => {
 
       expect(res.status).toBe(401);
       const body = await res.text();
-      expect(body).toBe("無効なセッションです");
-      expect(sessionService.getUserFromSession).toHaveBeenCalledWith(
-        mockDb,
-        "invalid-session-id",
-      );
+      expect(body).toBe("無効なトークンです");
     });
 
-    it("有効なセッションの場合はユーザー情報をコンテキストに設定する", async () => {
-      vi.mocked(sessionService.getUserFromSession).mockResolvedValue(testUser);
+    it("有効なトークンの場合はユーザー情報をコンテキストに設定する", async () => {
+      vi.mocked(sessionService.verifyAccessToken).mockResolvedValue({
+        sub: testUser.id,
+        username: testUser.username,
+        name: testUser.name,
+        role: testUser.role,
+        iss: "nepp-chan",
+        aud: "nepp-chan-admin",
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 900,
+      });
 
       const app = createApp();
       const req = new Request("http://localhost/protected", {
         headers: {
-          Authorization: "Bearer valid-session-id",
+          Authorization: "Bearer valid-jwt-token",
         },
       });
 
@@ -89,25 +95,6 @@ describe("session-auth ミドルウェア", () => {
       expect(res.status).toBe(200);
       const body = (await res.json()) as { user: typeof testUser };
       expect(body.user).toEqual(testUser);
-    });
-
-    it("getUserFromSession が正しいパラメータで呼ばれる", async () => {
-      vi.mocked(sessionService.getUserFromSession).mockResolvedValue(testUser);
-
-      const app = createApp();
-      const sessionId = "test-session-abc123";
-      const req = new Request("http://localhost/protected", {
-        headers: {
-          Authorization: `Bearer ${sessionId}`,
-        },
-      });
-
-      await app.request(req, {}, mockEnv);
-
-      expect(sessionService.getUserFromSession).toHaveBeenCalledWith(
-        mockDb,
-        sessionId,
-      );
     });
   });
 
@@ -141,13 +128,15 @@ describe("session-auth ミドルウェア", () => {
       expect(body.authenticated).toBe(false);
     });
 
-    it("無効なセッションの場合でもリクエストは通る", async () => {
-      vi.mocked(sessionService.getUserFromSession).mockResolvedValue(null);
+    it("無効なトークンの場合でもリクエストは通る", async () => {
+      vi.mocked(sessionService.verifyAccessToken).mockRejectedValue(
+        new Error("invalid"),
+      );
 
       const app = createApp();
       const req = new Request("http://localhost/public", {
         headers: {
-          Authorization: "Bearer invalid-session-id",
+          Authorization: "Bearer invalid-token",
         },
       });
 
@@ -159,13 +148,22 @@ describe("session-auth ミドルウェア", () => {
       expect(body.authenticated).toBe(false);
     });
 
-    it("有効なセッションの場合はユーザー情報をコンテキストに設定する", async () => {
-      vi.mocked(sessionService.getUserFromSession).mockResolvedValue(testUser);
+    it("有効なトークンの場合はユーザー情報をコンテキストに設定する", async () => {
+      vi.mocked(sessionService.verifyAccessToken).mockResolvedValue({
+        sub: testUser.id,
+        username: testUser.username,
+        name: testUser.name,
+        role: testUser.role,
+        iss: "nepp-chan",
+        aud: "nepp-chan-admin",
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 900,
+      });
 
       const app = createApp();
       const req = new Request("http://localhost/public", {
         headers: {
-          Authorization: "Bearer valid-session-id",
+          Authorization: "Bearer valid-jwt-token",
         },
       });
 
@@ -175,14 +173,6 @@ describe("session-auth ミドルウェア", () => {
       const body = (await res.json()) as PublicResponse;
       expect(body.user).toEqual(testUser);
       expect(body.authenticated).toBe(true);
-    });
-
-    it("Authorizationヘッダーがない場合はgetUserFromSessionを呼ばない", async () => {
-      const app = createApp();
-
-      await app.request("/public", {}, mockEnv);
-
-      expect(sessionService.getUserFromSession).not.toHaveBeenCalled();
     });
   });
 });

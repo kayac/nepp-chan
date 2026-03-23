@@ -1,70 +1,47 @@
-import { generateToken } from "~/lib/crypto";
-import { adminSessionRepository } from "~/repository/admin-session-repository";
-import {
-  type AdminUser,
-  adminUserRepository,
-} from "~/repository/admin-user-repository";
+import { sign, verify } from "hono/jwt";
+import type { JWTPayload } from "hono/utils/jwt/types";
+import type { AuthUser } from "~/schemas/auth-schema";
 
-const SESSION_DURATION_DAYS = 30;
-const SESSION_ABSOLUTE_MAX_DAYS = 90;
+const JWT_ISSUER = "nepp-chan";
+const JWT_AUDIENCE = "nepp-chan-admin";
+const ACCESS_TOKEN_EXPIRY_SECONDS = 8 * 60 * 60; // 8時間
 
-export const createSession = async (d1: D1Database, userId: string) => {
-  const sessionId = generateToken();
-  const now = new Date();
-  const expiresAt = new Date(
-    now.getTime() + SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000,
-  );
-
-  await adminSessionRepository.create(d1, {
-    id: sessionId,
-    userId,
-    expiresAt: expiresAt.toISOString(),
-    createdAt: now.toISOString(),
-    lastAccessedAt: now.toISOString(),
-  });
-
-  return {
-    sessionId,
-    expiresAt,
+type JwtPayload = JWTPayload &
+  Omit<AuthUser, "id"> & {
+    sub: string;
+    iss: string;
+    aud: string;
   };
+
+export const generateAccessToken = async (
+  user: AuthUser,
+  secret: string,
+): Promise<string> => {
+  const now = Math.floor(Date.now() / 1000);
+  const payload: JwtPayload = {
+    sub: user.id,
+    username: user.username,
+    name: user.name,
+    role: user.role,
+    iss: JWT_ISSUER,
+    aud: JWT_AUDIENCE,
+    iat: now,
+    exp: now + ACCESS_TOKEN_EXPIRY_SECONDS,
+  };
+  return sign(payload, secret);
 };
 
-export const validateSession = async (d1: D1Database, sessionId: string) => {
-  const session = await adminSessionRepository.findValidById(
-    d1,
-    sessionId,
-    SESSION_ABSOLUTE_MAX_DAYS,
-  );
-  if (!session) {
-    return null;
+export const verifyAccessToken = async (
+  token: string,
+  secret: string,
+): Promise<JwtPayload> => {
+  const payload = (await verify(token, secret, "HS256")) as JwtPayload;
+
+  if (payload.iss !== JWT_ISSUER || payload.aud !== JWT_AUDIENCE) {
+    throw new Error("無効なトークンです");
   }
 
-  await adminSessionRepository.updateLastAccessed(d1, sessionId);
-
-  return session;
+  return payload;
 };
 
-export const getUserFromSession = async (
-  d1: D1Database,
-  sessionId: string,
-): Promise<AdminUser | null> => {
-  const session = await validateSession(d1, sessionId);
-  if (!session) {
-    return null;
-  }
-
-  const user = await adminUserRepository.findById(d1, session.userId);
-  return user;
-};
-
-export const deleteSession = async (d1: D1Database, sessionId: string) => {
-  await adminSessionRepository.delete(d1, sessionId);
-};
-
-export const deleteUserSessions = async (d1: D1Database, userId: string) => {
-  await adminSessionRepository.deleteByUserId(d1, userId);
-};
-
-export const cleanupExpiredSessions = async (d1: D1Database) => {
-  await adminSessionRepository.deleteExpired(d1);
-};
+export type { AuthUser };

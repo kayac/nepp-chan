@@ -3,7 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import { errorResponse } from "~/lib/openapi-errors";
 import { type SessionVariables, sessionAuth } from "~/middleware/session-auth";
 import { adminInvitationRepository } from "~/repository/admin-invitation-repository";
-import { createInvitation } from "~/services/auth/webauthn";
+import { createInvitation } from "~/services/auth/invitation";
 
 export const invitationRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -26,7 +26,7 @@ const listInvitationsRoute = createRoute({
             invitations: z.array(
               z.object({
                 id: z.string(),
-                email: z.string(),
+                username: z.string(),
                 role: z.string(),
                 invitedBy: z.string(),
                 expiresAt: z.string(),
@@ -49,7 +49,7 @@ invitationRoutes.openapi(listInvitationsRoute, async (c) => {
     {
       invitations: invitations.map((inv) => ({
         id: inv.id,
-        email: inv.email,
+        username: inv.username,
         role: inv.role,
         invitedBy: inv.invitedBy,
         expiresAt: inv.expiresAt,
@@ -73,7 +73,7 @@ const createInvitationRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            email: z.string().email(),
+            username: z.string().min(1),
           }),
         },
       },
@@ -87,7 +87,7 @@ const createInvitationRoute = createRoute({
           schema: z.object({
             invitation: z.object({
               id: z.string(),
-              email: z.string(),
+              username: z.string(),
               token: z.string(),
               expiresAt: z.string(),
             }),
@@ -101,13 +101,13 @@ const createInvitationRoute = createRoute({
 });
 
 invitationRoutes.openapi(createInvitationRoute, async (c) => {
-  const { email } = c.req.valid("json");
+  const { username } = c.req.valid("json");
   const adminUser = c.get("adminUser");
 
   try {
     const invitation = await createInvitation(
       c.env.DB,
-      email,
+      username,
       adminUser.id,
       "admin",
       1,
@@ -117,7 +117,7 @@ invitationRoutes.openapi(createInvitationRoute, async (c) => {
       {
         invitation: {
           id: invitation.id,
-          email: invitation.email,
+          username: invitation.username,
           token: invitation.token,
           expiresAt: invitation.expiresAt.toISOString(),
         },

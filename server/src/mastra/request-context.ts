@@ -1,14 +1,14 @@
 import type { D1Store } from "@mastra/cloudflare-d1";
 import { RequestContext } from "@mastra/core/request-context";
 
-import type { AdminUser } from "~/db";
+import type { AuthUser } from "~/services/auth/session";
 
 export type MastraRequestContextType = {
   storage: D1Store;
   db: D1Database;
   env: CloudflareBindings;
   conversationEndedAt?: string;
-  adminUser?: AdminUser;
+  adminUser?: AuthUser;
 };
 
 export const createRequestContext = (values: MastraRequestContextType) => {

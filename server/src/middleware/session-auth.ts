@@ -1,50 +1,61 @@
 import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
-import type { AdminUser } from "~/db";
 import { getTokenFromHeader } from "~/lib/auth-header";
 import { logger } from "~/lib/logger";
-import { getUserFromSession } from "~/services/auth/session";
+import { type AuthUser, verifyAccessToken } from "~/services/auth/session";
 
 type SessionVariables = {
-  adminUser: AdminUser;
+  adminUser: AuthUser;
 };
 
 export const sessionAuth = createMiddleware<{
   Bindings: CloudflareBindings;
   Variables: SessionVariables;
 }>(async (c, next) => {
-  const sessionId = getTokenFromHeader(c);
+  const token = getTokenFromHeader(c);
 
-  if (!sessionId) {
-    logger.warn("[Auth] missing session token");
-    throw new HTTPException(401, { message: "セッションがありません" });
+  if (!token) {
+    logger.warn("[Auth] missing access token");
+    throw new HTTPException(401, { message: "認証トークンがありません" });
   }
 
-  const user = await getUserFromSession(c.env.DB, sessionId);
-
-  if (!user) {
-    logger.warn("[Auth] invalid or expired session");
-    throw new HTTPException(401, { message: "無効なセッションです" });
+  try {
+    const payload = await verifyAccessToken(token, c.env.JWT_SECRET);
+    c.set("adminUser", {
+      id: payload.sub,
+      username: payload.username,
+      name: payload.name,
+      role: payload.role,
+    });
+    await next();
+  } catch (error) {
+    if (error instanceof HTTPException) throw error;
+    logger.warn("[Auth] invalid access token");
+    throw new HTTPException(401, { message: "無効なトークンです" });
   }
-
-  c.set("adminUser", user);
-  await next();
 });
 
 export const optionalSessionAuth = createMiddleware<{
   Bindings: CloudflareBindings;
   Variables: Partial<SessionVariables>;
 }>(async (c, next) => {
-  const sessionId = getTokenFromHeader(c);
+  const token = getTokenFromHeader(c);
 
-  if (sessionId) {
-    const user = await getUserFromSession(c.env.DB, sessionId);
-    if (user) {
-      c.set("adminUser", user);
+  if (token) {
+    try {
+      const payload = await verifyAccessToken(token, c.env.JWT_SECRET);
+      c.set("adminUser", {
+        id: payload.sub,
+        username: payload.username,
+        name: payload.name,
+        role: payload.role,
+      });
+    } catch {
+      // トークンが無効でもリクエストは続行
     }
   }
 
   await next();
 });
 
-export type { SessionVariables };
+export type { AuthUser, SessionVariables };

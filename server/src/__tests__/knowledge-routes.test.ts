@@ -22,18 +22,28 @@ vi.mock("~/services/knowledge", () => ({
 }));
 
 vi.mock("~/services/auth/session", () => ({
-  getUserFromSession: vi.fn(),
+  verifyAccessToken: vi.fn(),
+}));
+
+vi.mock("~/repository/admin-user-repository", () => ({
+  adminUserRepository: {
+    findById: vi.fn(),
+  },
 }));
 
 const knowledgeService = await import("~/services/knowledge");
 const sessionService = await import("~/services/auth/session");
+const { adminUserRepository } = await import(
+  "~/repository/admin-user-repository"
+);
 const { knowledgeAdminRoutes } = await import("~/routes/admin/knowledge");
 
 const testUser = {
   id: "user-1",
-  email: "admin@example.com",
+  username: "admin01",
   name: "管理者",
   role: "admin" as const,
+  passwordHash: "100000:salt:hash",
   createdAt: "2024-01-01T00:00:00Z",
   updatedAt: null,
 };
@@ -45,6 +55,7 @@ const mockEnv = {
   } as unknown as R2Bucket,
   VECTORIZE: {} as VectorizeIndex,
   GOOGLE_GENERATIVE_AI_API_KEY: "test-api-key",
+  JWT_SECRET: "test-secret-32-chars-long-enough",
 } as unknown as CloudflareBindings;
 
 const authedRequest = (path: string, init?: RequestInit) => {
@@ -83,7 +94,17 @@ describe("knowledge schemas ユーティリティ", () => {
 describe("knowledge routes 統合テスト", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(sessionService.getUserFromSession).mockResolvedValue(testUser);
+    vi.mocked(sessionService.verifyAccessToken).mockResolvedValue({
+      sub: testUser.id,
+      username: testUser.username,
+      name: testUser.name,
+      role: testUser.role,
+      iss: "nepp-chan",
+      aud: "nepp-chan-admin",
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 900,
+    });
+    vi.mocked(adminUserRepository.findById).mockResolvedValue(testUser);
   });
 
   describe("認証", () => {
