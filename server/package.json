@@ -16,6 +16,8 @@
     "db:migrate:prd": "wrangler d1 migrations apply nepp-chan-db-prd --remote --env production",
     "db:migrate:local": "wrangler d1 migrations apply nepp-chan-db-dev --local --env local",
     "db:studio": "drizzle-kit studio",
+    "db:studio:dev": "D1_ENV=dev drizzle-kit studio",
+    "db:studio:prd": "D1_ENV=prd drizzle-kit studio",
     "db:push": "drizzle-kit push",
     "db:check": "drizzle-kit check",
     "eval:run": "tsx scripts/run-eval.ts",

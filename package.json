@@ -26,6 +26,8 @@
     "db:migrate:prd": "pnpm --filter @nepp-chan/server db:migrate:prd",
     "db:migrate:local": "pnpm --filter @nepp-chan/server db:migrate:local",
     "db:studio": "pnpm --filter @nepp-chan/server db:studio",
+    "db:studio:dev": "pnpm --filter @nepp-chan/server db:studio:dev",
+    "db:studio:prd": "pnpm --filter @nepp-chan/server db:studio:prd",
     "db:push": "pnpm --filter @nepp-chan/server db:push",
     "db:check": "pnpm --filter @nepp-chan/server db:check",
     "knowledge:upload:local": "tsx --env-file=.env.local scripts/upload-knowledge.ts",
