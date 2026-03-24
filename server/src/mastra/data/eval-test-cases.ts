@@ -1,8 +1,11 @@
-/** テストケースのカテゴリ（3分類） */
+/** テストケースのカテゴリ（6分類） */
 export type TestCategory =
   | "education" // 高校関連
   | "garbage" // ゴミ関連
-  | "village"; // 村全体
+  | "facility" // 公共施設関連
+  | "village" // 村全体
+  | "admin" // 行政・PDF
+  | "kouhou"; // 広報
 
 /** テストケースのタイプ */
 export type TestType = "positive" | "negative";
@@ -31,7 +34,7 @@ export interface TestCaseV3 {
   threshold: number;
 }
 
-/** マスターテストケース（22個） */
+/** マスターテストケース（51個） */
 export const evalTestCases: TestCaseV3[] = [
   // ─── education: 高校関連（12個） ─────────────────────────
 
@@ -346,5 +349,626 @@ export const evalTestCases: TestCaseV3[] = [
       "音威富士スキー場。2025-2026シーズンは12月19日〜3月下旬。月曜定休。リフト1日券:大人2,500円/小人2,000円。パウダースノーで初心者から上級者まで楽しめる。JR音威子府駅から徒歩約15分",
     requiredKeywords: ["音威富士", "スキー場", "12月"],
     threshold: 0.5,
+  },
+
+  // ─── garbage: ゴミ関連 追加（10個, gb-15〜gb-24） ─────────
+
+  {
+    id: "gb-15",
+    category: "garbage",
+    type: "positive",
+    input: "12月のゴミ収集日を教えてください",
+    groundTruth:
+      "令和8年度12月（2026年）は、火曜に生ごみ・炭化ごみ、水曜に紙製容器包装、木曜にプラ容器包装、金曜に生ごみ・炭化ごみ+カン・ビンorペットボトル、土曜に一般ごみ。12月31日〜1月4日は収集休み。粗大ごみ収集なし",
+    requiredKeywords: ["12月", "2026年", "収集休み"],
+    threshold: 0.3,
+  },
+  {
+    id: "gb-16",
+    category: "garbage",
+    type: "positive",
+    input: "1月のゴミの日はいつですか？",
+    groundTruth:
+      "令和8年度1月（2027年）は、1月1日〜4日は収集休み。1月5日（火）から収集開始。火曜に生ごみ・炭化ごみ、水曜に紙製容器包装、木曜にプラ容器包装、金曜に生ごみ・炭化ごみ、土曜に一般ごみ。粗大ごみ収集なし",
+    requiredKeywords: ["1月", "2027年", "1月5日"],
+    threshold: 0.3,
+  },
+  {
+    id: "gb-17",
+    category: "garbage",
+    type: "positive",
+    input: "12月の年末はゴミ収集ありますか？",
+    groundTruth:
+      "12月30日（水）が最後の収集日です。12月31日〜1月4日は収集休みです",
+    requiredKeywords: ["12月30日", "12月31日", "収集休み"],
+    threshold: 0.3,
+  },
+  {
+    id: "gb-18",
+    category: "garbage",
+    type: "positive",
+    input: "1月の正月期間のゴミ収集はお休みですか？",
+    groundTruth:
+      "はい、1月1日〜4日が収集休みです。1月5日（火）から通常収集が再開します。1月は粗大ごみの収集もありません",
+    requiredKeywords: ["1月", "収集休み", "粗大ごみ"],
+    threshold: 0.3,
+  },
+  {
+    id: "gb-19",
+    category: "garbage",
+    type: "positive",
+    input: "令和8年度の12月のゴミ収集日は？",
+    groundTruth:
+      "令和8年度の12月（2026年）は、1日（火）から30日（水）まで収集。火曜に生ごみ・炭化ごみ、水曜に紙製容器包装、木曜にプラ容器包装、金曜に生ごみ・炭化ごみ、土曜に一般ごみ。12月31日〜1月4日は収集休み。12月は粗大ごみの収集なし",
+    requiredKeywords: ["令和8年度", "12月", "収集休み"],
+    threshold: 0.3,
+  },
+  {
+    id: "gb-20",
+    category: "garbage",
+    type: "positive",
+    input: "令和8年度の1月のゴミ収集日は？",
+    groundTruth:
+      "令和8年度の1月（2027年）は、1月1日〜4日が収集休み。1月5日（火）から収集開始。火曜に生ごみ・炭化ごみ、水曜に紙製容器包装、木曜にプラ容器包装、金曜に生ごみ・炭化ごみ、土曜に一般ごみ。1月は粗大ごみの収集なし",
+    requiredKeywords: ["令和8年度", "1月", "1月5日"],
+    threshold: 0.3,
+  },
+  {
+    id: "gb-21",
+    category: "garbage",
+    type: "positive",
+    input: "ごみ袋の種類を教えてください",
+    groundTruth:
+      "紙製容器包装は市販の黄色半透明袋、プラ容器包装は市販の白色半透明袋またはレジ袋、ペットボトルは市販の白色半透明袋、カン・ビンはそれぞれ村指定の専用袋、生ごみ・炭化ごみ・一般ごみは村指定の専用袋、粗大ごみは役場で処理券を購入。青・黒い袋・段ボール等は回収不可",
+    requiredKeywords: ["黄色", "白色", "村指定", "処理券"],
+    threshold: 0.5,
+  },
+  {
+    id: "gb-22",
+    category: "garbage",
+    type: "positive",
+    input: "ゴミの分別ルールは？",
+    groundTruth:
+      "火曜と金曜に生ごみ・炭化ごみ（毎週）、水曜に紙製容器包装（毎週）、木曜にプラ容器包装（毎週）、金曜にカン・ビンとペットボトル（隔週交互）、土曜に一般ごみ（毎週）。日曜・月曜は収集なし",
+    requiredKeywords: ["火曜", "水曜", "木曜", "金曜"],
+    threshold: 0.5,
+  },
+  {
+    id: "gb-23",
+    category: "garbage",
+    type: "positive",
+    input: "燃やせるゴミの袋はどれを使えばいいですか？",
+    groundTruth:
+      "一般ごみ（燃やせるごみ）は村指定の専用ごみ袋を使用してください。土曜日に毎週収集されます。青・黒い袋・段ボール等を使用している場合は回収されません",
+    requiredKeywords: ["村指定", "専用", "土曜"],
+    threshold: 0.5,
+  },
+  {
+    id: "gb-24",
+    category: "garbage",
+    type: "positive",
+    input: "12月の粗大ごみ収集日はいつですか？",
+    groundTruth:
+      "12月は粗大ごみの収集がありません。粗大ごみは基本的に毎月第1土曜日に収集されますが、12月と1月は収集なしです",
+    requiredKeywords: ["12月", "粗大ごみ", "収集なし"],
+    threshold: 0.3,
+  },
+
+  // ─── facility: 公共施設関連（4個, fc-01〜fc-04） ──────────
+
+  {
+    id: "fc-01",
+    category: "facility",
+    type: "positive",
+    input: "公民館の第１研修室の広さはどれくらいですか？",
+    groundTruth:
+      "第１研修室は広さ34.75平米で、机8個とイス18個が設備されています",
+    requiredKeywords: ["34.75", "机8", "イス18"],
+    threshold: 0.5,
+  },
+  {
+    id: "fc-02",
+    category: "facility",
+    type: "positive",
+    input: "公民館の大ホールは何人くらい入れますか？",
+    groundTruth:
+      "2F大ホール（大会議室）は広さ396.36平米で、机46個・イス200個が設備されています。音響施設、マイク、ピアノもあります",
+    requiredKeywords: ["396.36", "イス200", "音響"],
+    threshold: 0.5,
+  },
+  {
+    id: "fc-03",
+    category: "facility",
+    type: "positive",
+    input: "公民館の調理室は利用できますか？",
+    groundTruth:
+      "はい、調理室があります。広さ50.14平米で、調理器具全般・冷蔵庫・ガス台が設備されています。利用料金は公民館の利用料金表をご確認ください",
+    requiredKeywords: ["50.14", "調理器具", "冷蔵庫"],
+    threshold: 0.5,
+  },
+  {
+    id: "fc-04",
+    category: "facility",
+    type: "positive",
+    input: "公民館の和室を借りたいのですが",
+    groundTruth:
+      "和室は2部屋あります。和室研修室（79.81平米、机14個・座布団）と和室会議室（66.22平米、机6個・イス7個・座布団）です。利用申請は教育委員会窓口または音威子府公式LINE（@otoineppu_1962）から可能です",
+    requiredKeywords: ["和室研修室", "和室会議室", "79.81"],
+    threshold: 0.5,
+  },
+
+  // ─── village: 村全体 追加（6個, vl-07〜vl-12） ────────────
+
+  {
+    id: "vl-07",
+    category: "village",
+    type: "positive",
+    input: "国保税の医療分の税率を教えてください",
+    groundTruth:
+      "国保税の医療分は、所得割（加入者の所得に応じた額）、均等割（加入者1人あたりの額）、平等割（1世帯あたりの額）の3つで算定されます。問い合わせ先は住民課住民生活室（01656-5-3312）",
+    requiredKeywords: ["所得割", "均等割", "平等割"],
+    threshold: 0.5,
+  },
+  {
+    id: "vl-08",
+    category: "village",
+    type: "positive",
+    input: "国保税の介護分はいくらですか？",
+    groundTruth:
+      "介護分は40歳以上65歳未満の方が対象で、所得割（所得に応じた額）、均等割（1人あたりの額）、平等割（1世帯あたりの額）で算定されます。世帯の所得に応じて7割・5割・2割の軽減制度もあります",
+    requiredKeywords: ["40歳以上65歳未満", "所得割", "軽減"],
+    threshold: 0.5,
+  },
+  {
+    id: "vl-09",
+    category: "village",
+    type: "positive",
+    input: "音威子府村への鉄道でのアクセス方法は？",
+    groundTruth:
+      "1日特急3往復。札幌駅〜音威子府駅は3時間10分、旭川駅〜音威子府駅は1時間41分、稚内駅〜音威子府駅は2時間01分。特急宗谷・サロベツが利用可能",
+    requiredKeywords: ["3時間10分", "1時間41分", "特急"],
+    threshold: 0.5,
+  },
+  {
+    id: "vl-10",
+    category: "village",
+    type: "positive",
+    input: "都市間バスで音威子府に行くにはどうすればいいですか？",
+    groundTruth:
+      "札幌市〜音威子府村は3時間50分、旭川市〜音威子府村は2時間40分、稚内市〜音威子府村は3時間12分（オホーツク海側経由）。特急わっかない号（札幌〜音威子府、要予約）や特急えさし号（旭川〜音威子府、要予約）が利用できます",
+    requiredKeywords: ["3時間50分", "2時間40分", "要予約"],
+    threshold: 0.5,
+  },
+  {
+    id: "vl-11",
+    category: "village",
+    type: "positive",
+    input: "地域バスの時刻表を教えてください",
+    groundTruth:
+      "地域バスは運賃無料。夏ダイヤ（5月〜10月）と冬ダイヤ（11月〜4月）があり、時刻表はPDFで公開されています。令和6年5月1日ダイヤ改正により「高齢者センター」停留所が廃止、「セイコーマート横」停留所が追加。問い合わせは経済課産業振興室（01656-5-3313）",
+    requiredKeywords: ["無料", "夏ダイヤ", "冬ダイヤ"],
+    threshold: 0.5,
+  },
+  {
+    id: "vl-12",
+    category: "village",
+    type: "positive",
+    input: "音威子府村の村名の由来は何ですか？",
+    groundTruth:
+      "アイヌ語で「濁りたる泥川」「漂木の堆積する川口」または「切れ曲がる川尻」の意。昭和38年に「常盤村」から「音威子府村」に改称された",
+    requiredKeywords: ["アイヌ語", "常盤村", "昭和38年"],
+    threshold: 0.5,
+  },
+
+  // ─── admin: PDF解析・実用的（10個, ad-01〜ad-10） ──────────
+
+  {
+    id: "ad-01",
+    category: "admin",
+    type: "positive",
+    input: "音威子府村で宿泊できる場所はどこですか？",
+    groundTruth:
+      "青少年宿泊研修施設トムテ（素泊まり4,400円、1泊2食付き6,600円）、BlueberryHouse（3,630円～、素泊まりのみ）、天塩川温泉（5,200円～）、ゲストハウスイケレ、天塩川リバーサイドキャンプ場（無料）、ライダーハウス咲来、ちょっと暮らし住宅がある",
+    requiredKeywords: ["トムテ", "天塩川温泉", "ゲストハウスイケレ"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-02",
+    category: "admin",
+    type: "positive",
+    input: "音威子府村のお土産は何がありますか？",
+    groundTruth:
+      "新音威子府そば（三浦家製麺）、おといねっぷそば（立川農園）、咲来そば（大地の恵み食品工房）、木工クラフト（ecoおといねっぷ）、命名之地羊羹、源泉ラーメン（天塩川温泉）、ジェラートセット（グリーングラス）、おとっきーグッズなどがある",
+    requiredKeywords: ["音威子府そば", "木工クラフト"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-03",
+    category: "admin",
+    type: "positive",
+    input: "音威子府村で食事できるお店は？",
+    groundTruth:
+      "お食事処咲来（そばや丼もの、11:00～18:30）、居酒屋潤ちゃん（村内唯一の居酒屋、18:00～23:00）、天塩川温泉レストラン（源泉ラーメン・源泉そば）、満腹イケレ（ゲストハウスイケレ内、11:30～15:00）、Gelateria the GreenGrass（牧場直営ジェラート）がある",
+    requiredKeywords: ["咲来", "天塩川温泉", "潤ちゃん"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-04",
+    category: "admin",
+    type: "positive",
+    input: "音威子府村の観光スポットを教えてください",
+    groundTruth:
+      "そば畑（キタワセそば、7月下旬～8月中旬）、音威子府村交通ターミナル（天北線資料室）、音威富士スキー場、エコミュージアムおさしまセンター（砂澤ビッキの作品100点以上展示、入館料300円）、北海道命名之地（松浦武四郎ゆかり）、木遊館（木工体験施設）がある",
+    requiredKeywords: ["エコミュージアム", "北海道命名之地"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-05",
+    category: "admin",
+    type: "positive",
+    input: "令和7年度の公共工事の発注予定を教えてください",
+    groundTruth:
+      "令和7年4月1日時点の発注見通しとして、教員住宅浴室改修工事、村有林整備事業、役場庁舎・消防庁舎LED化改修工事、防犯灯LED化改修工事、天塩川温泉女子浴室天井改修工事、橋梁点検委託業務、おといねっぷ美術工芸高等学校LED化工事、水道メーター交換工事などがある。予定価格250万円超のものを公表",
+    requiredKeywords: ["令和7年", "LED化", "指名競争入札"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-06",
+    category: "admin",
+    type: "positive",
+    input: "教員住宅の改修工事について教えてください",
+    groundTruth:
+      "教員住宅浴室改修工事は音威子府村字音威子府で実施予定。期間は4月上旬～5月下旬、建築工事としてユニットバス改修工事2戸を行う。入札方法は指名競争入札で、入札時期は第1四半期",
+    requiredKeywords: ["ユニットバス", "2戸", "指名競争入札"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-07",
+    category: "admin",
+    type: "positive",
+    input: "一般廃棄物の許可業者を教えてください",
+    groundTruth:
+      "令和7年9月26日現在の許可業者は、斎藤建設工業、久保重機工業、岩守産業、五十嵐運輸、中川建設、音威子府建設、村西運輸、旭光運輸、名寄トラックの9社。家庭系一般廃棄物を扱えるのは岩守産業、音威子府建設、旭光運輸、名寄トラック",
+    requiredKeywords: ["岩守産業", "音威子府建設", "旭光運輸"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-08",
+    category: "admin",
+    type: "positive",
+    input: "斎藤建設工業の許可情報は？",
+    groundTruth:
+      "斎藤建設工業株式会社（許可番号第5-8号）。住所は士別市大通西7丁目711番地24、電話0165-26-7575。主に取り扱う廃棄物は事業系一般廃棄物（伐採木枝・伐根・剪定木・刈草・すきとり物の収集運搬）。許可期限は令和8年2月20日",
+    requiredKeywords: ["士別市", "事業系一般廃棄物", "令和8年"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-09",
+    category: "admin",
+    type: "positive",
+    input: "行政報告書の給与情報を教えてください",
+    groundTruth:
+      "令和5年度の人件費は503,607千円（人件費率24.6%）。職員数57人、職員給与費計346,384千円、一人当たり給与費6,077千円。一般行政職の平均給料月額292,600円、平均給与月額323,561円（令和6年4月1日現在、平均年齢38.7歳）。ラスパイレス指数は98.2",
+    requiredKeywords: ["503,607", "57人", "292,600"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-10",
+    category: "admin",
+    type: "positive",
+    input: "音威子府村の総合戦略の内容は？",
+    groundTruth:
+      "音威子府村まち・ひと・しごと創生総合戦略は、おといねっぷ美術工芸高等学校を中心に4つの基本目標を設定。(1)高校の機能強化（入学者数年40人）、(2)卒業生の雇用創出（バイオガスプラント・高齢者複合型施設）、(3)高校を軸とした人の流れ促進（Uターン・定住促進）、(4)高校生参加による村づくり。対象期間は2015～2019年度",
+    requiredKeywords: ["美術工芸高等学校", "基本目標", "雇用"],
+    threshold: 0.3,
+  },
+
+  // ─── admin: PDF解析・大規模（10個, ad-11〜ad-20） ──────────
+
+  {
+    id: "ad-11",
+    category: "admin",
+    type: "positive",
+    input: "音威子府村の避難場所はどこですか？",
+    groundTruth:
+      "指定緊急避難場所は15箇所あり、主な施設は音威子府小中学校、咲来公民館、おといねっぷ美術工芸高等学校、音威子府村山村広場、道の駅おといねっぷ駐車場、音威子府村地域交流センター、音威富士スキー場ロッジ、筬島会館、音威子府村公民館、福祉交流拠点ときわ。洪水・土砂災害・地震・大規模火事・内水氾濫に対応",
+    requiredKeywords: ["音威子府小中学校", "咲来公民館", "美術工芸高等学校"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-12",
+    category: "admin",
+    type: "positive",
+    input: "地震が起きたらどうすればいいですか？",
+    groundTruth:
+      "まずわが身の安全を図る。揺れがおさまったら落ち着いてすばやく火の始末をする。火が出たらまず消火。避難は徒歩で持物は最小限に。みんなが協力しあって応急救護を行う。平常時から避難場所・避難経路・家族の集合場所を確認しておくことが大切",
+    requiredKeywords: ["身の安全", "火の始末", "避難"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-13",
+    category: "admin",
+    type: "positive",
+    input: "防災マップはありますか？",
+    groundTruth:
+      "音威子府村地域防災マップ（2020年3月版）がある。大雨・洪水・土砂災害・暴風雪への備え、避難行動の確認、避難場所一覧表（指定緊急避難場所15箇所）、地域防災マップ（索引図・No.1～No.7）、非常持出品・備蓄品リストなどが掲載されている",
+    requiredKeywords: ["防災マップ", "2020年", "避難場所"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-14",
+    category: "admin",
+    type: "positive",
+    input: "洪水時の避難経路は？",
+    groundTruth:
+      "村内の指定河川は天塩川で、国土交通省（旭川開発建設部）と気象庁が共同で洪水予報を発表する。警戒レベルに応じて避難行動をとる。防災マップで浸水想定区域と指定緊急避難場所を確認し、避難は徒歩で最小限の持物で行動する",
+    requiredKeywords: ["天塩川", "警戒レベル", "避難場所"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-15",
+    category: "admin",
+    type: "positive",
+    input: "音威子府村の将来人口の推計はどうなっていますか？",
+    groundTruth:
+      "2010年の総人口995人から、趨勢人口では2060年に240人程度まで減少する見込み。戦略人口として2040年に610人程度、2060年に500人程度の維持をめざす。おといねっぷ美術工芸高等学校の生徒約120人が人口の1割以上を占め、村の最大の強み",
+    requiredKeywords: ["995人", "240人", "500人"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-16",
+    category: "admin",
+    type: "positive",
+    input: "平成22年の人口は何人でしたか？",
+    groundTruth:
+      "平成22年（2010年）の人口は995人で、初めて1,000人を割り込んだ。国鉄合理化に伴う人員削減や平成元年の天北線廃止等の影響により人口減少が進んだ",
+    requiredKeywords: ["995人", "1,000人"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-17",
+    category: "admin",
+    type: "positive",
+    input: "簡易水道の経営戦略について教えてください",
+    groundTruth:
+      "音威子府村簡易水道事業経営戦略（平成30年3月策定、計画期間平成29～38年度）。昭和31年供用開始、計画給水人口1,070人に対し現在給水人口675人。一般用基本料金は1,840円（10立方メートルまで）。人口減少に伴い持続可能な事業運営が課題",
+    requiredKeywords: ["簡易水道", "675人", "1,840円"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-18",
+    category: "admin",
+    type: "positive",
+    input: "水道料金の将来見通しは？",
+    groundTruth:
+      "給水人口の減少と節水意識の高揚により料金収入は減少していく見込み。浄水場の機械・電気計装設備は整備から17年以上経過し更新が必要。料金の見直しは慎重に判断する。最終改定は平成19年4月1日",
+    requiredKeywords: ["料金収入", "減少", "更新"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-19",
+    category: "admin",
+    type: "positive",
+    input: "農業集落排水事業とは何ですか？",
+    groundTruth:
+      "音威子府村の農業集落排水事業は平成12年7月供用開始。音威子府地区1処理区で音威子府浄化センター1箇所を運用。一般家庭用使用料は10立方メートルまで1,650円（超過分は1立方メートルにつき180円）。汚泥は堆肥化後公共施設花壇等に利用",
+    requiredKeywords: ["農業集落排水", "1,650円", "浄化センター"],
+    threshold: 0.3,
+  },
+  {
+    id: "ad-20",
+    category: "admin",
+    type: "positive",
+    input: "音威子府村の河川情報を教えてください",
+    groundTruth:
+      "村の中央を天塩川が流れており、洪水予報の指定河川。天塩川リバーサイドキャンプ場やパークゴルフ場が河川沿いにあり、北海道命名之地は天塩川河川敷内に位置する。カヌーポートとしても利用されている",
+    requiredKeywords: ["天塩川", "洪水予報"],
+    threshold: 0.3,
+  },
+
+  // ─── kouhou: 広報パターン（10個, kh-01〜kh-10） ──────────
+
+  {
+    id: "kh-01",
+    category: "kouhou",
+    type: "positive",
+    input: "6月の専門外来の診療日はいつですか？",
+    groundTruth:
+      "令和5年6月の音威子府村立診療所の専門外来は、整形外科が6月2日・9日・16日・17日・23日・30日、皮膚科（予約制）が6月19日、眼科（予約制）が6月28日です",
+    requiredKeywords: ["整形外科", "皮膚科", "眼科"],
+    threshold: 0.3,
+  },
+  {
+    id: "kh-02",
+    category: "kouhou",
+    type: "positive",
+    input: "7月の整形外科の診療日は？",
+    groundTruth:
+      "令和5年7月の整形外科の診療日は7月7日（金）・14日（金）・15日（土）・21日（金）・28日（金）です。診療時間は金曜日が11:30〜12:30と14:00〜17:00、土曜日が9:00〜11:00です",
+    requiredKeywords: ["7月", "整形外科", "金曜"],
+    threshold: 0.3,
+  },
+  {
+    id: "kh-03",
+    category: "kouhou",
+    type: "positive",
+    input: "眼科の診療日を教えてください",
+    groundTruth:
+      "音威子府村立診療所の眼科は予約制で、月1回程度の診療です。例えば令和5年7月は7月26日（水）、診療時間は9:00〜11:30です",
+    requiredKeywords: ["眼科", "予約制"],
+    threshold: 0.3,
+  },
+  {
+    id: "kh-04",
+    category: "kouhou",
+    type: "positive",
+    input: "音威子府村の最新の人口は何人ですか？",
+    groundTruth:
+      "令和7年12月末現在の音威子府村の人口は588人（前月比-6人）で、うち男性309人、女性279人、世帯数は424戸です",
+    requiredKeywords: ["588", "424"],
+    threshold: 0.3,
+  },
+  {
+    id: "kh-05",
+    category: "kouhou",
+    type: "positive",
+    input: "令和7年3月の人口は？",
+    groundTruth:
+      "令和7年3月末現在の音威子府村の人口は549人（前月比-16人）で、うち男性296人、女性253人、世帯数は373戸です",
+    requiredKeywords: ["549", "373"],
+    threshold: 0.3,
+  },
+  {
+    id: "kh-06",
+    category: "kouhou",
+    type: "positive",
+    input: "世帯数はどれくらいですか？",
+    groundTruth:
+      "令和7年12月末現在の音威子府村の世帯数は424戸です。人口は588人（男性309人、女性279人）です",
+    requiredKeywords: ["424", "世帯"],
+    threshold: 0.3,
+  },
+  {
+    id: "kh-07",
+    category: "kouhou",
+    type: "positive",
+    input: "4月のイベント予定を教えてください",
+    groundTruth:
+      "令和7年4〜5月のイベントとして、4月26日からエコミュージアムおさしまセンター高橋昭五郎彫刻の館がオープン（開館09:00〜16:30、月曜休館）、5月10日〜6月1日に観光列車「花たびそうや」号が運行されます。音威子府駅停車日は5月11日・18日・25日・6月1日（全て日曜・上りのみ）",
+    requiredKeywords: ["エコミュージアム", "花たびそうや", "音威子府駅"],
+    threshold: 0.3,
+  },
+  {
+    id: "kh-08",
+    category: "kouhou",
+    type: "positive",
+    input: "12月のイベントカレンダーは？",
+    groundTruth:
+      "令和7年12月〜1月のイベントは、12月17〜18日に村議会第4回定例会、12月25〜27日に第43回クロスカントリー音威子府大会、1月2日に二十歳を祝う会、1月26日におと高卒業制作発表があります",
+    requiredKeywords: ["クロスカントリー", "二十歳を祝う会"],
+    threshold: 0.3,
+  },
+  {
+    id: "kh-09",
+    category: "kouhou",
+    type: "positive",
+    input: "保健福祉センターの健診情報は？",
+    groundTruth:
+      "令和7年度の総合健診は7月8日（火）6:00〜10:00に保健福祉センターで実施されます。対象はサーティ健診（30〜39歳）、国保特定健診（40〜75歳）、後期高齢者健診（75歳以上）で、いずれも自己負担は無料です",
+    requiredKeywords: ["総合健診", "7月8日", "無料"],
+    threshold: 0.3,
+  },
+  {
+    id: "kh-10",
+    category: "kouhou",
+    type: "positive",
+    input: "5月のお知らせは何がありますか？",
+    groundTruth:
+      "令和7年5月のイベントとして、5月20日に健康料理教室、5月24日〜6月1日に観光列車「花たびそうや」号運行、5月25日にクリーンおといねっぷと春季消防演習、5月27日にヘルシーフィットネスなどがあります",
+    requiredKeywords: ["クリーンおといねっぷ", "花たびそうや"],
+    threshold: 0.3,
+  },
+
+  // ─── education: 高校サイト追加（10個, ed-13〜ed-22） ────────
+
+  {
+    id: "ed-13",
+    category: "education",
+    type: "positive",
+    input: "おと高の資料請求はどうすればいいですか？",
+    groundTruth:
+      "おといねっぷ美術工芸高等学校の資料請求は、公式サイトの資料請求フォーム（https://www.otoineppu-h.ed.jp/contact/shiryou.html）から行えます。ガイダンス資料と学校パンフレットが送付されます",
+    requiredKeywords: ["資料請求フォーム", "パンフレット"],
+    threshold: 0.5,
+  },
+  {
+    id: "ed-14",
+    category: "education",
+    type: "positive",
+    input: "資料請求に必要な情報は何ですか？",
+    groundTruth:
+      "資料請求フォームではお名前、ふりがな、小中学校名、郵便番号、住所、部数が必須項目です。ガイダンス資料と学校パンフレットが送付されます",
+    requiredKeywords: ["お名前", "小中学校名", "住所"],
+    threshold: 0.5,
+  },
+  {
+    id: "ed-15",
+    category: "education",
+    type: "positive",
+    input: "おと高へのお問い合わせ方法は？",
+    groundTruth:
+      "おといねっぷ美術工芸高等学校への問い合わせは、公式サイトのお問い合わせフォーム（https://www.otoineppu-h.ed.jp/contact/otoiawase.html）から行えます。お名前、メールアドレス、お問い合わせ内容を入力して送信します",
+    requiredKeywords: ["お問い合わせフォーム", "メールアドレス"],
+    threshold: 0.5,
+  },
+  {
+    id: "ed-16",
+    category: "education",
+    type: "positive",
+    input: "お問い合わせフォームの入力項目は？",
+    groundTruth:
+      "お問い合わせフォームの必須入力項目は、お名前、メールアドレス（半角英数字のみ）、お問い合わせ内容の3つです",
+    requiredKeywords: ["お名前", "メールアドレス", "お問い合わせ"],
+    threshold: 0.5,
+  },
+  {
+    id: "ed-17",
+    category: "education",
+    type: "positive",
+    input: "卒業制作の工芸作品はどんなものがありますか？",
+    groundTruth:
+      "おといねっぷ美術工芸高等学校の卒業制作として工芸研究作品があり、公式サイトのギャラリーページ（https://www.otoineppu-h.ed.jp/gallery/crafts.html）で写真が公開されています。木工作品を中心とした作品が展示されています",
+    requiredKeywords: ["工芸研究作品", "ギャラリー"],
+    threshold: 0.5,
+  },
+  {
+    id: "ed-18",
+    category: "education",
+    type: "positive",
+    input: "卒業制作の美術作品を見たい",
+    groundTruth:
+      "おといねっぷ美術工芸高等学校の卒業制作の美術研究作品は、公式サイトのギャラリーページ（https://www.otoineppu-h.ed.jp/gallery/art.html）で写真が公開されています",
+    requiredKeywords: ["美術研究作品", "ギャラリー"],
+    threshold: 0.5,
+  },
+  {
+    id: "ed-19",
+    category: "education",
+    type: "positive",
+    input: "卒業制作の課題研究作品について教えてください",
+    groundTruth:
+      "おといねっぷ美術工芸高等学校の卒業制作として課題研究作品があり、公式サイトのギャラリーページ（https://www.otoineppu-h.ed.jp/gallery/2021-0329-1508-10.html）で多数の写真が公開されています。工芸研究作品、美術研究作品とともに3カテゴリで構成されています",
+    requiredKeywords: ["課題研究作品", "ギャラリー"],
+    threshold: 0.5,
+  },
+  {
+    id: "ed-20",
+    category: "education",
+    type: "positive",
+    input: "木の手づくり展はいつ開催されますか？",
+    groundTruth:
+      "令和7年度の木の手づくり展は、旭川展が令和7年6月28日（土）〜29日（日）10:00〜17:00、札幌展が7月25日（金）〜27日（日）に開催されます。卒業制作を中心に木工作品や絵画作品など200点ほどが展示されます",
+    requiredKeywords: ["6月28日", "7月25日", "200点"],
+    threshold: 0.3,
+  },
+  {
+    id: "ed-21",
+    category: "education",
+    type: "positive",
+    input: "木の手づくり展の旭川展の会場はどこですか？",
+    groundTruth:
+      "木の手づくり展の旭川展の会場は旭川市民文化会館（旭川市7条通9丁目）の展示室です。令和7年度は6月28日（土）〜29日（日）10:00〜17:00に開催されます",
+    requiredKeywords: ["旭川市民文化会館", "7条通9丁目"],
+    threshold: 0.3,
+  },
+  {
+    id: "ed-22",
+    category: "education",
+    type: "positive",
+    input: "木の手づくり展の札幌展の日程は？",
+    groundTruth:
+      "令和7年度の木の手づくり展の札幌展は、7月25日（金）〜27日（日）に、かでる2・7（札幌市中央区北2条西7丁目 道民活動センタービル）の展示ホールで開催されます。7月26日（土）には学校説明会とワークショップも行われます",
+    requiredKeywords: ["7月25日", "かでる", "展示ホール"],
+    threshold: 0.3,
   },
 ];
