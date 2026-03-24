@@ -9,8 +9,9 @@ import {
   UserGroupIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
+import type { AdminUser } from "~/lib/api/auth";
 import { cn } from "~/lib/class-merge";
 
 import { BroadcastPanel } from "./components/BroadcastPanel";
@@ -29,21 +30,37 @@ type Tab =
   | "broadcast"
   | "invitations";
 
-const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
+type AdminRole = AdminUser["role"];
+
+const ROLE_LEVEL: Record<AdminRole, number> = {
+  super_admin: 3,
+  admin: 2,
+  staff: 1,
+};
+
+const tabs: {
+  id: Tab;
+  label: string;
+  icon: React.ReactNode;
+  minRole?: AdminRole;
+}[] = [
   {
     id: "knowledge",
     label: "ナレッジ",
     icon: <BookOpenIcon className="w-5 h-5" aria-hidden="true" />,
+    minRole: "super_admin",
   },
   {
     id: "persona",
     label: "ペルソナ",
     icon: <UserGroupIcon className="w-5 h-5" aria-hidden="true" />,
+    minRole: "admin",
   },
   {
     id: "feedback",
     label: "フィードバック",
     icon: <ChatBubbleLeftIcon className="w-5 h-5" aria-hidden="true" />,
+    minRole: "admin",
   },
   {
     id: "emergency",
@@ -59,13 +76,22 @@ const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     id: "invitations",
     label: "招待管理",
     icon: <EnvelopeIcon className="w-5 h-5" aria-hidden="true" />,
+    minRole: "admin",
   },
 ];
 
 export const App = () => {
-  const [activeTab, setActiveTab] = useState<Tab>("knowledge");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user, isAuthenticated, isLoading, logout } = useAuth();
+
+  const visibleTabs = useMemo(() => {
+    const userLevel = ROLE_LEVEL[user?.role as AdminRole] ?? 0;
+    return tabs.filter((t) => !t.minRole || userLevel >= ROLE_LEVEL[t.minRole]);
+  }, [user?.role]);
+
+  const [activeTab, setActiveTab] = useState<Tab>(
+    visibleTabs[0]?.id ?? "emergency",
+  );
 
   const handleLogout = async () => {
     await logout();
@@ -136,7 +162,7 @@ export const App = () => {
         </div>
 
         <nav className="flex-1 overflow-y-auto py-2">
-          {tabs.map((tab) => (
+          {visibleTabs.map((tab) => (
             <button
               key={tab.id}
               type="button"
@@ -193,7 +219,7 @@ export const App = () => {
             <Bars3Icon className="w-5 h-5 text-stone-600" aria-hidden="true" />
           </button>
           <h2 className="text-lg font-semibold text-stone-800">
-            {tabs.find((t) => t.id === activeTab)?.label}
+            {visibleTabs.find((t) => t.id === activeTab)?.label}
           </h2>
         </header>
 

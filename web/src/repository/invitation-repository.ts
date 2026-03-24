@@ -6,9 +6,12 @@ export const fetchInvitations = async () => {
   return data;
 };
 
-export const createInvitation = async (username: string) => {
+export const createInvitation = async (
+  username: string,
+  role: "admin" | "staff",
+) => {
   const { data, error } = await client.POST("/admin/invitations", {
-    body: { username },
+    body: { username, role },
   });
   if (error) throw error;
   return data;

@@ -2604,7 +2604,8 @@ export interface paths {
                             invitations: {
                                 id: string;
                                 username: string;
-                                role: string;
+                                /** @enum {string} */
+                                role: "super_admin" | "admin" | "staff";
                                 invitedBy: string;
                                 expiresAt: string;
                                 usedAt: string | null;
@@ -2632,7 +2633,7 @@ export interface paths {
         put?: never;
         /**
          * 新規招待作成
-         * @description 管理者を招待します。super_admin の招待はスクリプト経由でのみ可能です。
+         * @description 管理者を招待します。super_admin ロールの招待は super_admin のみ可能です。
          */
         post: {
             parameters: {
@@ -2645,6 +2646,11 @@ export interface paths {
                 content: {
                     "application/json": {
                         username: string;
+                        /**
+                         * @default staff
+                         * @enum {string}
+                         */
+                        role?: "admin" | "staff";
                     };
                 };
             };
@@ -2681,6 +2687,20 @@ export interface paths {
                 };
                 /** @description 認証エラー */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2809,7 +2829,8 @@ export interface paths {
                                 id: string;
                                 username: string;
                                 name: string | null;
-                                role: string;
+                                /** @enum {string} */
+                                role: "super_admin" | "admin" | "staff";
                             };
                         };
                     };
@@ -2874,7 +2895,8 @@ export interface paths {
                                 id: string;
                                 username: string;
                                 name: string | null;
-                                role: string;
+                                /** @enum {string} */
+                                role: "super_admin" | "admin" | "staff";
                             };
                         };
                     };
@@ -2890,44 +2912,6 @@ export interface paths {
                                 code: number;
                                 message: string;
                             };
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** ログアウト */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description ログアウト成功 */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
                         };
                     };
                 };
@@ -2967,7 +2951,8 @@ export interface paths {
                                 id: string;
                                 username: string;
                                 name: string | null;
-                                role: string;
+                                /** @enum {string} */
+                                role: "super_admin" | "admin" | "staff";
                             } | null;
                         };
                     };
@@ -2976,6 +2961,44 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** ログアウト */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description ログアウト成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;

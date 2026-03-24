@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
+import type { AdminUser } from "~/lib/api/auth";
 import { formatDateTime } from "~/lib/format";
 import {
   createInvitation,
@@ -10,13 +10,21 @@ import {
 } from "~/repository/invitation-repository";
 import { useAuth } from "../contexts/AuthContext";
 
+const ROLE_LABELS: Record<AdminUser["role"], string> = {
+  super_admin: "スーパー管理者",
+  admin: "管理者",
+  staff: "職員",
+};
+
 export const InvitationsPanel = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { copyToClipboard } = useCopyToClipboard();
   const [username, setUsername] = useState("");
+  const [role, setRole] = useState<"admin" | "staff">("staff");
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const canInviteAdmin = user?.role === "super_admin";
 
   const { data, isLoading } = useQuery({
     queryKey: ["invitations"],
@@ -24,7 +32,13 @@ export const InvitationsPanel = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: (username: string) => createInvitation(username),
+    mutationFn: ({
+      username,
+      role,
+    }: {
+      username: string;
+      role: "admin" | "staff";
+    }) => createInvitation(username, role),
     onSuccess: (data) => {
       const baseUrl = window.location.origin;
       const url = `${baseUrl}/register?token=${data.invitation.token}`;
@@ -49,7 +63,7 @@ export const InvitationsPanel = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return;
-    createMutation.mutate(username.trim());
+    createMutation.mutate({ username: username.trim(), role });
   };
 
   const isExpired = (expiresAt: string) => {
@@ -103,6 +117,20 @@ export const InvitationsPanel = () => {
             required
             className="flex-1 px-3 py-2 border border-stone-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
+          {canInviteAdmin ? (
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as "admin" | "staff")}
+              className="px-3 py-2 border border-stone-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+            >
+              <option value="staff">職員</option>
+              <option value="admin">管理者</option>
+            </select>
+          ) : (
+            <span className="px-3 py-2 text-sm text-stone-500 self-center whitespace-nowrap">
+              職員として招待
+            </span>
+          )}
           <button
             type="submit"
             disabled={createMutation.isPending}
@@ -153,9 +181,7 @@ export const InvitationsPanel = () => {
                         {inv.username}
                       </td>
                       <td className="px-4 py-3 text-stone-600">
-                        {inv.role === "super_admin"
-                          ? "スーパー管理者"
-                          : "管理者"}
+                        {ROLE_LABELS[inv.role] ?? inv.role}
                       </td>
                       <td className="px-4 py-3">
                         {inv.usedAt ? (
@@ -216,9 +242,7 @@ export const InvitationsPanel = () => {
                     )}
                   </div>
                   <div className="flex items-center justify-between text-xs text-stone-500">
-                    <span>
-                      {inv.role === "super_admin" ? "スーパー管理者" : "管理者"}
-                    </span>
+                    <span>{ROLE_LABELS[inv.role] ?? inv.role}</span>
                     <span>期限: {formatDateTime(inv.expiresAt)}</span>
                   </div>
                   {(!inv.usedAt || user?.role === "super_admin") && (

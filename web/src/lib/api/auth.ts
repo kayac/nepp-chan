@@ -1,12 +1,10 @@
 import { getAuthToken } from "~/lib/auth-token";
+import type { paths } from "~/types/api";
 import { API_BASE, parseErrorResponse } from "./client";
 
-type AdminUser = {
-  id: string;
-  username: string;
-  name: string | null;
-  role: string;
-};
+type AdminUser = NonNullable<
+  paths["/auth/me"]["get"]["responses"]["200"]["content"]["application/json"]["user"]
+>;
 
 type AuthResponse = {
   accessToken: string;
