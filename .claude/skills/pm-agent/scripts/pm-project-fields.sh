@@ -290,6 +290,7 @@ process_issue() {
   local p_target="$8"
 
   local item_id option_id iteration_id
+  local local_update_count=0
 
   item_id=$(ensure_project_item "$REPO" "$issue_num" "$PROJECT_ID" "$PROJECT_NUMBER") || {
     print_warn "#$issue_num のプロジェクトへの追加に失敗しました"
@@ -303,7 +304,7 @@ process_issue() {
     option_id=$(find_option_id "$FIELDS_JSON" "Status" "$p_status")
     if [[ -n "$option_id" ]]; then
       update_single_select_field "$PROJECT_ID" "$item_id" "$FID_STATUS" "$option_id" >/dev/null && \
-        echo "    ↳ Status = $p_status"
+        echo "    ↳ Status = $p_status" && ((local_update_count++)) || true
     else
       print_warn "Status の選択肢 '$p_status' が見つかりません"
     fi
@@ -314,7 +315,7 @@ process_issue() {
     option_id=$(find_option_id "$FIELDS_JSON" "Priority" "$p_priority")
     if [[ -n "$option_id" ]]; then
       update_single_select_field "$PROJECT_ID" "$item_id" "$FID_PRIORITY" "$option_id" >/dev/null && \
-        echo "    ↳ Priority = $p_priority"
+        echo "    ↳ Priority = $p_priority" && ((local_update_count++)) || true
     else
       print_warn "Priority の選択肢 '$p_priority' が見つかりません"
     fi
@@ -325,7 +326,7 @@ process_issue() {
     option_id=$(find_option_id "$FIELDS_JSON" "Size" "$p_size")
     if [[ -n "$option_id" ]]; then
       update_single_select_field "$PROJECT_ID" "$item_id" "$FID_SIZE" "$option_id" >/dev/null && \
-        echo "    ↳ Size = $p_size"
+        echo "    ↳ Size = $p_size" && ((local_update_count++)) || true
     else
       print_warn "Size の選択肢 '$p_size' が見つかりません"
     fi
@@ -334,7 +335,7 @@ process_issue() {
   # Estimate を更新
   if [[ -n "$p_estimate" && -n "$FID_ESTIMATE" ]]; then
     update_number_field "$PROJECT_ID" "$item_id" "$FID_ESTIMATE" "$p_estimate" >/dev/null && \
-      echo "    ↳ Estimate = $p_estimate"
+      echo "    ↳ Estimate = $p_estimate" && ((local_update_count++)) || true
   fi
 
   # Iteration を更新
@@ -342,7 +343,7 @@ process_issue() {
     iteration_id=$(find_iteration_id "$FIELDS_JSON" "Iteration" "$p_iteration")
     if [[ -n "$iteration_id" ]]; then
       update_iteration_field "$PROJECT_ID" "$item_id" "$FID_ITERATION" "$iteration_id" >/dev/null && \
-        echo "    ↳ Iteration = $p_iteration"
+        echo "    ↳ Iteration = $p_iteration" && ((local_update_count++)) || true
     else
       print_warn "Iteration '$p_iteration' が見つかりません"
     fi
@@ -351,15 +352,16 @@ process_issue() {
   # 開始日を更新
   if [[ -n "$p_start" && -n "$FID_START_DATE" ]]; then
     update_date_field "$PROJECT_ID" "$item_id" "$FID_START_DATE" "$p_start" >/dev/null && \
-      echo "    ↳ 開始日 = $p_start"
+      echo "    ↳ 開始日 = $p_start" && ((local_update_count++)) || true
   fi
 
   # 目標日を更新
   if [[ -n "$p_target" && -n "$FID_TARGET_DATE" ]]; then
     update_date_field "$PROJECT_ID" "$item_id" "$FID_TARGET_DATE" "$p_target" >/dev/null && \
-      echo "    ↳ 目標日 = $p_target"
+      echo "    ↳ 目標日 = $p_target" && ((local_update_count++)) || true
   fi
 
+  echo "    更新フィールド数: $local_update_count"
   return 0
 }
 
