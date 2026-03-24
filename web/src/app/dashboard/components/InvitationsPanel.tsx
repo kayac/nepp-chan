@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
+import { ROLE_LABELS, useRole } from "~/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
 import { formatDateTime } from "~/lib/format";
 import {
@@ -10,21 +11,15 @@ import {
 } from "~/repository/invitation-repository";
 import { useAuth } from "../contexts/AuthContext";
 
-const ROLE_LABELS: Record<AdminUser["role"], string> = {
-  super_admin: "スーパー管理者",
-  admin: "管理者",
-  staff: "職員",
-};
-
 export const InvitationsPanel = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { isSuperAdmin } = useRole(user);
   const { copyToClipboard } = useCopyToClipboard();
   const [username, setUsername] = useState("");
   const [role, setRole] = useState<AdminUser["role"]>("staff");
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const canInviteAdmin = user?.role === "super_admin";
 
   const { data, isLoading } = useQuery({
     queryKey: ["invitations"],
@@ -117,7 +112,7 @@ export const InvitationsPanel = () => {
             required
             className="flex-1 px-3 py-2 border border-stone-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
-          {canInviteAdmin ? (
+          {isSuperAdmin ? (
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as AdminUser["role"])}
@@ -203,7 +198,7 @@ export const InvitationsPanel = () => {
                         {formatDateTime(inv.expiresAt)}
                       </td>
                       <td className="px-4 py-3">
-                        {(!inv.usedAt || user?.role === "super_admin") && (
+                        {(!inv.usedAt || isSuperAdmin) && (
                           <button
                             type="button"
                             onClick={() => deleteMutation.mutate(inv.id)}
@@ -246,7 +241,7 @@ export const InvitationsPanel = () => {
                     <span>{ROLE_LABELS[inv.role] ?? inv.role}</span>
                     <span>期限: {formatDateTime(inv.expiresAt)}</span>
                   </div>
-                  {(!inv.usedAt || user?.role === "super_admin") && (
+                  {(!inv.usedAt || isSuperAdmin) && (
                     <div className="pt-2">
                       <button
                         type="button"

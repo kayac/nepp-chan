@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useMemo, useState } from "react";
 
+import { useRole } from "~/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
 import { cn } from "~/lib/class-merge";
 
@@ -31,12 +32,6 @@ type Tab =
   | "invitations";
 
 type AdminRole = AdminUser["role"];
-
-const ROLE_LEVEL: Record<AdminRole, number> = {
-  super_admin: 3,
-  admin: 2,
-  staff: 1,
-};
 
 const tabs: {
   id: Tab;
@@ -83,11 +78,11 @@ const tabs: {
 export const App = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { hasRole } = useRole(user);
 
   const visibleTabs = useMemo(() => {
-    const userLevel = ROLE_LEVEL[user?.role as AdminRole] ?? 0;
-    return tabs.filter((t) => !t.minRole || userLevel >= ROLE_LEVEL[t.minRole]);
-  }, [user?.role]);
+    return tabs.filter((t) => !t.minRole || hasRole(t.minRole));
+  }, [hasRole]);
 
   const [activeTab, setActiveTab] = useState<Tab>(
     visibleTabs[0]?.id ?? "emergency",
