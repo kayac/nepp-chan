@@ -10,6 +10,7 @@ import {
   fetchBroadcasts,
   sendBroadcastNow,
   updateBroadcast,
+  uploadBroadcastImage,
 } from "~/repository/broadcast-repository";
 import { fetchEmergencies } from "~/repository/emergency-repository";
 import {
@@ -303,3 +304,6 @@ export const useSendBroadcast = () => {
     },
   });
 };
+
+export const useUploadBroadcastImage = () =>
+  useMutation({ mutationFn: uploadBroadcastImage });

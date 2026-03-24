@@ -14,6 +14,7 @@ import {
 import {
   authRoutes,
   broadcastAdminRoutes,
+  broadcastMediaRoutes,
   chatRoutes,
   emergencyAdminRoutes,
   feedbackAdminRoutes,
@@ -40,6 +41,7 @@ app.route("/chat", chatRoutes);
 app.route("/feedback", feedbackRoutes);
 app.route("/threads", threadsRoutes);
 app.route("/admin/broadcast", broadcastAdminRoutes);
+app.route("/broadcast/media", broadcastMediaRoutes);
 app.route("/admin/feedback", feedbackAdminRoutes);
 app.route("/admin/knowledge", knowledgeAdminRoutes);
 app.route("/admin/persona", personaAdminRoutes);

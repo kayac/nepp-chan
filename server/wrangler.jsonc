@@ -42,6 +42,11 @@
           "binding": "KNOWLEDGE_BUCKET",
           "bucket_name": "nepp-chan-knowledge-local",
           "remote": true
+        },
+        {
+          "binding": "LINE_BROADCAST_BUCKET",
+          "bucket_name": "nepp-chan-broadcast-dev",
+          "remote": true
         }
       ],
       "queues": {
@@ -87,6 +92,10 @@
         {
           "binding": "KNOWLEDGE_BUCKET",
           "bucket_name": "nepp-chan-knowledge-dev"
+        },
+        {
+          "binding": "LINE_BROADCAST_BUCKET",
+          "bucket_name": "nepp-chan-broadcast-dev"
         }
       ],
       "queues": {
@@ -131,6 +140,10 @@
         {
           "binding": "KNOWLEDGE_BUCKET",
           "bucket_name": "nepp-chan-knowledge-prd"
+        },
+        {
+          "binding": "LINE_BROADCAST_BUCKET",
+          "bucket_name": "nepp-chan-broadcast-prd"
         }
       ],
       "queues": {

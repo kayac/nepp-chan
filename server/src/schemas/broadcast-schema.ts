@@ -7,10 +7,18 @@ export const broadcastStatusSchema = z.enum([
   "failed",
 ]);
 
+export const broadcastPartSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("text"), text: z.string().min(1).max(5000) }),
+  z.object({ type: z.literal("image"), imageR2Key: z.string().min(1) }),
+]);
+
+export type BroadcastPart = z.infer<typeof broadcastPartSchema>;
+
 export const broadcastMessageSchema = z.object({
   id: z.string(),
   title: z.string(),
   body: z.string(),
+  parts: z.string().nullable(),
   status: z.string(),
   scheduledAt: z.string().nullable(),
   sentAt: z.string().nullable(),
@@ -21,12 +29,12 @@ export const broadcastMessageSchema = z.object({
 });
 
 export const createBroadcastSchema = z.object({
-  body: z.string().min(1).max(5000),
+  parts: z.array(broadcastPartSchema).min(1).max(5),
   scheduledAt: z.string().datetime().optional(),
   sendNow: z.boolean().optional(),
 });
 
 export const updateBroadcastSchema = z.object({
-  body: z.string().min(1).max(5000).optional(),
+  parts: z.array(broadcastPartSchema).min(1).max(5).optional(),
   scheduledAt: z.string().datetime().nullable().optional(),
 });

@@ -103,6 +103,7 @@ export const broadcastMessages = sqliteTable("broadcast_messages", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   body: text("body").notNull(),
+  parts: text("parts"),
   status: text("status").notNull().default("draft"), // draft | scheduled | sent | failed
   scheduledAt: text("scheduled_at"),
   sentAt: text("sent_at"),
