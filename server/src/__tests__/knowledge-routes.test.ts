@@ -46,7 +46,7 @@ const testUser = {
   id: "user-1",
   username: "admin01",
   name: "管理者",
-  role: "admin" as const,
+  role: "super_admin",
   passwordHash: "100000:salt:hash",
   createdAt: "2024-01-01T00:00:00Z",
   updatedAt: null,

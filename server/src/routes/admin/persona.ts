@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
 import { errorResponse } from "~/lib/openapi-errors";
 import { requireAuth } from "~/middleware/auth";
+import { requireRole } from "~/middleware/require-role";
 import { personaRepository } from "~/repository/persona-repository";
 import {
   deleteAllPersonas,
@@ -14,6 +15,7 @@ export const personaAdminRoutes = new OpenAPIHono<{
 }>();
 
 personaAdminRoutes.use("*", requireAuth);
+personaAdminRoutes.use("*", requireRole("admin"));
 
 const PersonaSchema = z.object({
   id: z.string(),

@@ -6,7 +6,7 @@ import { hashPassword, verifyPassword } from "~/lib/password";
 import type { AuthVariables } from "~/middleware/auth";
 import { adminInvitationRepository } from "~/repository/admin-invitation-repository";
 import { adminUserRepository } from "~/repository/admin-user-repository";
-import { AdminUserSchema } from "~/schemas/auth-schema";
+import { AdminUserSchema, adminRoleSchema } from "~/schemas/auth-schema";
 import { generateAccessToken } from "~/services/auth/token";
 
 export const authRoutes = new OpenAPIHono<{
@@ -23,7 +23,7 @@ const toUserResponse = (user: {
   id: user.id,
   username: user.username,
   name: user.name,
-  role: user.role,
+  role: adminRoleSchema.parse(user.role),
 });
 
 // --- Register ---

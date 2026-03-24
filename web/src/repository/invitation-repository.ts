@@ -1,3 +1,4 @@
+import type { AdminUser } from "~/lib/api/auth";
 import { client } from "~/lib/api/client";
 
 export const fetchInvitations = async () => {
@@ -6,9 +7,12 @@ export const fetchInvitations = async () => {
   return data;
 };
 
-export const createInvitation = async (username: string) => {
+export const createInvitation = async (
+  username: string,
+  role: AdminUser["role"],
+) => {
   const { data, error } = await client.POST("/admin/invitations", {
-    body: { username },
+    body: { username, role },
   });
   if (error) throw error;
   return data;

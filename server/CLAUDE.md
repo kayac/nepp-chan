@@ -203,6 +203,7 @@ throw new HTTPException(404, { message: "Not found" });
 - エラー: `throw new HTTPException(code, { message })` でスロー（グローバルエラーハンドラーが `{ error: { code, message } }` 形式に変換）
 - OpenAPI エラーレスポンス: `lib/openapi-errors.ts` の `errorResponse(code)` を使用
 - 認証必須ルート: `requireAuth` ミドルウェアを適用
+- ロール制限ルート: `requireRole("admin")` 等を `requireAuth` の後に適用（`middleware/require-role.ts`）
 - 共通スキーマ: `schemas/` から import（インライン定義を避ける）
 
 ## データベーステーブル
@@ -225,7 +226,7 @@ throw new HTTPException(404, { message: "Not found" });
 | id            | TEXT | PRIMARY KEY                        |
 | username      | TEXT | ユーザー名（UNIQUE NOT NULL）      |
 | name          | TEXT | 表示名                             |
-| role          | TEXT | 役割（admin/super_admin）          |
+| role          | TEXT | 役割（super_admin/admin/staff）    |
 | password_hash | TEXT | パスワードハッシュ（NOT NULL）      |
 | created_at    | TEXT | 作成日時（NOT NULL）               |
 | updated_at    | TEXT | 更新日時                           |

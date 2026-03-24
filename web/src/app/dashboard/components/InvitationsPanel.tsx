@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
+import { ROLE_LABELS, useRole } from "~/hooks/useRole";
+import type { AdminUser } from "~/lib/api/auth";
 import { formatDateTime } from "~/lib/format";
 import {
   createInvitation,
@@ -13,8 +14,10 @@ import { useAuth } from "../contexts/AuthContext";
 export const InvitationsPanel = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { isSuperAdmin } = useRole(user);
   const { copyToClipboard } = useCopyToClipboard();
   const [username, setUsername] = useState("");
+  const [role, setRole] = useState<AdminUser["role"]>("staff");
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +27,13 @@ export const InvitationsPanel = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: (username: string) => createInvitation(username),
+    mutationFn: ({
+      username,
+      role,
+    }: {
+      username: string;
+      role: AdminUser["role"];
+    }) => createInvitation(username, role),
     onSuccess: (data) => {
       const baseUrl = window.location.origin;
       const url = `${baseUrl}/register?token=${data.invitation.token}`;
@@ -49,7 +58,7 @@ export const InvitationsPanel = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return;
-    createMutation.mutate(username.trim());
+    createMutation.mutate({ username: username.trim(), role });
   };
 
   const isExpired = (expiresAt: string) => {
@@ -103,6 +112,21 @@ export const InvitationsPanel = () => {
             required
             className="flex-1 px-3 py-2 border border-stone-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
+          {isSuperAdmin ? (
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as AdminUser["role"])}
+              className="px-3 py-2 border border-stone-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+            >
+              <option value="staff">職員</option>
+              <option value="admin">管理者</option>
+              <option value="super_admin">スーパー管理者</option>
+            </select>
+          ) : (
+            <span className="px-3 py-2 text-sm text-stone-500 self-center whitespace-nowrap">
+              職員として招待
+            </span>
+          )}
           <button
             type="submit"
             disabled={createMutation.isPending}
@@ -153,9 +177,7 @@ export const InvitationsPanel = () => {
                         {inv.username}
                       </td>
                       <td className="px-4 py-3 text-stone-600">
-                        {inv.role === "super_admin"
-                          ? "スーパー管理者"
-                          : "管理者"}
+                        {ROLE_LABELS[inv.role] ?? inv.role}
                       </td>
                       <td className="px-4 py-3">
                         {inv.usedAt ? (
@@ -176,7 +198,7 @@ export const InvitationsPanel = () => {
                         {formatDateTime(inv.expiresAt)}
                       </td>
                       <td className="px-4 py-3">
-                        {(!inv.usedAt || user?.role === "super_admin") && (
+                        {(!inv.usedAt || isSuperAdmin) && (
                           <button
                             type="button"
                             onClick={() => deleteMutation.mutate(inv.id)}
@@ -216,12 +238,10 @@ export const InvitationsPanel = () => {
                     )}
                   </div>
                   <div className="flex items-center justify-between text-xs text-stone-500">
-                    <span>
-                      {inv.role === "super_admin" ? "スーパー管理者" : "管理者"}
-                    </span>
+                    <span>{ROLE_LABELS[inv.role] ?? inv.role}</span>
                     <span>期限: {formatDateTime(inv.expiresAt)}</span>
                   </div>
-                  {(!inv.usedAt || user?.role === "super_admin") && (
+                  {(!inv.usedAt || isSuperAdmin) && (
                     <div className="pt-2">
                       <button
                         type="button"

@@ -4,6 +4,7 @@ import { HTTPException } from "hono/http-exception";
 import type { MessageFeedback } from "~/db";
 import { errorResponse } from "~/lib/openapi-errors";
 import { requireAuth } from "~/middleware/auth";
+import { requireRole } from "~/middleware/require-role";
 import { feedbackRepository } from "~/repository/feedback-repository";
 import {
   feedbackFullSchema,
@@ -48,6 +49,7 @@ export const feedbackAdminRoutes = new OpenAPIHono<{
 }>();
 
 feedbackAdminRoutes.use("*", requireAuth);
+feedbackAdminRoutes.use("*", requireRole("admin"));
 
 const listRoute = createRoute({
   method: "get",

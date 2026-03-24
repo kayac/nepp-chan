@@ -74,7 +74,7 @@ export const adminUsers = sqliteTable("admin_users", {
   id: text("id").primaryKey(),
   username: text("username").notNull().unique(),
   name: text("name"),
-  role: text("role").notNull().default("admin"), // "super_admin" | "admin"
+  role: text("role").notNull().default("admin"), // "super_admin" | "admin" | "staff"
   passwordHash: text("password_hash").notNull(),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at"),

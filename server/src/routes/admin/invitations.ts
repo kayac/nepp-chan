@@ -2,7 +2,9 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 import { errorResponse } from "~/lib/openapi-errors";
 import { type AuthVariables, requireAuth } from "~/middleware/auth";
+import { requireRole } from "~/middleware/require-role";
 import { adminInvitationRepository } from "~/repository/admin-invitation-repository";
+import { adminRoleSchema } from "~/schemas/auth-schema";
 import { createInvitation } from "~/services/auth/invitation";
 
 export const invitationRoutes = new OpenAPIHono<{
@@ -11,6 +13,7 @@ export const invitationRoutes = new OpenAPIHono<{
 }>();
 
 invitationRoutes.use("*", requireAuth);
+invitationRoutes.use("*", requireRole("admin"));
 
 const listInvitationsRoute = createRoute({
   method: "get",
@@ -27,7 +30,7 @@ const listInvitationsRoute = createRoute({
               z.object({
                 id: z.string(),
                 username: z.string(),
-                role: z.string(),
+                role: adminRoleSchema,
                 invitedBy: z.string(),
                 expiresAt: z.string(),
                 usedAt: z.string().nullable(),
@@ -50,7 +53,7 @@ invitationRoutes.openapi(listInvitationsRoute, async (c) => {
       invitations: invitations.map((inv) => ({
         id: inv.id,
         username: inv.username,
-        role: inv.role,
+        role: adminRoleSchema.parse(inv.role),
         invitedBy: inv.invitedBy,
         expiresAt: inv.expiresAt,
         usedAt: inv.usedAt,
@@ -74,7 +77,10 @@ const createInvitationRoute = createRoute({
         "application/json": {
           schema: z.object({
             username: z.string().min(1),
-            role: z.enum(["admin", "super_admin"]).optional().default("admin"),
+            role: z
+              .enum(["super_admin", "admin", "staff"])
+              .optional()
+              .default("staff"),
           }),
         },
       },
@@ -106,9 +112,9 @@ invitationRoutes.openapi(createInvitationRoute, async (c) => {
   const { username, role } = c.req.valid("json");
   const adminUser = c.get("adminUser");
 
-  if (role === "super_admin" && adminUser.role !== "super_admin") {
+  if (role !== "staff" && adminUser.role !== "super_admin") {
     throw new HTTPException(403, {
-      message: "super_admin の招待は super_admin のみ可能です",
+      message: "管理者・スーパー管理者の招待はスーパー管理者のみ可能です",
     });
   }
 
