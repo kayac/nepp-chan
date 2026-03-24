@@ -34,7 +34,7 @@ import { LibSQLStore } from "@mastra/libsql";
 import { Memory } from "@mastra/memory";
 import { getPlatformProxy } from "wrangler";
 
-import { GEMINI_FLASH_LITE, GEMINI_SCORER } from "../src/lib/llm-models";
+import { OPENAI_SCORER } from "../src/lib/llm-models";
 import { knowledgeAgent } from "../src/mastra/agents/knowledge-agent";
 import { createNeppChanAgent } from "../src/mastra/agents/nepp-chan-agent";
 import type {
@@ -206,14 +206,27 @@ const isAbstention = (answer: string): boolean => {
 
 // ─── Eval用APIキー解決 ───────────────────────────────────
 
-const resolveEvalApiKey = (env: CloudflareBindings): string => {
+const resolveEvalApiKeys = (env: CloudflareBindings): void => {
+  // Gemini（エージェント実行用）
   // biome-ignore lint/suspicious/noExplicitAny: .dev.vars の追加キーは CloudflareBindings に未定義
-  const evalKey = (env as any).EVAL_GOOGLE_API_KEY as string | undefined;
-  const key = evalKey || env.GOOGLE_GENERATIVE_AI_API_KEY;
-  if (evalKey) {
-    console.log("🔑 Eval専用APIキーを使用");
+  const evalGoogleKey = (env as any).EVAL_GOOGLE_API_KEY as string | undefined;
+  const googleKey = evalGoogleKey || env.GOOGLE_GENERATIVE_AI_API_KEY;
+  if (evalGoogleKey) {
+    console.log("🔑 Eval専用Google APIキーを使用");
   }
-  return key;
+  process.env.GOOGLE_GENERATIVE_AI_API_KEY = googleKey;
+
+  // OpenAI（スコアラー用）
+  // biome-ignore lint/suspicious/noExplicitAny: .dev.vars の追加キーは CloudflareBindings に未定義
+  const openaiKey = (env as any).OPENAI_API_KEY as string | undefined;
+  if (openaiKey) {
+    process.env.OPENAI_API_KEY = openaiKey;
+    console.log("🔑 OpenAI APIキーを使用（スコアラー: gpt-5-nano）");
+  } else {
+    console.warn(
+      "⚠️ OPENAI_API_KEY が未設定。スコアラーが失敗する可能性があります",
+    );
+  }
 };
 
 // ─── CLI引数パース ────────────────────────────────────────
@@ -345,7 +358,7 @@ const runEvalScorers = async ({
   // similarity は常に実行
   try {
     const result = await createAnswerSimilarityScorer({
-      model: GEMINI_FLASH_LITE,
+      model: OPENAI_SCORER,
     }).run({
       input: testRun.input,
       output: testRun.output,
@@ -365,7 +378,7 @@ const runEvalScorers = async ({
 
   try {
     const result = await createContextPrecisionScorer({
-      model: GEMINI_FLASH_LITE,
+      model: OPENAI_SCORER,
       options: { context },
     }).run({
       input: testRun.input,
@@ -381,7 +394,7 @@ const runEvalScorers = async ({
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const result = await createContextRelevanceScorerLLM({
-        model: GEMINI_SCORER,
+        model: OPENAI_SCORER,
         options: { context },
       }).run({
         input: testRun.input,
@@ -408,7 +421,7 @@ const runEvalScorers = async ({
   } else {
     try {
       const result = await createHallucinationScorer({
-        model: GEMINI_FLASH_LITE,
+        model: OPENAI_SCORER,
         options: { context },
       }).run({
         input: testRun.input,
@@ -1387,7 +1400,7 @@ const main = async () => {
         environment: envName,
         remoteBindings: true,
       });
-      process.env.GOOGLE_GENERATIVE_AI_API_KEY = resolveEvalApiKey(env);
+      resolveEvalApiKeys(env);
 
       const requestContext = new RequestContext();
       requestContext.set("env", env);
@@ -1486,7 +1499,7 @@ const main = async () => {
       environment: args.env,
       remoteBindings: true,
     });
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY = resolveEvalApiKey(env);
+    resolveEvalApiKeys(env);
 
     const requestContext = new RequestContext();
     requestContext.set("env", env);

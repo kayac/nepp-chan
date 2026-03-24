@@ -7,6 +7,9 @@ export const GEMINI_PRO = "google/gemini-2.5-pro";
 // https://github.com/google-gemini/cookbook/issues/449
 export const GEMINI_SCORER = "google/gemini-2.5-flash";
 
+// OpenAI eval スコアラー用（Gemini 構造化出力バグの代替）
+export const OPENAI_SCORER = "openai/gpt-4.1-nano";
+
 // 埋め込みモデル
 export const GEMINI_EMBEDDING = "gemini-embedding-001";
 
