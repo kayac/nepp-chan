@@ -2650,7 +2650,7 @@ export interface paths {
                          * @default staff
                          * @enum {string}
                          */
-                        role?: "admin" | "staff";
+                        role?: "super_admin" | "admin" | "staff";
                     };
                 };
             };

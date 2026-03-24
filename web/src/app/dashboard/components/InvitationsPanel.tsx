@@ -21,7 +21,7 @@ export const InvitationsPanel = () => {
   const { user } = useAuth();
   const { copyToClipboard } = useCopyToClipboard();
   const [username, setUsername] = useState("");
-  const [role, setRole] = useState<"admin" | "staff">("staff");
+  const [role, setRole] = useState<AdminUser["role"]>("staff");
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const canInviteAdmin = user?.role === "super_admin";
@@ -37,7 +37,7 @@ export const InvitationsPanel = () => {
       role,
     }: {
       username: string;
-      role: "admin" | "staff";
+      role: AdminUser["role"];
     }) => createInvitation(username, role),
     onSuccess: (data) => {
       const baseUrl = window.location.origin;
@@ -120,11 +120,12 @@ export const InvitationsPanel = () => {
           {canInviteAdmin ? (
             <select
               value={role}
-              onChange={(e) => setRole(e.target.value as "admin" | "staff")}
+              onChange={(e) => setRole(e.target.value as AdminUser["role"])}
               className="px-3 py-2 border border-stone-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <option value="staff">職員</option>
               <option value="admin">管理者</option>
+              <option value="super_admin">スーパー管理者</option>
             </select>
           ) : (
             <span className="px-3 py-2 text-sm text-stone-500 self-center whitespace-nowrap">

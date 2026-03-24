@@ -77,7 +77,10 @@ const createInvitationRoute = createRoute({
         "application/json": {
           schema: z.object({
             username: z.string().min(1),
-            role: z.enum(["admin", "staff"]).optional().default("staff"),
+            role: z
+              .enum(["super_admin", "admin", "staff"])
+              .optional()
+              .default("staff"),
           }),
         },
       },
@@ -109,9 +112,9 @@ invitationRoutes.openapi(createInvitationRoute, async (c) => {
   const { username, role } = c.req.valid("json");
   const adminUser = c.get("adminUser");
 
-  if (role === "admin" && adminUser.role !== "super_admin") {
+  if (role !== "staff" && adminUser.role !== "super_admin") {
     throw new HTTPException(403, {
-      message: "管理者の招待はスーパー管理者のみ可能です",
+      message: "管理者・スーパー管理者の招待はスーパー管理者のみ可能です",
     });
   }
 
