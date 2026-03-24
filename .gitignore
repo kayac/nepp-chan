@@ -56,6 +56,7 @@ server/todos/
 # eval results
 dataset/eval/results/*.json
 dataset/eval/results/*.html
+dataset/eval/eval-test-history.md
 
 # web build output
 server/public/

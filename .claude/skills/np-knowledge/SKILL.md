@@ -113,6 +113,17 @@ knowledge/ に同期      付与・抽出・レビュー          アップロ�
 
 ※ review/ は .gitignore 対象
 
+## レポート記録先
+
+| ファイル | 内容 | 公開 |
+|---------|------|:----:|
+| `dataset/eval/eval-test-history.md` | eval テスト結果のサマリー履歴 | 非公開（.gitignore） |
+| `dataset/eval/results/*.json` | eval 生データ（JSON） | 非公開（.gitignore） |
+| `dataset/eval/results/*.html` | eval 可視化レポート（Chart.js） | 非公開（.gitignore） |
+| `review/` | frontmatter 抽出の中間ファイル（TSV） | 非公開（.gitignore） |
+
+eval 実行後は `dataset/eval/eval-test-history.md` に結果を追記すること。
+
 ## 典型的な運用フロー
 
 ```
@@ -122,4 +133,5 @@ knowledge/ に同期      付与・抽出・レビュー          アップロ�
 4. np:frontmatter review   ← 要レビューを人間確認
 5. np:frontmatter apply    ← 結果を frontmatter に書き込み
 6. np:uploadKnowledge      ← R2/Vectorize にアップロード
+7. np:eval                 ← 品質テスト → .brain/eval-reports/ に記録
 ```
