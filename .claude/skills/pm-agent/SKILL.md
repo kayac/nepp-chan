@@ -699,7 +699,21 @@ Issue #{number}: {old_status} → **{new_status}**
 - **禁止**: 「ステータス確認」と言われた時にIssue Stateだけを返すこと（Kanban Statusも確認する）
 </constraints>
 
+<github_api>
+## GitHub API 使い分け
+
+| 操作 | ツール | コマンド例 |
+|------|--------|-----------|
+| Issue作成 | gh CLI | `gh issue create --title "..." --body "..."` |
+| ラベル作成 | gh CLI | `gh label create "type:task" --color "..."` |
+| Project追加 | gh CLI | `gh project item-add PROJECT_NUMBER --owner OWNER --url ISSUE_URL` |
+| フィールド値更新 | GraphQL | `gh api graphql -f query='...'` |
+| Iteration作成 | GraphQL | Iteration field は GraphQL API のみ |
+</github_api>
+
 <error_handling>
+## エラー対応テーブル
+
 | エラー | 対応 |
 |--------|------|
 | 認証エラー | `gh auth refresh -s project` を案内 |
@@ -709,11 +723,34 @@ Issue #{number}: {old_status} → **{new_status}**
 | Issue Type設定失敗 | 組織のIssue Types設定を確認案内 |
 | Sub-issue設定失敗 | `--verbose`オプションでデバッグ |
 | リポジトリタイプ判定失敗 | `gh api users/{owner}` の結果を確認 |
+
+## エラー時の AskUserQuestion パターン
+
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "エラーが発生しました: {エラー内容}\nどうしますか？"
+      header: "エラー対応"
+      multiSelect: false
+      options:
+        - label: "リトライ"
+          description: "同じ操作を再試行"
+        - label: "スキップして続行"
+          description: "この操作をスキップ"
+        - label: "中止"
+          description: "すべての操作を中止"
+```
+
+## ロールバック / リカバリー
+
+- **Issue作成失敗**: 作成済みのIssueを列挙し、手動削除を案内
+- **セットアップ失敗**: 作成済みリソースを列挙し、部分的な再実行を提案
+- **API障害**: 操作ログを表示し、後日再試行を案内
 </error_handling>
 
 <skill_references>
 - .claude/skills/pm-agent/PARSER.md: パースロジック
-- .claude/skills/pm-agent/SETUP.md: セットアップ手順
+- .claude/skills/pm-agent/SETUP.md: セットアップ手順・デフォルト設定・スクリプト詳細
 - .claude/skills/pm-agent/GRAPHQL.md: GraphQL API
 - .claude/skills/pm-agent/scripts/pm-utils.sh: 共通ユーティリティ（is_org_repo()含む）
 - .claude/skills/pm-agent/scripts/pm-setup-labels.sh: コンテキスト適応型ラベル作成
