@@ -1,13 +1,18 @@
 import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  Bars3BottomLeftIcon,
   CheckCircleIcon,
   ClockIcon,
   ExclamationCircleIcon,
   PaperAirplaneIcon,
   PencilSquareIcon,
+  PhotoIcon,
+  PlusIcon,
   TrashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import {
   useBroadcasts,
@@ -15,10 +20,12 @@ import {
   useDeleteBroadcast,
   useSendBroadcast,
   useUpdateBroadcast,
+  useUploadBroadcastImage,
 } from "~/hooks/useDashboard";
 import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
+import { API_BASE } from "~/lib/api/client";
 import { formatDateTime } from "~/lib/format";
-import type { BroadcastMessage, BroadcastStatus } from "~/types";
+import type { BroadcastMessage, BroadcastPart, BroadcastStatus } from "~/types";
 
 const STATUS_LABELS: Record<BroadcastStatus, string> = {
   draft: "下書き",
@@ -41,6 +48,30 @@ const STATUS_ACTIVE_STYLES: Record<BroadcastStatus, string> = {
   failed: "bg-red-600 text-white",
 };
 
+const MAX_PARTS = 5;
+
+let partIdCounter = 0;
+const nextPartId = () => `part-${++partIdCounter}`;
+
+type PartState = { id: string } & (
+  | { type: "text"; text: string }
+  | { type: "image"; imageR2Key: string; file?: File; previewUrl?: string }
+);
+
+const parseParts = (broadcast: BroadcastMessage): PartState[] => {
+  if (!broadcast.parts)
+    return [{ id: nextPartId(), type: "text", text: broadcast.body }];
+  try {
+    const raw = JSON.parse(broadcast.parts) as Omit<PartState, "id">[];
+    return raw.map((p) => ({ ...p, id: nextPartId() }) as PartState);
+  } catch {
+    return [{ id: nextPartId(), type: "text", text: broadcast.body }];
+  }
+};
+
+const getImageUrl = (imageR2Key: string) =>
+  `${API_BASE}/broadcast/media/${imageR2Key}`;
+
 type ModalMode = "create" | "edit";
 
 type BroadcastFormModalProps = {
@@ -51,12 +82,195 @@ type BroadcastFormModalProps = {
 
 type SendTiming = "now" | "schedule";
 
+const PartEditor = ({
+  part,
+  index,
+  total,
+  onChange,
+  onRemove,
+  onMove,
+}: {
+  part: PartState;
+  index: number;
+  total: number;
+  onChange: (index: number, part: PartState) => void;
+  onRemove: (index: number) => void;
+  onMove: (index: number, direction: "up" | "down") => void;
+}) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const hasContent =
+    part.type === "text"
+      ? part.text.trim().length > 0
+      : !!(part.imageR2Key || part.file);
+  const canSwitchToText = part.type === "text" || !hasContent;
+  const canSwitchToImage = part.type === "image" || !hasContent;
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const previewUrl = URL.createObjectURL(file);
+    onChange(index, {
+      id: part.id,
+      type: "image",
+      imageR2Key: "",
+      file,
+      previewUrl,
+    });
+  };
+
+  return (
+    <div className="border border-stone-200 rounded-lg overflow-hidden">
+      <div className="flex items-center justify-between bg-stone-50 px-2 py-1.5">
+        <div className="flex">
+          <button
+            type="button"
+            disabled={!canSwitchToText}
+            onClick={() =>
+              part.type !== "text" &&
+              onChange(index, { id: part.id, type: "text", text: "" })
+            }
+            className={`flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-l border transition-colors ${
+              part.type === "text"
+                ? "bg-white text-stone-800 border-stone-300"
+                : canSwitchToText
+                  ? "bg-stone-100 text-stone-400 border-stone-200 hover:text-stone-600"
+                  : "bg-stone-100 text-stone-300 border-stone-200 cursor-not-allowed"
+            }`}
+          >
+            <Bars3BottomLeftIcon className="w-3.5 h-3.5" />
+            テキスト
+          </button>
+          <button
+            type="button"
+            disabled={!canSwitchToImage}
+            onClick={() =>
+              part.type !== "image" &&
+              onChange(index, {
+                id: part.id,
+                type: "image",
+                imageR2Key: "",
+              })
+            }
+            className={`flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-r border border-l-0 transition-colors ${
+              part.type === "image"
+                ? "bg-white text-stone-800 border-stone-300"
+                : canSwitchToImage
+                  ? "bg-stone-100 text-stone-400 border-stone-200 hover:text-stone-600"
+                  : "bg-stone-100 text-stone-300 border-stone-200 cursor-not-allowed"
+            }`}
+          >
+            <PhotoIcon className="w-3.5 h-3.5" />
+            画像
+          </button>
+        </div>
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => onMove(index, "up")}
+            disabled={index === 0}
+            className="p-1 text-stone-400 hover:text-stone-600 disabled:opacity-30"
+          >
+            <ArrowUpIcon className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onMove(index, "down")}
+            disabled={index === total - 1}
+            className="p-1 text-stone-400 hover:text-stone-600 disabled:opacity-30"
+          >
+            <ArrowDownIcon className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onRemove(index)}
+            disabled={total <= 1}
+            className="p-1 text-red-400 hover:text-red-600 disabled:opacity-30"
+          >
+            <XMarkIcon className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      <div className="p-3">
+        {part.type === "text" ? (
+          <div>
+            <textarea
+              value={part.text}
+              onChange={(e) =>
+                onChange(index, {
+                  id: part.id,
+                  type: "text",
+                  text: e.target.value,
+                })
+              }
+              placeholder="テキストを入力"
+              maxLength={5000}
+              rows={4}
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-y"
+            />
+            <div className="text-xs text-stone-400 mt-1 text-right">
+              {part.text.length} / 5000
+            </div>
+          </div>
+        ) : (
+          <div>
+            {part.previewUrl || part.imageR2Key ? (
+              <div className="relative">
+                <img
+                  src={part.previewUrl || getImageUrl(part.imageR2Key)}
+                  alt="プレビュー"
+                  className="max-h-48 rounded-lg object-contain mx-auto"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    onChange(index, {
+                      id: part.id,
+                      type: "image",
+                      imageR2Key: "",
+                    })
+                  }
+                  className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded-full hover:bg-black/70"
+                >
+                  <XMarkIcon className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full py-8 border-2 border-dashed border-stone-300 rounded-lg text-stone-400 hover:border-teal-400 hover:text-teal-500 transition-colors flex flex-col items-center gap-2"
+              >
+                <PhotoIcon className="w-8 h-8" />
+                <span className="text-sm font-medium">写真をアップロード</span>
+                <span className="text-xs">JPG, PNG / 10MB以下</span>
+              </button>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const BroadcastFormModal = ({
   mode,
   broadcast,
   onClose,
 }: BroadcastFormModalProps) => {
-  const [body, setBody] = useState(broadcast?.body ?? "");
+  const [parts, setParts] = useState<PartState[]>(
+    broadcast
+      ? parseParts(broadcast)
+      : [{ id: nextPartId(), type: "text", text: "" }],
+  );
   const [timing, setTiming] = useState<SendTiming>(
     broadcast?.scheduledAt ? "schedule" : "now",
   );
@@ -67,15 +281,47 @@ const BroadcastFormModal = ({
   const createMutation = useCreateBroadcast();
   const updateMutation = useUpdateBroadcast();
   const sendMutation = useSendBroadcast();
+  const uploadMutation = useUploadBroadcastImage();
 
   const isPending =
     createMutation.isPending ||
     updateMutation.isPending ||
-    sendMutation.isPending;
+    sendMutation.isPending ||
+    uploadMutation.isPending;
 
   const isValid =
-    body.trim().length > 0 &&
+    parts.length > 0 &&
+    parts.every((p) => {
+      if (p.type === "text") return p.text.trim().length > 0;
+      if (p.type === "image") return p.imageR2Key || p.file;
+      return false;
+    }) &&
     (timing === "now" || (timing === "schedule" && scheduledAt.length > 0));
+
+  const handlePartChange = useCallback((index: number, part: PartState) => {
+    setParts((prev) => prev.map((p, i) => (i === index ? part : p)));
+  }, []);
+
+  const handlePartRemove = useCallback((index: number) => {
+    setParts((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const handlePartMove = useCallback(
+    (index: number, direction: "up" | "down") => {
+      setParts((prev) => {
+        const next = [...prev];
+        const target = direction === "up" ? index - 1 : index + 1;
+        [next[index], next[target]] = [next[target], next[index]];
+        return next;
+      });
+    },
+    [],
+  );
+
+  const handleAddPart = () => {
+    if (parts.length >= MAX_PARTS) return;
+    setParts((prev) => [...prev, { id: nextPartId(), type: "text", text: "" }]);
+  };
 
   const handleSubmit = async () => {
     if (!isValid) return;
@@ -88,23 +334,45 @@ const BroadcastFormModal = ({
       ) {
         return;
       }
+    }
+
+    const uploadedParts: BroadcastPart[] = await Promise.all(
+      parts.map(async (part) => {
+        if (part.type === "text") {
+          return { type: "text" as const, text: part.text };
+        }
+        if (part.file) {
+          const { imageR2Key } = await uploadMutation.mutateAsync(part.file);
+          return { type: "image" as const, imageR2Key };
+        }
+        return { type: "image" as const, imageR2Key: part.imageR2Key };
+      }),
+    );
+
+    if (timing === "now") {
       if (mode === "create") {
-        await createMutation.mutateAsync({ body, sendNow: true });
+        await createMutation.mutateAsync({
+          parts: uploadedParts,
+          sendNow: true,
+        });
       } else if (broadcast) {
         await updateMutation.mutateAsync({
           id: broadcast.id,
-          data: { body },
+          data: { parts: uploadedParts },
         });
         await sendMutation.mutateAsync(broadcast.id);
       }
     } else {
       const isoDate = new Date(scheduledAt).toISOString();
       if (mode === "create") {
-        await createMutation.mutateAsync({ body, scheduledAt: isoDate });
+        await createMutation.mutateAsync({
+          parts: uploadedParts,
+          scheduledAt: isoDate,
+        });
       } else if (broadcast) {
         await updateMutation.mutateAsync({
           id: broadcast.id,
-          data: { body, scheduledAt: isoDate },
+          data: { parts: uploadedParts, scheduledAt: isoDate },
         });
       }
     }
@@ -134,28 +402,32 @@ const BroadcastFormModal = ({
           </button>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <label
-              htmlFor="broadcast-body"
-              className="block text-sm font-medium text-stone-700 mb-1"
-            >
-              本文
-            </label>
-            <textarea
-              id="broadcast-body"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="配信メッセージの本文を入力"
-              maxLength={5000}
-              rows={8}
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-y"
+        <div className="space-y-3">
+          {parts.map((part, index) => (
+            <PartEditor
+              key={part.id}
+              part={part}
+              index={index}
+              total={parts.length}
+              onChange={handlePartChange}
+              onRemove={handlePartRemove}
+              onMove={handlePartMove}
             />
-            <div className="text-xs text-stone-400 mt-1 text-right">
-              {body.length} / 5000
-            </div>
-          </div>
+          ))}
 
+          {parts.length < MAX_PARTS && (
+            <button
+              type="button"
+              onClick={handleAddPart}
+              className="w-full py-2 border border-dashed border-teal-300 rounded-lg text-teal-600 hover:bg-teal-50 transition-colors text-sm font-medium flex items-center justify-center gap-1"
+            >
+              <PlusIcon className="w-4 h-4" />
+              追加
+            </button>
+          )}
+        </div>
+
+        <div className="mt-4 space-y-4">
           <div>
             <span className="block text-sm font-medium text-stone-700 mb-2">
               配信タイミング
@@ -209,11 +481,13 @@ const BroadcastFormModal = ({
 
         {(createMutation.isError ||
           updateMutation.isError ||
-          sendMutation.isError) && (
+          sendMutation.isError ||
+          uploadMutation.isError) && (
           <div className="mt-4 px-4 py-3 rounded-lg text-sm bg-red-50 text-red-700">
             {createMutation.error?.message ||
               updateMutation.error?.message ||
               sendMutation.error?.message ||
+              uploadMutation.error?.message ||
               "エラーが発生しました"}
           </div>
         )}
@@ -245,6 +519,43 @@ const BroadcastFormModal = ({
           </button>
         </div>
       </div>
+    </div>
+  );
+};
+
+const BroadcastPartPreview = ({
+  parts,
+}: {
+  parts: string | null;
+  body: string;
+}) => {
+  if (!parts) return null;
+
+  let parsed: BroadcastPart[];
+  try {
+    parsed = JSON.parse(parts);
+  } catch {
+    return null;
+  }
+
+  const hasImage = parsed.some((p) => p.type === "image");
+  if (!hasImage) return null;
+
+  return (
+    <div className="flex gap-1.5 mb-1.5">
+      {parsed
+        .filter(
+          (p): p is Extract<BroadcastPart, { type: "image" }> =>
+            p.type === "image",
+        )
+        .map((p) => (
+          <img
+            key={p.imageR2Key}
+            src={getImageUrl(p.imageR2Key)}
+            alt=""
+            className="w-12 h-12 rounded object-cover border border-stone-200"
+          />
+        ))}
     </div>
   );
 };
@@ -402,6 +713,10 @@ export const BroadcastPanel = () => {
                           : `作成: ${formatDateTime(broadcast.createdAt)}`}
                     </span>
                   </div>
+                  <BroadcastPartPreview
+                    parts={broadcast.parts}
+                    body={broadcast.body}
+                  />
                   <p className="text-sm text-stone-700 line-clamp-3 whitespace-pre-wrap">
                     {broadcast.body}
                   </p>

@@ -6,6 +6,7 @@ type CreateInput = {
   id: string;
   title: string;
   body: string;
+  parts: string;
   status: string;
   scheduledAt?: string | null;
   createdBy: string;
@@ -15,6 +16,7 @@ type CreateInput = {
 type UpdateInput = {
   title?: string;
   body?: string;
+  parts?: string;
   scheduledAt?: string | null;
   status?: string;
 };
@@ -49,6 +51,7 @@ export const broadcastRepository = {
       id: input.id,
       title: input.title,
       body: input.body,
+      parts: input.parts,
       status: input.status,
       scheduledAt: input.scheduledAt ?? null,
       createdBy: input.createdBy,
@@ -67,6 +70,7 @@ export const broadcastRepository = {
 
     if (input.title !== undefined) updates.title = input.title;
     if (input.body !== undefined) updates.body = input.body;
+    if (input.parts !== undefined) updates.parts = input.parts;
     if (input.scheduledAt !== undefined)
       updates.scheduledAt = input.scheduledAt;
     if (input.status !== undefined) updates.status = input.status;

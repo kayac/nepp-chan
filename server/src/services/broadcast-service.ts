@@ -1,13 +1,50 @@
+import type { messagingApi } from "@line/bot-sdk";
+
 import type { BroadcastMessage } from "~/db";
 import { logger } from "~/lib/logger";
 import { broadcastRepository } from "~/repository/broadcast-repository";
+import type { BroadcastPart } from "~/schemas/broadcast-schema";
 import { createLineClient } from "~/services/line-messaging";
 
 const generateTitle = (text: string) =>
   text.slice(0, 50) + (text.length > 50 ? "…" : "");
 
+const generateBodyFromParts = (parts: BroadcastPart[]): string => {
+  const firstText = parts.find((p) => p.type === "text");
+  return firstText ? firstText.text : "";
+};
+
+const getPublicImageUrl = (env: CloudflareBindings, r2Key: string): string => {
+  const apiBaseUrl =
+    (env.ENVIRONMENT as string) === "local"
+      ? "http://localhost:8787"
+      : env.WEB_URL.replace("-web.", "-api.").replace("//web.", "//api.");
+  return `${apiBaseUrl}/broadcast/media/${r2Key}`;
+};
+
+const buildLineMessages = (
+  parts: BroadcastPart[],
+  env: CloudflareBindings,
+): messagingApi.Message[] =>
+  parts.map((part) => {
+    if (part.type === "text") {
+      return { type: "text" as const, text: part.text };
+    }
+    const imageUrl = getPublicImageUrl(env, part.imageR2Key);
+    return {
+      type: "image" as const,
+      originalContentUrl: imageUrl,
+      previewImageUrl: imageUrl,
+    };
+  });
+
+const parseParts = (broadcast: BroadcastMessage): BroadcastPart[] =>
+  broadcast.parts
+    ? (JSON.parse(broadcast.parts) as BroadcastPart[])
+    : [{ type: "text", text: broadcast.body }];
+
 type CreateInput = {
-  body: string;
+  parts: BroadcastPart[];
   scheduledAt?: string;
   sendNow?: boolean;
   createdBy: string;
@@ -25,10 +62,13 @@ export const createBroadcastMessage = async (
       ? "scheduled"
       : "draft";
 
+  const body = generateBodyFromParts(input.parts);
+
   await broadcastRepository.create(env.DB, {
     id,
-    title: generateTitle(input.body),
-    body: input.body,
+    title: generateTitle(body),
+    body,
+    parts: JSON.stringify(input.parts),
     status,
     scheduledAt: input.scheduledAt ?? null,
     createdBy: input.createdBy,
@@ -47,7 +87,7 @@ export const createBroadcastMessage = async (
 };
 
 type UpdateInput = {
-  body?: string;
+  parts?: BroadcastPart[];
   scheduledAt?: string | null;
 };
 
@@ -59,13 +99,16 @@ export const updateBroadcastMessage = async (
   const updateData: {
     title?: string;
     body?: string;
+    parts?: string;
     scheduledAt?: string | null;
     status?: string;
   } = {};
 
-  if (input.body !== undefined) {
-    updateData.body = input.body;
-    updateData.title = generateTitle(input.body);
+  if (input.parts !== undefined) {
+    const body = generateBodyFromParts(input.parts);
+    updateData.body = body;
+    updateData.title = generateTitle(body);
+    updateData.parts = JSON.stringify(input.parts);
   }
   if (input.scheduledAt !== undefined) {
     updateData.scheduledAt = input.scheduledAt;
@@ -95,18 +138,10 @@ export const sendBroadcast = async (
   try {
     const client = createLineClient(env.LINE_CHANNEL_ACCESS_TOKEN);
     const retryKey = crypto.randomUUID();
+    const parts = parseParts(broadcast);
+    const messages = buildLineMessages(parts, env);
 
-    await client.broadcast(
-      {
-        messages: [
-          {
-            type: "text",
-            text: broadcast.body,
-          },
-        ],
-      },
-      retryKey,
-    );
+    await client.broadcast({ messages }, retryKey);
 
     await broadcastRepository.markSent(env.DB, broadcastId);
 

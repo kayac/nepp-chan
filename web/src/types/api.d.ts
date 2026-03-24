@@ -484,6 +484,7 @@ export interface paths {
                                 id: string;
                                 title: string;
                                 body: string;
+                                parts: string | null;
                                 status: string;
                                 scheduledAt: string | null;
                                 sentAt: string | null;
@@ -529,7 +530,15 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
-                        body: string;
+                        parts: ({
+                            /** @enum {string} */
+                            type: "text";
+                            text: string;
+                        } | {
+                            /** @enum {string} */
+                            type: "image";
+                            imageR2Key: string;
+                        })[];
                         /** Format: date-time */
                         scheduledAt?: string;
                         sendNow?: boolean;
@@ -547,6 +556,7 @@ export interface paths {
                             id: string;
                             title: string;
                             body: string;
+                            parts: string | null;
                             status: string;
                             scheduledAt: string | null;
                             sentAt: string | null;
@@ -625,6 +635,7 @@ export interface paths {
                             id: string;
                             title: string;
                             body: string;
+                            parts: string | null;
                             status: string;
                             scheduledAt: string | null;
                             sentAt: string | null;
@@ -681,7 +692,15 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
-                        body?: string;
+                        parts?: ({
+                            /** @enum {string} */
+                            type: "text";
+                            text: string;
+                        } | {
+                            /** @enum {string} */
+                            type: "image";
+                            imageR2Key: string;
+                        })[];
                         /** Format: date-time */
                         scheduledAt?: string | null;
                     };
@@ -698,6 +717,7 @@ export interface paths {
                             id: string;
                             title: string;
                             body: string;
+                            parts: string | null;
                             status: string;
                             scheduledAt: string | null;
                             sentAt: string | null;
@@ -828,6 +848,81 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/broadcast/upload-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 配信用画像をアップロード
+         * @description 配信用の画像をR2にアップロードします
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        file?: unknown;
+                    };
+                };
+            };
+            responses: {
+                /** @description アップロード成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            imageR2Key: string;
+                        };
+                    };
+                };
+                /** @description リクエストエラー */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/broadcast/{id}/send": {
         parameters: {
             query?: never;
@@ -921,6 +1016,59 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/broadcast/media/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 配信画像を取得
+         * @description R2に保存された配信用画像を返却します
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    key: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 画像データ */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

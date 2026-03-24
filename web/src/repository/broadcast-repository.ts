@@ -66,3 +66,20 @@ export const sendBroadcastNow = async (id: string) => {
   if (error) throw error;
   return data;
 };
+
+const toFormData = (body: unknown) => {
+  const fd = new FormData();
+  for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
+    if (value != null) fd.append(key, value as string | Blob);
+  }
+  return fd;
+};
+
+export const uploadBroadcastImage = async (file: File) => {
+  const { data, error } = await client.POST("/admin/broadcast/upload-image", {
+    body: { file: file as unknown as string },
+    bodySerializer: toFormData,
+  });
+  if (error) throw error;
+  return data;
+};
