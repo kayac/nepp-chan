@@ -62,6 +62,8 @@ server/src/
 | `/admin/broadcast`                 | GET/POST | 配信一覧・作成                 |
 | `/admin/broadcast/:id`             | GET/PUT/DELETE | 配信詳細・更新・削除     |
 | `/admin/broadcast/:id/send`        | POST     | 配信即時送信                   |
+| `/admin/broadcast/upload-image`    | POST     | 配信用画像アップロード         |
+| `/broadcast/media/:key`            | GET      | 配信画像取得                   |
 | `/admin/invitations`               | GET/POST | 招待一覧・作成                 |
 | `/admin/invitations/:id`           | DELETE   | 招待削除                       |
 | `/auth/register`                   | POST     | ユーザー登録（招待トークン+パスワード） |
@@ -290,7 +292,8 @@ throw new HTTPException(404, { message: "Not found" });
 | ------------- | ---- | ------------------------------------------- |
 | id            | TEXT | PRIMARY KEY                                 |
 | title         | TEXT | タイトル（本文先頭50文字、NOT NULL）         |
-| body          | TEXT | 本文（NOT NULL）                            |
+| body          | TEXT | 本文（最初のテキストパーツから自動生成、NOT NULL） |
+| parts         | TEXT | メッセージパーツ（JSON配列）                |
 | status        | TEXT | ステータス（draft/scheduled/sent/failed）   |
 | scheduled_at  | TEXT | 予約送信日時                                |
 | sent_at       | TEXT | 送信日時                                    |
