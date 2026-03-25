@@ -17,6 +17,9 @@ Gallery
 
 
 ##  卒業制作 工芸研究作品
+
+おといねっぷ美術工芸高等学校の卒業制作、工芸研究作品のギャラリーです。木工作品を中心とした作品が展示されています。
+
 [![](https://www.otoineppu-h.ed.jp/gallery/images/2025-0331-1620_0.JPG)](https://www.otoineppu-h.ed.jp/gallery/images/2025-0331-1620_0.JPG)
 [![](https://www.otoineppu-h.ed.jp/gallery/images/2025-0331-1621_0.JPG)](https://www.otoineppu-h.ed.jp/gallery/images/2025-0331-1621_0.JPG)
 [![](https://www.otoineppu-h.ed.jp/gallery/images/2025-0331-1621-a_0.JPG)](https://www.otoineppu-h.ed.jp/gallery/images/2025-0331-1621-a_0.JPG)

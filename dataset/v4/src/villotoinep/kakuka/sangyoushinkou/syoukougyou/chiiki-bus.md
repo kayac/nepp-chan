@@ -20,6 +20,8 @@ contact: 経済課産業振興室 商工観光労働係
 
 ## 地域バス時刻表
 
+音威子府村の地域バス時刻表です。運賃は無料です。
+
 - [夏ダイヤ（5月〜10月）（PDF 120KB）](https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/syoukougyou/files/CB20240501S.pdf)
 - [冬ダイヤ（11月〜4月）（PDF 108KB）](https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/syoukougyou/files/CB20240501W.pdf)
 
@@ -27,12 +29,16 @@ contact: 経済課産業振興室 商工観光労働係
 
 ## 運行経路（航空地図）
 
+地域バスの運行経路を示す航空地図です。
+
 - [音威子府市街・咲来方面（PDF 372KB）](https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/syoukougyou/files/20240501otoineppushigai.pdf)
 - [咲来市街・天塩川温泉方面（PDF 325KB）](https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/syoukougyou/files/sakkurushigai.pdf)
 
 ---
 
 ## 村内案内動画（地域バスルート）
+
+地域バスルートの村内案内動画です。
 
 地域バスや村の様子について、今より多くの人に知ってもらいたいと思い、『地域バス運行ルートの紹介動画』を作成しました！
 
@@ -47,6 +53,8 @@ contact: 経済課産業振興室 商工観光労働係
 ---
 
 ## お問い合わせ先
+
+地域バスのお問い合わせ先です。
 
 経済課産業振興室 商工観光労働係
 - 電話: 01656-5-3313（内線 37）

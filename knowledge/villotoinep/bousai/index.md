@@ -25,13 +25,22 @@ contact: 総務課
 - [コロナ禍における避難 (PDF)](./pdf/bousai/corona_hinan0928.pdf) / [テキスト版](./pdf/parsed/bousai/corona_hinan0928.md)
 
 ## 冬の事故防止
+
+冬の事故防止に関する注意事項です。
+
 - [屋根からの落氷雪事故防止などのお願い (PDF)](./pdf/bousai/R4rakuhyousetsujikoboushi.pdf) / [テキスト版](./pdf/parsed/bousai/R4rakuhyousetsujikoboushi.md)
 
 ## 気象庁情報
+
+気象庁の防災情報リンクです。
+
 - [特別警報について](http://www.jma.go.jp/jma/kishou/know/tokubetsu-keiho/index.html)
 - [天気の急変から身を守るために](http://www.jma.go.jp/jma/kishou/know/tenki_chuui/tenki_chuui_p1.html)
 
 ## お問い合わせ・緊急連絡先
+
+防災に関するお問い合わせ・緊急連絡先です。
+
 ※市外局番: 01656
 ### 警察・消防
 - **警察（事件・事故）**: 110
@@ -87,6 +96,9 @@ contact: 総務課
 ```
 
 ### 指定福祉避難所
+
+音威子府村の指定福祉避難所の情報です。
+
 ```json
 [
   {
