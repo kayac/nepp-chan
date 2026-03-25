@@ -11,19 +11,19 @@ const SEARCH_TOP_K = 10;
 
 const RERANK_TOP_K = 5;
 
-export interface KnowledgeResult {
+export type KnowledgeResult = {
   content: string;
   score: number;
   source: string;
   title?: string;
   section?: string;
   subsection?: string;
-}
+};
 
-export interface SearchOutput {
+export type SearchOutput = {
   results: KnowledgeResult[];
   error?: string;
-}
+};
 
 export const searchKnowledge = async (
   query: string,

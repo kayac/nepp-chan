@@ -17,19 +17,19 @@ export const getConversationEndedAt = (
 ): string | undefined =>
   context?.requestContext?.get("conversationEndedAt") as string | undefined;
 
-interface RequireDbResult {
+type RequireDbResult = {
   db: D1Database;
-}
+};
 
-interface RequireAdminResult {
+type RequireAdminResult = {
   adminUser: AuthUser;
   db: D1Database;
-}
+};
 
-interface ToolError {
+type ToolError = {
   error: string;
   message: string;
-}
+};
 
 export const requireDb = (
   context: ToolContext,

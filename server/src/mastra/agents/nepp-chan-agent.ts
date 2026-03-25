@@ -174,11 +174,10 @@ const lineInstructions = `
 - 古い配信の詳細が必要 → broadcast-get ツールを使う
 `;
 
-interface Props
-  extends Omit<AgentConfig, "id" | "name" | "instructions" | "model"> {
+type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
   isAdmin?: boolean;
   platform?: "web" | "line";
-}
+};
 
 export const createNeppChanAgent = ({
   isAdmin = false,
