@@ -1,0 +1,30 @@
+name: tagpr
+
+on:
+  push:
+    branches:
+      - develop
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  tagpr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tagpr
+        id: tagpr
+        uses: Songmu/tagpr@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger production deploy
+        if: steps.tagpr.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run deploy-prd.yml --ref "${{ steps.tagpr.outputs.tag }}"
