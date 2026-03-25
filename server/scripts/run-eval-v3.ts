@@ -1530,19 +1530,40 @@ const main = async () => {
     console.log(`\n📊 比較レポート: ${compareHtmlPath}`);
   } else {
     // ─── 単一環境モード ────────────────────────────────────
-    const { env, dispose } = await getPlatformProxy<CloudflareBindings>({
-      configPath: "wrangler.jsonc",
-      environment: args.env,
-      remoteBindings: true,
-    });
-    resolveEvalApiKeys(env);
 
-    const requestContext = new RequestContext();
-    requestContext.set("env", env);
+    // Vectorize リモートバインディングのセッション安定性対策:
+    // getPlatformProxy のセッションは長時間稼働でトークン期限切れが発生するため、
+    // SESSION_RECREATE_INTERVAL 件ごとにセッションを再作成する
+    const SESSION_RECREATE_INTERVAL = 10;
+
+    let currentDispose: () => Promise<void>;
+    let requestContext: RequestContext;
+
+    const createSession = async () => {
+      const proxy = await getPlatformProxy<CloudflareBindings>({
+        configPath: "wrangler.jsonc",
+        environment: args.env,
+        remoteBindings: true,
+      });
+      resolveEvalApiKeys(proxy.env);
+      requestContext = new RequestContext();
+      requestContext.set("env", proxy.env);
+      currentDispose = proxy.dispose;
+    };
+
+    await createSession();
 
     const allResults: EvalResult[] = [];
 
     for (let tcIdx = 0; tcIdx < testCases.length; tcIdx++) {
+      // N件ごとにセッション再作成（Vectorize セッション劣化対策）
+      if (tcIdx > 0 && tcIdx % SESSION_RECREATE_INTERVAL === 0) {
+        console.log(`\n🔄 セッション再作成 (${tcIdx}/${testCases.length}件目)`);
+        await currentDispose();
+        await sleep(2000);
+        await createSession();
+      }
+
       const testCase = testCases[tcIdx];
       const result = await runTestCaseEval({
         testCase,
@@ -1620,7 +1641,7 @@ const main = async () => {
       console.log(`\n📁 サマリー: ${summaryHtmlPath}`);
     }
 
-    await dispose();
+    await currentDispose();
   }
 
   console.log("✅ Eval V3 完了");
