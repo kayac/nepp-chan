@@ -37,7 +37,7 @@ const printUsage = () => {
 Usage: pnpm knowledge:upload:<local|dev|prd> [options]
 
 Options:
-  --clean           Vectorizeのナレッジを全削除（wrangler経由）
+  --clean           R2全削除 + Vectorize再作成 + 全ファイル再アップロード
   --file=<filename> 特定のファイルのみアップロード
   --help, -h        ヘルプを表示
 
@@ -49,7 +49,7 @@ Environment Variables (required, set via .env.local/.env.development/.env.produc
 Examples:
   pnpm knowledge:upload:dev                    # 全ファイルをR2にアップロード
   pnpm knowledge:upload:dev --file=foo.md      # 特定ファイルのみ
-  pnpm knowledge:upload:dev --clean            # 全ナレッジを削除
+  pnpm knowledge:upload:dev --clean            # R2 + Vectorize全削除→再同期
 
 Note:
   R2へのアップロード後、R2 Event Notificationsにより
@@ -72,6 +72,40 @@ const uploadToR2 = (filepath: string, key: string): boolean => {
     );
     return false;
   }
+};
+
+const listR2Objects = (): string[] => {
+  try {
+    const output = execSync(
+      `CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler r2 object list ${R2_BUCKET_NAME} --remote`,
+      { stdio: "pipe", encoding: "utf-8" },
+    );
+    const objects = JSON.parse(output) as { key: string }[];
+    return objects.map((obj) => obj.key);
+  } catch (error) {
+    console.error(
+      "  Failed to list R2 objects:",
+      error instanceof Error ? error.message : error,
+    );
+    return [];
+  }
+};
+
+const deleteR2Objects = (keys: string[]): number => {
+  let deletedCount = 0;
+  for (const key of keys) {
+    try {
+      console.log(`  Deleting from R2: ${key}`);
+      execSync(
+        `CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler r2 object delete ${R2_BUCKET_NAME}/${key} --remote`,
+        { stdio: "pipe" },
+      );
+      deletedCount++;
+    } catch {
+      console.error(`  Failed to delete: ${key}`);
+    }
+  }
+  return deletedCount;
 };
 
 const deleteVectorizeIndex = (): boolean => {
@@ -115,14 +149,54 @@ const main = async () => {
   validateEnv();
 
   if (args.clean) {
-    console.log("=== Knowledge Clean Script ===\n");
+    console.log("=== Knowledge Clean & Re-sync Script ===\n");
 
-    const success = deleteVectorizeIndex();
-    if (success) {
-      console.log("\n=== Clean Complete ===");
-    } else {
+    // Step 1: Vectorize インデックス削除・再作成
+    console.log("[1/3] Resetting Vectorize index...");
+    if (!deleteVectorizeIndex()) {
       process.exit(1);
     }
+
+    // Step 2: knowledge/ の全ファイルを R2 にアップロード
+    console.log("\n[2/3] Uploading all files to R2...");
+    const allFiles = await glob(`${KNOWLEDGE_DIR}/**/*.md`);
+
+    if (allFiles.length === 0) {
+      console.log(`No markdown files found in ${KNOWLEDGE_DIR}`);
+      console.log("\n=== Clean Complete (no files to upload) ===");
+      return;
+    }
+
+    console.log(`Found ${allFiles.length} file(s)`);
+    const localKeys = new Set<string>();
+
+    let uploadedCount = 0;
+    for (const filepath of allFiles) {
+      const key = filepath.replace("knowledge/", "");
+      localKeys.add(key);
+      if (uploadToR2(filepath, key)) {
+        uploadedCount++;
+      }
+    }
+    console.log(`Uploaded ${uploadedCount}/${allFiles.length} files`);
+
+    // Step 3: R2 から stale ファイルを削除
+    console.log("\n[3/3] Cleaning stale files from R2...");
+    const r2Keys = listR2Objects();
+    const staleKeys = r2Keys.filter((key) => !localKeys.has(key));
+
+    if (staleKeys.length === 0) {
+      console.log("  No stale files found");
+    } else {
+      console.log(`  Found ${staleKeys.length} stale file(s)`);
+      const deleted = deleteR2Objects(staleKeys);
+      console.log(`  Deleted ${deleted}/${staleKeys.length} stale files`);
+    }
+
+    console.log(
+      "\nNote: Vectorize sync will be triggered automatically via R2 Event Notifications",
+    );
+    console.log("\n=== Clean & Re-sync Complete ===");
     return;
   }
 
