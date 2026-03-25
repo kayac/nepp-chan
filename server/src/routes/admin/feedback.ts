@@ -3,7 +3,7 @@ import { HTTPException } from "hono/http-exception";
 
 import type { MessageFeedback } from "~/db";
 import { errorResponse } from "~/lib/openapi-errors";
-import { requireAuth } from "~/middleware/auth";
+import { type AuthVariables, requireAuth } from "~/middleware/auth";
 import { requireRole } from "~/middleware/require-role";
 import { feedbackRepository } from "~/repository/feedback-repository";
 import {
@@ -46,6 +46,7 @@ const parseFeedback = (f: MessageFeedback): FeedbackFull => ({
 
 export const feedbackAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
+  Variables: AuthVariables;
 }>();
 
 feedbackAdminRoutes.use("*", requireAuth);
