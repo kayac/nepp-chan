@@ -1,51 +1,19 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 
-import type { MessageFeedback } from "~/db";
 import { errorResponse } from "~/lib/openapi-errors";
-import { requireAuth } from "~/middleware/auth";
+import { type AuthVariables, requireAuth } from "~/middleware/auth";
 import { requireRole } from "~/middleware/require-role";
 import { feedbackRepository } from "~/repository/feedback-repository";
 import {
   feedbackFullSchema,
   feedbackStatsSchema,
 } from "~/schemas/feedback-schema";
-
-type FeedbackFull = z.infer<typeof feedbackFullSchema>;
-type Rating = FeedbackFull["rating"];
-type Category = FeedbackFull["category"];
-type ConversationContext = FeedbackFull["conversationContext"];
-type ToolExecution = NonNullable<FeedbackFull["toolExecutions"]>[number];
-
-const safeParse = <T>(json: string, fallback: T): T => {
-  try {
-    return JSON.parse(json);
-  } catch {
-    return fallback;
-  }
-};
-
-const defaultConversationContext: ConversationContext = {
-  targetMessage: { id: "", role: "", content: "" },
-  previousMessages: [],
-  nextMessages: [],
-};
-
-const parseFeedback = (f: MessageFeedback): FeedbackFull => ({
-  ...f,
-  rating: f.rating as Rating,
-  category: f.category as Category,
-  conversationContext: safeParse<ConversationContext>(
-    f.conversationContext,
-    defaultConversationContext,
-  ),
-  toolExecutions: f.toolExecutions
-    ? safeParse<ToolExecution[]>(f.toolExecutions, [])
-    : null,
-});
+import { parseFeedback } from "~/services/feedback";
 
 export const feedbackAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
+  Variables: AuthVariables;
 }>();
 
 feedbackAdminRoutes.use("*", requireAuth);
@@ -86,14 +54,15 @@ const listRoute = createRoute({
 feedbackAdminRoutes.openapi(listRoute, async (c) => {
   const { limit, cursor, rating } = c.req.valid("query");
 
-  const result = await feedbackRepository.list(c.env.DB, {
-    limit,
-    cursor: cursor ?? undefined,
-    rating: rating ?? undefined,
-  });
-
-  const stats = await feedbackRepository.getStats(c.env.DB);
-  const total = await feedbackRepository.count(c.env.DB);
+  const [result, stats, total] = await Promise.all([
+    feedbackRepository.list(c.env.DB, {
+      limit,
+      cursor: cursor ?? undefined,
+      rating: rating ?? undefined,
+    }),
+    feedbackRepository.getStats(c.env.DB),
+    feedbackRepository.count(c.env.DB),
+  ]);
 
   return c.json(
     {
@@ -136,7 +105,6 @@ feedbackAdminRoutes.openapi(getDetailRoute, async (c) => {
   const { id } = c.req.valid("param");
 
   const feedback = await feedbackRepository.findById(c.env.DB, id);
-
   if (!feedback) {
     throw new HTTPException(404, {
       message: "フィードバックが見つかりません",

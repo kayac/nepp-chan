@@ -8,13 +8,13 @@ export type TestCategory =
 export type TestType = "positive" | "negative";
 
 /** V2 用の簡易型（input/groundTruth のみ） */
-export interface TestCase {
+export type TestCase = {
   input: string;
   groundTruth: string;
-}
+};
 
 /** V3 用の完全型（スコアリング・自動合否判定付き） */
-export interface TestCaseV3 {
+export type TestCaseV3 = {
   /** テストケース ID（重複不可） */
   id: string;
   /** カテゴリ */
@@ -29,7 +29,7 @@ export interface TestCaseV3 {
   requiredKeywords: string[];
   /** 合格閾値（similarity スコアがこの値以上で pass） */
   threshold: number;
-}
+};
 
 /** マスターテストケース（22個） */
 export const evalTestCases: TestCaseV3[] = [

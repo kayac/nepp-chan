@@ -1,11 +1,13 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
 import { errorResponse } from "~/lib/openapi-errors";
+import type { AuthVariables } from "~/middleware/auth";
 import { deleteAllKnowledge, syncAll } from "~/services/knowledge";
 import { requireApiKey, SuccessResponseSchema } from "./schemas";
 
 export const knowledgeSyncRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
+  Variables: AuthVariables;
 }>();
 
 // DELETE /admin/knowledge - 全削除

@@ -1,7 +1,6 @@
 import { logger } from "~/lib/logger";
 import { deleteKnowledgeBySource } from "./embedding";
-
-const EDIT_THRESHOLD_MS = 5000;
+import { buildOriginalsMap, EDIT_THRESHOLD_MS, extractBaseName } from "./utils";
 
 export type FileInfo = {
   key: string;
@@ -33,19 +32,6 @@ export type FileContent = {
   contentType: string;
   size: number;
   lastModified: string;
-};
-
-const extractBaseName = (key: string) =>
-  key.replace("originals/", "").replace(/\.[^.]+$/, "");
-
-const buildOriginalsMap = (objects: R2Object[]) => {
-  const map = new Map<string, Date>();
-  for (const obj of objects) {
-    if (obj.key.startsWith("originals/")) {
-      map.set(extractBaseName(obj.key), obj.uploaded);
-    }
-  }
-  return map;
 };
 
 /**
