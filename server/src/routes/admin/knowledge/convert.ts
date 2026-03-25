@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 
 import { errorResponse } from "~/lib/openapi-errors";
+import type { AuthVariables } from "~/middleware/auth";
 import {
   convertAndUpload,
   reconvertFromOriginal,
@@ -11,6 +12,7 @@ import { requireApiKey, validateFileKey } from "./schemas";
 
 export const knowledgeConvertRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
+  Variables: AuthVariables;
 }>();
 
 // POST /admin/knowledge/upload - ファイルアップロード
@@ -55,14 +57,15 @@ const uploadFileRoute = createRoute({
 knowledgeConvertRoutes.openapi(uploadFileRoute, async (c) => {
   const apiKey = requireApiKey(c.env.GOOGLE_GENERATIVE_AI_API_KEY);
 
-  const formData = await c.req.formData();
-  const file = formData.get("file") as File | null;
-  const customFilename = formData.get("filename") as string | null;
+  const body = await c.req.parseBody();
+  const file = body.file;
 
-  if (!file) {
+  if (!(file instanceof File)) {
     throw new HTTPException(400, { message: "File is required" });
   }
 
+  const customFilename =
+    typeof body.filename === "string" ? body.filename : null;
   if (customFilename) validateFileKey(customFilename);
 
   const result = await uploadMarkdownFile(file, customFilename, {
@@ -126,11 +129,11 @@ const convertFileRoute = createRoute({
 knowledgeConvertRoutes.openapi(convertFileRoute, async (c) => {
   const apiKey = requireApiKey(c.env.GOOGLE_GENERATIVE_AI_API_KEY);
 
-  const formData = await c.req.formData();
-  const file = formData.get("file") as File | null;
-  const filename = formData.get("filename") as string | null;
+  const body = await c.req.parseBody();
+  const file = body.file;
+  const filename = typeof body.filename === "string" ? body.filename : null;
 
-  if (!file) {
+  if (!(file instanceof File)) {
     throw new HTTPException(400, { message: "File is required" });
   }
   if (!filename) {
