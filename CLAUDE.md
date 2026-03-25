@@ -138,3 +138,13 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 
 - メイン: `develop`
 - 機能: `feature/*`
+
+## リリース
+
+tagpr によるリリース自動化。develop push 時にバージョンバンプ PR が自動作成される。
+
+1. feature/* → develop（dev デプロイ）
+2. tagpr がバージョンバンプ PR を自動作成
+3. バージョンバンプ PR をマージ → タグ + GitHub Release + 本番デプロイ
+
+- デフォルトは patch バンプ。`tagpr:minor` / `tagpr:major` ラベルで制御
