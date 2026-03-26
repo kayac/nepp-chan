@@ -42,6 +42,11 @@
           "binding": "KNOWLEDGE_BUCKET",
           "bucket_name": "nepp-chan-knowledge-local",
           "remote": true
+        },
+        {
+          "binding": "LINE_BROADCAST_BUCKET",
+          "bucket_name": "nepp-chan-broadcast-dev",
+          "remote": true
         }
       ],
       "queues": {
@@ -63,10 +68,7 @@
       },
       "vars": {
         "ENVIRONMENT": "local",
-        "WEB_URL": "http://localhost:5173",
-        "WEBAUTHN_RP_ID": "localhost",
-        "WEBAUTHN_RP_NAME": "ねっぷちゃん",
-        "WEBAUTHN_ORIGIN": "http://localhost:5173"
+        "WEB_URL": "http://localhost:5173"
       }
     },
     "development": {
@@ -90,6 +92,10 @@
         {
           "binding": "KNOWLEDGE_BUCKET",
           "bucket_name": "nepp-chan-knowledge-dev"
+        },
+        {
+          "binding": "LINE_BROADCAST_BUCKET",
+          "bucket_name": "nepp-chan-broadcast-dev"
         }
       ],
       "queues": {
@@ -111,10 +117,7 @@
       },
       "vars": {
         "ENVIRONMENT": "development",
-        "WEB_URL": "https://dev-web.nepp-chan.ai",
-        "WEBAUTHN_RP_ID": "dev-web.nepp-chan.ai",
-        "WEBAUTHN_RP_NAME": "ねっぷちゃん",
-        "WEBAUTHN_ORIGIN": "https://dev-web.nepp-chan.ai"
+        "WEB_URL": "https://dev-web.nepp-chan.ai"
       }
     },
     "production": {
@@ -137,6 +140,10 @@
         {
           "binding": "KNOWLEDGE_BUCKET",
           "bucket_name": "nepp-chan-knowledge-prd"
+        },
+        {
+          "binding": "LINE_BROADCAST_BUCKET",
+          "bucket_name": "nepp-chan-broadcast-prd"
         }
       ],
       "queues": {
@@ -158,10 +165,7 @@
       },
       "vars": {
         "ENVIRONMENT": "production",
-        "WEB_URL": "https://web.nepp-chan.ai",
-        "WEBAUTHN_RP_ID": "web.nepp-chan.ai",
-        "WEBAUTHN_RP_NAME": "ねっぷちゃん",
-        "WEBAUTHN_ORIGIN": "https://web.nepp-chan.ai"
+        "WEB_URL": "https://web.nepp-chan.ai"
       }
     }
   }

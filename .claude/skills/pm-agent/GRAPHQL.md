@@ -346,7 +346,7 @@ gh api graphql -f query='...' --jq '.data.user.projectV2.fields.nodes[].name'
 
 ## バッチ処理パターン
 
-### 複数Issue追加
+### 複数Issueの一括追加
 
 ```bash
 #!/bin/bash

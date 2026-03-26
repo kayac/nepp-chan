@@ -47,7 +47,7 @@
 - **フレームワーク**: Hono, Mastra
 - **ランタイム**: Cloudflare Workers / Pages
 - **AI**: Google Generative AI (Gemini)
-- **フロントエンド**: React, Vite, TailwindCSS
+- **フロントエンド**: Astro, React, TailwindCSS
 - **データベース**: Cloudflare D1
 - **言語**: TypeScript
 

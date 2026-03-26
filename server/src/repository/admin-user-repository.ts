@@ -10,9 +10,10 @@ export const adminUserRepository = {
 
     await db.insert(adminUsers).values({
       id: input.id,
-      email: input.email,
+      username: input.username,
       name: input.name ?? null,
       role: input.role ?? "admin",
+      passwordHash: input.passwordHash,
       createdAt: input.createdAt,
     });
 
@@ -31,13 +32,13 @@ export const adminUserRepository = {
     return result ?? null;
   },
 
-  async findByEmail(d1: D1Database, email: string) {
+  async findByUsername(d1: D1Database, username: string) {
     const db = createDb(d1);
 
     const result = await db
       .select()
       .from(adminUsers)
-      .where(eq(adminUsers.email, email))
+      .where(eq(adminUsers.username, username.toLowerCase().trim()))
       .get();
 
     return result ?? null;
@@ -54,7 +55,7 @@ export const adminUserRepository = {
   async update(
     d1: D1Database,
     id: string,
-    input: Partial<Pick<AdminUser, "name" | "role">>,
+    input: Partial<Pick<AdminUser, "name" | "role" | "passwordHash">>,
   ) {
     const db = createDb(d1);
 

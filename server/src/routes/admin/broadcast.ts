@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 
 import { errorResponse } from "~/lib/openapi-errors";
-import { sessionAuth } from "~/middleware/session-auth";
+import { type AuthVariables, requireAuth } from "~/middleware/auth";
 import { broadcastRepository } from "~/repository/broadcast-repository";
 import {
   broadcastMessageSchema,
@@ -18,9 +18,10 @@ import {
 
 export const broadcastAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
+  Variables: AuthVariables;
 }>();
 
-broadcastAdminRoutes.use("*", sessionAuth);
+broadcastAdminRoutes.use("*", requireAuth);
 
 const listRoute = createRoute({
   method: "get",
@@ -105,7 +106,7 @@ const createBroadcastRoute = createRoute({
 
 broadcastAdminRoutes.openapi(createBroadcastRoute, async (c) => {
   const body = c.req.valid("json");
-  const adminUser = c.get("adminUser" as never) as { id: string };
+  const adminUser = c.get("adminUser");
 
   try {
     const broadcast = await createBroadcastMessage(c.env, {
@@ -252,6 +253,18 @@ broadcastAdminRoutes.openapi(deleteRoute, async (c) => {
     });
   }
 
+  if (broadcast.parts) {
+    const parts = JSON.parse(broadcast.parts) as {
+      type: string;
+      imageR2Key?: string;
+    }[];
+    await Promise.all(
+      parts
+        .filter((p) => p.type === "image" && p.imageR2Key)
+        .map((p) => c.env.LINE_BROADCAST_BUCKET.delete(p.imageR2Key as string)),
+    );
+  }
+
   await broadcastRepository.delete(c.env.DB, id);
   return c.json({ message: "配信メッセージを削除しました" }, 200);
 });
@@ -281,6 +294,70 @@ const sendRoute = createRoute({
     404: errorResponse(404),
     500: errorResponse(500),
   },
+});
+
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png"]);
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+
+const uploadImageRoute = createRoute({
+  method: "post",
+  path: "/upload-image",
+  summary: "配信用画像をアップロード",
+  description: "配信用の画像をR2にアップロードします",
+  tags: ["Admin - Broadcast"],
+  request: {
+    body: {
+      content: {
+        "multipart/form-data": {
+          schema: z.object({
+            file: z.any(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "アップロード成功",
+      content: {
+        "application/json": {
+          schema: z.object({ imageR2Key: z.string() }),
+        },
+      },
+    },
+    400: errorResponse(400),
+    401: errorResponse(401),
+  },
+});
+
+broadcastAdminRoutes.openapi(uploadImageRoute, async (c) => {
+  const body = await c.req.parseBody();
+  const file = body.file;
+
+  if (!(file instanceof File)) {
+    throw new HTTPException(400, { message: "画像ファイルが必要です" });
+  }
+
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    throw new HTTPException(400, {
+      message: "対応形式: JPG, PNG",
+    });
+  }
+
+  if (file.size > MAX_IMAGE_SIZE) {
+    throw new HTTPException(400, {
+      message: "ファイルサイズは10MB以下にしてください",
+    });
+  }
+
+  const ext = file.type === "image/png" ? "png" : "jpg";
+  const key = `${crypto.randomUUID()}.${ext}`;
+
+  await c.env.LINE_BROADCAST_BUCKET.put(key, file.stream(), {
+    httpMetadata: { contentType: file.type },
+  });
+
+  return c.json({ imageR2Key: key }, 200);
 });
 
 broadcastAdminRoutes.openapi(sendRoute, async (c) => {

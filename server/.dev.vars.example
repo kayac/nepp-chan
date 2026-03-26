@@ -1,16 +1,14 @@
 GOOGLE_GENERATIVE_AI_API_KEY=your-api-key-here
 GOOGLE_SEARCH_ENGINE_ID=your-engine-id-here
 
+# JWT
+JWT_SECRET=local-dev-jwt-secret-must-be-at-least-32-chars-long
+
 # Eval専用（省略時は GOOGLE_GENERATIVE_AI_API_KEY を使用）
 EVAL_GOOGLE_API_KEY=
 
 # OpenAI（Evalスコアラー用: gpt-5-nano）
 OPENAI_API_KEY=
-
-# WebAuthn
-WEBAUTHN_RP_ID=localhost
-WEBAUTHN_RP_NAME=ねっぷちゃん
-WEBAUTHN_ORIGIN=http://localhost:5173
 
 # LINE Messaging API
 LINE_CHANNEL_SECRET=your-channel-secret-here

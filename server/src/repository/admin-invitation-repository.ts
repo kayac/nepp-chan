@@ -15,7 +15,7 @@ export const adminInvitationRepository = {
 
     await db.insert(adminInvitations).values({
       id: input.id,
-      email: input.email,
+      username: input.username,
       token: input.token,
       invitedBy: input.invitedBy,
       role: input.role ?? "admin",
@@ -51,13 +51,13 @@ export const adminInvitationRepository = {
     return result ?? null;
   },
 
-  async findByEmail(d1: D1Database, email: string) {
+  async findByUsername(d1: D1Database, username: string) {
     const db = createDb(d1);
 
     const result = await db
       .select()
       .from(adminInvitations)
-      .where(eq(adminInvitations.email, email))
+      .where(eq(adminInvitations.username, username))
       .get();
 
     return result ?? null;

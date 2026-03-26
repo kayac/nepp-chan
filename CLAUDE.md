@@ -11,7 +11,7 @@ pnpm server:dev          # API 開発サーバー（8787）
 pnpm web:dev             # Web 開発サーバー（5173）
 
 # 品質チェック
-pnpm lint                # Biome + tsc
+pnpm lint                # Biome + astro check + tsc
 pnpm format              # Biome フォーマット
 
 # DB マイグレーション
@@ -113,7 +113,7 @@ cp web/.env.example web/.env
 
 | 変数名         | 用途    |
 | -------------- | ------- |
-| `VITE_API_URL` | API URL |
+| `PUBLIC_API_URL` | API URL |
 
 ### 本番環境
 
@@ -138,3 +138,13 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 
 - メイン: `develop`
 - 機能: `feature/*`
+
+## リリース
+
+tagpr によるリリース自動化。develop push 時にバージョンバンプ PR が自動作成される。
+
+1. feature/* → develop（dev デプロイ）
+2. tagpr がバージョンバンプ PR を自動作成
+3. バージョンバンプ PR をマージ → タグ + GitHub Release + 本番デプロイ
+
+- デフォルトは patch バンプ。`tagpr:minor` / `tagpr:major` ラベルで制御

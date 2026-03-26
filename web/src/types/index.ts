@@ -60,6 +60,7 @@ export type BroadcastMessage = BroadcastsResponse["broadcasts"][number];
 export type BroadcastStatus = "draft" | "scheduled" | "sent" | "failed";
 export type CreateBroadcastRequest = PostBody<"/admin/broadcast">;
 export type UpdateBroadcastRequest = PutBody<"/admin/broadcast/{id}">;
+export type BroadcastPart = CreateBroadcastRequest["parts"][number];
 
 // フィードバック
 export type FeedbacksResponse = GetOk<"/admin/feedback">;

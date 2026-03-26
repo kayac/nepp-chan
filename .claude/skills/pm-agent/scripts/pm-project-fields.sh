@@ -1,11 +1,11 @@
 #!/bin/bash
-# pm-project-fields.sh - Update GitHub Projects custom field values
+# pm-project-fields.sh - GitHub Projects カスタムフィールド値の更新
 # Usage: pm-project-fields.sh <issue_number> [options]
 #
-# Adds an issue to a GitHub Project and updates custom field values.
-# Uses GraphQL API for Projects V2.
+# Issue を GitHub Project に追加し、カスタムフィールド値を更新する。
+# Projects V2 の GraphQL API を使用。
 #
-# Reference: https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/using-the-api-to-manage-projects
+# 参考: https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/using-the-api-to-manage-projects
 
 set -euo pipefail
 
@@ -14,40 +14,40 @@ source "$SCRIPT_DIR/pm-utils.sh"
 
 usage() {
   cat <<EOF
-Usage: $0 <issue_number> [options]
-       $0 --bulk <json_file> [options]
+使い方: $0 <issue_number> [オプション]
+       $0 --bulk <json_file> [オプション]
 
-Options:
-  --repo <owner/repo>      Repository (default: auto-detect from git remote)
-  --project <number>       Project number (required)
-  --owner <login>          Project owner (@me for user, or org name)
-  --status <value>         Set Status field
-  --priority <value>       Set Priority field
-  --size <value>           Set Size field
-  --estimate <number>      Set Estimate field (number)
-  --iteration <name>       Set Iteration field
-  --start-date <YYYY-MM-DD>   Set Start date
-  --target-date <YYYY-MM-DD>  Set Target date
-  --bulk <json_file>       Bulk update from JSON file
-  --list-fields            List available fields and options, then exit
-  --dry-run                Show what would be done without executing
-  -h, --help               Show this help
+オプション:
+  --repo <owner/repo>      リポジトリ（デフォルト: git remote から自動検出）
+  --project <number>       プロジェクト番号（必須）
+  --owner <login>          プロジェクトオーナー（@me でユーザー、または組織名）
+  --status <value>         Status フィールドを設定
+  --priority <value>       Priority フィールドを設定
+  --size <value>           Size フィールドを設定
+  --estimate <number>      Estimate フィールドを設定（数値）
+  --iteration <name>       Iteration フィールドを設定
+  --start-date <YYYY-MM-DD>   開始日を設定
+  --target-date <YYYY-MM-DD>  目標日を設定
+  --bulk <json_file>       JSON ファイルから一括更新
+  --list-fields            利用可能なフィールドと選択肢を表示して終了
+  --dry-run                実行せずに予定内容を表示
+  -h, --help               このヘルプを表示
 
-Examples:
-  # List available fields
+使用例:
+  # 利用可能なフィールドを一覧表示
   $0 --project 1 --owner @me --list-fields
 
-  # Add issue to project and set fields
+  # Issue をプロジェクトに追加してフィールドを設定
   $0 123 --project 1 --owner @me --status "In Progress" --priority "High"
 
-  # Set multiple fields
+  # 複数フィールドを設定
   $0 123 --project 1 --owner @me \\
     --status "Todo" --priority "Medium" --estimate 3 --start-date 2025-01-15
 
-  # Bulk update from JSON file
+  # JSON ファイルから一括更新
   $0 --bulk issues-fields.json --project 1 --owner @me
 
-Bulk JSON format:
+一括更新 JSON 形式:
 [
   {"issue": 123, "status": "Todo", "priority": "High", "estimate": 3},
   {"issue": 124, "status": "In Progress", "priority": "Medium"}
@@ -56,7 +56,7 @@ EOF
   exit 1
 }
 
-# Default values
+# デフォルト値
 ISSUE_NUMBER=""
 REPO=""
 PROJECT_NUMBER=""
@@ -72,7 +72,7 @@ BULK_FILE=""
 LIST_FIELDS=false
 DRY_RUN=false
 
-# Parse arguments
+# 引数の解析
 while [[ $# -gt 0 ]]; do
   case $1 in
     --repo)
@@ -129,7 +129,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     -h | --help) usage ;;
     -*)
-      echo "Unknown option: $1"
+      echo "不明なオプション: $1"
       usage
       ;;
     *)
@@ -139,128 +139,19 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Validate required arguments
+# 必須引数の検証
 [[ -z "$PROJECT_NUMBER" ]] && {
-  echo "Error: --project is required"
+  echo "エラー: --project は必須です"
   usage
 }
 [[ -z "$PROJECT_OWNER" ]] && {
-  echo "Error: --owner is required"
+  echo "エラー: --owner は必須です"
   usage
 }
 
 REPO="${REPO:-$(get_repo)}"
 
-# Determine if owner is user or organization
-get_project_id() {
-  local owner="$1" number="$2"
-  local query result
-
-  if [[ "$owner" == "@me" ]]; then
-    # User project
-    query='query($number: Int!) {
-      viewer {
-        projectV2(number: $number) {
-          id
-        }
-      }
-    }'
-    result=$(gh api graphql -F number="$number" -f query="$query" --jq '.data.viewer.projectV2.id')
-  else
-    # Try organization first, then user
-    query='query($login: String!, $number: Int!) {
-      organization(login: $login) {
-        projectV2(number: $number) {
-          id
-        }
-      }
-    }'
-    result=$(gh api graphql -f login="$owner" -F number="$number" -f query="$query" --jq '.data.organization.projectV2.id' 2>/dev/null) || true
-
-    if [[ -z "$result" || "$result" == "null" ]]; then
-      # Try as user
-      query='query($login: String!, $number: Int!) {
-        user(login: $login) {
-          projectV2(number: $number) {
-            id
-          }
-        }
-      }'
-      result=$(gh api graphql -f login="$owner" -F number="$number" -f query="$query" --jq '.data.user.projectV2.id')
-    fi
-  fi
-
-  echo "$result"
-}
-
-# Get all fields and their options
-get_project_fields() {
-  local project_id="$1"
-  local query='query($projectId: ID!) {
-    node(id: $projectId) {
-      ... on ProjectV2 {
-        fields(first: 50) {
-          nodes {
-            ... on ProjectV2Field {
-              id
-              name
-              dataType
-            }
-            ... on ProjectV2IterationField {
-              id
-              name
-              dataType
-              configuration {
-                iterations {
-                  id
-                  title
-                  startDate
-                }
-              }
-            }
-            ... on ProjectV2SingleSelectField {
-              id
-              name
-              dataType
-              options {
-                id
-                name
-              }
-            }
-          }
-        }
-      }
-    }
-  }'
-
-  gh api graphql -f projectId="$project_id" -f query="$query" --jq '.data.node.fields.nodes'
-}
-
-# Get issue node ID
-get_issue_node_id() {
-  local repo="$1" issue_number="$2"
-  gh api "repos/$repo/issues/$issue_number" --jq '.node_id'
-}
-
-# Add issue to project, returns item ID
-add_issue_to_project() {
-  local project_id="$1" content_id="$2"
-  local mutation='mutation($projectId: ID!, $contentId: ID!) {
-    addProjectV2ItemById(input: {
-      projectId: $projectId
-      contentId: $contentId
-    }) {
-      item {
-        id
-      }
-    }
-  }'
-
-  gh api graphql -f projectId="$project_id" -f contentId="$content_id" -f query="$mutation" \
-    --jq '.data.addProjectV2ItemById.item.id'
-}
-
-# Update a single select field
+# 単一選択フィールドを更新
 update_single_select_field() {
   local project_id="$1" item_id="$2" field_id="$3" option_id="$4"
   local mutation='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
@@ -282,7 +173,7 @@ update_single_select_field() {
     -f optionId="$option_id" -f query="$mutation" --jq '.data.updateProjectV2ItemFieldValue.projectV2Item.id'
 }
 
-# Update a number field
+# 数値フィールドを更新
 update_number_field() {
   local project_id="$1" item_id="$2" field_id="$3" value="$4"
   local mutation='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: Float!) {
@@ -304,7 +195,7 @@ update_number_field() {
     -F value="$value" -f query="$mutation" --jq '.data.updateProjectV2ItemFieldValue.projectV2Item.id'
 }
 
-# Update a date field
+# 日付フィールドを更新
 update_date_field() {
   local project_id="$1" item_id="$2" field_id="$3" date_value="$4"
   local mutation='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $date: Date!) {
@@ -326,29 +217,11 @@ update_date_field() {
     -f date="$date_value" -f query="$mutation" --jq '.data.updateProjectV2ItemFieldValue.projectV2Item.id'
 }
 
-# Update an iteration field
-update_iteration_field() {
-  local project_id="$1" item_id="$2" field_id="$3" iteration_id="$4"
-  local mutation='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $iterationId: String!) {
-    updateProjectV2ItemFieldValue(input: {
-      projectId: $projectId
-      itemId: $itemId
-      fieldId: $fieldId
-      value: {
-        iterationId: $iterationId
-      }
-    }) {
-      projectV2Item {
-        id
-      }
-    }
-  }'
-
-  gh api graphql -f projectId="$project_id" -f itemId="$item_id" -f fieldId="$field_id" \
-    -f iterationId="$iteration_id" -f query="$mutation" --jq '.data.updateProjectV2ItemFieldValue.projectV2Item.id'
+find_field_id() {
+  local fields_json="$1" field_name="$2"
+  echo "$fields_json" | jq -r --arg fn "$field_name" '.[] | select(.name == $fn) | .id' | head -1
 }
 
-# Find option ID by name
 find_option_id() {
   local fields_json="$1" field_name="$2" option_name="$3"
   echo "$fields_json" | jq -r --arg fn "$field_name" --arg on "$option_name" '
@@ -356,13 +229,7 @@ find_option_id() {
   '
 }
 
-# Find field ID by name
-find_field_id() {
-  local fields_json="$1" field_name="$2"
-  echo "$fields_json" | jq -r --arg fn "$field_name" '.[] | select(.name == $fn) | .id'
-}
-
-# Find iteration ID by title
+# タイトルからイテレーション ID を検索（field_name 指定版）
 find_iteration_id() {
   local fields_json="$1" field_name="$2" iteration_title="$3"
   echo "$fields_json" | jq -r --arg fn "$field_name" --arg it "$iteration_title" '
@@ -370,39 +237,48 @@ find_iteration_id() {
   '
 }
 
-# Main execution
-echo "Fetching project information..."
+# メイン処理
+echo "プロジェクト情報を取得中..."
 PROJECT_ID=$(get_project_id "$PROJECT_OWNER" "$PROJECT_NUMBER")
 
 if [[ -z "$PROJECT_ID" || "$PROJECT_ID" == "null" ]]; then
-  echo "Error: Could not find project #$PROJECT_NUMBER for owner $PROJECT_OWNER" >&2
+  echo "エラー: オーナー $PROJECT_OWNER のプロジェクト #$PROJECT_NUMBER が見つかりません" >&2
   exit 1
 fi
 
-echo "  Project ID: $PROJECT_ID"
+echo "  プロジェクト ID: $PROJECT_ID"
 
-# Get fields
+# フィールドを取得
 FIELDS_JSON=$(get_project_fields "$PROJECT_ID")
 
-# List fields mode
+# フィールド一覧モード
 if [[ "$LIST_FIELDS" == true ]]; then
   echo ""
   echo "═══════════════════════════════════════════════"
-  echo "📋 Available Fields for Project #$PROJECT_NUMBER"
+  echo "📋 プロジェクト #$PROJECT_NUMBER の利用可能なフィールド"
   echo "═══════════════════════════════════════════════"
   echo ""
   echo "$FIELDS_JSON" | jq -r '
     .[] |
-    "Field: \(.name)\n  ID: \(.id)\n  Type: \(.dataType)" +
-    (if .options then "\n  Options:\n" + (.options | map("    - \(.name) (\(.id))") | join("\n")) else "" end) +
-    (if .configuration.iterations then "\n  Iterations:\n" + (.configuration.iterations | map("    - \(.title) (\(.id))") | join("\n")) else "" end) +
+    "フィールド: \(.name)\n  ID: \(.id)\n  タイプ: \(.dataType)" +
+    (if .options then "\n  選択肢:\n" + (.options | map("    - \(.name) (\(.id))") | join("\n")) else "" end) +
+    (if .configuration.iterations then "\n  イテレーション:\n" + (.configuration.iterations | map("    - \(.title) (\(.id))") | join("\n")) else "" end) +
     "\n"
   '
   exit 0
 fi
 
-# Process a single issue with field updates
-# Arguments: issue_number status priority size estimate iteration start_date target_date
+# フィールド ID を事前キャッシュ（Issue に依存しないため一度だけ検索）
+FID_STATUS=$(find_field_id "$FIELDS_JSON" "Status")
+FID_PRIORITY=$(find_field_id "$FIELDS_JSON" "Priority")
+FID_SIZE=$(find_field_id "$FIELDS_JSON" "Size")
+FID_ESTIMATE=$(find_field_id "$FIELDS_JSON" "Estimate")
+FID_ITERATION=$(find_field_id "$FIELDS_JSON" "Iteration")
+FID_START_DATE=$(find_field_id "$FIELDS_JSON" "Start date")
+FID_TARGET_DATE=$(find_field_id "$FIELDS_JSON" "Target date")
+
+# 単一 Issue のフィールド更新処理
+# 引数: issue_number status priority size estimate iteration start_date target_date
 process_issue() {
   local issue_num="$1"
   local p_status="$2"
@@ -413,126 +289,97 @@ process_issue() {
   local p_start="$7"
   local p_target="$8"
 
-  local issue_node_id item_id field_id option_id iteration_id local_update_count=0
+  local item_id option_id iteration_id
+  local local_update_count=0
 
-  # Get issue node ID
-  issue_node_id=$(get_issue_node_id "$REPO" "$issue_num") || {
-    print_warn "Failed to get node ID for #$issue_num"
+  item_id=$(ensure_project_item "$REPO" "$issue_num" "$PROJECT_ID" "$PROJECT_NUMBER") || {
+    print_warn "#$issue_num のプロジェクトへの追加に失敗しました"
     return 1
   }
 
-  # Add issue to project
-  item_id=$(add_issue_to_project "$PROJECT_ID" "$issue_node_id") || {
-    print_warn "Failed to add #$issue_num to project"
-    return 1
-  }
+  echo "  #$issue_num → プロジェクト（アイテム: ${item_id:0:20}...）"
 
-  if [[ -z "$item_id" || "$item_id" == "null" ]]; then
-    print_warn "Failed to add #$issue_num to project"
-    return 1
-  fi
-
-  echo "  #$issue_num → Project (Item: ${item_id:0:20}...)"
-
-  # Update Status
-  if [[ -n "$p_status" ]]; then
-    field_id=$(find_field_id "$FIELDS_JSON" "Status")
+  # Status を更新
+  if [[ -n "$p_status" && -n "$FID_STATUS" ]]; then
     option_id=$(find_option_id "$FIELDS_JSON" "Status" "$p_status")
-    if [[ -n "$field_id" && -n "$option_id" ]]; then
-      update_single_select_field "$PROJECT_ID" "$item_id" "$field_id" "$option_id" >/dev/null && {
-        echo "    ↳ Status = $p_status"
-        ((local_update_count++)) || true
-      }
+    if [[ -n "$option_id" ]]; then
+      update_single_select_field "$PROJECT_ID" "$item_id" "$FID_STATUS" "$option_id" >/dev/null && \
+        echo "    ↳ Status = $p_status" && ((local_update_count++)) || true
+    else
+      print_warn "Status の選択肢 '$p_status' が見つかりません"
     fi
   fi
 
-  # Update Priority
-  if [[ -n "$p_priority" ]]; then
-    field_id=$(find_field_id "$FIELDS_JSON" "Priority")
+  # Priority を更新
+  if [[ -n "$p_priority" && -n "$FID_PRIORITY" ]]; then
     option_id=$(find_option_id "$FIELDS_JSON" "Priority" "$p_priority")
-    if [[ -n "$field_id" && -n "$option_id" ]]; then
-      update_single_select_field "$PROJECT_ID" "$item_id" "$field_id" "$option_id" >/dev/null && {
-        echo "    ↳ Priority = $p_priority"
-        ((local_update_count++)) || true
-      }
+    if [[ -n "$option_id" ]]; then
+      update_single_select_field "$PROJECT_ID" "$item_id" "$FID_PRIORITY" "$option_id" >/dev/null && \
+        echo "    ↳ Priority = $p_priority" && ((local_update_count++)) || true
+    else
+      print_warn "Priority の選択肢 '$p_priority' が見つかりません"
     fi
   fi
 
-  # Update Size
-  if [[ -n "$p_size" ]]; then
-    field_id=$(find_field_id "$FIELDS_JSON" "Size")
+  # Size を更新
+  if [[ -n "$p_size" && -n "$FID_SIZE" ]]; then
     option_id=$(find_option_id "$FIELDS_JSON" "Size" "$p_size")
-    if [[ -n "$field_id" && -n "$option_id" ]]; then
-      update_single_select_field "$PROJECT_ID" "$item_id" "$field_id" "$option_id" >/dev/null && {
-        echo "    ↳ Size = $p_size"
-        ((local_update_count++)) || true
-      }
+    if [[ -n "$option_id" ]]; then
+      update_single_select_field "$PROJECT_ID" "$item_id" "$FID_SIZE" "$option_id" >/dev/null && \
+        echo "    ↳ Size = $p_size" && ((local_update_count++)) || true
+    else
+      print_warn "Size の選択肢 '$p_size' が見つかりません"
     fi
   fi
 
-  # Update Estimate
-  if [[ -n "$p_estimate" ]]; then
-    field_id=$(find_field_id "$FIELDS_JSON" "Estimate")
-    if [[ -n "$field_id" ]]; then
-      update_number_field "$PROJECT_ID" "$item_id" "$field_id" "$p_estimate" >/dev/null && {
-        echo "    ↳ Estimate = $p_estimate"
-        ((local_update_count++)) || true
-      }
-    fi
+  # Estimate を更新
+  if [[ -n "$p_estimate" && -n "$FID_ESTIMATE" ]]; then
+    update_number_field "$PROJECT_ID" "$item_id" "$FID_ESTIMATE" "$p_estimate" >/dev/null && \
+      echo "    ↳ Estimate = $p_estimate" && ((local_update_count++)) || true
   fi
 
-  # Update Iteration
-  if [[ -n "$p_iteration" ]]; then
-    field_id=$(find_field_id "$FIELDS_JSON" "Iteration")
+  # Iteration を更新
+  if [[ -n "$p_iteration" && -n "$FID_ITERATION" ]]; then
     iteration_id=$(find_iteration_id "$FIELDS_JSON" "Iteration" "$p_iteration")
-    if [[ -n "$field_id" && -n "$iteration_id" ]]; then
-      update_iteration_field "$PROJECT_ID" "$item_id" "$field_id" "$iteration_id" >/dev/null && {
-        echo "    ↳ Iteration = $p_iteration"
-        ((local_update_count++)) || true
-      }
+    if [[ -n "$iteration_id" ]]; then
+      update_iteration_field "$PROJECT_ID" "$item_id" "$FID_ITERATION" "$iteration_id" >/dev/null && \
+        echo "    ↳ Iteration = $p_iteration" && ((local_update_count++)) || true
+    else
+      print_warn "Iteration '$p_iteration' が見つかりません"
     fi
   fi
 
-  # Update Start date
-  if [[ -n "$p_start" ]]; then
-    field_id=$(find_field_id "$FIELDS_JSON" "Start date")
-    if [[ -n "$field_id" ]]; then
-      update_date_field "$PROJECT_ID" "$item_id" "$field_id" "$p_start" >/dev/null && {
-        echo "    ↳ Start date = $p_start"
-        ((local_update_count++)) || true
-      }
-    fi
+  # 開始日を更新
+  if [[ -n "$p_start" && -n "$FID_START_DATE" ]]; then
+    update_date_field "$PROJECT_ID" "$item_id" "$FID_START_DATE" "$p_start" >/dev/null && \
+      echo "    ↳ 開始日 = $p_start" && ((local_update_count++)) || true
   fi
 
-  # Update Target date
-  if [[ -n "$p_target" ]]; then
-    field_id=$(find_field_id "$FIELDS_JSON" "Target date")
-    if [[ -n "$field_id" ]]; then
-      update_date_field "$PROJECT_ID" "$item_id" "$field_id" "$p_target" >/dev/null && {
-        echo "    ↳ Target date = $p_target"
-        ((local_update_count++)) || true
-      }
-    fi
+  # 目標日を更新
+  if [[ -n "$p_target" && -n "$FID_TARGET_DATE" ]]; then
+    update_date_field "$PROJECT_ID" "$item_id" "$FID_TARGET_DATE" "$p_target" >/dev/null && \
+      echo "    ↳ 目標日 = $p_target" && ((local_update_count++)) || true
   fi
 
+  echo "    更新フィールド数: $local_update_count"
   return 0
 }
 
-# Bulk mode
+# 一括更新モード
 if [[ -n "$BULK_FILE" ]]; then
   [[ ! -f "$BULK_FILE" ]] && {
-    echo "Error: Bulk file not found: $BULK_FILE"
+    echo "エラー: 一括更新ファイルが見つかりません: $BULK_FILE"
     exit 1
   }
 
   echo ""
   echo "═══════════════════════════════════════════════"
-  echo "📋 Bulk Update Mode"
+  echo "📋 一括更新モード"
   echo "───────────────────────────────────────────────"
-  echo "  Repository: $REPO"
-  echo "  Project: #$PROJECT_NUMBER"
-  echo "  Input: $BULK_FILE"
-  [[ "$DRY_RUN" == true ]] && echo "  Mode: DRY RUN"
+  echo "  リポジトリ: $REPO"
+  echo "  プロジェクト: #$PROJECT_NUMBER"
+  echo "  入力ファイル: $BULK_FILE"
+  [[ "$DRY_RUN" == true ]] && echo "  モード: ドライラン"
   echo "═══════════════════════════════════════════════"
   echo ""
 
@@ -541,7 +388,7 @@ if [[ -n "$BULK_FILE" ]]; then
   fail_count=0
 
   if [[ "$DRY_RUN" == true ]]; then
-    echo "Would process $total_count issues:"
+    echo "$total_count 件の Issue を処理予定:"
     jq -r '.[] | "  #\(.issue): status=\(.status // "-"), priority=\(.priority // "-"), estimate=\(.estimate // "-")"' "$BULK_FILE"
     exit 0
   fi
@@ -565,142 +412,49 @@ if [[ -n "$BULK_FILE" ]]; then
 
   echo ""
   echo "═══════════════════════════════════════════════"
-  echo "📊 Bulk Update Summary"
+  echo "📊 一括更新サマリー"
   echo "───────────────────────────────────────────────"
-  echo "  Total: $total_count"
-  echo "  Success: $success_count"
-  echo "  Failed: $fail_count"
+  echo "  合計: $total_count"
+  echo "  成功: $success_count"
+  echo "  失敗: $fail_count"
   echo "═══════════════════════════════════════════════"
   exit 0
 fi
 
-# Single issue mode - Validate issue number
+# 単一 Issue モード - Issue 番号の検証
 [[ -z "$ISSUE_NUMBER" ]] && {
-  echo "Error: issue_number is required"
+  echo "エラー: issue_number は必須です"
   usage
 }
 
-echo "  Repository: $REPO"
+echo "  リポジトリ: $REPO"
 echo "  Issue: #$ISSUE_NUMBER"
 echo ""
 
-# Get issue node ID
-ISSUE_NODE_ID=$(get_issue_node_id "$REPO" "$ISSUE_NUMBER")
-echo "  Issue Node ID: $ISSUE_NODE_ID"
-
 if [[ "$DRY_RUN" == true ]]; then
+  echo "🔍 ドライランモード - 変更は行われません"
   echo ""
-  echo "🔍 DRY RUN MODE - no changes will be made"
-  echo ""
-  echo "Would perform:"
-  echo "  1. Add issue #$ISSUE_NUMBER to project"
-  [[ -n "$STATUS_VALUE" ]] && echo "  2. Set Status = $STATUS_VALUE"
-  [[ -n "$PRIORITY_VALUE" ]] && echo "  3. Set Priority = $PRIORITY_VALUE"
-  [[ -n "$SIZE_VALUE" ]] && echo "  4. Set Size = $SIZE_VALUE"
-  [[ -n "$ESTIMATE_VALUE" ]] && echo "  5. Set Estimate = $ESTIMATE_VALUE"
-  [[ -n "$ITERATION_VALUE" ]] && echo "  6. Set Iteration = $ITERATION_VALUE"
-  [[ -n "$START_DATE" ]] && echo "  7. Set Start date = $START_DATE"
-  [[ -n "$TARGET_DATE" ]] && echo "  8. Set Target date = $TARGET_DATE"
+  echo "実行予定:"
+  echo "  1. Issue #$ISSUE_NUMBER をプロジェクトに追加"
+  [[ -n "$STATUS_VALUE" ]] && echo "  2. Status = $STATUS_VALUE を設定"
+  [[ -n "$PRIORITY_VALUE" ]] && echo "  3. Priority = $PRIORITY_VALUE を設定"
+  [[ -n "$SIZE_VALUE" ]] && echo "  4. Size = $SIZE_VALUE を設定"
+  [[ -n "$ESTIMATE_VALUE" ]] && echo "  5. Estimate = $ESTIMATE_VALUE を設定"
+  [[ -n "$ITERATION_VALUE" ]] && echo "  6. Iteration = $ITERATION_VALUE を設定"
+  [[ -n "$START_DATE" ]] && echo "  7. 開始日 = $START_DATE を設定"
+  [[ -n "$TARGET_DATE" ]] && echo "  8. 目標日 = $TARGET_DATE を設定"
   exit 0
 fi
 
-# Add issue to project
-echo "Adding issue to project..."
-ITEM_ID=$(add_issue_to_project "$PROJECT_ID" "$ISSUE_NODE_ID")
-if [[ -z "$ITEM_ID" || "$ITEM_ID" == "null" ]]; then
-  echo "Error: Failed to add issue to project" >&2
+if process_issue "$ISSUE_NUMBER" "$STATUS_VALUE" "$PRIORITY_VALUE" "$SIZE_VALUE" "$ESTIMATE_VALUE" "$ITERATION_VALUE" "$START_DATE" "$TARGET_DATE"; then
+  echo ""
+  echo "═══════════════════════════════════════════════"
+  echo "📊 結果サマリー"
+  echo "───────────────────────────────────────────────"
+  echo "  Issue #$ISSUE_NUMBER をプロジェクト #$PROJECT_NUMBER に追加しました"
+  echo "═══════════════════════════════════════════════"
+else
+  echo ""
+  echo "エラー: Issue #$ISSUE_NUMBER の処理に失敗しました" >&2
   exit 1
 fi
-print_success "Added to project (Item ID: $ITEM_ID)"
-
-# Update fields
-update_count=0
-
-if [[ -n "$STATUS_VALUE" ]]; then
-  field_id=$(find_field_id "$FIELDS_JSON" "Status")
-  option_id=$(find_option_id "$FIELDS_JSON" "Status" "$STATUS_VALUE")
-  if [[ -n "$field_id" && -n "$option_id" ]]; then
-    update_single_select_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$option_id" >/dev/null
-    print_success "Status = $STATUS_VALUE"
-    ((update_count++)) || true
-  else
-    print_warn "Could not find Status option: $STATUS_VALUE"
-  fi
-fi
-
-if [[ -n "$PRIORITY_VALUE" ]]; then
-  field_id=$(find_field_id "$FIELDS_JSON" "Priority")
-  option_id=$(find_option_id "$FIELDS_JSON" "Priority" "$PRIORITY_VALUE")
-  if [[ -n "$field_id" && -n "$option_id" ]]; then
-    update_single_select_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$option_id" >/dev/null
-    print_success "Priority = $PRIORITY_VALUE"
-    ((update_count++)) || true
-  else
-    print_warn "Could not find Priority option: $PRIORITY_VALUE"
-  fi
-fi
-
-if [[ -n "$SIZE_VALUE" ]]; then
-  field_id=$(find_field_id "$FIELDS_JSON" "Size")
-  option_id=$(find_option_id "$FIELDS_JSON" "Size" "$SIZE_VALUE")
-  if [[ -n "$field_id" && -n "$option_id" ]]; then
-    update_single_select_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$option_id" >/dev/null
-    print_success "Size = $SIZE_VALUE"
-    ((update_count++)) || true
-  else
-    print_warn "Could not find Size option: $SIZE_VALUE"
-  fi
-fi
-
-if [[ -n "$ESTIMATE_VALUE" ]]; then
-  field_id=$(find_field_id "$FIELDS_JSON" "Estimate")
-  if [[ -n "$field_id" ]]; then
-    update_number_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$ESTIMATE_VALUE" >/dev/null
-    print_success "Estimate = $ESTIMATE_VALUE"
-    ((update_count++)) || true
-  else
-    print_warn "Could not find Estimate field"
-  fi
-fi
-
-if [[ -n "$ITERATION_VALUE" ]]; then
-  field_id=$(find_field_id "$FIELDS_JSON" "Iteration")
-  iteration_id=$(find_iteration_id "$FIELDS_JSON" "Iteration" "$ITERATION_VALUE")
-  if [[ -n "$field_id" && -n "$iteration_id" ]]; then
-    update_iteration_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$iteration_id" >/dev/null
-    print_success "Iteration = $ITERATION_VALUE"
-    ((update_count++)) || true
-  else
-    print_warn "Could not find Iteration: $ITERATION_VALUE"
-  fi
-fi
-
-if [[ -n "$START_DATE" ]]; then
-  field_id=$(find_field_id "$FIELDS_JSON" "Start date")
-  if [[ -n "$field_id" ]]; then
-    update_date_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$START_DATE" >/dev/null
-    print_success "Start date = $START_DATE"
-    ((update_count++)) || true
-  else
-    print_warn "Could not find Start date field"
-  fi
-fi
-
-if [[ -n "$TARGET_DATE" ]]; then
-  field_id=$(find_field_id "$FIELDS_JSON" "Target date")
-  if [[ -n "$field_id" ]]; then
-    update_date_field "$PROJECT_ID" "$ITEM_ID" "$field_id" "$TARGET_DATE" >/dev/null
-    print_success "Target date = $TARGET_DATE"
-    ((update_count++)) || true
-  else
-    print_warn "Could not find Target date field"
-  fi
-fi
-
-echo ""
-echo "═══════════════════════════════════════════════"
-echo "📊 Summary"
-echo "───────────────────────────────────────────────"
-echo "  Issue #$ISSUE_NUMBER added to project #$PROJECT_NUMBER"
-echo "  Fields updated: $update_count"
-echo "═══════════════════════════════════════════════"

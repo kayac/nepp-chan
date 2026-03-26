@@ -7,6 +7,7 @@ export {
   personaAdminRoutes,
 } from "./admin";
 export { authRoutes } from "./auth";
+export { broadcastMediaRoutes } from "./broadcast-media";
 export { chatRoutes } from "./chat";
 export { feedbackRoutes } from "./feedback";
 export { healthRoutes } from "./health";

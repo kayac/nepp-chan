@@ -3,25 +3,25 @@ import { z } from "zod";
 import { logger } from "~/lib/logger";
 import { getEnv } from "./helpers";
 
-interface GoogleSearchResponse {
+type GoogleSearchResponse = {
   items?: {
     title: string;
     snippet: string;
     link: string;
   }[];
-}
+};
 
-interface SearchResult {
+type SearchResult = {
   title: string;
   snippet: string;
   url: string;
-}
+};
 
-interface SearchOutput {
+type SearchOutput = {
   results: SearchResult[];
   error?: string;
   source: string;
-}
+};
 
 const SOURCE = "Google Custom Search API";
 

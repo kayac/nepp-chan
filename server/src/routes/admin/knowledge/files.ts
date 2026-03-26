@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 
 import { errorResponse } from "~/lib/openapi-errors";
+import type { AuthVariables } from "~/middleware/auth";
 import {
   deleteFile,
   getFile,
@@ -23,6 +24,7 @@ import {
 
 export const knowledgeFilesRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
+  Variables: AuthVariables;
 }>();
 
 // GET /admin/knowledge/files - ファイル一覧取得

@@ -55,10 +55,8 @@ pnpm dev
 | `/threads/:threadId`          | GET/DELETE | スレッド詳細取得・削除         |
 | `/threads/:threadId/messages` | GET      | メッセージ履歴取得               |
 | `/feedback`                   | POST     | フィードバック送信               |
-| `/auth/register/options`      | POST     | WebAuthn 登録オプション取得      |
-| `/auth/register/verify`       | POST     | WebAuthn 登録検証                |
-| `/auth/login/options`         | POST     | WebAuthn ログインオプション      |
-| `/auth/login/verify`          | POST     | WebAuthn ログイン検証            |
+| `/auth/register`              | POST     | ユーザー登録（招待トークン+パスワード） |
+| `/auth/login`                 | POST     | ログイン（ユーザー名+パスワード）      |
 | `/auth/me`                    | GET      | 認証状態確認                     |
 | `/auth/logout`                | POST     | ログアウト                       |
 | `/line/webhook`               | POST     | LINE Webhook 受信                |

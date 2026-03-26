@@ -1,7 +1,6 @@
 import { logger } from "~/lib/logger";
 import { deleteKnowledgeBySource, processKnowledgeFile } from "./embedding";
-
-const EDIT_THRESHOLD_MS = 5000;
+import { buildOriginalsMap, EDIT_THRESHOLD_MS } from "./utils";
 
 type SyncResult = {
   file: string;
@@ -21,19 +20,6 @@ type SyncDeps = {
   bucket: R2Bucket;
   vectorize: VectorizeIndex;
   apiKey: string;
-};
-
-const extractBaseName = (key: string) =>
-  key.replace("originals/", "").replace(/\.[^.]+$/, "");
-
-const buildOriginalsMap = (objects: R2Object[]) => {
-  const map = new Map<string, Date>();
-  for (const obj of objects) {
-    if (obj.key.startsWith("originals/")) {
-      map.set(extractBaseName(obj.key), obj.uploaded);
-    }
-  }
-  return map;
 };
 
 const isFileEdited = (mdFile: R2Object, originalsMap: Map<string, Date>) => {

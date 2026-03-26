@@ -2,7 +2,11 @@ import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
 import type { RequestContext } from "@mastra/core/request-context";
 import { getCurrentDateInfo } from "~/lib/date";
-import { geminiModelWithThinking } from "~/lib/llm-models";
+import {
+  GEMINI_FLASH,
+  GEMINI_FLASH_LITE,
+  geminiModelWithThinking,
+} from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
 import { feedbackAgent } from "~/mastra/agents/feedback-agent";
@@ -35,6 +39,10 @@ const baseInstructions = (platform: "web" | "line") => `
 
 ## 応答戦略（最重要）
 村に関する事実は検索結果・ナレッジのみを情報源とする。自分の知識で補完しない。
+
+### 内部情報の秘匿
+エージェント名・ツール名・内部のシステム名をユーザーに見せてはいけない。
+「調べてみるね」「確認するね」のような自然な表現を使う。
 ${
   platform === "web"
     ? `
@@ -170,11 +178,10 @@ const lineInstructions = `
 - 古い配信の詳細が必要 → broadcast-get ツールを使う
 `;
 
-interface Props
-  extends Omit<AgentConfig, "id" | "name" | "instructions" | "model"> {
+type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
   isAdmin?: boolean;
   platform?: "web" | "line";
-}
+};
 
 export const createNeppChanAgent = ({
   isAdmin = false,
@@ -221,7 +228,11 @@ export const createNeppChanAgent = ({
     id: "nep-chan",
     name: "ねっぷちゃん",
     instructions,
-    ...geminiModelWithThinking(),
+    ...geminiModelWithThinking(
+      platform === "web"
+        ? { model: GEMINI_FLASH, level: "high" }
+        : { model: GEMINI_FLASH_LITE, level: "medium" },
+    ),
     agents,
     tools,
     memory: ({ requestContext }) =>

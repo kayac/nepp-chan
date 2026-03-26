@@ -4,9 +4,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { adminUsers } from "~/db";
 import { createTestDb, type TestDb } from "./helpers/test-db";
 
-/**
- * admin_users テーブルに対する Drizzle ORM クエリの統合テスト
- */
 describe("adminUsers Drizzle クエリ", () => {
   let db: TestDb;
 
@@ -18,9 +15,10 @@ describe("adminUsers Drizzle クエリ", () => {
     it("新しい管理者ユーザーを作成できる", async () => {
       await db.insert(adminUsers).values({
         id: "user-1",
-        email: "admin@example.com",
+        username: "admin01",
         name: "管理者",
         role: "admin",
+        passwordHash: "100000:salt:hash",
         createdAt: "2024-01-01T00:00:00Z",
       });
 
@@ -31,7 +29,7 @@ describe("adminUsers Drizzle クエリ", () => {
         .get();
 
       expect(saved).not.toBeNull();
-      expect(saved?.email).toBe("admin@example.com");
+      expect(saved?.username).toBe("admin01");
       expect(saved?.name).toBe("管理者");
       expect(saved?.role).toBe("admin");
     });
@@ -39,8 +37,9 @@ describe("adminUsers Drizzle クエリ", () => {
     it("名前なしでも作成できる", async () => {
       await db.insert(adminUsers).values({
         id: "user-2",
-        email: "admin2@example.com",
+        username: "admin02",
         role: "admin",
+        passwordHash: "100000:salt:hash",
         createdAt: "2024-01-01T00:00:00Z",
       });
 
@@ -51,14 +50,15 @@ describe("adminUsers Drizzle クエリ", () => {
         .get();
 
       expect(saved?.name).toBeNull();
-      expect(saved?.email).toBe("admin2@example.com");
+      expect(saved?.username).toBe("admin02");
     });
 
     it("super_admin ロールで作成できる", async () => {
       await db.insert(adminUsers).values({
         id: "user-3",
-        email: "super@example.com",
+        username: "superadmin",
         role: "super_admin",
+        passwordHash: "100000:salt:hash",
         createdAt: "2024-01-01T00:00:00Z",
       });
 
@@ -71,19 +71,21 @@ describe("adminUsers Drizzle クエリ", () => {
       expect(saved?.role).toBe("super_admin");
     });
 
-    it("同じメールアドレスで重複作成するとエラーになる", async () => {
+    it("同じユーザー名で重複作成するとエラーになる", async () => {
       await db.insert(adminUsers).values({
         id: "user-dup-1",
-        email: "duplicate@example.com",
+        username: "duplicate",
         role: "admin",
+        passwordHash: "100000:salt:hash",
         createdAt: "2024-01-01T00:00:00Z",
       });
 
       await expect(
         db.insert(adminUsers).values({
           id: "user-dup-2",
-          email: "duplicate@example.com",
+          username: "duplicate",
           role: "admin",
+          passwordHash: "100000:salt:hash",
           createdAt: "2024-01-02T00:00:00Z",
         }),
       ).rejects.toThrow();
@@ -94,9 +96,10 @@ describe("adminUsers Drizzle クエリ", () => {
     beforeEach(async () => {
       await db.insert(adminUsers).values({
         id: "find-test",
-        email: "find@example.com",
+        username: "finduser",
         name: "検索テスト",
         role: "admin",
+        passwordHash: "100000:salt:hash",
         createdAt: "2024-01-01T00:00:00Z",
       });
     });
@@ -110,7 +113,7 @@ describe("adminUsers Drizzle クエリ", () => {
 
       expect(result).not.toBeNull();
       expect(result?.id).toBe("find-test");
-      expect(result?.email).toBe("find@example.com");
+      expect(result?.username).toBe("finduser");
     });
 
     it("存在しないIDの場合はundefinedを返す", async () => {
@@ -124,33 +127,34 @@ describe("adminUsers Drizzle クエリ", () => {
     });
   });
 
-  describe("select by email", () => {
+  describe("select by username", () => {
     beforeEach(async () => {
       await db.insert(adminUsers).values({
-        id: "email-test",
-        email: "email-test@example.com",
-        name: "メールテスト",
+        id: "username-test",
+        username: "usernametest",
+        name: "ユーザー名テスト",
         role: "admin",
+        passwordHash: "100000:salt:hash",
         createdAt: "2024-01-01T00:00:00Z",
       });
     });
 
-    it("メールアドレスでユーザーを取得できる", async () => {
+    it("ユーザー名でユーザーを取得できる", async () => {
       const result = await db
         .select()
         .from(adminUsers)
-        .where(eq(adminUsers.email, "email-test@example.com"))
+        .where(eq(adminUsers.username, "usernametest"))
         .get();
 
       expect(result).not.toBeNull();
-      expect(result?.id).toBe("email-test");
+      expect(result?.id).toBe("username-test");
     });
 
-    it("存在しないメールアドレスの場合はundefinedを返す", async () => {
+    it("存在しないユーザー名の場合はundefinedを返す", async () => {
       const result = await db
         .select()
         .from(adminUsers)
-        .where(eq(adminUsers.email, "nonexistent@example.com"))
+        .where(eq(adminUsers.username, "nonexistent"))
         .get();
 
       expect(result).toBeUndefined();
@@ -161,9 +165,10 @@ describe("adminUsers Drizzle クエリ", () => {
     beforeEach(async () => {
       await db.insert(adminUsers).values({
         id: "update-test",
-        email: "update@example.com",
+        username: "updateuser",
         name: "元の名前",
         role: "admin",
+        passwordHash: "100000:salt:hash",
         createdAt: "2024-01-01T00:00:00Z",
       });
     });
@@ -210,8 +215,9 @@ describe("adminUsers Drizzle クエリ", () => {
     beforeEach(async () => {
       await db.insert(adminUsers).values({
         id: "delete-test",
-        email: "delete@example.com",
+        username: "deleteuser",
         role: "admin",
+        passwordHash: "100000:salt:hash",
         createdAt: "2024-01-01T00:00:00Z",
       });
     });
@@ -234,20 +240,23 @@ describe("adminUsers Drizzle クエリ", () => {
       await db.insert(adminUsers).values([
         {
           id: "list-1",
-          email: "list1@example.com",
+          username: "listuser1",
           role: "admin",
+          passwordHash: "100000:salt:hash",
           createdAt: "2024-01-01T00:00:00Z",
         },
         {
           id: "list-2",
-          email: "list2@example.com",
+          username: "listuser2",
           role: "super_admin",
+          passwordHash: "100000:salt:hash",
           createdAt: "2024-01-02T00:00:00Z",
         },
         {
           id: "list-3",
-          email: "list3@example.com",
+          username: "listuser3",
           role: "admin",
+          passwordHash: "100000:salt:hash",
           createdAt: "2024-01-03T00:00:00Z",
         },
       ]);

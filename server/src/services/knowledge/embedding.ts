@@ -8,6 +8,7 @@ import { logger } from "~/lib/logger";
 const EMBEDDING_DIMENSIONS = 1536;
 const BATCH_SIZE = 100;
 const MIN_CHUNK_LENGTH = 50;
+const MAX_DELETE_ITERATIONS = 1000;
 
 type EmbeddingModel = ReturnType<
   ReturnType<typeof createGoogleGenerativeAI>["textEmbeddingModel"]
@@ -184,20 +185,23 @@ export const deleteAllKnowledge = async (
 
   // returnMetadata: "all" の場合、topK は最大 50
   // 繰り返し削除してすべてのベクトルを削除
-  let hasMore = true;
-  while (hasMore) {
+  for (let i = 0; i < MAX_DELETE_ITERATIONS; i++) {
     const results = await vectorize.query(dummyVector, {
       topK: 50,
       returnMetadata: "all",
     });
 
-    if (results.matches.length > 0) {
-      const ids = results.matches.map((m) => m.id);
-      await vectorize.deleteByIds(ids);
-      totalDeleted += ids.length;
-    } else {
-      hasMore = false;
-    }
+    if (results.matches.length === 0) break;
+
+    const ids = results.matches.map((m) => m.id);
+    await vectorize.deleteByIds(ids);
+    totalDeleted += ids.length;
+  }
+
+  if (totalDeleted >= MAX_DELETE_ITERATIONS * 50) {
+    logger.warn(
+      `[Knowledge] deleteAllKnowledge reached iteration limit (${MAX_DELETE_ITERATIONS}), some vectors may remain`,
+    );
   }
 
   return { deleted: totalDeleted };
@@ -213,23 +217,24 @@ export const deleteKnowledgeBySource = async (
   const dummyVector = new Array(EMBEDDING_DIMENSIONS).fill(0);
   let totalDeleted = 0;
 
-  // returnMetadata: "all" の場合、topK は最大 50
-  // 繰り返し削除してすべてのベクトルを削除
-  let hasMore = true;
-  while (hasMore) {
+  for (let i = 0; i < MAX_DELETE_ITERATIONS; i++) {
     const results = await vectorize.query(dummyVector, {
       topK: 50,
       returnMetadata: "all",
       filter: { source: { $eq: source } },
     });
 
-    if (results.matches.length > 0) {
-      const ids = results.matches.map((m) => m.id);
-      await vectorize.deleteByIds(ids);
-      totalDeleted += ids.length;
-    } else {
-      hasMore = false;
-    }
+    if (results.matches.length === 0) break;
+
+    const ids = results.matches.map((m) => m.id);
+    await vectorize.deleteByIds(ids);
+    totalDeleted += ids.length;
+  }
+
+  if (totalDeleted >= MAX_DELETE_ITERATIONS * 50) {
+    logger.warn(
+      `[Knowledge] deleteKnowledgeBySource(${source}) reached iteration limit (${MAX_DELETE_ITERATIONS}), some vectors may remain`,
+    );
   }
 
   return { deleted: totalDeleted };

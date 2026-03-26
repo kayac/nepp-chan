@@ -72,9 +72,10 @@ export type NewMessageFeedback = typeof messageFeedback.$inferInsert;
 // 管理者ユーザー
 export const adminUsers = sqliteTable("admin_users", {
   id: text("id").primaryKey(),
-  email: text("email").notNull().unique(),
+  username: text("username").notNull().unique(),
   name: text("name"),
-  role: text("role").notNull().default("admin"), // "super_admin" | "admin"
+  role: text("role").notNull().default("admin"), // "super_admin" | "admin" | "staff"
+  passwordHash: text("password_hash").notNull(),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at"),
 });
@@ -82,28 +83,10 @@ export const adminUsers = sqliteTable("admin_users", {
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type NewAdminUser = typeof adminUsers.$inferInsert;
 
-// 管理者クレデンシャル（WebAuthn）
-export const adminCredentials = sqliteTable("admin_credentials", {
-  id: text("id").primaryKey(), // Base64URL encoded credential ID
-  userId: text("user_id")
-    .notNull()
-    .references(() => adminUsers.id, { onDelete: "cascade" }),
-  publicKey: text("public_key").notNull(),
-  counter: integer("counter").notNull().default(0),
-  deviceType: text("device_type").notNull(),
-  backedUp: integer("backed_up", { mode: "boolean" }).notNull().default(false),
-  transports: text("transports"), // JSON array
-  createdAt: text("created_at").notNull(),
-  lastUsedAt: text("last_used_at"),
-});
-
-export type AdminCredential = typeof adminCredentials.$inferSelect;
-export type NewAdminCredential = typeof adminCredentials.$inferInsert;
-
 // 管理者招待
 export const adminInvitations = sqliteTable("admin_invitations", {
   id: text("id").primaryKey(),
-  email: text("email").notNull().unique(),
+  username: text("username").notNull().unique(),
   token: text("token").notNull().unique(),
   invitedBy: text("invited_by").notNull(), // 初期は "system"
   role: text("role").notNull().default("admin"),
@@ -115,25 +98,12 @@ export const adminInvitations = sqliteTable("admin_invitations", {
 export type AdminInvitation = typeof adminInvitations.$inferSelect;
 export type NewAdminInvitation = typeof adminInvitations.$inferInsert;
 
-// 管理者セッション
-export const adminSessions = sqliteTable("admin_sessions", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => adminUsers.id, { onDelete: "cascade" }),
-  expiresAt: text("expires_at").notNull(),
-  createdAt: text("created_at").notNull(),
-  lastAccessedAt: text("last_accessed_at"),
-});
-
-export type AdminSession = typeof adminSessions.$inferSelect;
-export type NewAdminSession = typeof adminSessions.$inferInsert;
-
 // LINE配信メッセージ
 export const broadcastMessages = sqliteTable("broadcast_messages", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   body: text("body").notNull(),
+  parts: text("parts"),
   status: text("status").notNull().default("draft"), // draft | scheduled | sent | failed
   scheduledAt: text("scheduled_at"),
   sentAt: text("sent_at"),
@@ -145,16 +115,3 @@ export const broadcastMessages = sqliteTable("broadcast_messages", {
 
 export type BroadcastMessage = typeof broadcastMessages.$inferSelect;
 export type NewBroadcastMessage = typeof broadcastMessages.$inferInsert;
-
-// 認証リクエスト（一時保存、WebAuthn challenge）
-export const authChallenges = sqliteTable("auth_challenges", {
-  id: text("id").primaryKey(),
-  challenge: text("challenge").notNull(),
-  type: text("type").notNull(), // "registration" | "authentication"
-  email: text("email"),
-  expiresAt: text("expires_at").notNull(),
-  createdAt: text("created_at").notNull(),
-});
-
-export type AuthChallenge = typeof authChallenges.$inferSelect;
-export type NewAuthChallenge = typeof authChallenges.$inferInsert;

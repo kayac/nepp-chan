@@ -18,7 +18,7 @@
     "mastra:dev": "pnpm --filter @nepp-chan/server mastra:dev",
     "mastra:build": "pnpm --filter @nepp-chan/server mastra:build",
     "mastra:start": "pnpm --filter @nepp-chan/server mastra:start",
-    "lint": "biome check . && pnpm --filter @nepp-chan/web exec tsc --noEmit && pnpm --filter @nepp-chan/server exec tsc --noEmit",
+    "lint": "biome check . && pnpm --filter @nepp-chan/web check && pnpm --filter @nepp-chan/server exec tsc --noEmit",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "db:generate": "pnpm --filter @nepp-chan/server db:generate",
@@ -26,6 +26,8 @@
     "db:migrate:prd": "pnpm --filter @nepp-chan/server db:migrate:prd",
     "db:migrate:local": "pnpm --filter @nepp-chan/server db:migrate:local",
     "db:studio": "pnpm --filter @nepp-chan/server db:studio",
+    "db:studio:dev": "pnpm --filter @nepp-chan/server db:studio:dev",
+    "db:studio:prd": "pnpm --filter @nepp-chan/server db:studio:prd",
     "db:push": "pnpm --filter @nepp-chan/server db:push",
     "db:check": "pnpm --filter @nepp-chan/server db:check",
     "knowledge:upload:local": "tsx --env-file=.env.local .claude/skills/np-knowledge/scripts/upload-knowledge.ts",
@@ -48,6 +50,6 @@
     "glob": "^13.0.6",
     "gray-matter": "^4.0.3",
     "tsx": "^4.21.0",
-    "wrangler": "^4.66.0"
+    "wrangler": "^4.76.0"
   }
 }

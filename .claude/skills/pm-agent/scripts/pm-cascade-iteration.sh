@@ -1,11 +1,11 @@
 #!/bin/bash
-# pm-cascade-iteration.sh - Cascade iteration from parent to sub-issues
+# pm-cascade-iteration.sh - 親 Issue から子 Issue へイテレーションを伝播
 # Usage: pm-cascade-iteration.sh <parent_issue_number> [options]
 #
-# Automatically sets the same iteration for all sub-issues of a parent issue.
-# Uses GraphQL API for Projects V2 and REST API for sub-issues.
+# 親 Issue のイテレーションをすべての子 Issue に自動設定する。
+# Projects V2 の GraphQL API と REST API（子 Issue 取得）を使用。
 #
-# Reference: https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/using-the-api-to-manage-projects
+# 参考: https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/using-the-api-to-manage-projects
 
 set -euo pipefail
 
@@ -14,33 +14,33 @@ source "$SCRIPT_DIR/pm-utils.sh"
 
 usage() {
   cat <<EOF
-Usage: $0 <parent_issue_number> [options]
+使い方: $0 <parent_issue_number> [オプション]
 
-Cascade iteration from a parent issue to its sub-issues.
+親 Issue のイテレーションを子 Issue に伝播する。
 
-Options:
-  --repo <owner/repo>      Repository (default: auto-detect from git remote)
-  --project <number>       Project number (required)
-  --owner <login>          Project owner (@me for user, or org name)
-  --recursive              Cascade to ALL descendants (not just direct children)
-  --max-depth <N>          Maximum depth for recursive mode (default: 10)
-  --dry-run                Show what would be done without executing
-  -h, --help               Show this help
+オプション:
+  --repo <owner/repo>      リポジトリ（デフォルト: git remote から自動検出）
+  --project <number>       プロジェクト番号（必須）
+  --owner <login>          プロジェクトオーナー（@me でユーザー、または組織名）
+  --recursive              直接の子だけでなく全子孫に伝播
+  --max-depth <N>          再帰モードの最大深度（デフォルト: 10）
+  --dry-run                実行せずに予定内容を表示
+  -h, --help               このヘルプを表示
 
-Examples:
-  # Cascade to direct children only
+使用例:
+  # 直接の子 Issue のみに伝播
   $0 10 --project 1 --owner @me
 
-  # Cascade to ALL descendants (Epic → Feature → Story → Task)
+  # 全子孫に伝播（Epic → Feature → Story → Task）
   $0 10 --project 1 --owner @me --recursive
 
-  # Dry run with recursive mode
+  # 再帰モードでドライラン
   $0 10 --project 1 --owner @me --recursive --dry-run
 EOF
   exit 1
 }
 
-# Default values
+# デフォルト値
 PARENT_ISSUE=""
 REPO=""
 PROJECT_NUMBER=""
@@ -49,7 +49,7 @@ RECURSIVE=false
 MAX_DEPTH=10
 DRY_RUN=false
 
-# Parse arguments
+# 引数の解析
 while [[ $# -gt 0 ]]; do
   case $1 in
     --repo)
@@ -78,7 +78,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     -h | --help) usage ;;
     -*)
-      echo "Unknown option: $1"
+      echo "不明なオプション: $1"
       usage
       ;;
     *)
@@ -88,63 +88,63 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Validate required arguments
+# 必須引数の検証
 [[ -z "$PARENT_ISSUE" ]] && {
-  echo "Error: parent_issue_number is required"
+  echo "エラー: parent_issue_number は必須です"
   usage
 }
 [[ -z "$PROJECT_NUMBER" ]] && {
-  echo "Error: --project is required"
+  echo "エラー: --project は必須です"
   usage
 }
 [[ -z "$PROJECT_OWNER" ]] && {
-  echo "Error: --owner is required"
+  echo "エラー: --owner は必須です"
   usage
 }
 
 REPO="${REPO:-$(get_repo)}"
 
-# Note: GraphQL functions are now in pm-utils.sh (DRY refactoring)
-# Available: get_project_id, get_project_fields, get_issue_iteration,
+# 注: GraphQL 関数は pm-utils.sh に集約済み（DRY リファクタリング）
+# 利用可能: get_project_id, get_project_fields, get_issue_iteration,
 #            get_issue_node_id, add_issue_to_project, update_iteration_field,
 #            find_iteration_field_id, get_child_issues, get_all_descendants
 
 # ============================================================
-# Main Execution
+# メイン処理
 # ============================================================
 
 echo ""
 echo "═══════════════════════════════════════════════"
 echo "📋 pm-cascade-iteration.sh"
 echo "───────────────────────────────────────────────"
-echo "  Repository: $REPO"
-echo "  Project: #$PROJECT_NUMBER"
-echo "  Parent: #$PARENT_ISSUE"
-[[ "$RECURSIVE" == true ]] && echo "  Mode: RECURSIVE (max depth: $MAX_DEPTH)"
-[[ "$DRY_RUN" == true ]] && echo "  Mode: DRY RUN"
+echo "  リポジトリ: $REPO"
+echo "  プロジェクト: #$PROJECT_NUMBER"
+echo "  親 Issue: #$PARENT_ISSUE"
+[[ "$RECURSIVE" == true ]] && echo "  モード: 再帰（最大深度: $MAX_DEPTH）"
+[[ "$DRY_RUN" == true ]] && echo "  モード: ドライラン"
 echo "═══════════════════════════════════════════════"
 echo ""
 
-# Step 1: Get project ID
-echo "Fetching project information..."
+# ステップ 1: プロジェクト ID を取得
+echo "プロジェクト情報を取得中..."
 PROJECT_ID=$(get_project_id "$PROJECT_OWNER" "$PROJECT_NUMBER")
 
 if [[ -z "$PROJECT_ID" || "$PROJECT_ID" == "null" ]]; then
-  echo "Error: Could not find project #$PROJECT_NUMBER for owner $PROJECT_OWNER" >&2
+  echo "エラー: オーナー $PROJECT_OWNER のプロジェクト #$PROJECT_NUMBER が見つかりません" >&2
   exit 1
 fi
 
-# Step 2: Get project fields
+# ステップ 2: プロジェクトフィールドを取得
 FIELDS_JSON=$(get_project_fields "$PROJECT_ID")
 ITERATION_FIELD_ID=$(find_iteration_field_id "$FIELDS_JSON")
 
 if [[ -z "$ITERATION_FIELD_ID" || "$ITERATION_FIELD_ID" == "null" ]]; then
-  echo "Error: Project #$PROJECT_NUMBER does not have an Iteration field" >&2
+  echo "エラー: プロジェクト #$PROJECT_NUMBER に Iteration フィールドがありません" >&2
   exit 1
 fi
 
-# Step 3: Get parent issue's iteration
-echo "Fetching parent #$PARENT_ISSUE iteration..."
+# ステップ 3: 親 Issue のイテレーションを取得
+echo "親 Issue #$PARENT_ISSUE のイテレーションを取得中..."
 PARENT_ITERATION_JSON=$(get_issue_iteration "$REPO" "$PARENT_ISSUE" "$PROJECT_NUMBER")
 
 PARENT_ITERATION_ID=$(echo "$PARENT_ITERATION_JSON" | jq -r '.iterationId // empty')
@@ -153,149 +153,113 @@ PARENT_ISSUE_TITLE=$(echo "$PARENT_ITERATION_JSON" | jq -r '.issueTitle // empty
 
 if [[ -z "$PARENT_ITERATION_ID" || "$PARENT_ITERATION_ID" == "null" ]]; then
   echo ""
-  echo "Error: Parent issue #$PARENT_ISSUE does not have an iteration set" >&2
-  echo "Please set an iteration for the parent issue first using:" >&2
-  echo "  pm-project-fields.sh $PARENT_ISSUE --project $PROJECT_NUMBER --owner $PROJECT_OWNER --iteration \"Sprint Name\"" >&2
+  echo "エラー: 親 Issue #$PARENT_ISSUE にイテレーションが設定されていません" >&2
+  echo "先に親 Issue のイテレーションを設定してください:" >&2
+  echo "  pm-project-fields.sh $PARENT_ISSUE --project $PROJECT_NUMBER --owner $PROJECT_OWNER --iteration \"スプリント名\"" >&2
   exit 1
 fi
 
-echo "  Parent: #$PARENT_ISSUE - $PARENT_ISSUE_TITLE"
-echo "  Iteration: $PARENT_ITERATION_TITLE"
+echo "  親: #$PARENT_ISSUE - $PARENT_ISSUE_TITLE"
+echo "  イテレーション: $PARENT_ITERATION_TITLE"
 echo ""
 
-# Step 4: Get sub-issues (direct or recursive)
+# ステップ 4: 子 Issue を取得（直接 or 再帰）
 if [[ "$RECURSIVE" == true ]]; then
-  echo "Fetching all descendants (recursive)..."
+  echo "全子孫を取得中（再帰）..."
   DESCENDANTS_JSON=$(get_all_descendants "$REPO" "$PARENT_ISSUE" "$MAX_DEPTH")
   TOTAL_COUNT=$(echo "$DESCENDANTS_JSON" | jq 'length')
 else
-  echo "Cascading to sub-issues..."
+  echo "子 Issue に伝播中..."
   DESCENDANTS_JSON=$(get_child_issues "$REPO" "$PARENT_ISSUE")
   TOTAL_COUNT=$(echo "$DESCENDANTS_JSON" | jq 'length')
 fi
 
 if [[ "$TOTAL_COUNT" -eq 0 ]]; then
-  print_warn "No sub-issues found for #$PARENT_ISSUE"
+  print_warn "#$PARENT_ISSUE の子 Issue が見つかりません"
   echo ""
   echo "═══════════════════════════════════════════════"
-  echo "📊 Summary"
+  echo "📊 結果サマリー"
   echo "───────────────────────────────────────────────"
-  echo "  Parent: #$PARENT_ISSUE ($PARENT_ITERATION_TITLE)"
-  echo "  Sub-issues: 0"
+  echo "  親: #$PARENT_ISSUE ($PARENT_ITERATION_TITLE)"
+  echo "  子 Issue: 0 件"
   echo "═══════════════════════════════════════════════"
   exit 0
 fi
 
-echo "  Found $TOTAL_COUNT issue(s) to process"
+echo "  処理対象: $TOTAL_COUNT 件"
 echo ""
 
-# Step 5: Process each sub-issue
+# ステップ 5: 各子 Issue を処理
 updated_count=0
 skipped_count=0
 max_depth_reached=0
 
-# Process by depth level for better output
+# 子 Issue 1件のイテレーション更新処理
+process_child_iteration() {
+  local item="$1"
+  [[ -z "$item" ]] && return
+
+  local sub_issue sub_issue_title
+  sub_issue=$(echo "$item" | jq -r '.number')
+  sub_issue_title=$(echo "$item" | jq -r '.title')
+
+  # 子 Issue の現在のイテレーションを取得
+  local sub_iteration_json sub_iteration_id sub_item_id
+  sub_iteration_json=$(get_issue_iteration "$REPO" "$sub_issue" "$PROJECT_NUMBER")
+  sub_iteration_id=$(echo "$sub_iteration_json" | jq -r '.iterationId // empty')
+  sub_item_id=$(echo "$sub_iteration_json" | jq -r '.itemId // empty')
+
+  # 同じイテレーションが既に設定されているか確認
+  if [[ "$sub_iteration_id" == "$PARENT_ITERATION_ID" ]]; then
+    print_skip "#$sub_issue: $sub_issue_title（既に $PARENT_ITERATION_TITLE）"
+    ((skipped_count++)) || true
+    return
+  fi
+
+  if [[ "$DRY_RUN" == true ]]; then
+    echo "  更新予定 #$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
+    ((updated_count++)) || true
+    return
+  fi
+
+  # プロジェクトに未追加の場合は追加してからイテレーションを更新
+  if [[ -z "$sub_item_id" || "$sub_item_id" == "null" ]]; then
+    sub_item_id=$(ensure_project_item "$REPO" "$sub_issue" "$PROJECT_ID" "$PROJECT_NUMBER") || {
+      print_warn "#$sub_issue のプロジェクトへの追加に失敗しました"
+      return
+    }
+  fi
+
+  if update_iteration_field "$PROJECT_ID" "$sub_item_id" "$ITERATION_FIELD_ID" "$PARENT_ITERATION_ID" >/dev/null 2>&1; then
+    print_success "#$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
+    ((updated_count++)) || true
+  else
+    print_warn "#$sub_issue の更新に失敗しました"
+  fi
+}
+
+# 深さレベルごとに処理（出力を見やすくするため）
 if [[ "$RECURSIVE" == true ]]; then
   for depth in $(echo "$DESCENDANTS_JSON" | jq -r '.[].depth' | sort -u); do
-    echo "Level $depth:"
+    echo "レベル $depth:"
     max_depth_reached=$depth
-
     while IFS= read -r item; do
-      [[ -z "$item" ]] && continue
-
-      sub_issue=$(echo "$item" | jq -r '.number')
-      sub_issue_title=$(echo "$item" | jq -r '.title')
-
-      # Get sub-issue's current iteration
-      sub_iteration_json=$(get_issue_iteration "$REPO" "$sub_issue" "$PROJECT_NUMBER")
-      sub_iteration_id=$(echo "$sub_iteration_json" | jq -r '.iterationId // empty')
-      sub_item_id=$(echo "$sub_iteration_json" | jq -r '.itemId // empty')
-
-      # Check if already has the same iteration
-      if [[ "$sub_iteration_id" == "$PARENT_ITERATION_ID" ]]; then
-        print_skip "#$sub_issue: $sub_issue_title (already $PARENT_ITERATION_TITLE)"
-        ((skipped_count++)) || true
-        continue
-      fi
-
-      if [[ "$DRY_RUN" == true ]]; then
-        echo "  Would update #$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
-        ((updated_count++)) || true
-        continue
-      fi
-
-      # Add to project if not already added
-      if [[ -z "$sub_item_id" || "$sub_item_id" == "null" ]]; then
-        node_id=$(get_issue_node_id "$REPO" "$sub_issue")
-        sub_item_id=$(add_issue_to_project "$PROJECT_ID" "$node_id")
-        if [[ -z "$sub_item_id" || "$sub_item_id" == "null" ]]; then
-          print_warn "Failed to add #$sub_issue to project"
-          continue
-        fi
-      fi
-
-      # Update iteration
-      if update_iteration_field "$PROJECT_ID" "$sub_item_id" "$ITERATION_FIELD_ID" "$PARENT_ITERATION_ID" >/dev/null 2>&1; then
-        print_success "#$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
-        ((updated_count++)) || true
-      else
-        print_warn "Failed to update #$sub_issue"
-      fi
+      process_child_iteration "$item"
     done < <(echo "$DESCENDANTS_JSON" | jq -c --argjson d "$depth" '.[] | select(.depth == $d)')
     echo ""
   done
 else
-  # Non-recursive mode: process direct children only
   while IFS= read -r item; do
-    [[ -z "$item" ]] && continue
-
-    sub_issue=$(echo "$item" | jq -r '.number')
-    sub_issue_title=$(echo "$item" | jq -r '.title')
-
-    # Get sub-issue's current iteration
-    sub_iteration_json=$(get_issue_iteration "$REPO" "$sub_issue" "$PROJECT_NUMBER")
-    sub_iteration_id=$(echo "$sub_iteration_json" | jq -r '.iterationId // empty')
-    sub_item_id=$(echo "$sub_iteration_json" | jq -r '.itemId // empty')
-
-    # Check if already has the same iteration
-    if [[ "$sub_iteration_id" == "$PARENT_ITERATION_ID" ]]; then
-      print_skip "#$sub_issue: $sub_issue_title (already $PARENT_ITERATION_TITLE)"
-      ((skipped_count++)) || true
-      continue
-    fi
-
-    if [[ "$DRY_RUN" == true ]]; then
-      echo "Would update #$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
-      ((updated_count++)) || true
-      continue
-    fi
-
-    # Add to project if not already added
-    if [[ -z "$sub_item_id" || "$sub_item_id" == "null" ]]; then
-      node_id=$(get_issue_node_id "$REPO" "$sub_issue")
-      sub_item_id=$(add_issue_to_project "$PROJECT_ID" "$node_id")
-      if [[ -z "$sub_item_id" || "$sub_item_id" == "null" ]]; then
-        print_warn "Failed to add #$sub_issue to project"
-        continue
-      fi
-    fi
-
-    # Update iteration
-    if update_iteration_field "$PROJECT_ID" "$sub_item_id" "$ITERATION_FIELD_ID" "$PARENT_ITERATION_ID" >/dev/null 2>&1; then
-      print_success "#$sub_issue: $sub_issue_title → $PARENT_ITERATION_TITLE"
-      ((updated_count++)) || true
-    else
-      print_warn "Failed to update #$sub_issue"
-    fi
+    process_child_iteration "$item"
   done < <(echo "$DESCENDANTS_JSON" | jq -c '.[]')
 fi
 
-# Step 6: Summary
+# ステップ 6: サマリー
 echo "═══════════════════════════════════════════════"
-echo "📊 Summary"
+echo "📊 結果サマリー"
 echo "───────────────────────────────────────────────"
-echo "  Parent: #$PARENT_ISSUE ($PARENT_ITERATION_TITLE)"
-echo "  Updated: $updated_count issue(s)"
-echo "  Skipped: $skipped_count issue(s)"
-[[ "$RECURSIVE" == true ]] && echo "  Max depth reached: $max_depth_reached"
+echo "  親: #$PARENT_ISSUE ($PARENT_ITERATION_TITLE)"
+echo "  更新: $updated_count 件"
+echo "  スキップ: $skipped_count 件"
+[[ "$RECURSIVE" == true ]] && echo "  到達した最大深度: $max_depth_reached"
 echo "═══════════════════════════════════════════════"

@@ -5,10 +5,16 @@ import { handleLineEvent, handleR2Event, handleScheduled } from "~/handlers";
 import type { R2EventMessage } from "~/handlers/r2-event-handler";
 import { logger } from "~/lib/logger";
 import { getSentryOptions } from "~/lib/sentry";
-import { corsMiddleware, errorHandler, securityHeaders } from "~/middleware";
+import {
+  corsMiddleware,
+  errorHandler,
+  resolveAuth,
+  securityHeaders,
+} from "~/middleware";
 import {
   authRoutes,
   broadcastAdminRoutes,
+  broadcastMediaRoutes,
   chatRoutes,
   emergencyAdminRoutes,
   feedbackAdminRoutes,
@@ -26,6 +32,7 @@ const app = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
 
 app.use("*", corsMiddleware);
 app.use("*", securityHeaders);
+app.use("*", resolveAuth);
 
 app.onError(errorHandler);
 
@@ -34,6 +41,7 @@ app.route("/chat", chatRoutes);
 app.route("/feedback", feedbackRoutes);
 app.route("/threads", threadsRoutes);
 app.route("/admin/broadcast", broadcastAdminRoutes);
+app.route("/broadcast/media", broadcastMediaRoutes);
 app.route("/admin/feedback", feedbackAdminRoutes);
 app.route("/admin/knowledge", knowledgeAdminRoutes);
 app.route("/admin/persona", personaAdminRoutes);
