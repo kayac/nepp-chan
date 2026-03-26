@@ -9,7 +9,14 @@
  */
 import { execSync } from "node:child_process";
 import { getPlatformProxy } from "wrangler";
-import { getGeminiUsage } from "./lib/gemini-counter";
+import {
+  type GeminiKeyType,
+  getAllGeminiUsage,
+  migrateLegacyCounter,
+} from "./lib/gemini-counter";
+
+// ─── ユーティリティ ─────────────────────────────────────
+
 
 // ─── CLI バーグラフ ──────────────────────────────────────
 
@@ -107,16 +114,19 @@ const main = async () => {
   const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
   const timestamp = jst.toISOString().replace("T", " ").slice(0, 19);
 
-  console.log(
-    "\n╔══════════════════════════════════════════════════════════════╗",
-  );
-  console.log(`║  API Quota Dashboard (${timestamp} JST)      ║`);
-  console.log(
-    "╠══════════════════════════════════════════════════════════════╣",
-  );
+  const sep = "─".repeat(60);
+  const section = (title: string) => {
+    console.log("");
+    console.log(`  ${title}`);
+    console.log(`  ${sep}`);
+  };
+
+  console.log(`\n  API Quota Dashboard (${timestamp} JST)`);
+  console.log(`  ${"=".repeat(60)}`);
 
   // ─── Gemini ───
-  const gemini = getGeminiUsage();
+  migrateLegacyCounter();
+  const geminiAll = getAllGeminiUsage();
   const geminiResetJST = "17:00 JST";
   const hoursUntilReset = (() => {
     const resetHourUTC = 8; // PT 00:00 = UTC 08:00
@@ -125,24 +135,26 @@ const main = async () => {
     return diff > 0 ? diff : diff + 24;
   })();
 
-  console.log(
-    "║                                                              ║",
-  );
-  console.log(
-    "║  Gemini (ローカルカウンター)                                  ║",
-  );
-  console.log(`║  RPD: ${bar(gemini.requests, gemini.rpd)}  ║`);
-  console.log(
-    `║  Reset: ${geminiResetJST} (${hoursUntilReset.toFixed(1)}h)${" ".repeat(37)}║`,
-  );
-  if (gemini.lastUpdated) {
-    const lastJST = new Date(
-      new Date(gemini.lastUpdated).getTime() + 9 * 60 * 60 * 1000,
-    );
-    console.log(
-      `║  Last: ${lastJST.toISOString().replace("T", " ").slice(0, 19)} JST${" ".repeat(24)}║`,
-    );
+  const keyLabels: Record<GeminiKeyType, string> = {
+    eval: "Eval専用 (EVAL_GOOGLE_API_KEY)",
+    main: "本番会話 (GOOGLE_GENERATIVE_AI_API_KEY)",
+  };
+
+  section("Gemini (ローカルカウンター)");
+  for (const keyType of ["eval", "main"] as const) {
+    const usage = geminiAll[keyType];
+    console.log(`    ${keyLabels[keyType]}`);
+    console.log(`    RPD: ${bar(usage.requests, usage.rpd)}`);
+    if (usage.lastUpdated) {
+      const lastJST = new Date(
+        new Date(usage.lastUpdated).getTime() + 9 * 60 * 60 * 1000,
+      );
+      console.log(
+        `    Last: ${lastJST.toISOString().replace("T", " ").slice(0, 19)} JST`,
+      );
+    }
   }
+  console.log(`  Reset: ${geminiResetJST} (${hoursUntilReset.toFixed(1)}h)`);
 
   // ─── OpenAI ───
   // biome-ignore lint/suspicious/noExplicitAny: .dev.vars の型
@@ -151,37 +163,24 @@ const main = async () => {
   });
   const openaiKey = env.OPENAI_API_KEY as string | undefined;
 
-  console.log(
-    "║                                                              ║",
-  );
   if (openaiKey) {
-    console.log(
-      "║  OpenAI (gpt-4.1-nano)                                       ║",
-    );
+    section("OpenAI (gpt-4.1-nano) — Eval スコアラー用");
     const oai = await fetchOpenAIQuota(openaiKey);
     if (oai) {
       const usedReq = oai.limitRequests - oai.remainingRequests;
       const usedTok = oai.limitTokens - oai.remainingTokens;
-      console.log(`║  RPM: ${bar(usedReq, oai.limitRequests)}  ║`);
-      console.log(`║  TPM: ${bar(usedTok, oai.limitTokens)}  ║`);
-      console.log(
-        `║  Reset: RPM ${oai.resetRequests}, TPM ${oai.resetTokens}${" ".repeat(Math.max(0, 30 - oai.resetRequests.length - oai.resetTokens.length))}║`,
-      );
+      console.log(`    RPM: ${bar(usedReq, oai.limitRequests)}`);
+      console.log(`    TPM: ${bar(usedTok, oai.limitTokens)}`);
+      console.log(`    Reset: RPM ${oai.resetRequests}, TPM ${oai.resetTokens}`);
     } else {
-      console.log(
-        "║  ⚠️  取得失敗                                                ║",
-      );
+      console.log("    ⚠️  取得失敗");
     }
   } else {
-    console.log(
-      "║  OpenAI: OPENAI_API_KEY 未設定                                ║",
-    );
+    section("OpenAI: OPENAI_API_KEY 未設定");
   }
 
   // ─── Vectorize ───
-  console.log(
-    "║                                                              ║",
-  );
+  section("Vectorize");
   for (const envName of ["local", "dev", "prd"] as const) {
     const info = fetchVectorizeInfo(envName);
     if (info) {
@@ -196,17 +195,12 @@ const main = async () => {
               .replace("T", " ")
           : "unknown";
       console.log(
-        `║  Vectorize (${envName.padEnd(5)}): ${info.vectorCount.toLocaleString().padStart(6)} vectors  (${dateStr} JST)  ║`,
+        `    ${envName.padEnd(5)}: ${info.vectorCount.toLocaleString().padStart(6)} vectors  (${dateStr} JST)`,
       );
     }
   }
 
-  console.log(
-    "║                                                              ║",
-  );
-  console.log(
-    "╚══════════════════════════════════════════════════════════════╝\n",
-  );
+  console.log("");
 
   await dispose();
 };

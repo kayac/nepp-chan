@@ -1227,7 +1227,7 @@ const runTestCaseEval = async (params: {
         requestContext,
         maxSteps: 3,
       });
-      incrementGeminiCounter(1); // Gemini RPD カウンター
+      incrementGeminiCounter(1, "eval"); // Eval 用 Gemini RPD カウンター
 
       const retrievedChunks = extractKnowledgeSearchResults(
         // biome-ignore lint/suspicious/noExplicitAny: agent.generate の戻り値型は不定
