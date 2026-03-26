@@ -57,6 +57,7 @@ server/todos/
 dataset/eval/results/*.json
 dataset/eval/results/*.html
 dataset/eval/eval-test-history.md
+dataset/eval/.gemini-usage.json
 
 # web build output
 server/public/

@@ -35,7 +35,6 @@ import {
 import { LibSQLStore } from "@mastra/libsql";
 import { Memory } from "@mastra/memory";
 import { getPlatformProxy } from "wrangler";
-
 import { OPENAI_SCORER } from "../src/lib/llm-models";
 import { knowledgeAgent } from "../src/mastra/agents/knowledge-agent";
 import { createNeppChanAgent } from "../src/mastra/agents/nepp-chan-agent";
@@ -45,6 +44,7 @@ import type {
   TestType,
 } from "../src/mastra/data/eval-v3-test-cases";
 import { evalV3TestCases } from "../src/mastra/data/eval-v3-test-cases";
+import { incrementGeminiCounter } from "./lib/gemini-counter";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -1227,6 +1227,7 @@ const runTestCaseEval = async (params: {
         requestContext,
         maxSteps: 3,
       });
+      incrementGeminiCounter(1); // Gemini RPD カウンター
 
       const retrievedChunks = extractKnowledgeSearchResults(
         // biome-ignore lint/suspicious/noExplicitAny: agent.generate の戻り値型は不定
