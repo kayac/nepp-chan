@@ -1457,6 +1457,44 @@ const main = async () => {
     process.exit(1);
   }
 
+  // ─── クォータ事前チェック ──────────────────────────────────
+  const envCount = args.compare ? 3 : 1;
+  const estimatedGeminiCalls = testCases.length * args.n * 3 * envCount;
+  const estimatedScorerCalls = testCases.length * args.n * 4 * envCount;
+  const GEMINI_RPD = 10_000;
+  const OPENAI_RPM = 500;
+  const estimatedDurationMin = Math.ceil(
+    (testCases.length * args.n * 70 * envCount) / 60,
+  );
+
+  console.log("─── クォータ事前チェック ─────────────────────────");
+  console.log(
+    `   Gemini 推定リクエスト数: ${estimatedGeminiCalls.toLocaleString()} / ${GEMINI_RPD.toLocaleString()} RPD (${((estimatedGeminiCalls / GEMINI_RPD) * 100).toFixed(0)}%)`,
+  );
+  console.log(
+    `   OpenAI 推定リクエスト数: ${estimatedScorerCalls.toLocaleString()} (RPM ${OPENAI_RPM})`,
+  );
+  console.log(`   推定実行時間: ${estimatedDurationMin}分`);
+
+  if (estimatedGeminiCalls > GEMINI_RPD * 0.8) {
+    console.warn(
+      `\n⚠️  警告: Gemini RPD の ${((estimatedGeminiCalls / GEMINI_RPD) * 100).toFixed(0)}% を消費する見込みです`,
+    );
+    console.warn(
+      "   同じ GCP プロジェクトの他サービス（prd 等）に影響する可能性があります",
+    );
+    if (estimatedGeminiCalls > GEMINI_RPD) {
+      console.error(
+        "\n❌ エラー: Gemini RPD を超過します。テストケース数または n を減らしてください",
+      );
+      console.error(
+        `   推奨: n=${Math.floor((GEMINI_RPD * 0.8) / (testCases.length * 3 * envCount))} 以下`,
+      );
+      process.exit(1);
+    }
+  }
+  console.log("─────────────────────────────────────────────────\n");
+
   const outputDir = path.resolve(
     import.meta.dirname,
     "../../dataset/eval/results",
@@ -1533,8 +1571,10 @@ const main = async () => {
 
     // Vectorize リモートバインディングのセッション安定性対策:
     // getPlatformProxy のセッションは長時間稼働でトークン期限切れが発生するため、
-    // SESSION_RECREATE_INTERVAL 件ごとにセッションを再作成する
-    const SESSION_RECREATE_INTERVAL = 10;
+    // 注意: セッション再作成は Cloudflare 認証トークンの期限切れで失敗する場合がある。
+    // その場合は値を 999 にして無効化し、1セッションで走り切らせる。
+    // ただし 1セッションで ~50件超えると VECTOR_QUERY_ERROR が発生する可能性もある。
+    const SESSION_RECREATE_INTERVAL = 999;
 
     let currentDispose: () => Promise<void>;
     let requestContext: RequestContext;
