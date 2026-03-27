@@ -1,24 +1,25 @@
 import { Agent } from "@mastra/core/agent";
-import { GEMINI_PRO } from "~/lib/llm-models";
+import { GEMINI_FLASH } from "~/lib/llm-models";
 
-const CONVERSION_INSTRUCTIONS = `
-あなたは文書変換のエキスパートです。
-提供された画像/PDFの内容を、以下のルールに従ってMarkdown形式に変換してください：
+const INSTRUCTIONS = `提供された画像・PDFの内容をMarkdown形式で出力する。
 
-## 変換ルール
-1. 文書の構造（見出し、段落、リスト）を適切にMarkdownで表現する
-2. 表がある場合はMarkdownテーブル形式にする
-3. 重要な情報は強調（太字）にする
-4. 画像内のテキストは正確に書き起こす
-5. 読み取れない部分は[判読不能]と記載する
-6. 日本語文書の場合は日本語で出力する
+入力の種類に応じて出力を変える:
 
-変換結果のMarkdownのみを出力してください。説明は不要です。
-`;
+**文書・チラシ・PDF（テキスト中心のコンテンツ）:**
+- テキストを正確に書き起こす
+- 見出し・段落・リストなどの構造をMarkdownで再現する
+- 表はMarkdownテーブルにする
+
+**写真・イラスト・グラフ（ビジュアル中心のコンテンツ）:**
+- 何が写っているか / 描かれているかを簡潔に説明する
+- テキストが含まれていればそのまま書き起こす
+- グラフや図表はデータの要点を読み取って記述する
+
+出力はMarkdownのみ。前置きや補足説明は不要。日本語コンテンツは日本語で出力する。`;
 
 export const converterAgent = new Agent({
   id: "document-converter",
   name: "Document Converter",
-  instructions: CONVERSION_INSTRUCTIONS,
-  model: GEMINI_PRO,
+  instructions: INSTRUCTIONS,
+  model: GEMINI_FLASH,
 });
