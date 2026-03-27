@@ -113,7 +113,13 @@ export const personaRepository = {
     }
 
     if (options.keyword) {
-      conditions.push(like(persona.content, `%${options.keyword}%`));
+      const words = options.keyword
+        .split(/\s+/)
+        .filter((w) => w.length > 0)
+        .slice(0, 5);
+      for (const word of words) {
+        conditions.push(like(persona.content, `%${word}%`));
+      }
     }
 
     return db
