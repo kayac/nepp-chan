@@ -45,7 +45,7 @@ import type {
   TestType,
 } from "../src/mastra/data/eval-v3-test-cases";
 import { evalV3TestCases } from "../src/mastra/data/eval-v3-test-cases";
-import { incrementGeminiCounter } from "./lib/gemini-counter";
+import { getGeminiUsage, incrementGeminiCounter } from "./lib/gemini-counter";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -1450,24 +1450,31 @@ const main = async () => {
   }
 
   // --batch-size によるプロセス分割モード（親プロセス）
-  if (args.batchSize && args.from === undefined) {
+  // --from/--to と併用可能: 指定範囲内でさらにバッチ分割する
+  if (args.batchSize) {
     const total = testCases.length;
     const batchSize = args.batchSize;
     const batches = Math.ceil(total / batchSize);
+    const globalFrom = args.from ?? 0;
 
     console.log("🔄 Eval V3 バッチ分割モード");
-    console.log(`   テストケース数: ${total}`);
+    console.log(`   テストケース数: ${total}${args.from !== undefined ? ` (ケース ${args.from}〜${args.to})` : ""}`);
     console.log(`   バッチサイズ: ${batchSize}`);
     console.log(`   バッチ数: ${batches}`);
     console.log();
 
     const baseArgs = process.argv
       .slice(2)
-      .filter((a, i, arr) => a !== "--batch-size" && arr[i - 1] !== "--batch-size");
+      .filter(
+        (a, i, arr) =>
+          a !== "--batch-size" && arr[i - 1] !== "--batch-size" &&
+          a !== "--from" && arr[i - 1] !== "--from" &&
+          a !== "--to" && arr[i - 1] !== "--to",
+      );
 
     for (let batch = 0; batch < batches; batch++) {
-      const from = batch * batchSize;
-      const to = Math.min(from + batchSize - 1, total - 1);
+      const from = globalFrom + batch * batchSize;
+      const to = Math.min(from + batchSize - 1, globalFrom + total - 1);
 
       console.log(
         `\n━━━ バッチ ${batch + 1}/${batches} (ケース ${from}〜${to}) ━━━`,
@@ -1478,7 +1485,7 @@ const main = async () => {
         execSync(cmd, {
           stdio: "inherit",
           cwd: path.resolve(import.meta.dirname, ".."),
-          timeout: 600_000,
+          timeout: 7_200_000, // 2時間/バッチ
         });
       } catch (e) {
         console.error(`❌ バッチ ${batch + 1} でエラー:`, e instanceof Error ? e.message : e);
@@ -1529,8 +1536,10 @@ const main = async () => {
   }
 
   // ─── クォータ事前チェック ──────────────────────────────────
+  const CALLS_PER_ITERATION = 5; // チャット ~3 + リランク ~2
   const envCount = args.compare ? 3 : 1;
-  const estimatedGeminiCalls = testCases.length * args.n * 3 * envCount;
+  const estimatedGeminiCalls =
+    testCases.length * args.n * CALLS_PER_ITERATION * envCount;
   const estimatedScorerCalls = testCases.length * args.n * 4 * envCount;
   const GEMINI_RPD = 10_000;
   const OPENAI_RPM = 500;
@@ -1538,29 +1547,38 @@ const main = async () => {
     (testCases.length * args.n * 70 * envCount) / 60,
   );
 
+  const currentUsage = getGeminiUsage("eval");
+  const alreadyUsed = currentUsage.requests;
+  const remaining = GEMINI_RPD - alreadyUsed;
+  const totalAfterRun = alreadyUsed + estimatedGeminiCalls;
+
   console.log("─── クォータ事前チェック ─────────────────────────");
   console.log(
-    `   Gemini 推定リクエスト数: ${estimatedGeminiCalls.toLocaleString()} / ${GEMINI_RPD.toLocaleString()} RPD (${((estimatedGeminiCalls / GEMINI_RPD) * 100).toFixed(0)}%)`,
+    `   Gemini 今日の累計: ${alreadyUsed.toLocaleString()} / ${GEMINI_RPD.toLocaleString()} RPD (残り ${remaining.toLocaleString()})`,
+  );
+  console.log(
+    `   Gemini 推定消費: +${estimatedGeminiCalls.toLocaleString()} → 合計 ${totalAfterRun.toLocaleString()} (${((totalAfterRun / GEMINI_RPD) * 100).toFixed(0)}%)`,
   );
   console.log(
     `   OpenAI 推定リクエスト数: ${estimatedScorerCalls.toLocaleString()} (RPM ${OPENAI_RPM})`,
   );
   console.log(`   推定実行時間: ${estimatedDurationMin}分`);
 
-  if (estimatedGeminiCalls > GEMINI_RPD * 0.8) {
+  if (totalAfterRun > GEMINI_RPD * 0.8) {
     console.warn(
-      `\n⚠️  警告: Gemini RPD の ${((estimatedGeminiCalls / GEMINI_RPD) * 100).toFixed(0)}% を消費する見込みです`,
+      `\n⚠️  警告: 実行後に Gemini RPD の ${((totalAfterRun / GEMINI_RPD) * 100).toFixed(0)}% に到達する見込みです`,
     );
     console.warn(
       "   同じ GCP プロジェクトの他サービス（prd 等）に影響する可能性があります",
     );
-    if (estimatedGeminiCalls > GEMINI_RPD) {
+    if (totalAfterRun > GEMINI_RPD) {
+      const safeN = Math.floor(
+        (remaining * 0.8) / (testCases.length * CALLS_PER_ITERATION * envCount),
+      );
       console.error(
         "\n❌ エラー: Gemini RPD を超過します。テストケース数または n を減らしてください",
       );
-      console.error(
-        `   推奨: n=${Math.floor((GEMINI_RPD * 0.8) / (testCases.length * 3 * envCount))} 以下`,
-      );
+      console.error(`   推奨: n=${Math.max(1, safeN)} 以下`);
       process.exit(1);
     }
   }
