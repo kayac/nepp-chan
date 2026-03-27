@@ -8,6 +8,9 @@
  * - main: GOOGLE_GENERATIVE_AI_API_KEY（本番会話用）
  * - eval: EVAL_GOOGLE_API_KEY（eval 専用）
  *
+ * 並列安全: append-only ログ形式。各行が「日付,カウント,タイムスタンプ」で、
+ * 読み取り時に当日分を合算する。fs.appendFileSync は OS レベルでアトミック。
+ *
  * RPD リセットタイミング: PT 深夜 0:00（JST 17:00）
  */
 import * as fs from "node:fs";
@@ -20,10 +23,12 @@ const COUNTER_DIR = path.resolve(
   "../../../dataset/eval",
 );
 
-const counterPath = (keyType: GeminiKeyType): string =>
-  path.join(COUNTER_DIR, `.gemini-usage-${keyType}.json`);
+const logPath = (keyType: GeminiKeyType): string =>
+  path.join(COUNTER_DIR, `.gemini-usage-${keyType}.log`);
 
-/** 後方互換: 旧ファイル名 */
+/** 後方互換: 旧 JSON ファイル */
+const legacyJsonPath = (keyType: GeminiKeyType): string =>
+  path.join(COUNTER_DIR, `.gemini-usage-${keyType}.json`);
 const LEGACY_COUNTER_PATH = path.join(COUNTER_DIR, ".gemini-usage.json");
 
 interface GeminiUsage {
@@ -42,36 +47,50 @@ const getPTDate = (): string => {
   return pt.toISOString().slice(0, 10);
 };
 
-const readCounter = (keyType: GeminiKeyType): GeminiUsage => {
+/** ログファイルから当日分のリクエスト数を集計 */
+const readLog = (keyType: GeminiKeyType): GeminiUsage => {
+  const today = getPTDate();
+  const filePath = logPath(keyType);
+
   try {
-    const raw = fs.readFileSync(counterPath(keyType), "utf-8");
-    return JSON.parse(raw) as GeminiUsage;
+    const raw = fs.readFileSync(filePath, "utf-8");
+    const lines = raw.trim().split("\n").filter(Boolean);
+
+    let requests = 0;
+    let lastUpdated = "";
+
+    for (const line of lines) {
+      const [date, countStr, timestamp] = line.split(",");
+      if (date === today) {
+        requests += Number(countStr) || 0;
+        if (timestamp && timestamp > lastUpdated) {
+          lastUpdated = timestamp;
+        }
+      }
+    }
+
+    return { periodDate: today, requests, lastUpdated };
   } catch {
-    return { periodDate: getPTDate(), requests: 0, lastUpdated: "" };
+    return { periodDate: today, requests: 0, lastUpdated: "" };
   }
 };
 
-const writeCounter = (keyType: GeminiKeyType, usage: GeminiUsage): void => {
-  fs.mkdirSync(COUNTER_DIR, { recursive: true });
-  fs.writeFileSync(counterPath(keyType), JSON.stringify(usage, null, 2));
-};
-
-/** カウンターをインクリメント。日付が変わっていたら自動リセット */
+/**
+ * カウンターをインクリメント（並列安全）。
+ * ログファイルに1行 append するだけなのでロック不要。
+ */
 export const incrementGeminiCounter = (
   count = 1,
   keyType: GeminiKeyType = "eval",
 ): GeminiUsage => {
-  const usage = readCounter(keyType);
   const today = getPTDate();
+  const timestamp = new Date().toISOString();
 
-  if (usage.periodDate !== today) {
-    usage.periodDate = today;
-    usage.requests = 0;
-  }
+  fs.mkdirSync(COUNTER_DIR, { recursive: true });
+  fs.appendFileSync(logPath(keyType), `${today},${count},${timestamp}\n`);
 
-  usage.requests += count;
-  usage.lastUpdated = new Date().toISOString();
-  writeCounter(keyType, usage);
+  // 返り値は近似値（他プロセスの書き込みとのタイミングで多少ずれる）
+  const usage = readLog(keyType);
   return usage;
 };
 
@@ -79,13 +98,7 @@ export const incrementGeminiCounter = (
 export const getGeminiUsage = (
   keyType: GeminiKeyType = "eval",
 ): GeminiUsage & { rpd: number } => {
-  const usage = readCounter(keyType);
-  const today = getPTDate();
-
-  if (usage.periodDate !== today) {
-    return { periodDate: today, requests: 0, lastUpdated: "", rpd: 10_000 };
-  }
-
+  const usage = readLog(keyType);
   return { ...usage, rpd: 10_000 };
 };
 
@@ -98,20 +111,55 @@ export const getAllGeminiUsage = (): Record<
   eval: getGeminiUsage("eval"),
 });
 
-/** 旧ファイルが存在すれば eval に移行して削除 */
+/**
+ * 古いログ行（当日以外）を削除してファイルサイズを抑える。
+ * 日次で1回呼べば十分。
+ */
+export const compactLog = (keyType: GeminiKeyType): void => {
+  const today = getPTDate();
+  const filePath = logPath(keyType);
+
+  try {
+    const raw = fs.readFileSync(filePath, "utf-8");
+    const todayLines = raw
+      .trim()
+      .split("\n")
+      .filter((line) => line.startsWith(today));
+    fs.writeFileSync(filePath, todayLines.length > 0 ? `${todayLines.join("\n")}\n` : "");
+  } catch {
+    // ファイルが存在しない場合は何もしない
+  }
+};
+
+/** 旧 JSON ファイルが存在すれば log 形式に移行して削除 */
 export const migrateLegacyCounter = (): void => {
+  for (const keyType of ["main", "eval"] as const) {
+    try {
+      const jsonPath = legacyJsonPath(keyType);
+      if (fs.existsSync(jsonPath)) {
+        const raw = fs.readFileSync(jsonPath, "utf-8");
+        const legacy = JSON.parse(raw) as GeminiUsage;
+        if (legacy.requests > 0 && legacy.periodDate === getPTDate()) {
+          // 当日分のみ移行（古い日付のデータは捨てる）
+          fs.mkdirSync(COUNTER_DIR, { recursive: true });
+          fs.appendFileSync(
+            logPath(keyType),
+            `${legacy.periodDate},${legacy.requests},${legacy.lastUpdated}\n`,
+          );
+        }
+        fs.unlinkSync(jsonPath);
+      }
+    } catch {
+      // 移行失敗は無視
+    }
+  }
+
+  // 最古の旧ファイル
   try {
     if (fs.existsSync(LEGACY_COUNTER_PATH)) {
-      const raw = fs.readFileSync(LEGACY_COUNTER_PATH, "utf-8");
-      const legacy = JSON.parse(raw) as GeminiUsage;
-      // 旧カウンターは eval 用途でしか使っていなかった
-      const evalUsage = readCounter("eval");
-      if (evalUsage.requests === 0) {
-        writeCounter("eval", legacy);
-      }
       fs.unlinkSync(LEGACY_COUNTER_PATH);
     }
   } catch {
-    // 移行失敗は無視
+    // 無視
   }
 };
