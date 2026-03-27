@@ -22,7 +22,9 @@ export const personaGetTool = createTool({
     keyword: z
       .string()
       .optional()
-      .describe("キーワードで内容を検索（自然言語OK）"),
+      .describe(
+        "キーワードで内容を検索。短い単語1つを指定する（例: 「バス」「除雪」「クマ」）。複数のキーワードで検索したい場合はツールを複数回呼び出す。",
+      ),
     limit: z
       .number()
       .int()
