@@ -12,7 +12,7 @@ export const broadcastPartSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("image"),
     imageR2Key: z.string().min(1),
-    imageDescription: z.string().optional(),
+    imageDescription: z.string().max(5000).optional(),
   }),
 ]);
 
