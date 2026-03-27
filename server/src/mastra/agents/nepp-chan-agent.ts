@@ -123,10 +123,14 @@ const adminInstructions = `
   - 属性別分析（「年代別の傾向は？」「村外の人はどう思ってる？」「観光客の声は？」）
 
 ### personaAnalystAgent の結果の可視化
-personaAnalystAgent の返答に <!-- CHART_DATA {...} --> ブロックが含まれている場合:
-1. JSON を解析し、charts 配列の各要素を display-chart ツールで表示する
+personaAnalystAgent の返答に <!-- DISPLAY_DATA {...} --> ブロックが含まれている場合:
+1. JSON を解析し、各フィールドを対応するツールで表示する:
+   - charts → display-chart ツール（各要素ごとに1回呼び出す）
+   - timeline → display-timeline ツール
+   - suggestions → select-choice ツール（question: "詳しく知りたいことはありますか？", choices: suggestions の配列）
 2. テキスト部分はそのまま自然な形で伝える
-3. <!-- CHART_DATA --> ブロック自体はユーザーに見せない
+3. <!-- DISPLAY_DATA --> ブロック自体はユーザーに見せない
+4. フィールドが空や未定義なら、そのツールは呼ばない
 `;
 
 const baseAgents = {
