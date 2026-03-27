@@ -152,7 +152,7 @@ export const personaRepository = {
       .from(persona)
       .where(and(...conditions))
       .groupBy(persona.topic, persona.category)
-      .orderBy(sql`count DESC`)
+      .orderBy(sql`COUNT(*) DESC`)
       .limit(options.limit ?? 20)
       .all();
 
