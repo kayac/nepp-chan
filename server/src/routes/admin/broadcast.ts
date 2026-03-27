@@ -1,6 +1,8 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 
+import { convertToMarkdown } from "~/lib/image-converter";
+import { logger } from "~/lib/logger";
 import { errorResponse } from "~/lib/openapi-errors";
 import { type AuthVariables, requireAuth } from "~/middleware/auth";
 import { broadcastRepository } from "~/repository/broadcast-repository";
@@ -321,7 +323,10 @@ const uploadImageRoute = createRoute({
       description: "アップロード成功",
       content: {
         "application/json": {
-          schema: z.object({ imageR2Key: z.string() }),
+          schema: z.object({
+            imageR2Key: z.string(),
+            imageDescription: z.string().optional(),
+          }),
         },
       },
     },
@@ -353,11 +358,20 @@ broadcastAdminRoutes.openapi(uploadImageRoute, async (c) => {
   const ext = file.type === "image/png" ? "png" : "jpg";
   const key = `${crypto.randomUUID()}.${ext}`;
 
-  await c.env.LINE_BROADCAST_BUCKET.put(key, file.stream(), {
+  const fileData = await file.arrayBuffer();
+
+  await c.env.LINE_BROADCAST_BUCKET.put(key, fileData, {
     httpMetadata: { contentType: file.type },
   });
 
-  return c.json({ imageR2Key: key }, 200);
+  let imageDescription: string | undefined;
+  try {
+    imageDescription = await convertToMarkdown(fileData, file.type);
+  } catch (error) {
+    logger.error("[Broadcast] Image OCR failed during upload", error);
+  }
+
+  return c.json({ imageR2Key: key, imageDescription }, 200);
 });
 
 broadcastAdminRoutes.openapi(sendRoute, async (c) => {
