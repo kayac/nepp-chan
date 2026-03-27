@@ -117,8 +117,14 @@ export const personaRepository = {
         .split(/\s+/)
         .filter((w) => w.length > 0)
         .slice(0, 5);
-      for (const word of words) {
-        conditions.push(like(persona.content, `%${word}%`));
+      if (words.length === 1) {
+        conditions.push(like(persona.content, `%${words[0]}%`));
+      } else if (words.length > 1) {
+        const wordConditions = words.map((w) =>
+          like(persona.content, `%${w}%`),
+        );
+        const wordCondition = or(...wordConditions);
+        if (wordCondition) conditions.push(wordCondition);
       }
     }
 
