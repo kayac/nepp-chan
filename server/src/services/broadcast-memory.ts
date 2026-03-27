@@ -12,7 +12,11 @@ const extractImageDescriptions = (partsJson: string | null): string[] => {
       )
       .map((p) => p.imageDescription)
       .filter((d): d is string => !!d);
-  } catch {
+  } catch (e) {
+    console.warn("Failed to parse broadcast parts JSON", {
+      error: e,
+      partsJson,
+    });
     return [];
   }
 };
