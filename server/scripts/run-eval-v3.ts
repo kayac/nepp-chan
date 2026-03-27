@@ -19,6 +19,7 @@
  *   pnpm eval:v3 -- --interval 10 --n 3                  # テストケース間に10秒インターバル
  */
 
+import { execSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { RequestContext } from "@mastra/core/request-context";
@@ -198,6 +199,12 @@ interface CliArgs {
   compare: boolean;
   /** テストケース間のインターバル（秒）。デフォルト5秒 */
   interval: number;
+  /** バッチサイズ（指定時はプロセス分割モード） */
+  batchSize?: number;
+  /** テストケース開始インデックス（子プロセス用） */
+  from?: number;
+  /** テストケース終了インデックス（子プロセス用） */
+  to?: number;
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -268,6 +275,15 @@ const parseArgs = (): CliArgs => {
         break;
       case "--interval":
         result.interval = Number.parseInt(args[++i], 10);
+        break;
+      case "--batch-size":
+        result.batchSize = Number.parseInt(args[++i], 10);
+        break;
+      case "--from":
+        result.from = Number.parseInt(args[++i], 10);
+        break;
+      case "--to":
+        result.to = Number.parseInt(args[++i], 10);
         break;
     }
   }
@@ -1227,8 +1243,6 @@ const runTestCaseEval = async (params: {
         requestContext,
         maxSteps: 3,
       });
-      incrementGeminiCounter(1, "eval"); // Eval 用 Gemini RPD カウンター
-
       const retrievedChunks = extractKnowledgeSearchResults(
         // biome-ignore lint/suspicious/noExplicitAny: agent.generate の戻り値型は不定
         (result as any).steps,
@@ -1239,6 +1253,12 @@ const runTestCaseEval = async (params: {
         // biome-ignore lint/suspicious/noExplicitAny: agent.generate の戻り値型は不定
         (result as any).steps,
       );
+
+      // Gemini RPD カウンター: チャット(steps) + rerank(toolCalls) = Flash API コール数
+      const geminiCalls =
+        transcript.length +
+        transcript.reduce((sum, s) => sum + s.toolCalls.length, 0);
+      incrementGeminiCounter(geminiCalls, "eval");
 
       const abstentionDetected = isAbstention(result.text);
 
@@ -1424,6 +1444,56 @@ const main = async () => {
     testCases = evalV3TestCases;
   }
 
+  // --from/--to によるテストケース範囲フィルタリング（子プロセス用）
+  if (args.from !== undefined && args.to !== undefined) {
+    testCases = testCases.slice(args.from, args.to + 1);
+  }
+
+  // --batch-size によるプロセス分割モード（親プロセス）
+  if (args.batchSize && args.from === undefined) {
+    const total = testCases.length;
+    const batchSize = args.batchSize;
+    const batches = Math.ceil(total / batchSize);
+
+    console.log("🔄 Eval V3 バッチ分割モード");
+    console.log(`   テストケース数: ${total}`);
+    console.log(`   バッチサイズ: ${batchSize}`);
+    console.log(`   バッチ数: ${batches}`);
+    console.log();
+
+    const baseArgs = process.argv
+      .slice(2)
+      .filter((a, i, arr) => a !== "--batch-size" && arr[i - 1] !== "--batch-size");
+
+    for (let batch = 0; batch < batches; batch++) {
+      const from = batch * batchSize;
+      const to = Math.min(from + batchSize - 1, total - 1);
+
+      console.log(
+        `\n━━━ バッチ ${batch + 1}/${batches} (ケース ${from}〜${to}) ━━━`,
+      );
+
+      const cmd = `tsx scripts/run-eval-v3.ts ${baseArgs.join(" ")} --from ${from} --to ${to}`;
+      try {
+        execSync(cmd, {
+          stdio: "inherit",
+          cwd: path.resolve(import.meta.dirname, ".."),
+          timeout: 600_000,
+        });
+      } catch (e) {
+        console.error(`❌ バッチ ${batch + 1} でエラー:`, e instanceof Error ? e.message : e);
+      }
+
+      if (batch < batches - 1) {
+        console.log("⏳ バッチ間インターバル（5秒）...");
+        await sleep(5000);
+      }
+    }
+
+    console.log("\n✅ Eval V3 全バッチ完了");
+    return;
+  }
+
   console.log("🔄 Eval V3 開始");
   console.log(`   エージェント: ${args.agent}`);
   console.log(`   テストケース数: ${testCases.length}`);
@@ -1571,40 +1641,21 @@ const main = async () => {
     // ─── 単一環境モード ────────────────────────────────────
 
     // Vectorize リモートバインディングのセッション安定性対策:
-    // getPlatformProxy のセッションは長時間稼働でトークン期限切れが発生するため、
-    // 注意: セッション再作成は Cloudflare 認証トークンの期限切れで失敗する場合がある。
-    // その場合は値を 999 にして無効化し、1セッションで走り切らせる。
-    // ただし 1セッションで ~50件超えると VECTOR_QUERY_ERROR が発生する可能性もある。
-    const SESSION_RECREATE_INTERVAL = 999;
+    // getPlatformProxy は長時間稼働で認証トークンが劣化し VECTOR_QUERY_ERROR が発生する。
+    // --batch-size オプションでプロセス分割し、各バッチで新鮮なセッションを使用する。
 
-    let currentDispose: () => Promise<void>;
-    let requestContext: RequestContext;
-
-    const createSession = async () => {
-      const proxy = await getPlatformProxy<CloudflareBindings>({
-        configPath: "wrangler.jsonc",
-        environment: args.env,
-        remoteBindings: true,
-      });
-      resolveEvalApiKeys(proxy.env);
-      requestContext = new RequestContext();
-      requestContext.set("env", proxy.env);
-      currentDispose = proxy.dispose;
-    };
-
-    await createSession();
+    const { env, dispose } = await getPlatformProxy<CloudflareBindings>({
+      configPath: "wrangler.jsonc",
+      environment: args.env,
+      remoteBindings: true,
+    });
+    resolveEvalApiKeys(env);
+    const requestContext = new RequestContext();
+    requestContext.set("env", env);
 
     const allResults: EvalResult[] = [];
 
     for (let tcIdx = 0; tcIdx < testCases.length; tcIdx++) {
-      // N件ごとにセッション再作成（Vectorize セッション劣化対策）
-      if (tcIdx > 0 && tcIdx % SESSION_RECREATE_INTERVAL === 0) {
-        console.log(`\n🔄 セッション再作成 (${tcIdx}/${testCases.length}件目)`);
-        await currentDispose();
-        await sleep(2000);
-        await createSession();
-      }
-
       const testCase = testCases[tcIdx];
       const result = await runTestCaseEval({
         testCase,
@@ -1682,7 +1733,7 @@ const main = async () => {
       console.log(`\n📁 サマリー: ${summaryHtmlPath}`);
     }
 
-    await currentDispose();
+    await dispose();
   }
 
   console.log("✅ Eval V3 完了");
