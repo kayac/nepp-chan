@@ -54,8 +54,11 @@ let partIdCounter = 0;
 const nextPartId = () => `part-${++partIdCounter}`;
 
 type PartState = { id: string } & (
-  | { type: "text"; text: string }
-  | { type: "image"; imageR2Key: string; file?: File; previewUrl?: string }
+  | Extract<BroadcastPart, { type: "text" }>
+  | (Extract<BroadcastPart, { type: "image" }> & {
+      file?: File;
+      previewUrl?: string;
+    })
 );
 
 const parseParts = (broadcast: BroadcastMessage): PartState[] => {
@@ -342,10 +345,15 @@ const BroadcastFormModal = ({
           return { type: "text" as const, text: part.text };
         }
         if (part.file) {
-          const { imageR2Key } = await uploadMutation.mutateAsync(part.file);
-          return { type: "image" as const, imageR2Key };
+          const { imageR2Key, imageDescription } =
+            await uploadMutation.mutateAsync(part.file);
+          return { type: "image" as const, imageR2Key, imageDescription };
         }
-        return { type: "image" as const, imageR2Key: part.imageR2Key };
+        return {
+          type: "image" as const,
+          imageR2Key: part.imageR2Key,
+          imageDescription: part.imageDescription,
+        };
       }),
     );
 

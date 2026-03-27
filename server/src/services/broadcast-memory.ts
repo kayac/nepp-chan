@@ -1,4 +1,21 @@
 import { broadcastRepository } from "~/repository/broadcast-repository";
+import type { BroadcastPart } from "~/schemas/broadcast-schema";
+
+const extractImageDescriptions = (partsJson: string | null): string[] => {
+  if (!partsJson) return [];
+  try {
+    const parts = JSON.parse(partsJson) as BroadcastPart[];
+    return parts
+      .filter(
+        (p): p is Extract<BroadcastPart, { type: "image" }> =>
+          p.type === "image",
+      )
+      .map((p) => p.imageDescription)
+      .filter((d): d is string => !!d);
+  } catch {
+    return [];
+  }
+};
 
 export const buildBroadcastMemory = async (d1: D1Database): Promise<string> => {
   const { details, summaries } = await broadcastRepository.findRecentSent(d1, {
@@ -25,6 +42,9 @@ export const buildBroadcastMemory = async (d1: D1Database): Promise<string> => {
       const date = d.sentAt ? d.sentAt.slice(0, 10) : d.createdAt.slice(0, 10);
       lines.push(`${i + 1}. [${date}] ${d.title}`);
       lines.push(`   内容: ${d.body}`);
+      for (const desc of extractImageDescriptions(d.parts)) {
+        lines.push(`   添付画像の内容: ${desc}`);
+      }
     }
     lines.push("");
   }
