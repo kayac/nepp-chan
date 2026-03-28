@@ -36,8 +36,15 @@ import {
 import { LibSQLStore } from "@mastra/libsql";
 import { Memory } from "@mastra/memory";
 import { getPlatformProxy } from "wrangler";
-import { OPENAI_SCORER } from "../src/lib/llm-models";
-import { knowledgeAgent } from "../src/mastra/agents/knowledge-agent";
+import {
+  GEMINI_FLASH,
+  GEMINI_FLASH_EVAL,
+  OPENAI_SCORER,
+} from "../src/lib/llm-models";
+import {
+  createKnowledgeAgentWithModel,
+  knowledgeAgent,
+} from "../src/mastra/agents/knowledge-agent";
 import { createNeppChanAgent } from "../src/mastra/agents/nepp-chan-agent";
 import type {
   TestCase,
@@ -189,6 +196,8 @@ interface CliArgs {
   compare: boolean;
   /** テストケース間のインターバル（秒）。デフォルト5秒 */
   interval: number;
+  /** エージェントモデル: eval=2.5-flash-lite(RPD無制限), production=flash-latest(本番同一) */
+  model: "eval" | "production";
   /** バッチサイズ（指定時はプロセス分割モード） */
   batchSize?: number;
   /** テストケース開始インデックス（子プロセス用） */
@@ -223,7 +232,11 @@ const resolveEvalApiKeys = (env: CloudflareBindings): void => {
   if (evalGoogleKey) {
     console.log("🔑 Eval専用Google APIキーを使用");
   }
+  // process.env: Mastra の agent.generate() が参照
   process.env.GOOGLE_GENERATIVE_AI_API_KEY = googleKey;
+  // env: knowledgeSearchTool → searchKnowledge() が参照（embed + rerank）
+  // biome-ignore lint/suspicious/noExplicitAny: eval 時のみ env proxy を上書き
+  (env as any).GOOGLE_GENERATIVE_AI_API_KEY = googleKey;
 
   // OpenAI（スコアラー用）
   // biome-ignore lint/suspicious/noExplicitAny: .dev.vars の追加キーは CloudflareBindings に未定義
@@ -248,6 +261,7 @@ const parseArgs = (): CliArgs => {
     env: "local",
     compare: false,
     interval: 5,
+    model: "eval",
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -278,6 +292,9 @@ const parseArgs = (): CliArgs => {
         break;
       case "--interval":
         result.interval = Number.parseInt(args[++i], 10);
+        break;
+      case "--model":
+        result.model = args[++i] as "eval" | "production";
         break;
       case "--batch-size":
         result.batchSize = Number.parseInt(args[++i], 10);
@@ -1420,8 +1437,17 @@ const main = async () => {
     return;
   }
 
+  // モデル選択: eval=gemini-2.5-flash-lite(RPD無制限), production=flash-latest(本番同一)
+  const evalModelId =
+    args.model === "production" ? GEMINI_FLASH : GEMINI_FLASH_EVAL;
+  const evalModelLabel =
+    args.model === "production"
+      ? "gemini-flash-latest（本番同一）"
+      : "gemini-2.5-flash-lite（eval用、RPD無制限）";
+
   console.log("🔄 Eval V2 開始");
   console.log(`   エージェント: ${args.agent}`);
+  console.log(`   モデル: ${evalModelLabel}`);
   console.log(`   テストケース数: ${testCases.length}`);
   console.log(`   各N回: ${args.n}`);
   console.log(
@@ -1440,7 +1466,10 @@ const main = async () => {
 
   // エージェント選択
   const agentMap: Record<string, ReturnType<typeof createNeppChanAgent>> = {
-    knowledge: knowledgeAgent,
+    knowledge:
+      args.model === "production"
+        ? knowledgeAgent
+        : createKnowledgeAgentWithModel(evalModelId),
     "nepp-chan": createNeppChanAgent({
       isAdmin: false,
       memory: () =>
@@ -1458,55 +1487,62 @@ const main = async () => {
   }
 
   // ─── クォータ事前チェック ──────────────────────────────────
-  // 1イテレーションあたりの Gemini Flash コール数:
-  //   agent.generate() チャット: ~3 steps + knowledgeSearch リランク: ~2 toolCalls = ~5
-  const CALLS_PER_ITERATION = 5;
+  // 1イテレーションあたりの実測 Gemini コール数:
+  //   agent.generate() チャット + thinking + retry: ~15
+  //   knowledgeSearch embed + rerank: ~7
+  //   合計: ~22（Google AI Studio 実測ベース）
+  const CALLS_PER_ITERATION = 22;
   const envCount = args.compare ? 3 : 1;
   const estimatedGeminiCalls =
     testCases.length * args.n * CALLS_PER_ITERATION * envCount;
-  const estimatedScorerCalls = testCases.length * args.n * 4 * envCount; // 4 scorers/case
+  const estimatedScorerCalls = testCases.length * args.n * 4 * envCount;
   const GEMINI_RPD = 10_000;
   const OPENAI_RPM = 500;
   const estimatedDurationMin = Math.ceil(
     (testCases.length * args.n * 70 * envCount) / 60,
-  ); // ~70s/iteration
+  );
 
-  // 今日の累計消費をカウンターから取得
   const currentUsage = getGeminiUsage("eval");
   const alreadyUsed = currentUsage.requests;
-  const remaining = GEMINI_RPD - alreadyUsed;
-  const totalAfterRun = alreadyUsed + estimatedGeminiCalls;
 
   console.log("─── クォータ事前チェック ─────────────────────────");
-  console.log(
-    `   Gemini 今日の累計: ${alreadyUsed.toLocaleString()} / ${GEMINI_RPD.toLocaleString()} RPD (残り ${remaining.toLocaleString()})`,
-  );
-  console.log(
-    `   Gemini 推定消費: +${estimatedGeminiCalls.toLocaleString()} → 合計 ${totalAfterRun.toLocaleString()} (${((totalAfterRun / GEMINI_RPD) * 100).toFixed(0)}%)`,
-  );
+  if (args.model === "eval") {
+    console.log(
+      `   Gemini モデル: ${evalModelLabel}（RPD 無制限）`,
+    );
+    console.log(
+      `   推定コール数: ${estimatedGeminiCalls.toLocaleString()}（RPD制限なし）`,
+    );
+  } else {
+    const remaining = GEMINI_RPD - alreadyUsed;
+    const totalAfterRun = alreadyUsed + estimatedGeminiCalls;
+    console.log(
+      `   Gemini 今日の累計: ${alreadyUsed.toLocaleString()} / ${GEMINI_RPD.toLocaleString()} RPD (残り ${remaining.toLocaleString()})`,
+    );
+    console.log(
+      `   Gemini 推定消費: +${estimatedGeminiCalls.toLocaleString()} → 合計 ${totalAfterRun.toLocaleString()} (${((totalAfterRun / GEMINI_RPD) * 100).toFixed(0)}%)`,
+    );
+
+    if (totalAfterRun > GEMINI_RPD * 0.8) {
+      console.warn(
+        `\n⚠️  警告: 実行後に Gemini RPD の ${((totalAfterRun / GEMINI_RPD) * 100).toFixed(0)}% に到達する見込みです`,
+      );
+      if (totalAfterRun > GEMINI_RPD) {
+        const safeN = Math.floor(
+          (remaining * 0.8) / (testCases.length * CALLS_PER_ITERATION * envCount),
+        );
+        console.error(
+          "\n❌ エラー: Gemini RPD を超過します。テストケース数または n を減らしてください",
+        );
+        console.error(`   推奨: n=${Math.max(1, safeN)} 以下`);
+        process.exit(1);
+      }
+    }
+  }
   console.log(
     `   OpenAI 推定リクエスト数: ${estimatedScorerCalls.toLocaleString()} (RPM ${OPENAI_RPM})`,
   );
   console.log(`   推定実行時間: ${estimatedDurationMin}分`);
-
-  if (totalAfterRun > GEMINI_RPD * 0.8) {
-    console.warn(
-      `\n⚠️  警告: 実行後に Gemini RPD の ${((totalAfterRun / GEMINI_RPD) * 100).toFixed(0)}% に到達する見込みです`,
-    );
-    console.warn(
-      "   同じ GCP プロジェクトの他サービス（prd 等）に影響する可能性があります",
-    );
-    if (totalAfterRun > GEMINI_RPD) {
-      const safeN = Math.floor(
-        (remaining * 0.8) / (testCases.length * CALLS_PER_ITERATION * envCount),
-      );
-      console.error(
-        "\n❌ エラー: Gemini RPD を超過します。テストケース数または n を減らしてください",
-      );
-      console.error(`   推奨: n=${Math.max(1, safeN)} 以下`);
-      process.exit(1);
-    }
-  }
   console.log("─────────────────────────────────────────────────\n");
 
   // 出力ディレクトリ
