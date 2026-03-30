@@ -385,7 +385,11 @@ async function processFile(filePath: string): Promise<ExtractResult> {
 
   // 機械的にdateが確定した場合でも、LLMでcontactとdate検証を行う
   const deterministicDate = filenameDate || urlDate;
-  const deterministicSource = filenameDate ? "filename" : urlDate ? "url" : null;
+  const deterministicSource = filenameDate
+    ? "filename"
+    : urlDate
+      ? "url"
+      : null;
   const deterministicEvidence = filenameDate
     ? `ファイル名: ${basename(filePath)}`
     : urlDate
