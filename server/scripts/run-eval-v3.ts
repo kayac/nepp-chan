@@ -369,7 +369,13 @@ const isPass = (
   keywordResult: KeywordCheckResult,
   answer: string,
   threshold: number,
+  testType: "positive" | "negative" = "positive",
 ): boolean => {
+  if (testType === "negative") {
+    // negative: 棄権 or KWにマッチ（「ありません」等）すれば PASS
+    return isAbstention(answer) || keywordResult.pass;
+  }
+  // positive: 棄権でない + KW全マッチ + sim >= threshold
   if (isAbstention(answer)) return false;
   if (!keywordResult.pass) return false;
   const sim = scores.similarity;
@@ -1298,6 +1304,7 @@ const runTestCaseEval = async (params: {
         keywordCheck,
         result.text,
         testCase.threshold,
+        testCase.type,
       );
 
       const durationMs = Date.now() - iterStart;
@@ -1475,7 +1482,9 @@ const main = async () => {
     const globalFrom = args.from ?? 0;
 
     console.log("🔄 Eval V3 バッチ分割モード");
-    console.log(`   テストケース数: ${total}${args.from !== undefined ? ` (ケース ${args.from}〜${args.to})` : ""}`);
+    console.log(
+      `   テストケース数: ${total}${args.from !== undefined ? ` (ケース ${args.from}〜${args.to})` : ""}`,
+    );
     console.log(`   バッチサイズ: ${batchSize}`);
     console.log(`   バッチ数: ${batches}`);
     console.log();
@@ -1484,9 +1493,12 @@ const main = async () => {
       .slice(2)
       .filter(
         (a, i, arr) =>
-          a !== "--batch-size" && arr[i - 1] !== "--batch-size" &&
-          a !== "--from" && arr[i - 1] !== "--from" &&
-          a !== "--to" && arr[i - 1] !== "--to",
+          a !== "--batch-size" &&
+          arr[i - 1] !== "--batch-size" &&
+          a !== "--from" &&
+          arr[i - 1] !== "--from" &&
+          a !== "--to" &&
+          arr[i - 1] !== "--to",
       );
 
     for (let batch = 0; batch < batches; batch++) {
@@ -1505,7 +1517,10 @@ const main = async () => {
           timeout: 7_200_000, // 2時間/バッチ
         });
       } catch (e) {
-        console.error(`❌ バッチ ${batch + 1} でエラー:`, e instanceof Error ? e.message : e);
+        console.error(
+          `❌ バッチ ${batch + 1} でエラー:`,
+          e instanceof Error ? e.message : e,
+        );
       }
 
       if (batch < batches - 1) {
@@ -1581,9 +1596,7 @@ const main = async () => {
 
   console.log("─── クォータ事前チェック ─────────────────────────");
   if (args.model === "eval") {
-    console.log(
-      `   Gemini モデル: ${evalModelLabel}（RPD 無制限）`,
-    );
+    console.log(`   Gemini モデル: ${evalModelLabel}（RPD 無制限）`);
     console.log(
       `   推定コール数: ${estimatedGeminiCalls.toLocaleString()}（RPD制限なし）`,
     );
@@ -1603,7 +1616,8 @@ const main = async () => {
       );
       if (totalAfterRun > GEMINI_RPD) {
         const safeN = Math.floor(
-          (remaining * 0.8) / (testCases.length * CALLS_PER_ITERATION * envCount),
+          (remaining * 0.8) /
+            (testCases.length * CALLS_PER_ITERATION * envCount),
         );
         console.error(
           "\n❌ エラー: Gemini RPD を超過します。テストケース数または n を減らしてください",
