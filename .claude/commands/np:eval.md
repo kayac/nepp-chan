@@ -51,7 +51,7 @@ pnpm eval:v2 -- --compare --n <回数>  # 全テストケース
 
 ## テストケースマスター
 
-`server/src/mastra/data/eval-test-cases.ts`（22個）。V2/V3 共有。
+`server/scripts/data/eval-test-cases.ts`（22個）。V2/V3 共有。
 
 | カテゴリ | 件数 | 内容 |
 |---------|:----:|------|

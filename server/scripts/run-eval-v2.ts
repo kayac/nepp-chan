@@ -49,9 +49,9 @@ import { createNeppChanAgent } from "../src/mastra/agents/nepp-chan-agent";
 import type {
   TestCase,
   TestCategory,
-} from "../src/mastra/data/eval-test-cases";
-import { evalTestCases } from "../src/mastra/data/eval-test-cases";
-import { evalV2TestCases } from "../src/mastra/data/eval-v2-test-cases";
+} from "./data/eval-test-cases";
+import { evalTestCases } from "./data/eval-test-cases";
+import { evalV2TestCases } from "./data/eval-v2-test-cases";
 import { getGeminiUsage, incrementGeminiCounter } from "./lib/gemini-counter";
 
 // ─── Types ───────────────────────────────────────────────

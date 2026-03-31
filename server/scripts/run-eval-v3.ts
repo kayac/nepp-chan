@@ -50,8 +50,8 @@ import type {
   TestCaseV3,
   TestCategory,
   TestType,
-} from "../src/mastra/data/eval-v3-test-cases";
-import { evalV3TestCases } from "../src/mastra/data/eval-v3-test-cases";
+} from "./data/eval-v3-test-cases";
+import { evalV3TestCases } from "./data/eval-v3-test-cases";
 import { getGeminiUsage, incrementGeminiCounter } from "./lib/gemini-counter";
 
 // ─── Types ───────────────────────────────────────────────
