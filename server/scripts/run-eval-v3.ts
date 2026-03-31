@@ -40,6 +40,7 @@ import {
   GEMINI_FLASH,
   GEMINI_FLASH_EVAL,
   OPENAI_SCORER,
+  resolveModelTier,
 } from "../src/lib/llm-models";
 import {
   createKnowledgeAgentWithModel,
@@ -50,8 +51,8 @@ import type {
   TestCaseV3,
   TestCategory,
   TestType,
-} from "../src/mastra/data/eval-v3-test-cases";
-import { evalV3TestCases } from "../src/mastra/data/eval-v3-test-cases";
+} from "./data/eval-v3-test-cases";
+import { evalV3TestCases } from "./data/eval-v3-test-cases";
 import { getGeminiUsage, incrementGeminiCounter } from "./lib/gemini-counter";
 
 // ─── Types ───────────────────────────────────────────────
@@ -1565,6 +1566,11 @@ const main = async () => {
         : createKnowledgeAgentWithModel(evalModelId),
     "nepp-chan": createNeppChanAgent({
       isAdmin: false,
+      modelConfig: resolveModelTier({
+        intent: "normal",
+        platform: "web",
+        isAdmin: false,
+      }),
       memory: () =>
         new Memory({
           storage: libsqlStore,

@@ -20,7 +20,6 @@
     "db:studio:prd": "D1_ENV=prd drizzle-kit studio",
     "db:push": "drizzle-kit push",
     "db:check": "drizzle-kit check",
-    "eval:run": "tsx scripts/run-eval.ts",
     "eval:v2": "tsx scripts/run-eval-v2.ts",
     "eval:v3": "tsx scripts/run-eval-v3.ts",
     "api:quota": "tsx scripts/api-quota.ts"
