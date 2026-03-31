@@ -1,4 +1,3 @@
-export { convertToMarkdown, isSupportedMimeType } from "./converter";
 export {
   deleteAllKnowledge,
   deleteKnowledgeBySource,

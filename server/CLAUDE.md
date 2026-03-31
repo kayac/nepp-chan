@@ -367,7 +367,7 @@ knowledge/*.md → R2 バケット → Vectorize（embeddings）
 | パス                                       | 説明                         |
 | ------------------------------------------ | ---------------------------- |
 | `services/knowledge/embedding.ts`          | chunk 分割・embeddings 生成  |
-| `services/knowledge/converter.ts`          | 画像/PDF → Markdown 変換     |
+| `lib/image-converter.ts`                   | 画像/PDF → Markdown 変換     |
 | `services/knowledge/sync.ts`               | R2 → Vectorize 同期処理      |
 | `services/knowledge/files.ts`              | R2 ファイル操作              |
 | `services/knowledge/upload.ts`             | アップロード処理             |

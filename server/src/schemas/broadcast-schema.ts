@@ -9,7 +9,11 @@ export const broadcastStatusSchema = z.enum([
 
 export const broadcastPartSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("text"), text: z.string().min(1).max(5000) }),
-  z.object({ type: z.literal("image"), imageR2Key: z.string().min(1) }),
+  z.object({
+    type: z.literal("image"),
+    imageR2Key: z.string().min(1),
+    imageDescription: z.string().max(5000).optional(),
+  }),
 ]);
 
 export type BroadcastPart = z.infer<typeof broadcastPartSchema>;

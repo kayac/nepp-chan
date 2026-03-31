@@ -538,6 +538,7 @@ export interface paths {
                             /** @enum {string} */
                             type: "image";
                             imageR2Key: string;
+                            imageDescription?: string;
                         })[];
                         /** Format: date-time */
                         scheduledAt?: string;
@@ -700,6 +701,7 @@ export interface paths {
                             /** @enum {string} */
                             type: "image";
                             imageR2Key: string;
+                            imageDescription?: string;
                         })[];
                         /** Format: date-time */
                         scheduledAt?: string | null;
@@ -884,6 +886,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             imageR2Key: string;
+                            imageDescription?: string;
                         };
                     };
                 };

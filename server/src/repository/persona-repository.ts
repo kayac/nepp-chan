@@ -113,7 +113,19 @@ export const personaRepository = {
     }
 
     if (options.keyword) {
-      conditions.push(like(persona.content, `%${options.keyword}%`));
+      const words = options.keyword
+        .split(/\s+/)
+        .filter((w) => w.length > 0)
+        .slice(0, 5);
+      if (words.length === 1) {
+        conditions.push(like(persona.content, `%${words[0]}%`));
+      } else if (words.length > 1) {
+        const wordConditions = words.map((w) =>
+          like(persona.content, `%${w}%`),
+        );
+        const wordCondition = or(...wordConditions);
+        if (wordCondition) conditions.push(wordCondition);
+      }
     }
 
     return db
@@ -152,7 +164,7 @@ export const personaRepository = {
       .from(persona)
       .where(and(...conditions))
       .groupBy(persona.topic, persona.category)
-      .orderBy(sql`count DESC`)
+      .orderBy(sql`COUNT(*) DESC`)
       .limit(options.limit ?? 20)
       .all();
 
