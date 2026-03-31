@@ -78,15 +78,20 @@ server/src/
 
 ### nep-chan（動的生成）
 
-メインキャラクター「ねっぷちゃん」は `createNeppChanAgent({ isAdmin, channel })` で動的に生成される。
+メインキャラクター「ねっぷちゃん」は `createNeppChanAgent({ isAdmin, platform, modelConfig })` で動的に生成される。
+`modelConfig` は `resolveModelTier()` で Intent（casual/normal/thinking）× プラットフォーム × 管理者フラグから決定する。
 
 - **一般ユーザー**: 基本機能のみ（天気、Web検索、ナレッジ、緊急報告）
 - **管理者**: 基本機能 + 管理者専用エージェント（emergency, feedback, persona-analyst）
 
 ```typescript
+import { classifyIntent } from "~/lib/classify-intent";
+import { resolveModelTier } from "~/lib/llm-models";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 
-const agent = createNeppChanAgent({ isAdmin: true });
+const intent = await classifyIntent(userText);
+const modelConfig = resolveModelTier({ intent, platform: "web", isAdmin: false });
+const agent = createNeppChanAgent({ modelConfig });
 ```
 
 ### エージェント一覧
@@ -94,6 +99,7 @@ const agent = createNeppChanAgent({ isAdmin: true });
 | ID                         | 説明                               |
 | -------------------------- | ---------------------------------- |
 | `nep-chan`                 | メインキャラクター（ねっぷちゃん） |
+| `intent-router`            | Intent 分類（モデルティア決定用）   |
 | `web-researcher`           | Web 検索（Google Grounding）       |
 | `emergency-reporter-agent` | 緊急事態報告（一般ユーザー）       |
 | `emergency-agent`          | 緊急報告取得（管理者専用）         |
