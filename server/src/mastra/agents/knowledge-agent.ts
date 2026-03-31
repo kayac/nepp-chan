@@ -114,7 +114,7 @@ export const createKnowledgeAgentWithModel = (model: string) =>
   new Agent({
     id: "knowledge-agent",
     name: "Knowledge Agent",
-    description: knowledgeAgent.description,
+    description: knowledgeAgent.getDescription(),
     instructions: knowledgeAgentInstructions,
     ...geminiModelWithThinking({ model, level: "high" }),
     tools: {
