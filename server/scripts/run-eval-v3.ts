@@ -40,6 +40,7 @@ import {
   GEMINI_FLASH,
   GEMINI_FLASH_EVAL,
   OPENAI_SCORER,
+  resolveModelTier,
 } from "../src/lib/llm-models";
 import {
   createKnowledgeAgentWithModel,
@@ -1565,6 +1566,11 @@ const main = async () => {
         : createKnowledgeAgentWithModel(evalModelId),
     "nepp-chan": createNeppChanAgent({
       isAdmin: false,
+      modelConfig: resolveModelTier({
+        intent: "normal",
+        platform: "web",
+        isAdmin: false,
+      }),
       memory: () =>
         new Memory({
           storage: libsqlStore,
