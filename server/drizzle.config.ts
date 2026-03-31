@@ -18,7 +18,7 @@ export default defineConfig({
     dbCredentials: {
       accountId: "51544998e04526c4d6cc9e3e08653361",
       databaseId,
-      token: process.env.CLOUDFLARE_API_TOKEN!,
+      token: process.env.CLOUDFLARE_API_TOKEN ?? "",
     },
   }),
 });

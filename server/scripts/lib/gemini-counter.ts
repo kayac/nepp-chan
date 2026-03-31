@@ -18,10 +18,7 @@ import * as path from "node:path";
 
 export type GeminiKeyType = "main" | "eval";
 
-const COUNTER_DIR = path.resolve(
-  import.meta.dirname,
-  "../../../dataset/eval",
-);
+const COUNTER_DIR = path.resolve("dataset/eval");
 
 const logPath = (keyType: GeminiKeyType): string =>
   path.join(COUNTER_DIR, `.gemini-usage-${keyType}.log`);
@@ -125,7 +122,10 @@ export const compactLog = (keyType: GeminiKeyType): void => {
       .trim()
       .split("\n")
       .filter((line) => line.startsWith(today));
-    fs.writeFileSync(filePath, todayLines.length > 0 ? `${todayLines.join("\n")}\n` : "");
+    fs.writeFileSync(
+      filePath,
+      todayLines.length > 0 ? `${todayLines.join("\n")}\n` : "",
+    );
   } catch {
     // ファイルが存在しない場合は何もしない
   }

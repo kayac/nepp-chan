@@ -17,7 +17,6 @@ import {
 
 // ─── ユーティリティ ─────────────────────────────────────
 
-
 // ─── CLI バーグラフ ──────────────────────────────────────
 
 const bar = (used: number, limit: number, width = 25): string => {
@@ -171,7 +170,9 @@ const main = async () => {
       const usedTok = oai.limitTokens - oai.remainingTokens;
       console.log(`    RPM: ${bar(usedReq, oai.limitRequests)}`);
       console.log(`    TPM: ${bar(usedTok, oai.limitTokens)}`);
-      console.log(`    Reset: RPM ${oai.resetRequests}, TPM ${oai.resetTokens}`);
+      console.log(
+        `    Reset: RPM ${oai.resetRequests}, TPM ${oai.resetTokens}`,
+      );
     } else {
       console.log("    ⚠️  取得失敗");
     }

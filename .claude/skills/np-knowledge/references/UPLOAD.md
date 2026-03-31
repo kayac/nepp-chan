@@ -79,7 +79,7 @@ R2 アップロード後、ベクタライズは非同期（Queue → Worker →
 
 | ファイル | 役割 |
 |----------|------|
-| `.claude/skills/np-knowledge/scripts/upload-knowledge.ts` | CLI エントリポイント（ディレクトリ構造保持でR2アップロード） |
+| `scripts/upload-knowledge.ts` | CLI エントリポイント（ディレクトリ構造保持でR2アップロード） |
 | `server/src/handlers/r2-event-handler.ts` | R2 イベント → チャンク→embedding |
 | `server/src/services/knowledge/embedding.ts` | チャンク分割・embedding・Vectorize upsert |
 | `server/src/services/knowledge/sync.ts` | R2 ↔ Vectorize 全同期 |
