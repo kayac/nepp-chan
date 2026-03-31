@@ -2,11 +2,7 @@ import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
 import type { RequestContext } from "@mastra/core/request-context";
 import { getCurrentDateInfo } from "~/lib/date";
-import {
-  GEMINI_FLASH,
-  GEMINI_FLASH_LITE,
-  geminiModelWithThinking,
-} from "~/lib/llm-models";
+import { type ModelTierConfig, resolveModelTier } from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
 import { feedbackAgent } from "~/mastra/agents/feedback-agent";
@@ -187,13 +183,15 @@ const lineInstructions = `
 type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
   isAdmin?: boolean;
   platform?: "web" | "line";
+  modelConfig: ModelTierConfig;
 };
 
 export const createNeppChanAgent = ({
   isAdmin = false,
   platform = "web",
+  modelConfig,
   ...agentOptions
-}: Props = {}) => {
+}: Props) => {
   const agents = isAdmin ? adminAgents : baseAgents;
   const tools = getTools(platform);
 
@@ -234,11 +232,7 @@ export const createNeppChanAgent = ({
     id: "nep-chan",
     name: "ねっぷちゃん",
     instructions,
-    ...geminiModelWithThinking(
-      platform === "web"
-        ? { model: GEMINI_FLASH, level: "high" }
-        : { model: GEMINI_FLASH_LITE, level: "medium" },
-    ),
+    ...modelConfig,
     agents,
     tools,
     memory: ({ requestContext }) =>
@@ -255,7 +249,12 @@ export const createNeppChanAgent = ({
   });
 };
 
-// Playground 用（管理者モード）
+// Playground 用（管理者モード・thinking ティア）
 export const neppChanAgent = createNeppChanAgent({
   isAdmin: true,
+  modelConfig: resolveModelTier({
+    intent: "thinking",
+    platform: "web",
+    isAdmin: true,
+  }),
 });

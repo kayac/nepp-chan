@@ -2,7 +2,8 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { handleChatStream } from "@mastra/ai-sdk";
 import { Mastra } from "@mastra/core/mastra";
 import { createUIMessageStreamResponse, type UIMessage } from "ai";
-
+import { classifyIntent } from "~/lib/classify-intent";
+import { resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
@@ -18,6 +19,7 @@ const ChatSendRequestSchema = z.object({
   }),
   resourceId: z.string().min(1, "resourceId is required"),
   threadId: z.string().min(1, "threadId is required"),
+  intent: z.enum(["casual", "normal", "thinking"]).optional(),
 });
 
 export const chatRoutes = new OpenAPIHono<{
@@ -55,13 +57,34 @@ const chatRoute = createRoute({
 });
 
 chatRoutes.openapi(chatRoute, async (c) => {
-  const { message, resourceId, threadId } = c.req.valid("json");
+  const {
+    message,
+    resourceId,
+    threadId,
+    intent: fixedIntent,
+  } = c.req.valid("json");
   logger.info(`[Chat] request received`, { threadId, resourceId });
 
   const storage = await getStorage(c.env.DB);
   const adminUser = c.get("adminUser");
+  const isAdmin = !!adminUser;
 
-  const neppChanAgent = createNeppChanAgent({ isAdmin: !!adminUser });
+  // Intent 分類でモデルティアを決定（fixedIntent 指定時はルータースキップ）
+  const userText = (
+    message.parts.find((p) => p.type === "text") as
+      | { type: string; text: string }
+      | undefined
+  )?.text;
+  const intent =
+    fixedIntent ??
+    (isAdmin ? "thinking" : await classifyIntent(userText ?? ""));
+  const modelConfig = resolveModelTier({ intent, platform: "web", isAdmin });
+  logger.info(`[Chat] intent: ${intent}`, { threadId });
+
+  const neppChanAgent = createNeppChanAgent({
+    isAdmin,
+    modelConfig,
+  });
   const mastra = new Mastra({
     agents: { neppChanAgent },
     storage,

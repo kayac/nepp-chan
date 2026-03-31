@@ -24,3 +24,43 @@ export const geminiModelWithThinking = ({
     },
   },
 });
+
+export type Intent = "casual" | "normal" | "thinking";
+
+export type ModelTierConfig = ReturnType<typeof geminiModelWithThinking>;
+
+const MODEL_TIERS: Record<Intent, Record<"web" | "line", ModelTierConfig>> = {
+  casual: {
+    web: geminiModelWithThinking({ model: GEMINI_FLASH_LITE, level: "low" }),
+    line: geminiModelWithThinking({ model: GEMINI_FLASH_LITE, level: "low" }),
+  },
+  normal: {
+    web: geminiModelWithThinking({ model: GEMINI_FLASH, level: "medium" }),
+    line: geminiModelWithThinking({
+      model: GEMINI_FLASH_LITE,
+      level: "medium",
+    }),
+  },
+  thinking: {
+    web: geminiModelWithThinking({ model: GEMINI_FLASH, level: "high" }),
+    line: geminiModelWithThinking({ model: GEMINI_FLASH, level: "medium" }),
+  },
+};
+
+/**
+ * Intent・プラットフォーム・管理者フラグからモデル設定を解決する
+ */
+export const resolveModelTier = ({
+  intent,
+  platform,
+  isAdmin,
+}: {
+  intent: Intent;
+  platform: "web" | "line";
+  isAdmin: boolean;
+}): ModelTierConfig => {
+  if (isAdmin) {
+    return MODEL_TIERS.thinking.web;
+  }
+  return MODEL_TIERS[intent][platform];
+};
