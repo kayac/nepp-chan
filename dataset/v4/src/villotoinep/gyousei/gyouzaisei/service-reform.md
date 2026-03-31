@@ -1,6 +1,9 @@
 ---
 title: 地方行政サービス改革の取組状況等
 category: 行政
+date: '2026-03-18'
+date_type: observed
+contact: 総務課総務財政室
 ---
 # 地方行政サービス改革の取組状況等
 

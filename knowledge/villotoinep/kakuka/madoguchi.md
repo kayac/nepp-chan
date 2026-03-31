@@ -2,6 +2,8 @@
 title: 窓口案内
 category: 各課案内
 subcategory: madoguchi.md
+date: '2026-03-18'
+date_type: observed
 ---
 # 窓口案内
 

@@ -2,6 +2,8 @@
 category: 教育
 subcategory: その他
 url: 'https://www.otoineppu-h.ed.jp/'
+date: '2026-03-18'
+date_type: observed
 ---
 本文へ移動
 ![](https://www.otoineppu-h.ed.jp/assets/image/top/catchcopy.png)

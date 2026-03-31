@@ -2,6 +2,7 @@
 category: 教育
 subcategory: 問合せ
 url: 'https://www.otoineppu-h.ed.jp/contact/'
+date_type: evergreen
 ---
 本文へ移動
 お問い合わせ

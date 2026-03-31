@@ -2,6 +2,8 @@
 title: OTOINEPPU GreenRunning 2025について
 category: 各課案内
 subcategory: 教育委員会
+date: '2026-03-18'
+date_type: observed
 ---
 # OTOINEPPU GreenRunning 2025について
 

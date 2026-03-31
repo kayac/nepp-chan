@@ -2,6 +2,8 @@
 category: 教育
 subcategory: ギャラリー
 url: 'https://www.otoineppu-h.ed.jp/gallery/crafts.html'
+date: '2026-03-18'
+date_type: observed
 ---
 本文へ移動
 ##  作品紹介

@@ -2,6 +2,8 @@
 category: 教育
 subcategory: ギャラリー
 url: 'https://www.otoineppu-h.ed.jp/gallery/art.html'
+date: '2026-03-18'
+date_type: observed
 ---
 本文へ移動
 ##  作品紹介
@@ -15,6 +17,9 @@ Gallery
 
 
 ##  卒業制作 美術研究作品
+
+おといねっぷ美術工芸高等学校の卒業制作、美術研究作品のギャラリーです。絵画作品などが展示されています。
+
 [![](https://www.otoineppu-h.ed.jp/gallery/images/2025-0331-1630_0.jpg)](https://www.otoineppu-h.ed.jp/gallery/images/2025-0331-1630_0.jpg)
 [![](https://www.otoineppu-h.ed.jp/gallery/images/2025-0331-1630-a_0.jpg)](https://www.otoineppu-h.ed.jp/gallery/images/2025-0331-1630-a_0.jpg)
 [![](https://www.otoineppu-h.ed.jp/gallery/images/2025-0331-1630-b_0.jpg)](https://www.otoineppu-h.ed.jp/gallery/images/2025-0331-1630-b_0.jpg)

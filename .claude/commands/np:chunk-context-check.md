@@ -1,5 +1,5 @@
 ---
-description: ナレッジX線検査 - チャンク分割で見出し除外により文脈が失われた箇所を検知
+description: stripHeaders文脈欠落チェック - Mastra RAGのchunk分割で見出し除外により文脈が失われた箇所を検知
 argument-hint: [自然言語で対象を指定、または空で全スキャン]
 ---
 
@@ -15,7 +15,7 @@ Your job is detection only — you report problems, not fix them.
 </language>
 
 <reference>
-@.claude/skills/np-xray/SKILL.md
+@.claude/skills/np-chunk-context-check/SKILL.md
 </reference>
 
 <workflow>

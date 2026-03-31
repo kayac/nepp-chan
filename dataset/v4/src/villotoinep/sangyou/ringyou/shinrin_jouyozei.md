@@ -1,6 +1,9 @@
 ---
 title: 森林環境譲与税の活用について
 category: 産業
+date: '2019-04-01'
+date_type: exact
+contact: 経済課産業振興室 林政係
 ---
 # 森林環境譲与税の活用について
 

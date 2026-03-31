@@ -1,6 +1,7 @@
 ---
 title: 地域おこし協力隊
 category: 行政
+date_type: evergreen
 ---
 # 地域おこし協力隊
 

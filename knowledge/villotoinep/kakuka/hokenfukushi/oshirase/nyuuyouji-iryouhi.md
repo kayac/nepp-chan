@@ -2,6 +2,9 @@
 title: 乳幼児等医療費助成制度の拡大について
 category: 各課案内
 subcategory: 保健福祉課
+date: '2025-04-01'
+date_type: estimated
+contact: 住民課保健福祉室 保健推進係
 ---
 # 乳幼児等医療費助成制度の拡大について
 

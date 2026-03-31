@@ -2,6 +2,8 @@
 title: 村税関係証明書等の発行について
 category: 住民生活
 subcategory: 税金
+date_type: observed
+contact: 住民課住民生活室
 ---
 # 村税関係証明書等の発行について
 

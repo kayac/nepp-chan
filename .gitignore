@@ -13,6 +13,7 @@ dist/
 .idea/shelf
 .brain/
 .agent/
+review/
 .claude/settings.local.json
 
 # deps
@@ -56,6 +57,10 @@ server/todos/
 # eval results
 dataset/eval/results/*.json
 dataset/eval/results/*.html
+dataset/eval/eval-test-history.md
+dataset/eval/.gemini-usage.json
+dataset/eval/.gemini-usage-*.json
+dataset/eval/.gemini-usage-*.log
 
 # web build output
 server/public/

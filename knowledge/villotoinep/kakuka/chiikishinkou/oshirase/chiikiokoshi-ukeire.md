@@ -2,6 +2,9 @@
 title: 地域おこし協力隊（事業所等雇用型隊員）の受入事業者を募集します！
 category: 各課案内
 subcategory: 地域振興課
+date: '2026-03-18'
+date_type: observed
+contact: 地域振興室
 ---
 # 地域おこし協力隊（事業所等雇用型隊員）の受入事業者を募集します！
 

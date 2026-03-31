@@ -2,6 +2,9 @@
 title: YOKO-CUP 第37回音威子府ジュニアクロスカントリースキー大会について
 category: 各課案内
 subcategory: 教育委員会
+date: '2026-03-18'
+date_type: observed
+contact: 教育委員会
 ---
 # YOKO-CUP 第37回音威子府ジュニアクロスカントリースキー大会について
 

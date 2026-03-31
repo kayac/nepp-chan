@@ -39,7 +39,10 @@
     "admin:invite:prd": "tsx server/scripts/create-invitation.ts --env=prd",
     "eval:v2": "pnpm --filter @nepp-chan/server eval:v2",
     "eval:v3": "pnpm --filter @nepp-chan/server eval:v3",
+    "api:quota": "pnpm --filter @nepp-chan/server api:quota",
     "frontmatter:add": "tsx scripts/add-frontmatter.ts",
+    "frontmatter:extract": "tsx --env-file=.env.local scripts/extract-date-contact.ts --target=dataset",
+    "frontmatter:apply": "tsx scripts/apply-date-contact.ts",
     "openapi:generate": "pnpm --filter @nepp-chan/web openapi:generate"
   },
   "devDependencies": {

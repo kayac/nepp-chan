@@ -2,6 +2,7 @@
 title: 第3期音威子府村食育推進計画の制定について
 category: 各課案内
 subcategory: 産業振興課
+date_type: evergreen
 ---
 # 第3期音威子府村食育推進計画の制定について
 

@@ -2,6 +2,8 @@
 title: 村民トレーディングカードを作ろう！外部人材伴走インターン実施！
 category: 各課案内
 subcategory: 地域振興課
+date_type: evergreen
+contact: 地域振興室
 ---
 # 村民トレーディングカードを作ろう！外部人材伴走インターン実施！
 

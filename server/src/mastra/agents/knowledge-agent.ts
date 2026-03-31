@@ -89,21 +89,35 @@ const baseInstructions = `
 - URLは検索結果から得たもののみ使用し、推測や捏造は絶対にしない
 `;
 
-export const knowledgeAgent = new Agent({
-  id: "knowledge-agent",
-  name: "Knowledge Agent",
-  description:
-    "音威子府村の情報を検索・回答する担当。村に関する情報（歴史、施設、観光、村長、行政、行事）を検索して回答する。",
-  // instructionsを関数化（リクエスト時に評価され、現在日時が動的に取得される）
-  instructions: () => `${baseInstructions}
+const knowledgeAgentInstructions = () => `${baseInstructions}
 ## 現在の日時
 ${getCurrentDateInfo()}
 
 ## 検索クエリ生成ルール
 - 「最新」「現在」「今年」「今日」「今週」「今月」などの曖昧な時間表現は、上記の日時を基準に具体的な日付・年に変換する
-`,
+`;
+
+export const knowledgeAgent = new Agent({
+  id: "knowledge-agent",
+  name: "Knowledge Agent",
+  description:
+    "音威子府村の情報を検索・回答する担当。村に関する情報（歴史、施設、観光、村長、行政、行事）を検索して回答する。",
+  instructions: knowledgeAgentInstructions,
   ...geminiModelWithThinking({ model: GEMINI_FLASH, level: "high" }),
   tools: {
     knowledgeSearchTool,
   },
 });
+
+/** eval 用: モデルを指定して knowledge agent を生成 */
+export const createKnowledgeAgentWithModel = (model: string) =>
+  new Agent({
+    id: "knowledge-agent",
+    name: "Knowledge Agent",
+    description: knowledgeAgent.getDescription(),
+    instructions: knowledgeAgentInstructions,
+    ...geminiModelWithThinking({ model, level: "high" }),
+    tools: {
+      knowledgeSearchTool,
+    },
+  });

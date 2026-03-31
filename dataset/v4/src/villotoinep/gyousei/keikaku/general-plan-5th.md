@@ -1,6 +1,7 @@
 ---
 title: 第5期音威子府村総合計画
 category: 行政
+date_type: evergreen
 ---
 # 第5期音威子府村総合計画
 

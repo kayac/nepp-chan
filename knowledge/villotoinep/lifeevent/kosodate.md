@@ -1,6 +1,9 @@
 ---
 title: 子育て
 category: ライフイベント
+date: '2025-04-09'
+date_type: exact
+contact: 住民課保健福祉室
 ---
 # 子育て
 

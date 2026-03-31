@@ -2,6 +2,9 @@
 title: 保険・年金
 category: 住民生活
 subcategory: 保険・年金
+date: '2026-03-18'
+date_type: observed
+contact: 住民課 住民生活室 住民係
 ---
 # 保険・年金
 

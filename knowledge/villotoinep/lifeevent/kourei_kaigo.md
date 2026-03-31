@@ -1,6 +1,9 @@
 ---
 title: 高齢・介護
 category: ライフイベント
+date: '2025-04-23'
+date_type: exact
+contact: 住民課保健福祉室
 ---
 # 高齢・介護
 

@@ -2,6 +2,9 @@
 title: 「地域おこし協力隊」（地域福祉隊員）募集について
 category: 各課案内
 subcategory: 保健福祉課
+date: '2025-03-31'
+date_type: exact
+contact: 保健福祉室
 ---
 # 「地域おこし協力隊」（地域福祉隊員）募集について
 

@@ -1,6 +1,8 @@
 ---
 title: 使用済み小型家電回収品目一覧
 category: 資料
+date: '2026-03-18'
+date_type: observed
 ---
 # 使用済み小型家電回収品目一覧
 

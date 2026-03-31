@@ -1,6 +1,9 @@
 ---
 title: 空き店舗利活用チャレンジショップ
 category: 施設案内
+date: '2026-03-18'
+date_type: observed
+contact: 総務課地域振興室
 ---
 # 空き店舗利活用チャレンジショップ
 

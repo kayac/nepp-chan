@@ -1,6 +1,9 @@
 ---
 title: 伐採及び伐採後の造林の届出等制度について
 category: 産業
+date: '2021-04-01'
+date_type: estimated
+contact: 経済課産業振興室 林政係
 ---
 # 伐採及び伐採後の造林の届出等制度について
 

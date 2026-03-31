@@ -1,6 +1,8 @@
 ---
 title: その他スポーツ施設
 category: 施設案内
+date: '2026-03-18'
+date_type: observed
 ---
 # その他スポーツ施設
 

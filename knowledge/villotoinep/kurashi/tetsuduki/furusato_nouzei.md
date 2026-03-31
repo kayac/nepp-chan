@@ -2,6 +2,8 @@
 title: ふるさと納税制度について
 category: 住民生活
 subcategory: 手続き
+date_type: observed
+contact: 総務課
 ---
 # ふるさと納税制度について
 

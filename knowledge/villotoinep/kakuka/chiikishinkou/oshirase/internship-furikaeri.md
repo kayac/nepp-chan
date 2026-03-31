@@ -2,6 +2,9 @@
 title: おといねっぷインターンシップの振り返り資料について
 category: 各課案内
 subcategory: 地域振興課
+date: '2024-04-01'
+date_type: exact
+contact: 地域振興室
 ---
 # おといねっぷインターンシップの振り返り資料について
 

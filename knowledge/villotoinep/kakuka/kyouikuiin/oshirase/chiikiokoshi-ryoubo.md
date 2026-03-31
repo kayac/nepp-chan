@@ -2,6 +2,9 @@
 title: 地域おこし協力隊【高等学校寄宿舎指導員（寮母）】募集！
 category: 各課案内
 subcategory: 教育委員会
+date: '2026-03-18'
+date_type: observed
+contact: 教育委員会
 ---
 # 地域おこし協力隊【高等学校寄宿舎指導員（寮母）】募集！
 

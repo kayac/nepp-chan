@@ -1,6 +1,9 @@
 ---
 title: 林業・鳥獣
 category: 産業
+date: '2026-03-18'
+date_type: observed
+contact: 経済課産業振興室 林政係
 ---
 # 林業・鳥獣
 

@@ -1,6 +1,8 @@
 ---
 title: 人事行政の運営等の状況報告
 category: 行政
+date: '2026-03-18'
+date_type: observed
 ---
 # 人事行政の運営等の状況報告
 

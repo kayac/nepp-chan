@@ -2,6 +2,9 @@
 title: 乳幼児医療費の助成
 category: 住民生活
 subcategory: 健康・福祉
+date: '2025-04-01'
+date_type: estimated
+contact: 保健推進係
 ---
 # 乳幼児医療費の助成
 

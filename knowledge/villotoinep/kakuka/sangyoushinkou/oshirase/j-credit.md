@@ -2,6 +2,9 @@
 title: Jクレジット制度プロジェクト登録のお知らせ 修正について
 category: 各課案内
 subcategory: 産業振興課
+date: '2025-09-01'
+date_type: exact
+contact: 経済課産業振興室
 ---
 # Jクレジット制度プロジェクト登録のお知らせ 修正について
 

@@ -1,6 +1,9 @@
 ---
 title: 屋根からの落氷雪事故防止などのお願い
 category: 資料
+date: '2026-03-18'
+date_type: observed
+contact: 旭川開発建設部公物管理課
 ---
 # 屋根からの落氷雪事故防止などのお願い
 

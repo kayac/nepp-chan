@@ -2,6 +2,8 @@
 title: 音威子府村地域強靭化計画
 category: 各課案内
 subcategory: 総務財政課
+date_type: evergreen
+contact: 総務財政室
 ---
 # 音威子府村地域強靭化計画
 

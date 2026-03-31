@@ -1,6 +1,7 @@
 ---
 title: 道の駅おといねっぷ
 category: 施設案内
+date_type: evergreen
 ---
 # 道の駅おといねっぷ
 

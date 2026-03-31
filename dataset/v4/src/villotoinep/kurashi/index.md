@@ -2,6 +2,7 @@
 title: くらしの情報
 category: 住民生活
 subcategory: index.md
+date_type: evergreen
 ---
 # くらしの情報
 

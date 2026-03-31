@@ -1,6 +1,9 @@
 ---
 title: 天塩川リバーサイドキャンプ場
 category: 施設案内
+date: '2026-03-18'
+date_type: observed
+contact: 経済課産業振興室
 ---
 # 天塩川リバーサイドキャンプ場
 

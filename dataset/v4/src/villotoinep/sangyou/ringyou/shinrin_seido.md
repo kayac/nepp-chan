@@ -1,6 +1,8 @@
 ---
 title: 森林・林業の諸制度
 category: 産業
+date: '2026-03-18'
+date_type: observed
 ---
 # 森林・林業の諸制度
 

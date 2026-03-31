@@ -22,7 +22,7 @@ import {
 } from "@mastra/evals/scorers/utils";
 import { getPlatformProxy } from "wrangler";
 
-import { GEMINI_FLASH_LITE, GEMINI_SCORER } from "../src/lib/llm-models";
+import { OPENAI_SCORER } from "../src/lib/llm-models";
 
 // ─── テストシナリオ定義 ──────────────────────────────────────
 
@@ -150,6 +150,15 @@ type ScoreName =
 
 type Scores = Record<ScoreName, number | null>;
 
+// CLI 引数からモデルを取得（デフォルト: OPENAI_SCORER）
+const getModelFromArgs = (): string => {
+  const idx = process.argv.indexOf("--model");
+  if (idx !== -1 && process.argv[idx + 1]) return process.argv[idx + 1];
+  return OPENAI_SCORER;
+};
+
+const SCORER_MODEL = getModelFromArgs();
+
 const runScorer = async (
   name: ScoreName,
   tc: ScorerTestCase,
@@ -170,7 +179,7 @@ const runScorer = async (
     switch (name) {
       case "similarity":
         result = await createAnswerSimilarityScorer({
-          model: GEMINI_FLASH_LITE,
+          model: SCORER_MODEL,
         }).run({
           input: testRun.input,
           output: testRun.output,
@@ -179,7 +188,7 @@ const runScorer = async (
         break;
       case "faithfulness":
         result = await createFaithfulnessScorer({
-          model: GEMINI_SCORER,
+          model: SCORER_MODEL,
           options: { context: tc.context },
         }).run({
           input: testRun.input,
@@ -188,7 +197,7 @@ const runScorer = async (
         break;
       case "contextPrecision":
         result = await createContextPrecisionScorer({
-          model: GEMINI_FLASH_LITE,
+          model: SCORER_MODEL,
           options: { context: tc.context },
         }).run({
           input: testRun.input,
@@ -198,7 +207,7 @@ const runScorer = async (
         break;
       case "contextRelevance":
         result = await createContextRelevanceScorerLLM({
-          model: GEMINI_SCORER,
+          model: SCORER_MODEL,
           options: { context: tc.context },
         }).run({
           input: testRun.input,
@@ -207,7 +216,7 @@ const runScorer = async (
         break;
       case "hallucination":
         result = await createHallucinationScorer({
-          model: GEMINI_FLASH_LITE,
+          model: SCORER_MODEL,
           options: { context: tc.context },
         }).run({
           input: testRun.input,
@@ -247,12 +256,23 @@ const main = async () => {
   });
   // biome-ignore lint/suspicious/noExplicitAny: .dev.vars の追加キーは CloudflareBindings に未定義
   const evalKey = (env as any).EVAL_GOOGLE_API_KEY as string | undefined;
-  const key = evalKey || env.GOOGLE_GENERATIVE_AI_API_KEY;
-  process.env.GOOGLE_GENERATIVE_AI_API_KEY = key;
-  console.log(evalKey ? "🔑 Eval専用APIキーを使用" : "🔑 通常APIキーを使用");
+  const googleKey = evalKey || env.GOOGLE_GENERATIVE_AI_API_KEY;
+  process.env.GOOGLE_GENERATIVE_AI_API_KEY = googleKey;
+  // biome-ignore lint/suspicious/noExplicitAny: .dev.vars の追加キーは CloudflareBindings に未定義
+  const openaiKey = (env as any).OPENAI_API_KEY as string | undefined;
+  if (openaiKey) process.env.OPENAI_API_KEY = openaiKey;
+  console.log(
+    evalKey ? "🔑 Eval専用Google APIキーを使用" : "🔑 通常Google APIキーを使用",
+  );
+  console.log(
+    openaiKey
+      ? "🔑 OpenAI APIキーを使用（スコアラー: gpt-5-nano）"
+      : "⚠️ OPENAI_API_KEY 未設定",
+  );
 
   console.log("═══════════════════════════════════════════════════════════");
   console.log("🧪 スコアラー検証テスト（Phase 1: 物差しのテスト）");
+  console.log(`🤖 モデル: ${SCORER_MODEL}`);
   console.log("═══════════════════════════════════════════════════════════");
   console.log(`テストケース数: ${TEST_CASES.length}`);
   console.log(`スコアラー数: ${SCORE_NAMES.length}`);

@@ -2,6 +2,8 @@
 title: クロスカントリースキー
 category: 住民生活
 subcategory: sports
+date: '2026-03-18'
+date_type: observed
 ---
 # クロスカントリースキー
 

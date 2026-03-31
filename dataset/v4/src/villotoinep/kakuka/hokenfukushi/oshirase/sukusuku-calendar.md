@@ -2,6 +2,9 @@
 title: 令和7年度 すくすく健康カレンダーを作成しました
 category: 各課案内
 subcategory: 保健福祉課
+date: '2025-04-01'
+date_type: exact
+contact: 住民課保健福祉室
 ---
 # 令和7年度 すくすく健康カレンダーを作成しました
 

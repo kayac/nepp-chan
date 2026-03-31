@@ -1,6 +1,9 @@
 ---
 title: 妊娠・出産
 category: ライフイベント
+date: '2025-04-01'
+date_type: estimated
+contact: 住民課保健福祉室
 ---
 # 妊娠・出産
 

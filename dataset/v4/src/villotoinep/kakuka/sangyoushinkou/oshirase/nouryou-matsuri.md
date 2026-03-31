@@ -2,6 +2,9 @@
 title: 第3回ふるさと納涼まつりについて
 category: 各課案内
 subcategory: 産業振興課
+date: '2026-03-18'
+date_type: observed
+contact: 産業振興室
 ---
 # 第3回ふるさと納涼まつりについて
 

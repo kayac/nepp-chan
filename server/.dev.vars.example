@@ -7,6 +7,9 @@ JWT_SECRET=local-dev-jwt-secret-must-be-at-least-32-chars-long
 # Eval専用（省略時は GOOGLE_GENERATIVE_AI_API_KEY を使用）
 EVAL_GOOGLE_API_KEY=
 
+# OpenAI（Evalスコアラー用: gpt-5-nano）
+OPENAI_API_KEY=
+
 # LINE Messaging API
 LINE_CHANNEL_SECRET=your-channel-secret-here
 LINE_CHANNEL_ACCESS_TOKEN=your-chan=======

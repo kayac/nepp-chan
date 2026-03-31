@@ -1,4 +1,4 @@
-# np:xray - ナレッジ X線検査
+# np:chunk-context-check - stripHeaders 文脈欠落チェック
 
 ## 概要
 
@@ -112,4 +112,4 @@ INFO: {count} ({percent}%)
 - **コード側の修正**: `embedding.ts` で `stripHeaders: false` にする、または metadata filter を search.ts に追加
 - **ハイブリッド**: 特に CRITICAL な箇所のみデータ修正、コード側は別タスクで対応
 
-いずれの場合も、修正後に再度 `/np:xray` でスキャンして CRITICAL/WARNING が解消されたことを確認する。
+いずれの場合も、修正後に再度 `/np:chunk-context-check` でスキャンして CRITICAL/WARNING が解消されたことを確認する。

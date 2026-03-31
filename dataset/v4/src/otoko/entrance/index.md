@@ -2,6 +2,8 @@
 category: 教育
 subcategory: 入試
 url: 'https://www.otoineppu-h.ed.jp/entrance/'
+date: '2026-03-18'
+date_type: observed
 ---
 本文へ移動
 入試情報

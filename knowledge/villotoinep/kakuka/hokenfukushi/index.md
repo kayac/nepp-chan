@@ -2,6 +2,9 @@
 title: 住民課保健福祉室
 category: 各課案内
 subcategory: 保健福祉課
+date: '2025-09-24'
+date_type: exact
+contact: 住民課保健福祉室
 ---
 # 住民課保健福祉室
 

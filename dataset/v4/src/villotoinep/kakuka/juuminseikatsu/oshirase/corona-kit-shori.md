@@ -2,6 +2,9 @@
 title: 新型コロナウイルス検査用試験キットの処理方法について
 category: 各課案内
 subcategory: 住民生活課
+date: '2026-03-18'
+date_type: observed
+contact: 住民課住民生活室 生活環境係
 ---
 # 新型コロナウイルス検査用試験キットの処理方法について
 

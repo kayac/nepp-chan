@@ -15,8 +15,11 @@
  *   pnpm eval:v2 -- --compare --category education --n 3            # 3環境比較（カテゴリ）
  *   pnpm eval:v2 -- --compare --n 3                                 # 3環境比較（全テストケース）
  *   pnpm eval:v2 -- --interval 10 --n 3                              # テストケース間に10秒インターバル
+ *   pnpm eval:v2 -- --env local --n 8 --batch-size 10               # 10件ずつプロセス分割（Vectorize安定化）
+ *   pnpm eval:v2 -- --env local --n 8 --from 0 --to 9              # テストケース0〜9番のみ実行
  */
 
+import { execSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { RequestContext } from "@mastra/core/request-context";
@@ -33,9 +36,15 @@ import {
 import { LibSQLStore } from "@mastra/libsql";
 import { Memory } from "@mastra/memory";
 import { getPlatformProxy } from "wrangler";
-
-import { GEMINI_FLASH_LITE, GEMINI_SCORER } from "../src/lib/llm-models";
-import { knowledgeAgent } from "../src/mastra/agents/knowledge-agent";
+import {
+  GEMINI_FLASH,
+  GEMINI_FLASH_EVAL,
+  OPENAI_SCORER,
+} from "../src/lib/llm-models";
+import {
+  createKnowledgeAgentWithModel,
+  knowledgeAgent,
+} from "../src/mastra/agents/knowledge-agent";
 import { createNeppChanAgent } from "../src/mastra/agents/nepp-chan-agent";
 import type {
   TestCase,
@@ -43,6 +52,7 @@ import type {
 } from "../src/mastra/data/eval-test-cases";
 import { evalTestCases } from "../src/mastra/data/eval-test-cases";
 import { evalV2TestCases } from "../src/mastra/data/eval-v2-test-cases";
+import { getGeminiUsage, incrementGeminiCounter } from "./lib/gemini-counter";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -186,6 +196,14 @@ interface CliArgs {
   compare: boolean;
   /** テストケース間のインターバル（秒）。デフォルト5秒 */
   interval: number;
+  /** エージェントモデル: eval=2.5-flash-lite(RPD無制限), production=flash-latest(本番同一) */
+  model: "eval" | "production";
+  /** バッチサイズ（指定時はプロセス分割モード） */
+  batchSize?: number;
+  /** テストケース開始インデックス（子プロセス用） */
+  from?: number;
+  /** テストケース終了インデックス（子プロセス用） */
+  to?: number;
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -206,14 +224,31 @@ const isAbstention = (answer: string): boolean => {
 
 // ─── Eval用APIキー解決 ───────────────────────────────────
 
-const resolveEvalApiKey = (env: CloudflareBindings): string => {
+const resolveEvalApiKeys = (env: CloudflareBindings): void => {
+  // Gemini（エージェント実行用）
   // biome-ignore lint/suspicious/noExplicitAny: .dev.vars の追加キーは CloudflareBindings に未定義
-  const evalKey = (env as any).EVAL_GOOGLE_API_KEY as string | undefined;
-  const key = evalKey || env.GOOGLE_GENERATIVE_AI_API_KEY;
-  if (evalKey) {
-    console.log("🔑 Eval専用APIキーを使用");
+  const evalGoogleKey = (env as any).EVAL_GOOGLE_API_KEY as string | undefined;
+  const googleKey = evalGoogleKey || env.GOOGLE_GENERATIVE_AI_API_KEY;
+  if (evalGoogleKey) {
+    console.log("🔑 Eval専用Google APIキーを使用");
   }
-  return key;
+  // process.env: Mastra の agent.generate() が参照
+  process.env.GOOGLE_GENERATIVE_AI_API_KEY = googleKey;
+  // env: knowledgeSearchTool → searchKnowledge() が参照（embed + rerank）
+  // biome-ignore lint/suspicious/noExplicitAny: eval 時のみ env proxy を上書き
+  (env as any).GOOGLE_GENERATIVE_AI_API_KEY = googleKey;
+
+  // OpenAI（スコアラー用）
+  // biome-ignore lint/suspicious/noExplicitAny: .dev.vars の追加キーは CloudflareBindings に未定義
+  const openaiKey = (env as any).OPENAI_API_KEY as string | undefined;
+  if (openaiKey) {
+    process.env.OPENAI_API_KEY = openaiKey;
+    console.log("🔑 OpenAI APIキーを使用（スコアラー: gpt-5-nano）");
+  } else {
+    console.warn(
+      "⚠️ OPENAI_API_KEY が未設定。スコアラーが失敗する可能性があります",
+    );
+  }
 };
 
 // ─── CLI引数パース ────────────────────────────────────────
@@ -226,6 +261,7 @@ const parseArgs = (): CliArgs => {
     env: "local",
     compare: false,
     interval: 5,
+    model: "eval",
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -256,6 +292,18 @@ const parseArgs = (): CliArgs => {
         break;
       case "--interval":
         result.interval = Number.parseInt(args[++i], 10);
+        break;
+      case "--model":
+        result.model = args[++i] as "eval" | "production";
+        break;
+      case "--batch-size":
+        result.batchSize = Number.parseInt(args[++i], 10);
+        break;
+      case "--from":
+        result.from = Number.parseInt(args[++i], 10);
+        break;
+      case "--to":
+        result.to = Number.parseInt(args[++i], 10);
         break;
     }
   }
@@ -345,7 +393,7 @@ const runEvalScorers = async ({
   // similarity は常に実行
   try {
     const result = await createAnswerSimilarityScorer({
-      model: GEMINI_FLASH_LITE,
+      model: OPENAI_SCORER,
     }).run({
       input: testRun.input,
       output: testRun.output,
@@ -365,7 +413,7 @@ const runEvalScorers = async ({
 
   try {
     const result = await createContextPrecisionScorer({
-      model: GEMINI_FLASH_LITE,
+      model: OPENAI_SCORER,
       options: { context },
     }).run({
       input: testRun.input,
@@ -381,7 +429,7 @@ const runEvalScorers = async ({
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const result = await createContextRelevanceScorerLLM({
-        model: GEMINI_SCORER,
+        model: OPENAI_SCORER,
         options: { context },
       }).run({
         input: testRun.input,
@@ -408,7 +456,7 @@ const runEvalScorers = async ({
   } else {
     try {
       const result = await createHallucinationScorer({
-        model: GEMINI_FLASH_LITE,
+        model: OPENAI_SCORER,
         options: { context },
       }).run({
         input: testRun.input,
@@ -1170,7 +1218,6 @@ const runTestCaseEval = async (params: {
         requestContext,
         maxSteps: 3,
       });
-
       // biome-ignore lint/suspicious/noExplicitAny: agent.generate の戻り値型は不定
       const steps = (result as any).steps;
 
@@ -1209,6 +1256,9 @@ const runTestCaseEval = async (params: {
         (sum, s) => sum + s.toolCalls.length,
         0,
       );
+
+      // Gemini RPD カウンター: チャット(steps) + rerank(toolCalls) = Flash API コール数
+      incrementGeminiCounter(stepCount + toolCallCount, "eval");
       const hasAnswer = result.text.trim().length > 0;
 
       timeline.push({
@@ -1328,8 +1378,84 @@ const main = async () => {
     testCases = evalV2TestCases;
   }
 
+  // --from/--to によるテストケース範囲フィルタリング（子プロセス用）
+  if (args.from !== undefined && args.to !== undefined) {
+    testCases = testCases.slice(args.from, args.to + 1);
+  }
+
+  // --batch-size によるプロセス分割モード（親プロセス）
+  // --from/--to と併用可能: 指定範囲内でさらにバッチ分割する
+  if (args.batchSize) {
+    const total = testCases.length;
+    const batchSize = args.batchSize;
+    const batches = Math.ceil(total / batchSize);
+    const globalFrom = args.from ?? 0;
+
+    console.log("🔄 Eval V2 バッチ分割モード");
+    console.log(
+      `   テストケース数: ${total}${args.from !== undefined ? ` (ケース ${args.from}〜${args.to})` : ""}`,
+    );
+    console.log(`   バッチサイズ: ${batchSize}`);
+    console.log(`   バッチ数: ${batches}`);
+    console.log();
+
+    // 元の引数を再構成（--batch-size, --from, --to を除去し新しい --from/--to を付与）
+    const baseArgs = process.argv
+      .slice(2)
+      .filter(
+        (a, i, arr) =>
+          a !== "--batch-size" &&
+          arr[i - 1] !== "--batch-size" &&
+          a !== "--from" &&
+          arr[i - 1] !== "--from" &&
+          a !== "--to" &&
+          arr[i - 1] !== "--to",
+      );
+
+    for (let batch = 0; batch < batches; batch++) {
+      const from = globalFrom + batch * batchSize;
+      const to = Math.min(from + batchSize - 1, globalFrom + total - 1);
+
+      console.log(
+        `\n━━━ バッチ ${batch + 1}/${batches} (ケース ${from}〜${to}) ━━━`,
+      );
+
+      const cmd = `tsx scripts/run-eval-v2.ts ${baseArgs.join(" ")} --from ${from} --to ${to}`;
+      try {
+        execSync(cmd, {
+          stdio: "inherit",
+          cwd: path.resolve(import.meta.dirname, ".."),
+          timeout: 7_200_000, // 2時間/バッチ
+        });
+      } catch (e) {
+        console.error(
+          `❌ バッチ ${batch + 1} でエラー:`,
+          e instanceof Error ? e.message : e,
+        );
+      }
+
+      // バッチ間インターバル（セッション完全破棄を待つ）
+      if (batch < batches - 1) {
+        console.log("⏳ バッチ間インターバル（5秒）...");
+        await sleep(5000);
+      }
+    }
+
+    console.log("\n✅ Eval V2 全バッチ完了");
+    return;
+  }
+
+  // モデル選択: eval=gemini-2.5-flash-lite(RPD無制限), production=flash-latest(本番同一)
+  const evalModelId =
+    args.model === "production" ? GEMINI_FLASH : GEMINI_FLASH_EVAL;
+  const evalModelLabel =
+    args.model === "production"
+      ? "gemini-flash-latest（本番同一）"
+      : "gemini-2.5-flash-lite（eval用、RPD無制限）";
+
   console.log("🔄 Eval V2 開始");
   console.log(`   エージェント: ${args.agent}`);
+  console.log(`   モデル: ${evalModelLabel}`);
   console.log(`   テストケース数: ${testCases.length}`);
   console.log(`   各N回: ${args.n}`);
   console.log(
@@ -1348,7 +1474,10 @@ const main = async () => {
 
   // エージェント選択
   const agentMap: Record<string, ReturnType<typeof createNeppChanAgent>> = {
-    knowledge: knowledgeAgent,
+    knowledge:
+      args.model === "production"
+        ? knowledgeAgent
+        : createKnowledgeAgentWithModel(evalModelId),
     "nepp-chan": createNeppChanAgent({
       isAdmin: false,
       memory: () =>
@@ -1364,6 +1493,64 @@ const main = async () => {
     console.error(`❌ 不明なエージェント: ${args.agent}`);
     process.exit(1);
   }
+
+  // ─── クォータ事前チェック ──────────────────────────────────
+  // 1イテレーションあたりの実測 Gemini コール数:
+  //   agent.generate() チャット + thinking + retry: ~15
+  //   knowledgeSearch embed + rerank: ~7
+  //   合計: ~22（Google AI Studio 実測ベース）
+  const CALLS_PER_ITERATION = 22;
+  const envCount = args.compare ? 3 : 1;
+  const estimatedGeminiCalls =
+    testCases.length * args.n * CALLS_PER_ITERATION * envCount;
+  const estimatedScorerCalls = testCases.length * args.n * 4 * envCount;
+  const GEMINI_RPD = 10_000;
+  const OPENAI_RPM = 500;
+  const estimatedDurationMin = Math.ceil(
+    (testCases.length * args.n * 70 * envCount) / 60,
+  );
+
+  const currentUsage = getGeminiUsage("eval");
+  const alreadyUsed = currentUsage.requests;
+
+  console.log("─── クォータ事前チェック ─────────────────────────");
+  if (args.model === "eval") {
+    console.log(`   Gemini モデル: ${evalModelLabel}（RPD 無制限）`);
+    console.log(
+      `   推定コール数: ${estimatedGeminiCalls.toLocaleString()}（RPD制限なし）`,
+    );
+  } else {
+    const remaining = GEMINI_RPD - alreadyUsed;
+    const totalAfterRun = alreadyUsed + estimatedGeminiCalls;
+    console.log(
+      `   Gemini 今日の累計: ${alreadyUsed.toLocaleString()} / ${GEMINI_RPD.toLocaleString()} RPD (残り ${remaining.toLocaleString()})`,
+    );
+    console.log(
+      `   Gemini 推定消費: +${estimatedGeminiCalls.toLocaleString()} → 合計 ${totalAfterRun.toLocaleString()} (${((totalAfterRun / GEMINI_RPD) * 100).toFixed(0)}%)`,
+    );
+
+    if (totalAfterRun > GEMINI_RPD * 0.8) {
+      console.warn(
+        `\n⚠️  警告: 実行後に Gemini RPD の ${((totalAfterRun / GEMINI_RPD) * 100).toFixed(0)}% に到達する見込みです`,
+      );
+      if (totalAfterRun > GEMINI_RPD) {
+        const safeN = Math.floor(
+          (remaining * 0.8) /
+            (testCases.length * CALLS_PER_ITERATION * envCount),
+        );
+        console.error(
+          "\n❌ エラー: Gemini RPD を超過します。テストケース数または n を減らしてください",
+        );
+        console.error(`   推奨: n=${Math.max(1, safeN)} 以下`);
+        process.exit(1);
+      }
+    }
+  }
+  console.log(
+    `   OpenAI 推定リクエスト数: ${estimatedScorerCalls.toLocaleString()} (RPM ${OPENAI_RPM})`,
+  );
+  console.log(`   推定実行時間: ${estimatedDurationMin}分`);
+  console.log("─────────────────────────────────────────────────\n");
 
   // 出力ディレクトリ
   const outputDir = path.resolve(
@@ -1387,7 +1574,7 @@ const main = async () => {
         environment: envName,
         remoteBindings: true,
       });
-      process.env.GOOGLE_GENERATIVE_AI_API_KEY = resolveEvalApiKey(env);
+      resolveEvalApiKeys(env);
 
       const requestContext = new RequestContext();
       requestContext.set("env", env);
@@ -1481,13 +1668,18 @@ const main = async () => {
     }
   } else {
     // ─── 単一環境モード ────────────────────────────────────
+
+    // Vectorize リモートバインディングのセッション安定性対策:
+    // getPlatformProxy は長時間稼働で認証トークンが劣化し VECTOR_QUERY_ERROR が発生する。
+    // --batch-size オプションでプロセス分割し、各バッチで新鮮なセッションを使用する。
+    // 1バッチ内では1セッションで走り切る。
+
     const { env, dispose } = await getPlatformProxy<CloudflareBindings>({
       configPath: "wrangler.jsonc",
       environment: args.env,
       remoteBindings: true,
     });
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY = resolveEvalApiKey(env);
-
+    resolveEvalApiKeys(env);
     const requestContext = new RequestContext();
     requestContext.set("env", env);
 

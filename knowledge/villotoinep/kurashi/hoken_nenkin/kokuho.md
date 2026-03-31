@@ -2,6 +2,8 @@
 title: 国民健康保険について
 category: 住民生活
 subcategory: 保険・年金
+date: '2026-03-18'
+date_type: observed
 ---
 # 国民健康保険について
 

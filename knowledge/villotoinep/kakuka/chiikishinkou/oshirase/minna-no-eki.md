@@ -2,6 +2,7 @@
 title: 音威子府村「みんなの駅」プロジェクト
 category: 各課案内
 subcategory: 地域振興課
+date_type: evergreen
 ---
 # 音威子府村「みんなの駅」プロジェクト
 

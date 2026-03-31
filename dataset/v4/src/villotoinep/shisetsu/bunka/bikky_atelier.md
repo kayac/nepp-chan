@@ -1,6 +1,8 @@
 ---
 title: エコミュージアムおさしまセンター（BIKKYアトリエ3モア）
 category: 施設案内
+date: '2024-04-26'
+date_type: exact
 ---
 # エコミュージアムおさしまセンター（BIKKYアトリエ3モア）
 

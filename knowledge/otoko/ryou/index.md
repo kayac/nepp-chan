@@ -2,6 +2,8 @@
 category: 教育
 subcategory: 寮
 url: 'https://www.otoineppu-h.ed.jp/ryou/'
+date: '2025-04-01'
+date_type: exact
 ---
 本文へ移動
 Chiseneshiri Ryou

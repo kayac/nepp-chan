@@ -2,6 +2,9 @@
 title: 会計課
 category: 各課案内
 subcategory: 出納室
+date: '2026-03-18'
+date_type: observed
+contact: 会計課
 ---
 # 会計課
 

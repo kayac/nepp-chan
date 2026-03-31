@@ -2,6 +2,9 @@
 title: 古着・古布回収方法
 category: 住民生活
 subcategory: ごみ・環境
+date: '2020-04-01'
+date_type: exact
+contact: 住民生活室 生活環境係
 ---
 # 古着・古布回収方法
 

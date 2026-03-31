@@ -1,6 +1,9 @@
 ---
 title: 音威子府村鳥獣被害防止計画
 category: 産業
+date: '2024-04-01'
+date_type: exact
+contact: 経済課産業振興室 林政係
 ---
 # 音威子府村鳥獣被害防止計画
 

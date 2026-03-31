@@ -2,6 +2,8 @@
 category: 教育
 subcategory: 問合せ
 url: 'https://www.otoineppu-h.ed.jp/contact/shiryou.html'
+date: '2026-03-18'
+date_type: observed
 ---
 本文へ移動
 ##  お問い合わせ

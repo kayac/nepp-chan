@@ -2,6 +2,9 @@
 title: 村道民税（住民税）
 category: 住民生活
 subcategory: 税金
+date: '2012-11-21'
+date_type: exact
+contact: 住民課住民生活室
 ---
 # 村道民税（住民税）
 

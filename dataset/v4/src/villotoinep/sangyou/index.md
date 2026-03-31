@@ -1,6 +1,9 @@
 ---
 title: 産業情報
 category: 産業
+date: '2026-03-18'
+date_type: observed
+contact: 経済課産業振興室
 ---
 # 産業情報
 

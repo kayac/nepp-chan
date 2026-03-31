@@ -2,6 +2,9 @@
 title: 健康・福祉
 category: 住民生活
 subcategory: 健康・福祉
+date: '2025-07-01'
+date_type: exact
+contact: 保健福祉室 保健推進係
 ---
 # 健康・福祉
 

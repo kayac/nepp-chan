@@ -2,6 +2,9 @@
 title: 住民課住民生活室
 category: 各課案内
 subcategory: 住民生活課
+date: '2024-12-13'
+date_type: exact
+contact: 住民課住民生活室
 ---
 # 住民課住民生活室
 

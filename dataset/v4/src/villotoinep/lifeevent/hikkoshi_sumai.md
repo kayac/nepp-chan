@@ -1,6 +1,8 @@
 ---
 title: 引越し・住まい
 category: ライフイベント
+date: '2026-03-18'
+date_type: observed
 ---
 # 引越し・住まい
 

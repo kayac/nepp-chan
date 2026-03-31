@@ -2,6 +2,9 @@
 title: 地域計画の変更に関する協議の場について
 category: 各課案内
 subcategory: 農業委員会
+date: '2025-12-17'
+date_type: exact
+contact: 経済課産業振興室農政係
 ---
 # 地域計画の変更に関する協議の場について
 

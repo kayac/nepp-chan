@@ -2,6 +2,8 @@
 title: 音威子府村公民館図書室
 category: 各課案内
 subcategory: 教育委員会
+date: '2026-03-18'
+date_type: observed
 ---
 # 音威子府村公民館図書室
 

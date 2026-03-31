@@ -1,6 +1,8 @@
 ---
 title: 入札情報
 category: 行政
+date: '2026-03-18'
+date_type: observed
 ---
 # 入札情報
 
