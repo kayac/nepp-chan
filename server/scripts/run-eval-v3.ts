@@ -116,11 +116,27 @@ interface TranscriptStep {
   toolCalls: ToolCall[];
 }
 
+interface UrlValidationResult {
+  /** 回答に含まれるURL一覧 */
+  urls: string[];
+  /** HTTP HEAD で 200 を返したURL */
+  accessibleUrls: string[];
+  /** HTTP HEAD で 200 以外だったURL（ステータスコード付き） */
+  inaccessibleUrls: { url: string; status: number | "error" }[];
+  /** 期待URLとの一致 */
+  expectedUrlMatch: boolean | null;
+  /** 許可ドメインのURL数 / 全URL数 */
+  domainValidRate: number | null;
+  /** HTTP 200 率 (accessibleUrls.length / urls.length) */
+  accessibleRate: number | null;
+}
+
 interface IterationResult {
   iteration: number;
   answer: string;
   scores: Scores;
   keywordCheck: KeywordCheckResult;
+  urlValidation: UrlValidationResult | null;
   pass: boolean;
   durationMs: number;
   usage: TokenUsage | null;
@@ -350,6 +366,96 @@ const checkRequiredKeywords = (
     matchedKeywords: matched,
     missingKeywords: missing,
     score,
+  };
+};
+
+// ─── URL Validation ─────────────────────────────────────
+
+const URL_REGEX = /https?:\/\/[^\s)<>\]]+/g;
+
+const ALLOWED_DOMAINS = [
+  "www.otoineppu-h.ed.jp",
+  "www.vill.otoineppu.hokkaido.jp",
+];
+
+const extractUrls = (text: string): string[] => {
+  const matches = text.match(URL_REGEX);
+  if (!matches) return [];
+  // 末尾の句読点やカッコを除去
+  return [...new Set(matches.map((u) => u.replace(/[.,;:!?）】」。、]+$/, "")))];
+};
+
+const checkUrlAccessibility = async (
+  url: string,
+  timeoutMs = 5000,
+): Promise<{ url: string; status: number | "error" }> => {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const res = await fetch(url, {
+      method: "HEAD",
+      signal: controller.signal,
+      redirect: "follow",
+    });
+    clearTimeout(timer);
+    return { url, status: res.status };
+  } catch {
+    return { url, status: "error" };
+  }
+};
+
+const validateUrls = async (
+  answer: string,
+  testCase: TestCaseV3,
+): Promise<UrlValidationResult | null> => {
+  // URL 検証が不要なテストケースはスキップ
+  if (!testCase.expectedUrl && !testCase.noUrlExpected) return null;
+
+  const urls = extractUrls(answer);
+
+  // noUrlExpected の場合: URL が含まれていなければ OK
+  if (testCase.noUrlExpected) {
+    return {
+      urls,
+      accessibleUrls: [],
+      inaccessibleUrls: [],
+      expectedUrlMatch: null,
+      domainValidRate: urls.length === 0 ? 1.0 : 0.0,
+      accessibleRate: urls.length === 0 ? 1.0 : null,
+    };
+  }
+
+  // URL の HTTP HEAD 検証
+  const results = await Promise.all(urls.map((u) => checkUrlAccessibility(u)));
+  const accessible = results.filter((r) => r.status === 200);
+  const inaccessible = results.filter((r) => r.status !== 200);
+
+  // 期待 URL との一致
+  const expectedUrlMatch = testCase.expectedUrl
+    ? urls.some((u) => u === testCase.expectedUrl)
+    : null;
+
+  // ドメイン検証
+  const domainValid = urls.filter((u) => {
+    try {
+      const host = new URL(u).hostname;
+      return ALLOWED_DOMAINS.includes(host);
+    } catch {
+      return false;
+    }
+  });
+
+  return {
+    urls,
+    accessibleUrls: accessible.map((r) => r.url),
+    inaccessibleUrls: inaccessible.map((r) => ({
+      url: r.url,
+      status: r.status,
+    })),
+    expectedUrlMatch,
+    domainValidRate: urls.length > 0 ? domainValid.length / urls.length : null,
+    accessibleRate:
+      urls.length > 0 ? accessible.length / urls.length : null,
   };
 };
 
@@ -1308,6 +1414,9 @@ const runTestCaseEval = async (params: {
         testCase.type,
       );
 
+      // URL 検証（expectedUrl または noUrlExpected が設定されている場合のみ）
+      const urlValidation = await validateUrls(result.text, testCase);
+
       const durationMs = Date.now() - iterStart;
       // biome-ignore lint/suspicious/noExplicitAny: usage の型は不定
       const rawUsage = (result as any).usage;
@@ -1326,6 +1435,7 @@ const runTestCaseEval = async (params: {
         answer: result.text,
         scores,
         keywordCheck,
+        urlValidation,
         pass,
         durationMs,
         usage,
@@ -1337,8 +1447,11 @@ const runTestCaseEval = async (params: {
       const kwInfo = `kw=${keywordCheck.matchedKeywords.length}/${keywordCheck.matchedKeywords.length + keywordCheck.missingKeywords.length}`;
       const passIcon = pass ? "✅ PASS" : "❌ FAIL";
       const tokenInfo = usage ? ` tok=${usage.totalTokens}` : "";
+      const urlInfo = urlValidation
+        ? ` url=${urlValidation.accessibleRate !== null ? `${(urlValidation.accessibleRate * 100).toFixed(0)}%` : "N/A"}${urlValidation.expectedUrlMatch === false ? " ⚠url-mismatch" : ""}`
+        : "";
       console.log(
-        `${passIcon} (${durationMs}ms) sim=${simScore} ${kwInfo}${tokenInfo}`,
+        `${passIcon} (${durationMs}ms) sim=${simScore} ${kwInfo}${tokenInfo}${urlInfo}`,
       );
     } catch (e) {
       const durationMs = Date.now() - iterStart;
@@ -1359,6 +1472,7 @@ const runTestCaseEval = async (params: {
           missingKeywords: testCase.requiredKeywords,
           score: 0,
         },
+        urlValidation: null,
         pass: false,
         durationMs,
         usage: null,

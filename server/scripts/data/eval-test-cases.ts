@@ -32,9 +32,13 @@ export type TestCaseV3 = {
   requiredKeywords: string[];
   /** 合格閾値（similarity スコアがこの値以上で pass） */
   threshold: number;
+  /** URL検証: 期待される正確なURL（完全一致） */
+  expectedUrl?: string;
+  /** URL検証: URLを含むべきでない場合 true */
+  noUrlExpected?: boolean;
 };
 
-/** マスターテストケース（51個） */
+/** マスターテストケース（66個） */
 export const evalTestCases: TestCaseV3[] = [
   // ─── education: 高校関連（12個） ─────────────────────────
 
@@ -975,5 +979,184 @@ export const evalTestCases: TestCaseV3[] = [
       "令和7年度の木の手づくり展の札幌展は、7月25日（金）〜27日（日）に、かでる2・7（札幌市中央区北2条西7丁目 道民活動センタービル）の展示ホールで開催されます。7月26日（土）には学校説明会とワークショップも行われます",
     requiredKeywords: ["7月25日", "7月27日"],
     threshold: 0.5,
+  },
+
+  // ─── URL検証: 正しいURLを返すべき（10個） ────────────────
+
+  {
+    id: "ur-01",
+    category: "education",
+    type: "positive",
+    input: "おと高の資料請求ページのURLを教えてください",
+    groundTruth:
+      "おと高の資料請求ページはこちらです: https://www.otoineppu-h.ed.jp/contact/shiryou.html",
+    requiredKeywords: [
+      "https://www.otoineppu-h.ed.jp/contact/shiryou.html",
+    ],
+    threshold: 0.3,
+    expectedUrl: "https://www.otoineppu-h.ed.jp/contact/shiryou.html",
+  },
+  {
+    id: "ur-02",
+    category: "education",
+    type: "positive",
+    input: "おと高のお問い合わせフォームはどこですか？",
+    groundTruth:
+      "お問い合わせフォームはこちらです: https://www.otoineppu-h.ed.jp/contact/otoiawase.html",
+    requiredKeywords: [
+      "https://www.otoineppu-h.ed.jp/contact/otoiawase.html",
+    ],
+    threshold: 0.3,
+    expectedUrl: "https://www.otoineppu-h.ed.jp/contact/otoiawase.html",
+  },
+  {
+    id: "ur-03",
+    category: "education",
+    type: "positive",
+    input: "おと高の入試情報のページはありますか？",
+    groundTruth:
+      "入試情報のページはこちらです: https://www.otoineppu-h.ed.jp/entrance/",
+    requiredKeywords: ["https://www.otoineppu-h.ed.jp/entrance/"],
+    threshold: 0.3,
+    expectedUrl: "https://www.otoineppu-h.ed.jp/entrance/",
+  },
+  {
+    id: "ur-04",
+    category: "education",
+    type: "positive",
+    input: "中学生向けのQ&Aページを教えてください",
+    groundTruth:
+      "中学生向けQ&Aページはこちらです: https://www.otoineppu-h.ed.jp/junior/qa.html",
+    requiredKeywords: ["https://www.otoineppu-h.ed.jp/junior/qa.html"],
+    threshold: 0.3,
+    expectedUrl: "https://www.otoineppu-h.ed.jp/junior/qa.html",
+  },
+  {
+    id: "ur-05",
+    category: "education",
+    type: "positive",
+    input: "おと高の体験入学の情報はどこで見られますか？",
+    groundTruth:
+      "体験入学の情報はこちらです: https://www.otoineppu-h.ed.jp/junior/taiken/",
+    requiredKeywords: ["https://www.otoineppu-h.ed.jp/junior/taiken/"],
+    threshold: 0.3,
+    expectedUrl: "https://www.otoineppu-h.ed.jp/junior/taiken/",
+  },
+  {
+    id: "ur-06",
+    category: "education",
+    type: "positive",
+    input: "おと高の学校見学について知りたいのですが、ページはありますか？",
+    groundTruth:
+      "学校見学のページはこちらです: https://www.otoineppu-h.ed.jp/junior/kengaku.html",
+    requiredKeywords: [
+      "https://www.otoineppu-h.ed.jp/junior/kengaku.html",
+    ],
+    threshold: 0.3,
+    expectedUrl: "https://www.otoineppu-h.ed.jp/junior/kengaku.html",
+  },
+  {
+    id: "ur-07",
+    category: "education",
+    type: "positive",
+    input: "おと高の寮生活の情報ページはありますか？",
+    groundTruth:
+      "寮生活の情報はこちらです: https://www.otoineppu-h.ed.jp/ryou/",
+    requiredKeywords: ["https://www.otoineppu-h.ed.jp/ryou/"],
+    threshold: 0.3,
+    expectedUrl: "https://www.otoineppu-h.ed.jp/ryou/",
+  },
+  {
+    id: "ur-08",
+    category: "education",
+    type: "positive",
+    input: "おと高のギャラリーで工芸作品を見たいのですが",
+    groundTruth:
+      "工芸作品のギャラリーはこちらです: https://www.otoineppu-h.ed.jp/gallery/crafts.html",
+    requiredKeywords: [
+      "https://www.otoineppu-h.ed.jp/gallery/crafts.html",
+    ],
+    threshold: 0.3,
+    expectedUrl: "https://www.otoineppu-h.ed.jp/gallery/crafts.html",
+  },
+  {
+    id: "ur-09",
+    category: "education",
+    type: "positive",
+    input: "おと高のホームページのURLは？",
+    groundTruth:
+      "おと高のホームページはこちらです: https://www.otoineppu-h.ed.jp/",
+    requiredKeywords: ["https://www.otoineppu-h.ed.jp/"],
+    threshold: 0.3,
+    expectedUrl: "https://www.otoineppu-h.ed.jp/",
+  },
+  {
+    id: "ur-10",
+    category: "education",
+    type: "positive",
+    input: "おと高のイベント情報はどこで確認できますか？",
+    groundTruth:
+      "イベント情報はこちらです: https://www.otoineppu-h.ed.jp/event/",
+    requiredKeywords: ["https://www.otoineppu-h.ed.jp/event/"],
+    threshold: 0.3,
+    expectedUrl: "https://www.otoineppu-h.ed.jp/event/",
+  },
+
+  // ─── URL検証: URLを返すべきでない（5個） ─────────────────
+
+  {
+    id: "ur-11",
+    category: "garbage",
+    type: "negative",
+    input: "ゴミカレンダーのURLを教えてください",
+    groundTruth:
+      "申し訳ありませんが、ゴミカレンダーのURLの情報は持っていません",
+    requiredKeywords: ["わかりません", "ありません", "持っていません"],
+    threshold: 0.1,
+    noUrlExpected: true,
+  },
+  {
+    id: "ur-12",
+    category: "village",
+    type: "negative",
+    input: "音威子府村役場のホームページは？",
+    groundTruth:
+      "申し訳ありませんが、村役場のホームページURLの情報は持っていません",
+    requiredKeywords: ["わかりません", "ありません", "持っていません"],
+    threshold: 0.1,
+    noUrlExpected: true,
+  },
+  {
+    id: "ur-13",
+    category: "admin",
+    type: "negative",
+    input: "防災マップのダウンロードURLは？",
+    groundTruth:
+      "申し訳ありませんが、防災マップのダウンロードURLの情報は持っていません",
+    requiredKeywords: ["わかりません", "ありません", "持っていません"],
+    threshold: 0.1,
+    noUrlExpected: true,
+  },
+  {
+    id: "ur-14",
+    category: "facility",
+    type: "negative",
+    input: "公民館の予約ページのURLは？",
+    groundTruth:
+      "申し訳ありませんが、公民館の予約ページURLの情報は持っていません",
+    requiredKeywords: ["わかりません", "ありません", "持っていません"],
+    threshold: 0.1,
+    noUrlExpected: true,
+  },
+  {
+    id: "ur-15",
+    category: "kouhou",
+    type: "negative",
+    input: "広報おといねっぷのバックナンバーのURLは？",
+    groundTruth:
+      "申し訳ありませんが、広報のバックナンバーのURLの情報は持っていません",
+    requiredKeywords: ["わかりません", "ありません", "持っていません"],
+    threshold: 0.1,
+    noUrlExpected: true,
   },
 ];
