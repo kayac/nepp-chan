@@ -1,6 +1,7 @@
 import { messagingApi } from "@line/bot-sdk";
 import { Mastra } from "@mastra/core/mastra";
-
+import { classifyIntent } from "~/lib/classify-intent";
+import { resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { splitMessagesForLine } from "~/lib/split-message";
 import { getStorage } from "~/lib/storage";
@@ -25,7 +26,21 @@ export const generateReply = async (params: {
     env: params.env,
   });
 
-  const neppChanAgent = createNeppChanAgent({ platform: "line" });
+  // Intent 分類でモデルティアを決定（非テキストメッセージは normal 直行）
+  const intent = params.userMessage
+    ? await classifyIntent(params.userMessage)
+    : "normal";
+  const modelConfig = resolveModelTier({
+    intent,
+    platform: "line",
+    isAdmin: false,
+  });
+  logger.info(`[LINE] intent: ${intent}`, { threadId: params.threadId });
+
+  const neppChanAgent = createNeppChanAgent({
+    platform: "line",
+    modelConfig,
+  });
   const mastra = new Mastra({
     agents: { neppChanAgent },
     storage,

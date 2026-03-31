@@ -48,11 +48,21 @@ export const AssistantProvider = ({
           },
           prepareSendMessagesRequest({ messages }) {
             const lastMessage = messages[messages.length - 1];
+            const lastText = lastMessage?.parts
+              ?.filter(
+                (p): p is { type: "text"; text: string } => p.type === "text",
+              )
+              .map((p) => p.text)
+              .join("");
+            const intent = GREETING_PROMPTS.includes(lastText ?? "")
+              ? "casual"
+              : undefined;
             return {
               body: {
                 message: lastMessage,
                 resourceId,
                 threadId,
+                intent,
               },
             };
           },
