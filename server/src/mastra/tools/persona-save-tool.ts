@@ -12,7 +12,9 @@ export const personaSaveTool = createTool({
     resourceId: z.string().describe("リソースID（村やグループの識別子）"),
     category: z
       .string()
-      .describe("カテゴリ（例: 意見、関心事、要望、困りごと、好み）"),
+      .describe(
+        "カテゴリ（意見/関心事/要望/困りごと/好み/体験談/提案/探し物/プロダクト）",
+      ),
     tags: z
       .string()
       .optional()
