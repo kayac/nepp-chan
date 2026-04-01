@@ -4,7 +4,7 @@ import type { AuthUser } from "~/schemas/auth-schema";
 
 const JWT_ISSUER = "nepp-chan";
 const JWT_AUDIENCE = "nepp-chan-admin";
-const ACCESS_TOKEN_EXPIRY_SECONDS = 8 * 60 * 60; // 8時間
+const ACCESS_TOKEN_EXPIRY_SECONDS = 7 * 24 * 60 * 60; // 7日
 
 type JwtPayload = JWTPayload &
   Omit<AuthUser, "id"> & {
