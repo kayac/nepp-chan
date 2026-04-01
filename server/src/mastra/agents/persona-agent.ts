@@ -29,7 +29,8 @@ export const personaAgent = new Agent({
 - プロダクト: ねっぷちゃん自体への質問・要望・フィードバック
 
 ### content
-声の内容・文脈を記録する。話者の属性は content に書かず tags / demographicSummary に任せる。
+声の内容・文脈を記録する。名前・ニックネームは括弧書き含め一切書かない。
+話者の属性は content に書かず tags / demographicSummary に任せる。
 季節・時期・背景の文脈があれば積極的に含める。
 
 良い例:
