@@ -6,7 +6,6 @@ on:
       - develop
 
 permissions:
-  actions: write
   contents: write
   pull-requests: write
 
@@ -23,13 +22,6 @@ jobs:
         uses: Songmu/tagpr@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Trigger CI for tagpr PR
-        if: steps.tagpr.outputs.pull_request_number != ''
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh workflow run ci.yml --ref "tagpr-from-v${{ steps.tagpr.outputs.version }}"
 
       - name: Trigger production deploy
         if: steps.tagpr.outputs.tag != ''
