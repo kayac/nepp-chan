@@ -3,6 +3,7 @@ import {
   Bars3Icon,
   BookOpenIcon,
   ChatBubbleLeftIcon,
+  ClipboardDocumentListIcon,
   EnvelopeIcon,
   ExclamationTriangleIcon,
   MegaphoneIcon,
@@ -21,6 +22,7 @@ import { FeedbackPanel } from "./components/FeedbackPanel";
 import { InvitationsPanel } from "./components/InvitationsPanel";
 import { KnowledgePanel } from "./components/KnowledgePanel";
 import { PersonaPanel } from "./components/PersonaPanel";
+import { QuestionnairePanel } from "./components/QuestionnairePanel";
 import { useAuth } from "./contexts/AuthContext";
 
 type Tab =
@@ -29,6 +31,7 @@ type Tab =
   | "feedback"
   | "emergency"
   | "broadcast"
+  | "questionnaire"
   | "invitations";
 
 type AdminRole = AdminUser["role"];
@@ -66,6 +69,11 @@ const tabs: {
     id: "broadcast",
     label: "LINE配信",
     icon: <MegaphoneIcon className="w-5 h-5" aria-hidden="true" />,
+  },
+  {
+    id: "questionnaire",
+    label: "アンケート",
+    icon: <ClipboardDocumentListIcon className="w-5 h-5" aria-hidden="true" />,
   },
   {
     id: "invitations",
@@ -225,6 +233,7 @@ export const App = () => {
             {activeTab === "feedback" && <FeedbackPanel />}
             {activeTab === "emergency" && <EmergencyPanel />}
             {activeTab === "broadcast" && <BroadcastPanel />}
+            {activeTab === "questionnaire" && <QuestionnairePanel />}
             {activeTab === "invitations" && <InvitationsPanel />}
           </div>
         </div>
