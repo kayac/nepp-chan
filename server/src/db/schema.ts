@@ -115,3 +115,76 @@ export const broadcastMessages = sqliteTable("broadcast_messages", {
 
 export type BroadcastMessage = typeof broadcastMessages.$inferSelect;
 export type NewBroadcastMessage = typeof broadcastMessages.$inferInsert;
+
+// アンケート
+export const questionnaires = sqliteTable("questionnaires", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  isAnonymous: integer("is_anonymous").notNull().default(1), // 1=無記名, 0=記名
+  status: text("status")
+    .$type<"draft" | "scheduled" | "sent" | "closed">()
+    .notNull()
+    .default("draft"),
+  createdBy: text("created_by").notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at"),
+  scheduledAt: text("scheduled_at"),
+  sentAt: text("sent_at"),
+  closedAt: text("closed_at"),
+});
+
+export type Questionnaire = typeof questionnaires.$inferSelect;
+export type NewQuestionnaire = typeof questionnaires.$inferInsert;
+
+// アンケート設問
+export const questionnaireQuestions = sqliteTable("questionnaire_questions", {
+  id: text("id").primaryKey(),
+  questionnaireId: text("questionnaire_id").notNull(),
+  order: integer("order").notNull(),
+  text: text("text").notNull(),
+  type: text("type")
+    .$type<"single_choice" | "multiple_choice" | "free_text" | "rating">()
+    .notNull(),
+  required: integer("required").notNull().default(1), // 1=必須, 0=任意
+  choices: text("choices"), // JSON: string[] (選択式の場合)
+  createdAt: text("created_at").notNull(),
+});
+
+export type QuestionnaireQuestion = typeof questionnaireQuestions.$inferSelect;
+export type NewQuestionnaireQuestion =
+  typeof questionnaireQuestions.$inferInsert;
+
+// アンケート提出（ユーザーごとの重複防止）
+export const questionnaireSubmissions = sqliteTable(
+  "questionnaire_submissions",
+  {
+    id: text("id").primaryKey(),
+    questionnaireId: text("questionnaire_id").notNull(),
+    userId: text("user_id").notNull(),
+    currentQuestionOrder: integer("current_question_order")
+      .notNull()
+      .default(1),
+    completedAt: text("completed_at"),
+    createdAt: text("created_at").notNull(),
+  },
+);
+
+export type QuestionnaireSubmission =
+  typeof questionnaireSubmissions.$inferSelect;
+export type NewQuestionnaireSubmission =
+  typeof questionnaireSubmissions.$inferInsert;
+
+// アンケート回答
+export const questionnaireAnswers = sqliteTable("questionnaire_answers", {
+  id: text("id").primaryKey(),
+  submissionId: text("submission_id").notNull(),
+  questionId: text("question_id").notNull(),
+  answerText: text("answer_text"), // free_text の回答
+  answerNumber: integer("answer_number"), // rating の回答
+  selectedChoices: text("selected_choices"), // JSON: string[] (選択式の回答)
+  createdAt: text("created_at").notNull(),
+});
+
+export type QuestionnaireAnswer = typeof questionnaireAnswers.$inferSelect;
+export type NewQuestionnaireAnswer = typeof questionnaireAnswers.$inferInsert;
