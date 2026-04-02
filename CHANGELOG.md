@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.4.1](https://github.com/kayac/nepp-chan/compare/v0.4.0...v0.4.1) - 2026-04-02
+- fix(ci): tagpr.ymlにactions: write権限を追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/416
+
 ## [v0.4.0](https://github.com/kayac/nepp-chan/compare/v0.3.0...v0.4.0) - 2026-04-02
 - feat(server): Sentry Logs ラッパー導入・全ログ統一 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/291
 - feat: LINE配信（broadcast）機能を追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/293
