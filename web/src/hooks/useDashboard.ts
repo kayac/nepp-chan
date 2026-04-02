@@ -37,6 +37,15 @@ import {
   extractPersonas,
   fetchPersonas,
 } from "~/repository/persona-repository";
+import {
+  closeQuestionnaire,
+  createQuestionnaire,
+  deleteQuestionnaire,
+  fetchQuestionnaireResults,
+  fetchQuestionnaires,
+  sendQuestionnaireNow,
+  updateQuestionnaire,
+} from "~/repository/questionnaire-repository";
 
 export const dashboardKeys = {
   broadcasts: ["dashboard", "broadcasts"] as const,
@@ -49,6 +58,9 @@ export const dashboardKeys = {
   knowledgeUnifiedFiles: ["dashboard", "knowledge", "unified"] as const,
   knowledgeFile: (key: string) =>
     ["dashboard", "knowledge", "file", key] as const,
+  questionnaires: ["dashboard", "questionnaires"] as const,
+  questionnaireResults: (id: string) =>
+    ["dashboard", "questionnaire", "results", id] as const,
 };
 
 export const usePersonas = (limit = 30) =>
@@ -307,3 +319,96 @@ export const useSendBroadcast = () => {
 
 export const useUploadBroadcastImage = () =>
   useMutation({ mutationFn: uploadBroadcastImage });
+
+// アンケート関連 hooks
+export const useQuestionnaires = (
+  limit = 30,
+  options?: { status?: "draft" | "scheduled" | "sent" | "closed" },
+) =>
+  useInfiniteQuery({
+    queryKey: [...dashboardKeys.questionnaires, limit, options?.status],
+    queryFn: ({ pageParam }) =>
+      fetchQuestionnaires({
+        limit,
+        cursor: pageParam,
+        status: options?.status,
+      }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
+
+export const useCreateQuestionnaire = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createQuestionnaire,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: dashboardKeys.questionnaires,
+      });
+    },
+  });
+};
+
+export const useUpdateQuestionnaire = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Parameters<typeof updateQuestionnaire>[1];
+    }) => updateQuestionnaire(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: dashboardKeys.questionnaires,
+      });
+    },
+  });
+};
+
+export const useDeleteQuestionnaire = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteQuestionnaire,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: dashboardKeys.questionnaires,
+      });
+    },
+  });
+};
+
+export const useSendQuestionnaire = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: sendQuestionnaireNow,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: dashboardKeys.questionnaires,
+      });
+    },
+  });
+};
+
+export const useCloseQuestionnaire = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: closeQuestionnaire,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: dashboardKeys.questionnaires,
+      });
+    },
+  });
+};
+
+export const useQuestionnaireResults = (id: string | null) =>
+  useQuery({
+    queryKey: dashboardKeys.questionnaireResults(id ?? ""),
+    queryFn: () => {
+      if (!id) throw new Error("ID is required");
+      return fetchQuestionnaireResults(id);
+    },
+    enabled: !!id,
+  });

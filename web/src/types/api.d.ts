@@ -82,6 +82,8 @@ export interface paths {
                         };
                         resourceId: string;
                         threadId: string;
+                        /** @enum {string} */
+                        intent?: "casual" | "normal" | "thinking";
                     };
                 };
             };
@@ -2935,6 +2937,713 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/questionnaires": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * アンケート一覧を取得
+         * @description アンケートの一覧を取得します
+         */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    cursor?: string;
+                    status?: "draft" | "scheduled" | "sent" | "closed";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 取得成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            questionnaires: {
+                                id: string;
+                                title: string;
+                                description: string | null;
+                                isAnonymous: boolean;
+                                /** @enum {string} */
+                                status: "draft" | "scheduled" | "sent" | "closed";
+                                questions: {
+                                    id: string;
+                                    questionnaireId: string;
+                                    order: number;
+                                    text: string;
+                                    /** @enum {string} */
+                                    type: "single_choice" | "multiple_choice" | "free_text" | "rating";
+                                    required: boolean;
+                                    choices: string[] | null;
+                                }[];
+                                createdBy: string;
+                                createdAt: string;
+                                updatedAt: string | null;
+                                scheduledAt: string | null;
+                                sentAt: string | null;
+                                closedAt: string | null;
+                            }[];
+                            total: number;
+                            nextCursor: string | null;
+                            hasMore: boolean;
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * アンケートを作成
+         * @description アンケートを作成します
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        title: string;
+                        description?: string;
+                        /** @default true */
+                        isAnonymous?: boolean;
+                        questions: {
+                            text: string;
+                            /** @enum {string} */
+                            type: "single_choice" | "multiple_choice" | "free_text" | "rating";
+                            /** @default true */
+                            required?: boolean;
+                            choices?: string[];
+                        }[];
+                        /** Format: date-time */
+                        scheduledAt?: string;
+                        sendNow?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description 作成成功 */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            title: string;
+                            description: string | null;
+                            isAnonymous: boolean;
+                            /** @enum {string} */
+                            status: "draft" | "scheduled" | "sent" | "closed";
+                            questions: {
+                                id: string;
+                                questionnaireId: string;
+                                order: number;
+                                text: string;
+                                /** @enum {string} */
+                                type: "single_choice" | "multiple_choice" | "free_text" | "rating";
+                                required: boolean;
+                                choices: string[] | null;
+                            }[];
+                            createdBy: string;
+                            createdAt: string;
+                            updatedAt: string | null;
+                            scheduledAt: string | null;
+                            sentAt: string | null;
+                            closedAt: string | null;
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/questionnaires/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * アンケート詳細を取得
+         * @description アンケートの詳細情報を取得します
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 取得成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            title: string;
+                            description: string | null;
+                            isAnonymous: boolean;
+                            /** @enum {string} */
+                            status: "draft" | "scheduled" | "sent" | "closed";
+                            questions: {
+                                id: string;
+                                questionnaireId: string;
+                                order: number;
+                                text: string;
+                                /** @enum {string} */
+                                type: "single_choice" | "multiple_choice" | "free_text" | "rating";
+                                required: boolean;
+                                choices: string[] | null;
+                            }[];
+                            createdBy: string;
+                            createdAt: string;
+                            updatedAt: string | null;
+                            scheduledAt: string | null;
+                            sentAt: string | null;
+                            closedAt: string | null;
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        /**
+         * アンケートを更新
+         * @description アンケートを更新します（draftのみ）
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        title?: string;
+                        description?: string | null;
+                        isAnonymous?: boolean;
+                        questions?: {
+                            text: string;
+                            /** @enum {string} */
+                            type: "single_choice" | "multiple_choice" | "free_text" | "rating";
+                            /** @default true */
+                            required?: boolean;
+                            choices?: string[];
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description 更新成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            title: string;
+                            description: string | null;
+                            isAnonymous: boolean;
+                            /** @enum {string} */
+                            status: "draft" | "scheduled" | "sent" | "closed";
+                            questions: {
+                                id: string;
+                                questionnaireId: string;
+                                order: number;
+                                text: string;
+                                /** @enum {string} */
+                                type: "single_choice" | "multiple_choice" | "free_text" | "rating";
+                                required: boolean;
+                                choices: string[] | null;
+                            }[];
+                            createdBy: string;
+                            createdAt: string;
+                            updatedAt: string | null;
+                            scheduledAt: string | null;
+                            sentAt: string | null;
+                            closedAt: string | null;
+                        };
+                    };
+                };
+                /** @description リクエストエラー */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        /**
+         * アンケートを削除
+         * @description アンケートを削除します（draftのみ）
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 削除成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description リクエストエラー */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/questionnaires/{id}/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * アンケートをLINEに配信
+         * @description アンケートをLINE全ユーザーに配信します
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 配信成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description リクエストエラー */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description サーバーエラー */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/questionnaires/{id}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * アンケート結果を取得
+         * @description アンケートの回答結果を集計して取得します
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 取得成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            questionnaireId: string;
+                            title: string;
+                            totalSubmissions: number;
+                            completedSubmissions: number;
+                            questionResults: {
+                                questionId: string;
+                                questionText: string;
+                                /** @enum {string} */
+                                questionType: "single_choice" | "multiple_choice" | "free_text" | "rating";
+                                totalResponses: number;
+                                choiceResults?: {
+                                    choice: string;
+                                    count: number;
+                                    percentage: number;
+                                }[];
+                                averageRating?: number;
+                                ratingDistribution?: {
+                                    [key: string]: number;
+                                };
+                                freeTextAnswers?: string[];
+                            }[];
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/questionnaires/{id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * アンケートを締切
+         * @description アンケートの回答受付を締め切ります
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 締切成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description リクエストエラー */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
