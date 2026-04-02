@@ -5,6 +5,7 @@ export {
   invitationRoutes,
   knowledgeAdminRoutes,
   personaAdminRoutes,
+  questionnaireAdminRoutes,
 } from "./admin";
 export { authRoutes } from "./auth";
 export { broadcastMediaRoutes } from "./broadcast-media";

@@ -115,3 +115,21 @@ export type ReconvertFileResponse = PostOk<"/admin/knowledge/reconvert">;
 export type InvitationsResponse = GetOk<"/admin/invitations">;
 export type Invitation = InvitationsResponse["invitations"][number];
 export type CreateInvitationResponse = PostCreated<"/admin/invitations">;
+
+// アンケート
+export type QuestionnairesResponse = GetOk<"/admin/questionnaires">;
+export type QuestionnaireMessage =
+  QuestionnairesResponse["questionnaires"][number];
+export type QuestionnaireQuestion = QuestionnaireMessage["questions"][number];
+export type QuestionnaireStatus = "draft" | "scheduled" | "sent" | "closed";
+export type QuestionType =
+  | "single_choice"
+  | "multiple_choice"
+  | "free_text"
+  | "rating";
+export type CreateQuestionnaireRequest = PostBody<"/admin/questionnaires">;
+export type UpdateQuestionnaireRequest = PutBody<"/admin/questionnaires/{id}">;
+export type QuestionnaireResultsResponse =
+  GetOk<"/admin/questionnaires/{id}/results">;
+export type QuestionResult =
+  QuestionnaireResultsResponse["questionResults"][number];

@@ -4,6 +4,7 @@ import type { WebhookEvent, WebhookRequestBody } from "@line/bot-sdk";
 import { logger } from "~/lib/logger";
 import { lineSignatureVerify } from "~/middleware";
 import type { LineEventMessage } from "~/schemas/line-schema";
+import { handleQuestionnairePostback } from "~/services/questionnaire-response";
 
 export const lineRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -31,6 +32,25 @@ const enqueueLineEvents = async (
   env: CloudflareBindings,
 ) => {
   for (const event of events) {
+    // Postback イベント（アンケート回答）
+    if (event.type === "postback") {
+      if (!event.source.userId || !event.replyToken) continue;
+      if (!event.postback.data.startsWith("qnr=")) continue;
+
+      try {
+        await handleQuestionnairePostback(
+          env,
+          event.source.userId,
+          event.postback.data,
+          event.replyToken,
+        );
+      } catch (error) {
+        logger.error("[LINE] Questionnaire postback error", error);
+      }
+      continue;
+    }
+
+    // Message イベント（既存のチャット処理）
     if (event.type !== "message" || event.message.type !== "text") continue;
     if (!("replyToken" in event) || !event.replyToken) continue;
     if (!event.source.userId) continue;
