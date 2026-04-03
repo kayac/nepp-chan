@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.4.2](https://github.com/kayac/nepp-chan/compare/v0.4.1...v0.4.2) - 2026-04-03
+- feat: 匿名セッションによるresourceId所有権検証 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/419
+- fix: Dependabot alert対応（hono, @hono/zod-openapi, astro） by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/421
+
 ## [v0.4.1](https://github.com/kayac/nepp-chan/compare/v0.4.0...v0.4.1) - 2026-04-02
 - fix(ci): tagpr.ymlにactions: write権限を追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/416
 
