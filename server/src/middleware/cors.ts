@@ -24,7 +24,12 @@ export const corsMiddleware: MiddlewareHandler<{
       return allowed;
     },
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "User-Agent", "Authorization"],
+    allowHeaders: [
+      "Content-Type",
+      "User-Agent",
+      "Authorization",
+      "X-Session-Token",
+    ],
     credentials: true,
     maxAge: 86400,
   });

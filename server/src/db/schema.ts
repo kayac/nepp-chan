@@ -188,3 +188,11 @@ export const questionnaireAnswers = sqliteTable("questionnaire_answers", {
 
 export type QuestionnaireAnswer = typeof questionnaireAnswers.$inferSelect;
 export type NewQuestionnaireAnswer = typeof questionnaireAnswers.$inferInsert;
+
+// 匿名セッション（先着制限）
+export const anonymousSessions = sqliteTable("anonymous_sessions", {
+  resourceId: text("resource_id").primaryKey(),
+  createdAt: text("created_at").notNull(),
+});
+
+export type AnonymousSession = typeof anonymousSessions.$inferSelect;
