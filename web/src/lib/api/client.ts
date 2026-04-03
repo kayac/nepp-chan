@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/react";
 import createClient from "openapi-fetch";
-import { getAuthToken, removeAuthToken } from "~/lib/auth-token";
+import { getAuthToken } from "~/lib/auth-token";
 import { getSessionToken } from "~/lib/session-token";
 import type { paths } from "~/types/api";
 
@@ -35,11 +35,6 @@ client.use({
 client.use({
   async onResponse({ response }) {
     if (!response.ok) {
-      if (response.status === 401 && getAuthToken()) {
-        removeAuthToken();
-        window.location.href = "/login";
-        return response;
-      }
       const message = await parseErrorResponse(response);
       if (response.status >= 500) {
         Sentry.captureException(new ApiError(message, response.status));
