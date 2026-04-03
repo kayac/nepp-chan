@@ -5,6 +5,7 @@ subcategory: 健康・福祉
 date: '2025-07-01'
 date_type: exact
 contact: 保健福祉室 保健推進係
+url: 'https://www.vill.otoineppu.hokkaido.jp/kurashi/kenkou_fukushi/index.html'
 ---
 # 健康・福祉
 

@@ -5,6 +5,7 @@ subcategory: 農業委員会
 date: '2026-03-18'
 date_type: observed
 contact: 農業委員会
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/nougyouiin/todokede.html'
 ---
 # 農地相続の届出
 

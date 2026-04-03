@@ -3,6 +3,7 @@ title: 入札情報
 category: 行政
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/gyousei/nyusatsu/index.html'
 ---
 # 入札情報
 

@@ -4,6 +4,7 @@ category: 各課案内
 subcategory: 議会事務局
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/gikaijimu/index.html'
 ---
 # 音威子府村議会
 

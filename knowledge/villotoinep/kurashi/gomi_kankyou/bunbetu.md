@@ -5,6 +5,7 @@ subcategory: ごみ・環境
 date: '2025-01-10'
 date_type: exact
 contact: 住民生活室 生活環境係
+url: 'https://www.vill.otoineppu.hokkaido.jp/kurashi/gomi_kankyou/bunbetu.html'
 ---
 # ごみの分け方、出し方
 

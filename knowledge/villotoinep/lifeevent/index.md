@@ -3,6 +3,7 @@ title: ライフイベント（人生の節目）
 category: ライフイベント
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/lifeevent/index.html'
 ---
 # ライフイベント（人生の節目）
 

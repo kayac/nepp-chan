@@ -4,6 +4,7 @@ category: ライフイベント
 date: '2026-03-18'
 date_type: observed
 contact: 住民課住民生活室
+url: 'https://www.vill.otoineppu.hokkaido.jp/lifeevent/kekkon_rikon.html'
 ---
 # 結婚・離婚
 

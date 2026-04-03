@@ -4,6 +4,7 @@ category: 産業
 date: '2026-03-18'
 date_type: observed
 contact: 経済課産業振興室
+url: 'https://www.vill.otoineppu.hokkaido.jp/sangyou/index.html'
 ---
 # 産業情報
 

@@ -5,6 +5,7 @@ subcategory: 環境整備課
 date: '2013-07-24'
 date_type: exact
 contact: 経済課環境整備室
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/kankyouseibi/index.html'
 ---
 # 経済課環境整備室
 

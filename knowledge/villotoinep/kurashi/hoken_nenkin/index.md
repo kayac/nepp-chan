@@ -5,6 +5,7 @@ subcategory: 保険・年金
 date: '2026-03-18'
 date_type: observed
 contact: 住民課 住民生活室 住民係
+url: 'https://www.vill.otoineppu.hokkaido.jp/kurashi/hoken_nenkin/index.html'
 ---
 # 保険・年金
 

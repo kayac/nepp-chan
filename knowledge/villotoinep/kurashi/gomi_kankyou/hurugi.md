@@ -5,6 +5,7 @@ subcategory: ごみ・環境
 date: '2020-04-01'
 date_type: exact
 contact: 住民生活室 生活環境係
+url: 'https://www.vill.otoineppu.hokkaido.jp/kurashi/gomi_kankyou/hurugi.html'
 ---
 # 古着・古布回収方法
 

@@ -4,6 +4,7 @@ category: 行政
 date: '2026-03-18'
 date_type: observed
 contact: 総務課総務財政室
+url: 'https://www.vill.otoineppu.hokkaido.jp/gyousei/index.html'
 ---
 # 行政情報
 

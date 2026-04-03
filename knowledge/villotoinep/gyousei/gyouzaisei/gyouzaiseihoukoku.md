@@ -4,6 +4,7 @@ category: 行政
 date: '2025-04-01'
 date_type: exact
 contact: 総務課総務財政室
+url: 'https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/gyouzaiseihoukoku.html'
 ---
 # 行財政報告
 

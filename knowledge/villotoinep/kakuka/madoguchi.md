@@ -4,6 +4,7 @@ category: 各課案内
 subcategory: madoguchi.md
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/madoguchi.html'
 ---
 # 窓口案内
 

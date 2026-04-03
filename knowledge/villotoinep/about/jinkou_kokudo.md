@@ -2,6 +2,7 @@
 title: jinkou_kokudo
 category: 村の概要
 date_type: evergreen
+url: 'https://www.vill.otoineppu.hokkaido.jp/about/jinkou_kokudo.html'
 ---
 # jinkou_kokudo
 

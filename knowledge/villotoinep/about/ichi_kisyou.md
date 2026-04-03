@@ -2,6 +2,7 @@
 title: 位置、気象
 category: 村の概要
 date_type: evergreen
+url: 'https://www.vill.otoineppu.hokkaido.jp/about/ichi_kisyou.html'
 ---
 # 位置、気象
 

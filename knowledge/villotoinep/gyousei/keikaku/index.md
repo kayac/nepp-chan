@@ -2,6 +2,7 @@
 title: 各種計画
 category: 行政
 date_type: evergreen
+url: 'https://www.vill.otoineppu.hokkaido.jp/gyousei/keikaku/index.html'
 ---
 # 各種計画
 

@@ -4,6 +4,7 @@ category: ライフイベント
 date: '2025-04-23'
 date_type: exact
 contact: 住民課保健福祉室
+url: 'https://www.vill.otoineppu.hokkaido.jp/lifeevent/kourei_kaigo.html'
 ---
 # 高齢・介護
 

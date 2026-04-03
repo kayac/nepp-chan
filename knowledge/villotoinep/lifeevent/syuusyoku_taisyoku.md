@@ -4,6 +4,7 @@ category: ライフイベント
 date: '2013-11-20'
 date_type: exact
 contact: 住民課住民生活室 住民係
+url: 'https://www.vill.otoineppu.hokkaido.jp/lifeevent/syuusyoku_taisyoku.html'
 ---
 # 就職・退職
 

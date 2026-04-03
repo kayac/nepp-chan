@@ -4,6 +4,7 @@ category: 防災
 date: '2020-03-01'
 date_type: estimated
 contact: 総務課
+url: 'https://www.vill.otoineppu.hokkaido.jp/bousai/index.html'
 ---
 # 防災情報
 

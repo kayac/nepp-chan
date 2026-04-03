@@ -5,6 +5,7 @@ subcategory: 消防
 date: '2026-03-18'
 date_type: observed
 contact: 音威子府支署
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/syoubou/index.html'
 ---
 # 消防支署
 

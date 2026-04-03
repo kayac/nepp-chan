@@ -3,6 +3,7 @@ title: 音威子府村について
 category: 村の概要
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/about/index.html'
 ---
 # 音威子府村について
 

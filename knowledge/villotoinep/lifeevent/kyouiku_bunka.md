@@ -4,6 +4,7 @@ category: ライフイベント
 date: '2025-03-31'
 date_type: exact
 contact: 音威子府村教育委員会
+url: 'https://www.vill.otoineppu.hokkaido.jp/lifeevent/kyouiku_bunka.html'
 ---
 # 教育・文化
 

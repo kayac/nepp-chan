@@ -5,6 +5,7 @@ subcategory: 農業委員会
 date: '2026-03-18'
 date_type: observed
 contact: 農業委員会
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/nougyouiin/tiikikeikaku.html'
 ---
 # 地域計画（案）の広告・縦覧について
 

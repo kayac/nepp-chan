@@ -3,6 +3,7 @@ title: くらしの情報
 category: 住民生活
 subcategory: index.md
 date_type: evergreen
+url: 'https://www.vill.otoineppu.hokkaido.jp/kurashi/index.html'
 ---
 # くらしの情報
 

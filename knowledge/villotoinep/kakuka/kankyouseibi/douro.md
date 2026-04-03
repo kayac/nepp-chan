@@ -4,6 +4,7 @@ category: 各課案内
 subcategory: 環境整備課
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/kankyouseibi/douro.html'
 ---
 # 道路・橋梁
 

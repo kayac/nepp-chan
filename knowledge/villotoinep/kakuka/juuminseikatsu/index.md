@@ -5,6 +5,7 @@ subcategory: 住民生活課
 date: '2024-12-13'
 date_type: exact
 contact: 住民課住民生活室
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/index.html'
 ---
 # 住民課住民生活室
 

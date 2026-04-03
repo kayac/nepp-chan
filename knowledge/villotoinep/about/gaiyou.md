@@ -3,6 +3,7 @@ title: 村の概要
 category: 村の概要
 date: '1972-09-30'
 date_type: exact
+url: 'https://www.vill.otoineppu.hokkaido.jp/about/gaiyou.html'
 ---
 # 村の概要
 

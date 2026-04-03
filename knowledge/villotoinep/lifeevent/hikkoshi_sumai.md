@@ -3,6 +3,7 @@ title: 引越し・住まい
 category: ライフイベント
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/lifeevent/hikkoshi_sumai.html'
 ---
 # 引越し・住まい
 

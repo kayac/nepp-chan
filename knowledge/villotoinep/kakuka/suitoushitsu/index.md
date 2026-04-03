@@ -5,6 +5,7 @@ subcategory: 出納室
 date: '2026-03-18'
 date_type: observed
 contact: 会計課
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/suitoushitsu/index.html'
 ---
 # 会計課
 

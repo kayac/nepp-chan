@@ -4,6 +4,7 @@ category: ライフイベント
 date: '2025-04-01'
 date_type: estimated
 contact: 住民課保健福祉室
+url: 'https://www.vill.otoineppu.hokkaido.jp/lifeevent/ninshin_syussan.html'
 ---
 # 妊娠・出産
 

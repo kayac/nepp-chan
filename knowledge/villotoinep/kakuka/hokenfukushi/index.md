@@ -5,6 +5,7 @@ subcategory: 保健福祉課
 date: '2025-09-24'
 date_type: exact
 contact: 住民課保健福祉室
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/hokenfukushi/index.html'
 ---
 # 住民課保健福祉室
 

@@ -4,6 +4,7 @@ category: 各課案内
 subcategory: 選挙管理委員会
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/senkyokanri/index.html'
 ---
 # 選挙管理委員会
 

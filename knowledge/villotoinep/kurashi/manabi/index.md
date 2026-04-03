@@ -4,6 +4,7 @@ category: 住民生活
 subcategory: 教育・学び
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kurashi/manabi/index.html'
 ---
 # 学び
 

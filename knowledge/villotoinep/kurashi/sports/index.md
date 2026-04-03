@@ -5,6 +5,7 @@ subcategory: sports
 date: '2026-03-18'
 date_type: observed
 contact: 生涯学習係
+url: 'https://www.vill.otoineppu.hokkaido.jp/kurashi/sports/index.html'
 ---
 # スポーツ
 

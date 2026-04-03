@@ -5,6 +5,7 @@ subcategory: 総務財政課
 date: '2025-11-18'
 date_type: exact
 contact: 総務課総務財政室
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/soumuzaisei/index.html'
 ---
 # 総務課総務財政室
 

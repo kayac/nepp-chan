@@ -5,6 +5,7 @@ subcategory: 農業委員会
 date: '2025-12-17'
 date_type: exact
 contact: 農業委員会
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/nougyouiin/index.html'
 ---
 # 農業委員会
 
