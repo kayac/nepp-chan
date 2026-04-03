@@ -1,0 +1,27 @@
+---
+title: 手続き・相談
+category: 住民生活
+subcategory: 手続き
+date: '2026-03-18'
+date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kurashi/tetsuduki/index.html'
+---
+# 手続き・相談
+
+音威子府村での各種手続き・届出に関する情報です。
+
+---
+
+## 主な手続き
+
+- [ふるさと納税制度について](furusato_nouzei.md)
+- [音威子府村村有財産使用申請について](sonyuzaisan.md)
+- [国土利用計画法の届出](kokudoriyou.md)
+
+## 納付
+
+- [村税・使用料・手数料等の納付について](noufu.md)
+
+---
+
+[← くらしの情報に戻る](../index.md)

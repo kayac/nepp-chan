@@ -1,0 +1,36 @@
+---
+title: クロスカントリースキー
+category: 住民生活
+subcategory: sports
+date: '2026-03-18'
+date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kurashi/sports/cross_country/index.html'
+---
+# クロスカントリースキー
+
+## 全日本クロスカントリー音威子府大会
+
+毎年12月下旬に開催される大会です。約500名の選手が参加し、日本のトップランナーも出場します。
+
+過去には全日本選手権を開催し、日本一を決定する大会として開催してきた歴史があります。幼少期にこの大会に参加した選手の中には、全日本選手権制覇、ワールドカップ転戦、オリンピック出場に至った者もいます。
+
+### 大会情報
+
+- [2025〜2026シーズン大会情報](https://www.vill.otoineppu.hokkaido.jp/kurashi/sports/cross_country/index.html)
+
+### 過去の成績
+
+- 全日本クロスカントリー音威子府大会リザルト
+- 学生選手権リザルト
+- ジュニア選手権リザルト
+
+---
+
+## お問い合わせ
+
+教育委員会 生涯学習係
+- 電話：01656-5-3356
+
+---
+
+[← スポーツに戻る](index.md)

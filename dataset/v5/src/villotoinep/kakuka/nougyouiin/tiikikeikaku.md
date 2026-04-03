@@ -1,0 +1,23 @@
+---
+title: 地域計画（案）の広告・縦覧について
+category: 各課案内
+subcategory: 農業委員会
+date: '2026-03-18'
+date_type: observed
+contact: 農業委員会
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/nougyouiin/tiikikeikaku.html'
+---
+# 地域計画（案）の広告・縦覧について
+
+地域計画に関する広告・縦覧の情報です。
+
+---
+
+## お問い合わせ
+
+農業委員会
+- 電話: 01656-5-3313
+
+---
+
+[← 農業委員会に戻る](index.md)

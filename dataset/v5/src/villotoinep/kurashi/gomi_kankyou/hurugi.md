@@ -1,0 +1,35 @@
+---
+title: 古着・古布回収方法
+category: 住民生活
+subcategory: ごみ・環境
+date: '2020-04-01'
+date_type: exact
+contact: 住民生活室 生活環境係
+url: 'https://www.vill.otoineppu.hokkaido.jp/kurashi/gomi_kankyou/hurugi.html'
+---
+# 古着・古布回収方法
+
+音威子府村の古着・古布回収に関する情報です。
+
+## ダウンロード
+
+```json
+[
+  {
+    "資料": "古着・古布回収一覧",
+    "ファイル": "[PDF（700KB）](https://www.vill.otoineppu.hokkaido.jp/kurashi/gomi_kankyou/files/hurugi-kaisyu2020.pdf)"
+  }
+]
+```
+
+---
+
+## お問い合わせ
+
+住民課 住民生活室 生活環境係
+- 電話：01656-5-3312（内線35）
+- FAX：01656-5-3837
+
+---
+
+[← くらし・環境に戻る](index.md)

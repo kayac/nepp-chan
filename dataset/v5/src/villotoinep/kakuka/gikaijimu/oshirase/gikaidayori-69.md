@@ -1,0 +1,27 @@
+---
+title: おといねっぷ議会だより 第69号
+category: 各課案内
+subcategory: 議会事務局
+date: '2025-06-13'
+date_type: exact
+contact: 議会事務局
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/gikaijimu/oshirase/2025-0618-1532-25.html'
+---
+# おといねっぷ議会だより 第69号
+
+令和7年6月13日発行
+
+---
+
+- [PDFでご覧いただけます](https://www.vill.otoineppu.hokkaido.jp/kakuka/gikaijimu/oshirase/files/No.69.pdf)
+
+---
+
+## お問い合わせ
+
+議会事務局
+- 電話: 01656-5-3311（内線46）
+
+---
+
+[← 音威子府村議会に戻る](../index.md)

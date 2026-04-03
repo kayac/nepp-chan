@@ -1,0 +1,28 @@
+---
+title: 音威子府・中川フォトコンテスト2013開催
+category: 各課案内
+subcategory: 環境整備課
+date: '2013-07-24'
+date_type: exact
+contact: 経済課環境整備室
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/kankyouseibi/oshirase/fotcontesto25.html'
+---
+# 音威子府・中川フォトコンテスト2013開催
+
+2013年7月24日
+
+---
+
+※このお知らせは2013年のイベント情報です。
+
+---
+
+## お問い合わせ
+
+経済課環境整備室
+- 電話: 01656-5-3314
+- FAX: 01656-5-3837
+
+---
+
+[← 経済課環境整備室に戻る](../index.md)
