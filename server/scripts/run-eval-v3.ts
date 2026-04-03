@@ -382,7 +382,9 @@ const extractUrls = (text: string): string[] => {
   const matches = text.match(URL_REGEX);
   if (!matches) return [];
   // 末尾の句読点やカッコを除去
-  return [...new Set(matches.map((u) => u.replace(/[.,;:!?）】」。、]+$/, "")))];
+  return [
+    ...new Set(matches.map((u) => u.replace(/[.,;:!?）】」。、]+$/, ""))),
+  ];
 };
 
 const checkUrlAccessibility = async (
@@ -454,8 +456,7 @@ const validateUrls = async (
     })),
     expectedUrlMatch,
     domainValidRate: urls.length > 0 ? domainValid.length / urls.length : null,
-    accessibleRate:
-      urls.length > 0 ? accessible.length / urls.length : null,
+    accessibleRate: urls.length > 0 ? accessible.length / urls.length : null,
   };
 };
 
@@ -602,7 +603,17 @@ const runEvalScorers = async ({
     });
     scores.similarity = result?.score ?? null;
   } catch (e) {
-    console.warn("  ⚠ similarity scorer failed:", (e as Error).message);
+    const msg = (e as Error).message ?? "";
+    // FIXME(@mastra/evals): matchType "contradiction" が Zod enum に含まれず ZodError になる。
+    // Mastra 修正後はこの catch に入らなくなるため、ログで検知可能。
+    if (msg.includes("contradiction") || msg.includes("invalid_enum_value")) {
+      console.warn(
+        "  ⚠ similarity: contradiction matchType detected (Mastra enum bug) → 0.0",
+      );
+      scores.similarity = 0.0;
+    } else {
+      console.warn("  ⚠ similarity scorer failed:", msg);
+    }
   }
 
   if (context.length === 0) return scores;
