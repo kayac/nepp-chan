@@ -990,9 +990,7 @@ export const evalTestCases: TestCaseV3[] = [
     input: "おと高の資料請求ページのURLを教えてください",
     groundTruth:
       "おと高の資料請求ページはこちらです: https://www.otoineppu-h.ed.jp/contact/shiryou.html",
-    requiredKeywords: [
-      "https://www.otoineppu-h.ed.jp/contact/shiryou.html",
-    ],
+    requiredKeywords: ["https://www.otoineppu-h.ed.jp/contact/shiryou.html"],
     threshold: 0.3,
     expectedUrl: "https://www.otoineppu-h.ed.jp/contact/shiryou.html",
   },
@@ -1003,9 +1001,7 @@ export const evalTestCases: TestCaseV3[] = [
     input: "おと高のお問い合わせフォームはどこですか？",
     groundTruth:
       "お問い合わせフォームはこちらです: https://www.otoineppu-h.ed.jp/contact/otoiawase.html",
-    requiredKeywords: [
-      "https://www.otoineppu-h.ed.jp/contact/otoiawase.html",
-    ],
+    requiredKeywords: ["https://www.otoineppu-h.ed.jp/contact/otoiawase.html"],
     threshold: 0.3,
     expectedUrl: "https://www.otoineppu-h.ed.jp/contact/otoiawase.html",
   },
@@ -1049,9 +1045,7 @@ export const evalTestCases: TestCaseV3[] = [
     input: "おと高の学校見学について知りたいのですが、ページはありますか？",
     groundTruth:
       "学校見学のページはこちらです: https://www.otoineppu-h.ed.jp/junior/kengaku.html",
-    requiredKeywords: [
-      "https://www.otoineppu-h.ed.jp/junior/kengaku.html",
-    ],
+    requiredKeywords: ["https://www.otoineppu-h.ed.jp/junior/kengaku.html"],
     threshold: 0.3,
     expectedUrl: "https://www.otoineppu-h.ed.jp/junior/kengaku.html",
   },
@@ -1073,9 +1067,7 @@ export const evalTestCases: TestCaseV3[] = [
     input: "おと高のギャラリーで工芸作品を見たいのですが",
     groundTruth:
       "工芸作品のギャラリーはこちらです: https://www.otoineppu-h.ed.jp/gallery/crafts.html",
-    requiredKeywords: [
-      "https://www.otoineppu-h.ed.jp/gallery/crafts.html",
-    ],
+    requiredKeywords: ["https://www.otoineppu-h.ed.jp/gallery/crafts.html"],
     threshold: 0.3,
     expectedUrl: "https://www.otoineppu-h.ed.jp/gallery/crafts.html",
   },
@@ -1300,5 +1292,48 @@ export const evalTestCases: TestCaseV3[] = [
     threshold: 0.3,
     expectedUrl:
       "https://www.vill.otoineppu.hokkaido.jp/about/jinkou_kokudo.html",
+  },
+
+  // ─── kouhou: 広報 追加（kh-11〜kh-14） ─────────
+
+  {
+    id: "kh-11",
+    category: "kouhou",
+    type: "positive",
+    input: "音威子府道路（音中道路）はいつ開通しますか？",
+    groundTruth:
+      "音中道路は2026年3月22日（日）16:00に開通予定です。音威子府バイパスの音中トンネルは2020年11月に貫通しており、長年の工事を経て開通を迎えます。",
+    requiredKeywords: ["3月22日", "開通"],
+    threshold: 0.5,
+  },
+  {
+    id: "kh-12",
+    category: "kouhou",
+    type: "positive",
+    input: "音威子府バイパスの音中トンネルについて教えてください",
+    groundTruth:
+      "音威子府バイパスの音中トンネルは2020年11月20日に貫通しました。平成22年（2010年）の掘削開始以来、難航する工事が続き、着工から11年目の悲願の貫通となりました。",
+    requiredKeywords: ["音中トンネル", "貫通"],
+    threshold: 0.5,
+  },
+  {
+    id: "kh-13",
+    category: "kouhou",
+    type: "positive",
+    input: "道の駅おといねっぷはいつ再開しますか？",
+    groundTruth:
+      "道の駅おといねっぷは2026年3月13日からセイコーマートにより再開予定です。地域特産品の販売も検討されています。",
+    requiredKeywords: ["3月13日", "セイコーマート"],
+    threshold: 0.5,
+  },
+  {
+    id: "kh-14",
+    category: "kouhou",
+    type: "positive",
+    input: "道の駅おといねっぷの運営はどこがやっていますか？",
+    groundTruth:
+      "道の駅おといねっぷは2026年3月13日からセイコーマートによる運営で再開予定です。「道の駅おといねっぷ」地方創生プロジェクトとして管理・運営委託事業が進められています。",
+    requiredKeywords: ["セイコーマート"],
+    threshold: 0.5,
   },
 ];
