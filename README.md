@@ -34,10 +34,11 @@
 
 ## ロードマップ
 
-- [x] **Phase 1**: Web/モバイルチャットのパイロット運用（現在）
-- [ ] **Phase 2**: LINEメッセージ + 電話対応
-- [ ] **Phase 3**: 村役場・公共施設への対面端末の設置
-- [ ] **Phase 4**: 匿名化された会話分析による政策改善
+- [x] **Phase 1**: Web/モバイルチャットのパイロット運用
+- [x] **Phase 2**: LINEメッセージ対応
+- [ ] **Phase 3**: 電話対応
+- [ ] **Phase 4**: 村役場・公共施設への対面端末の設置
+- [ ] **Phase 5**: 匿名化された会話分析による政策改善
 - [ ] **ビジョン**: 「すべての声が届く村へ」
 
 ---
@@ -115,11 +116,11 @@ pnpm mastra:dev
 
 ### 環境構成
 
-| 環境 | ブランチ | Web URL | API URL |
+| 環境 | トリガー | Web URL | API URL |
 |------|----------|---------|---------|
 | ローカル | - | http://localhost:5173 | http://localhost:8787 |
-| dev | develop | https://dev-web.nepp-chan.ai | https://dev-api.nepp-chan.ai |
-| prd | main | https://web.nepp-chan.ai | https://api.nepp-chan.ai |
+| dev | develop push | https://dev-web.nepp-chan.ai | https://dev-api.nepp-chan.ai |
+| prd | `v*` タグ（tagpr） | https://web.nepp-chan.ai | https://api.nepp-chan.ai |
 
 ### 手動デプロイ
 
@@ -136,5 +137,6 @@ pnpm web:deploy:prd
 ### CI/CD
 
 GitHub Actions で自動デプロイ:
-- `develop` ブランチ push → dev 環境
-- `main` ブランチ push → prd 環境
+- `develop` push → CI（lint + test）+ dev 環境デプロイ
+- `develop` push → tagpr がバージョンバンプ PR を自動作成
+- バージョンバンプ PR マージ → タグ + GitHub Release → prd 環境デプロイ
