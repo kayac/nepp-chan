@@ -3,7 +3,13 @@ import { Memory } from "@mastra/memory";
 import { count, desc, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
-import { createDb, mastraThreads, persona, threadPersonaStatus } from "~/db";
+import {
+  createDb,
+  mastraMessages,
+  mastraThreads,
+  persona,
+  threadPersonaStatus,
+} from "~/db";
 import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
 import { personaAgent } from "~/mastra/agents/persona-agent";
@@ -142,11 +148,29 @@ const getAllThreads = async (d1: D1Database): Promise<ThreadInfo[]> => {
   return results.filter((t): t is ThreadInfo => t.resourceId !== null);
 };
 
+const getMessageCountsByThread = async (
+  d1: D1Database,
+): Promise<Map<string, number>> => {
+  const db = createDb(d1);
+
+  const results = await db
+    .select({
+      threadId: mastraMessages.threadId,
+      count: count(),
+    })
+    .from(mastraMessages)
+    .groupBy(mastraMessages.threadId)
+    .all();
+
+  return new Map(results.map((r) => [r.threadId, r.count]));
+};
+
 export const extractAllPendingThreads = async (env: CloudflareBindings) => {
   const allStatus = await threadPersonaStatusRepository.findAll(env.DB);
   const statusMap = new Map(allStatus.map((s) => [s.threadId, s]));
 
   const threads = await getAllThreads(env.DB);
+  const messageCountMap = await getMessageCountsByThread(env.DB);
 
   const results: Array<{
     threadId: string;
@@ -156,6 +180,16 @@ export const extractAllPendingThreads = async (env: CloudflareBindings) => {
   for (const thread of threads) {
     const status = statusMap.get(thread.id);
     const lastMessageCount = status?.lastMessageCount ?? 0;
+    const currentMessageCount = messageCountMap.get(thread.id) ?? 0;
+
+    // DB のメッセージ数で事前フィルタ（memory.recall() を呼ばずにスキップ）
+    if (currentMessageCount <= lastMessageCount) {
+      results.push({
+        threadId: thread.id,
+        result: { skipped: true, reason: "no_new_messages" },
+      });
+      continue;
+    }
 
     const result = await extractPersonaFromThread(
       thread.id,

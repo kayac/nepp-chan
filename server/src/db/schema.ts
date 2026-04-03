@@ -40,6 +40,11 @@ export const mastraThreads = sqliteTable("mastra_threads", {
   resourceId: text("resourceId"),
 });
 
+export const mastraMessages = sqliteTable("mastra_messages", {
+  id: text("id").primaryKey(),
+  threadId: text("thread_id").notNull(),
+});
+
 // 型エクスポート
 export type EmergencyReport = typeof emergencyReports.$inferSelect;
 export type NewEmergencyReport = typeof emergencyReports.$inferInsert;
