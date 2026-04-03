@@ -1159,4 +1159,146 @@ export const evalTestCases: TestCaseV3[] = [
     threshold: 0.1,
     noUrlExpected: true,
   },
+
+  // ─── URL検証: villotoinep（村公式サイト）の正しいURLを返すべき（10個） ──
+
+  {
+    id: "ur-16",
+    category: "village",
+    type: "positive",
+    input: "音威子府村へのアクセス方法のページはありますか？",
+    groundTruth:
+      "アクセス情報のページはこちらです: https://www.vill.otoineppu.hokkaido.jp/about/access.html",
+    requiredKeywords: [
+      "https://www.vill.otoineppu.hokkaido.jp/about/access.html",
+    ],
+    threshold: 0.3,
+    expectedUrl: "https://www.vill.otoineppu.hokkaido.jp/about/access.html",
+  },
+  {
+    id: "ur-17",
+    category: "village",
+    type: "positive",
+    input: "音威子府村のふるさと納税のページを教えてください",
+    groundTruth:
+      "ふるさと納税のページはこちらです: https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/oshirase/202306_onseneki.html",
+    requiredKeywords: [
+      "https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/oshirase/202306_onseneki.html",
+    ],
+    threshold: 0.3,
+    expectedUrl:
+      "https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/oshirase/202306_onseneki.html",
+  },
+  {
+    id: "ur-18",
+    category: "facility",
+    type: "positive",
+    input: "音威子府村の公民館のページはありますか？",
+    groundTruth:
+      "公民館のページはこちらです: https://www.vill.otoineppu.hokkaido.jp/kakuka/kyouikuiin/2020-0424-1654-21.html",
+    requiredKeywords: [
+      "https://www.vill.otoineppu.hokkaido.jp/kakuka/kyouikuiin/2020-0424-1654-21.html",
+    ],
+    threshold: 0.3,
+    expectedUrl:
+      "https://www.vill.otoineppu.hokkaido.jp/kakuka/kyouikuiin/2020-0424-1654-21.html",
+  },
+  {
+    id: "ur-19",
+    category: "village",
+    type: "positive",
+    input: "音威子府村の職員採用情報のURLは？",
+    groundTruth:
+      "職員採用情報のページはこちらです: https://www.vill.otoineppu.hokkaido.jp/kakuka/soumuzaisei/oshirase/2025-0701-1217-14.html",
+    requiredKeywords: [
+      "https://www.vill.otoineppu.hokkaido.jp/kakuka/soumuzaisei/oshirase/2025-0701-1217-14.html",
+    ],
+    threshold: 0.3,
+    expectedUrl:
+      "https://www.vill.otoineppu.hokkaido.jp/kakuka/soumuzaisei/oshirase/2025-0701-1217-14.html",
+  },
+  {
+    id: "ur-20",
+    category: "village",
+    type: "positive",
+    input: "音威子府村の子育て支援のページはありますか？",
+    groundTruth:
+      "子育て支援のページはこちらです: https://www.vill.otoineppu.hokkaido.jp/lifeevent/kosodate.html",
+    requiredKeywords: [
+      "https://www.vill.otoineppu.hokkaido.jp/lifeevent/kosodate.html",
+    ],
+    threshold: 0.3,
+    expectedUrl:
+      "https://www.vill.otoineppu.hokkaido.jp/lifeevent/kosodate.html",
+  },
+  {
+    id: "ur-21",
+    category: "village",
+    type: "positive",
+    input: "音威子府村の地域バスの情報ページはどこですか？",
+    groundTruth:
+      "地域バスの情報はこちらです: https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/oshirase/2024-0507-1503-14.html",
+    requiredKeywords: [
+      "https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/oshirase/2024-0507-1503-14.html",
+    ],
+    threshold: 0.3,
+    expectedUrl:
+      "https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/oshirase/2024-0507-1503-14.html",
+  },
+  {
+    id: "ur-22",
+    category: "facility",
+    type: "positive",
+    input: "木遊館のページはありますか？",
+    groundTruth:
+      "木遊館のページはこちらです: https://www.vill.otoineppu.hokkaido.jp/shisetsu/mokuyukan.html",
+    requiredKeywords: [
+      "https://www.vill.otoineppu.hokkaido.jp/shisetsu/mokuyukan.html",
+    ],
+    threshold: 0.3,
+    expectedUrl:
+      "https://www.vill.otoineppu.hokkaido.jp/shisetsu/mokuyukan.html",
+  },
+  {
+    id: "ur-23",
+    category: "village",
+    type: "positive",
+    input: "音威子府村の地域おこし協力隊（福祉）の募集ページはありますか？",
+    groundTruth:
+      "地域おこし協力隊（福祉）の募集ページはこちらです: https://www.vill.otoineppu.hokkaido.jp/kakuka/hokenfukushi/oshirase/2025-0401-0917-18.html",
+    requiredKeywords: [
+      "https://www.vill.otoineppu.hokkaido.jp/kakuka/hokenfukushi/oshirase/2025-0401-0917-18.html",
+    ],
+    threshold: 0.3,
+    expectedUrl:
+      "https://www.vill.otoineppu.hokkaido.jp/kakuka/hokenfukushi/oshirase/2025-0401-0917-18.html",
+  },
+  {
+    id: "ur-24",
+    category: "village",
+    type: "positive",
+    input: "音威子府村の健康・福祉のページはありますか？",
+    groundTruth:
+      "健康・福祉のページはこちらです: https://www.vill.otoineppu.hokkaido.jp/kurashi/kenkou_fukushi/index.html",
+    requiredKeywords: [
+      "https://www.vill.otoineppu.hokkaido.jp/kurashi/kenkou_fukushi/index.html",
+    ],
+    threshold: 0.3,
+    expectedUrl:
+      "https://www.vill.otoineppu.hokkaido.jp/kurashi/kenkou_fukushi/index.html",
+  },
+  {
+    id: "ur-25",
+    category: "village",
+    type: "positive",
+    input: "音威子府村の人口と面積のページはどこですか？",
+    groundTruth:
+      "人口と面積のページはこちらです: https://www.vill.otoineppu.hokkaido.jp/about/jinkou_kokudo.html",
+    requiredKeywords: [
+      "https://www.vill.otoineppu.hokkaido.jp/about/jinkou_kokudo.html",
+    ],
+    threshold: 0.3,
+    expectedUrl:
+      "https://www.vill.otoineppu.hokkaido.jp/about/jinkou_kokudo.html",
+  },
 ];

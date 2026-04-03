@@ -1565,14 +1565,21 @@ const main = async () => {
       },
     ];
   } else if (args.caseId) {
-    const tc = evalV3TestCases.find((c) => c.id === args.caseId);
-    if (!tc) {
-      console.error(
-        `❌ テストケース ID "${args.caseId}" が見つかりません。有効なID: ${evalV3TestCases.map((c) => c.id).join(", ")}`,
-      );
-      process.exit(1);
+    // 前方一致: "ur-" で ur-01〜ur-25 全てにマッチ
+    const matched = evalV3TestCases.filter((c) => c.id.startsWith(args.caseId!));
+    if (matched.length === 0) {
+      // 完全一致フォールバック
+      const tc = evalV3TestCases.find((c) => c.id === args.caseId);
+      if (!tc) {
+        console.error(
+          `❌ テストケース ID "${args.caseId}" が見つかりません。有効なID: ${evalV3TestCases.map((c) => c.id).join(", ")}`,
+        );
+        process.exit(1);
+      }
+      testCases = [tc];
+    } else {
+      testCases = matched;
     }
-    testCases = [tc];
   } else if (args.caseIndex !== undefined) {
     const tc = evalV3TestCases[args.caseIndex];
     if (!tc) {
