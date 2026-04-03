@@ -1566,7 +1566,8 @@ const main = async () => {
     ];
   } else if (args.caseId) {
     // 前方一致: "ur-" で ur-01〜ur-25 全てにマッチ
-    const matched = evalV3TestCases.filter((c) => c.id.startsWith(args.caseId!));
+    const caseId = args.caseId as string;
+    const matched = evalV3TestCases.filter((c) => c.id.startsWith(caseId));
     if (matched.length === 0) {
       // 完全一致フォールバック
       const tc = evalV3TestCases.find((c) => c.id === args.caseId);

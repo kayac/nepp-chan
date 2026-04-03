@@ -990,9 +990,7 @@ export const evalTestCases: TestCaseV3[] = [
     input: "おと高の資料請求ページのURLを教えてください",
     groundTruth:
       "おと高の資料請求ページはこちらです: https://www.otoineppu-h.ed.jp/contact/shiryou.html",
-    requiredKeywords: [
-      "https://www.otoineppu-h.ed.jp/contact/shiryou.html",
-    ],
+    requiredKeywords: ["https://www.otoineppu-h.ed.jp/contact/shiryou.html"],
     threshold: 0.3,
     expectedUrl: "https://www.otoineppu-h.ed.jp/contact/shiryou.html",
   },
@@ -1003,9 +1001,7 @@ export const evalTestCases: TestCaseV3[] = [
     input: "おと高のお問い合わせフォームはどこですか？",
     groundTruth:
       "お問い合わせフォームはこちらです: https://www.otoineppu-h.ed.jp/contact/otoiawase.html",
-    requiredKeywords: [
-      "https://www.otoineppu-h.ed.jp/contact/otoiawase.html",
-    ],
+    requiredKeywords: ["https://www.otoineppu-h.ed.jp/contact/otoiawase.html"],
     threshold: 0.3,
     expectedUrl: "https://www.otoineppu-h.ed.jp/contact/otoiawase.html",
   },
@@ -1049,9 +1045,7 @@ export const evalTestCases: TestCaseV3[] = [
     input: "おと高の学校見学について知りたいのですが、ページはありますか？",
     groundTruth:
       "学校見学のページはこちらです: https://www.otoineppu-h.ed.jp/junior/kengaku.html",
-    requiredKeywords: [
-      "https://www.otoineppu-h.ed.jp/junior/kengaku.html",
-    ],
+    requiredKeywords: ["https://www.otoineppu-h.ed.jp/junior/kengaku.html"],
     threshold: 0.3,
     expectedUrl: "https://www.otoineppu-h.ed.jp/junior/kengaku.html",
   },
@@ -1073,9 +1067,7 @@ export const evalTestCases: TestCaseV3[] = [
     input: "おと高のギャラリーで工芸作品を見たいのですが",
     groundTruth:
       "工芸作品のギャラリーはこちらです: https://www.otoineppu-h.ed.jp/gallery/crafts.html",
-    requiredKeywords: [
-      "https://www.otoineppu-h.ed.jp/gallery/crafts.html",
-    ],
+    requiredKeywords: ["https://www.otoineppu-h.ed.jp/gallery/crafts.html"],
     threshold: 0.3,
     expectedUrl: "https://www.otoineppu-h.ed.jp/gallery/crafts.html",
   },
