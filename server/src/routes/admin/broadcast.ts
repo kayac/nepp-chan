@@ -117,8 +117,9 @@ broadcastAdminRoutes.openapi(createBroadcastRoute, async (c) => {
     });
     return c.json(broadcast, 201);
   } catch (error) {
+    logger.error("[Broadcast] Failed to create broadcast", error);
     throw new HTTPException(500, {
-      message: `配信に失敗しました: ${error instanceof Error ? error.message : "Unknown error"}`,
+      message: "配信の作成に失敗しました",
     });
   }
 });
@@ -389,8 +390,12 @@ broadcastAdminRoutes.openapi(sendRoute, async (c) => {
 
   const result = await sendBroadcast(c.env, id);
   if (!result.success) {
+    logger.error("[Broadcast] Failed to send broadcast", {
+      id,
+      error: result.error,
+    });
     throw new HTTPException(500, {
-      message: `配信に失敗しました: ${result.error}`,
+      message: "配信の送信に失敗しました",
     });
   }
 

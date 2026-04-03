@@ -8,7 +8,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { ToolUIRegistry } from "~/components/assistant-ui/tool-uis";
 import { API_BASE } from "~/lib/api/client";
 import { getAuthToken } from "~/lib/auth-token";
-import { getResourceId } from "~/lib/resource";
+import { getSessionToken } from "~/lib/session-token";
 
 export const GREETING_PROMPT =
   "新しい会話が始まりました。時間帯や季節に合った短い挨拶をしてください。";
@@ -31,8 +31,6 @@ export const AssistantProvider = ({
   greetingPrompt,
   children,
 }: Props) => {
-  const resourceId = useMemo(() => getResourceId(), []);
-
   const runtime = useChatRuntime({
     messages: initialMessages,
     transport: useMemo(
@@ -40,11 +38,16 @@ export const AssistantProvider = ({
         new DefaultChatTransport({
           api: `${API_BASE}/chat`,
           headers: (): Record<string, string> => {
-            const token = getAuthToken();
-            if (token) {
-              return { Authorization: `Bearer ${token}` };
+            const headers: Record<string, string> = {};
+            const authToken = getAuthToken();
+            if (authToken) {
+              headers.Authorization = `Bearer ${authToken}`;
             }
-            return {};
+            const sessionToken = getSessionToken();
+            if (sessionToken) {
+              headers["X-Session-Token"] = sessionToken;
+            }
+            return headers;
           },
           prepareSendMessagesRequest({ messages }) {
             const lastMessage = messages[messages.length - 1];
@@ -60,14 +63,13 @@ export const AssistantProvider = ({
             return {
               body: {
                 message: lastMessage,
-                resourceId,
                 threadId,
                 intent,
               },
             };
           },
         }),
-      [resourceId, threadId],
+      [threadId],
     ),
   });
 

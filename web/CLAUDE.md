@@ -57,6 +57,9 @@ web/
 │   ├── repository/            # API クライアント（Repository パターン）
 │   ├── lib/
 │   │   ├── api/client.ts      # 共通 API クライアント
+│   │   ├── auth-token.ts      # 管理者トークン（localStorage）
+│   │   ├── session-token.ts   # セッショントークン（localStorage）
+│   │   ├── resource.ts        # resourceId 生成・取得
 │   │   ├── sentry.ts          # Sentry 初期化
 │   │   └── class-merge.ts     # cn ユーティリティ
 │   ├── providers/             # QueryProvider 等

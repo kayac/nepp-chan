@@ -71,6 +71,7 @@ server/src/
 | `/admin/questionnaires/:id/close`  | POST     | アンケート締切                 |
 | `/admin/invitations`               | GET/POST | 招待一覧・作成                 |
 | `/admin/invitations/:id`           | DELETE   | 招待削除                       |
+| `/auth/anonymous-session`          | POST     | 匿名セッショントークン取得（先着制限） |
 | `/auth/register`                   | POST     | ユーザー登録（招待トークン+パスワード） |
 | `/auth/login`                      | POST     | ログイン（ユーザー名+パスワード）      |
 | `/auth/me`                         | GET      | 認証状態確認                   |
@@ -215,11 +216,20 @@ throw new HTTPException(404, { message: "Not found" });
 
 - エラー: `throw new HTTPException(code, { message })` でスロー（グローバルエラーハンドラーが `{ error: { code, message } }` 形式に変換）
 - OpenAPI エラーレスポンス: `lib/openapi-errors.ts` の `errorResponse(code)` を使用
-- 認証必須ルート: `requireAuth` ミドルウェアを適用
-- ロール制限ルート: `requireRole("admin")` 等を `requireAuth` の後に適用（`middleware/require-role.ts`）
+- 管理者認証: `requireAuth` ミドルウェアを適用（`Authorization: Bearer` → `adminUser`）
+- ロール制限: `requireRole("admin")` 等を `requireAuth` の後に適用
+- セッション認証: `resolveSession` がグローバルに適用（`X-Session-Token` → `sessionResourceId`）
+- スレッド所有権: `verifyThreadOwnership(threadId, sessionResourceId, db)` を各ハンドラーで呼ぶ
 - 共通スキーマ: `schemas/` から import（インライン定義を避ける）
 
 ## データベーステーブル
+
+### anonymous_sessions
+
+| カラム      | 型   | 説明                        |
+| ----------- | ---- | --------------------------- |
+| resource_id | TEXT | PRIMARY KEY（UUID v4）      |
+| created_at  | TEXT | 作成日時（NOT NULL）        |
 
 ### emergency_reports
 

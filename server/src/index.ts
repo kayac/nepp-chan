@@ -9,6 +9,7 @@ import {
   corsMiddleware,
   errorHandler,
   resolveAuth,
+  resolveSession,
   securityHeaders,
 } from "~/middleware";
 import {
@@ -34,6 +35,7 @@ const app = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
 app.use("*", corsMiddleware);
 app.use("*", securityHeaders);
 app.use("*", resolveAuth);
+app.use("*", resolveSession);
 
 app.onError(errorHandler);
 

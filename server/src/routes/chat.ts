@@ -9,6 +9,8 @@ import { getStorage } from "~/lib/storage";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import type { AuthVariables } from "~/middleware/auth";
+import type { SessionVariables } from "~/middleware/resolve-session";
+import { verifyThreadOwnership } from "~/services/thread";
 
 const ChatSendRequestSchema = z.object({
   message: z.object({
@@ -17,14 +19,13 @@ const ChatSendRequestSchema = z.object({
     parts: z.array(z.looseObject({ type: z.string() })),
     createdAt: z.coerce.date().optional(),
   }),
-  resourceId: z.string().min(1, "resourceId is required"),
   threadId: z.string().min(1, "threadId is required"),
   intent: z.enum(["casual", "normal", "thinking"]).optional(),
 });
 
 export const chatRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
-  Variables: Partial<AuthVariables>;
+  Variables: Partial<AuthVariables & SessionVariables>;
 }>();
 
 const chatRoute = createRoute({
@@ -57,17 +58,23 @@ const chatRoute = createRoute({
 });
 
 chatRoutes.openapi(chatRoute, async (c) => {
-  const {
-    message,
-    resourceId,
-    threadId,
-    intent: fixedIntent,
-  } = c.req.valid("json");
-  logger.info(`[Chat] request received`, { threadId, resourceId });
+  const { message, threadId, intent: fixedIntent } = c.req.valid("json");
 
-  const storage = await getStorage(c.env.DB);
+  const thread = await verifyThreadOwnership(
+    threadId,
+    c.get("sessionResourceId"),
+    c.env.DB,
+  );
+
+  logger.info(`[Chat] request received`, {
+    threadId,
+    resourceId: thread.resourceId,
+  });
+
   const adminUser = c.get("adminUser");
   const isAdmin = !!adminUser;
+
+  const storage = await getStorage(c.env.DB);
 
   // Intent 分類でモデルティアを決定（fixedIntent 指定時はルータースキップ）
   const userText = (
@@ -104,7 +111,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
       messages: [message] as UIMessage[],
       requestContext,
       memory: {
-        resource: resourceId,
+        resource: thread.resourceId,
         thread: threadId,
       },
     },

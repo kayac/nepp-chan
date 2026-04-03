@@ -34,10 +34,11 @@ To ensure no one is left behind — including those unfamiliar with digital tech
 
 ## Roadmap
 
-- [x] **Phase 1**: Web/mobile chat pilot (Current)
-- [ ] **Phase 2**: LINE messaging + voice call support
-- [ ] **Phase 3**: In-person kiosks at village hall and public facilities
-- [ ] **Phase 4**: Anonymized conversation analytics for policy improvement
+- [x] **Phase 1**: Web/mobile chat pilot
+- [x] **Phase 2**: LINE messaging
+- [ ] **Phase 3**: Voice call support
+- [ ] **Phase 4**: In-person kiosks at village hall and public facilities
+- [ ] **Phase 5**: Anonymized conversation analytics for policy improvement
 - [ ] **Vision**: "A municipality where every voice is heard"
 
 ---
@@ -47,7 +48,7 @@ To ensure no one is left behind — including those unfamiliar with digital tech
 - **Framework**: Hono, Mastra
 - **Runtime**: Cloudflare Workers / Pages
 - **AI**: Google Generative AI (Gemini)
-- **Frontend**: React, Vite, TailwindCSS
+- **Frontend**: Astro, React, TailwindCSS
 - **Database**: Cloudflare D1
 - **Language**: TypeScript
 
@@ -115,11 +116,11 @@ pnpm mastra:dev
 
 ### Environments
 
-| Environment | Branch | Web URL | API URL |
-|-------------|--------|---------|---------|
+| Environment | Trigger | Web URL | API URL |
+|-------------|---------|---------|---------|
 | Local | - | http://localhost:5173 | http://localhost:8787 |
-| dev | develop | https://dev-web.nepp-chan.ai | https://dev-api.nepp-chan.ai |
-| prd | main | https://web.nepp-chan.ai | https://api.nepp-chan.ai |
+| dev | develop push | https://dev-web.nepp-chan.ai | https://dev-api.nepp-chan.ai |
+| prd | `v*` tag (tagpr) | https://web.nepp-chan.ai | https://api.nepp-chan.ai |
 
 ### Manual Deployment
 
@@ -136,5 +137,6 @@ pnpm web:deploy:prd
 ### CI/CD
 
 Automatic deployment via GitHub Actions:
-- Push to `develop` branch → dev environment
-- Push to `main` branch → prd environment
+- Push to `develop` → CI (lint + test) + dev deployment
+- Push to `develop` → tagpr creates version bump PR automatically
+- Merge version bump PR → tag + GitHub Release → prd deployment

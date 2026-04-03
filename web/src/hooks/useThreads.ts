@@ -9,18 +9,17 @@ import {
 
 export const threadKeys = {
   all: ["threads"] as const,
-  list: (resourceId: string) =>
-    [...threadKeys.all, "list", resourceId] as const,
+  list: () => [...threadKeys.all, "list"] as const,
   detail: (threadId: string) =>
     [...threadKeys.all, "detail", threadId] as const,
   messages: (threadId: string) =>
     [...threadKeys.all, "messages", threadId] as const,
 };
 
-export const useThreads = (resourceId: string, page = 0, perPage = 20) =>
+export const useThreads = (page = 0, perPage = 20) =>
   useQuery({
-    queryKey: threadKeys.list(resourceId),
-    queryFn: () => fetchThreads(resourceId, page, perPage),
+    queryKey: threadKeys.list(),
+    queryFn: () => fetchThreads(page, perPage),
   });
 
 export const useThread = (threadId: string) =>
@@ -37,24 +36,24 @@ export const useMessages = (threadId: string) =>
     enabled: !!threadId,
   });
 
-export const useCreateThread = (resourceId: string) => {
+export const useCreateThread = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (title?: string) => createThread(resourceId, title),
+    mutationFn: (title?: string) => createThread(title),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: threadKeys.list(resourceId) });
+      queryClient.invalidateQueries({ queryKey: threadKeys.list() });
     },
   });
 };
 
-export const useDeleteThread = (resourceId: string) => {
+export const useDeleteThread = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (threadId: string) => deleteThread(threadId),
     onSuccess: (_data, threadId) => {
-      queryClient.invalidateQueries({ queryKey: threadKeys.list(resourceId) });
+      queryClient.invalidateQueries({ queryKey: threadKeys.list() });
       queryClient.removeQueries({ queryKey: threadKeys.detail(threadId) });
       queryClient.removeQueries({ queryKey: threadKeys.messages(threadId) });
     },

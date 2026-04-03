@@ -4,10 +4,15 @@ import { Memory } from "@mastra/memory";
 import { HTTPException } from "hono/http-exception";
 import { errorResponse } from "~/lib/openapi-errors";
 import { getStorage } from "~/lib/storage";
-import { deleteThreadWithRelatedData } from "~/services/thread";
+import type { SessionVariables } from "~/middleware/resolve-session";
+import {
+  deleteThreadWithRelatedData,
+  verifyThreadOwnership,
+} from "~/services/thread";
 
 export const threadsRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
+  Variables: Partial<SessionVariables>;
 }>();
 
 const getMemory = async (db: D1Database) => {
@@ -35,11 +40,10 @@ const getThreadsRoute = createRoute({
   method: "get",
   path: "/",
   summary: "スレッド一覧取得",
-  description: "resourceId に紐づくスレッド一覧を取得",
+  description: "セッションに紐づくスレッド一覧を取得",
   tags: ["Threads"],
   request: {
     query: z.object({
-      resourceId: z.string().min(1, "resourceId is required"),
       page: z.coerce.number().int().min(0).optional().default(0),
       perPage: z.coerce.number().int().min(1).max(100).optional().default(20),
     }),
@@ -63,13 +67,17 @@ const getThreadsRoute = createRoute({
 });
 
 threadsRoutes.openapi(getThreadsRoute, async (c) => {
-  const { resourceId, page, perPage } = c.req.valid("query");
+  const { page, perPage } = c.req.valid("query");
+  const sessionResourceId = c.get("sessionResourceId");
+  if (!sessionResourceId) {
+    throw new HTTPException(401, { message: "認証が必要です" });
+  }
 
   const memory = await getMemory(c.env.DB);
 
   const result = await memory.listThreads({
     filter: {
-      resourceId: resourceId,
+      resourceId: sessionResourceId,
     },
 
     page,
@@ -104,7 +112,6 @@ const createThreadRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            resourceId: z.string().min(1, "resourceId is required"),
             title: z.string().optional(),
             metadata: z.record(z.string(), z.unknown()).optional(),
           }),
@@ -126,12 +133,16 @@ const createThreadRoute = createRoute({
 });
 
 threadsRoutes.openapi(createThreadRoute, async (c) => {
-  const { resourceId, title, metadata } = c.req.valid("json");
+  const { title, metadata } = c.req.valid("json");
+  const sessionResourceId = c.get("sessionResourceId");
+  if (!sessionResourceId) {
+    throw new HTTPException(401, { message: "認証が必要です" });
+  }
 
   const memory = await getMemory(c.env.DB);
 
   const thread = await memory.createThread({
-    resourceId,
+    resourceId: sessionResourceId,
     title,
     metadata,
   });
@@ -177,13 +188,11 @@ const getThreadRoute = createRoute({
 threadsRoutes.openapi(getThreadRoute, async (c) => {
   const { threadId } = c.req.valid("param");
 
-  const memory = await getMemory(c.env.DB);
-
-  const thread = await memory.getThreadById({ threadId });
-
-  if (!thread) {
-    throw new HTTPException(404, { message: "Thread not found" });
-  }
+  const thread = await verifyThreadOwnership(
+    threadId,
+    c.get("sessionResourceId"),
+    c.env.DB,
+  );
 
   return c.json(
     {
@@ -228,13 +237,9 @@ const getMessagesRoute = createRoute({
 threadsRoutes.openapi(getMessagesRoute, async (c) => {
   const { threadId } = c.req.valid("param");
 
+  await verifyThreadOwnership(threadId, c.get("sessionResourceId"), c.env.DB);
+
   const memory = await getMemory(c.env.DB);
-
-  const thread = await memory.getThreadById({ threadId });
-
-  if (!thread) {
-    throw new HTTPException(404, { message: "Thread not found" });
-  }
 
   const result = await memory.recall({
     threadId,
@@ -283,6 +288,9 @@ const deleteThreadRoute = createRoute({
 
 threadsRoutes.openapi(deleteThreadRoute, async (c) => {
   const { threadId } = c.req.valid("param");
+
+  await verifyThreadOwnership(threadId, c.get("sessionResourceId"), c.env.DB);
+
   await deleteThreadWithRelatedData(threadId, c.env.DB);
   return c.json({ message: "スレッドを削除しました" }, 200);
 });

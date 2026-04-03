@@ -139,12 +139,27 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 - メイン: `develop`
 - 機能: `feature/*`
 
-## リリース
+## CI/CD
 
-tagpr によるリリース自動化。develop push 時にバージョンバンプ PR が自動作成される。
+### GitHub Actions ワークフロー
 
-1. feature/* → develop（dev デプロイ）
-2. tagpr がバージョンバンプ PR を自動作成
-3. バージョンバンプ PR をマージ → タグ + GitHub Release + 本番デプロイ
+| ワークフロー | トリガー | 内容 |
+| ------------ | -------- | ---- |
+| `ci.yml` | PR / develop push | Biome lint + tsc + テスト |
+| `deploy-dev.yml` | develop push | DB マイグレーション → サーバーデプロイ → Web デプロイ |
+| `tagpr.yml` | develop push | バージョンバンプ PR 自動作成 |
+| `deploy-prd.yml` | `v*` タグ push / tagpr からトリガー | 本番 DB マイグレーション → サーバーデプロイ → Web デプロイ |
+| `eval.yml` | 毎週月曜 9:00 JST / 手動 | ナレッジエージェント評価 |
+
+### リリースフロー
+
+```
+feature/* → PR → develop（CI + dev 自動デプロイ）
+  ↓
+tagpr がバージョンバンプ PR を自動作成
+  ↓
+バージョンバンプ PR マージ → タグ + GitHub Release → 本番デプロイ
+```
 
 - デフォルトは patch バンプ。`tagpr:minor` / `tagpr:major` ラベルで制御
+- 本番デプロイは tagpr が `gh workflow run deploy-prd.yml` でトリガー

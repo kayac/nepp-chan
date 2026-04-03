@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Thread } from "~/components/assistant-ui/Thread";
 import { LoadingDots } from "~/components/ui/Loading";
 import { useAdminUser } from "~/hooks/useAdminUser";
+import { useAnonymousSession } from "~/hooks/useAnonymousSession";
 import {
   threadKeys,
   useCreateThread,
@@ -56,6 +57,7 @@ export const ChatPage = () => {
   const resourceId = useMemo(() => getResourceId(), []);
   const { data: adminUser, isLoading: isAdminLoading } = useAdminUser();
   const isAdmin = !!adminUser;
+  const { isReady: isSessionReady } = useAnonymousSession();
 
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -64,12 +66,11 @@ export const ChatPage = () => {
   const hasInitialized = useRef(false);
   const isFirstVisit = useRef(false);
 
-  const { data: threadsData, isSuccess: threadsLoaded } =
-    useThreads(resourceId);
+  const { data: threadsData, isSuccess: threadsLoaded } = useThreads();
   const threads = threadsData?.threads ?? [];
 
-  const createThreadMutation = useCreateThread(resourceId);
-  const deleteThreadMutation = useDeleteThread(resourceId);
+  const createThreadMutation = useCreateThread();
+  const deleteThreadMutation = useDeleteThread();
 
   const { data: messagesData, isLoading: messagesLoading } = useQuery({
     queryKey: threadKeys.messages(currentThreadId ?? ""),
@@ -155,7 +156,7 @@ export const ChatPage = () => {
     }
   }, [threadsLoaded, threads.length, currentThreadId, handleNewThread]);
 
-  if (isAdminLoading) {
+  if (isAdminLoading || !isSessionReady) {
     return null;
   }
 

@@ -6,7 +6,12 @@ import { hashPassword, verifyPassword } from "~/lib/password";
 import type { AuthVariables } from "~/middleware/auth";
 import { adminInvitationRepository } from "~/repository/admin-invitation-repository";
 import { adminUserRepository } from "~/repository/admin-user-repository";
+import { anonymousSessionRepository } from "~/repository/anonymous-session-repository";
 import { AdminUserSchema, adminRoleSchema } from "~/schemas/auth-schema";
+import {
+  generateAnonymousToken,
+  isValidUuidV4,
+} from "~/services/auth/anonymous-session";
 import { generateAccessToken } from "~/services/auth/token";
 
 export const authRoutes = new OpenAPIHono<{
@@ -218,4 +223,72 @@ const logoutRoute = createRoute({
 
 authRoutes.openapi(logoutRoute, async (c) => {
   return c.json({ message: "ログアウトしました" }, 200);
+});
+
+// --- Anonymous Session ---
+
+const anonymousSessionRoute = createRoute({
+  method: "post",
+  path: "/anonymous-session",
+  tags: ["Auth"],
+  summary: "匿名セッショントークン取得",
+  description:
+    "一般ユーザー向けの匿名セッショントークンを発行する。resourceId を指定しない場合はサーバーで生成する。",
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            resourceId: z
+              .string()
+              .optional()
+              .describe("既存の resourceId（UUID v4 形式）"),
+          }),
+        },
+      },
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      description: "トークン発行成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            token: z.string(),
+            resourceId: z.string(),
+          }),
+        },
+      },
+    },
+    400: errorResponse(400),
+    409: errorResponse(409),
+  },
+});
+
+authRoutes.openapi(anonymousSessionRoute, async (c) => {
+  const { resourceId: providedId } = c.req.valid("json");
+
+  const resourceId = providedId || crypto.randomUUID();
+
+  if (!isValidUuidV4(resourceId)) {
+    throw new HTTPException(400, {
+      message: "resourceId は UUID v4 形式で指定してください",
+    });
+  }
+
+  const existing = await anonymousSessionRepository.findByResourceId(
+    c.env.DB,
+    resourceId,
+  );
+  if (existing) {
+    throw new HTTPException(409, {
+      message: "この resourceId は既に使用されています",
+    });
+  }
+
+  await anonymousSessionRepository.create(c.env.DB, resourceId);
+  const token = await generateAnonymousToken(resourceId, c.env.JWT_SECRET);
+
+  return c.json({ token, resourceId }, 200);
 });
