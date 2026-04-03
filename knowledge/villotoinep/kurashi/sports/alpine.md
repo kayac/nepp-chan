@@ -5,6 +5,7 @@ subcategory: sports
 date: '2026-03-18'
 date_type: observed
 contact: 教育委員会 生涯学習係
+url: 'https://www.vill.otoineppu.hokkaido.jp/kurashi/sports/alpine/index.html'
 ---
 # アルペンスキー
 

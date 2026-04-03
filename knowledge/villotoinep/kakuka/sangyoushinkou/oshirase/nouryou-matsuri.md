@@ -5,6 +5,7 @@ subcategory: 産業振興課
 date: '2026-03-18'
 date_type: observed
 contact: 産業振興室
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/oshirase/2025-0725-1501-20.html'
 ---
 # 第3回ふるさと納涼まつりについて
 

@@ -5,6 +5,7 @@ subcategory: 産業振興課
 date: '2025-09-01'
 date_type: exact
 contact: 経済課産業振興室
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/oshirase/2025-1117-1102-20.html'
 ---
 # Jクレジット制度プロジェクト登録のお知らせ 修正について
 

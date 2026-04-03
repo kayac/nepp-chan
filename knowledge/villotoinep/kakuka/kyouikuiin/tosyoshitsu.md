@@ -4,6 +4,7 @@ category: 各課案内
 subcategory: 教育委員会
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/kyouikuiin/oshirase/2021-0531-1931-21.html'
 ---
 # 音威子府村公民館図書室
 

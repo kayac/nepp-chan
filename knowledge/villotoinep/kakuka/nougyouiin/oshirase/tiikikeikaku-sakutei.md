@@ -5,6 +5,7 @@ subcategory: 農業委員会
 date: '2025-03-31'
 date_type: exact
 contact: 農業委員会
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/nougyouiin/oshirase/2025-0331-1604-20.html'
 ---
 # 地域計画の策定について
 

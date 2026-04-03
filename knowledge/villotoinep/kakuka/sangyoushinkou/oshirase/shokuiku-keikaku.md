@@ -3,6 +3,7 @@ title: 第3期音威子府村食育推進計画の制定について
 category: 各課案内
 subcategory: 産業振興課
 date_type: evergreen
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/oshirase/2015-0311-0841-20.html'
 ---
 # 第3期音威子府村食育推進計画の制定について
 

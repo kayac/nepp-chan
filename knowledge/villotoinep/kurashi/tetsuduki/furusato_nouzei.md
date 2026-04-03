@@ -4,6 +4,7 @@ category: 住民生活
 subcategory: 手続き
 date_type: observed
 contact: 総務課
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/oshirase/202306_onseneki.html'
 ---
 # ふるさと納税制度について
 

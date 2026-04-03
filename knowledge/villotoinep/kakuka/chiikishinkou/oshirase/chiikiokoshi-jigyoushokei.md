@@ -5,6 +5,7 @@ subcategory: 地域振興課
 date: '2025-11-25'
 date_type: exact
 contact: 総務課地域振興室
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/oshirase/chiikiokoshi_jigyoushokei.html'
 ---
 # 地域おこし協力隊（事業所雇用型隊員：事業承継）募集！
 

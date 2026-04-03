@@ -4,6 +4,7 @@ category: 施設案内
 date: '2026-03-18'
 date_type: observed
 contact: 音威子府村立診療所
+url: 'https://www.vill.otoineppu.hokkaido.jp/shisetsu/hokenfukushi_center.html'
 ---
 # 音威子府村立診療所
 

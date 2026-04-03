@@ -5,6 +5,7 @@ subcategory: 健康・福祉
 date: '2025-04-01'
 date_type: estimated
 contact: 保健推進係
+url: 'https://www.vill.otoineppu.hokkaido.jp/kurashi/kenkou_fukushi/nyuuyouji1.html'
 ---
 # 乳幼児医療費の助成
 

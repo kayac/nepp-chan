@@ -4,6 +4,7 @@ category: 各課案内
 subcategory: 住民生活課
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/oshirase/2024-08.html'
 ---
 # 蛾（マイマイガ・クスサン）の大量発生について
 

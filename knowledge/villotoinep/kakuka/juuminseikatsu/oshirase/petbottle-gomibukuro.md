@@ -5,6 +5,7 @@ subcategory: 住民生活課
 date: '2025-01-10'
 date_type: exact
 contact: 住民課住民生活室 生活環境係
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/oshirase/2024-1213-1008-18.html'
 ---
 # ペットボトル用ごみ袋の変更について（令和7年1月10日収集より開始）
 

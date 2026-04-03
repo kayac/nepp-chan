@@ -3,6 +3,7 @@ title: 高齢者等支援住宅／地域交流センター
 category: 施設案内
 date_type: observed
 contact: 住民課保健福祉室
+url: 'https://www.vill.otoineppu.hokkaido.jp/shisetsu/seikatsufukushi_center.html'
 ---
 # 高齢者等支援住宅／地域交流センター
 

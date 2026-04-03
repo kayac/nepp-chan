@@ -4,6 +4,7 @@ category: 各課案内
 subcategory: 地域振興課
 date_type: evergreen
 contact: 地域振興室
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/oshirase/2025-0619-1825-16.html'
 ---
 # 村民トレーディングカードを作ろう！外部人材伴走インターン実施！
 

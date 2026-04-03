@@ -4,6 +4,7 @@ category: 産業
 date: '2019-04-01'
 date_type: exact
 contact: 経済課産業振興室 林政係
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/oshirase/2021-0927-1522-20.html'
 ---
 # 林地台帳制度について
 

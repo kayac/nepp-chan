@@ -5,6 +5,7 @@ subcategory: 産業振興課
 date: '2024-05-01'
 date_type: exact
 contact: 経済課産業振興室 商工観光労働係
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/oshirase/2024-0507-1503-14.html'
 ---
 # 地域バス
 

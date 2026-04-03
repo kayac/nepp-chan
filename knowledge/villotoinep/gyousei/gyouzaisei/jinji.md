@@ -3,6 +3,7 @@ title: 人事行政の運営等の状況報告
 category: 行政
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/gyousei/gyouzaisei/h17.html'
 ---
 # 人事行政の運営等の状況報告
 

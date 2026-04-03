@@ -5,6 +5,7 @@ subcategory: 総務財政課
 date: '2025-04-01'
 date_type: estimated
 contact: 総務課総務財政室 財政管理係
+url: 'https://www.vill.otoineppu.hokkaido.jp/gyousei/nyusatsu/nyusatsuuketuke.html'
 ---
 # 入札参加資格申請書の受付について（HP更新）
 

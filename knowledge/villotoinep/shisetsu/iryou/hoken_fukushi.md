@@ -4,6 +4,7 @@ category: 施設案内
 date: '2026-03-18'
 date_type: observed
 contact: 住民課保健福祉室
+url: 'https://www.vill.otoineppu.hokkaido.jp/shisetsu/hokenfukushi_center.html'
 ---
 # 音威子府村保健福祉センター（在宅介護支援センター・診療所）
 

@@ -3,6 +3,7 @@ title: 高橋昭五郎 彫刻の館
 category: 施設案内
 date: '2024-04-26'
 date_type: exact
+url: 'https://www.vill.otoineppu.hokkaido.jp/shisetsu/choukokunoyakata/index.html'
 ---
 # 高橋昭五郎 彫刻の館
 

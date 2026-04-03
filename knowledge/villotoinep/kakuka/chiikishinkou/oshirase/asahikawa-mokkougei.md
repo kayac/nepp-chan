@@ -4,6 +4,7 @@ category: 各課案内
 subcategory: 地域振興課
 date_type: evergreen
 contact: 地域振興室
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/oshirase/2025-0708-1815-16.html'
 ---
 # 旭川市との「木工芸の継承普及に向けた連携」に関する協定の締結について
 

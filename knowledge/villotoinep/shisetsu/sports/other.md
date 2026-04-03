@@ -3,6 +3,7 @@ title: その他スポーツ施設
 category: 施設案内
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/shisetsu/index.html'
 ---
 # その他スポーツ施設
 

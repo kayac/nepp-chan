@@ -5,6 +5,7 @@ subcategory: 手続き
 date: '2014-05-01'
 date_type: exact
 contact: 総務課総務財政室
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/soumuzaisei/2014-0501-1412-14.html'
 ---
 # 音威子府村村有財産使用申請について
 

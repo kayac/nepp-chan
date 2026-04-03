@@ -4,6 +4,7 @@ category: 住民生活
 subcategory: sports
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kurashi/sports/cross_country/index.html'
 ---
 # クロスカントリースキー
 

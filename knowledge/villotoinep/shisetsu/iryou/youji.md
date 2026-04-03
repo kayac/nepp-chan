@@ -2,6 +2,7 @@
 title: 幼児センター
 category: 施設案内
 date_type: evergreen
+url: 'https://www.vill.otoineppu.hokkaido.jp/shisetsu/index.html'
 ---
 # 幼児センター
 

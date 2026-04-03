@@ -3,6 +3,7 @@ title: 森林・林業の諸制度
 category: 産業
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/oshirase/2021-0927-1351-20.html'
 ---
 # 森林・林業の諸制度
 

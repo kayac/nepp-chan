@@ -3,6 +3,7 @@ title: 音威子府村公民館
 category: 施設案内
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/kyouikuiin/2020-0424-1654-21.html'
 ---
 # 音威子府村公民館
 

@@ -4,6 +4,7 @@ category: 各課案内
 subcategory: 住民生活課
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/oshirase/2023-0929.html'
 ---
 # （お知らせ）『（仮称）名寄地区一般廃棄物中間処理施設建設工事請負契約』の締結について
 

@@ -4,6 +4,7 @@ category: 住民生活
 subcategory: 保険・年金
 date_type: observed
 contact: 住民課住民生活室
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/2013-1128-1028-18.html'
 ---
 # 各種年金手続き
 

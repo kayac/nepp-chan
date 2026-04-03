@@ -5,6 +5,7 @@ subcategory: 保健福祉課
 date: '2025-03-31'
 date_type: exact
 contact: 保健福祉室
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/hokenfukushi/oshirase/2025-0401-0917-18.html'
 ---
 # 「地域おこし協力隊」（地域福祉隊員）募集について
 

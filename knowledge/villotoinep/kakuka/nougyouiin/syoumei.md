@@ -9,7 +9,13 @@ url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/nougyouiin/syoumei.html'
 ---
 # 各種証明
 
-農業委員会が発行する各種証明書に関する情報です。
+## 農地の賃貸・売買
+
+農地の賃貸・売買手続きには「農用地利用集積計画作成申出書」の提出が必要です。
+
+- [農用地利用集積計画作成申出書（PDF）](https://www.vill.otoineppu.hokkaido.jp/kakuka/nougyouiin/files/syuusekikeikaku.pdf)
+
+※農地の賃貸・売買手続きには時間を要しますので、早めに申出を行ってください。
 
 ---
 

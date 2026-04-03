@@ -5,6 +5,7 @@ subcategory: 産業振興課
 date: '2024-12-19'
 date_type: exact
 contact: 経済課産業振興室 商工観光労働係
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/oshirase/2023-0306-1457-20.html'
 ---
 # 【12月19日】音威富士スキー場 オープンのお知らせ
 

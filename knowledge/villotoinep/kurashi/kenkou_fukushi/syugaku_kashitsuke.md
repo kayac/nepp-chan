@@ -4,6 +4,7 @@ category: 住民生活
 subcategory: 健康・福祉
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kurashi/kenkou_fukushi/2016syougakukinn.html'
 ---
 # 保健師等修学資金貸付制度
 

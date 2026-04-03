@@ -4,6 +4,7 @@ category: 産業
 date: '2026-03-18'
 date_type: observed
 contact: 経済課産業振興室 林政係
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/oshirase/2022-0628-1439-20.html'
 ---
 # 音威子府村森林整備計画
 

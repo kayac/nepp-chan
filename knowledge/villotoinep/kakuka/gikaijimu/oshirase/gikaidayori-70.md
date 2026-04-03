@@ -5,6 +5,7 @@ subcategory: 議会事務局
 date: '2025-09-12'
 date_type: exact
 contact: 議会事務局
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/gikaijimu/oshirase/2025-0916-1116-25.html'
 ---
 # おといねっぷ議会だより 第70号
 

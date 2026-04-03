@@ -2,6 +2,7 @@
 title: 地域おこし協力隊
 category: 行政
 date_type: evergreen
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/oshirase/202404_moku01.html'
 ---
 # 地域おこし協力隊
 

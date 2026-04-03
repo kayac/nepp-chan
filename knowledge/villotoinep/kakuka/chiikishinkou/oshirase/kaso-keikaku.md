@@ -5,6 +5,7 @@ subcategory: 地域振興課
 date: '2026-03-18'
 date_type: observed
 contact: 地域振興室
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/oshirase/2021-0916-1335-16.html'
 ---
 # 音威子府村過疎地域持続的発展市町村計画を策定しました
 

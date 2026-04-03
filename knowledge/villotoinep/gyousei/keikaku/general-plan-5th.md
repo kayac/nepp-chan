@@ -2,6 +2,7 @@
 title: 第5期音威子府村総合計画
 category: 行政
 date_type: evergreen
+url: 'https://www.vill.otoineppu.hokkaido.jp/gyousei/keikaku/general-plan.html'
 ---
 # 第5期音威子府村総合計画
 

@@ -4,6 +4,7 @@ category: 各課案内
 subcategory: 産業振興課
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/syoukougyou/skizyou.html'
 ---
 # 音威富士スキー場
 

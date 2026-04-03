@@ -5,6 +5,7 @@ subcategory: 住民生活課
 date: '2021-05-17'
 date_type: exact
 contact: 住民課住民生活室 生活環境係
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/oshirase/gomi_jisyuku.html'
 ---
 # 新型コロナウイルス緊急事態宣言によるごみの自己搬入自粛のお願い
 

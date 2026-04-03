@@ -4,6 +4,7 @@ category: 産業
 date: '2026-03-18'
 date_type: observed
 contact: 経済課産業振興室 農政係
+url: 'https://www.vill.otoineppu.hokkaido.jp/sangyou/nougyou/index.html'
 ---
 # 農業
 
@@ -24,8 +25,6 @@ contact: 経済課産業振興室 農政係
 - FAX: 01656-5-3837
 
 ---
-
-参照: https://www.vill.otoineppu.hokkaido.jp/sangyou/nougyou/index.html
 
 [← 産業情報に戻る](index.md)
 

@@ -3,6 +3,7 @@ title: 森林の土地所有者届出制度
 category: 産業
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/oshirase/2021-0927-1327-20.html'
 ---
 # 森林の土地所有者届出制度
 

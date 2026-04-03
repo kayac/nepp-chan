@@ -4,6 +4,7 @@ category: 住民生活
 subcategory: 保険・年金
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/kokuho.html'
 ---
 # 国民健康保険について
 

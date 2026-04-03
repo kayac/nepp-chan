@@ -5,6 +5,7 @@ subcategory: 住民生活課
 date: '2026-03-18'
 date_type: observed
 contact: 住民課住民生活室 生活環境係
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/oshirase/2021-0721-1632-18.html'
 ---
 # 新型コロナウイルス検査用試験キットの処理方法について
 

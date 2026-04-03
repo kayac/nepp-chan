@@ -4,6 +4,7 @@ category: 住民生活
 subcategory: 手続き
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/kokudoriyou_todokede.html'
 ---
 # 国土利用計画法の届出
 

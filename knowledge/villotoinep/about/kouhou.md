@@ -3,6 +3,7 @@ title: 広報おといねっぷ アーカイブ (2020-2026)
 category: 村の概要
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/oshirase/kouhou.html'
 ---
 # 広報おといねっぷ アーカイブ (2020-2026)
 音威子府村の広報誌「広報おといねっぷ」のアーカイブです。

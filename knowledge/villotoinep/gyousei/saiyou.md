@@ -4,6 +4,7 @@ category: 行政
 date: '2026-04-01'
 date_type: exact
 contact: 総務課総務財政室
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/soumuzaisei/oshirase/2025-0701-1217-14.html'
 ---
 # 職員採用情報
 

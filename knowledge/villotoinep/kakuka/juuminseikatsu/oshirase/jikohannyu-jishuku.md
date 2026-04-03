@@ -5,6 +5,7 @@ subcategory: 住民生活課
 date: '2022-03-07'
 date_type: exact
 contact: 住民課住民生活室 生活環境係
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/oshirase/2022-0126-1301-18.html'
 ---
 # （3月7日更新）名寄地区広域最終処分場及び炭化センターへの自己搬入の自粛に関するご協力のお願いについて
 

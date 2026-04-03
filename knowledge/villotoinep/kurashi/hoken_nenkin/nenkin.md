@@ -4,6 +4,7 @@ category: 住民生活
 subcategory: 保険・年金
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/juuminseikatsu/2013-1108-1430-18.html'
 ---
 # 国民年金について
 

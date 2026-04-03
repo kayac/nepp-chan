@@ -4,6 +4,7 @@ category: 施設案内
 date: '2026-03-18'
 date_type: observed
 contact: 総務課地域振興室
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/chiikishinkou/oshirase/tenpokusen.html'
 ---
 # 天北線資料室
 

@@ -3,6 +3,7 @@ title: 山村・都市交流センター 木遊館（もくゆうかん）
 category: 施設案内
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/shisetsu/mokuyukan.html'
 ---
 # 山村・都市交流センター 木遊館（もくゆうかん）
 

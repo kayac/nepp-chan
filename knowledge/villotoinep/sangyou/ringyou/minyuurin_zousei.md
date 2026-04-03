@@ -3,6 +3,7 @@ title: 音威子府村民有林造成事業について
 category: 産業
 date: '2026-03-18'
 date_type: observed
+url: 'https://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/oshirase/2021-0917-1538-20.html'
 ---
 # 音威子府村民有林造成事業について
 
