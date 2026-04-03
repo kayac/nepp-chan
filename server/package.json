@@ -28,7 +28,7 @@
     "@ai-sdk/google": "^2.0.46",
     "@ai-sdk/openai": "^3.0.48",
     "@hono/swagger-ui": "^0.6.1",
-    "@hono/zod-openapi": "^1.1.5",
+    "@hono/zod-openapi": "^1.2.4",
     "@line/bot-sdk": "^10.6.0",
     "@mastra/ai-sdk": "1.1.2",
     "@mastra/cloudflare-d1": "1.0.1",
@@ -45,7 +45,7 @@
     "drizzle-orm": "^0.45.1",
     "glob": "^13.0.6",
     "gray-matter": "^4.0.3",
-    "hono": "^4.12.3",
+    "hono": "^4.12.10",
     "zod": "^4.3.6"
   },
   "devDependencies": {
