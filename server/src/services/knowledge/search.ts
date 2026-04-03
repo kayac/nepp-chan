@@ -18,6 +18,7 @@ export type KnowledgeResult = {
   title?: string;
   section?: string;
   subsection?: string;
+  url?: string;
 };
 
 export type SearchOutput = {
@@ -68,6 +69,7 @@ export const searchKnowledge = async (
           title: metadata?.title as string | undefined,
           section: metadata?.section as string | undefined,
           subsection: metadata?.subsection as string | undefined,
+          url: metadata?.url as string | undefined,
         },
       };
     });
@@ -98,6 +100,7 @@ export const searchKnowledge = async (
       title: r.result.metadata?.title as string | undefined,
       section: r.result.metadata?.section as string | undefined,
       subsection: r.result.metadata?.subsection as string | undefined,
+      url: r.result.metadata?.url as string | undefined,
     }));
 
     return {

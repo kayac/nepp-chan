@@ -25,6 +25,7 @@ export const knowledgeSearchTool = createTool({
         title: z.string().optional(),
         section: z.string().optional(),
         subsection: z.string().optional(),
+        url: z.string().optional(),
       }),
     ),
     error: z.string().optional(),
