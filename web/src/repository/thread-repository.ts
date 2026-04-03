@@ -1,20 +1,16 @@
 import { client } from "~/lib/api/client";
 
-export const fetchThreads = async (
-  resourceId: string,
-  page = 0,
-  perPage = 20,
-) => {
+export const fetchThreads = async (page = 0, perPage = 20) => {
   const { data, error } = await client.GET("/threads", {
-    params: { query: { resourceId, page, perPage } },
+    params: { query: { page, perPage } },
   });
   if (error) throw error;
   return data;
 };
 
-export const createThread = async (resourceId: string, title?: string) => {
+export const createThread = async (title?: string) => {
   const { data, error } = await client.POST("/threads", {
-    body: { resourceId, title },
+    body: { title },
   });
   if (error) throw error;
   return data;

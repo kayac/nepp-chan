@@ -80,7 +80,6 @@ export interface paths {
                             /** Format: date */
                             createdAt?: string | null;
                         };
-                        resourceId: string;
                         threadId: string;
                         /** @enum {string} */
                         intent?: "casual" | "normal" | "thinking";
@@ -191,12 +190,11 @@ export interface paths {
         };
         /**
          * スレッド一覧取得
-         * @description resourceId に紐づくスレッド一覧を取得
+         * @description セッションに紐づくスレッド一覧を取得
          */
         get: {
             parameters: {
-                query: {
-                    resourceId: string;
+                query?: {
                     page?: number | null;
                     perPage?: number;
                 };
@@ -247,7 +245,6 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        resourceId: string;
                         title?: string;
                         metadata?: {
                             [key: string]: unknown;
@@ -3854,6 +3851,83 @@ export interface paths {
                     content: {
                         "application/json": {
                             message: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/anonymous-session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 匿名セッショントークン取得
+         * @description 一般ユーザー向けの匿名セッショントークンを発行する。resourceId を指定しない場合はサーバーで生成する。
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description 既存の resourceId（UUID v4 形式） */
+                        resourceId?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description トークン発行成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            token: string;
+                            resourceId: string;
+                        };
+                    };
+                };
+                /** @description リクエストエラー */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが競合しています */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
                         };
                     };
                 };
