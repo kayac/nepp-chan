@@ -2,6 +2,11 @@
 
 ## [v0.4.3](https://github.com/kayac/nepp-chan/compare/v0.4.2...v0.4.3) - 2026-04-03
 - feat: URL正答率改善 + ナレッジデータ v5 by @vesperworks in https://github.com/kayac/nepp-chan/pull/423
+- fix(server): ペルソナ一括抽出で処理済みスレッドのスキップコストを削減 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/425
+- Release for v0.4.3 by @github-actions[bot] in https://github.com/kayac/nepp-chan/pull/424
+
+## [v0.4.3](https://github.com/kayac/nepp-chan/compare/v0.4.2...v0.4.3) - 2026-04-03
+- feat: URL正答率改善 + ナレッジデータ v5 by @vesperworks in https://github.com/kayac/nepp-chan/pull/423
 
 ## [v0.4.2](https://github.com/kayac/nepp-chan/compare/v0.4.1...v0.4.2) - 2026-04-03
 - feat: 匿名セッションによるresourceId所有権検証 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/419
