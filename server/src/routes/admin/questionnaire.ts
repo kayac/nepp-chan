@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 
+import { logger } from "~/lib/logger";
 import { errorResponse } from "~/lib/openapi-errors";
 import { type AuthVariables, requireAuth } from "~/middleware/auth";
 import { questionnaireRepository } from "~/repository/questionnaire-repository";
@@ -137,8 +138,9 @@ questionnaireAdminRoutes.openapi(createRoute_, async (c) => {
 
     return c.json(questionnaire, 201);
   } catch (error) {
+    logger.error("[Questionnaire] Failed to create questionnaire", error);
     throw new HTTPException(500, {
-      message: `アンケートの作成に失敗しました: ${error instanceof Error ? error.message : "Unknown error"}`,
+      message: "アンケートの作成に失敗しました",
     });
   }
 });
