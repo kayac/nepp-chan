@@ -1479,7 +1479,7 @@ const main = async () => {
     "nepp-chan": createNeppChanAgent({
       isAdmin: false,
       modelConfig: resolveModelTier({
-        intent: "normal",
+        intent: "thinking",
         platform: "web",
         isAdmin: false,
       }),

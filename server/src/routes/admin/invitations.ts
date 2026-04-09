@@ -1,7 +1,9 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 import { errorResponse } from "~/lib/openapi-errors";
-import { type AuthVariables, requireAuth } from "~/middleware/auth";
+import type { PrincipalVariables } from "~/lib/principal";
+import { requireAdminUser } from "~/lib/principal";
+import { requireAuth } from "~/middleware/auth";
 import { requireRole } from "~/middleware/require-role";
 import { adminInvitationRepository } from "~/repository/admin-invitation-repository";
 import { adminRoleSchema } from "~/schemas/auth-schema";
@@ -9,7 +11,7 @@ import { createInvitation } from "~/services/auth/invitation";
 
 export const invitationRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
-  Variables: AuthVariables;
+  Variables: Partial<PrincipalVariables>;
 }>();
 
 invitationRoutes.use("*", requireAuth);
@@ -110,7 +112,7 @@ const createInvitationRoute = createRoute({
 
 invitationRoutes.openapi(createInvitationRoute, async (c) => {
   const { username, role } = c.req.valid("json");
-  const adminUser = c.get("adminUser");
+  const adminUser = requireAdminUser(c.get("principal"));
 
   if (role !== "staff" && adminUser.role !== "super_admin") {
     throw new HTTPException(403, {

@@ -7,7 +7,12 @@ vi.mock("~/services/auth/token", () => ({
   verifyAccessToken: vi.fn(),
 }));
 
-const { resolveAuth, requireAuth } = await import("~/middleware/auth");
+vi.mock("~/services/auth/anonymous-session", () => ({
+  verifyAnonymousToken: vi.fn(),
+}));
+
+const { resolvePrincipal } = await import("~/middleware/resolve-principal");
+const { requireAuth } = await import("~/middleware/auth");
 const { requireRole } = await import("~/middleware/require-role");
 
 describe("requireRole ミドルウェア", () => {
@@ -28,11 +33,8 @@ describe("requireRole ミドルウェア", () => {
   });
 
   const createApp = (minRole: "super_admin" | "admin" | "staff") => {
-    const app = new Hono<{
-      Bindings: CloudflareBindings;
-      Variables: { adminUser?: ReturnType<typeof makeUser> };
-    }>();
-    app.use("*", resolveAuth);
+    const app = new Hono<{ Bindings: CloudflareBindings }>();
+    app.use("*", resolvePrincipal);
     app.use("*", requireAuth);
     app.use("*", requireRole(minRole));
     app.get("/test", (c) => c.json({ ok: true }));

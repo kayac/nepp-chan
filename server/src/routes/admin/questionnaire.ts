@@ -3,7 +3,10 @@ import { HTTPException } from "hono/http-exception";
 
 import { logger } from "~/lib/logger";
 import { errorResponse } from "~/lib/openapi-errors";
-import { type AuthVariables, requireAuth } from "~/middleware/auth";
+import type { PrincipalVariables } from "~/lib/principal";
+import { requireAdminUser } from "~/lib/principal";
+import { requireAuth } from "~/middleware/auth";
+import { requireRole } from "~/middleware/require-role";
 import { questionnaireRepository } from "~/repository/questionnaire-repository";
 import {
   createQuestionnaireSchema,
@@ -22,10 +25,11 @@ import { getQuestionnaireResults } from "~/services/questionnaire-response";
 
 export const questionnaireAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
-  Variables: AuthVariables;
+  Variables: Partial<PrincipalVariables>;
 }>();
 
 questionnaireAdminRoutes.use("*", requireAuth);
+questionnaireAdminRoutes.use("*", requireRole("staff"));
 
 // --- 一覧取得 ---
 
@@ -122,7 +126,7 @@ const createRoute_ = createRoute({
 
 questionnaireAdminRoutes.openapi(createRoute_, async (c) => {
   const body = c.req.valid("json");
-  const adminUser = c.get("adminUser");
+  const adminUser = requireAdminUser(c.get("principal"));
 
   try {
     const questionnaire = await createQuestionnaire(c.env, {

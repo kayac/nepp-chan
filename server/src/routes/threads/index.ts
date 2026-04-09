@@ -1,18 +1,19 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { convertMessages } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
-import { HTTPException } from "hono/http-exception";
 import { errorResponse } from "~/lib/openapi-errors";
+import type { PrincipalVariables } from "~/lib/principal";
+import { toResourceId } from "~/lib/principal";
 import { getStorage } from "~/lib/storage";
-import type { SessionVariables } from "~/middleware/resolve-session";
-import {
-  deleteThreadWithRelatedData,
-  verifyThreadOwnership,
-} from "~/services/thread";
+import { requireAuth } from "~/middleware/auth";
+import type { ThreadVariables } from "~/middleware/require-thread-access";
+import { requireThreadAccess } from "~/middleware/require-thread-access";
+import { deleteThreadWithRelatedData } from "~/services/thread";
+import { chatRoutes } from "./chat";
 
 export const threadsRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
-  Variables: Partial<SessionVariables>;
+  Variables: Partial<PrincipalVariables & ThreadVariables>;
 }>();
 
 const getMemory = async (db: D1Database) => {
@@ -35,7 +36,26 @@ const MessageSchema = z.object({
   parts: z.array(z.record(z.string(), z.unknown())),
 });
 
-// GET /threads - スレッド一覧取得
+const toThreadResponse = (t: {
+  id: string;
+  resourceId: string;
+  title?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  metadata?: Record<string, unknown> | null;
+}) => ({
+  id: t.id,
+  resourceId: t.resourceId,
+  title: t.title ?? null,
+  createdAt: t.createdAt.toISOString(),
+  updatedAt: t.updatedAt.toISOString(),
+  metadata: t.metadata ?? null,
+});
+
+threadsRoutes.use("*", requireAuth);
+threadsRoutes.use("/:threadId/*", requireThreadAccess);
+threadsRoutes.use("/:threadId", requireThreadAccess);
+
 const getThreadsRoute = createRoute({
   method: "get",
   path: "/",
@@ -68,31 +88,19 @@ const getThreadsRoute = createRoute({
 
 threadsRoutes.openapi(getThreadsRoute, async (c) => {
   const { page, perPage } = c.req.valid("query");
-  const sessionResourceId = c.get("sessionResourceId");
-  if (!sessionResourceId) {
-    throw new HTTPException(401, { message: "認証が必要です" });
-  }
-
+  const principal = c.get("principal")!;
   const memory = await getMemory(c.env.DB);
 
   const result = await memory.listThreads({
     filter: {
-      resourceId: sessionResourceId,
+      resourceId: toResourceId(principal),
     },
-
     page,
     perPage,
   });
 
   return c.json({
-    threads: result.threads.map((t) => ({
-      id: t.id,
-      resourceId: t.resourceId,
-      title: t.title ?? null,
-      createdAt: t.createdAt.toISOString(),
-      updatedAt: t.updatedAt.toISOString(),
-      metadata: t.metadata ?? null,
-    })),
+    threads: result.threads.map(toThreadResponse),
     hasMore: result.hasMore,
     total: result.total,
     page,
@@ -100,7 +108,6 @@ threadsRoutes.openapi(getThreadsRoute, async (c) => {
   });
 });
 
-// POST /threads - スレッド作成
 const createThreadRoute = createRoute({
   method: "post",
   path: "/",
@@ -134,33 +141,18 @@ const createThreadRoute = createRoute({
 
 threadsRoutes.openapi(createThreadRoute, async (c) => {
   const { title, metadata } = c.req.valid("json");
-  const sessionResourceId = c.get("sessionResourceId");
-  if (!sessionResourceId) {
-    throw new HTTPException(401, { message: "認証が必要です" });
-  }
-
+  const principal = c.get("principal")!;
   const memory = await getMemory(c.env.DB);
 
   const thread = await memory.createThread({
-    resourceId: sessionResourceId,
+    resourceId: toResourceId(principal),
     title,
     metadata,
   });
 
-  return c.json(
-    {
-      id: thread.id,
-      resourceId: thread.resourceId,
-      title: thread.title ?? null,
-      createdAt: thread.createdAt.toISOString(),
-      updatedAt: thread.updatedAt.toISOString(),
-      metadata: thread.metadata ?? null,
-    },
-    201,
-  );
+  return c.json(toThreadResponse(thread), 201);
 });
 
-// GET /threads/{threadId} - スレッド詳細取得
 const getThreadRoute = createRoute({
   method: "get",
   path: "/{threadId}",
@@ -186,28 +178,9 @@ const getThreadRoute = createRoute({
 });
 
 threadsRoutes.openapi(getThreadRoute, async (c) => {
-  const { threadId } = c.req.valid("param");
-
-  const thread = await verifyThreadOwnership(
-    threadId,
-    c.get("sessionResourceId"),
-    c.env.DB,
-  );
-
-  return c.json(
-    {
-      id: thread.id,
-      resourceId: thread.resourceId,
-      title: thread.title ?? null,
-      createdAt: thread.createdAt.toISOString(),
-      updatedAt: thread.updatedAt.toISOString(),
-      metadata: thread.metadata ?? null,
-    },
-    200,
-  );
+  return c.json(toThreadResponse(c.get("thread")!), 200);
 });
 
-// GET /threads/{threadId}/messages - メッセージ履歴取得
 const getMessagesRoute = createRoute({
   method: "get",
   path: "/{threadId}/messages",
@@ -237,8 +210,6 @@ const getMessagesRoute = createRoute({
 threadsRoutes.openapi(getMessagesRoute, async (c) => {
   const { threadId } = c.req.valid("param");
 
-  await verifyThreadOwnership(threadId, c.get("sessionResourceId"), c.env.DB);
-
   const memory = await getMemory(c.env.DB);
 
   const result = await memory.recall({
@@ -259,7 +230,6 @@ threadsRoutes.openapi(getMessagesRoute, async (c) => {
   return c.json({ messages }, 200);
 });
 
-// DELETE /threads/{threadId} - スレッド削除
 const deleteThreadRoute = createRoute({
   method: "delete",
   path: "/{threadId}",
@@ -289,8 +259,8 @@ const deleteThreadRoute = createRoute({
 threadsRoutes.openapi(deleteThreadRoute, async (c) => {
   const { threadId } = c.req.valid("param");
 
-  await verifyThreadOwnership(threadId, c.get("sessionResourceId"), c.env.DB);
-
   await deleteThreadWithRelatedData(threadId, c.env.DB);
   return c.json({ message: "スレッドを削除しました" }, 200);
 });
+
+threadsRoutes.route("/", chatRoutes);

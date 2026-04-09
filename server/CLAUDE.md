@@ -20,6 +20,7 @@ server/src/
 ├── index.ts                 # エントリーポイント・Hono アプリケーション
 ├── middleware/              # Hono ミドルウェア
 ├── routes/                  # API ルート定義
+│   ├── threads/             # スレッド・チャット API
 │   └── admin/               # 管理 API
 ├── schemas/                 # 共有 Zod スキーマ（ツール・ルート共通）
 ├── mastra/                  # Mastra プリミティブ
@@ -44,10 +45,10 @@ server/src/
 | パス                               | メソッド | 説明                           |
 | ---------------------------------- | -------- | ------------------------------ |
 | `/health`                          | GET      | ヘルスチェック                 |
-| `/chat`                            | POST     | チャット（ストリーミング）     |
 | `/threads`                         | GET/POST | スレッド一覧・作成             |
 | `/threads/:threadId`               | GET/DELETE | スレッド詳細・削除           |
 | `/threads/:threadId/messages`      | GET      | メッセージ履歴                 |
+| `/threads/:threadId/chat`          | POST     | チャット（ストリーミング）     |
 | `/feedback`                        | POST     | フィードバック送信             |
 | `/admin/knowledge/sync`            | POST     | ナレッジ同期                   |
 | `/admin/knowledge`                 | DELETE   | ナレッジ削除                   |
@@ -85,7 +86,7 @@ server/src/
 ### nep-chan（動的生成）
 
 メインキャラクター「ねっぷちゃん」は `createNeppChanAgent({ isAdmin, platform, modelConfig })` で動的に生成される。
-`modelConfig` は `resolveModelTier()` で Intent（casual/normal/thinking）× プラットフォーム × 管理者フラグから決定する。
+`modelConfig` は `resolveModelTier()` で Intent（casual/thinking）× プラットフォーム × 管理者フラグから決定する。
 
 - **一般ユーザー**: 基本機能のみ（天気、Web検索、ナレッジ、緊急報告）
 - **管理者**: 基本機能 + 管理者専用エージェント（emergency, feedback, persona-analyst）
@@ -216,10 +217,10 @@ throw new HTTPException(404, { message: "Not found" });
 
 - エラー: `throw new HTTPException(code, { message })` でスロー（グローバルエラーハンドラーが `{ error: { code, message } }` 形式に変換）
 - OpenAPI エラーレスポンス: `lib/openapi-errors.ts` の `errorResponse(code)` を使用
-- 管理者認証: `requireAuth` ミドルウェアを適用（`Authorization: Bearer` → `adminUser`）
+- 認証主体: `resolvePrincipal` がグローバルに適用（`Authorization: Bearer` → `principal`）
+- 管理者認証: `requireAuth` ミドルウェアで `principal` の存在を保証
 - ロール制限: `requireRole("admin")` 等を `requireAuth` の後に適用
-- セッション認証: `resolveSession` がグローバルに適用（`X-Session-Token` → `sessionResourceId`）
-- スレッド所有権: `verifyThreadOwnership(threadId, sessionResourceId, db)` を各ハンドラーで呼ぶ
+- スレッドアクセス: `requireThreadAccess` ミドルウェアで所有権検証（`principal` + `threadId` → `thread`）
 - 共通スキーマ: `schemas/` から import（インライン定義を避ける）
 
 ## データベーステーブル

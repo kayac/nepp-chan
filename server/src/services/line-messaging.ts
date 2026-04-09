@@ -26,10 +26,10 @@ export const generateReply = async (params: {
     env: params.env,
   });
 
-  // Intent 分類でモデルティアを決定（非テキストメッセージは normal 直行）
+  // Intent 分類でモデルティアを決定（非テキストメッセージは casual 直行）
   const intent = params.userMessage
     ? await classifyIntent(params.userMessage)
-    : "normal";
+    : "casual";
   const modelConfig = resolveModelTier({
     intent,
     platform: "line",

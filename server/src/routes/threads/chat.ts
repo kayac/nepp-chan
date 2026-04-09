@@ -5,12 +5,17 @@ import { createUIMessageStreamResponse, type UIMessage } from "ai";
 import { classifyIntent } from "~/lib/classify-intent";
 import { resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
+import type { PrincipalVariables } from "~/lib/principal";
+import { requireAdminUser } from "~/lib/principal";
 import { getStorage } from "~/lib/storage";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
-import type { AuthVariables } from "~/middleware/auth";
-import type { SessionVariables } from "~/middleware/resolve-session";
-import { verifyThreadOwnership } from "~/services/thread";
+import type { ThreadVariables } from "~/middleware/require-thread-access";
+
+export const chatRoutes = new OpenAPIHono<{
+  Bindings: CloudflareBindings;
+  Variables: Partial<PrincipalVariables & ThreadVariables>;
+}>();
 
 const ChatSendRequestSchema = z.object({
   message: z.object({
@@ -19,23 +24,20 @@ const ChatSendRequestSchema = z.object({
     parts: z.array(z.looseObject({ type: z.string() })),
     createdAt: z.coerce.date().optional(),
   }),
-  threadId: z.string().min(1, "threadId is required"),
-  intent: z.enum(["casual", "normal", "thinking"]).optional(),
+  intent: z.enum(["casual", "thinking"]).optional(),
 });
-
-export const chatRoutes = new OpenAPIHono<{
-  Bindings: CloudflareBindings;
-  Variables: Partial<AuthVariables & SessionVariables>;
-}>();
 
 const chatRoute = createRoute({
   method: "post",
-  path: "/",
+  path: "/{threadId}/chat",
   summary: "ねっぷちゃんとおしゃべり",
   description:
     "ねっぷちゃん（音威子府村のAIキャラクター）にメッセージを送信し、ストリーミングレスポンスを受け取る",
   tags: ["Chat"],
   request: {
+    params: z.object({
+      threadId: z.string().min(1),
+    }),
     body: {
       content: {
         "application/json": {
@@ -58,21 +60,18 @@ const chatRoute = createRoute({
 });
 
 chatRoutes.openapi(chatRoute, async (c) => {
-  const { message, threadId, intent: fixedIntent } = c.req.valid("json");
-
-  const thread = await verifyThreadOwnership(
-    threadId,
-    c.get("sessionResourceId"),
-    c.env.DB,
-  );
+  const { threadId } = c.req.valid("param");
+  const { message, intent: fixedIntent } = c.req.valid("json");
+  const thread = c.get("thread")!;
+  const principal = c.get("principal")!;
 
   logger.info(`[Chat] request received`, {
     threadId,
     resourceId: thread.resourceId,
   });
 
-  const adminUser = c.get("adminUser");
-  const isAdmin = !!adminUser;
+  const isAdmin = principal.type === "admin";
+  const adminUser = isAdmin ? requireAdminUser(principal) : undefined;
 
   const storage = await getStorage(c.env.DB);
 

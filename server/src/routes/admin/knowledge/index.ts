@@ -1,6 +1,6 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-
-import { type AuthVariables, requireAuth } from "~/middleware/auth";
+import type { PrincipalVariables } from "~/lib/principal";
+import { requireAuth } from "~/middleware/auth";
 import { requireRole } from "~/middleware/require-role";
 import { knowledgeConvertRoutes } from "./convert";
 import { knowledgeFilesRoutes } from "./files";
@@ -8,7 +8,7 @@ import { knowledgeSyncRoutes } from "./sync";
 
 export const knowledgeAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
-  Variables: AuthVariables;
+  Variables: Partial<PrincipalVariables>;
 }>();
 
 knowledgeAdminRoutes.use("*", requireAuth);
