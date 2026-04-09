@@ -8,15 +8,13 @@ import { getSentryOptions } from "~/lib/sentry";
 import {
   corsMiddleware,
   errorHandler,
-  resolveAuth,
-  resolveSession,
+  resolvePrincipal,
   securityHeaders,
 } from "~/middleware";
 import {
   authRoutes,
   broadcastAdminRoutes,
   broadcastMediaRoutes,
-  chatRoutes,
   emergencyAdminRoutes,
   feedbackAdminRoutes,
   feedbackRoutes,
@@ -34,13 +32,11 @@ const app = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
 
 app.use("*", corsMiddleware);
 app.use("*", securityHeaders);
-app.use("*", resolveAuth);
-app.use("*", resolveSession);
+app.use("*", resolvePrincipal);
 
 app.onError(errorHandler);
 
 app.route("/health", healthRoutes);
-app.route("/chat", chatRoutes);
 app.route("/feedback", feedbackRoutes);
 app.route("/threads", threadsRoutes);
 app.route("/admin/broadcast", broadcastAdminRoutes);
