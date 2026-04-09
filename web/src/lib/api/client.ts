@@ -1,7 +1,6 @@
 import * as Sentry from "@sentry/react";
 import createClient from "openapi-fetch";
-import { getAuthToken } from "~/lib/auth-token";
-import { getSessionToken } from "~/lib/session-token";
+import { getBearerToken } from "~/lib/auth-token";
 import type { paths } from "~/types/api";
 
 class ApiError extends Error {
@@ -19,14 +18,9 @@ export const client = createClient<paths>({ baseUrl: API_BASE });
 
 client.use({
   async onRequest({ request }) {
-    const authToken = getAuthToken();
-    if (authToken) {
-      request.headers.set("Authorization", `Bearer ${authToken}`);
-    }
-
-    const sessionToken = getSessionToken();
-    if (sessionToken) {
-      request.headers.set("X-Session-Token", sessionToken);
+    const token = getBearerToken();
+    if (token) {
+      request.headers.set("Authorization", `Bearer ${token}`);
     }
     return request;
   },

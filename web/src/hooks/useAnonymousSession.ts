@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { API_BASE } from "~/lib/api/client";
+import { getSessionToken, setSessionToken } from "~/lib/auth-token";
 import { getResourceId } from "~/lib/resource";
-import { getSessionToken, setSessionToken } from "~/lib/session-token";
 
 type SessionState = {
   isReady: boolean;

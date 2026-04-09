@@ -7,8 +7,7 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { ToolUIRegistry } from "~/components/assistant-ui/tool-uis";
 import { API_BASE } from "~/lib/api/client";
-import { getAuthToken } from "~/lib/auth-token";
-import { getSessionToken } from "~/lib/session-token";
+import { getBearerToken } from "~/lib/auth-token";
 
 export const GREETING_PROMPT =
   "新しい会話が始まりました。時間帯や季節に合った短い挨拶をしてください。";
@@ -36,18 +35,13 @@ export const AssistantProvider = ({
     transport: useMemo(
       () =>
         new DefaultChatTransport({
-          api: `${API_BASE}/chat`,
+          api: `${API_BASE}/threads/${threadId}/chat`,
           headers: (): Record<string, string> => {
-            const headers: Record<string, string> = {};
-            const authToken = getAuthToken();
-            if (authToken) {
-              headers.Authorization = `Bearer ${authToken}`;
+            const token = getBearerToken();
+            if (token) {
+              return { Authorization: `Bearer ${token}` };
             }
-            const sessionToken = getSessionToken();
-            if (sessionToken) {
-              headers["X-Session-Token"] = sessionToken;
-            }
-            return headers;
+            return {};
           },
           prepareSendMessagesRequest({ messages }) {
             const lastMessage = messages[messages.length - 1];
@@ -63,7 +57,6 @@ export const AssistantProvider = ({
             return {
               body: {
                 message: lastMessage,
-                threadId,
                 intent,
               },
             };
