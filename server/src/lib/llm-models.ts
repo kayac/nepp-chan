@@ -31,7 +31,7 @@ export const geminiModelWithThinking = ({
   },
 });
 
-export type Intent = "casual" | "normal" | "thinking";
+export type Intent = "casual" | "thinking";
 
 export type ModelTierConfig = ReturnType<typeof geminiModelWithThinking>;
 
@@ -40,16 +40,9 @@ const MODEL_TIERS: Record<Intent, Record<"web" | "line", ModelTierConfig>> = {
     web: geminiModelWithThinking({ model: GEMINI_FLASH_LITE, level: "low" }),
     line: geminiModelWithThinking({ model: GEMINI_FLASH_LITE, level: "low" }),
   },
-  normal: {
-    web: geminiModelWithThinking({ model: GEMINI_FLASH, level: "medium" }),
-    line: geminiModelWithThinking({
-      model: GEMINI_FLASH_LITE,
-      level: "medium",
-    }),
-  },
   thinking: {
     web: geminiModelWithThinking({ model: GEMINI_FLASH, level: "high" }),
-    line: geminiModelWithThinking({ model: GEMINI_FLASH, level: "medium" }),
+    line: geminiModelWithThinking({ model: GEMINI_FLASH, level: "high" }),
   },
 };
 
