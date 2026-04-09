@@ -4,7 +4,10 @@ import { HTTPException } from "hono/http-exception";
 import { convertToMarkdown } from "~/lib/image-converter";
 import { logger } from "~/lib/logger";
 import { errorResponse } from "~/lib/openapi-errors";
-import { type AuthVariables, requireAuth } from "~/middleware/auth";
+import type { PrincipalVariables } from "~/lib/principal";
+import { requireAdminUser } from "~/lib/principal";
+import { requireAuth } from "~/middleware/auth";
+import { requireRole } from "~/middleware/require-role";
 import { broadcastRepository } from "~/repository/broadcast-repository";
 import {
   broadcastMessageSchema,
@@ -20,10 +23,11 @@ import {
 
 export const broadcastAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
-  Variables: AuthVariables;
+  Variables: Partial<PrincipalVariables>;
 }>();
 
 broadcastAdminRoutes.use("*", requireAuth);
+broadcastAdminRoutes.use("*", requireRole("staff"));
 
 const listRoute = createRoute({
   method: "get",
@@ -108,7 +112,7 @@ const createBroadcastRoute = createRoute({
 
 broadcastAdminRoutes.openapi(createBroadcastRoute, async (c) => {
   const body = c.req.valid("json");
-  const adminUser = c.get("adminUser");
+  const adminUser = requireAdminUser(c.get("principal"));
 
   try {
     const broadcast = await createBroadcastMessage(c.env, {

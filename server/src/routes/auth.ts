@@ -3,7 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import { generateId } from "~/lib/crypto";
 import { errorResponse } from "~/lib/openapi-errors";
 import { hashPassword, verifyPassword } from "~/lib/password";
-import type { AuthVariables } from "~/middleware/auth";
+import type { PrincipalVariables } from "~/lib/principal";
 import { adminInvitationRepository } from "~/repository/admin-invitation-repository";
 import { adminUserRepository } from "~/repository/admin-user-repository";
 import { anonymousSessionRepository } from "~/repository/anonymous-session-repository";
@@ -16,7 +16,7 @@ import { generateAccessToken } from "~/services/auth/token";
 
 export const authRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
-  Variables: Partial<AuthVariables>;
+  Variables: Partial<PrincipalVariables>;
 }>();
 
 const toUserResponse = (user: {
@@ -196,7 +196,8 @@ const meRoute = createRoute({
 });
 
 authRoutes.openapi(meRoute, async (c) => {
-  const user = c.get("adminUser");
+  const principal = c.get("principal");
+  const user = principal?.type === "admin" ? principal.user : undefined;
   return c.json({ user: user ? toUserResponse(user) : null }, 200);
 });
 

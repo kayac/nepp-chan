@@ -38,9 +38,9 @@ const { adminUserRepository } = await import(
 );
 const { knowledgeAdminRoutes } = await import("~/routes/admin/knowledge");
 
-import { withResolveAuth } from "./helpers/test-app";
+import { withResolvePrincipal } from "./helpers/test-app";
 
-const app = await withResolveAuth(knowledgeAdminRoutes);
+const app = await withResolvePrincipal(knowledgeAdminRoutes);
 
 const testUser = {
   id: "user-1",

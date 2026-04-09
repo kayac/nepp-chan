@@ -2,7 +2,8 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 
 import { errorResponse } from "~/lib/openapi-errors";
-import { type AuthVariables, requireAuth } from "~/middleware/auth";
+import type { PrincipalVariables } from "~/lib/principal";
+import { requireAuth } from "~/middleware/auth";
 import { requireRole } from "~/middleware/require-role";
 import { feedbackRepository } from "~/repository/feedback-repository";
 import {
@@ -13,7 +14,7 @@ import { parseFeedback } from "~/services/feedback";
 
 export const feedbackAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
-  Variables: AuthVariables;
+  Variables: Partial<PrincipalVariables>;
 }>();
 
 feedbackAdminRoutes.use("*", requireAuth);

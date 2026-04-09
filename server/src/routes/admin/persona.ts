@@ -1,7 +1,8 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
 import { errorResponse } from "~/lib/openapi-errors";
-import { type AuthVariables, requireAuth } from "~/middleware/auth";
+import type { PrincipalVariables } from "~/lib/principal";
+import { requireAuth } from "~/middleware/auth";
 import { requireRole } from "~/middleware/require-role";
 import { personaRepository } from "~/repository/persona-repository";
 import {
@@ -12,7 +13,7 @@ import {
 
 export const personaAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
-  Variables: AuthVariables;
+  Variables: Partial<PrincipalVariables>;
 }>();
 
 personaAdminRoutes.use("*", requireAuth);

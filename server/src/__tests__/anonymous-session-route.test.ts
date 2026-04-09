@@ -50,9 +50,9 @@ const { anonymousSessionRepository } = await import(
 );
 const { authRoutes: rawAuthRoutes } = await import("~/routes/auth");
 
-import { withResolveAuth } from "./helpers/test-app";
+import { withResolvePrincipal } from "./helpers/test-app";
 
-const authRoutes = await withResolveAuth(rawAuthRoutes);
+const authRoutes = await withResolvePrincipal(rawAuthRoutes);
 
 const mockEnv = {
   DB: {} as D1Database,
