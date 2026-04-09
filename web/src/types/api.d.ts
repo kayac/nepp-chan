@@ -82,7 +82,7 @@ export interface paths {
                         };
                         threadId: string;
                         /** @enum {string} */
-                        intent?: "casual" | "normal" | "thinking";
+                        intent?: "casual" | "thinking";
                     };
                 };
             };

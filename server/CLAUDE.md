@@ -85,7 +85,7 @@ server/src/
 ### nep-chan（動的生成）
 
 メインキャラクター「ねっぷちゃん」は `createNeppChanAgent({ isAdmin, platform, modelConfig })` で動的に生成される。
-`modelConfig` は `resolveModelTier()` で Intent（casual/normal/thinking）× プラットフォーム × 管理者フラグから決定する。
+`modelConfig` は `resolveModelTier()` で Intent（casual/thinking）× プラットフォーム × 管理者フラグから決定する。
 
 - **一般ユーザー**: 基本機能のみ（天気、Web検索、ナレッジ、緊急報告）
 - **管理者**: 基本機能 + 管理者専用エージェント（emergency, feedback, persona-analyst）
