@@ -234,6 +234,23 @@ export const broadcastRepository = {
       .all();
   },
 
+  async findSentSince(d1: D1Database, since: string, limit = 10) {
+    const db = createDb(d1);
+
+    return db
+      .select()
+      .from(broadcastMessages)
+      .where(
+        and(
+          eq(broadcastMessages.status, "sent"),
+          sql`${broadcastMessages.sentAt} > ${since}`,
+        ),
+      )
+      .orderBy(broadcastMessages.sentAt)
+      .limit(limit)
+      .all();
+  },
+
   async delete(d1: D1Database, id: string) {
     const db = createDb(d1);
 

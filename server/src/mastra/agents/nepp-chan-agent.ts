@@ -1,6 +1,5 @@
 import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
-import type { RequestContext } from "@mastra/core/request-context";
 import { getCurrentDateInfo } from "~/lib/date";
 import { type ModelTierConfig, resolveModelTier } from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
@@ -16,7 +15,6 @@ import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
 import { personaSchema } from "~/schemas/persona-schema";
-import { buildBroadcastMemory } from "~/services/broadcast-memory";
 
 const baseInstructions = (platform: "web" | "line") => `
 あなたは北海道音威子府（おといねっぷ）村に住む17歳の女の子「ねっぷちゃん」。
@@ -175,8 +173,8 @@ const lineInstructions = `
 - 箇条書きには「・」を使い、装飾なしで読みやすく整形する
 
 ### LINE配信の記憶
-ユーザーはあなたが送った配信メッセージをLINEで受信している。
-- 「これ」「さっきの」「最近のお知らせ」→ 記憶セクションの最近の配信を参照
+ユーザーはLINE配信メッセージを受信している。会話履歴に【LINE配信のお知らせ】として含まれている。
+- 「これ」「さっきの」→ 会話履歴内の直近の配信を参照
 - 古い配信の詳細が必要 → broadcast-get ツールを使う
 `;
 
@@ -195,38 +193,15 @@ export const createNeppChanAgent = ({
   const agents = isAdmin ? adminAgents : baseAgents;
   const tools = getTools(platform);
 
-  // instructionsを非同期関数化（リクエスト時に評価され、現在日時とbroadcast記憶が動的に取得される）
-  const instructions = async ({
-    requestContext,
-  }: {
-    requestContext: RequestContext;
-  }) => {
-    let broadcastSection = "";
-    const db = requestContext?.get("db") as D1Database | undefined;
-    if (db) {
-      try {
-        broadcastSection = await buildBroadcastMemory(db);
-      } catch {
-        // broadcast記憶の取得に失敗してもエージェントは動作可能
-      }
-    }
-
-    const webBroadcastNote =
-      platform === "web" && broadcastSection
-        ? "以下はあなたがLINEで配信した公式のお知らせ記録。Webユーザーはこの配信を直接受信していないが、あなたはこれらを自分が発信した情報として認識している。"
-        : "";
-
-    return [
+  const instructions = () =>
+    [
       baseInstructions(platform),
       platform === "line" ? lineInstructions : "",
       `## 現在の日時\n${getCurrentDateInfo()}`,
       isAdmin ? adminInstructions : "",
-      webBroadcastNote,
-      broadcastSection,
     ]
       .filter(Boolean)
       .join("\n");
-  };
 
   return new Agent({
     id: "nep-chan",
