@@ -1,6 +1,7 @@
 import { Agent } from "@mastra/core/agent";
 import { getCurrentDateInfo } from "~/lib/date";
 import { GEMINI_FLASH, geminiModelWithThinking } from "~/lib/llm-models";
+import { broadcastGetTool } from "~/mastra/tools/broadcast-get-tool";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 
 const baseInstructions = `
@@ -99,6 +100,10 @@ const baseInstructions = `
 
 検索結果にない情報の推測や捏造は行わない。
 
+## LINE配信メッセージの検索
+broadcast-get ツールで過去にLINEで配信したお知らせを検索できる。
+ナレッジ検索で該当情報が見つからない場合や、ユーザーの質問が「お知らせ」「配信」「通知」に関連しそうな場合はこちらも検索する。
+
 ## URLの取り扱い
 - 検索結果に url フィールドがある場合、回答に関連するものだけを厳選して含める
 - 重複するURLは1つにまとめる
@@ -125,6 +130,7 @@ export const knowledgeAgent = new Agent({
   ...geminiModelWithThinking({ model: GEMINI_FLASH, level: "high" }),
   tools: {
     knowledgeSearchTool,
+    broadcastGetTool,
   },
 });
 
@@ -138,5 +144,6 @@ export const createKnowledgeAgentWithModel = (model: string) =>
     ...geminiModelWithThinking({ model, level: "high" }),
     tools: {
       knowledgeSearchTool,
+      broadcastGetTool,
     },
   });
