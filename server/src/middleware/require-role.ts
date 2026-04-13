@@ -15,7 +15,10 @@ export const requireRole = (minRole: AdminRole) =>
     Variables: Partial<PrincipalVariables>;
   }>(async (c, next) => {
     const principal = c.get("principal");
-    if (!principal || principal.type !== "admin") {
+    if (!principal) {
+      throw new HTTPException(401, { message: "認証が必要です" });
+    }
+    if (principal.type !== "admin") {
       throw new HTTPException(403, {
         message: "この操作を行う権限がありません",
       });
