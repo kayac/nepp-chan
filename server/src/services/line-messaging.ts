@@ -8,6 +8,7 @@ import { getStorage } from "~/lib/storage";
 import { stripMarkdown } from "~/lib/strip-markdown";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
+import { injectBroadcastsToThread } from "~/services/broadcast-thread-injector";
 
 export const createLineClient = (token: string) =>
   new messagingApi.MessagingApiClient({ channelAccessToken: token });
@@ -24,6 +25,16 @@ export const generateReply = async (params: {
     storage,
     db: params.env.DB,
     env: params.env,
+  });
+
+  // 未注入の配信メッセージをスレッドに system メッセージとして追加
+  const lineUserId = params.threadId.replace("line-thread:", "");
+  await injectBroadcastsToThread({
+    d1: params.env.DB,
+    storage,
+    threadId: params.threadId,
+    resourceId: params.resourceId,
+    userId: lineUserId,
   });
 
   // Intent 分類でモデルティアを決定（非テキストメッセージは casual 直行）

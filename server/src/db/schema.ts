@@ -204,3 +204,11 @@ export const adminSessions = sqliteTable("admin_sessions", {
 
 export type AdminSession = typeof adminSessions.$inferSelect;
 export type NewAdminSession = typeof adminSessions.$inferInsert;
+
+// ユーザー別配信注入状態
+export const userBroadcastState = sqliteTable("user_broadcast_state", {
+  userId: text("user_id").primaryKey(),
+  lastInjectedAt: text("last_injected_at").notNull(),
+});
+
+export type UserBroadcastState = typeof userBroadcastState.$inferSelect;
