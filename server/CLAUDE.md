@@ -326,6 +326,13 @@ throw new HTTPException(404, { message: "Not found" });
 | created_at    | TEXT | 作成日時（NOT NULL）                        |
 | updated_at    | TEXT | 更新日時                                    |
 
+### user_broadcast_state
+
+| カラム           | 型   | 説明                          |
+| ---------------- | ---- | ----------------------------- |
+| user_id          | TEXT | PRIMARY KEY（LINE userId）    |
+| last_injected_at | TEXT | 最終配信注入日時（NOT NULL）  |
+
 ### questionnaires
 
 | カラム        | 型      | 説明                                          |
