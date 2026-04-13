@@ -1,19 +1,18 @@
 import { useEffect, useState } from "react";
 import { API_BASE } from "~/lib/api/client";
 import { getSessionToken, setSessionToken } from "~/lib/auth-token";
-import { getResourceId } from "~/lib/resource";
+import { setResourceId } from "~/lib/resource";
 
 type SessionState = {
   isReady: boolean;
 };
 
-const acquireSessionToken = async (
-  resourceId: string,
-): Promise<{ token: string; resourceId: string }> => {
+const acquireSessionToken = async (): Promise<{
+  token: string;
+  resourceId: string;
+}> => {
   const res = await fetch(`${API_BASE}/auth/anonymous-session`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ resourceId }),
   });
   if (!res.ok) {
     throw new Error(`Failed to acquire session token: ${res.status}`);
@@ -27,15 +26,14 @@ export const useAnonymousSession = (): SessionState => {
   useEffect(() => {
     if (isReady) return;
 
-    const resourceId = getResourceId();
-    acquireSessionToken(resourceId)
-      .then(({ token }) => {
+    acquireSessionToken()
+      .then(({ token, resourceId }) => {
         setSessionToken(token);
+        setResourceId(resourceId);
         setIsReady(true);
       })
       .catch((error) => {
         console.error("[Session] Failed to acquire session token", error);
-        // 409（既に claimed）等でも画面をブロックしない
         setIsReady(true);
       });
   }, [isReady]);

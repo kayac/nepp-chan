@@ -9,10 +9,7 @@ import { adminInvitationRepository } from "~/repository/admin-invitation-reposit
 import { adminSessionRepository } from "~/repository/admin-session-repository";
 import { adminUserRepository } from "~/repository/admin-user-repository";
 import { AdminUserSchema, adminRoleSchema } from "~/schemas/auth-schema";
-import {
-  generateAnonymousToken,
-  isValidUuidV4,
-} from "~/services/auth/anonymous-session";
+import { generateAnonymousToken } from "~/services/auth/anonymous-session";
 
 export const authRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -238,22 +235,7 @@ const anonymousSessionRoute = createRoute({
   tags: ["Auth"],
   summary: "匿名セッショントークン取得",
   description:
-    "一般ユーザー向けの匿名セッショントークンを発行する。resourceId を指定しない場合はサーバーで生成する。",
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            resourceId: z
-              .string()
-              .optional()
-              .describe("既存の resourceId（UUID v4 形式）"),
-          }),
-        },
-      },
-      required: true,
-    },
-  },
+    "一般ユーザー向けの匿名セッショントークンを発行する。resourceId はサーバーで生成する。",
   responses: {
     200: {
       description: "トークン発行成功",
@@ -266,21 +248,11 @@ const anonymousSessionRoute = createRoute({
         },
       },
     },
-    400: errorResponse(400),
   },
 });
 
 authRoutes.openapi(anonymousSessionRoute, async (c) => {
-  const { resourceId: providedId } = c.req.valid("json");
-
-  const resourceId = providedId || crypto.randomUUID();
-
-  if (!isValidUuidV4(resourceId)) {
-    throw new HTTPException(400, {
-      message: "resourceId は UUID v4 形式で指定してください",
-    });
-  }
-
+  const resourceId = crypto.randomUUID();
   const token = await generateAnonymousToken(resourceId, c.env.JWT_SECRET);
 
   return c.json({ token, resourceId }, 200);
