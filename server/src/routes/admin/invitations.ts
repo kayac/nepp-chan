@@ -3,7 +3,6 @@ import { HTTPException } from "hono/http-exception";
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
 import { requireAdminUser } from "~/lib/principal";
-import { requireAuth } from "~/middleware/auth";
 import { requireRole } from "~/middleware/require-role";
 import { adminInvitationRepository } from "~/repository/admin-invitation-repository";
 import { adminRoleSchema } from "~/schemas/auth-schema";
@@ -14,7 +13,6 @@ export const invitationRoutes = new OpenAPIHono<{
   Variables: Partial<PrincipalVariables>;
 }>();
 
-invitationRoutes.use("*", requireAuth);
 invitationRoutes.use("*", requireRole("admin"));
 
 const listInvitationsRoute = createRoute({

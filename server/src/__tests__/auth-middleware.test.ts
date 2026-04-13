@@ -2,17 +2,30 @@ import { Hono } from "hono";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Principal } from "~/lib/principal";
-import * as sessionService from "~/services/auth/anonymous-session";
-import * as tokenService from "~/services/auth/token";
 
-vi.mock("~/services/auth/token", () => ({
-  verifyAccessToken: vi.fn(),
+vi.mock("~/repository/admin-session-repository", () => ({
+  adminSessionRepository: {
+    findValid: vi.fn(),
+  },
+}));
+
+vi.mock("~/repository/admin-user-repository", () => ({
+  adminUserRepository: {
+    findById: vi.fn(),
+  },
 }));
 
 vi.mock("~/services/auth/anonymous-session", () => ({
   verifyAnonymousToken: vi.fn(),
 }));
 
+const { adminSessionRepository } = await import(
+  "~/repository/admin-session-repository"
+);
+const { adminUserRepository } = await import(
+  "~/repository/admin-user-repository"
+);
+const sessionService = await import("~/services/auth/anonymous-session");
 const { resolvePrincipal } = await import("~/middleware/resolve-principal");
 const { requireAuth } = await import("~/middleware/auth");
 
@@ -27,6 +40,9 @@ describe("requireAuth", () => {
     username: "admin01",
     name: "管理者",
     role: "admin",
+    passwordHash: "100000:salt:hash",
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: null,
   };
 
   beforeEach(() => {
@@ -58,9 +74,7 @@ describe("requireAuth", () => {
   });
 
   it("無効なトークンの場合は401を返す", async () => {
-    vi.mocked(tokenService.verifyAccessToken).mockRejectedValue(
-      new Error("invalid"),
-    );
+    vi.mocked(adminSessionRepository.findValid).mockResolvedValue(undefined);
     vi.mocked(sessionService.verifyAnonymousToken).mockRejectedValue(
       new Error("invalid"),
     );
@@ -79,8 +93,14 @@ describe("requireAuth", () => {
     expect(body).toBe("認証が必要です");
   });
 
-  it("有効な Admin JWT で principal がセットされる", async () => {
-    vi.mocked(tokenService.verifyAccessToken).mockResolvedValue(testUser);
+  it("有効な Admin opaque session で principal がセットされる", async () => {
+    vi.mocked(adminSessionRepository.findValid).mockResolvedValue({
+      token: "valid-jwt-token",
+      userId: "user-1",
+      expiresAt: new Date(Date.now() + 86400000).toISOString(),
+      createdAt: "2024-01-01T00:00:00Z",
+    });
+    vi.mocked(adminUserRepository.findById).mockResolvedValue(testUser);
 
     const app = createApp();
     const req = new Request("http://localhost/protected", {
@@ -97,9 +117,7 @@ describe("requireAuth", () => {
   });
 
   it("有効な Anonymous JWT で principal がセットされる", async () => {
-    vi.mocked(tokenService.verifyAccessToken).mockRejectedValue(
-      new Error("invalid aud"),
-    );
+    vi.mocked(adminSessionRepository.findValid).mockResolvedValue(undefined);
     vi.mocked(sessionService.verifyAnonymousToken).mockResolvedValue(
       "resource-uuid",
     );

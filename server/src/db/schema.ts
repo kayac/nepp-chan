@@ -194,10 +194,13 @@ export const questionnaireAnswers = sqliteTable("questionnaire_answers", {
 export type QuestionnaireAnswer = typeof questionnaireAnswers.$inferSelect;
 export type NewQuestionnaireAnswer = typeof questionnaireAnswers.$inferInsert;
 
-// 匿名セッション（先着制限）
-export const anonymousSessions = sqliteTable("anonymous_sessions", {
-  resourceId: text("resource_id").primaryKey(),
+// 管理者セッション（opaque token）
+export const adminSessions = sqliteTable("admin_sessions", {
+  token: text("token").primaryKey(),
+  userId: text("user_id").notNull(),
+  expiresAt: text("expires_at").notNull(),
   createdAt: text("created_at").notNull(),
 });
 
-export type AnonymousSession = typeof anonymousSessions.$inferSelect;
+export type AdminSession = typeof adminSessions.$inferSelect;
+export type NewAdminSession = typeof adminSessions.$inferInsert;

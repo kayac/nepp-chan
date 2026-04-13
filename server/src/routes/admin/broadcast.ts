@@ -6,7 +6,6 @@ import { logger } from "~/lib/logger";
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
 import { requireAdminUser } from "~/lib/principal";
-import { requireAuth } from "~/middleware/auth";
 import { requireRole } from "~/middleware/require-role";
 import { broadcastRepository } from "~/repository/broadcast-repository";
 import {
@@ -26,7 +25,6 @@ export const broadcastAdminRoutes = new OpenAPIHono<{
   Variables: Partial<PrincipalVariables>;
 }>();
 
-broadcastAdminRoutes.use("*", requireAuth);
 broadcastAdminRoutes.use("*", requireRole("staff"));
 
 const listRoute = createRoute({

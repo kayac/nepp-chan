@@ -18,7 +18,12 @@ describe("toResourceId", () => {
     const p: AdminPrincipal = {
       type: "admin",
       id: "admin-1",
-      user: { id: "admin-1", username: "test", name: null, role: "admin" },
+      user: {
+        id: "admin-1",
+        username: "test",
+        name: null,
+        role: "admin" as const,
+      },
     };
     expect(toResourceId(p)).toBe("admin:admin-1");
   });
@@ -35,7 +40,7 @@ describe("requireAdminUser", () => {
       id: "admin-1",
       username: "test",
       name: "テスト",
-      role: "admin",
+      role: "admin" as const,
     };
     const p: AdminPrincipal = { type: "admin", id: "admin-1", user };
     expect(requireAdminUser(p)).toEqual(user);

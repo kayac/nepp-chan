@@ -6,7 +6,6 @@ import { classifyIntent } from "~/lib/classify-intent";
 import { resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import type { PrincipalVariables } from "~/lib/principal";
-import { requireAdminUser } from "~/lib/principal";
 import { getStorage } from "~/lib/storage";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
@@ -71,7 +70,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
   });
 
   const isAdmin = principal.type === "admin";
-  const adminUser = isAdmin ? requireAdminUser(principal) : undefined;
+  const adminUser = isAdmin ? principal.user : undefined;
 
   const storage = await getStorage(c.env.DB);
 

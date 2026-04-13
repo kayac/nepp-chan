@@ -54,7 +54,7 @@ const FeedbackModalWrapper = () => {
 };
 
 export const ChatPage = () => {
-  const resourceId = useMemo(() => getResourceId(), []);
+  const resourceId = useMemo(() => getResourceId() ?? "default", []);
   const { data: adminUser, isLoading: isAdminLoading } = useAdminUser();
   const isAdmin = !!adminUser;
   const { isReady: isSessionReady } = useAnonymousSession();

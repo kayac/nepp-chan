@@ -1,5 +1,6 @@
 import type { ToolExecutionContext } from "@mastra/core/tools";
-import type { AuthUser } from "~/schemas/auth-schema";
+import { ROLE_LEVEL } from "~/middleware/require-role";
+import type { AdminRole, AuthUser } from "~/schemas/auth-schema";
 
 type ToolContext = ToolExecutionContext | undefined;
 
@@ -48,9 +49,19 @@ export const requireDb = (
 
 export const requireAdmin = (
   context: ToolContext,
+  minRole: AdminRole = "admin",
 ): RequireAdminResult | { error: ToolError } => {
   const adminUser = getAdminUser(context);
   if (!adminUser) {
+    return {
+      error: {
+        error: "NOT_AUTHORIZED",
+        message: "この機能は使用できません",
+      },
+    };
+  }
+
+  if (ROLE_LEVEL[adminUser.role] < ROLE_LEVEL[minRole]) {
     return {
       error: {
         error: "NOT_AUTHORIZED",
