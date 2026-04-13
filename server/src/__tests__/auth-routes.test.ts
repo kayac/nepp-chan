@@ -19,13 +19,21 @@ vi.mock("~/repository/admin-invitation-repository", () => ({
 vi.mock("~/repository/admin-user-repository", () => ({
   adminUserRepository: {
     findByUsername: vi.fn(),
+    findById: vi.fn(),
     create: vi.fn(),
   },
 }));
 
-vi.mock("~/services/auth/token", () => ({
-  generateAccessToken: vi.fn(),
-  verifyAccessToken: vi.fn(),
+vi.mock("~/repository/admin-session-repository", () => ({
+  adminSessionRepository: {
+    create: vi.fn(),
+    findValid: vi.fn(),
+    deleteByToken: vi.fn(),
+  },
+}));
+
+vi.mock("~/services/auth/anonymous-session", () => ({
+  verifyAnonymousToken: vi.fn(),
 }));
 
 const { hashPassword, verifyPassword } = await import("~/lib/password");
@@ -35,7 +43,9 @@ const { adminInvitationRepository } = await import(
 const { adminUserRepository } = await import(
   "~/repository/admin-user-repository"
 );
-const tokenService = await import("~/services/auth/token");
+const { adminSessionRepository } = await import(
+  "~/repository/admin-session-repository"
+);
 const { authRoutes: rawAuthRoutes } = await import("~/routes/auth");
 
 import { withResolvePrincipal } from "./helpers/test-app";
@@ -90,8 +100,8 @@ describe("auth routes", () => {
       vi.mocked(adminUserRepository.findByUsername).mockResolvedValue(null);
       vi.mocked(hashPassword).mockResolvedValue("hashed-password");
       vi.mocked(adminUserRepository.create).mockResolvedValue("user-1");
-      vi.mocked(tokenService.generateAccessToken).mockResolvedValue(
-        "access-token-jwt",
+      vi.mocked(adminSessionRepository.create).mockResolvedValue(
+        "opaque-session-token",
       );
 
       const res = await authRoutes.request(
@@ -106,7 +116,7 @@ describe("auth routes", () => {
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body).toEqual({
-        accessToken: "access-token-jwt",
+        accessToken: "opaque-session-token",
         user: {
           id: "generated-id",
           username: "newuser",
@@ -169,8 +179,8 @@ describe("auth routes", () => {
     it("正しい認証情報でログインできる", async () => {
       vi.mocked(adminUserRepository.findByUsername).mockResolvedValue(testUser);
       vi.mocked(verifyPassword).mockResolvedValue(true);
-      vi.mocked(tokenService.generateAccessToken).mockResolvedValue(
-        "access-token-jwt",
+      vi.mocked(adminSessionRepository.create).mockResolvedValue(
+        "opaque-session-token",
       );
 
       const res = await authRoutes.request(
@@ -182,7 +192,7 @@ describe("auth routes", () => {
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body).toEqual({
-        accessToken: "access-token-jwt",
+        accessToken: "opaque-session-token",
         user: {
           id: "user-1",
           username: "admin01",
@@ -239,8 +249,14 @@ describe("auth routes", () => {
   // --- Me ---
 
   describe("GET /me", () => {
-    it("有効な Access Token でユーザー情報を返す", async () => {
-      vi.mocked(tokenService.verifyAccessToken).mockResolvedValue(testUser);
+    it("有効な opaque session でユーザー情報を返す", async () => {
+      vi.mocked(adminSessionRepository.findValid).mockResolvedValue({
+        token: "valid-token",
+        userId: "user-1",
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        createdAt: "2024-01-01T00:00:00Z",
+      });
+      vi.mocked(adminUserRepository.findById).mockResolvedValue(testUser);
 
       const res = await authRoutes.request(
         new Request("http://localhost/me", {
@@ -275,9 +291,7 @@ describe("auth routes", () => {
     });
 
     it("無効なトークンで user: null を返す", async () => {
-      vi.mocked(tokenService.verifyAccessToken).mockRejectedValue(
-        new Error("invalid"),
-      );
+      vi.mocked(adminSessionRepository.findValid).mockResolvedValue(undefined);
 
       const res = await authRoutes.request(
         new Request("http://localhost/me", {

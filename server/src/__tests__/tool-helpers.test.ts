@@ -51,7 +51,7 @@ describe("ツールヘルパー関数", () => {
         id: "admin-1",
         username: "admin01",
         name: null,
-        role: "admin",
+        role: "admin" as const,
       };
       const context = createMockContext({ adminUser: mockUser });
       expect(getAdminUser(context as never)).toBe(mockUser);
@@ -113,7 +113,7 @@ describe("ツールヘルパー関数", () => {
         id: "admin-1",
         username: "admin01",
         name: null,
-        role: "admin",
+        role: "admin" as const,
       };
       const mockDb = { prepare: () => {} };
       const context = createMockContext({
@@ -146,7 +146,7 @@ describe("ツールヘルパー関数", () => {
         id: "admin-1",
         username: "admin01",
         name: null,
-        role: "admin",
+        role: "admin" as const,
       };
       const context = createMockContext({ adminUser: mockUser });
 

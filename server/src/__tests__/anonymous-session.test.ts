@@ -5,7 +5,6 @@ import {
   isValidUuidV4,
   verifyAnonymousToken,
 } from "~/services/auth/anonymous-session";
-import { verifyAccessToken } from "~/services/auth/token";
 
 describe("anonymous-session", () => {
   const jwtSecret = "test-jwt-secret-must-be-at-least-32-chars";
@@ -47,14 +46,6 @@ describe("anonymous-session", () => {
       await expect(
         verifyAnonymousToken(token, "wrong-secret-wrong-secret-32-ch"),
       ).rejects.toThrow();
-    });
-
-    it("管理者トークン検証関数では検証に失敗する", async () => {
-      const token = await generateAnonymousToken(resourceId, jwtSecret);
-
-      await expect(verifyAccessToken(token, jwtSecret)).rejects.toThrow(
-        "無効なトークンです",
-      );
     });
   });
 });

@@ -1,16 +1,28 @@
 import { Hono } from "hono";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import * as tokenService from "~/services/auth/token";
+vi.mock("~/repository/admin-session-repository", () => ({
+  adminSessionRepository: {
+    findValid: vi.fn(),
+  },
+}));
 
-vi.mock("~/services/auth/token", () => ({
-  verifyAccessToken: vi.fn(),
+vi.mock("~/repository/admin-user-repository", () => ({
+  adminUserRepository: {
+    findById: vi.fn(),
+  },
 }));
 
 vi.mock("~/services/auth/anonymous-session", () => ({
   verifyAnonymousToken: vi.fn(),
 }));
 
+const { adminSessionRepository } = await import(
+  "~/repository/admin-session-repository"
+);
+const { adminUserRepository } = await import(
+  "~/repository/admin-user-repository"
+);
 const { resolvePrincipal } = await import("~/middleware/resolve-principal");
 const { requireAuth } = await import("~/middleware/auth");
 const { requireRole } = await import("~/middleware/require-role");
@@ -26,6 +38,9 @@ describe("requireRole ミドルウェア", () => {
     username: "testuser",
     name: "テスト",
     role,
+    passwordHash: "100000:salt:hash",
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: null,
   });
 
   beforeEach(() => {
@@ -39,6 +54,16 @@ describe("requireRole ミドルウェア", () => {
     app.use("*", requireRole(minRole));
     app.get("/test", (c) => c.json({ ok: true }));
     return app;
+  };
+
+  const setupAdminSession = (role: string) => {
+    vi.mocked(adminSessionRepository.findValid).mockResolvedValue({
+      token: "valid-token",
+      userId: "user-1",
+      expiresAt: new Date(Date.now() + 86400000).toISOString(),
+      createdAt: "2024-01-01T00:00:00Z",
+    });
+    vi.mocked(adminUserRepository.findById).mockResolvedValue(makeUser(role));
   };
 
   // biome-ignore lint/suspicious/noExplicitAny: テスト用ヘルパーのため型制約を緩和
@@ -60,25 +85,19 @@ describe("requireRole ミドルウェア", () => {
 
   describe("staff ロール要求", () => {
     it("staff はアクセスできる", async () => {
-      vi.mocked(tokenService.verifyAccessToken).mockResolvedValue(
-        makeUser("staff"),
-      );
+      setupAdminSession("staff");
       const res = await requestWith(createApp("staff"));
       expect(res.status).toBe(200);
     });
 
     it("admin はアクセスできる", async () => {
-      vi.mocked(tokenService.verifyAccessToken).mockResolvedValue(
-        makeUser("admin"),
-      );
+      setupAdminSession("admin");
       const res = await requestWith(createApp("staff"));
       expect(res.status).toBe(200);
     });
 
     it("super_admin はアクセスできる", async () => {
-      vi.mocked(tokenService.verifyAccessToken).mockResolvedValue(
-        makeUser("super_admin"),
-      );
+      setupAdminSession("super_admin");
       const res = await requestWith(createApp("staff"));
       expect(res.status).toBe(200);
     });
@@ -86,25 +105,19 @@ describe("requireRole ミドルウェア", () => {
 
   describe("admin ロール要求", () => {
     it("staff は403を返す", async () => {
-      vi.mocked(tokenService.verifyAccessToken).mockResolvedValue(
-        makeUser("staff"),
-      );
+      setupAdminSession("staff");
       const res = await requestWith(createApp("admin"));
       expect(res.status).toBe(403);
     });
 
     it("admin はアクセスできる", async () => {
-      vi.mocked(tokenService.verifyAccessToken).mockResolvedValue(
-        makeUser("admin"),
-      );
+      setupAdminSession("admin");
       const res = await requestWith(createApp("admin"));
       expect(res.status).toBe(200);
     });
 
     it("super_admin はアクセスできる", async () => {
-      vi.mocked(tokenService.verifyAccessToken).mockResolvedValue(
-        makeUser("super_admin"),
-      );
+      setupAdminSession("super_admin");
       const res = await requestWith(createApp("admin"));
       expect(res.status).toBe(200);
     });
@@ -112,25 +125,19 @@ describe("requireRole ミドルウェア", () => {
 
   describe("super_admin ロール要求", () => {
     it("staff は403を返す", async () => {
-      vi.mocked(tokenService.verifyAccessToken).mockResolvedValue(
-        makeUser("staff"),
-      );
+      setupAdminSession("staff");
       const res = await requestWith(createApp("super_admin"));
       expect(res.status).toBe(403);
     });
 
     it("admin は403を返す", async () => {
-      vi.mocked(tokenService.verifyAccessToken).mockResolvedValue(
-        makeUser("admin"),
-      );
+      setupAdminSession("admin");
       const res = await requestWith(createApp("super_admin"));
       expect(res.status).toBe(403);
     });
 
     it("super_admin はアクセスできる", async () => {
-      vi.mocked(tokenService.verifyAccessToken).mockResolvedValue(
-        makeUser("super_admin"),
-      );
+      setupAdminSession("super_admin");
       const res = await requestWith(createApp("super_admin"));
       expect(res.status).toBe(200);
     });

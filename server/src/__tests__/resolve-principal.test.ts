@@ -2,17 +2,30 @@ import { Hono } from "hono";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Principal } from "~/lib/principal";
-import * as sessionService from "~/services/auth/anonymous-session";
-import * as tokenService from "~/services/auth/token";
 
-vi.mock("~/services/auth/token", () => ({
-  verifyAccessToken: vi.fn(),
+vi.mock("~/repository/admin-session-repository", () => ({
+  adminSessionRepository: {
+    findValid: vi.fn(),
+  },
+}));
+
+vi.mock("~/repository/admin-user-repository", () => ({
+  adminUserRepository: {
+    findById: vi.fn(),
+  },
 }));
 
 vi.mock("~/services/auth/anonymous-session", () => ({
   verifyAnonymousToken: vi.fn(),
 }));
 
+const { adminSessionRepository } = await import(
+  "~/repository/admin-session-repository"
+);
+const { adminUserRepository } = await import(
+  "~/repository/admin-user-repository"
+);
+const sessionService = await import("~/services/auth/anonymous-session");
 const { resolvePrincipal } = await import("~/middleware/resolve-principal");
 
 type TestResponse = {
@@ -44,6 +57,9 @@ describe("resolvePrincipal", () => {
     username: "admin01",
     name: "管理者",
     role: "admin",
+    passwordHash: "100000:salt:hash",
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: null,
   };
 
   beforeEach(() => {
@@ -58,8 +74,14 @@ describe("resolvePrincipal", () => {
     expect(body.principal).toBeNull();
   });
 
-  it("Admin JWT → AdminPrincipal", async () => {
-    vi.mocked(tokenService.verifyAccessToken).mockResolvedValue(testUser);
+  it("Admin opaque session → AdminPrincipal", async () => {
+    vi.mocked(adminSessionRepository.findValid).mockResolvedValue({
+      token: "valid-admin-token",
+      userId: "user-1",
+      expiresAt: new Date(Date.now() + 86400000).toISOString(),
+      createdAt: "2024-01-01T00:00:00Z",
+    });
+    vi.mocked(adminUserRepository.findById).mockResolvedValue(testUser);
 
     const req = new Request("http://localhost/test", {
       headers: { Authorization: "Bearer valid-admin-token" },
@@ -71,15 +93,17 @@ describe("resolvePrincipal", () => {
     expect(body.principal).toEqual({
       type: "admin",
       id: "user-1",
-      user: testUser,
+      user: {
+        id: "user-1",
+        username: "admin01",
+        name: "管理者",
+        role: "admin",
+      },
     });
   });
 
   it("Anonymous JWT → AnonymousPrincipal", async () => {
-    // admin verify が失敗 → anonymous verify が成功
-    vi.mocked(tokenService.verifyAccessToken).mockRejectedValue(
-      new Error("invalid aud"),
-    );
+    vi.mocked(adminSessionRepository.findValid).mockResolvedValue(undefined);
     vi.mocked(sessionService.verifyAnonymousToken).mockResolvedValue(
       "resource-uuid-1234",
     );
@@ -97,8 +121,14 @@ describe("resolvePrincipal", () => {
     });
   });
 
-  it("Admin JWT が優先される（aud で判定）", async () => {
-    vi.mocked(tokenService.verifyAccessToken).mockResolvedValue(testUser);
+  it("Admin opaque session が優先される", async () => {
+    vi.mocked(adminSessionRepository.findValid).mockResolvedValue({
+      token: "admin-token",
+      userId: "user-1",
+      expiresAt: new Date(Date.now() + 86400000).toISOString(),
+      createdAt: "2024-01-01T00:00:00Z",
+    });
+    vi.mocked(adminUserRepository.findById).mockResolvedValue(testUser);
 
     const req = new Request("http://localhost/test", {
       headers: { Authorization: "Bearer admin-token" },
@@ -108,14 +138,11 @@ describe("resolvePrincipal", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as TestResponse;
     expect(body.principal?.type).toBe("admin");
-    // anonymous verify は呼ばれない
     expect(sessionService.verifyAnonymousToken).not.toHaveBeenCalled();
   });
 
   it("無効なトークン → principal は null", async () => {
-    vi.mocked(tokenService.verifyAccessToken).mockRejectedValue(
-      new Error("invalid"),
-    );
+    vi.mocked(adminSessionRepository.findValid).mockResolvedValue(undefined);
     vi.mocked(sessionService.verifyAnonymousToken).mockRejectedValue(
       new Error("invalid"),
     );

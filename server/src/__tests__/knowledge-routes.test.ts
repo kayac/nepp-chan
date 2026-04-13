@@ -6,7 +6,6 @@ import {
   validateFileKey,
 } from "~/routes/admin/knowledge/schemas";
 
-// services/knowledge と auth/token のモック
 vi.mock("~/services/knowledge", () => ({
   listFiles: vi.fn(),
   getFile: vi.fn(),
@@ -21,8 +20,10 @@ vi.mock("~/services/knowledge", () => ({
   reconvertFromOriginal: vi.fn(),
 }));
 
-vi.mock("~/services/auth/token", () => ({
-  verifyAccessToken: vi.fn(),
+vi.mock("~/repository/admin-session-repository", () => ({
+  adminSessionRepository: {
+    findValid: vi.fn(),
+  },
 }));
 
 vi.mock("~/repository/admin-user-repository", () => ({
@@ -31,8 +32,14 @@ vi.mock("~/repository/admin-user-repository", () => ({
   },
 }));
 
+vi.mock("~/services/auth/anonymous-session", () => ({
+  verifyAnonymousToken: vi.fn(),
+}));
+
 const knowledgeService = await import("~/services/knowledge");
-const tokenService = await import("~/services/auth/token");
+const { adminSessionRepository } = await import(
+  "~/repository/admin-session-repository"
+);
 const { adminUserRepository } = await import(
   "~/repository/admin-user-repository"
 );
@@ -98,7 +105,12 @@ describe("knowledge schemas ユーティリティ", () => {
 describe("knowledge routes 統合テスト", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(tokenService.verifyAccessToken).mockResolvedValue(testUser);
+    vi.mocked(adminSessionRepository.findValid).mockResolvedValue({
+      token: "valid-token",
+      userId: "user-1",
+      expiresAt: new Date(Date.now() + 86400000).toISOString(),
+      createdAt: "2024-01-01T00:00:00Z",
+    });
     vi.mocked(adminUserRepository.findById).mockResolvedValue(testUser);
   });
 

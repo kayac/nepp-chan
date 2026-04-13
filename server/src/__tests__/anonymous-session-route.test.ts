@@ -1,12 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("~/repository/anonymous-session-repository", () => ({
-  anonymousSessionRepository: {
-    findByResourceId: vi.fn(),
-    create: vi.fn(),
-  },
-}));
-
 vi.mock("~/services/auth/anonymous-session", () => ({
   generateAnonymousToken: vi.fn().mockResolvedValue("mock-jwt-token"),
   isValidUuidV4: vi.fn((v: string) =>
@@ -16,7 +9,6 @@ vi.mock("~/services/auth/anonymous-session", () => ({
   ),
 }));
 
-// auth routes 内で使われる他のモック
 vi.mock("~/lib/password", () => ({
   hashPassword: vi.fn(),
   verifyPassword: vi.fn(),
@@ -36,18 +28,19 @@ vi.mock("~/repository/admin-invitation-repository", () => ({
 vi.mock("~/repository/admin-user-repository", () => ({
   adminUserRepository: {
     findByUsername: vi.fn(),
+    findById: vi.fn(),
     create: vi.fn(),
   },
 }));
 
-vi.mock("~/services/auth/token", () => ({
-  generateAccessToken: vi.fn(),
-  verifyAccessToken: vi.fn(),
+vi.mock("~/repository/admin-session-repository", () => ({
+  adminSessionRepository: {
+    create: vi.fn(),
+    findValid: vi.fn(),
+    deleteByToken: vi.fn(),
+  },
 }));
 
-const { anonymousSessionRepository } = await import(
-  "~/repository/anonymous-session-repository"
-);
 const { authRoutes: rawAuthRoutes } = await import("~/routes/auth");
 
 import { withResolvePrincipal } from "./helpers/test-app";
@@ -71,11 +64,8 @@ describe("POST /anonymous-session", () => {
     vi.clearAllMocks();
   });
 
-  it("新規 resourceId でセッションを作成できる", async () => {
+  it("新規 resourceId でトークンを発行できる", async () => {
     const resourceId = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-    vi.mocked(anonymousSessionRepository.findByResourceId).mockResolvedValue(
-      undefined,
-    );
 
     const res = await authRoutes.request(
       postJson("/anonymous-session", { resourceId }),
@@ -89,17 +79,9 @@ describe("POST /anonymous-session", () => {
       token: "mock-jwt-token",
       resourceId,
     });
-    expect(anonymousSessionRepository.create).toHaveBeenCalledWith(
-      mockEnv.DB,
-      resourceId,
-    );
   });
 
   it("resourceId 省略時はサーバーで生成する", async () => {
-    vi.mocked(anonymousSessionRepository.findByResourceId).mockResolvedValue(
-      undefined,
-    );
-
     const res = await authRoutes.request(
       postJson("/anonymous-session", {}),
       undefined,
@@ -110,24 +92,6 @@ describe("POST /anonymous-session", () => {
     const body = (await res.json()) as { token: string; resourceId: string };
     expect(body.token).toBe("mock-jwt-token");
     expect(body.resourceId).toBeDefined();
-    expect(anonymousSessionRepository.create).toHaveBeenCalled();
-  });
-
-  it("既に claimed 済みの resourceId は 409 を返す", async () => {
-    const resourceId = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-    vi.mocked(anonymousSessionRepository.findByResourceId).mockResolvedValue({
-      resourceId,
-      createdAt: "2024-01-01T00:00:00Z",
-    });
-
-    const res = await authRoutes.request(
-      postJson("/anonymous-session", { resourceId }),
-      undefined,
-      mockEnv,
-    );
-
-    expect(res.status).toBe(409);
-    expect(anonymousSessionRepository.create).not.toHaveBeenCalled();
   });
 
   it("UUID v4 以外の形式は 400 を返す", async () => {
@@ -138,7 +102,6 @@ describe("POST /anonymous-session", () => {
     );
 
     expect(res.status).toBe(400);
-    expect(anonymousSessionRepository.findByResourceId).not.toHaveBeenCalled();
   });
 
   it("不正な UUID 形式は 400 を返す", async () => {
