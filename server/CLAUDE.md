@@ -72,7 +72,7 @@ server/src/
 | `/admin/questionnaires/:id/close`  | POST     | アンケート締切                 |
 | `/admin/invitations`               | GET/POST | 招待一覧・作成                 |
 | `/admin/invitations/:id`           | DELETE   | 招待削除                       |
-| `/auth/anonymous-session`          | POST     | 匿名セッショントークン取得（先着制限） |
+| `/auth/anonymous-session`          | POST     | 匿名セッショントークン取得（JWT発行） |
 | `/auth/register`                   | POST     | ユーザー登録（招待トークン+パスワード） |
 | `/auth/login`                      | POST     | ログイン（ユーザー名+パスワード）      |
 | `/auth/me`                         | GET      | 認証状態確認                   |
@@ -217,20 +217,22 @@ throw new HTTPException(404, { message: "Not found" });
 
 - エラー: `throw new HTTPException(code, { message })` でスロー（グローバルエラーハンドラーが `{ error: { code, message } }` 形式に変換）
 - OpenAPI エラーレスポンス: `lib/openapi-errors.ts` の `errorResponse(code)` を使用
-- 認証主体: `resolvePrincipal` がグローバルに適用（`Authorization: Bearer` → `principal`）
-- 管理者認証: `requireAuth` ミドルウェアで `principal` の存在を保証
-- ロール制限: `requireRole("admin")` 等を `requireAuth` の後に適用
+- 認証主体: `resolvePrincipal` がグローバルに適用（opaque session → anonymous JWT の順で `principal` を解決）
+- 管理者認可: `requireRole("admin")` 等で admin principal + ロールレベルをチェック（未認証は 401、権限不足は 403）
+- 一般認証: `requireAuth` で `principal` の存在を保証（anonymous + admin 共通ルート用）
 - スレッドアクセス: `requireThreadAccess` ミドルウェアで所有権検証（`principal` + `threadId` → `thread`）
 - 共通スキーマ: `schemas/` から import（インライン定義を避ける）
 
 ## データベーステーブル
 
-### anonymous_sessions
+### admin_sessions
 
-| カラム      | 型   | 説明                        |
-| ----------- | ---- | --------------------------- |
-| resource_id | TEXT | PRIMARY KEY（UUID v4）      |
-| created_at  | TEXT | 作成日時（NOT NULL）        |
+| カラム     | 型   | 説明                              |
+| ---------- | ---- | --------------------------------- |
+| token      | TEXT | PRIMARY KEY（opaque token）       |
+| user_id    | TEXT | 管理者ユーザー ID（NOT NULL）     |
+| expires_at | TEXT | 有効期限（NOT NULL）              |
+| created_at | TEXT | 作成日時（NOT NULL）              |
 
 ### emergency_reports
 
