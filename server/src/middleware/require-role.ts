@@ -1,10 +1,13 @@
 import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
 import type { PrincipalVariables } from "~/lib/principal";
+import type { AdminRole } from "~/schemas/auth-schema";
 
-const ROLE_LEVEL = { super_admin: 3, admin: 2, staff: 1 } as const;
-
-type AdminRole = keyof typeof ROLE_LEVEL;
+export const ROLE_LEVEL: Record<AdminRole, number> = {
+  super_admin: 3,
+  admin: 2,
+  staff: 1,
+};
 
 export const requireRole = (minRole: AdminRole) =>
   createMiddleware<{
@@ -17,7 +20,7 @@ export const requireRole = (minRole: AdminRole) =>
         message: "この操作を行う権限がありません",
       });
     }
-    const userLevel = ROLE_LEVEL[principal.user.role as AdminRole] ?? 0;
+    const userLevel = ROLE_LEVEL[principal.user.role];
     if (userLevel < ROLE_LEVEL[minRole]) {
       throw new HTTPException(403, {
         message: "この操作を行う権限がありません",

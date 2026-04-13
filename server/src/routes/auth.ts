@@ -1,18 +1,18 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
+import { getTokenFromHeader } from "~/lib/auth-header";
 import { generateId } from "~/lib/crypto";
 import { errorResponse } from "~/lib/openapi-errors";
 import { hashPassword, verifyPassword } from "~/lib/password";
 import type { PrincipalVariables } from "~/lib/principal";
 import { adminInvitationRepository } from "~/repository/admin-invitation-repository";
+import { adminSessionRepository } from "~/repository/admin-session-repository";
 import { adminUserRepository } from "~/repository/admin-user-repository";
-import { anonymousSessionRepository } from "~/repository/anonymous-session-repository";
 import { AdminUserSchema, adminRoleSchema } from "~/schemas/auth-schema";
 import {
   generateAnonymousToken,
   isValidUuidV4,
 } from "~/services/auth/anonymous-session";
-import { generateAccessToken } from "~/services/auth/token";
 
 export const authRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -111,7 +111,7 @@ authRoutes.openapi(registerRoute, async (c) => {
     name: null,
     role: invitation.role,
   };
-  const accessToken = await generateAccessToken(user, c.env.JWT_SECRET);
+  const accessToken = await adminSessionRepository.create(c.env.DB, userId);
 
   return c.json({ accessToken, user: toUserResponse(user) }, 200);
 });
@@ -169,7 +169,7 @@ authRoutes.openapi(loginRoute, async (c) => {
     });
   }
 
-  const accessToken = await generateAccessToken(user, c.env.JWT_SECRET);
+  const accessToken = await adminSessionRepository.create(c.env.DB, user.id);
 
   return c.json({ accessToken, user: toUserResponse(user) }, 200);
 });
@@ -223,6 +223,10 @@ const logoutRoute = createRoute({
 });
 
 authRoutes.openapi(logoutRoute, async (c) => {
+  const token = getTokenFromHeader(c);
+  if (token) {
+    await adminSessionRepository.deleteByToken(c.env.DB, token);
+  }
   return c.json({ message: "ログアウトしました" }, 200);
 });
 
@@ -263,7 +267,6 @@ const anonymousSessionRoute = createRoute({
       },
     },
     400: errorResponse(400),
-    409: errorResponse(409),
   },
 });
 
@@ -278,17 +281,6 @@ authRoutes.openapi(anonymousSessionRoute, async (c) => {
     });
   }
 
-  const existing = await anonymousSessionRepository.findByResourceId(
-    c.env.DB,
-    resourceId,
-  );
-  if (existing) {
-    throw new HTTPException(409, {
-      message: "この resourceId は既に使用されています",
-    });
-  }
-
-  await anonymousSessionRepository.create(c.env.DB, resourceId);
   const token = await generateAnonymousToken(resourceId, c.env.JWT_SECRET);
 
   return c.json({ token, resourceId }, 200);

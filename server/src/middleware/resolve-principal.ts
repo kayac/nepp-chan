@@ -2,8 +2,10 @@ import { createMiddleware } from "hono/factory";
 import { getTokenFromHeader } from "~/lib/auth-header";
 import { logger } from "~/lib/logger";
 import type { PrincipalVariables } from "~/lib/principal";
+import { adminSessionRepository } from "~/repository/admin-session-repository";
+import { adminUserRepository } from "~/repository/admin-user-repository";
+import { adminRoleSchema } from "~/schemas/auth-schema";
 import { verifyAnonymousToken } from "~/services/auth/anonymous-session";
-import { verifyAccessToken } from "~/services/auth/token";
 
 export const resolvePrincipal = createMiddleware<{
   Bindings: CloudflareBindings;
@@ -15,21 +17,40 @@ export const resolvePrincipal = createMiddleware<{
     return;
   }
 
-  // admin JWT を先に試行（aud が異なるので片方のみ成功する）
-  try {
-    const user = await verifyAccessToken(token, c.env.JWT_SECRET);
-    c.set("principal", { type: "admin", id: user.id, user });
+  // opaque session を試行（admin）
+  const session = await adminSessionRepository.findValid(c.env.DB, token);
+  if (session) {
+    const user = await adminUserRepository.findById(c.env.DB, session.userId);
+    if (user) {
+      const roleResult = adminRoleSchema.safeParse(user.role);
+      if (roleResult.success) {
+        c.set("principal", {
+          type: "admin",
+          id: user.id,
+          user: {
+            id: user.id,
+            username: user.username,
+            name: user.name,
+            role: roleResult.data,
+          },
+        });
+      } else {
+        logger.warn("[Auth] admin user has invalid role", {
+          userId: user.id,
+          role: user.role,
+        });
+      }
+    }
     await next();
     return;
-  } catch {}
+  }
 
   // anonymous JWT を試行
   try {
     const resourceId = await verifyAnonymousToken(token, c.env.JWT_SECRET);
     c.set("principal", { type: "anonymous", id: resourceId });
   } catch {
-    // 両方失敗 = 不正なトークン
-    logger.warn("[Auth] invalid bearer token, neither admin nor anonymous");
+    logger.warn("[Auth] invalid bearer token");
   }
 
   await next();
