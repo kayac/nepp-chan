@@ -202,4 +202,3 @@ export const buildQuestionFlexMessage = (
     contents: bubble,
   };
 };
-
