@@ -45,65 +45,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/chat": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * ねっぷちゃんとおしゃべり
-         * @description ねっぷちゃん（音威子府村のAIキャラクター）にメッセージを送信し、ストリーミングレスポンスを受け取る
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        message: {
-                            id: string;
-                            /** @enum {string} */
-                            role: "user" | "assistant" | "system";
-                            parts: ({
-                                type: string;
-                            } & {
-                                [key: string]: unknown;
-                            })[];
-                            /** Format: date */
-                            createdAt?: string | null;
-                        };
-                        threadId: string;
-                        /** @enum {string} */
-                        intent?: "casual" | "thinking";
-                    };
-                };
-            };
-            responses: {
-                /** @description ストリーミングレスポンス */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/event-stream": string;
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/feedback": {
         parameters: {
             query?: never;
@@ -442,6 +383,66 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/threads/{threadId}/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * ねっぷちゃんとおしゃべり
+         * @description ねっぷちゃん（音威子府村のAIキャラクター）にメッセージを送信し、ストリーミングレスポンスを受け取る
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    threadId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        message: {
+                            id: string;
+                            /** @enum {string} */
+                            role: "user" | "assistant" | "system";
+                            parts: ({
+                                type: string;
+                            } & {
+                                [key: string]: unknown;
+                            })[];
+                            /** Format: date-time */
+                            createdAt?: string | null;
+                        };
+                        /** @enum {string} */
+                        intent?: "casual" | "thinking";
+                    };
+                };
+            };
+            responses: {
+                /** @description ストリーミングレスポンス */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/event-stream": string;
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -3646,6 +3647,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/questionnaires/{id}/poll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * アンケート投票結果を公開取得
+         * @description 選択式設問の集計結果を認証不要で取得します。sent/closed のアンケートのみ対象。
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 取得成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            questionnaireId: string;
+                            title: string;
+                            totalSubmissions: number;
+                            completedSubmissions: number;
+                            questionResults: {
+                                questionId: string;
+                                questionText: string;
+                                /** @enum {string} */
+                                questionType: "single_choice" | "multiple_choice";
+                                totalResponses: number;
+                                choiceResults: {
+                                    choice: string;
+                                    count: number;
+                                    percentage: number;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/register": {
         parameters: {
             query?: never;
@@ -3873,7 +3946,7 @@ export interface paths {
         put?: never;
         /**
          * 匿名セッショントークン取得
-         * @description 一般ユーザー向けの匿名セッショントークンを発行する。resourceId を指定しない場合はサーバーで生成する。
+         * @description 一般ユーザー向けの匿名セッショントークンを発行する。resourceId はサーバーで生成する。
          */
         post: {
             parameters: {
@@ -3882,14 +3955,7 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** @description 既存の resourceId（UUID v4 形式） */
-                        resourceId?: string;
-                    };
-                };
-            };
+            requestBody?: never;
             responses: {
                 /** @description トークン発行成功 */
                 200: {
@@ -3900,34 +3966,6 @@ export interface paths {
                         "application/json": {
                             token: string;
                             resourceId: string;
-                        };
-                    };
-                };
-                /** @description リクエストエラー */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: {
-                                code: number;
-                                message: string;
-                            };
-                        };
-                    };
-                };
-                /** @description リソースが競合しています */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: {
-                                code: number;
-                                message: string;
-                            };
                         };
                     };
                 };

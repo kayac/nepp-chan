@@ -88,3 +88,11 @@ export const fetchQuestionnaireResults = async (id: string) => {
   if (error) throw error;
   return data;
 };
+
+export const fetchPollResults = async (id: string) => {
+  const { data, error } = await client.GET("/questionnaires/{id}/poll", {
+    params: { path: { id } },
+  });
+  if (error) throw error;
+  return data;
+};
