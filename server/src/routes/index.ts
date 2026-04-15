@@ -12,4 +12,5 @@ export { broadcastMediaRoutes } from "./broadcast-media";
 export { feedbackRoutes } from "./feedback";
 export { healthRoutes } from "./health";
 export { lineRoutes } from "./line";
+export { questionnairePublicRoutes } from "./questionnaire-public";
 export { threadsRoutes } from "./threads";
