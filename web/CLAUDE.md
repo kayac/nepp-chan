@@ -30,7 +30,8 @@ web/
 │   │   ├── index.astro        # / → チャット画面
 │   │   ├── dashboard.astro    # /dashboard → ダッシュボード
 │   │   ├── login.astro        # /login → ログイン
-│   │   └── register.astro     # /register → 登録
+│   │   ├── register.astro     # /register → 登録
+│   │   └── poll.astro         # /poll → 投票結果
 │   ├── app/                   # React ページコンポーネント
 │   │   ├── chat/              # チャット画面
 │   │   │   ├── App.tsx              # エントリー（RootLayout + QueryProvider）
@@ -40,6 +41,8 @@ web/
 │   │   ├── auth/              # 認証画面
 │   │   │   ├── LoginPage.tsx        # ログインページ
 │   │   │   └── RegisterPage.tsx     # 登録ページ
+│   │   ├── poll/              # 投票結果画面
+│   │   │   └── PollResultsPage.tsx  # 投票結果ページ
 │   │   └── dashboard/         # ダッシュボード画面
 │   │       ├── DashboardPage.tsx    # エントリー（RootLayout + Providers）
 │   │       ├── App.tsx              # ダッシュボード本体（認証ガード含む）
@@ -161,6 +164,7 @@ export const toolsByName = {
 | `/dashboard` | `pages/dashboard.astro`| `app/dashboard/DashboardPage` |
 | `/login`     | `pages/login.astro`    | `app/auth/LoginPage`    |
 | `/register`  | `pages/register.astro` | `app/auth/RegisterPage` |
+| `/poll`      | `pages/poll.astro`     | `app/poll/PollResultsPage` |
 
 ## コーディング規約
 

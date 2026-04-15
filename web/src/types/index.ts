@@ -133,3 +133,8 @@ export type QuestionnaireResultsResponse =
   GetOk<"/admin/questionnaires/{id}/results">;
 export type QuestionResult =
   QuestionnaireResultsResponse["questionResults"][number];
+
+// アンケート投票結果
+export type PollResultsResponse = GetOk<"/questionnaires/{id}/poll">;
+export type PollQuestionResult = PollResultsResponse["questionResults"][number];
+export type PollChoiceResult = PollQuestionResult["choiceResults"][number];

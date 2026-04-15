@@ -24,6 +24,7 @@ import {
   lineRoutes,
   personaAdminRoutes,
   questionnaireAdminRoutes,
+  questionnairePublicRoutes,
   threadsRoutes,
 } from "~/routes";
 import type { LineEventMessage } from "~/schemas/line-schema";
@@ -47,6 +48,7 @@ app.route("/admin/persona", personaAdminRoutes);
 app.route("/admin/emergency", emergencyAdminRoutes);
 app.route("/admin/invitations", invitationRoutes);
 app.route("/admin/questionnaires", questionnaireAdminRoutes);
+app.route("/questionnaires", questionnairePublicRoutes);
 app.route("/auth", authRoutes);
 app.route("/line", lineRoutes);
 
