@@ -70,6 +70,7 @@ server/src/
 | `/admin/questionnaires/:id/send`   | POST     | アンケートLINE配信             |
 | `/admin/questionnaires/:id/results`| GET      | アンケート回答結果             |
 | `/admin/questionnaires/:id/close`  | POST     | アンケート締切                 |
+| `/questionnaires/:id/poll`         | GET      | アンケート投票結果             |
 | `/admin/invitations`               | GET/POST | 招待一覧・作成                 |
 | `/admin/invitations/:id`           | DELETE   | 招待削除                       |
 | `/auth/anonymous-session`          | POST     | 匿名セッショントークン取得（JWT発行） |
