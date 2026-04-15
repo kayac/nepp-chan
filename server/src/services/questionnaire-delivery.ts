@@ -48,16 +48,7 @@ export const sendQuestionnaire = async (
       questions.length,
     );
 
-    const hasChoiceQuestions = questions.some(
-      (q) => q.type === "single_choice" || q.type === "multiple_choice",
-    );
-
-    const messages: messagingApi.Message[] = [questionMessage];
-    if (hasChoiceQuestions) {
-      messages.push(buildPollResultsLinkMessage(questionnaire, env.WEB_URL));
-    }
-
-    await client.broadcast({ messages }, retryKey);
+    await client.broadcast({ messages: [questionMessage] }, retryKey);
 
     await questionnaireRepository.update(env.DB, questionnaireId, {
       status: "sent",
@@ -212,58 +203,3 @@ export const buildQuestionFlexMessage = (
   };
 };
 
-export const buildPollResultsLinkMessage = (
-  questionnaire: Questionnaire,
-  webUrl: string,
-): messagingApi.FlexMessage => {
-  const pollUrl = `${webUrl}/poll?id=${questionnaire.id}`;
-
-  const bubble: messagingApi.FlexBubble = {
-    type: "bubble",
-    size: "kilo",
-    body: {
-      type: "box",
-      layout: "vertical",
-      contents: [
-        {
-          type: "text",
-          text: "📊 投票結果",
-          weight: "bold",
-          size: "sm",
-          color: "#1DB446",
-        },
-        {
-          type: "text",
-          text: "投票状況を確認できます",
-          size: "xs",
-          color: "#888888",
-          margin: "md",
-          wrap: true,
-        },
-      ],
-    },
-    footer: {
-      type: "box",
-      layout: "vertical",
-      contents: [
-        {
-          type: "button",
-          action: {
-            type: "uri",
-            label: "結果を見る",
-            uri: pollUrl,
-          },
-          style: "primary",
-          color: "#0f766e",
-          height: "sm",
-        },
-      ],
-    },
-  };
-
-  return {
-    type: "flex",
-    altText: `${questionnaire.title} - 投票結果を見る`,
-    contents: bubble,
-  };
-};

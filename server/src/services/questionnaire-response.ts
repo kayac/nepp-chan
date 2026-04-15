@@ -1,4 +1,7 @@
+import type { messagingApi } from "@line/bot-sdk";
+
 import {
+  type Questionnaire,
   type QuestionnaireQuestion,
   questionnaireRepository,
 } from "~/repository/questionnaire-repository";
@@ -116,25 +119,20 @@ export const handleQuestionnairePostback = async (
       completedAt: now,
     });
 
+    const completionMessage = buildCompletionFlexMessage(
+      questionnaire,
+      env.WEB_URL,
+    );
+
     try {
       await client.replyMessage({
         replyToken,
-        messages: [
-          {
-            type: "text",
-            text: `「${questionnaire.title}」へのご回答ありがとうございました！`,
-          },
-        ],
+        messages: [completionMessage],
       });
     } catch {
       await client.pushMessage({
         to: userId,
-        messages: [
-          {
-            type: "text",
-            text: `「${questionnaire.title}」へのご回答ありがとうございました！`,
-          },
-        ],
+        messages: [completionMessage],
       });
     }
   }
@@ -160,6 +158,62 @@ const buildAnswerData = (
     default:
       return { answerText: answer };
   }
+};
+
+const buildCompletionFlexMessage = (
+  questionnaire: Questionnaire,
+  webUrl: string,
+): messagingApi.FlexMessage => {
+  const pollUrl = `${webUrl}/poll?id=${questionnaire.id}`;
+
+  const bubble: messagingApi.FlexBubble = {
+    type: "bubble",
+    size: "kilo",
+    body: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "text",
+          text: "✅ 回答完了",
+          weight: "bold",
+          size: "sm",
+          color: "#1DB446",
+        },
+        {
+          type: "text",
+          text: `「${questionnaire.title}」へのご回答ありがとうございました！`,
+          size: "xs",
+          color: "#888888",
+          margin: "md",
+          wrap: true,
+        },
+      ],
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "button",
+          action: {
+            type: "uri",
+            label: "投票結果を見る",
+            uri: pollUrl,
+          },
+          style: "primary",
+          color: "#0f766e",
+          height: "sm",
+        },
+      ],
+    },
+  };
+
+  return {
+    type: "flex",
+    altText: `「${questionnaire.title}」へのご回答ありがとうございました！`,
+    contents: bubble,
+  };
 };
 
 // --- 集計 ---
