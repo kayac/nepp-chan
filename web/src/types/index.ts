@@ -134,7 +134,7 @@ export type QuestionnaireResultsResponse =
 export type QuestionResult =
   QuestionnaireResultsResponse["questionResults"][number];
 
-// アンケート投票結果（公開）
+// アンケート投票結果
 export type PollResultsResponse = GetOk<"/questionnaires/{id}/poll">;
 export type PollQuestionResult = PollResultsResponse["questionResults"][number];
 export type PollChoiceResult = PollQuestionResult["choiceResults"][number];
