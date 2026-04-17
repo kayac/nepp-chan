@@ -7,43 +7,44 @@ import type { PrincipalVariables } from "~/lib/principal";
 import { requireAdminUser } from "~/lib/principal";
 import { requireAuth } from "~/middleware/auth";
 import { requireRole } from "~/middleware/require-role";
-import { questionnaireRepository } from "~/repository/questionnaire-repository";
+import { pollRepository } from "~/repository/poll-repository";
 import {
-  createQuestionnaireSchema,
-  questionnaireResponseSchema,
-  questionnaireResultsSchema,
-  questionnaireStatusSchema,
-  updateQuestionnaireSchema,
-} from "~/schemas/questionnaire-schema";
+  createPollSchema,
+  pollResponseSchema,
+  pollResultsSchema,
+  pollStatusSchema,
+  updatePollSchema,
+} from "~/schemas/poll-schema";
 import {
-  createQuestionnaire,
-  getQuestionnaireWithQuestions,
-  updateQuestionnaire,
-} from "~/services/questionnaire";
-import { sendQuestionnaire } from "~/services/questionnaire-delivery";
-import { getQuestionnaireResults } from "~/services/questionnaire-response";
+  createPoll,
+  formatPollResponse,
+  getPoll,
+  updatePoll,
+} from "~/services/poll";
+import { sendPoll } from "~/services/poll-delivery";
+import { getPollResults } from "~/services/poll-response";
 
-export const questionnaireAdminRoutes = new OpenAPIHono<{
+export const pollAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
   Variables: Partial<PrincipalVariables>;
 }>();
 
-questionnaireAdminRoutes.use("*", requireAuth);
-questionnaireAdminRoutes.use("*", requireRole("staff"));
+pollAdminRoutes.use("*", requireAuth);
+pollAdminRoutes.use("*", requireRole("staff"));
 
 // --- 一覧取得 ---
 
 const listRoute = createRoute({
   method: "get",
   path: "/",
-  summary: "アンケート一覧を取得",
-  description: "アンケートの一覧を取得します",
-  tags: ["Admin - Questionnaire"],
+  summary: "投票一覧を取得",
+  description: "投票の一覧を取得します",
+  tags: ["Admin - Poll"],
   request: {
     query: z.object({
       limit: z.coerce.number().int().min(1).optional().default(30),
       cursor: z.string().optional(),
-      status: questionnaireStatusSchema.optional(),
+      status: pollStatusSchema.optional(),
     }),
   },
   responses: {
@@ -52,8 +53,7 @@ const listRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            questionnaires: z.array(questionnaireResponseSchema),
-            total: z.number(),
+            polls: z.array(pollResponseSchema),
             nextCursor: z.string().nullable(),
             hasMore: z.boolean(),
           }),
@@ -64,29 +64,18 @@ const listRoute = createRoute({
   },
 });
 
-questionnaireAdminRoutes.openapi(listRoute, async (c) => {
+pollAdminRoutes.openapi(listRoute, async (c) => {
   const { limit, cursor, status } = c.req.valid("query");
 
-  const result = await questionnaireRepository.findAll(c.env.DB, {
+  const result = await pollRepository.findAll(c.env.DB, {
     limit,
     cursor: cursor ?? undefined,
     status: status ?? undefined,
   });
-  const total = await questionnaireRepository.count(c.env.DB);
-
-  // 各アンケートに設問を付与
-  const withQuestions = (
-    await Promise.all(
-      result.questionnaires.map((q) =>
-        getQuestionnaireWithQuestions(c.env.DB, q.id),
-      ),
-    )
-  ).filter((q) => q !== null);
 
   return c.json(
     {
-      questionnaires: withQuestions,
-      total,
+      polls: result.polls.map(formatPollResponse),
       nextCursor: result.nextCursor,
       hasMore: result.hasMore,
     },
@@ -96,17 +85,17 @@ questionnaireAdminRoutes.openapi(listRoute, async (c) => {
 
 // --- 作成 ---
 
-const createRoute_ = createRoute({
+const createPollRoute = createRoute({
   method: "post",
   path: "/",
-  summary: "アンケートを作成",
-  description: "アンケートを作成します",
-  tags: ["Admin - Questionnaire"],
+  summary: "投票を作成",
+  description: "投票を作成します",
+  tags: ["Admin - Poll"],
   request: {
     body: {
       content: {
         "application/json": {
-          schema: createQuestionnaireSchema,
+          schema: createPollSchema,
         },
       },
     },
@@ -116,7 +105,7 @@ const createRoute_ = createRoute({
       description: "作成成功",
       content: {
         "application/json": {
-          schema: questionnaireResponseSchema,
+          schema: pollResponseSchema,
         },
       },
     },
@@ -124,27 +113,27 @@ const createRoute_ = createRoute({
   },
 });
 
-questionnaireAdminRoutes.openapi(createRoute_, async (c) => {
+pollAdminRoutes.openapi(createPollRoute, async (c) => {
   const body = c.req.valid("json");
   const adminUser = requireAdminUser(c.get("principal"));
 
   try {
-    const questionnaire = await createQuestionnaire(c.env, {
+    const poll = await createPoll(c.env, {
       ...body,
       createdBy: adminUser.id,
     });
 
-    if (!questionnaire) {
+    if (!poll) {
       throw new HTTPException(500, {
-        message: "アンケートの作成に失敗しました",
+        message: "投票の作成に失敗しました",
       });
     }
 
-    return c.json(questionnaire, 201);
+    return c.json(poll, 201);
   } catch (error) {
-    logger.error("[Questionnaire] Failed to create questionnaire", error);
+    logger.error("[Poll] Failed to create poll", error);
     throw new HTTPException(500, {
-      message: "アンケートの作成に失敗しました",
+      message: "投票の作成に失敗しました",
     });
   }
 });
@@ -154,9 +143,9 @@ questionnaireAdminRoutes.openapi(createRoute_, async (c) => {
 const getDetailRoute = createRoute({
   method: "get",
   path: "/{id}",
-  summary: "アンケート詳細を取得",
-  description: "アンケートの詳細情報を取得します",
-  tags: ["Admin - Questionnaire"],
+  summary: "投票詳細を取得",
+  description: "投票の詳細情報を取得します",
+  tags: ["Admin - Poll"],
   request: {
     params: z.object({
       id: z.string().min(1),
@@ -167,7 +156,7 @@ const getDetailRoute = createRoute({
       description: "取得成功",
       content: {
         "application/json": {
-          schema: questionnaireResponseSchema,
+          schema: pollResponseSchema,
         },
       },
     },
@@ -176,17 +165,17 @@ const getDetailRoute = createRoute({
   },
 });
 
-questionnaireAdminRoutes.openapi(getDetailRoute, async (c) => {
+pollAdminRoutes.openapi(getDetailRoute, async (c) => {
   const { id } = c.req.valid("param");
-  const questionnaire = await getQuestionnaireWithQuestions(c.env.DB, id);
+  const poll = await getPoll(c.env.DB, id);
 
-  if (!questionnaire) {
+  if (!poll) {
     throw new HTTPException(404, {
-      message: "アンケートが見つかりません",
+      message: "投票が見つかりません",
     });
   }
 
-  return c.json(questionnaire, 200);
+  return c.json(poll, 200);
 });
 
 // --- 更新 ---
@@ -194,9 +183,9 @@ questionnaireAdminRoutes.openapi(getDetailRoute, async (c) => {
 const updateRoute = createRoute({
   method: "put",
   path: "/{id}",
-  summary: "アンケートを更新",
-  description: "アンケートを更新します（draftのみ）",
-  tags: ["Admin - Questionnaire"],
+  summary: "投票を更新",
+  description: "投票を更新します（draftのみ）",
+  tags: ["Admin - Poll"],
   request: {
     params: z.object({
       id: z.string().min(1),
@@ -204,7 +193,7 @@ const updateRoute = createRoute({
     body: {
       content: {
         "application/json": {
-          schema: updateQuestionnaireSchema,
+          schema: updatePollSchema,
         },
       },
     },
@@ -214,7 +203,7 @@ const updateRoute = createRoute({
       description: "更新成功",
       content: {
         "application/json": {
-          schema: questionnaireResponseSchema,
+          schema: pollResponseSchema,
         },
       },
     },
@@ -224,26 +213,26 @@ const updateRoute = createRoute({
   },
 });
 
-questionnaireAdminRoutes.openapi(updateRoute, async (c) => {
+pollAdminRoutes.openapi(updateRoute, async (c) => {
   const { id } = c.req.valid("param");
   const body = c.req.valid("json");
 
-  const existing = await questionnaireRepository.findById(c.env.DB, id);
+  const existing = await pollRepository.findById(c.env.DB, id);
   if (!existing) {
     throw new HTTPException(404, {
-      message: "アンケートが見つかりません",
+      message: "投票が見つかりません",
     });
   }
   if (existing.status !== "draft") {
     throw new HTTPException(400, {
-      message: "下書き状態のアンケートのみ更新できます",
+      message: "下書き状態の投票のみ更新できます",
     });
   }
 
-  const updated = await updateQuestionnaire(c.env.DB, id, body);
+  const updated = await updatePoll(c.env.DB, id, body);
 
   if (!updated) {
-    throw new HTTPException(500, { message: "アンケートの更新に失敗しました" });
+    throw new HTTPException(500, { message: "投票の更新に失敗しました" });
   }
 
   return c.json(updated, 200);
@@ -254,9 +243,9 @@ questionnaireAdminRoutes.openapi(updateRoute, async (c) => {
 const deleteRoute = createRoute({
   method: "delete",
   path: "/{id}",
-  summary: "アンケートを削除",
-  description: "アンケートを削除します（draftのみ）",
-  tags: ["Admin - Questionnaire"],
+  summary: "投票を削除",
+  description: "投票を削除します（draft / scheduled のみ）",
+  tags: ["Admin - Poll"],
   request: {
     params: z.object({
       id: z.string().min(1),
@@ -277,23 +266,23 @@ const deleteRoute = createRoute({
   },
 });
 
-questionnaireAdminRoutes.openapi(deleteRoute, async (c) => {
+pollAdminRoutes.openapi(deleteRoute, async (c) => {
   const { id } = c.req.valid("param");
 
-  const existing = await questionnaireRepository.findById(c.env.DB, id);
+  const existing = await pollRepository.findById(c.env.DB, id);
   if (!existing) {
     throw new HTTPException(404, {
-      message: "アンケートが見つかりません",
+      message: "投票が見つかりません",
     });
   }
   if (existing.status !== "draft" && existing.status !== "scheduled") {
     throw new HTTPException(400, {
-      message: "下書きまたは予約済みのアンケートのみ削除できます",
+      message: "下書きまたは予約済みの投票のみ削除できます",
     });
   }
 
-  await questionnaireRepository.delete(c.env.DB, id);
-  return c.json({ message: "アンケートを削除しました" }, 200);
+  await pollRepository.delete(c.env.DB, id);
+  return c.json({ message: "投票を削除しました" }, 200);
 });
 
 // --- LINE配信 ---
@@ -301,9 +290,9 @@ questionnaireAdminRoutes.openapi(deleteRoute, async (c) => {
 const sendRoute = createRoute({
   method: "post",
   path: "/{id}/send",
-  summary: "アンケートをLINEに配信",
-  description: "アンケートをLINE全ユーザーに配信します",
-  tags: ["Admin - Questionnaire"],
+  summary: "投票をLINEに配信",
+  description: "投票をLINE全ユーザーに配信します",
+  tags: ["Admin - Poll"],
   request: {
     params: z.object({
       id: z.string().min(1),
@@ -325,10 +314,10 @@ const sendRoute = createRoute({
   },
 });
 
-questionnaireAdminRoutes.openapi(sendRoute, async (c) => {
+pollAdminRoutes.openapi(sendRoute, async (c) => {
   const { id } = c.req.valid("param");
 
-  const result = await sendQuestionnaire(c.env, id);
+  const result = await sendPoll(c.env, id);
   if (!result.success) {
     const status = result.error?.includes("見つかりません") ? 404 : 400;
     throw new HTTPException(status, {
@@ -336,7 +325,7 @@ questionnaireAdminRoutes.openapi(sendRoute, async (c) => {
     });
   }
 
-  return c.json({ message: "アンケートを配信しました" }, 200);
+  return c.json({ message: "投票を配信しました" }, 200);
 });
 
 // --- 結果取得 ---
@@ -344,9 +333,9 @@ questionnaireAdminRoutes.openapi(sendRoute, async (c) => {
 const resultsRoute = createRoute({
   method: "get",
   path: "/{id}/results",
-  summary: "アンケート結果を取得",
-  description: "アンケートの回答結果を集計して取得します",
-  tags: ["Admin - Questionnaire"],
+  summary: "投票結果を取得",
+  description: "投票の集計結果を取得します",
+  tags: ["Admin - Poll"],
   request: {
     params: z.object({
       id: z.string().min(1),
@@ -357,7 +346,7 @@ const resultsRoute = createRoute({
       description: "取得成功",
       content: {
         "application/json": {
-          schema: questionnaireResultsSchema,
+          schema: pollResultsSchema,
         },
       },
     },
@@ -366,13 +355,13 @@ const resultsRoute = createRoute({
   },
 });
 
-questionnaireAdminRoutes.openapi(resultsRoute, async (c) => {
+pollAdminRoutes.openapi(resultsRoute, async (c) => {
   const { id } = c.req.valid("param");
 
-  const results = await getQuestionnaireResults(c.env.DB, id);
+  const results = await getPollResults(c.env.DB, id);
   if (!results) {
     throw new HTTPException(404, {
-      message: "アンケートが見つかりません",
+      message: "投票が見つかりません",
     });
   }
 
@@ -384,9 +373,9 @@ questionnaireAdminRoutes.openapi(resultsRoute, async (c) => {
 const closeRoute = createRoute({
   method: "post",
   path: "/{id}/close",
-  summary: "アンケートを締切",
-  description: "アンケートの回答受付を締め切ります",
-  tags: ["Admin - Questionnaire"],
+  summary: "投票を締切",
+  description: "投票の回答受付を締め切ります",
+  tags: ["Admin - Poll"],
   request: {
     params: z.object({
       id: z.string().min(1),
@@ -407,25 +396,25 @@ const closeRoute = createRoute({
   },
 });
 
-questionnaireAdminRoutes.openapi(closeRoute, async (c) => {
+pollAdminRoutes.openapi(closeRoute, async (c) => {
   const { id } = c.req.valid("param");
 
-  const existing = await questionnaireRepository.findById(c.env.DB, id);
+  const existing = await pollRepository.findById(c.env.DB, id);
   if (!existing) {
     throw new HTTPException(404, {
-      message: "アンケートが見つかりません",
+      message: "投票が見つかりません",
     });
   }
   if (existing.status !== "sent") {
     throw new HTTPException(400, {
-      message: "配信済みのアンケートのみ締切できます",
+      message: "配信済みの投票のみ締切できます",
     });
   }
 
-  await questionnaireRepository.update(c.env.DB, id, {
+  await pollRepository.update(c.env.DB, id, {
     status: "closed",
     closedAt: new Date().toISOString(),
   });
 
-  return c.json({ message: "アンケートを締め切りました" }, 200);
+  return c.json({ message: "投票を締め切りました" }, 200);
 });
