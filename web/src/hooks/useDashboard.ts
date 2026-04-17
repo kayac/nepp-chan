@@ -38,14 +38,15 @@ import {
   fetchPersonas,
 } from "~/repository/persona-repository";
 import {
-  closeQuestionnaire,
-  createQuestionnaire,
-  deleteQuestionnaire,
-  fetchQuestionnaireResults,
-  fetchQuestionnaires,
-  sendQuestionnaireNow,
-  updateQuestionnaire,
-} from "~/repository/questionnaire-repository";
+  closePoll,
+  createPoll,
+  deletePoll,
+  fetchPollResultsAdmin,
+  fetchPolls,
+  sendPollNow,
+  updatePoll,
+} from "~/repository/poll-repository";
+import type { PollStatus } from "~/types";
 
 export const dashboardKeys = {
   broadcasts: ["dashboard", "broadcasts"] as const,
@@ -58,9 +59,8 @@ export const dashboardKeys = {
   knowledgeUnifiedFiles: ["dashboard", "knowledge", "unified"] as const,
   knowledgeFile: (key: string) =>
     ["dashboard", "knowledge", "file", key] as const,
-  questionnaires: ["dashboard", "questionnaires"] as const,
-  questionnaireResults: (id: string) =>
-    ["dashboard", "questionnaire", "results", id] as const,
+  polls: ["dashboard", "polls"] as const,
+  pollResults: (id: string) => ["dashboard", "poll", "results", id] as const,
 };
 
 export const usePersonas = (limit = 30) =>
@@ -320,15 +320,17 @@ export const useSendBroadcast = () => {
 export const useUploadBroadcastImage = () =>
   useMutation({ mutationFn: uploadBroadcastImage });
 
-// アンケート関連 hooks
-export const useQuestionnaires = (
+// 投票関連 hooks
+export const usePolls = (
   limit = 30,
-  options?: { status?: "draft" | "scheduled" | "sent" | "closed" },
+  options?: {
+    status?: PollStatus;
+  },
 ) =>
   useInfiniteQuery({
-    queryKey: [...dashboardKeys.questionnaires, limit, options?.status],
+    queryKey: [...dashboardKeys.polls, limit, options?.status],
     queryFn: ({ pageParam }) =>
-      fetchQuestionnaires({
+      fetchPolls({
         limit,
         cursor: pageParam,
         status: options?.status,
@@ -337,19 +339,17 @@ export const useQuestionnaires = (
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });
 
-export const useCreateQuestionnaire = () => {
+export const useCreatePoll = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createQuestionnaire,
+    mutationFn: createPoll,
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: dashboardKeys.questionnaires,
-      });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.polls });
     },
   });
 };
 
-export const useUpdateQuestionnaire = () => {
+export const useUpdatePoll = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -357,58 +357,50 @@ export const useUpdateQuestionnaire = () => {
       data,
     }: {
       id: string;
-      data: Parameters<typeof updateQuestionnaire>[1];
-    }) => updateQuestionnaire(id, data),
+      data: Parameters<typeof updatePoll>[1];
+    }) => updatePoll(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: dashboardKeys.questionnaires,
-      });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.polls });
     },
   });
 };
 
-export const useDeleteQuestionnaire = () => {
+export const useDeletePoll = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: deleteQuestionnaire,
+    mutationFn: deletePoll,
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: dashboardKeys.questionnaires,
-      });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.polls });
     },
   });
 };
 
-export const useSendQuestionnaire = () => {
+export const useSendPoll = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: sendQuestionnaireNow,
+    mutationFn: sendPollNow,
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: dashboardKeys.questionnaires,
-      });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.polls });
     },
   });
 };
 
-export const useCloseQuestionnaire = () => {
+export const useClosePoll = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: closeQuestionnaire,
+    mutationFn: closePoll,
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: dashboardKeys.questionnaires,
-      });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.polls });
     },
   });
 };
 
-export const useQuestionnaireResults = (id: string | null) =>
+export const usePollResults = (id: string | null) =>
   useQuery({
-    queryKey: dashboardKeys.questionnaireResults(id ?? ""),
+    queryKey: dashboardKeys.pollResults(id ?? ""),
     queryFn: () => {
       if (!id) throw new Error("ID is required");
-      return fetchQuestionnaireResults(id);
+      return fetchPollResultsAdmin(id);
     },
     enabled: !!id,
   });

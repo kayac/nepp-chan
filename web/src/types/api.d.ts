@@ -2940,7 +2940,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/questionnaires": {
+    "/admin/polls": {
         parameters: {
             query?: never;
             header?: never;
@@ -2948,8 +2948,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * アンケート一覧を取得
-         * @description アンケートの一覧を取得します
+         * 投票一覧を取得
+         * @description 投票の一覧を取得します
          */
         get: {
             parameters: {
@@ -2971,23 +2971,13 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            questionnaires: {
+                            polls: {
                                 id: string;
                                 title: string;
-                                description: string | null;
-                                isAnonymous: boolean;
+                                choices: string[];
+                                followUpPrompt: string | null;
                                 /** @enum {string} */
                                 status: "draft" | "scheduled" | "sent" | "closed";
-                                questions: {
-                                    id: string;
-                                    questionnaireId: string;
-                                    order: number;
-                                    text: string;
-                                    /** @enum {string} */
-                                    type: "single_choice" | "multiple_choice" | "free_text" | "rating";
-                                    required: boolean;
-                                    choices: string[] | null;
-                                }[];
                                 createdBy: string;
                                 createdAt: string;
                                 updatedAt: string | null;
@@ -3019,8 +3009,8 @@ export interface paths {
         };
         put?: never;
         /**
-         * アンケートを作成
-         * @description アンケートを作成します
+         * 投票を作成
+         * @description 投票を作成します
          */
         post: {
             parameters: {
@@ -3033,17 +3023,8 @@ export interface paths {
                 content: {
                     "application/json": {
                         title: string;
-                        description?: string;
-                        /** @default true */
-                        isAnonymous?: boolean;
-                        questions: {
-                            text: string;
-                            /** @enum {string} */
-                            type: "single_choice" | "multiple_choice" | "free_text" | "rating";
-                            /** @default true */
-                            required?: boolean;
-                            choices?: string[];
-                        }[];
+                        choices: string[];
+                        followUpPrompt?: string;
                         /** Format: date-time */
                         scheduledAt?: string;
                         sendNow?: boolean;
@@ -3060,20 +3041,10 @@ export interface paths {
                         "application/json": {
                             id: string;
                             title: string;
-                            description: string | null;
-                            isAnonymous: boolean;
+                            choices: string[];
+                            followUpPrompt: string | null;
                             /** @enum {string} */
                             status: "draft" | "scheduled" | "sent" | "closed";
-                            questions: {
-                                id: string;
-                                questionnaireId: string;
-                                order: number;
-                                text: string;
-                                /** @enum {string} */
-                                type: "single_choice" | "multiple_choice" | "free_text" | "rating";
-                                required: boolean;
-                                choices: string[] | null;
-                            }[];
                             createdBy: string;
                             createdAt: string;
                             updatedAt: string | null;
@@ -3105,7 +3076,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/questionnaires/{id}": {
+    "/admin/polls/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -3113,8 +3084,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * アンケート詳細を取得
-         * @description アンケートの詳細情報を取得します
+         * 投票詳細を取得
+         * @description 投票の詳細情報を取得します
          */
         get: {
             parameters: {
@@ -3136,20 +3107,10 @@ export interface paths {
                         "application/json": {
                             id: string;
                             title: string;
-                            description: string | null;
-                            isAnonymous: boolean;
+                            choices: string[];
+                            followUpPrompt: string | null;
                             /** @enum {string} */
                             status: "draft" | "scheduled" | "sent" | "closed";
-                            questions: {
-                                id: string;
-                                questionnaireId: string;
-                                order: number;
-                                text: string;
-                                /** @enum {string} */
-                                type: "single_choice" | "multiple_choice" | "free_text" | "rating";
-                                required: boolean;
-                                choices: string[] | null;
-                            }[];
                             createdBy: string;
                             createdAt: string;
                             updatedAt: string | null;
@@ -3190,8 +3151,8 @@ export interface paths {
             };
         };
         /**
-         * アンケートを更新
-         * @description アンケートを更新します（draftのみ）
+         * 投票を更新
+         * @description 投票を更新します（draftのみ）
          */
         put: {
             parameters: {
@@ -3206,16 +3167,8 @@ export interface paths {
                 content: {
                     "application/json": {
                         title?: string;
-                        description?: string | null;
-                        isAnonymous?: boolean;
-                        questions?: {
-                            text: string;
-                            /** @enum {string} */
-                            type: "single_choice" | "multiple_choice" | "free_text" | "rating";
-                            /** @default true */
-                            required?: boolean;
-                            choices?: string[];
-                        }[];
+                        choices?: string[];
+                        followUpPrompt?: string | null;
                     };
                 };
             };
@@ -3229,20 +3182,10 @@ export interface paths {
                         "application/json": {
                             id: string;
                             title: string;
-                            description: string | null;
-                            isAnonymous: boolean;
+                            choices: string[];
+                            followUpPrompt: string | null;
                             /** @enum {string} */
                             status: "draft" | "scheduled" | "sent" | "closed";
-                            questions: {
-                                id: string;
-                                questionnaireId: string;
-                                order: number;
-                                text: string;
-                                /** @enum {string} */
-                                type: "single_choice" | "multiple_choice" | "free_text" | "rating";
-                                required: boolean;
-                                choices: string[] | null;
-                            }[];
                             createdBy: string;
                             createdAt: string;
                             updatedAt: string | null;
@@ -3298,8 +3241,8 @@ export interface paths {
         };
         post?: never;
         /**
-         * アンケートを削除
-         * @description アンケートを削除します（draftのみ）
+         * 投票を削除
+         * @description 投票を削除します（draft / scheduled のみ）
          */
         delete: {
             parameters: {
@@ -3372,7 +3315,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/questionnaires/{id}/send": {
+    "/admin/polls/{id}/send": {
         parameters: {
             query?: never;
             header?: never;
@@ -3382,8 +3325,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * アンケートをLINEに配信
-         * @description アンケートをLINE全ユーザーに配信します
+         * 投票をLINEに配信
+         * @description 投票をLINE全ユーザーに配信します
          */
         post: {
             parameters: {
@@ -3471,7 +3414,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/questionnaires/{id}/results": {
+    "/admin/polls/{id}/results": {
         parameters: {
             query?: never;
             header?: never;
@@ -3479,8 +3422,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * アンケート結果を取得
-         * @description アンケートの回答結果を集計して取得します
+         * 投票結果を取得
+         * @description 投票の集計結果を取得します
          */
         get: {
             parameters: {
@@ -3500,26 +3443,13 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            questionnaireId: string;
+                            pollId: string;
                             title: string;
                             totalSubmissions: number;
-                            completedSubmissions: number;
-                            questionResults: {
-                                questionId: string;
-                                questionText: string;
-                                /** @enum {string} */
-                                questionType: "single_choice" | "multiple_choice" | "free_text" | "rating";
-                                totalResponses: number;
-                                choiceResults?: {
-                                    choice: string;
-                                    count: number;
-                                    percentage: number;
-                                }[];
-                                averageRating?: number;
-                                ratingDistribution?: {
-                                    [key: string]: number;
-                                };
-                                freeTextAnswers?: string[];
+                            choiceResults: {
+                                choice: string;
+                                count: number;
+                                percentage: number;
                             }[];
                         };
                     };
@@ -3562,7 +3492,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/questionnaires/{id}/close": {
+    "/admin/polls/{id}/close": {
         parameters: {
             query?: never;
             header?: never;
@@ -3572,8 +3502,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * アンケートを締切
-         * @description アンケートの回答受付を締め切ります
+         * 投票を締切
+         * @description 投票の回答受付を締め切ります
          */
         post: {
             parameters: {
@@ -3647,7 +3577,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/questionnaires/{id}/poll": {
+    "/polls/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -3655,8 +3585,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * アンケート投票結果を公開取得
-         * @description 選択式設問の集計結果を認証不要で取得します。sent/closed のアンケートのみ対象。
+         * 投票結果を公開取得
+         * @description 投票の集計結果を認証不要で取得します。sent/closed の投票のみ。
          */
         get: {
             parameters: {
@@ -3676,21 +3606,13 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            questionnaireId: string;
+                            pollId: string;
                             title: string;
                             totalSubmissions: number;
-                            completedSubmissions: number;
-                            questionResults: {
-                                questionId: string;
-                                questionText: string;
-                                /** @enum {string} */
-                                questionType: "single_choice" | "multiple_choice";
-                                totalResponses: number;
-                                choiceResults: {
-                                    choice: string;
-                                    count: number;
-                                    percentage: number;
-                                }[];
+                            choiceResults: {
+                                choice: string;
+                                count: number;
+                                percentage: number;
                             }[];
                         };
                     };
