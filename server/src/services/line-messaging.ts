@@ -9,6 +9,7 @@ import { stripMarkdown } from "~/lib/strip-markdown";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { injectBroadcastsToThread } from "~/services/broadcast-thread-injector";
+import { injectPollsToThread } from "~/services/poll-thread-injector";
 
 export const createLineClient = (token: string) =>
   new messagingApi.MessagingApiClient({ channelAccessToken: token });
@@ -27,15 +28,24 @@ export const generateReply = async (params: {
     env: params.env,
   });
 
-  // 未注入の配信メッセージをスレッドに system メッセージとして追加
+  // 未注入の配信メッセージ／投票お知らせをスレッドに system として追加
   const lineUserId = params.threadId.replace("line-thread:", "");
-  await injectBroadcastsToThread({
-    d1: params.env.DB,
-    storage,
-    threadId: params.threadId,
-    resourceId: params.resourceId,
-    userId: lineUserId,
-  });
+  await Promise.all([
+    injectBroadcastsToThread({
+      d1: params.env.DB,
+      storage,
+      threadId: params.threadId,
+      resourceId: params.resourceId,
+      userId: lineUserId,
+    }),
+    injectPollsToThread({
+      d1: params.env.DB,
+      storage,
+      threadId: params.threadId,
+      resourceId: params.resourceId,
+      userId: lineUserId,
+    }),
+  ]);
 
   // Intent 分類でモデルティアを決定（非テキストメッセージは casual 直行）
   const intent = params.userMessage
