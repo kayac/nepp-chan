@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { RootLayout } from "~/components/RootLayout";
 import { QueryProvider } from "~/providers/QueryProvider";
-import { fetchPollResults } from "~/repository/questionnaire-repository";
-import type { PollChoiceResult, PollQuestionResult } from "~/types";
+import { fetchPollResults } from "~/repository/poll-repository";
+import type { PollChoiceResult } from "~/types";
 
-const usePollResults = (id: string | null) =>
+const usePollResultsPublic = (id: string | null) =>
   useQuery({
     queryKey: ["poll-results", id],
     queryFn: () => fetchPollResults(id as string),
@@ -38,44 +38,8 @@ const ChoiceBar = ({
   </div>
 );
 
-const QuestionCard = ({
-  result,
-  index,
-}: {
-  result: PollQuestionResult;
-  index: number;
-}) => {
-  const maxCount = Math.max(...result.choiceResults.map((cr) => cr.count), 0);
-
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 p-5 space-y-4">
-      <div className="space-y-1">
-        <p className="text-xs font-medium text-teal-600 tracking-wide">
-          Q{index + 1}
-          {result.questionType === "multiple_choice" && " (複数選択)"}
-        </p>
-        <h3 className="text-base font-semibold text-stone-800 leading-snug">
-          {result.questionText}
-        </h3>
-      </div>
-      <div className="space-y-3">
-        {result.choiceResults.map((cr) => (
-          <ChoiceBar
-            key={cr.choice}
-            {...cr}
-            isLeading={cr.count === maxCount && maxCount > 0}
-          />
-        ))}
-      </div>
-      <p className="text-xs text-stone-400 text-right tabular-nums">
-        {result.totalResponses}票
-      </p>
-    </div>
-  );
-};
-
 const PollContent = ({ id }: { id: string }) => {
-  const { data, isLoading, isError } = usePollResults(id);
+  const { data, isLoading, isError } = usePollResultsPublic(id);
 
   if (isLoading) {
     return (
@@ -94,12 +58,14 @@ const PollContent = ({ id }: { id: string }) => {
         <div className="text-center space-y-2 p-6">
           <p className="text-stone-600 font-medium">投票結果を表示できません</p>
           <p className="text-sm text-stone-400">
-            アンケートが存在しないか、まだ配信されていません
+            投票が存在しないか、まだ配信されていません
           </p>
         </div>
       </div>
     );
   }
+
+  const maxCount = Math.max(...data.choiceResults.map((cr) => cr.count), 0);
 
   return (
     <div className="min-h-dvh bg-stone-50">
@@ -111,15 +77,23 @@ const PollContent = ({ id }: { id: string }) => {
           </p>
         </header>
 
-        {data.questionResults.length === 0 && (
+        {data.choiceResults.length === 0 && (
           <div className="bg-white rounded-2xl border border-stone-200/80 p-8 text-center">
             <p className="text-sm text-stone-400">まだ投票がありません</p>
           </div>
         )}
 
-        {data.questionResults.map((qr, i) => (
-          <QuestionCard key={qr.questionId} result={qr} index={i} />
-        ))}
+        {data.choiceResults.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 p-5 space-y-3">
+            {data.choiceResults.map((cr) => (
+              <ChoiceBar
+                key={cr.choice}
+                {...cr}
+                isLeading={cr.count === maxCount && maxCount > 0}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -131,9 +105,7 @@ const PollResultsInner = () => {
   if (!id) {
     return (
       <div className="flex items-center justify-center min-h-dvh bg-stone-50">
-        <p className="text-stone-500 text-sm">
-          アンケートIDが指定されていません
-        </p>
+        <p className="text-stone-500 text-sm">投票IDが指定されていません</p>
       </div>
     );
   }
