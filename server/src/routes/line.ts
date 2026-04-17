@@ -4,7 +4,10 @@ import type { WebhookEvent, WebhookRequestBody } from "@line/bot-sdk";
 import { logger } from "~/lib/logger";
 import { lineSignatureVerify } from "~/middleware";
 import type { LineEventMessage } from "~/schemas/line-schema";
-import { handleQuestionnairePostback } from "~/services/questionnaire-response";
+import {
+  generatePollFollowUp,
+  handlePollPostback,
+} from "~/services/poll-response";
 
 export const lineRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -22,7 +25,7 @@ lineRoutes.post("/webhook", async (c) => {
     return c.json({ status: "ok" });
   }
 
-  await enqueueLineEvents(body.events, c.env);
+  await enqueueLineEvents(body.events, c.env, c.executionCtx);
 
   return c.json({ status: "ok" });
 });
@@ -30,27 +33,38 @@ lineRoutes.post("/webhook", async (c) => {
 const enqueueLineEvents = async (
   events: WebhookEvent[],
   env: CloudflareBindings,
+  executionCtx: { waitUntil: (promise: Promise<unknown>) => void },
 ) => {
   for (const event of events) {
-    // Postback イベント（アンケート回答）
     if (event.type === "postback") {
       if (!event.source.userId || !event.replyToken) continue;
-      if (!event.postback.data.startsWith("qnr=")) continue;
+      if (!event.postback.data.startsWith("poll=")) continue;
 
       try {
-        await handleQuestionnairePostback(
+        const result = await handlePollPostback(
           env,
           event.source.userId,
           event.postback.data,
           event.replyToken,
         );
+
+        if (result.status === "answered") {
+          const userId = event.source.userId;
+          executionCtx.waitUntil(
+            generatePollFollowUp(
+              env,
+              userId,
+              result.poll,
+              result.selectedChoice,
+            ),
+          );
+        }
       } catch (error) {
-        logger.error("[LINE] Questionnaire postback error", error);
+        logger.error("[LINE] Poll postback error", error);
       }
       continue;
     }
 
-    // Message イベント（既存のチャット処理）
     if (event.type !== "message" || event.message.type !== "text") continue;
     if (!("replyToken" in event) || !event.replyToken) continue;
     if (!event.source.userId) continue;

@@ -116,25 +116,13 @@ export type InvitationsResponse = GetOk<"/admin/invitations">;
 export type Invitation = InvitationsResponse["invitations"][number];
 export type CreateInvitationResponse = PostCreated<"/admin/invitations">;
 
-// アンケート
-export type QuestionnairesResponse = GetOk<"/admin/questionnaires">;
-export type QuestionnaireMessage =
-  QuestionnairesResponse["questionnaires"][number];
-export type QuestionnaireQuestion = QuestionnaireMessage["questions"][number];
-export type QuestionnaireStatus = "draft" | "scheduled" | "sent" | "closed";
-export type QuestionType =
-  | "single_choice"
-  | "multiple_choice"
-  | "free_text"
-  | "rating";
-export type CreateQuestionnaireRequest = PostBody<"/admin/questionnaires">;
-export type UpdateQuestionnaireRequest = PutBody<"/admin/questionnaires/{id}">;
-export type QuestionnaireResultsResponse =
-  GetOk<"/admin/questionnaires/{id}/results">;
-export type QuestionResult =
-  QuestionnaireResultsResponse["questionResults"][number];
+// 投票
+export type PollsResponse = GetOk<"/admin/polls">;
+export type Poll = PollsResponse["polls"][number];
+export type PollStatus = "draft" | "scheduled" | "sent" | "closed";
+export type CreatePollRequest = PostBody<"/admin/polls">;
+export type UpdatePollRequest = PutBody<"/admin/polls/{id}">;
 
-// アンケート投票結果
-export type PollResultsResponse = GetOk<"/questionnaires/{id}/poll">;
-export type PollQuestionResult = PollResultsResponse["questionResults"][number];
-export type PollChoiceResult = PollQuestionResult["choiceResults"][number];
+// 投票結果
+export type PollResultsResponse = GetOk<"/polls/{id}">;
+export type PollChoiceResult = PollResultsResponse["choiceResults"][number];

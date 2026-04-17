@@ -65,12 +65,12 @@ server/src/
 | `/admin/broadcast/:id/send`        | POST     | 配信即時送信                   |
 | `/admin/broadcast/upload-image`    | POST     | 配信用画像アップロード         |
 | `/broadcast/media/:key`            | GET      | 配信画像取得                   |
-| `/admin/questionnaires`            | GET/POST | アンケート一覧・作成           |
-| `/admin/questionnaires/:id`        | GET/PUT/DELETE | アンケート詳細・更新・削除 |
-| `/admin/questionnaires/:id/send`   | POST     | アンケートLINE配信             |
-| `/admin/questionnaires/:id/results`| GET      | アンケート回答結果             |
-| `/admin/questionnaires/:id/close`  | POST     | アンケート締切                 |
-| `/questionnaires/:id/poll`         | GET      | アンケート投票結果             |
+| `/admin/polls`                     | GET/POST | 投票一覧・作成                 |
+| `/admin/polls/:id`                 | GET/PUT/DELETE | 投票詳細・更新・削除     |
+| `/admin/polls/:id/send`            | POST     | 投票LINE配信                   |
+| `/admin/polls/:id/results`         | GET      | 投票結果                       |
+| `/admin/polls/:id/close`           | POST     | 投票締切                       |
+| `/polls/:id`                       | GET      | 投票結果（公開）               |
 | `/admin/invitations`               | GET/POST | 招待一覧・作成                 |
 | `/admin/invitations/:id`           | DELETE   | 招待削除                       |
 | `/auth/anonymous-session`          | POST     | 匿名セッショントークン取得（JWT発行） |
@@ -334,59 +334,40 @@ throw new HTTPException(404, { message: "Not found" });
 | user_id          | TEXT | PRIMARY KEY（LINE userId）    |
 | last_injected_at | TEXT | 最終配信注入日時（NOT NULL）  |
 
-### questionnaires
+### polls
 
-| カラム        | 型      | 説明                                          |
-| ------------- | ------- | --------------------------------------------- |
-| id            | TEXT    | PRIMARY KEY                                   |
-| title         | TEXT    | タイトル（NOT NULL）                          |
-| description   | TEXT    | 説明                                          |
-| is_anonymous  | INTEGER | 無記名フラグ（1=無記名, 0=記名、NOT NULL）    |
-| status        | TEXT    | ステータス（draft/scheduled/sent/closed）     |
-| created_by    | TEXT    | 作成者 admin ID（NOT NULL）                   |
-| created_at    | TEXT    | 作成日時（NOT NULL）                          |
-| updated_at    | TEXT    | 更新日時                                      |
-| scheduled_at  | TEXT    | 予約配信日時                                  |
-| sent_at       | TEXT    | 配信日時                                      |
-| closed_at     | TEXT    | 締切日時                                      |
+| カラム            | 型   | 説明                                                 |
+| ----------------- | ---- | ---------------------------------------------------- |
+| id                | TEXT | PRIMARY KEY                                          |
+| title             | TEXT | お題（NOT NULL）                                     |
+| choices           | TEXT | 選択肢（JSON配列、NOT NULL）                         |
+| follow_up_prompt  | TEXT | 回答後にねっぷちゃんが会話を広げるヒント（任意）     |
+| status            | TEXT | ステータス（draft/scheduled/sent/closed）            |
+| created_by        | TEXT | 作成者 admin ID（NOT NULL）                          |
+| created_at        | TEXT | 作成日時（NOT NULL）                                 |
+| updated_at        | TEXT | 更新日時                                             |
+| scheduled_at      | TEXT | 予約配信日時                                         |
+| sent_at           | TEXT | 配信日時                                             |
+| closed_at         | TEXT | 締切日時                                             |
 
-### questionnaire_questions
+### poll_submissions
 
-| カラム           | 型      | 説明                                              |
-| ---------------- | ------- | ------------------------------------------------- |
-| id               | TEXT    | PRIMARY KEY                                       |
-| questionnaire_id | TEXT    | アンケートID（NOT NULL）                          |
-| order            | INTEGER | 表示順（NOT NULL）                                |
-| text             | TEXT    | 質問文（NOT NULL）                                |
-| type             | TEXT    | 種別（single_choice/multiple_choice/free_text/rating） |
-| required         | INTEGER | 必須フラグ（1=必須, 0=任意、NOT NULL）            |
-| choices          | TEXT    | 選択肢（JSON配列）                                |
-| created_at       | TEXT    | 作成日時（NOT NULL）                              |
+| カラム          | 型   | 説明                        |
+| --------------- | ---- | --------------------------- |
+| id              | TEXT | PRIMARY KEY                 |
+| poll_id         | TEXT | 投票ID（NOT NULL）          |
+| user_id         | TEXT | LINE ユーザーID（NOT NULL） |
+| selected_choice | TEXT | 選んだ選択肢（NOT NULL）    |
+| created_at      | TEXT | 作成日時（NOT NULL）        |
 
-### questionnaire_submissions
+UNIQUE INDEX: `(poll_id, user_id)` で重複回答を防止
 
-| カラム                 | 型      | 説明                        |
-| ---------------------- | ------- | --------------------------- |
-| id                     | TEXT    | PRIMARY KEY                 |
-| questionnaire_id       | TEXT    | アンケートID（NOT NULL）    |
-| user_id                | TEXT    | LINE ユーザーID（NOT NULL） |
-| current_question_order | INTEGER | 現在の設問番号（NOT NULL）  |
-| completed_at           | TEXT    | 回答完了日時                |
-| created_at             | TEXT    | 作成日時（NOT NULL）        |
+### user_poll_state
 
-UNIQUE INDEX: `(questionnaire_id, user_id)` で重複回答を防止
-
-### questionnaire_answers
-
-| カラム           | 型      | 説明                     |
-| ---------------- | ------- | ------------------------ |
-| id               | TEXT    | PRIMARY KEY              |
-| submission_id    | TEXT    | 提出ID（NOT NULL）       |
-| question_id      | TEXT    | 設問ID（NOT NULL）       |
-| answer_text      | TEXT    | 自由記述の回答           |
-| answer_number    | INTEGER | 評価の回答（1-5）        |
-| selected_choices | TEXT    | 選択肢の回答（JSON配列） |
-| created_at       | TEXT    | 作成日時（NOT NULL）     |
+| カラム           | 型   | 説明                          |
+| ---------------- | ---- | ----------------------------- |
+| user_id          | TEXT | PRIMARY KEY（LINE userId）    |
+| last_injected_at | TEXT | 最終投票注入日時（NOT NULL）  |
 
 ## Drizzle ORM
 
@@ -497,7 +478,7 @@ thread_persona_status 更新
 | スケジュール   | ハンドラー           | 説明                          |
 | -------------- | -------------------- | ----------------------------- |
 | `*/5 * * * *`  | handleBroadcastCheck | 配信予約チェック（5分ごと）        |
-| `*/5 * * * *`  | handleQuestionnaireCheck | アンケート予約配信チェック（5分ごと） |
+| `*/5 * * * *`  | handlePollCheck          | 投票予約配信チェック（5分ごと） |
 | `0 18 * * *`   | handlePersonaExtract | ペルソナ抽出（毎日03:00 JST）      |
 
 ## デプロイ環境
