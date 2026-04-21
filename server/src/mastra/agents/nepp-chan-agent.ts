@@ -14,6 +14,7 @@ import { devTool } from "~/mastra/tools/dev-tool";
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
+import { pollGetTool } from "~/mastra/tools/poll-get-tool";
 import { personaSchema } from "~/schemas/persona-schema";
 
 const baseInstructions = (platform: "web" | "line") => `
@@ -118,6 +119,10 @@ const adminInstructions = `
 - 村民の声・住民レポート → まず personaAnalystAgent に委譲する
   村の状況把握や住民の声に関する質問はpersonaAnalystAgentを優先する。結果が不十分な場合はwebResearcherAgentで補完する。
   例: 「住民の声を教えて」「困ってる人はいる？」「村の調子はどう？」「最近どんな話題が多い？」「年代別の傾向は？」「交通の不満をもっと教えて」
+
+### 投票の結果・傾向分析
+- 投票結果を踏まえた分析（例: 「最近の投票結果は？」「どの選択肢が人気だった？」「投票の傾向を教えて」）→ pollGetTool
+- 選択肢別の割合や参加人数は display-chart で可視化、複数投票の比較は display-table で一覧化する
 `;
 
 const baseAgents = {
@@ -135,6 +140,7 @@ const adminAgents = {
 
 const defaultTools = {
   broadcastGetTool,
+  pollGetTool,
 };
 
 const webTools = {

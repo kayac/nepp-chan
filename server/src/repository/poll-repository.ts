@@ -24,7 +24,7 @@ type CreatePollInput = {
 type ListOptions = {
   limit?: number;
   cursor?: string;
-  status?: PollStatus;
+  status?: PollStatus | PollStatus[];
 };
 
 export const pollRepository = {
@@ -78,7 +78,11 @@ export const pollRepository = {
 
     const conditions = [];
     if (options.status) {
-      conditions.push(eq(polls.status, options.status));
+      conditions.push(
+        Array.isArray(options.status)
+          ? inArray(polls.status, options.status)
+          : eq(polls.status, options.status),
+      );
     }
     if (options.cursor) {
       conditions.push(sql`${polls.createdAt} < ${options.cursor}`);
