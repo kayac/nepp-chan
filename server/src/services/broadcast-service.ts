@@ -36,7 +36,7 @@ const buildExplainButtonMessage = (
           type: "button",
           action: {
             type: "postback",
-            label: "ねっぷちゃんに解説してもらう",
+            label: "おしらせを解説",
             data: `broadcast=${broadcastId}`,
             displayText: "このおしらせ、ねっぷちゃんに解説してもらう！",
           },
