@@ -31,12 +31,20 @@ const buildExplainButtonMessage = (
     body: {
       type: "box",
       layout: "vertical",
+      spacing: "md",
       contents: [
+        {
+          type: "text",
+          text: "このおしらせ、ねっぷちゃんが解説するよ！",
+          size: "sm",
+          color: "#57534e",
+          wrap: true,
+        },
         {
           type: "button",
           action: {
             type: "postback",
-            label: "おしらせを解説",
+            label: "解説してもらう",
             data: `broadcast=${broadcastId}`,
             displayText: "このおしらせ、ねっぷちゃんに解説してもらう！",
           },
@@ -50,7 +58,7 @@ const buildExplainButtonMessage = (
 
   return {
     type: "flex",
-    altText: "このおしらせ、ねっぷちゃんに解説してもらう？",
+    altText: "このおしらせ、ねっぷちゃんが解説するよ！",
     contents: bubble,
   };
 };
