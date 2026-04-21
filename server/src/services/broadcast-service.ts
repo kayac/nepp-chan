@@ -22,11 +22,45 @@ const getPublicImageUrl = (env: CloudflareBindings, r2Key: string): string => {
   return `${apiBaseUrl}/broadcast/media/${r2Key}`;
 };
 
+const buildExplainButtonMessage = (
+  broadcastId: string,
+): messagingApi.FlexMessage => {
+  const bubble: messagingApi.FlexBubble = {
+    type: "bubble",
+    size: "kilo",
+    body: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "button",
+          action: {
+            type: "postback",
+            label: "ねっぷちゃんに解説してもらう",
+            data: `broadcast=${broadcastId}`,
+            displayText: "このおしらせ、ねっぷちゃんに解説してもらう！",
+          },
+          style: "primary",
+          color: "#0f766e",
+          height: "sm",
+        },
+      ],
+    },
+  };
+
+  return {
+    type: "flex",
+    altText: "このおしらせ、ねっぷちゃんに解説してもらう？",
+    contents: bubble,
+  };
+};
+
 const buildLineMessages = (
   parts: BroadcastPart[],
   env: CloudflareBindings,
-): messagingApi.Message[] =>
-  parts.map((part) => {
+  broadcastId?: string,
+): messagingApi.Message[] => {
+  const contentMessages: messagingApi.Message[] = parts.map((part) => {
     if (part.type === "text") {
       return { type: "text" as const, text: part.text };
     }
@@ -37,6 +71,10 @@ const buildLineMessages = (
       previewImageUrl: imageUrl,
     };
   });
+
+  if (!broadcastId) return contentMessages;
+  return [...contentMessages, buildExplainButtonMessage(broadcastId)];
+};
 
 const parseParts = (broadcast: BroadcastMessage): BroadcastPart[] =>
   broadcast.parts
@@ -139,7 +177,7 @@ export const sendBroadcast = async (
     const client = createLineClient(env.LINE_CHANNEL_ACCESS_TOKEN);
     const retryKey = crypto.randomUUID();
     const parts = parseParts(broadcast);
-    const messages = buildLineMessages(parts, env);
+    const messages = buildLineMessages(parts, env, broadcast.id);
 
     await client.broadcast({ messages }, retryKey);
 
