@@ -5,6 +5,10 @@ import { logger } from "~/lib/logger";
 import { lineSignatureVerify } from "~/middleware";
 import type { LineEventMessage } from "~/schemas/line-schema";
 import {
+  generateBroadcastExplanation,
+  handleBroadcastPostback,
+} from "~/services/broadcast-response";
+import {
   generatePollFollowUp,
   handlePollPostback,
 } from "~/services/poll-response";
@@ -38,30 +42,58 @@ const enqueueLineEvents = async (
   for (const event of events) {
     if (event.type === "postback") {
       if (!event.source.userId || !event.replyToken) continue;
-      if (!event.postback.data.startsWith("poll=")) continue;
+      const userId = event.source.userId;
+      const postbackData = event.postback.data;
 
-      try {
-        const result = await handlePollPostback(
-          env,
-          event.source.userId,
-          event.postback.data,
-          event.replyToken,
-        );
-
-        if (result.status === "answered") {
-          const userId = event.source.userId;
-          executionCtx.waitUntil(
-            generatePollFollowUp(
-              env,
-              userId,
-              result.poll,
-              result.selectedChoice,
-            ),
+      if (postbackData.startsWith("poll=")) {
+        try {
+          const result = await handlePollPostback(
+            env,
+            userId,
+            postbackData,
+            event.replyToken,
           );
+
+          if (result.status === "answered") {
+            executionCtx.waitUntil(
+              generatePollFollowUp(
+                env,
+                userId,
+                result.poll,
+                result.selectedChoice,
+              ),
+            );
+          }
+        } catch (error) {
+          logger.error("[LINE] Poll postback error", error);
         }
-      } catch (error) {
-        logger.error("[LINE] Poll postback error", error);
+        continue;
       }
+
+      if (postbackData.startsWith("broadcast=")) {
+        try {
+          const result = await handleBroadcastPostback(
+            env,
+            postbackData,
+            event.replyToken,
+          );
+
+          if (result.status === "accepted") {
+            executionCtx.waitUntil(
+              generateBroadcastExplanation(
+                env,
+                userId,
+                result.broadcast,
+                result.replyToken,
+              ),
+            );
+          }
+        } catch (error) {
+          logger.error("[LINE] Broadcast postback error", error);
+        }
+        continue;
+      }
+
       continue;
     }
 
