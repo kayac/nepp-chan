@@ -8,6 +8,7 @@ import {
   generateBroadcastExplanation,
   handleBroadcastPostback,
 } from "~/services/broadcast-response";
+import { handleChitchatTrigger } from "~/services/line/chitchat";
 import {
   generatePollFollowUp,
   handlePollPostback,
@@ -67,6 +68,13 @@ const enqueueLineEvents = async (
         } catch (error) {
           logger.error("[LINE] Poll postback error", error);
         }
+        continue;
+      }
+
+      if (postbackData.startsWith("chitchat=")) {
+        executionCtx.waitUntil(
+          handleChitchatTrigger(env, userId, event.replyToken),
+        );
         continue;
       }
 
