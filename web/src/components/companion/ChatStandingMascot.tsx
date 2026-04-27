@@ -16,29 +16,57 @@ const POST_RESPONSE_DURATION_MS = 3500;
 const pickRandom = <T,>(arr: readonly T[]) =>
   arr[Math.floor(Math.random() * arr.length)];
 
-const useMascotState = (): MascotState => {
+type Presentation = {
+  state: MascotState;
+  expression?: MascotExpression;
+};
+
+// content part の最小限の型 (assistant-ui の ThreadMessageContentPart 簡易版)
+type ContentPart = {
+  type: string;
+  result?: unknown;
+  status?: { type?: string };
+};
+
+const hasRunningToolCall = (parts: readonly ContentPart[]): boolean =>
+  parts.some(
+    (p) =>
+      p.type === "tool-call" &&
+      (p.result === undefined || p.status?.type === "running"),
+  );
+
+const useMascotPresentation = (): Presentation => {
   const runtime = useThreadRuntime();
-  const [state, setState] = useState<MascotState>("idle");
+  const [pres, setPres] = useState<Presentation>({ state: "idle" });
   const wasRunningRef = useRef(false);
   const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const sync = () => {
-      const isRunning = runtime.getState().isRunning;
+      const t = runtime.getState();
+      const isRunning = t.isRunning;
+
       if (isRunning) {
         if (timerRef.current !== null) {
           window.clearTimeout(timerRef.current);
           timerRef.current = null;
         }
         wasRunningRef.current = true;
-        setState("thinking");
+        const last = t.messages[t.messages.length - 1];
+        const parts = (last?.content ?? []) as readonly ContentPart[];
+        // ツール実行中は指差しポーズ、それ以外は寝姿
+        const expression: MascotExpression = hasRunningToolCall(parts)
+          ? "point"
+          : "sleeping";
+        setPres({ state: "thinking", expression });
         return;
       }
+
       if (wasRunningRef.current) {
         wasRunningRef.current = false;
-        setState(pickRandom(POST_RESPONSE_STATES));
+        setPres({ state: pickRandom(POST_RESPONSE_STATES) });
         timerRef.current = window.setTimeout(() => {
-          setState("idle");
+          setPres({ state: "idle" });
           timerRef.current = null;
         }, POST_RESPONSE_DURATION_MS);
       }
@@ -51,25 +79,20 @@ const useMascotState = (): MascotState => {
     };
   }, [runtime]);
 
-  return state;
+  return pres;
 };
-
-// thinking 時のみ全身寝姿（モックの ExprReactor 準拠）。それ以外は表情画像
-const expressionOverride = (
-  state: MascotState,
-): MascotExpression | undefined =>
-  state === "thinking" ? "sleeping" : undefined;
 
 /**
  * 画面左下に固定配置するマスコット。Composer (中央配置) と被らないよう
  * 画面端寄りに張り付ける。lg 以上で表示。
  *
  * - idle (待機): expr-wave-smile
- * - thinking (応答中): pose-sleeping（全身寝姿）
+ * - thinking + ツール実行中: pose-point（指差し案内 = 調べてる）
+ * - thinking + テキスト生成のみ: pose-sleeping
  * - 応答完了直後 3.5 秒: ランダムで content / laugh / surprise → idle に戻る
  */
 export const ChatStandingMascot = () => {
-  const state = useMascotState();
+  const { state, expression } = useMascotPresentation();
   return (
     <div
       className={cn(
@@ -84,7 +107,7 @@ export const ChatStandingMascot = () => {
     >
       <Mascot
         state={state}
-        expression={expressionOverride(state)}
+        expression={expression}
         showHalo={false}
         floating={false}
         size={170}
