@@ -14,7 +14,8 @@
       "!**/.mastra",
       "!**/.wrangler",
       "!**/*.d.ts",
-      "!**/server/public"
+      "!**/server/public",
+      "!design-reference"
     ]
   },
   "formatter": {

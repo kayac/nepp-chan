@@ -161,7 +161,7 @@ export const ChatPage = () => {
   }
 
   return (
-    <div className="flex h-dvh bg-(--color-bg)">
+    <div className="flex h-dvh bg-(--bg-app)">
       {/* サイドバーオーバーレイ */}
       {isSidebarOpen && (
         <button
@@ -175,28 +175,25 @@ export const ChatPage = () => {
       {/* サイドバー */}
       <aside
         className={cn(
-          "fixed md:relative z-20 w-[280px] h-full bg-(--color-surface) border-r border-(--color-border) flex flex-col",
+          "fixed md:relative z-20 w-[280px] h-full bg-(--bg-raised) border-r border-(--border-1) flex flex-col",
           "transition-transform duration-200 ease-out",
           isSidebarOpen
             ? "translate-x-0"
             : "-translate-x-full md:translate-x-0 md:hidden",
         )}
       >
-        <div className="flex flex-col gap-3 p-4 border-b border-(--color-border)">
+        <div className="flex flex-col gap-3 p-4 border-b border-(--border-1)">
           <div className="flex items-center justify-between">
-            <span className="text-base font-semibold text-(--color-text)">
+            <span className="text-base font-semibold text-(--fg-1)">
               スレッド
             </span>
             <button
               type="button"
               onClick={() => setIsSidebarOpen(false)}
-              className="p-1.5 hover:bg-(--color-surface-hover) rounded-sm transition-colors"
+              className="p-1.5 hover:bg-(--bg-sunken) rounded-sm transition-colors"
               aria-label="閉じる"
             >
-              <XMarkIcon
-                className="w-5 h-5 text-(--color-text-muted)"
-                aria-hidden="true"
-              />
+              <XMarkIcon className="w-5 h-5 text-(--fg-3)" aria-hidden="true" />
             </button>
           </div>
           <button
@@ -205,8 +202,8 @@ export const ChatPage = () => {
             disabled={createThreadMutation.isPending}
             className={cn(
               "w-full rounded-sm text-sm font-medium transition-colors",
-              "bg-(--color-accent) text-white",
-              "hover:bg-(--color-accent-hover)",
+              "bg-(--brand) text-white",
+              "hover:bg-(--brand-hover)",
               "disabled:opacity-60 disabled:cursor-not-allowed",
               "flex items-center justify-center gap-2",
             )}
@@ -231,9 +228,7 @@ export const ChatPage = () => {
                 key={thread.id}
                 className={cn(
                   "group relative rounded-sm transition-colors",
-                  isSelected
-                    ? "bg-(--color-surface-hover)"
-                    : "hover:bg-(--color-surface-hover)",
+                  isSelected ? "bg-(--bg-sunken)" : "hover:bg-(--bg-sunken)",
                 )}
               >
                 <button
@@ -245,14 +240,12 @@ export const ChatPage = () => {
                   <div
                     className={cn(
                       "text-sm font-medium truncate",
-                      isSelected
-                        ? "text-(--color-text)"
-                        : "text-(--color-text-secondary)",
+                      isSelected ? "text-(--fg-1)" : "text-(--fg-2)",
                     )}
                   >
                     {thread.title ?? "新しい会話"}
                   </div>
-                  <div className="text-xs text-(--color-text-faint)">
+                  <div className="text-xs text-(--fg-4)">
                     {new Date(thread.updatedAt).toLocaleDateString("ja-JP")}
                   </div>
                 </button>
@@ -265,7 +258,7 @@ export const ChatPage = () => {
                   className={cn(
                     "absolute top-2 right-2 p-1.5 rounded-sm transition-all duration-150",
                     "hover:bg-red-100 hover:text-red-600",
-                    "text-(--color-text-muted)",
+                    "text-(--fg-3)",
                     isSelected
                       ? "opacity-100"
                       : "opacity-0 group-hover:opacity-100",
@@ -284,23 +277,23 @@ export const ChatPage = () => {
       <main className="flex-1 flex flex-col min-w-0">
         <header
           className={cn(
-            "sticky top-0 z-10 bg-(--color-surface) px-4 md:px-6 flex flex-col shrink-0 transition-colors",
-            !isAdmin && "border-b border-(--color-border)",
+            "sticky top-0 z-10 bg-(--bg-raised) px-4 md:px-6 flex flex-col shrink-0 transition-colors",
+            !isAdmin && "border-b border-(--border-1)",
           )}
           style={{ boxShadow: isAdmin ? "none" : "var(--shadow-xs)" }}
         >
           {/* 管理者モードバナー */}
           {isAdmin && (
-            <div className="h-9 -mx-4 md:-mx-6 px-4 md:px-6 bg-(--color-admin-bg) border-b border-(--color-admin-border)/80 flex items-center justify-between">
+            <div className="h-9 -mx-4 md:-mx-6 px-4 md:px-6 bg-(--admin-bg) border-b border-(--admin-border)/80 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-(--color-admin) animate-pulse" />
-                <span className="text-xs font-semibold text-(--color-admin) tracking-wide">
+                <div className="w-1.5 h-1.5 rounded-full bg-(--admin) animate-pulse" />
+                <span className="text-xs font-semibold text-(--admin) tracking-wide">
                   管理者モード
                 </span>
               </div>
               <a
                 href="/dashboard"
-                className="flex items-center gap-1.5 text-xs font-medium text-(--color-admin) hover:text-(--color-admin-hover) transition-all duration-150 hover:gap-2"
+                className="flex items-center gap-1.5 text-xs font-medium text-(--admin) hover:text-(--admin-hover) transition-all duration-150 hover:gap-2"
               >
                 <Cog6ToothIcon className="w-3.5 h-3.5" />
                 管理画面
@@ -312,22 +305,22 @@ export const ChatPage = () => {
           <div
             className={cn(
               "h-12 md:h-14 flex items-center justify-between",
-              isAdmin && "border-b border-(--color-border)",
+              isAdmin && "border-b border-(--border-1)",
             )}
           >
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="p-2 -ml-2 hover:bg-(--color-surface-hover) rounded-sm transition-colors"
+                className="p-2 -ml-2 hover:bg-(--bg-sunken) rounded-sm transition-colors"
                 aria-label="メニュー"
               >
                 <Bars3Icon
-                  className="w-5 h-5 text-(--color-text-muted)"
+                  className="w-5 h-5 text-(--fg-3)"
                   aria-hidden="true"
                 />
               </button>
-              <h1 className="text-base font-semibold text-(--color-text) tracking-tight">
+              <h1 className="text-base font-semibold text-(--fg-1) tracking-tight">
                 ねっぷちゃん
               </h1>
             </div>
@@ -336,10 +329,10 @@ export const ChatPage = () => {
               onClick={handleNewThread}
               disabled={createThreadMutation.isPending}
               className={cn(
-                "text-sm font-medium transition-all duration-150 disabled:opacity-60 flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-(--color-surface-hover)",
+                "text-sm font-medium transition-all duration-150 disabled:opacity-60 flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-(--bg-sunken)",
                 isAdmin
-                  ? "text-(--color-admin) hover:text-(--color-admin-hover)"
-                  : "text-(--color-accent) hover:text-(--color-accent-hover)",
+                  ? "text-(--admin) hover:text-(--admin-hover)"
+                  : "text-(--brand) hover:text-(--brand-hover)",
               )}
             >
               <PlusIcon className="w-4 h-4" />
@@ -361,16 +354,16 @@ export const ChatPage = () => {
             </FeedbackProvider>
           </AssistantProvider>
         ) : (
-          <div className="flex-1 flex items-center justify-center bg-(--color-bg)">
+          <div className="flex-1 flex items-center justify-center bg-(--bg-app)">
             {currentThreadId || messagesLoading ? (
               <div className="flex flex-col items-center gap-4">
                 <LoadingDots />
-                <span className="text-sm text-(--color-text-muted) font-medium">
+                <span className="text-sm text-(--fg-3) font-medium">
                   読み込み中
                 </span>
               </div>
             ) : (
-              <span className="text-(--color-text-muted) font-medium">
+              <span className="text-(--fg-3) font-medium">
                 スレッドを選択してください
               </span>
             )}
@@ -388,10 +381,10 @@ export const ChatPage = () => {
             aria-label="キャンセル"
           />
           <div className="relative bg-white rounded-2xl p-6 w-80 shadow-xl">
-            <h2 className="text-base font-semibold text-(--color-text) mb-2">
+            <h2 className="text-base font-semibold text-(--fg-1) mb-2">
               スレッドを削除
             </h2>
-            <p className="text-sm text-(--color-text-secondary) mb-6">
+            <p className="text-sm text-(--fg-2) mb-6">
               このスレッドを削除しますか？会話履歴は復元できません。
             </p>
             <div className="flex gap-3 justify-end">
@@ -399,7 +392,7 @@ export const ChatPage = () => {
                 type="button"
                 onClick={() => setThreadToDelete(null)}
                 disabled={deleteThreadMutation.isPending}
-                className="px-4 py-2 text-sm font-medium text-(--color-text-secondary) hover:bg-(--color-surface-hover) rounded-lg transition-colors disabled:opacity-60"
+                className="px-4 py-2 text-sm font-medium text-(--fg-2) hover:bg-(--bg-sunken) rounded-lg transition-colors disabled:opacity-60"
               >
                 キャンセル
               </button>

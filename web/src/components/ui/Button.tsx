@@ -16,39 +16,39 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: [
-          "bg-(--color-accent) text-white",
-          "hover:bg-(--color-accent-hover) hover:scale-[1.02]",
-          "focus-visible:ring-2 focus-visible:ring-(--color-accent-light) focus-visible:ring-offset-2",
+          "bg-(--brand) text-white",
+          "hover:bg-(--brand-hover) hover:scale-[1.02]",
+          "focus-visible:ring-2 focus-visible:ring-(--teal-500) focus-visible:ring-offset-2",
           "active:scale-[0.98]",
         ].join(" "),
         destructive: [
-          "bg-(--color-danger) text-white",
+          "bg-(--danger) text-white",
           "hover:bg-red-700 hover:scale-[1.02]",
           "focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2",
           "active:scale-[0.98]",
         ].join(" "),
         outline: [
-          "border border-(--color-border) bg-(--color-surface)",
-          "text-(--color-text-secondary)",
-          "hover:bg-(--color-surface-hover) hover:border-(--color-border-subtle)",
-          "focus-visible:ring-2 focus-visible:ring-(--color-accent-light) focus-visible:ring-offset-2",
+          "border border-(--border-1) bg-(--bg-raised)",
+          "text-(--fg-2)",
+          "hover:bg-(--bg-sunken) hover:border-(--border-2)",
+          "focus-visible:ring-2 focus-visible:ring-(--teal-500) focus-visible:ring-offset-2",
           "active:scale-[0.98]",
         ].join(" "),
         secondary: [
-          "bg-(--color-surface-hover) text-(--color-text-secondary)",
+          "bg-(--bg-sunken) text-(--fg-2)",
           "hover:bg-stone-200",
           "focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-2",
           "active:scale-[0.98]",
         ].join(" "),
         ghost: [
-          "text-(--color-text-muted)",
-          "hover:bg-(--color-surface-hover) hover:text-(--color-text-secondary)",
-          "focus-visible:ring-2 focus-visible:ring-(--color-accent-light)/50",
+          "text-(--fg-3)",
+          "hover:bg-(--bg-sunken) hover:text-(--fg-2)",
+          "focus-visible:ring-2 focus-visible:ring-(--teal-500)/50",
           "active:bg-stone-200/80",
         ].join(" "),
         link: [
-          "text-(--color-accent) underline-offset-4",
-          "hover:underline hover:text-(--color-accent-hover)",
+          "text-(--brand) underline-offset-4",
+          "hover:underline hover:text-(--brand-hover)",
         ].join(" "),
       },
       size: {

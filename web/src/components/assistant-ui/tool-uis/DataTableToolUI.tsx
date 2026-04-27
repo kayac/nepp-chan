@@ -58,14 +58,12 @@ const DataTable = ({ args }: { args: DataTableArgs }) => {
   };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-(--color-border) bg-(--color-surface)">
+    <div className="overflow-hidden rounded-xl border border-(--border-1) bg-(--bg-raised)">
       {args.title && (
-        <div className="flex items-center gap-2 border-b border-(--color-border) px-4 py-3">
-          <TableIcon className="size-5 text-(--color-text-muted)" />
-          <h3 className="font-medium text-(--color-text-secondary)">
-            {args.title}
-          </h3>
-          <span className="ml-auto text-sm text-(--color-text-faint)">
+        <div className="flex items-center gap-2 border-b border-(--border-1) px-4 py-3">
+          <TableIcon className="size-5 text-(--fg-3)" />
+          <h3 className="font-medium text-(--fg-2)">{args.title}</h3>
+          <span className="ml-auto text-sm text-(--fg-4)">
             {args.data.length}件
           </span>
         </div>
@@ -73,15 +71,15 @@ const DataTable = ({ args }: { args: DataTableArgs }) => {
 
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-(--color-surface-subtle)">
-            <tr className="border-b border-(--color-border)">
+          <thead className="bg-(--bg-sunken)">
+            <tr className="border-b border-(--border-1)">
               {args.columns.map((col) => (
                 <th
                   key={col.key}
                   className={cn(
-                    "px-4 py-3 text-left text-xs font-semibold text-(--color-text-secondary)",
+                    "px-4 py-3 text-left text-xs font-semibold text-(--fg-2)",
                     col.sortable &&
-                      "cursor-pointer select-none hover:bg-(--color-surface-hover)",
+                      "cursor-pointer select-none hover:bg-(--bg-sunken)",
                   )}
                   onClick={() => col.sortable && handleSort(col.key)}
                 >
@@ -99,16 +97,16 @@ const DataTable = ({ args }: { args: DataTableArgs }) => {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-(--color-border)">
+          <tbody className="divide-y divide-(--border-1)">
             {displayedData.map((row) => (
               <tr
                 key={JSON.stringify(row)}
-                className="transition-colors hover:bg-(--color-surface-hover)"
+                className="transition-colors hover:bg-(--bg-sunken)"
               >
                 {args.columns.map((col) => (
                   <td
                     key={col.key}
-                    className="whitespace-nowrap px-4 py-3 text-sm text-(--color-text-secondary)"
+                    className="whitespace-nowrap px-4 py-3 text-sm text-(--fg-2)"
                   >
                     {String(row[col.key] ?? "-")}
                   </td>
@@ -123,7 +121,7 @@ const DataTable = ({ args }: { args: DataTableArgs }) => {
         <button
           type="button"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex w-full items-center justify-center gap-1 border-t border-(--color-border) py-2 text-sm text-(--color-text-muted) hover:bg-(--color-surface-hover)"
+          className="flex w-full items-center justify-center gap-1 border-t border-(--border-1) py-2 text-sm text-(--fg-3) hover:bg-(--bg-sunken)"
         >
           {isExpanded ? (
             <>
@@ -148,9 +146,7 @@ const renderDataTable = (args: DataTableArgs, isRunning: boolean) => {
       <div className="my-4">
         <ToolLoadingState
           variant="table"
-          icon={
-            <TableIcon className="size-5 animate-pulse text-(--color-text-faint)" />
-          }
+          icon={<TableIcon className="size-5 animate-pulse text-(--fg-4)" />}
         />
       </div>
     );

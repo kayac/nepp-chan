@@ -30,7 +30,7 @@ import { cn } from "~/lib/class-merge";
 
 export const Thread = () => (
   <ThreadPrimitive.Root
-    className="aui-root aui-thread-root @container flex flex-1 min-h-0 flex-col bg-(--color-bg)"
+    className="aui-root aui-thread-root @container flex flex-1 min-h-0 flex-col bg-(--bg-app)"
     style={{
       ["--thread-max-width" as string]: "42rem",
     }}
@@ -56,7 +56,7 @@ const ThreadScrollToBottom = () => (
     <Button
       variant="outline"
       size="icon-sm"
-      className="aui-thread-scroll-to-bottom absolute -top-10 right-0 z-10 rounded-full p-2 disabled:invisible bg-(--color-surface) hover:bg-(--color-surface-hover) border border-(--color-border) transition-all duration-200 hover:scale-105 opacity-80 hover:opacity-100"
+      className="aui-thread-scroll-to-bottom absolute -top-10 right-0 z-10 rounded-full p-2 disabled:invisible bg-(--bg-raised) hover:bg-(--bg-sunken) border border-(--border-1) transition-all duration-200 hover:scale-105 opacity-80 hover:opacity-100"
       style={{ boxShadow: "var(--shadow-sm)" }}
       aria-label="下にスクロール"
     >
@@ -72,17 +72,17 @@ const isTouchDevice =
 const Composer = () => (
   <ComposerPrimitive.Root
     className="aui-composer-root relative flex w-full flex-col"
-    style={{ boxShadow: "var(--shadow-card)" }}
+    style={{ boxShadow: "var(--shadow-float-md)" }}
   >
     <ComposerPrimitive.Input
       placeholder="メッセージを入力..."
       submitOnEnter={!isTouchDevice}
-      className="aui-composer-input mb-1 max-h-36 min-h-[3.5rem] w-full resize-none rounded-2xl border border-(--color-border) bg-(--color-surface) px-5 pt-4 pb-3 pr-14 text-base text-(--color-text) outline-none placeholder:text-(--color-text-faint) focus:border-(--color-accent-light) transition-all duration-200"
+      className="aui-composer-input mb-1 max-h-36 min-h-[3.5rem] w-full resize-none rounded-2xl border border-(--border-1) bg-(--bg-raised) px-5 pt-4 pb-3 pr-14 text-base text-(--fg-1) outline-none placeholder:text-(--fg-4) focus:border-(--teal-500) transition-all duration-200"
       style={{
         boxShadow: "var(--shadow-sm)",
       }}
       onFocus={(e) => {
-        e.currentTarget.style.boxShadow = "var(--shadow-input-focus)";
+        e.currentTarget.style.boxShadow = "var(--ring-brand)";
         if (isTouchDevice) {
           setTimeout(() => {
             e.target.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -110,7 +110,7 @@ const ComposerAction = () => (
           type="submit"
           variant="default"
           size="icon"
-          className="aui-composer-send size-9 rounded-full bg-(--color-accent) hover:bg-(--color-accent-hover) transition-all duration-200 hover:scale-105 active:scale-95"
+          className="aui-composer-send size-9 rounded-full bg-(--brand) hover:bg-(--brand-hover) transition-all duration-200 hover:scale-105 active:scale-95"
           style={{ boxShadow: "var(--shadow-sm)" }}
           aria-label="送信"
         >
@@ -137,7 +137,7 @@ const ComposerAction = () => (
 
 const MessageError = () => (
   <MessagePrimitive.Error>
-    <ErrorPrimitive.Root className="aui-message-error-root mt-2 rounded-lg border border-red-200 bg-(--color-danger-bg) p-3 text-(--color-danger) text-sm">
+    <ErrorPrimitive.Root className="aui-message-error-root mt-2 rounded-lg border border-red-200 bg-(--danger-bg) p-3 text-(--danger) text-sm">
       <ErrorPrimitive.Message className="aui-message-error-message line-clamp-2" />
     </ErrorPrimitive.Root>
   </MessagePrimitive.Error>
@@ -148,11 +148,11 @@ const AssistantMessage = () => (
     className="aui-assistant-message-root fade-in slide-in-from-bottom-1 relative mx-auto w-full max-w-(--thread-max-width) animate-in py-4 duration-200"
     data-role="assistant"
   >
-    <div className="text-xs text-(--color-text-muted) mb-2 font-medium tracking-wide">
+    <div className="text-xs text-(--fg-3) mb-2 font-medium tracking-wide">
       ねっぷちゃん
     </div>
     <div
-      className="aui-assistant-message-content wrap-break-word rounded-2xl bg-(--color-surface) border border-(--color-border)/60 px-5 py-4 text-(--color-text) leading-relaxed"
+      className="aui-assistant-message-content wrap-break-word rounded-2xl bg-(--bg-raised) border border-(--border-1)/60 px-5 py-4 text-(--fg-1) leading-relaxed"
       style={{ boxShadow: "var(--shadow-xs)" }}
     >
       <MessagePrimitive.Parts
@@ -181,21 +181,21 @@ const FeedbackButtons = () => {
       <TooltipIconButton
         tooltip="良い回答"
         onClick={() => onFeedbackClick(messageId, "good")}
-        className="hover:text-(--color-success) transition-colors duration-150"
+        className="hover:text-(--success) transition-colors duration-150"
       >
         <ThumbsUpIcon className="size-3.5" />
       </TooltipIconButton>
       <TooltipIconButton
         tooltip="改善が必要"
         onClick={() => onFeedbackClick(messageId, "bad")}
-        className="hover:text-(--color-danger) transition-colors duration-150"
+        className="hover:text-(--danger) transition-colors duration-150"
       >
         <ThumbsDownIcon className="size-3.5" />
       </TooltipIconButton>
       <TooltipIconButton
         tooltip="アイディア"
         onClick={() => onFeedbackClick(messageId, "idea")}
-        className="hover:text-(--color-warning) transition-colors duration-150"
+        className="hover:text-(--warning) transition-colors duration-150"
       >
         <LightbulbIcon className="size-3.5" />
       </TooltipIconButton>
@@ -206,11 +206,9 @@ const FeedbackButtons = () => {
 const AssistantActionBar = () => (
   <ActionBarPrimitive.Root
     hideWhenRunning
-    className="aui-assistant-action-bar-root flex items-center gap-1.5 text-(--color-text-faint)"
+    className="aui-assistant-action-bar-root flex items-center gap-1.5 text-(--fg-4)"
   >
-    <span className="text-xs text-(--color-text-muted)">
-      この回答は役に立ちましたか？
-    </span>
+    <span className="text-xs text-(--fg-3)">この回答は役に立ちましたか？</span>
     <FeedbackButtons />
   </ActionBarPrimitive.Root>
 );
@@ -229,7 +227,7 @@ const UserMessage = () => {
       data-role="user"
     >
       <div
-        className="aui-user-message-content wrap-break-word max-w-[80%] rounded-2xl rounded-br-md bg-(--color-user-message) px-5 py-3 text-white/95 leading-relaxed"
+        className="aui-user-message-content wrap-break-word max-w-[80%] rounded-2xl rounded-br-md bg-(--brand) px-5 py-3 text-white/95 leading-relaxed"
         style={{ boxShadow: "var(--shadow-sm)" }}
       >
         <MessagePrimitive.Parts />
@@ -245,7 +243,7 @@ const BranchPicker = ({
   <BranchPickerPrimitive.Root
     hideWhenSingleBranch
     className={cn(
-      "aui-branch-picker-root mr-2 -ml-2 inline-flex items-center text-(--color-text-muted) text-xs",
+      "aui-branch-picker-root mr-2 -ml-2 inline-flex items-center text-(--fg-3) text-xs",
       className,
     )}
     {...rest}
