@@ -14,6 +14,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   LightbulbIcon,
+  PlusIcon,
   SendIcon,
   SquareIcon,
   ThumbsDownIcon,
@@ -25,17 +26,25 @@ import { MarkdownText } from "~/components/assistant-ui/MarkdownText";
 import { ToolFallback } from "~/components/assistant-ui/ToolFallback";
 import { TooltipIconButton } from "~/components/assistant-ui/TooltipIconButton";
 import { toolsByName } from "~/components/assistant-ui/tool-uis";
-import { Button } from "~/components/ui/Button";
+import { SpeechBubble } from "~/components/companion/SpeechBubble";
 import { cn } from "~/lib/class-merge";
 
 export const Thread = () => (
   <ThreadPrimitive.Root
-    className="aui-root aui-thread-root @container flex flex-1 min-h-0 flex-col bg-(--bg-app)"
+    className="aui-root aui-thread-root @container relative flex flex-1 min-h-0 flex-col"
     style={{
       ["--thread-max-width" as string]: "42rem",
     }}
   >
-    <ThreadPrimitive.Viewport className="aui-thread-viewport relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth px-4 pt-6 md:px-6">
+    <ThreadPrimitive.Viewport
+      className={cn(
+        "aui-thread-viewport relative flex flex-1 flex-col scroll-smooth",
+        "overflow-x-auto overflow-y-scroll",
+        "px-4 pt-6 md:px-6",
+        // フローティング Composer + マスコット領域分の余白を確保
+        "pb-[clamp(140px,28dvh,420px)]",
+      )}
+    >
       <ThreadPrimitive.Messages
         components={{
           UserMessage,
@@ -43,7 +52,7 @@ export const Thread = () => (
         }}
       />
 
-      <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mx-auto mt-auto flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-4">
+      <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer pointer-events-none sticky bottom-0 mx-auto mt-auto flex w-full max-w-(--thread-max-width) flex-col items-center gap-3 overflow-visible pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-4">
         <ThreadScrollToBottom />
         <Composer />
       </ThreadPrimitive.ViewportFooter>
@@ -53,15 +62,20 @@ export const Thread = () => (
 
 const ThreadScrollToBottom = () => (
   <ThreadPrimitive.ScrollToBottom asChild>
-    <Button
-      variant="outline"
-      size="icon-sm"
-      className="aui-thread-scroll-to-bottom absolute -top-10 right-0 z-10 rounded-full p-2 disabled:invisible bg-(--bg-raised) hover:bg-(--bg-sunken) border border-(--border-1) transition-all duration-200 hover:scale-105 opacity-80 hover:opacity-100"
-      style={{ boxShadow: "var(--shadow-sm)" }}
+    <button
+      type="button"
+      className={cn(
+        "aui-thread-scroll-to-bottom pointer-events-auto",
+        "size-9 rounded-full grid place-items-center",
+        "bg-(--paper-0) border border-(--paper-200) text-(--fg-2)",
+        "transition-all duration-200 hover:border-(--teal-300) hover:text-(--teal-700)",
+        "disabled:invisible opacity-90 hover:opacity-100",
+      )}
+      style={{ boxShadow: "var(--shadow-float-sm)" }}
       aria-label="下にスクロール"
     >
-      <ArrowDownIcon className="size-3.5" />
-    </Button>
+      <ArrowDownIcon className="size-3.5" aria-hidden="true" />
+    </button>
   </ThreadPrimitive.ScrollToBottom>
 );
 
@@ -71,26 +85,40 @@ const isTouchDevice =
 
 const Composer = () => (
   <ComposerPrimitive.Root
-    className="aui-composer-root relative flex w-full flex-col"
-    style={{ boxShadow: "var(--shadow-float-md)" }}
+    className={cn(
+      "aui-composer-root pointer-events-auto",
+      "relative flex w-full items-center gap-2",
+      "rounded-(--r-footer) border-2 border-(--teal-500) bg-(--paper-0)",
+      "px-2.5 py-2.5 pl-4",
+    )}
+    style={{ boxShadow: "var(--shadow-floating-input)" }}
   >
+    <button
+      type="button"
+      aria-label="添付（準備中）"
+      tabIndex={-1}
+      disabled
+      className={cn(
+        "size-10 rounded-full grid place-items-center flex-none",
+        "text-(--fg-4) cursor-not-allowed opacity-60",
+      )}
+    >
+      <PlusIcon className="size-5" aria-hidden="true" />
+    </button>
     <ComposerPrimitive.Input
-      placeholder="メッセージを入力..."
+      placeholder="ねっぷちゃんに話しかける…"
       submitOnEnter={!isTouchDevice}
-      className="aui-composer-input mb-1 max-h-36 min-h-[3.5rem] w-full resize-none rounded-2xl border border-(--border-1) bg-(--bg-raised) px-5 pt-4 pb-3 pr-14 text-base text-(--fg-1) outline-none placeholder:text-(--fg-4) focus:border-(--teal-500) transition-all duration-200"
-      style={{
-        boxShadow: "var(--shadow-sm)",
-      }}
+      className={cn(
+        "aui-composer-input flex-1 resize-none border-0 bg-transparent outline-none",
+        "px-1 py-2 text-[15px] text-(--fg-1) placeholder:text-(--fg-4) leading-snug",
+        "min-h-[24px] max-h-32",
+      )}
       onFocus={(e) => {
-        e.currentTarget.style.boxShadow = "var(--ring-brand)";
         if (isTouchDevice) {
           setTimeout(() => {
             e.target.scrollIntoView({ behavior: "smooth", block: "end" });
           }, 300);
         }
-      }}
-      onBlur={(e) => {
-        e.currentTarget.style.boxShadow = "var(--shadow-sm)";
       }}
       rows={1}
       autoFocus
@@ -101,35 +129,37 @@ const Composer = () => (
 );
 
 const ComposerAction = () => (
-  <div className="aui-composer-action-wrapper absolute right-3 bottom-3 flex items-center">
+  <div className="aui-composer-action-wrapper flex items-center flex-none">
     <AssistantIf condition={({ thread }) => !thread.isRunning}>
       <ComposerPrimitive.Send asChild>
-        <TooltipIconButton
-          tooltip="送信"
-          side="top"
+        <button
           type="submit"
-          variant="default"
-          size="icon"
-          className="aui-composer-send size-9 rounded-full bg-(--brand) hover:bg-(--brand-hover) transition-all duration-200 hover:scale-105 active:scale-95"
-          style={{ boxShadow: "var(--shadow-sm)" }}
           aria-label="送信"
+          className={cn(
+            "aui-composer-send size-10 rounded-full grid place-items-center",
+            "bg-(--teal-700) text-(--paper-0)",
+            "transition-colors hover:bg-(--teal-800)",
+            "disabled:bg-(--paper-100) disabled:text-(--fg-4)",
+          )}
+          style={{ boxShadow: "0 4px 12px rgba(15, 118, 110, 0.35)" }}
         >
           <SendIcon className="aui-composer-send-icon size-4" />
-        </TooltipIconButton>
+        </button>
       </ComposerPrimitive.Send>
     </AssistantIf>
 
     <AssistantIf condition={({ thread }) => thread.isRunning}>
       <ComposerPrimitive.Cancel asChild>
-        <Button
+        <button
           type="button"
-          variant="secondary"
-          size="icon"
-          className="aui-composer-cancel size-9 rounded-full transition-all duration-200 hover:scale-105"
           aria-label="停止"
+          className={cn(
+            "aui-composer-cancel size-10 rounded-full grid place-items-center",
+            "bg-(--paper-100) text-(--fg-2) transition-colors hover:bg-(--paper-200)",
+          )}
         >
           <SquareIcon className="aui-composer-cancel-icon size-3 fill-current" />
-        </Button>
+        </button>
       </ComposerPrimitive.Cancel>
     </AssistantIf>
   </div>
@@ -148,23 +178,25 @@ const AssistantMessage = () => (
     className="aui-assistant-message-root fade-in slide-in-from-bottom-1 relative mx-auto w-full max-w-(--thread-max-width) animate-in py-4 duration-200"
     data-role="assistant"
   >
-    <div className="text-xs text-(--fg-3) mb-2 font-medium tracking-wide">
+    <div className="text-[11px] text-(--fg-3) mb-2 font-(family-name:--font-display) tracking-wide pl-1">
       ねっぷちゃん
     </div>
-    <div
-      className="aui-assistant-message-content wrap-break-word rounded-2xl bg-(--bg-raised) border border-(--border-1)/60 px-5 py-4 text-(--fg-1) leading-relaxed"
-      style={{ boxShadow: "var(--shadow-xs)" }}
-    >
-      <MessagePrimitive.Parts
-        components={{
-          Text: MarkdownText,
-          tools: { by_name: toolsByName, Fallback: ToolFallback },
-        }}
-      />
-      <MessageError />
+    <div className="flex justify-start">
+      <SpeechBubble
+        variant="assistant"
+        className="max-w-[92%] md:max-w-[88%] py-4"
+      >
+        <MessagePrimitive.Parts
+          components={{
+            Text: MarkdownText,
+            tools: { by_name: toolsByName, Fallback: ToolFallback },
+          }}
+        />
+        <MessageError />
+      </SpeechBubble>
     </div>
 
-    <div className="aui-assistant-message-footer mt-2.5 flex">
+    <div className="aui-assistant-message-footer mt-4 flex pl-1">
       <BranchPicker />
       <AssistantActionBar />
     </div>
@@ -226,12 +258,9 @@ const UserMessage = () => {
       className="aui-user-message-root fade-in slide-in-from-bottom-1 mx-auto flex w-full max-w-(--thread-max-width) animate-in justify-end py-4 duration-200"
       data-role="user"
     >
-      <div
-        className="aui-user-message-content wrap-break-word max-w-[80%] rounded-2xl rounded-br-md bg-(--brand) px-5 py-3 text-white/95 leading-relaxed"
-        style={{ boxShadow: "var(--shadow-sm)" }}
-      >
+      <SpeechBubble variant="user" className="max-w-[80%]">
         <MessagePrimitive.Parts />
-      </div>
+      </SpeechBubble>
     </MessagePrimitive.Root>
   );
 };

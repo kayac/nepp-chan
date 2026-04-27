@@ -150,9 +150,9 @@ export const ToolFallback: ToolCallMessagePartComponent = ({
     <div
       className={cn(
         "aui-tool-fallback-root my-1 flex w-full flex-col rounded-lg border transition-colors",
-        isCancelled && "border-stone-200 bg-stone-50 opacity-70",
-        isError && "border-red-200 bg-red-50/50",
-        isRunning && "border-(--brand-soft) bg-teal-50/30",
+        isCancelled && "border-(--paper-200) bg-(--paper-50) opacity-70",
+        isError && "border-(--apricot-300) bg-(--apricot-50)/60",
+        isRunning && "border-(--brand-soft) bg-(--brand-soft)/30",
         !isCancelled &&
           !isError &&
           !isRunning &&
@@ -204,7 +204,7 @@ export const ToolFallback: ToolCallMessagePartComponent = ({
                   "text-sm p-2.5 rounded-lg",
                   isError
                     ? "bg-(--danger-bg) text-(--danger)"
-                    : "bg-stone-100 text-(--fg-3)",
+                    : "bg-(--paper-100) text-(--fg-3)",
                 )}
               >
                 {cancelledReason}

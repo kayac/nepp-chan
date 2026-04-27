@@ -38,7 +38,7 @@ const defaultComponents = memoizeMarkdownComponents({
   h1: ({ className, ...props }) => (
     <h1
       className={cn(
-        "aui-md-h1 mb-8 scroll-m-20 font-extrabold text-4xl tracking-tight last:mb-0",
+        "aui-md-h1 mb-8 scroll-m-20 font-(family-name:--font-display) font-extrabold text-4xl tracking-tight last:mb-0",
         className,
       )}
       {...props}
@@ -47,7 +47,7 @@ const defaultComponents = memoizeMarkdownComponents({
   h2: ({ className, ...props }) => (
     <h2
       className={cn(
-        "aui-md-h2 mt-8 mb-4 scroll-m-20 font-semibold text-3xl tracking-tight first:mt-0 last:mb-0",
+        "aui-md-h2 mt-8 mb-4 scroll-m-20 font-(family-name:--font-display) font-bold text-3xl tracking-tight first:mt-0 last:mb-0",
         className,
       )}
       {...props}
@@ -56,7 +56,7 @@ const defaultComponents = memoizeMarkdownComponents({
   h3: ({ className, ...props }) => (
     <h3
       className={cn(
-        "aui-md-h3 mt-6 mb-4 scroll-m-20 font-semibold text-2xl tracking-tight first:mt-0 last:mb-0",
+        "aui-md-h3 mt-6 mb-4 scroll-m-20 font-(family-name:--font-display) font-bold text-2xl tracking-tight first:mt-0 last:mb-0",
         className,
       )}
       {...props}
@@ -65,7 +65,7 @@ const defaultComponents = memoizeMarkdownComponents({
   h4: ({ className, ...props }) => (
     <h4
       className={cn(
-        "aui-md-h4 mt-6 mb-4 scroll-m-20 font-semibold text-xl tracking-tight first:mt-0 last:mb-0",
+        "aui-md-h4 mt-6 mb-4 scroll-m-20 font-(family-name:--font-display) font-bold text-xl tracking-tight first:mt-0 last:mb-0",
         className,
       )}
       {...props}
