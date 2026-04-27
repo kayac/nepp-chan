@@ -15,7 +15,6 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   LightbulbIcon,
-  PlusIcon,
   SendIcon,
   SquareIcon,
   ThumbsDownIcon,
@@ -100,22 +99,10 @@ const Composer = () => {
         "aui-composer-root pointer-events-auto",
         "relative flex w-full items-center gap-2",
         "rounded-(--r-footer) border-2 border-(--teal-500) bg-(--paper-0)",
-        "px-2.5 py-2.5 pl-4",
+        "px-5 py-2.5",
       )}
       style={{ boxShadow: "var(--shadow-floating-input)" }}
     >
-      <button
-        type="button"
-        aria-label="添付（準備中）"
-        tabIndex={-1}
-        disabled
-        className={cn(
-          "size-10 rounded-full grid place-items-center flex-none",
-          "text-(--fg-4) cursor-not-allowed opacity-60",
-        )}
-      >
-        <PlusIcon className="size-5" aria-hidden="true" />
-      </button>
       <ComposerPrimitive.Input
         placeholder="ねっぷちゃんに話しかける…"
         submitOnEnter={false}
