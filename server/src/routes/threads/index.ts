@@ -212,12 +212,7 @@ threadsRoutes.openapi(getMessagesRoute, async (c) => {
 
   const memory = await getMemory(c.env.DB);
 
-  const result = await memory.recall({
-    threadId,
-    threadConfig: {
-      lastMessages: false,
-    },
-  });
+  const result = await memory.recall({ threadId });
 
   const uiMessages = convertMessages(result.messages).to("AIV5.UI");
 
