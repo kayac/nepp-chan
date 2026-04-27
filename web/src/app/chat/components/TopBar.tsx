@@ -19,7 +19,7 @@ export const TopBar = ({ onMenuClick, className }: Props) => (
         style={{ boxShadow: "0 0 0 3px rgba(20, 184, 166, 0.18)" }}
         aria-hidden="true"
       />
-      <span className="font-(family-name:--font-display) font-bold text-(--snow-800) tracking-wider text-[15px]">
+      <span className="font-(family-name:--font-display) font-bold text-(--snow-800) tracking-wider text-base">
         ねっぷちゃん
       </span>
     </div>

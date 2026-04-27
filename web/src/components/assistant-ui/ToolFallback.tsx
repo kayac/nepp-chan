@@ -114,7 +114,7 @@ type StatusBadgeProps = {
 const StatusBadge: FC<StatusBadgeProps> = ({ status }) => (
   <span
     className={cn(
-      "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-colors",
+      "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium transition-colors",
       status.color,
       status.bgColor,
     )}

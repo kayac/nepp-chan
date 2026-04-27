@@ -7,12 +7,11 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import type { UIMessage } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
+import { AmbientBG } from "~/app/chat/components/AmbientBG";
+import { ChatStandingMascot } from "~/app/chat/components/ChatStandingMascot";
+import { Constellation } from "~/app/chat/components/Constellation";
+import { TopBar } from "~/app/chat/components/TopBar";
 import { Thread } from "~/components/assistant-ui/Thread";
-import { AmbientBG } from "~/components/companion/AmbientBG";
-import { ChatStandingMascot } from "~/components/companion/ChatStandingMascot";
-import { Constellation } from "~/components/companion/Constellation";
-import { TopBar } from "~/components/companion/TopBar";
 import { LoadingDots } from "~/components/ui/Loading";
 import { useAdminUser } from "~/hooks/useAdminUser";
 import { useAnonymousSession } from "~/hooks/useAnonymousSession";

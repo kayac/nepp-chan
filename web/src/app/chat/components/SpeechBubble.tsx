@@ -19,20 +19,12 @@ const variantStyles: Record<Variant, string> = {
   moss: "bg-(--moss-100) text-(--moss-700) border border-(--moss-300) rounded-tl-[10px]",
 };
 
-const tailStyles: Record<Variant, { fill: string; stroke?: string }> = {
-  assistant: { fill: "var(--paper-0)", stroke: "var(--paper-200)" },
-  user: { fill: "var(--teal-700)" },
-  apricot: { fill: "var(--apricot-100)", stroke: "var(--apricot-300)" },
-  moss: { fill: "var(--moss-100)", stroke: "var(--moss-300)" },
-};
-
 export const SpeechBubble = ({
   children,
   variant = "assistant",
   className,
   style,
 }: Props) => {
-  const tail = tailStyles[variant];
   const isUser = variant === "user";
   return (
     <div
@@ -47,24 +39,6 @@ export const SpeechBubble = ({
       style={style}
     >
       {children}
-      <svg
-        className="absolute -bottom-3.5"
-        style={{
-          [isUser ? "right" : "left"]: 18,
-          transform: isUser ? "scaleX(-1)" : undefined,
-        }}
-        width="28"
-        height="18"
-        viewBox="0 0 28 18"
-        aria-hidden="true"
-      >
-        <path
-          d="M0 0 Q 14 2 14 18 Q 14 2 28 0 Z"
-          fill={tail.fill}
-          stroke={tail.stroke}
-          strokeWidth={tail.stroke ? 0.6 : undefined}
-        />
-      </svg>
     </div>
   );
 };

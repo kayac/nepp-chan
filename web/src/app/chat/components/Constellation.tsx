@@ -65,7 +65,8 @@ export const Constellation = ({
 
     const makeDot = (spawnFromTop: boolean): Particle => {
       const el = document.createElementNS(SVG_NS, "circle");
-      const r = rand(1.2, 2.6);
+      // 雪景色背景でも視認できるよう一回り大きく
+      const r = rand(2.0, 3.6);
       el.setAttribute("r", r.toFixed(2));
       el.setAttribute("fill", "var(--constellation-dot)");
       svg.appendChild(el);
@@ -87,7 +88,7 @@ export const Constellation = ({
     const makeEdge = (): SVGLineElement => {
       const el = document.createElementNS(SVG_NS, "line");
       el.setAttribute("stroke", "var(--constellation-line)");
-      el.setAttribute("stroke-width", "0.8");
+      el.setAttribute("stroke-width", "1.2");
       el.setAttribute("stroke-linecap", "round");
       el.setAttribute("opacity", "0");
       svg.appendChild(el);
@@ -242,7 +243,7 @@ export const Constellation = ({
   return (
     <div
       ref={hostRef}
-      className="fixed inset-0 z-0 pointer-events-none"
+      className="fixed inset-0 z-[1] pointer-events-none"
       aria-hidden="true"
     >
       <svg

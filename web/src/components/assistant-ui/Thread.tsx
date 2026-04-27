@@ -21,12 +21,12 @@ import {
   ThumbsUpIcon,
 } from "lucide-react";
 import { GREETING_PROMPTS } from "~/app/chat/AssistantProvider";
+import { SpeechBubble } from "~/app/chat/components/SpeechBubble";
 import { useFeedback } from "~/app/chat/FeedbackContext";
 import { MarkdownText } from "~/components/assistant-ui/MarkdownText";
 import { ToolFallback } from "~/components/assistant-ui/ToolFallback";
 import { TooltipIconButton } from "~/components/assistant-ui/TooltipIconButton";
 import { toolsByName } from "~/components/assistant-ui/tool-uis";
-import { SpeechBubble } from "~/components/companion/SpeechBubble";
 import { cn } from "~/lib/class-merge";
 
 export const Thread = () => (
@@ -108,7 +108,7 @@ const Composer = () => {
         submitOnEnter={false}
         className={cn(
           "aui-composer-input flex-1 resize-none border-0 bg-transparent outline-none",
-          "px-1 py-2 text-[15px] text-(--fg-1) placeholder:text-(--fg-4) leading-snug",
+          "px-1 py-2 text-base text-(--fg-1) placeholder:text-(--fg-4) leading-snug",
           "min-h-[24px] max-h-32",
         )}
         onKeyDown={handleKeyDown}
@@ -178,7 +178,7 @@ const AssistantMessage = () => (
     className="aui-assistant-message-root fade-in slide-in-from-bottom-1 relative mx-auto w-full max-w-(--thread-max-width) animate-in py-4 duration-200"
     data-role="assistant"
   >
-    <div className="text-[11px] text-(--fg-3) mb-2 font-(family-name:--font-display) tracking-wide pl-1">
+    <div className="text-xs text-(--fg-3) mb-2 font-(family-name:--font-display) tracking-wide pl-1">
       ねっぷちゃん
     </div>
     <div className="flex justify-start">
