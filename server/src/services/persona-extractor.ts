@@ -49,10 +49,7 @@ export const extractPersonaFromThread = async (
 ): Promise<ExtractResult> => {
   const memory = await getMemory(env.DB);
 
-  const result = await memory.recall({
-    threadId,
-    threadConfig: { lastMessages: false },
-  });
+  const result = await memory.recall({ threadId });
 
   const totalMessages = result.messages.length;
   if (totalMessages <= lastMessageCount) {
