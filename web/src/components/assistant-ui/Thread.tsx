@@ -41,8 +41,6 @@ export const Thread = () => (
         "aui-thread-viewport relative flex flex-1 flex-col scroll-smooth",
         "overflow-x-auto overflow-y-scroll",
         "px-4 pt-6 md:px-6",
-        // フローティング Composer + マスコット領域分の余白を確保
-        "pb-[clamp(140px,28dvh,420px)]",
       )}
     >
       <ThreadPrimitive.Messages
