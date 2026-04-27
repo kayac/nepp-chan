@@ -17,19 +17,13 @@ type Particle = {
   phase: number;
   born: number;
   dead: boolean;
-  _lx?: number;
-  _ly?: number;
-};
-
-type Edge = {
-  el: SVGLineElement;
-  a: number;
-  b: number;
 };
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const EDGE_MAX_DIST = 140;
 const EDGE_PER_NODE = 2;
+// エッジ計算は重いので毎フレームではなく EDGE_REBUILD_INTERVAL_MS に 1 回
+const EDGE_REBUILD_INTERVAL_MS = 100;
 
 export const Constellation = ({
   active = false,
@@ -63,7 +57,9 @@ export const Constellation = ({
     setSize();
 
     const particles: Particle[] = [];
-    const edgeEls: Edge[] = [];
+    const edgeEls: SVGLineElement[] = [];
+    // 各 tick で算出した粒子の表示座標。エッジ計算でも参照する
+    const positions: { x: number; y: number }[] = [];
 
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
@@ -88,19 +84,22 @@ export const Constellation = ({
       };
     };
 
-    const makeEdge = (): Edge => {
+    const makeEdge = (): SVGLineElement => {
       const el = document.createElementNS(SVG_NS, "line");
       el.setAttribute("stroke", "var(--constellation-line)");
       el.setAttribute("stroke-width", "0.8");
       el.setAttribute("stroke-linecap", "round");
       el.setAttribute("opacity", "0");
       svg.appendChild(el);
-      return { el, a: -1, b: -1 };
+      return el;
     };
 
     const targetCount = () => {
       const area = Math.max(1, (w * h) / 1_000_000);
-      return Math.min(120, Math.max(20, Math.round(densityPerMegapx * area)));
+      // モバイル幅では密度を抑えて負荷軽減
+      const isMobile = w < 768;
+      const density = isMobile ? densityPerMegapx * 0.5 : densityPerMegapx;
+      return Math.min(120, Math.max(20, Math.round(density * area)));
     };
 
     let target = targetCount();
@@ -121,11 +120,13 @@ export const Constellation = ({
     };
 
     let last = performance.now();
+    let lastEdgeRebuildAt = 0;
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       const paused = activeRef.current || reduceMotion;
 
+      positions.length = particles.length;
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
         if (p.dead) continue;
@@ -153,76 +154,87 @@ export const Constellation = ({
         p.el.setAttribute("cx", x.toFixed(2));
         p.el.setAttribute("cy", y.toFixed(2));
         p.el.setAttribute("opacity", pulse.toFixed(3));
-        p._lx = x;
-        p._ly = y;
+        positions[i] = { x, y };
       }
 
-      for (let i = particles.length - 1; i >= 0; i--) {
-        if (particles[i].dead) particles.splice(i, 1);
-      }
-
-      // edges: nearest 2 neighbors
-      for (let k = 0; k < edgeEls.length; k++) edgeEls[k].a = -1;
-      let ek = 0;
-      for (let i = 0; i < particles.length && ek < edgeEls.length; i++) {
-        const pi = particles[i];
-        const best: [number, number, number, number] = [
-          Number.POSITIVE_INFINITY,
-          -1,
-          Number.POSITIVE_INFINITY,
-          -1,
-        ];
-        for (let j = 0; j < particles.length; j++) {
-          if (j === i) continue;
-          const pj = particles[j];
-          const dx = (pi._lx ?? 0) - (pj._lx ?? 0);
-          const dy = (pi._ly ?? 0) - (pj._ly ?? 0);
-          const d = Math.hypot(dx, dy);
-          if (d < best[0]) {
-            best[2] = best[0];
-            best[3] = best[1];
-            best[0] = d;
-            best[1] = j;
-          } else if (d < best[2]) {
-            best[2] = d;
-            best[3] = j;
+      // エッジ再計算は EDGE_REBUILD_INTERVAL_MS 毎（O(N²) なので間引き）
+      if (now - lastEdgeRebuildAt > EDGE_REBUILD_INTERVAL_MS) {
+        lastEdgeRebuildAt = now;
+        let ek = 0;
+        for (let i = 0; i < particles.length && ek < edgeEls.length; i++) {
+          const pi = positions[i];
+          if (!pi) continue;
+          let bestD = Number.POSITIVE_INFINITY;
+          let bestJ = -1;
+          let secondD = Number.POSITIVE_INFINITY;
+          let secondJ = -1;
+          for (let j = 0; j < particles.length; j++) {
+            if (j === i) continue;
+            const pj = positions[j];
+            if (!pj) continue;
+            const d = Math.hypot(pi.x - pj.x, pi.y - pj.y);
+            if (d < bestD) {
+              secondD = bestD;
+              secondJ = bestJ;
+              bestD = d;
+              bestJ = j;
+            } else if (d < secondD) {
+              secondD = d;
+              secondJ = j;
+            }
+          }
+          for (let kk = 0; kk < EDGE_PER_NODE && ek < edgeEls.length; kk++) {
+            const jj = kk === 0 ? bestJ : secondJ;
+            const dd = kk === 0 ? bestD : secondD;
+            if (jj < 0 || jj <= i || dd > EDGE_MAX_DIST) continue;
+            const el = edgeEls[ek++];
+            const pj = positions[jj];
+            el.setAttribute("x1", pi.x.toFixed(2));
+            el.setAttribute("y1", pi.y.toFixed(2));
+            el.setAttribute("x2", pj.x.toFixed(2));
+            el.setAttribute("y2", pj.y.toFixed(2));
+            const op = paused
+              ? 0.6
+              : Math.max(
+                  0,
+                  Math.min(0.45, ((EDGE_MAX_DIST - dd) / EDGE_MAX_DIST) * 0.5),
+                );
+            el.setAttribute("opacity", op.toFixed(3));
           }
         }
-        for (let kk = 0; kk < 2 && ek < edgeEls.length; kk++) {
-          const jj = kk === 0 ? best[1] : best[3];
-          const dd = kk === 0 ? best[0] : best[2];
-          if (jj < 0 || jj <= i || dd > EDGE_MAX_DIST) continue;
-          const e = edgeEls[ek++];
-          const pj = particles[jj];
-          e.el.setAttribute("x1", (pi._lx ?? 0).toFixed(2));
-          e.el.setAttribute("y1", (pi._ly ?? 0).toFixed(2));
-          e.el.setAttribute("x2", (pj._lx ?? 0).toFixed(2));
-          e.el.setAttribute("y2", (pj._ly ?? 0).toFixed(2));
-          const op = paused
-            ? 0.6
-            : Math.max(
-                0,
-                Math.min(0.45, ((EDGE_MAX_DIST - dd) / EDGE_MAX_DIST) * 0.5),
-              );
-          e.el.setAttribute("opacity", op.toFixed(3));
-          e.a = i;
-          e.b = jj;
+        for (let k = ek; k < edgeEls.length; k++) {
+          edgeEls[k].setAttribute("opacity", "0");
         }
-      }
-      for (let k = ek; k < edgeEls.length; k++) {
-        edgeEls[k].el.setAttribute("opacity", "0");
       }
 
       rafRef.current = requestAnimationFrame(tick);
     };
 
-    rafRef.current = requestAnimationFrame(tick);
+    const start = () => {
+      if (rafRef.current) return;
+      last = performance.now();
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    const stop = () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = 0;
+      }
+    };
+    const handleVisibility = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    start();
     return () => {
-      cancelAnimationFrame(rafRef.current);
+      stop();
+      document.removeEventListener("visibilitychange", handleVisibility);
       ro.disconnect();
       for (const p of particles) destroy(p);
-      for (const e of edgeEls) {
-        if (e.el.parentNode) e.el.parentNode.removeChild(e.el);
+      for (const el of edgeEls) {
+        if (el.parentNode) el.parentNode.removeChild(el);
       }
     };
   }, [densityPerMegapx]);

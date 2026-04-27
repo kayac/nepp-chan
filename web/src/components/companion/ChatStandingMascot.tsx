@@ -42,6 +42,15 @@ const useMascotPresentation = (): Presentation => {
   const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
+    // 同値の setPres を避けて不要な再レンダーを抑える
+    const setPresIfChanged = (next: Presentation) => {
+      setPres((prev) =>
+        prev.state === next.state && prev.expression === next.expression
+          ? prev
+          : next,
+      );
+    };
+
     const sync = () => {
       const t = runtime.getState();
       const isRunning = t.isRunning;
@@ -58,15 +67,15 @@ const useMascotPresentation = (): Presentation => {
         const expression: MascotExpression = hasRunningToolCall(parts)
           ? "point"
           : "sleeping";
-        setPres({ state: "thinking", expression });
+        setPresIfChanged({ state: "thinking", expression });
         return;
       }
 
       if (wasRunningRef.current) {
         wasRunningRef.current = false;
-        setPres({ state: pickRandom(POST_RESPONSE_STATES) });
+        setPresIfChanged({ state: pickRandom(POST_RESPONSE_STATES) });
         timerRef.current = window.setTimeout(() => {
-          setPres({ state: "idle" });
+          setPresIfChanged({ state: "idle" });
           timerRef.current = null;
         }, POST_RESPONSE_DURATION_MS);
       }
@@ -102,7 +111,10 @@ export const ChatStandingMascot = () => {
         "left-[max(0px,calc(50%-520px))] bottom-2",
         "w-[170px] h-[220px]",
       )}
-      style={{ animation: "mascot-float-sm 4.5s ease-in-out infinite" }}
+      style={{
+        animation: "mascot-float-sm 4.5s ease-in-out infinite",
+        willChange: "transform",
+      }}
       aria-hidden="true"
     >
       <Mascot
@@ -110,7 +122,6 @@ export const ChatStandingMascot = () => {
         expression={expression}
         showHalo={false}
         floating={false}
-        size={170}
         style={{
           width: "100%",
           height: "100%",

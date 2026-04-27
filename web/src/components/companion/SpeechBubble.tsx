@@ -19,29 +19,11 @@ const variantStyles: Record<Variant, string> = {
   moss: "bg-(--moss-100) text-(--moss-700) border border-(--moss-300) rounded-tl-[10px]",
 };
 
-const tailStyles: Record<
-  Variant,
-  { fill: string; stroke?: string; align: "left" | "right" }
-> = {
-  assistant: {
-    fill: "var(--paper-0)",
-    stroke: "var(--paper-200)",
-    align: "left",
-  },
-  user: {
-    fill: "var(--teal-700)",
-    align: "right",
-  },
-  apricot: {
-    fill: "var(--apricot-100)",
-    stroke: "var(--apricot-300)",
-    align: "left",
-  },
-  moss: {
-    fill: "var(--moss-100)",
-    stroke: "var(--moss-300)",
-    align: "left",
-  },
+const tailStyles: Record<Variant, { fill: string; stroke?: string }> = {
+  assistant: { fill: "var(--paper-0)", stroke: "var(--paper-200)" },
+  user: { fill: "var(--teal-700)" },
+  apricot: { fill: "var(--apricot-100)", stroke: "var(--apricot-300)" },
+  moss: { fill: "var(--moss-100)", stroke: "var(--moss-300)" },
 };
 
 export const SpeechBubble = ({
@@ -68,8 +50,8 @@ export const SpeechBubble = ({
       <svg
         className="absolute -bottom-3.5"
         style={{
-          [tail.align === "right" ? "right" : "left"]: 18,
-          transform: tail.align === "right" ? "scaleX(-1)" : undefined,
+          [isUser ? "right" : "left"]: 18,
+          transform: isUser ? "scaleX(-1)" : undefined,
         }}
         width="28"
         height="18"
@@ -86,13 +68,3 @@ export const SpeechBubble = ({
     </div>
   );
 };
-
-export const TypingBubble = () => (
-  <SpeechBubble variant="assistant" className="px-5 py-4">
-    <div className="flex items-center gap-1.5">
-      <span className="size-1.5 rounded-full bg-(--teal-500) opacity-35 animate-[typing-bounce_1.2s_infinite_0s]" />
-      <span className="size-1.5 rounded-full bg-(--teal-500) opacity-35 animate-[typing-bounce_1.2s_infinite_0.15s]" />
-      <span className="size-1.5 rounded-full bg-(--teal-500) opacity-35 animate-[typing-bounce_1.2s_infinite_0.3s]" />
-    </div>
-  </SpeechBubble>
-);

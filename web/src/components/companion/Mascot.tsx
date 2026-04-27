@@ -110,10 +110,26 @@ export const Mascot = ({
         }}
         src={src}
         alt={alt}
+        decoding="async"
         draggable={false}
       />
     </div>
   );
 };
 
-export { MASCOT_ASSETS, STATE_MAP };
+// 切替頻度の高い表情・ポーズはロード時にプリロードしてチラつきを防ぐ
+const PRELOAD_KEYS: readonly MascotExpression[] = [
+  "wave-smile",
+  "content",
+  "laugh",
+  "surprise",
+  "point",
+  "sleeping",
+];
+
+if (typeof window !== "undefined") {
+  for (const key of PRELOAD_KEYS) {
+    const img = new Image();
+    img.src = MASCOT_ASSETS[key];
+  }
+}

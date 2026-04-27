@@ -1,81 +1,5 @@
 import type { CSSProperties } from "react";
 
-type CommonProps = {
-  size?: number;
-  color?: string;
-  opacity?: number;
-  className?: string;
-  style?: CSSProperties;
-};
-
-export const Snowflake = ({
-  size = 24,
-  color = "var(--teal-500)",
-  opacity = 1,
-  className,
-  style,
-}: CommonProps) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    className={className}
-    style={{ opacity, ...style }}
-    aria-hidden="true"
-  >
-    <g stroke={color} strokeWidth="1.6" strokeLinecap="round">
-      <line x1="12" y1="2" x2="12" y2="22" />
-      <line x1="2" y1="12" x2="22" y2="12" />
-      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-      <line x1="19.07" y1="4.93" x2="4.93" y2="19.07" />
-      <path d="M9 3.5 L12 6 L15 3.5" />
-      <path d="M9 20.5 L12 18 L15 20.5" />
-      <path d="M3.5 9 L6 12 L3.5 15" />
-      <path d="M20.5 9 L18 12 L20.5 15" />
-    </g>
-  </svg>
-);
-
-export const Sparkle = ({
-  size = 20,
-  color = "var(--apricot-500)",
-  className,
-  style,
-}: CommonProps) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill={color}
-    className={className}
-    style={style}
-    aria-hidden="true"
-  >
-    <path d="M12 0 L13.5 10.5 L24 12 L13.5 13.5 L12 24 L10.5 13.5 L0 12 L10.5 10.5 Z" />
-  </svg>
-);
-
-export const Pine = ({
-  size = 32,
-  color = "var(--moss-500)",
-  opacity = 0.55,
-  className,
-  style,
-}: CommonProps) => (
-  <svg
-    width={size}
-    height={size * 1.4}
-    viewBox="0 0 24 34"
-    fill={color}
-    className={className}
-    style={{ opacity, ...style }}
-    aria-hidden="true"
-  >
-    <path d="M12 2 L17 10 L14 10 L19 17 L15 17 L21 25 L13 25 L13 32 L11 32 L11 25 L3 25 L9 17 L5 17 L10 10 L7 10 Z" />
-  </svg>
-);
-
 type BirchProps = {
   height?: number;
   color?: string;
@@ -86,6 +10,9 @@ type BirchProps = {
   seed?: number;
 };
 
+/**
+ * 白樺の木 (背景レイヤー用)。seed で樹皮マークの位置を決定的に生成。
+ */
 export const Birch = ({
   height = 120,
   color = "var(--paper-0)",

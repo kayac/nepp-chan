@@ -242,10 +242,8 @@ const ParticleField = () => {
         }
       }
 
-      if (pool.length > 128 || pool.some((p) => p.dead)) {
-        poolRef.current = pool.filter((p) => !p.dead);
-      }
-
+      // dead を取り除き、不足分の flake を補充
+      poolRef.current = pool.filter((p) => !p.dead);
       const flakeCount = poolRef.current.filter(
         (p) => p.kind === "flake",
       ).length;
@@ -257,10 +255,28 @@ const ParticleField = () => {
       rafRef.current = requestAnimationFrame(tick);
     };
 
-    rafRef.current = requestAnimationFrame(tick);
+    const start = () => {
+      if (rafRef.current) return;
+      last = performance.now();
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    const stop = () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = 0;
+      }
+    };
+    const handleVisibility = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    start();
 
     return () => {
-      cancelAnimationFrame(rafRef.current);
+      stop();
+      document.removeEventListener("visibilitychange", handleVisibility);
       ro.disconnect();
       for (const p of poolRef.current) destroy(p);
       poolRef.current = [];

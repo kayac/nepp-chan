@@ -230,20 +230,6 @@ button:disabled {
   animation: fade-in 200ms ease;
 }
 
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.animate-slide-up {
-  animation: slide-up 300ms ease-out;
-}
-
 @keyframes pulse-subtle {
   0%,
   100% {
@@ -353,14 +339,6 @@ button:disabled {
   width: 24px;
   height: 24px;
   border-width: 2.5px;
-}
-
-/* フォーカスリング */
-.focus-ring {
-  outline: none;
-}
-.focus-ring:focus-visible {
-  box-shadow: var(--ring-brand);
 }
 
 /* prefers-reduced-motion 対応 */

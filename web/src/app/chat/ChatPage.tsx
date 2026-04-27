@@ -206,20 +206,18 @@ export const ChatPage = () => {
               <FeedbackModalWrapper />
             </FeedbackProvider>
           </AssistantProvider>
+        ) : messagesLoading ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-4">
+            <LoadingDots />
+            <span className="text-sm text-(--fg-3) font-medium">
+              読み込み中
+            </span>
+          </div>
         ) : (
           <div className="flex-1 flex items-center justify-center">
-            {currentThreadId || messagesLoading ? (
-              <div className="flex flex-col items-center gap-4">
-                <LoadingDots />
-                <span className="text-sm text-(--fg-3) font-medium">
-                  読み込み中
-                </span>
-              </div>
-            ) : (
-              <span className="text-(--fg-3) font-medium">
-                スレッドを選択してください
-              </span>
-            )}
+            <span className="text-(--fg-3) font-medium">
+              スレッドを選択してください
+            </span>
           </div>
         )}
       </main>
