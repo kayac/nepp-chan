@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AmbientBG } from "~/app/chat/components/AmbientBG";
 import { ChatStandingMascot } from "~/app/chat/components/ChatStandingMascot";
 import { Constellation } from "~/app/chat/components/Constellation";
+import { Landing } from "~/app/chat/components/Landing";
 import { TopBar } from "~/app/chat/components/TopBar";
 import { Thread } from "~/components/assistant-ui/Thread";
 import { LoadingDots } from "~/components/ui/Loading";
@@ -26,11 +27,7 @@ import { getResourceId } from "~/lib/resource";
 import { fetchMessages } from "~/repository/thread-repository";
 import type { Thread as ThreadType } from "~/types";
 
-import {
-  AssistantProvider,
-  GREETING_PROMPT,
-  ONBOARDING_PROMPT,
-} from "./AssistantProvider";
+import { AssistantProvider, type InitialMessage } from "./AssistantProvider";
 import { FeedbackModal } from "./components/FeedbackModal";
 import { FeedbackProvider, useFeedback } from "./FeedbackContext";
 
@@ -59,14 +56,13 @@ export const ChatPage = () => {
   const resourceId = useMemo(() => getResourceId() ?? "default", []);
   const { data: adminUser, isLoading: isAdminLoading } = useAdminUser();
   const isAdmin = !!adminUser;
-  const { isReady: isSessionReady } = useAnonymousSession();
+  const { isReady: isSessionReady, isFirstVisit } = useAnonymousSession();
 
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [greetingPrompt, setGreetingPrompt] = useState<string>();
+  const [initialMessage, setInitialMessage] = useState<InitialMessage>();
   const [threadToDelete, setThreadToDelete] = useState<string | null>(null);
   const hasInitialized = useRef(false);
-  const isFirstVisit = useRef(false);
 
   const { data: threadsData, isSuccess: threadsLoaded } = useThreads();
   const threads = threadsData?.threads ?? [];
@@ -81,18 +77,26 @@ export const ChatPage = () => {
   });
   const initialMessages = messagesData?.messages as UIMessage[] | undefined;
 
-  const handleNewThread = useCallback(async () => {
-    if (createThreadMutation.isPending) return;
-    const thread = await createThreadMutation.mutateAsync(undefined);
-    setCurrentThreadId(thread.id);
-    if (isFirstVisit.current) {
-      setGreetingPrompt(ONBOARDING_PROMPT);
-      isFirstVisit.current = false;
-    } else {
-      setGreetingPrompt(GREETING_PROMPT);
-    }
-    setIsSidebarOpen(false);
-  }, [createThreadMutation]);
+  const startThread = useCallback(
+    async (initial: InitialMessage) => {
+      if (createThreadMutation.isPending) return;
+      const thread = await createThreadMutation.mutateAsync(undefined);
+      setInitialMessage(initial);
+      setCurrentThreadId(thread.id);
+      setIsSidebarOpen(false);
+    },
+    [createThreadMutation],
+  );
+
+  const handleNewThread = useCallback(
+    () => startThread({ type: "greeting" }),
+    [startThread],
+  );
+
+  const handleStartFromLanding = useCallback(
+    (text: string) => startThread({ type: "user", text }),
+    [startThread],
+  );
 
   const handleSelectThread = useCallback(
     (selectedThreadId: string) => {
@@ -101,7 +105,7 @@ export const ChatPage = () => {
         return;
       }
       setCurrentThreadId(selectedThreadId);
-      setGreetingPrompt(undefined);
+      setInitialMessage(undefined);
       setIsSidebarOpen(false);
     },
     [currentThreadId],
@@ -116,7 +120,7 @@ export const ChatPage = () => {
       if (threadToDelete === currentThreadId) {
         const remaining = threads.filter((t) => t.id !== threadToDelete);
         setCurrentThreadId(remaining.length > 0 ? remaining[0].id : null);
-        setGreetingPrompt(undefined);
+        setInitialMessage(undefined);
       }
 
       setThreadToDelete(null);
@@ -141,26 +145,81 @@ export const ChatPage = () => {
         const thread =
           threads.find((t) => t.id === savedThreadId) ?? threads[0];
         setCurrentThreadId(thread.id);
-      } else {
-        isFirstVisit.current = true;
       }
     }
   }, [threadsLoaded, threads, resourceId]);
 
+  // 既存ユーザー（2 回目以降）でスレッド 0 件なら自動作成 + greeting。
+  // 初回訪問は Landing で受けるためスキップする。
   useEffect(() => {
     if (
       threadsLoaded &&
       hasInitialized.current &&
       threads.length === 0 &&
-      currentThreadId === null
+      currentThreadId === null &&
+      !isFirstVisit
     ) {
       handleNewThread();
     }
-  }, [threadsLoaded, threads.length, currentThreadId, handleNewThread]);
+  }, [
+    threadsLoaded,
+    threads.length,
+    currentThreadId,
+    isFirstVisit,
+    handleNewThread,
+  ]);
 
   if (isAdminLoading || !isSessionReady) {
     return null;
   }
+
+  const showLanding =
+    isFirstVisit &&
+    threadsLoaded &&
+    threads.length === 0 &&
+    currentThreadId === null;
+
+  const renderMain = () => {
+    if (showLanding) {
+      return (
+        <Landing
+          onSubmit={handleStartFromLanding}
+          disabled={createThreadMutation.isPending}
+        />
+      );
+    }
+    if (currentThreadId && !messagesLoading) {
+      return (
+        <AssistantProvider
+          key={currentThreadId}
+          threadId={currentThreadId}
+          initialMessages={initialMessages}
+          initialMessage={initialMessage}
+        >
+          <FeedbackProvider threadId={currentThreadId}>
+            <Thread />
+            <ChatStandingMascot />
+            <FeedbackModalWrapper />
+          </FeedbackProvider>
+        </AssistantProvider>
+      );
+    }
+    if (messagesLoading) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <LoadingDots />
+          <span className="text-sm text-(--fg-3) font-medium">読み込み中</span>
+        </div>
+      );
+    }
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <span className="text-(--fg-3) font-medium">
+          スレッドを選択してください
+        </span>
+      </div>
+    );
+  };
 
   return (
     <div className="relative flex h-dvh flex-col overflow-hidden bg-(--bg-app)">
@@ -192,33 +251,7 @@ export const ChatPage = () => {
 
       {/* メインコンテンツ */}
       <main className="relative z-[2] flex-1 flex flex-col min-w-0 min-h-0">
-        {currentThreadId && !messagesLoading ? (
-          <AssistantProvider
-            key={currentThreadId}
-            threadId={currentThreadId}
-            initialMessages={initialMessages}
-            greetingPrompt={greetingPrompt}
-          >
-            <FeedbackProvider threadId={currentThreadId}>
-              <Thread />
-              <ChatStandingMascot />
-              <FeedbackModalWrapper />
-            </FeedbackProvider>
-          </AssistantProvider>
-        ) : messagesLoading ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-4">
-            <LoadingDots />
-            <span className="text-sm text-(--fg-3) font-medium">
-              読み込み中
-            </span>
-          </div>
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <span className="text-(--fg-3) font-medium">
-              スレッドを選択してください
-            </span>
-          </div>
-        )}
+        {renderMain()}
       </main>
 
       {/* サイドバーオーバーレイ */}

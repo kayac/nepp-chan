@@ -20,7 +20,7 @@ import {
   ThumbsDownIcon,
   ThumbsUpIcon,
 } from "lucide-react";
-import { GREETING_PROMPTS } from "~/app/chat/AssistantProvider";
+import { GREETING_PROMPT } from "~/app/chat/AssistantProvider";
 import { SpeechBubble } from "~/app/chat/components/SpeechBubble";
 import { useFeedback } from "~/app/chat/FeedbackContext";
 import { MarkdownText } from "~/components/assistant-ui/MarkdownText";
@@ -248,7 +248,7 @@ const AssistantActionBar = () => (
 const UserMessage = () => {
   const message = useMessage();
   const isGreeting = message.content?.some(
-    (part) => part.type === "text" && GREETING_PROMPTS.includes(part.text),
+    (part) => part.type === "text" && part.text === GREETING_PROMPT,
   );
 
   if (isGreeting) return null;

@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 
 type Props = {
-  active?: boolean;
   densityPerMegapx?: number;
 };
 
@@ -25,15 +24,7 @@ const EDGE_PER_NODE = 2;
 // エッジ計算は重いので毎フレームではなく EDGE_REBUILD_INTERVAL_MS に 1 回
 const EDGE_REBUILD_INTERVAL_MS = 100;
 
-export const Constellation = ({
-  active = false,
-  densityPerMegapx = 120,
-}: Props) => {
-  const activeRef = useRef(active);
-  useEffect(() => {
-    activeRef.current = active;
-  }, [active]);
-
+export const Constellation = ({ densityPerMegapx = 120 }: Props) => {
   const hostRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const rafRef = useRef(0);
@@ -125,7 +116,7 @@ export const Constellation = ({
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      const paused = activeRef.current || reduceMotion;
+      const paused = reduceMotion;
 
       positions.length = particles.length;
       for (let i = 0; i < particles.length; i++) {
