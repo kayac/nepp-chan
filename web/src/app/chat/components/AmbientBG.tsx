@@ -259,11 +259,7 @@ const ParticleField = () => {
   );
 };
 
-/**
- * 冬景色の背景。1 枚絵 (bg-winter.png) を cover 配置し、上に雪 + ドット
- * のパーティクルを RAF で被せる。プロトタイプ準拠で山・白樺・川・鉄道の
- * SVG は廃止。
- */
+/** 冬景色の背景画像 + パーティクル (雪 + ドット) */
 export const AmbientBG = () => (
   <div
     className="fixed inset-0 z-0 pointer-events-none overflow-hidden"
