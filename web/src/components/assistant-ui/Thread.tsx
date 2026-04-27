@@ -6,6 +6,7 @@ import {
   ErrorPrimitive,
   MessagePrimitive,
   ThreadPrimitive,
+  useComposerRuntime,
   useMessage,
   useMessageRuntime,
 } from "@assistant-ui/react";
@@ -81,50 +82,64 @@ const isTouchDevice =
   typeof window !== "undefined" &&
   window.matchMedia("(pointer: coarse)").matches;
 
-const Composer = () => (
-  <ComposerPrimitive.Root
-    className={cn(
-      "aui-composer-root pointer-events-auto",
-      "relative flex w-full items-center gap-2",
-      "rounded-(--r-footer) border-2 border-(--teal-500) bg-(--paper-0)",
-      "px-2.5 py-2.5 pl-4",
-    )}
-    style={{ boxShadow: "var(--shadow-floating-input)" }}
-  >
-    <button
-      type="button"
-      aria-label="添付（準備中）"
-      tabIndex={-1}
-      disabled
+const Composer = () => {
+  const composerRuntime = useComposerRuntime();
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // タッチデバイスでは Enter で改行、送信ボタンで送信
+    if (isTouchDevice) return;
+    if (e.key !== "Enter" || e.shiftKey) return;
+    // IME 変換中の Enter は送信せず、変換確定として扱う
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+    e.preventDefault();
+    composerRuntime.send();
+  };
+
+  return (
+    <ComposerPrimitive.Root
       className={cn(
-        "size-10 rounded-full grid place-items-center flex-none",
-        "text-(--fg-4) cursor-not-allowed opacity-60",
+        "aui-composer-root pointer-events-auto",
+        "relative flex w-full items-center gap-2",
+        "rounded-(--r-footer) border-2 border-(--teal-500) bg-(--paper-0)",
+        "px-2.5 py-2.5 pl-4",
       )}
+      style={{ boxShadow: "var(--shadow-floating-input)" }}
     >
-      <PlusIcon className="size-5" aria-hidden="true" />
-    </button>
-    <ComposerPrimitive.Input
-      placeholder="ねっぷちゃんに話しかける…"
-      submitOnEnter={!isTouchDevice}
-      className={cn(
-        "aui-composer-input flex-1 resize-none border-0 bg-transparent outline-none",
-        "px-1 py-2 text-[15px] text-(--fg-1) placeholder:text-(--fg-4) leading-snug",
-        "min-h-[24px] max-h-32",
-      )}
-      onFocus={(e) => {
-        if (isTouchDevice) {
-          setTimeout(() => {
-            e.target.scrollIntoView({ behavior: "smooth", block: "end" });
-          }, 300);
-        }
-      }}
-      rows={1}
-      autoFocus
-      aria-label="メッセージ入力"
-    />
-    <ComposerAction />
-  </ComposerPrimitive.Root>
-);
+      <button
+        type="button"
+        aria-label="添付（準備中）"
+        tabIndex={-1}
+        disabled
+        className={cn(
+          "size-10 rounded-full grid place-items-center flex-none",
+          "text-(--fg-4) cursor-not-allowed opacity-60",
+        )}
+      >
+        <PlusIcon className="size-5" aria-hidden="true" />
+      </button>
+      <ComposerPrimitive.Input
+        placeholder="ねっぷちゃんに話しかける…"
+        submitOnEnter={false}
+        className={cn(
+          "aui-composer-input flex-1 resize-none border-0 bg-transparent outline-none",
+          "px-1 py-2 text-[15px] text-(--fg-1) placeholder:text-(--fg-4) leading-snug",
+          "min-h-[24px] max-h-32",
+        )}
+        onKeyDown={handleKeyDown}
+        onFocus={(e) => {
+          if (isTouchDevice) {
+            setTimeout(() => {
+              e.target.scrollIntoView({ behavior: "smooth", block: "end" });
+            }, 300);
+          }
+        }}
+        rows={1}
+        autoFocus
+        aria-label="メッセージ入力"
+      />
+      <ComposerAction />
+    </ComposerPrimitive.Root>
+  );
+};
 
 const ComposerAction = () => (
   <div className="aui-composer-action-wrapper flex items-center flex-none">
