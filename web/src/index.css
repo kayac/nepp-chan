@@ -257,6 +257,20 @@ button:disabled {
   animation: pulse-subtle 2s ease-in-out infinite;
 }
 
+/* タイピングドットのバウンス */
+@keyframes typing-bounce {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
 /* マスコットふわふわ */
 @keyframes mascot-float {
   0%,

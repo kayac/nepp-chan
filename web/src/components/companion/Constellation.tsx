@@ -1,0 +1,247 @@
+import { useEffect, useRef } from "react";
+
+type Props = {
+  active?: boolean;
+  densityPerMegapx?: number;
+};
+
+type Particle = {
+  el: SVGCircleElement;
+  r: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  wigAmp: number;
+  wigFreq: number;
+  phase: number;
+  born: number;
+  dead: boolean;
+  _lx?: number;
+  _ly?: number;
+};
+
+type Edge = {
+  el: SVGLineElement;
+  a: number;
+  b: number;
+};
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+const EDGE_MAX_DIST = 140;
+const EDGE_PER_NODE = 2;
+
+export const Constellation = ({
+  active = false,
+  densityPerMegapx = 120,
+}: Props) => {
+  const activeRef = useRef(active);
+  useEffect(() => {
+    activeRef.current = active;
+  }, [active]);
+
+  const hostRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const rafRef = useRef(0);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    const svg = svgRef.current;
+    if (!host || !svg) return;
+
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    let w = host.clientWidth;
+    let h = host.clientHeight;
+    const setSize = () => {
+      w = host.clientWidth;
+      h = host.clientHeight;
+      svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    };
+    setSize();
+
+    const particles: Particle[] = [];
+    const edgeEls: Edge[] = [];
+
+    const rand = (a: number, b: number) => a + Math.random() * (b - a);
+
+    const makeDot = (spawnFromTop: boolean): Particle => {
+      const el = document.createElementNS(SVG_NS, "circle");
+      const r = rand(1.2, 2.6);
+      el.setAttribute("r", r.toFixed(2));
+      el.setAttribute("fill", "var(--constellation-dot)");
+      svg.appendChild(el);
+      return {
+        el,
+        r,
+        x: rand(0, w),
+        y: spawnFromTop ? rand(-40, -4) : rand(0, h),
+        vx: rand(-4, 4),
+        vy: rand(6, 14),
+        wigAmp: rand(3, 10),
+        wigFreq: rand(0.1, 0.35),
+        phase: rand(0, Math.PI * 2),
+        born: performance.now(),
+        dead: false,
+      };
+    };
+
+    const makeEdge = (): Edge => {
+      const el = document.createElementNS(SVG_NS, "line");
+      el.setAttribute("stroke", "var(--constellation-line)");
+      el.setAttribute("stroke-width", "0.8");
+      el.setAttribute("stroke-linecap", "round");
+      el.setAttribute("opacity", "0");
+      svg.appendChild(el);
+      return { el, a: -1, b: -1 };
+    };
+
+    const targetCount = () => {
+      const area = Math.max(1, (w * h) / 1_000_000);
+      return Math.min(120, Math.max(20, Math.round(densityPerMegapx * area)));
+    };
+
+    let target = targetCount();
+    for (let i = 0; i < target; i++) particles.push(makeDot(false));
+    for (let i = 0; i < target * EDGE_PER_NODE; i++) edgeEls.push(makeEdge());
+
+    const ro = new ResizeObserver(() => {
+      setSize();
+      target = targetCount();
+      while (particles.length < target) particles.push(makeDot(true));
+      while (edgeEls.length < target * EDGE_PER_NODE) edgeEls.push(makeEdge());
+    });
+    ro.observe(host);
+
+    const destroy = (p: Particle) => {
+      if (p.el.parentNode) p.el.parentNode.removeChild(p.el);
+      p.dead = true;
+    };
+
+    let last = performance.now();
+    const tick = (now: number) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      const paused = activeRef.current || reduceMotion;
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        if (p.dead) continue;
+
+        let x = p.x;
+        let y = p.y;
+        if (!paused) {
+          p.y += p.vy * dt;
+          const wig =
+            Math.sin((now / 1000) * p.wigFreq * Math.PI * 2 + p.phase) *
+            p.wigAmp;
+          x = p.x + p.vx * ((now - p.born) / 1000) + wig;
+          y = p.y;
+          if (y > h + 20 || x < -40 || x > w + 40) {
+            destroy(p);
+            particles[i] = makeDot(true);
+            continue;
+          }
+        }
+
+        const pulse = paused
+          ? 0.8 + 0.2 * Math.sin((now / 1000) * 2.6 + (i % 6) * 0.3)
+          : 0.9 + 0.1 * Math.sin((now / 1000) * 0.8 + (i % 5) * 0.5);
+
+        p.el.setAttribute("cx", x.toFixed(2));
+        p.el.setAttribute("cy", y.toFixed(2));
+        p.el.setAttribute("opacity", pulse.toFixed(3));
+        p._lx = x;
+        p._ly = y;
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        if (particles[i].dead) particles.splice(i, 1);
+      }
+
+      // edges: nearest 2 neighbors
+      for (let k = 0; k < edgeEls.length; k++) edgeEls[k].a = -1;
+      let ek = 0;
+      for (let i = 0; i < particles.length && ek < edgeEls.length; i++) {
+        const pi = particles[i];
+        const best: [number, number, number, number] = [
+          Number.POSITIVE_INFINITY,
+          -1,
+          Number.POSITIVE_INFINITY,
+          -1,
+        ];
+        for (let j = 0; j < particles.length; j++) {
+          if (j === i) continue;
+          const pj = particles[j];
+          const dx = (pi._lx ?? 0) - (pj._lx ?? 0);
+          const dy = (pi._ly ?? 0) - (pj._ly ?? 0);
+          const d = Math.hypot(dx, dy);
+          if (d < best[0]) {
+            best[2] = best[0];
+            best[3] = best[1];
+            best[0] = d;
+            best[1] = j;
+          } else if (d < best[2]) {
+            best[2] = d;
+            best[3] = j;
+          }
+        }
+        for (let kk = 0; kk < 2 && ek < edgeEls.length; kk++) {
+          const jj = kk === 0 ? best[1] : best[3];
+          const dd = kk === 0 ? best[0] : best[2];
+          if (jj < 0 || jj <= i || dd > EDGE_MAX_DIST) continue;
+          const e = edgeEls[ek++];
+          const pj = particles[jj];
+          e.el.setAttribute("x1", (pi._lx ?? 0).toFixed(2));
+          e.el.setAttribute("y1", (pi._ly ?? 0).toFixed(2));
+          e.el.setAttribute("x2", (pj._lx ?? 0).toFixed(2));
+          e.el.setAttribute("y2", (pj._ly ?? 0).toFixed(2));
+          const op = paused
+            ? 0.6
+            : Math.max(
+                0,
+                Math.min(0.45, ((EDGE_MAX_DIST - dd) / EDGE_MAX_DIST) * 0.5),
+              );
+          e.el.setAttribute("opacity", op.toFixed(3));
+          e.a = i;
+          e.b = jj;
+        }
+      }
+      for (let k = ek; k < edgeEls.length; k++) {
+        edgeEls[k].el.setAttribute("opacity", "0");
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      ro.disconnect();
+      for (const p of particles) destroy(p);
+      for (const e of edgeEls) {
+        if (e.el.parentNode) e.el.parentNode.removeChild(e.el);
+      }
+    };
+  }, [densityPerMegapx]);
+
+  return (
+    <div
+      ref={hostRef}
+      className="fixed inset-0 z-0 pointer-events-none"
+      aria-hidden="true"
+    >
+      <svg
+        ref={svgRef}
+        width="100%"
+        height="100%"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <title>constellation background</title>
+      </svg>
+    </div>
+  );
+};
