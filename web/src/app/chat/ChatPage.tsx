@@ -203,19 +203,11 @@ export const ChatPage = () => {
         </AssistantProvider>
       );
     }
-    if (messagesLoading) {
-      return (
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          <LoadingDots />
-          <span className="text-sm text-(--fg-3) font-medium">読み込み中</span>
-        </div>
-      );
-    }
+    // それ以外は過渡状態 (messages fetch 中 / 自動 createThread 中 など)
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <span className="text-(--fg-3) font-medium">
-          スレッドを選択してください
-        </span>
+      <div className="flex-1 flex flex-col items-center justify-center gap-4">
+        <LoadingDots />
+        <span className="text-sm text-(--fg-3) font-medium">読み込み中</span>
       </div>
     );
   };
