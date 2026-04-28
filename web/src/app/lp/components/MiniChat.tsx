@@ -1,3 +1,4 @@
+import { ArrowRightIcon, EllipsisIcon, PlusIcon } from "lucide-react";
 import {
   type FormEvent,
   Fragment,
@@ -123,23 +124,10 @@ export const MiniChat = () => {
             オンライン
           </span>
         </div>
-        <span className="ml-auto text-(--fg-4)" aria-hidden="true">
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            role="presentation"
-          >
-            <title>menu</title>
-            <circle cx="12" cy="12" r="1" />
-            <circle cx="19" cy="12" r="1" />
-            <circle cx="5" cy="12" r="1" />
-          </svg>
-        </span>
+        <EllipsisIcon
+          className="ml-auto size-3.5 text-(--fg-4)"
+          aria-hidden="true"
+        />
       </div>
 
       <div
@@ -211,19 +199,7 @@ export const MiniChat = () => {
           aria-label="添付"
           className="grid size-7 place-items-center rounded-full text-(--fg-3) transition-colors hover:bg-(--teal-50) hover:text-(--teal-700)"
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            role="presentation"
-          >
-            <title>添付</title>
-            <path d="M12 5v14M5 12h14" />
-          </svg>
+          <PlusIcon className="size-[18px]" aria-hidden="true" />
         </button>
         <input
           value={input}
@@ -242,20 +218,7 @@ export const MiniChat = () => {
             "disabled:cursor-not-allowed disabled:opacity-55",
           )}
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            role="presentation"
-          >
-            <title>送信</title>
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
+          <ArrowRightIcon className="size-[18px]" aria-hidden="true" />
         </button>
       </form>
     </div>
