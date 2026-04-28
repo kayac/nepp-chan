@@ -32,7 +32,7 @@ export const Nav = () => (
       </div>
 
       <a
-        href="#chat"
+        href="/"
         className="ml-auto rounded-(--r-pill) bg-(--brand) px-3 py-1.5 text-xs font-semibold text-white shadow-(--shadow-sm) transition-all duration-200 hover:-translate-y-px hover:bg-(--brand-hover) hover:shadow-(--shadow-brand) sm:px-4 sm:py-2 sm:text-sm md:ml-0"
       >
         いますぐ話す

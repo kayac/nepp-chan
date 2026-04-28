@@ -40,7 +40,7 @@ export const Hero = () => {
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <a
-              href="#chat"
+              href="/"
               className="flex items-center justify-center gap-2 rounded-(--r-pill) bg-(--brand) px-6 py-3.5 text-sm font-bold text-white shadow-(--shadow-brand) transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:bg-(--brand-hover) hover:shadow-[0_10px_24px_rgba(15,118,110,0.32)]"
             >
               <svg
