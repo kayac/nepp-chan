@@ -39,14 +39,16 @@ export const Line = () => {
           LINEのお友達に追加するだけで、いつでもねっぷちゃんとお話しできます。村の最新情報やお知らせもお届けするよ！
         </p>
         {/* LINE 公式アカウント URL は別 Issue で確定するため暫定で button + alert に */}
-        <button
-          type="button"
-          onClick={() => window.alert("LINE公式アカウントは準備中です")}
-          className="mt-6 inline-flex items-center gap-2 rounded-(--r-pill) bg-[#06c755] px-6 py-3.5 text-sm font-bold text-white shadow-[0_6px_16px_rgba(6,199,85,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#05b048] hover:shadow-[0_10px_24px_rgba(6,199,85,0.36)]"
-        >
-          <LineIcon size={16} />
-          LINE友達追加はこちら
-        </button>
+        <div className="mt-6 flex justify-center md:justify-start">
+          <button
+            type="button"
+            onClick={() => window.alert("LINE公式アカウントは準備中です")}
+            className="inline-flex items-center gap-2 rounded-(--r-pill) bg-[#06c755] px-6 py-3.5 text-sm font-bold text-white shadow-[0_6px_16px_rgba(6,199,85,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#05b048] hover:shadow-[0_10px_24px_rgba(6,199,85,0.36)]"
+          >
+            <LineIcon size={16} />
+            LINE友達追加はこちら
+          </button>
+        </div>
       </div>
 
       <div
