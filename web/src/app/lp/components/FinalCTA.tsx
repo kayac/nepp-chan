@@ -30,7 +30,7 @@ export const FinalCTA = () => {
           {/* TODO: LINE 公式アカウント URL 確定後、href を実 URL に差し替え (#541) */}
           <a
             href="#line"
-            className="inline-flex items-center gap-2 rounded-(--r-pill) border border-(--paper-200) bg-white px-6 py-3.5 text-sm font-bold text-(--fg-1) shadow-(--shadow-sm) transition-all duration-200 hover:-translate-y-0.5 hover:border-(--teal-300) hover:text-(--brand)"
+            className="inline-flex items-center gap-2 rounded-(--r-pill) bg-[#06c755] px-6 py-3.5 text-sm font-bold text-white shadow-[0_6px_16px_rgba(6,199,85,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#05b048] hover:shadow-[0_10px_24px_rgba(6,199,85,0.36)]"
           >
             <LineIcon size={16} />
             LINEで友達追加
