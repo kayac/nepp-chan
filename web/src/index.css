@@ -173,14 +173,6 @@
   --lh-snug: 1.45;
   --lh-normal: 1.7;
   --lh-relaxed: 1.85;
-
-  /* ===============================================
-     CONSTELLATION (背景の星座レイヤー)
-     bg-winter.png (雪景色の白系) の上で目立つよう濃い teal で描画
-     =============================================== */
-  --constellation-line: rgba(15, 118, 110, 0.22);
-  --constellation-dot: rgba(15, 118, 110, 0.45);
-  --constellation-glow: rgba(15, 118, 110, 0.08);
 }
 
 body {

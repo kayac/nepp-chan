@@ -9,7 +9,6 @@ import type { UIMessage } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AmbientBG } from "~/app/chat/components/AmbientBG";
 import { ChatStandingMascot } from "~/app/chat/components/ChatStandingMascot";
-import { Constellation } from "~/app/chat/components/Constellation";
 import { Landing } from "~/app/chat/components/Landing";
 import { TopBar } from "~/app/chat/components/TopBar";
 import { Thread } from "~/components/assistant-ui/Thread";
@@ -225,7 +224,6 @@ export const ChatPage = () => {
     <div className="relative flex h-dvh flex-col overflow-hidden bg-(--bg-app)">
       {/* 背景レイヤー */}
       <AmbientBG />
-      <Constellation />
 
       {/* 管理者モードバナー */}
       {isAdmin && (
