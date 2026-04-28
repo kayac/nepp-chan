@@ -38,10 +38,10 @@ export const Hero = () => {
             村のことなら、なんでもお話しできます。
           </p>
 
-          <div className="mt-8 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <a
               href="#chat"
-              className="flex items-center justify-center gap-2 rounded-(--r-pill) bg-(--brand) px-3 py-3 text-sm font-bold text-white shadow-(--shadow-brand) transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:bg-(--brand-hover) hover:shadow-[0_10px_24px_rgba(15,118,110,0.32)] sm:px-6 sm:py-3.5"
+              className="flex items-center justify-center gap-2 rounded-(--r-pill) bg-(--brand) px-6 py-3.5 text-sm font-bold text-white shadow-(--shadow-brand) transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:bg-(--brand-hover) hover:shadow-[0_10px_24px_rgba(15,118,110,0.32)]"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -51,7 +51,7 @@ export const Hero = () => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 aria-hidden="true"
-                className="hidden size-4 sm:block"
+                className="size-4"
               >
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
@@ -59,9 +59,9 @@ export const Hero = () => {
             </a>
             <a
               href="#line"
-              className="flex items-center justify-center gap-2 rounded-(--r-pill) bg-[#06c755] px-3 py-3 text-sm font-bold text-white shadow-[0_6px_16px_rgba(6,199,85,0.22)] transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:bg-[#05b048] hover:shadow-[0_10px_24px_rgba(6,199,85,0.36)] sm:px-6 sm:py-3.5"
+              className="flex items-center justify-center gap-2 rounded-(--r-pill) bg-[#06c755] px-6 py-3.5 text-sm font-bold text-white shadow-[0_6px_16px_rgba(6,199,85,0.22)] transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:bg-[#05b048] hover:shadow-[0_10px_24px_rgba(6,199,85,0.36)]"
             >
-              <LineIcon size={16} className="hidden sm:block" />
+              <LineIcon size={16} />
               LINEで友達追加
             </a>
           </div>
