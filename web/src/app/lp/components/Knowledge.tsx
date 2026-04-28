@@ -54,12 +54,12 @@ export const Knowledge = () => {
         </div>
         <h3 className="mt-4 font-(family-name:--font-display) text-xl font-bold sm:text-2xl md:text-[28px] lg:text-[34px] leading-[1.35] text-(--snow-800)">
           村のことを
-          <br />
+          <br className="hidden md:inline" />
           なんでも知ってるよ
         </h3>
         <p className="mt-5 text-base leading-[1.85] text-(--fg-1)">
           駅に、宿に、役場に——
-          <br />
+          <br className="hidden md:inline" />
           音威子府のあらゆる情報を、まるごと持ったAIです。
         </p>
         <p className="mt-3 text-base leading-[1.85] text-(--fg-2)">

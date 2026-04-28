@@ -32,9 +32,9 @@ export const Hero = () => {
 
           <p className="mt-6 max-w-[520px] text-base leading-[1.85] text-(--fg-2)">
             北海道のいちばん小さな村、音威子府（おといねっぷ）村に、
-            <br />
+            <br className="hidden md:inline" />
             AI副村長「ねっぷちゃん」が誕生しました。
-            <br />
+            <br className="hidden md:inline" />
             村のことなら、なんでもお話しできます。
           </p>
 

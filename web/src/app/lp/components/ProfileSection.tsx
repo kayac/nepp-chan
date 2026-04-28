@@ -59,7 +59,7 @@ export const ProfileSection = () => {
             </dl>
             <p className="mt-6 text-base leading-[1.85] text-(--fg-2)">
               村の小さなことも、大切なことも。
-              <br />
+              <br className="hidden md:inline" />
               あなたのそばに、ねっぷちゃんがいます。
             </p>
           </div>

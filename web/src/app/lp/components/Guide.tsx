@@ -60,14 +60,14 @@ export const Guide = () => {
         </div>
         <h3 className="mt-4 font-(family-name:--font-display) text-xl font-bold sm:text-2xl md:text-[28px] lg:text-[34px] leading-[1.35] text-(--snow-800)">
           音威子府村を
-          <br />
+          <br className="hidden md:inline" />
           ねっぷちゃんと
-          <br />
+          <br className="hidden md:inline" />
           お散歩しよう
         </h3>
         <p className="mt-5 text-base leading-[1.85] text-(--fg-1)">
           自然・文化・グルメ・アクティビティ——
-          <br />
+          <br className="hidden md:inline" />
           村のことなら、ねっぷちゃんが道しるべ。
         </p>
         <p className="mt-3 text-base leading-[1.85] text-(--fg-2)">

@@ -29,7 +29,7 @@ export const LpPage = () => (
             </h2>
             <p className="mt-4 text-[17px] leading-[1.85] text-(--fg-2)">
               村の歴史、お知らせ、地域のお店、役場の手続き——
-              <br />
+              <br className="hidden md:inline" />
               音威子府のことなら、なんでもお話しできます。
             </p>
           </div>

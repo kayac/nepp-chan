@@ -13,7 +13,7 @@ export const FinalCTA = () => {
       >
         <h2 className="font-(family-name:--font-display) text-xl font-black sm:text-2xl md:text-3xl lg:text-[40px] leading-[1.4] text-(--snow-800)">
           さっそく、
-          <br />
+          <br className="hidden md:inline" />
           ねっぷちゃんに話しかけてみよう
         </h2>
         <p className="mx-auto mt-5 max-w-[560px] text-base leading-[1.85] text-(--fg-2)">

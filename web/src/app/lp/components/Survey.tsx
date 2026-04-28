@@ -95,14 +95,14 @@ export const Survey = () => {
         </div>
         <h3 className="mt-4 font-(family-name:--font-display) text-xl font-bold sm:text-2xl md:text-[28px] lg:text-[34px] leading-[1.35] text-(--snow-800)">
           たまに
-          <br />
+          <br className="hidden md:inline" />
           アンケートも
-          <br />
+          <br className="hidden md:inline" />
           届くよ！
         </h3>
         <p className="mt-5 text-base leading-[1.85] text-(--fg-1)">
           ねっぷちゃんから、ときどき質問が届きます。
-          <br />
+          <br className="hidden md:inline" />
           気が向いたら、気軽に答えてみてね！
         </p>
         <p className="mt-3 text-base leading-[1.85] text-(--fg-2)">
