@@ -27,6 +27,7 @@ export const FinalCTA = () => {
             <Icon name="message-circle" size={16} />
             Web版でいますぐ話しかける
           </a>
+          {/* TODO: LINE 公式アカウント URL 確定後、href を実 URL に差し替え (#541) */}
           <a
             href="#line"
             className="inline-flex items-center gap-2 rounded-(--r-pill) border border-(--paper-200) bg-white px-6 py-3.5 text-sm font-bold text-(--fg-1) shadow-(--shadow-sm) transition-all duration-200 hover:-translate-y-0.5 hover:border-(--teal-300) hover:text-(--brand)"

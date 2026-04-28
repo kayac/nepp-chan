@@ -64,6 +64,7 @@ export const FooterSection = () => (
         </h4>
         <ul className="mt-3 flex flex-col gap-2 text-[13px]">
           <li>
+            {/* TODO: 実在するメールアドレスに差し替え。リファレンス由来のモック値 */}
             <a
               href="mailto:nepp-chan@kayac.com"
               className="inline-flex items-center gap-1.5 text-(--fg-2) transition-colors hover:text-(--brand)"
@@ -73,7 +74,7 @@ export const FooterSection = () => (
           </li>
           <li>
             <a
-              href="https://otoineppu.jp"
+              href="https://www.vill.otoineppu.hokkaido.jp/"
               target="_blank"
               rel="noopener"
               className="text-(--fg-2) transition-colors hover:text-(--brand)"
