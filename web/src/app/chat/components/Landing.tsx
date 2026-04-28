@@ -45,11 +45,14 @@ export const Landing = ({ onSubmit, disabled = false }: Props) => {
           <span aria-hidden="true">❄</span>
         </div>
 
-        <h1 className="font-(family-name:--font-display) font-black text-3xl md:text-4xl text-center text-(--snow-800) tracking-tight leading-tight">
-          音威子府村を
-          <em className="not-italic text-(--brand)">ねっぷちゃん</em>と
+        <h1 className="font-(family-name:--font-display) font-black text-2xl sm:text-3xl md:text-4xl text-center text-(--snow-800) tracking-tight leading-tight">
+          <span className="inline-block">音威子府村を</span>
+          <em className="not-italic text-(--brand) whitespace-nowrap">
+            ねっぷちゃん
+          </em>
+          <span className="inline-block">と</span>
           <br />
-          お散歩しよう
+          <span className="inline-block">お散歩しよう</span>
           <span aria-hidden="true" className="ml-2">
             ✨
           </span>
