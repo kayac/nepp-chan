@@ -1,10 +1,6 @@
 import { useScrollReveal } from "~/hooks/useScrollReveal";
 import { LineIcon } from "./Icon";
 
-// `**bold**` を <strong> に置換する。入力ソースは hardcode のみ。
-const renderInlineBold = (text: string) =>
-  text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-
 export const Line = () => {
   const body = useScrollReveal<HTMLDivElement>();
   const visual = useScrollReveal<HTMLDivElement>();
@@ -97,15 +93,11 @@ export const Line = () => {
                   className="size-6 object-contain"
                 />
               </span>
-              <div
-                className="max-w-[210px] rounded-2xl rounded-bl-md bg-white px-3 py-2 text-xs leading-relaxed text-(--fg-1) shadow-(--shadow-xs)"
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: hardcoded
-                dangerouslySetInnerHTML={{
-                  __html: renderInlineBold(
-                    "駅の**常盤軒**の黒いお蕎麦がおすすめ！今日はちょっと寒いから、あったかい一杯がいいかも 🥢",
-                  ),
-                }}
-              />
+              <div className="max-w-[210px] rounded-2xl rounded-bl-md bg-white px-3 py-2 text-xs leading-relaxed text-(--fg-1) shadow-(--shadow-xs)">
+                駅の<strong>常盤軒</strong>
+                の黒いお蕎麦がおすすめ！今日はちょっと寒いから、あったかい一杯がいいかも
+                🥢
+              </div>
             </div>
           </div>
         </div>

@@ -1,4 +1,11 @@
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import {
+  type FormEvent,
+  Fragment,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { cn } from "~/lib/class-merge";
 
 const SAMPLE_QUESTIONS: ReadonlyArray<string> = [
@@ -37,10 +44,19 @@ const nextMessageId = () => {
   return `msg-${messageIdCounter}`;
 };
 
-// `**bold**` を <strong> に置換するだけのシンプルな変換。
-// 入力ソースは hardcode の CANNED と INITIAL_MESSAGE のみなので XSS のリスクなし。
-const renderInlineBold = (line: string) =>
-  line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+// `**bold**` を <strong> 要素に分解する。CANNED が hardcode のため
+// 簡易マークダウンとして扱う。
+const renderInlineBold = (line: string): ReactNode => {
+  const parts = line.split(/\*\*(.+?)\*\*/g);
+  return parts.map((part, i) => {
+    const key = `${i}-${part}`;
+    return i % 2 === 1 ? (
+      <strong key={key}>{part}</strong>
+    ) : (
+      <Fragment key={key}>{part}</Fragment>
+    );
+  });
+};
 
 /**
  * 静的版 MiniChat。後続 Issue で本物のチャットウィジェットに差し替える前提。
@@ -142,13 +158,8 @@ export const MiniChat = () => {
             )}
           >
             {m.text.split("\n").map((line, j) => (
-              <div
-                // メッセージ id + 行番号で安定キー、テキスト変化時もリスト構造は不変
-                // biome-ignore lint/suspicious/noArrayIndexKey: split の行順序は固定で id 単位でユニーク
-                key={`${m.id}-${j}`}
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: hardcoded canned text のみ通過
-                dangerouslySetInnerHTML={{ __html: renderInlineBold(line) }}
-              />
+              // biome-ignore lint/suspicious/noArrayIndexKey: split の行順序は固定で id 単位でユニーク
+              <div key={`${m.id}-${j}`}>{renderInlineBold(line)}</div>
             ))}
           </div>
         ))}
