@@ -41,7 +41,7 @@ export const Line = () => {
             onClick={() => window.alert("LINE公式アカウントは準備中です")}
             className="inline-flex items-center gap-2 rounded-(--r-pill) bg-[#06c755] px-6 py-3.5 text-sm font-bold text-white shadow-[0_6px_16px_rgba(6,199,85,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#05b048] hover:shadow-[0_10px_24px_rgba(6,199,85,0.36)]"
           >
-            <LineIcon size={16} />
+            <LineIcon size={20} />
             LINE友達追加はこちら
           </button>
         </div>
