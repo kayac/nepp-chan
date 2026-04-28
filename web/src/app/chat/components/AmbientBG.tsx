@@ -1,165 +1,170 @@
 import { useEffect, useRef } from "react";
 
-type Particle = {
-  el: HTMLSpanElement;
-  kind: "dot" | "flake";
+type Dot = {
+  kind: "dot";
   x: number;
   y: number;
-  vy: number;
   vx: number;
+  vy: number;
+  r: number;
+  color: string;
+  opacity: number;
+  born: number;
   wobbleAmp: number;
   wobbleFreq: number;
   phase: number;
-  size?: number;
-  rot?: number;
-  vrot?: number;
-  targetOp: number;
-  born: number;
-  age: number;
-  life?: number;
-  dead: boolean;
 };
 
+type Flake = {
+  kind: "flake";
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  rot: number;
+  vrot: number;
+  opacity: number;
+  born: number;
+  age: number;
+  life: number;
+  wobbleAmp: number;
+  wobbleFreq: number;
+  phase: number;
+};
+
+type Particle = Dot | Flake;
+
+const MAX_DOTS = 30;
+const MAX_FLAKES = 6;
+const DOT_SPAWN_MS = 600;
+
+const FLAKE_SVG = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none">
+    <g stroke="#2dd4bf" stroke-width="1.6" stroke-linecap="round">
+      <line x1="12" y1="2" x2="12" y2="22"/>
+      <line x1="2" y1="12" x2="22" y2="12"/>
+      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+      <line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/>
+      <path d="M9 3.5 L12 6 L15 3.5"/>
+      <path d="M9 20.5 L12 18 L15 20.5"/>
+      <path d="M3.5 9 L6 12 L3.5 15"/>
+      <path d="M20.5 9 L18 12 L20.5 15"/>
+    </g>
+  </svg>`;
+
+const DOT_PALETTE: ReadonlyArray<{ color: string; opacity: number }> = [
+  { color: "#5eead4", opacity: 0.85 },
+  { color: "#9ec7d6", opacity: 0.95 },
+  { color: "#d9b58e", opacity: 0.9 },
+  { color: "#a8bf9a", opacity: 0.9 },
+];
+
+const rand = (a: number, b: number) => a + Math.random() * (b - a);
+const pick = <T,>(arr: ReadonlyArray<T>): T =>
+  arr[Math.floor(Math.random() * arr.length)];
+
+/** Canvas 2D ベースの雪 + ドットパーティクル */
 const ParticleField = () => {
-  const rootRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef(0);
-  const poolRef = useRef<Particle[]>([]);
-  const lastSpawnRef = useRef(0);
-  const sizeRef = useRef({ w: 0, h: 0 });
 
   useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
     const reduceMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
     if (reduceMotion) return;
 
-    const MAX_DOTS = 30;
-    const MAX_FLAKES = 6;
-    const DOT_SPAWN_MS = 600;
-
-    const rand = (a: number, b: number) => a + Math.random() * (b - a);
-    const pick = <T,>(arr: T[]): T =>
-      arr[Math.floor(Math.random() * arr.length)];
-
-    const measure = () => {
-      const rect = root.getBoundingClientRect();
-      sizeRef.current.w = rect.width;
-      sizeRef.current.h = rect.height;
+    const dpr = window.devicePixelRatio || 1;
+    let w = 0;
+    let h = 0;
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      w = rect.width;
+      h = rect.height;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(root);
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
 
-    const destroy = (p: Particle) => {
-      if (p.el.parentNode) p.el.parentNode.removeChild(p.el);
-      p.dead = true;
+    // Snowflake は事前に Image にラスタライズして drawImage で再利用
+    const flakeImg = new Image();
+    let flakeReady = false;
+    flakeImg.onload = () => {
+      flakeReady = true;
     };
+    flakeImg.src = `data:image/svg+xml;utf8,${encodeURIComponent(FLAKE_SVG)}`;
 
-    const spawnDot = (): Particle | undefined => {
-      const { w } = sizeRef.current;
-      if (!w) return undefined;
-      const palette = [
-        { bg: "var(--teal-400)", op: 0.85 },
-        { bg: "#9ec7d6", op: 0.95 },
-        { bg: "#d9b58e", op: 0.9 },
-        { bg: "#a8bf9a", op: 0.9 },
-      ];
-      const c = pick(palette);
-      const size = pick([4, 6, 6, 8]);
-      const el = document.createElement("span");
-      el.className =
-        "absolute top-0 left-0 rounded-full will-change-[transform,opacity]";
-      el.style.width = `${size}px`;
-      el.style.height = `${size}px`;
-      el.style.background = c.bg;
-      el.style.opacity = "0";
-      root.appendChild(el);
+    const particles: Particle[] = [];
+    let dotCount = 0;
+    let flakeCount = 0;
+    let lastDotSpawn = 0;
+
+    const spawnDot = (): Dot => {
+      const c = pick(DOT_PALETTE);
       return {
-        el,
         kind: "dot",
         x: rand(0, w),
         y: -20,
-        vy: rand(18, 38),
         vx: rand(-6, 6),
+        vy: rand(18, 38),
+        r: pick([2, 3, 3, 4]),
+        color: c.color,
+        opacity: c.opacity,
+        born: performance.now(),
         wobbleAmp: rand(6, 18),
         wobbleFreq: rand(0.3, 0.9),
         phase: rand(0, Math.PI * 2),
-        targetOp: c.op,
-        born: performance.now(),
-        age: 0,
-        dead: false,
       };
     };
 
-    const spawnFlake = (): Particle | undefined => {
-      const { w, h } = sizeRef.current;
-      if (!w) return undefined;
-      const size = Math.round(rand(14, 28));
-      const el = document.createElement("span");
-      el.className = "absolute top-0 left-0 will-change-[transform,opacity]";
-      el.style.opacity = "0";
-      el.innerHTML = `
-        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:block">
-          <g stroke="var(--teal-400)" stroke-width="1.6" stroke-linecap="round">
-            <line x1="12" y1="2" x2="12" y2="22"/>
-            <line x1="2" y1="12" x2="22" y2="12"/>
-            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-            <line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/>
-            <path d="M9 3.5 L12 6 L15 3.5"/>
-            <path d="M9 20.5 L12 18 L15 20.5"/>
-            <path d="M3.5 9 L6 12 L3.5 15"/>
-            <path d="M20.5 9 L18 12 L20.5 15"/>
-          </g>
-        </svg>`;
-      root.appendChild(el);
-      return {
-        el,
-        kind: "flake",
-        size,
-        x: rand(0, w - size),
-        y: rand(0, Math.max(0, h * 0.75)),
-        vy: rand(-2, 2),
-        vx: rand(-3, 3),
-        wobbleAmp: rand(4, 10),
-        wobbleFreq: rand(0.08, 0.2),
-        phase: rand(0, Math.PI * 2),
-        rot: rand(-10, 10),
-        vrot: rand(-4, 4),
-        targetOp: rand(0.6, 0.85),
-        life: rand(10, 18),
-        age: 0,
-        born: performance.now(),
-        dead: false,
-      };
-    };
+    const spawnFlake = (): Flake => ({
+      kind: "flake",
+      x: rand(0, Math.max(1, w)),
+      y: rand(0, Math.max(1, h * 0.75)),
+      vx: rand(-3, 3),
+      vy: rand(-2, 2),
+      size: Math.round(rand(14, 28)),
+      rot: rand(-10, 10),
+      vrot: rand(-4, 4),
+      opacity: rand(0.6, 0.85),
+      born: performance.now(),
+      age: 0,
+      life: rand(10, 18),
+      wobbleAmp: rand(4, 10),
+      wobbleFreq: rand(0.08, 0.2),
+      phase: rand(0, Math.PI * 2),
+    });
 
     for (let i = 0; i < MAX_FLAKES; i++) {
-      const p = spawnFlake();
-      if (p) poolRef.current.push(p);
+      particles.push(spawnFlake());
+      flakeCount++;
     }
 
     let last = performance.now();
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      const { w, h } = sizeRef.current;
 
-      if (now - lastSpawnRef.current > DOT_SPAWN_MS) {
-        lastSpawnRef.current = now;
-        const dotCount = poolRef.current.filter((p) => p.kind === "dot").length;
-        if (dotCount < MAX_DOTS) {
-          const p = spawnDot();
-          if (p) poolRef.current.push(p);
-        }
+      if (now - lastDotSpawn > DOT_SPAWN_MS && dotCount < MAX_DOTS) {
+        lastDotSpawn = now;
+        particles.push(spawnDot());
+        dotCount++;
       }
 
-      const pool = poolRef.current;
-      for (let i = 0; i < pool.length; i++) {
-        const p = pool[i];
-        if (p.dead) continue;
+      ctx.clearRect(0, 0, w, h);
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        let alive = true;
 
         if (p.kind === "dot") {
           p.y += p.vy * dt;
@@ -169,12 +174,18 @@ const ParticleField = () => {
           const x = p.x + p.vx * ((now - p.born) / 1000) + wobble;
           const ageFade = Math.min(1, (now - p.born) / 600);
           const bottomFade = Math.max(0, Math.min(1, (h - p.y) / 120));
-          const op = p.targetOp * ageFade * bottomFade;
-          p.el.style.opacity = op.toFixed(3);
-          p.el.style.transform = `translate3d(${x.toFixed(1)}px, ${p.y.toFixed(1)}px, 0)`;
+          const op = p.opacity * ageFade * bottomFade;
 
-          if (p.y > h + 20 || x < -40 || x > w + 40) destroy(p);
-        } else if (p.kind === "flake") {
+          if (op > 0.01) {
+            ctx.globalAlpha = op;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          if (p.y > h + 20 || x < -40 || x > w + 40) alive = false;
+        } else {
           p.age += dt;
           const wobbleX =
             Math.sin((now / 1000) * p.wobbleFreq * Math.PI * 2 + p.phase) *
@@ -186,39 +197,46 @@ const ParticleField = () => {
             (p.wobbleAmp * 0.6);
           const x = p.x + p.vx * p.age + wobbleX;
           const y = p.y + p.vy * p.age + wobbleY;
-          const rot = (p.rot ?? 0) + (p.vrot ?? 0) * p.age;
-          const life = p.life ?? 12;
+          const rot = p.rot + p.vrot * p.age;
 
-          let op = p.targetOp;
-          if (p.age < 1) op = p.targetOp * p.age;
-          else if (p.age > life - 1.5)
-            op = p.targetOp * Math.max(0, (life - p.age) / 1.5);
+          let op = p.opacity;
+          if (p.age < 1) op = p.opacity * p.age;
+          else if (p.age > p.life - 1.5)
+            op = p.opacity * Math.max(0, (p.life - p.age) / 1.5);
 
-          p.el.style.opacity = op.toFixed(3);
-          p.el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) rotate(${rot.toFixed(1)}deg)`;
+          if (flakeReady && op > 0.01) {
+            ctx.save();
+            ctx.globalAlpha = op;
+            ctx.translate(x + p.size / 2, y + p.size / 2);
+            ctx.rotate((rot * Math.PI) / 180);
+            ctx.drawImage(flakeImg, -p.size / 2, -p.size / 2, p.size, p.size);
+            ctx.restore();
+          }
 
           if (
-            p.age >= life ||
-            x < -(p.size ?? 20) * 2 ||
-            x > w + (p.size ?? 20) ||
-            y < -(p.size ?? 20) * 2 ||
-            y > h + (p.size ?? 20)
+            p.age >= p.life ||
+            x < -p.size * 2 ||
+            x > w + p.size ||
+            y < -p.size * 2 ||
+            y > h + p.size
           ) {
-            destroy(p);
+            alive = false;
           }
+        }
+
+        if (!alive) {
+          if (p.kind === "dot") dotCount--;
+          else flakeCount--;
+          particles.splice(i, 1);
         }
       }
 
-      // dead を取り除き、不足分の flake を補充
-      poolRef.current = pool.filter((p) => !p.dead);
-      const flakeCount = poolRef.current.filter(
-        (p) => p.kind === "flake",
-      ).length;
-      if (flakeCount < MAX_FLAKES) {
-        const p = spawnFlake();
-        if (p) poolRef.current.push(p);
+      while (flakeCount < MAX_FLAKES) {
+        particles.push(spawnFlake());
+        flakeCount++;
       }
 
+      ctx.globalAlpha = 1;
       rafRef.current = requestAnimationFrame(tick);
     };
 
@@ -245,16 +263,15 @@ const ParticleField = () => {
       stop();
       document.removeEventListener("visibilitychange", handleVisibility);
       ro.disconnect();
-      for (const p of poolRef.current) destroy(p);
-      poolRef.current = [];
     };
   }, []);
 
   return (
-    <div
-      ref={rootRef}
-      className="absolute inset-0 z-[1] pointer-events-none overflow-hidden"
+    <canvas
+      ref={canvasRef}
+      tabIndex={-1}
       aria-hidden="true"
+      className="absolute inset-0 z-[1] w-full h-full pointer-events-none"
     />
   );
 };
