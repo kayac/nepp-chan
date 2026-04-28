@@ -9,7 +9,7 @@ const OPTIONS: ReadonlyArray<string> = [
   "イベントや交流",
 ];
 
-export const Feature4 = () => {
+export const Survey = () => {
   const [selected, setSelected] = useState<number | null>(null);
   const visual = useScrollReveal<HTMLDivElement>();
   const body = useScrollReveal<HTMLDivElement>();

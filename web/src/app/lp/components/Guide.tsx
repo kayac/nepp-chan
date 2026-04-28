@@ -8,7 +8,7 @@ const PILLS: ReadonlyArray<{ label: string; color: string }> = [
   { label: "ビッキ記念館", color: "#8a4735" },
 ];
 
-export const Feature2 = () => {
+export const Guide = () => {
   const visual = useScrollReveal<HTMLDivElement>();
   const body = useScrollReveal<HTMLDivElement>();
 

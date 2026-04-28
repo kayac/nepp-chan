@@ -35,7 +35,7 @@ const ROWS: ReadonlyArray<Row> = [
   },
 ];
 
-export const Feature1 = () => {
+export const Knowledge = () => {
   const body = useScrollReveal<HTMLDivElement>();
   const visual = useScrollReveal<HTMLDivElement>();
 

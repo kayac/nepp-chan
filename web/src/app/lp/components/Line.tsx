@@ -5,7 +5,7 @@ import { LineIcon } from "./Icon";
 const renderInlineBold = (text: string) =>
   text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
 
-export const Feature3 = () => {
+export const Line = () => {
   const body = useScrollReveal<HTMLDivElement>();
   const visual = useScrollReveal<HTMLDivElement>();
 

@@ -1,15 +1,15 @@
 import { AmbientBG } from "~/components/AmbientBG";
 import { RootLayout } from "~/components/RootLayout";
-import { Feature1 } from "./components/Feature1";
-import { Feature2 } from "./components/Feature2";
-import { Feature3 } from "./components/Feature3";
-import { Feature4 } from "./components/Feature4";
 import { FinalCTA } from "./components/FinalCTA";
 import { FooterSection } from "./components/FooterSection";
+import { Guide } from "./components/Guide";
 import { Hero } from "./components/Hero";
+import { Knowledge } from "./components/Knowledge";
+import { Line } from "./components/Line";
 import { MediaSection } from "./components/MediaSection";
 import { Nav } from "./components/Nav";
 import { ProfileSection } from "./components/ProfileSection";
+import { Survey } from "./components/Survey";
 
 export const LpPage = () => (
   <RootLayout>
@@ -33,10 +33,10 @@ export const LpPage = () => (
               音威子府のことなら、なんでもお話しできます。
             </p>
           </div>
-          <Feature1 />
-          <Feature2 />
-          <Feature3 />
-          <Feature4 />
+          <Knowledge />
+          <Guide />
+          <Line />
+          <Survey />
         </div>
       </section>
 
