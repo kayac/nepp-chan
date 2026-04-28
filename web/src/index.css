@@ -1,76 +1,185 @@
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap");
 @import "tailwindcss";
 
 :root {
-  /* 統一テーマ - 北海道の静謐な自然 */
-  --color-bg: #fafaf9; /* stone-50 */
-  --color-surface: #ffffff;
-  --color-surface-subtle: #f5f5f4; /* stone-100 - 座布団用 */
-  --color-surface-hover: #f5f5f4; /* stone-100 */
-  --color-border: #e7e5e4; /* stone-200 */
-  --color-border-subtle: #d6d3d1; /* stone-300 */
-  --color-text: #1c1917; /* stone-900 */
-  --color-text-secondary: #44403c; /* stone-700 */
-  --color-text-muted: #78716c; /* stone-500 */
-  --color-text-faint: #a8a29e; /* stone-400 */
+  /* ===============================================
+     RAW PALETTE — Companion v2
+     =============================================== */
 
-  /* アクセント - 深い森の緑 */
-  --color-accent: #0f766e; /* teal-700 */
-  --color-accent-hover: #0d9488; /* teal-600 */
-  --color-accent-light: #14b8a6; /* teal-500 */
-  --color-accent-subtle: #ccfbf1; /* teal-100 */
+  /* Teal — primary brand (ねっぷちゃんのベレー帽 / マフラー) */
+  --teal-50: #f0fdfa;
+  --teal-100: #ccfbf1;
+  --teal-200: #99f6e4;
+  --teal-300: #5eead4;
+  --teal-400: #2dd4bf;
+  --teal-500: #14b8a6;
+  --teal-600: #0d9488;
+  --teal-700: #0f766e;
+  --teal-800: #115e59;
+  --teal-900: #134e4a;
 
-  /* ステータスカラー */
-  --color-success: #16a34a; /* green-600 */
-  --color-success-bg: #dcfce7; /* green-100 */
-  --color-warning: #d97706; /* amber-600 */
-  --color-warning-bg: #fef3c7; /* amber-100 */
-  --color-danger: #dc2626; /* red-600 */
-  --color-danger-bg: #fef2f2; /* red-50 */
+  /* Snow — neutrals (warm stone palette) */
+  --snow-0: #ffffff;
+  --snow-50: #fafaf9;
+  --snow-100: #f5f5f4;
+  --snow-200: #e7e5e4;
+  --snow-300: #d6d3d1;
+  --snow-400: #a8a29e;
+  --snow-500: #78716c;
+  --snow-600: #57534e;
+  --snow-700: #44403c;
+  --snow-800: #292524;
+  --snow-900: #1c1917;
 
-  /* ユーザーメッセージ - 落ち着いた青緑 */
-  --color-user-message: #115e59; /* teal-800 */
-  --color-user-message-hover: #134e4a; /* teal-900 */
+  /* Paper — v2 warm off-white surface (紙のような温度) */
+  --paper-0: #fefdfb;
+  --paper-50: #faf7f2;
+  --paper-100: #f3eee6;
+  --paper-200: #e8dfd1;
 
-  /* 管理者モード - 温かみのあるアンバー */
-  --color-admin: #d97706; /* amber-600 */
-  --color-admin-hover: #b45309; /* amber-700 */
-  --color-admin-light: #fbbf24; /* amber-400 */
-  --color-admin-bg: #fffbeb; /* amber-50 */
-  --color-admin-border: #fde68a; /* amber-200 */
+  /* Apricot — マスコットの頬から派生、温かみ + admin */
+  --apricot-50: #fff4ec;
+  --apricot-100: #ffe4d1;
+  --apricot-300: #ffc8a2;
+  --apricot-500: #f4a06a;
+  --apricot-700: #c26d3c;
+  --apricot-800: #a8542a;
 
-  /* デザイントークン - 角丸 */
-  --radius-sm: 0.5rem; /* 8px */
-  --radius-md: 0.75rem; /* 12px */
-  --radius-lg: 1rem; /* 16px */
-  --radius-xl: 1.25rem; /* 20px */
-  --radius-full: 9999px;
+  /* Moss — 知床の森 / 成功 */
+  --moss-50: #f3f7ec;
+  --moss-100: #e4ecd4;
+  --moss-300: #c9ddb4;
+  --moss-500: #8faf6f;
+  --moss-700: #5c7a3f;
 
-  /* デザイントークン - シャドウ */
+  /* Sky Powder — 雪の青 / 情報・冷静 */
+  --sky-50: #eff5fa;
+  --sky-100: #dce8f2;
+  --sky-300: #c8d9e8;
+  --sky-500: #89a8c0;
+  --sky-700: #4f708b;
+
+  /* Character accents */
+  --berry: #e76f7a;
+  --honey: #f4b860;
+  --pine: #3f6e5a;
+
+  /* Semantic colors */
+  --success: #0d9488;
+  --warning: #f4b860;
+  --danger: #dc2626;
+  --info: #0891b2;
+
+  /* ===============================================
+     SEMANTIC ALIASES
+     =============================================== */
+  --bg-app: var(--paper-50);
+  --bg-raised: var(--paper-0);
+  --bg-sunken: var(--paper-100);
+  --bg-overlay: rgba(28, 25, 23, 0.48);
+
+  --fg-1: var(--snow-800);
+  --fg-2: var(--snow-600);
+  --fg-3: var(--snow-500);
+  --fg-4: var(--snow-400);
+  --fg-on-brand: var(--paper-0);
+
+  --border-1: var(--paper-200);
+  --border-2: var(--snow-300);
+
+  --brand: var(--teal-700);
+  --brand-hover: var(--teal-800);
+  --brand-press: var(--teal-900);
+  --brand-soft: var(--teal-50);
+  --brand-soft-2: var(--teal-100);
+
+  /* Admin context (温かいオレンジ系) */
+  --admin: var(--apricot-700);
+  --admin-hover: var(--apricot-800);
+  --admin-light: var(--apricot-500);
+  --admin-bg: var(--apricot-50);
+  --admin-border: var(--apricot-300);
+
+  /* Status backgrounds */
+  --success-bg: var(--moss-100);
+  --warning-bg: var(--apricot-100);
+  --danger-bg: #fef2f2;
+
+  /* ===============================================
+     RADII
+     =============================================== */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-2xl: 20px;
+  --r-pill: 9999px;
+  --r-bubble: 24px;
+  --r-card-lg: 32px;
+  --r-footer: 28px;
+  --r-organic: 42% 58% 55% 45% / 48% 50% 50% 52%;
+
+  /* ===============================================
+     SHADOWS
+     =============================================== */
   --shadow-xs: 0 1px 2px rgba(28, 25, 23, 0.04);
   --shadow-sm:
     0 1px 3px rgba(28, 25, 23, 0.06), 0 1px 2px rgba(28, 25, 23, 0.04);
   --shadow-md:
-    0 4px 6px -1px rgba(28, 25, 23, 0.06), 0 2px 4px -1px rgba(28, 25, 23, 0.04);
+    0 4px 12px rgba(28, 25, 23, 0.06), 0 2px 4px rgba(28, 25, 23, 0.04);
   --shadow-lg:
-    0 10px 15px -3px rgba(28, 25, 23, 0.06),
-    0 4px 6px -2px rgba(28, 25, 23, 0.03);
-  --shadow-soft: 0 2px 8px rgba(28, 25, 23, 0.08);
-  --shadow-card:
-    0 1px 3px rgba(28, 25, 23, 0.05), 0 4px 12px rgba(28, 25, 23, 0.04);
-  --shadow-input-focus: 0 0 0 3px rgba(20, 184, 166, 0.15);
+    0 12px 28px rgba(28, 25, 23, 0.08), 0 4px 8px rgba(28, 25, 23, 0.04);
 
-  /* デザイントークン - トランジション */
-  --transition-fast: 150ms ease-out;
-  --transition-base: 200ms ease-out;
-  --transition-slow: 300ms ease-out;
+  /* Floating shadows — マスコットや浮遊要素 */
+  --shadow-float-sm:
+    0 6px 20px rgba(28, 25, 23, 0.06), 0 2px 6px rgba(28, 25, 23, 0.04);
+  --shadow-float-md:
+    0 16px 40px rgba(28, 25, 23, 0.08), 0 6px 12px rgba(28, 25, 23, 0.04);
+  --shadow-float-lg:
+    0 28px 60px rgba(28, 25, 23, 0.1), 0 10px 20px rgba(28, 25, 23, 0.05);
+  --shadow-floating-input:
+    0 20px 50px rgba(15, 118, 110, 0.08), 0 8px 16px rgba(28, 25, 23, 0.06),
+    0 1px 3px rgba(28, 25, 23, 0.04);
+  --shadow-brand: 0 6px 16px rgba(15, 118, 110, 0.22);
+  --ring-brand: 0 0 0 3px rgba(20, 184, 166, 0.28);
+
+  /* ===============================================
+     TYPOGRAPHY
+     =============================================== */
+  --font-display:
+    "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic UI", sans-serif;
+  --font-body:
+    "M PLUS Rounded 1c", "Hiragino Sans", "Yu Gothic", "Noto Sans JP",
+    system-ui, sans-serif;
+  --font-mono: "SFMono-Regular", "Menlo", "Consolas", monospace;
+
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-base: 15px;
+  --fs-md: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 28px;
+  --fs-3xl: 34px;
+  --fs-4xl: 44px;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-bold: 700;
+  --fw-black: 900;
+
+  --lh-tight: 1.25;
+  --lh-snug: 1.45;
+  --lh-normal: 1.7;
+  --lh-relaxed: 1.85;
 }
 
 body {
   margin: 0;
-  font-family: "Noto Sans JP", sans-serif;
-  background: var(--color-bg);
-  color: var(--color-text);
+  font-family: var(--font-body);
+  background: var(--bg-app);
+  color: var(--fg-1);
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "palt" 1;
   letter-spacing: 0.02em;
@@ -92,11 +201,11 @@ button:disabled {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: var(--border-1);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-border-subtle);
+  background: var(--border-2);
 }
 
 /* 基本アニメーション */
@@ -114,20 +223,6 @@ button:disabled {
   animation: fade-in 200ms ease;
 }
 
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.animate-slide-up {
-  animation: slide-up 300ms ease-out;
-}
-
 @keyframes pulse-subtle {
   0%,
   100% {
@@ -139,6 +234,26 @@ button:disabled {
 }
 .animate-pulse-subtle {
   animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* マスコットふわふわ */
+@keyframes mascot-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes mascot-float-sm {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 /* ローディングドット */
@@ -162,7 +277,7 @@ button:disabled {
 .loading-dots span {
   width: 6px;
   height: 6px;
-  background: var(--color-accent);
+  background: var(--brand);
   border-radius: 50%;
   animation: loading-dot 1.4s ease-in-out infinite;
 }
@@ -189,8 +304,8 @@ button:disabled {
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid var(--color-border);
-  border-top-color: var(--color-accent);
+  border: 2px solid var(--border-1);
+  border-top-color: var(--brand);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -205,12 +320,14 @@ button:disabled {
   border-width: 2.5px;
 }
 
-/* フォーカスリング */
-.focus-ring {
-  outline: none;
-}
-.focus-ring:focus-visible {
-  box-shadow:
-    0 0 0 2px var(--color-surface),
-    0 0 0 4px var(--color-accent-light);
+/* prefers-reduced-motion 対応 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

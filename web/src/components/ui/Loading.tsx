@@ -48,7 +48,7 @@ export const LoadingText = ({
 }: LoadingTextProps) => (
   <span
     className={cn(
-      "inline-flex items-center gap-2 text-(--color-text-muted) text-sm",
+      "inline-flex items-center gap-2 text-(--fg-3) text-sm",
       className,
     )}
   >

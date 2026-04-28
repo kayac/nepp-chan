@@ -1,5 +1,4 @@
 import {
-  Bars3Icon,
   Cog6ToothIcon,
   PlusIcon,
   TrashIcon,
@@ -8,7 +7,10 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import type { UIMessage } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
+import { AmbientBG } from "~/app/chat/components/AmbientBG";
+import { ChatStandingMascot } from "~/app/chat/components/ChatStandingMascot";
+import { Landing } from "~/app/chat/components/Landing";
+import { TopBar } from "~/app/chat/components/TopBar";
 import { Thread } from "~/components/assistant-ui/Thread";
 import { LoadingDots } from "~/components/ui/Loading";
 import { useAdminUser } from "~/hooks/useAdminUser";
@@ -24,11 +26,7 @@ import { getResourceId } from "~/lib/resource";
 import { fetchMessages } from "~/repository/thread-repository";
 import type { Thread as ThreadType } from "~/types";
 
-import {
-  AssistantProvider,
-  GREETING_PROMPT,
-  ONBOARDING_PROMPT,
-} from "./AssistantProvider";
+import { AssistantProvider, type InitialMessage } from "./AssistantProvider";
 import { FeedbackModal } from "./components/FeedbackModal";
 import { FeedbackProvider, useFeedback } from "./FeedbackContext";
 
@@ -57,14 +55,13 @@ export const ChatPage = () => {
   const resourceId = useMemo(() => getResourceId() ?? "default", []);
   const { data: adminUser, isLoading: isAdminLoading } = useAdminUser();
   const isAdmin = !!adminUser;
-  const { isReady: isSessionReady } = useAnonymousSession();
+  const { isReady: isSessionReady, isFirstVisit } = useAnonymousSession();
 
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [greetingPrompt, setGreetingPrompt] = useState<string>();
+  const [initialMessage, setInitialMessage] = useState<InitialMessage>();
   const [threadToDelete, setThreadToDelete] = useState<string | null>(null);
   const hasInitialized = useRef(false);
-  const isFirstVisit = useRef(false);
 
   const { data: threadsData, isSuccess: threadsLoaded } = useThreads();
   const threads = threadsData?.threads ?? [];
@@ -79,18 +76,26 @@ export const ChatPage = () => {
   });
   const initialMessages = messagesData?.messages as UIMessage[] | undefined;
 
-  const handleNewThread = useCallback(async () => {
-    if (createThreadMutation.isPending) return;
-    const thread = await createThreadMutation.mutateAsync(undefined);
-    setCurrentThreadId(thread.id);
-    if (isFirstVisit.current) {
-      setGreetingPrompt(ONBOARDING_PROMPT);
-      isFirstVisit.current = false;
-    } else {
-      setGreetingPrompt(GREETING_PROMPT);
-    }
-    setIsSidebarOpen(false);
-  }, [createThreadMutation]);
+  const startThread = useCallback(
+    async (initial: InitialMessage) => {
+      if (createThreadMutation.isPending) return;
+      const thread = await createThreadMutation.mutateAsync(undefined);
+      setInitialMessage(initial);
+      setCurrentThreadId(thread.id);
+      setIsSidebarOpen(false);
+    },
+    [createThreadMutation],
+  );
+
+  const handleNewThread = useCallback(
+    () => startThread({ type: "greeting" }),
+    [startThread],
+  );
+
+  const handleStartFromLanding = useCallback(
+    (text: string) => startThread({ type: "user", text }),
+    [startThread],
+  );
 
   const handleSelectThread = useCallback(
     (selectedThreadId: string) => {
@@ -99,7 +104,7 @@ export const ChatPage = () => {
         return;
       }
       setCurrentThreadId(selectedThreadId);
-      setGreetingPrompt(undefined);
+      setInitialMessage(undefined);
       setIsSidebarOpen(false);
     },
     [currentThreadId],
@@ -114,7 +119,7 @@ export const ChatPage = () => {
       if (threadToDelete === currentThreadId) {
         const remaining = threads.filter((t) => t.id !== threadToDelete);
         setCurrentThreadId(remaining.length > 0 ? remaining[0].id : null);
-        setGreetingPrompt(undefined);
+        setInitialMessage(undefined);
       }
 
       setThreadToDelete(null);
@@ -139,64 +144,138 @@ export const ChatPage = () => {
         const thread =
           threads.find((t) => t.id === savedThreadId) ?? threads[0];
         setCurrentThreadId(thread.id);
-      } else {
-        isFirstVisit.current = true;
       }
     }
   }, [threadsLoaded, threads, resourceId]);
 
+  // 既存ユーザー（2 回目以降）でスレッド 0 件なら自動作成 + greeting。
+  // 初回訪問は Landing で受けるためスキップする。
   useEffect(() => {
     if (
       threadsLoaded &&
       hasInitialized.current &&
       threads.length === 0 &&
-      currentThreadId === null
+      currentThreadId === null &&
+      !isFirstVisit
     ) {
       handleNewThread();
     }
-  }, [threadsLoaded, threads.length, currentThreadId, handleNewThread]);
+  }, [
+    threadsLoaded,
+    threads.length,
+    currentThreadId,
+    isFirstVisit,
+    handleNewThread,
+  ]);
 
   if (isAdminLoading || !isSessionReady) {
     return null;
   }
 
+  const showLanding =
+    isFirstVisit &&
+    threadsLoaded &&
+    threads.length === 0 &&
+    currentThreadId === null;
+
+  const renderMain = () => {
+    if (showLanding) {
+      return (
+        <Landing
+          onSubmit={handleStartFromLanding}
+          disabled={createThreadMutation.isPending}
+        />
+      );
+    }
+    if (currentThreadId && !messagesLoading) {
+      return (
+        <AssistantProvider
+          key={currentThreadId}
+          threadId={currentThreadId}
+          initialMessages={initialMessages}
+          initialMessage={initialMessage}
+        >
+          <FeedbackProvider threadId={currentThreadId}>
+            <Thread />
+            <ChatStandingMascot />
+            <FeedbackModalWrapper />
+          </FeedbackProvider>
+        </AssistantProvider>
+      );
+    }
+    // それ以外は過渡状態 (messages fetch 中 / 自動 createThread 中 など)
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-4">
+        <LoadingDots />
+        <span className="text-sm text-(--fg-3) font-medium">読み込み中</span>
+      </div>
+    );
+  };
+
   return (
-    <div className="flex h-dvh bg-(--color-bg)">
+    <div className="relative flex h-dvh flex-col overflow-hidden bg-(--bg-app)">
+      {/* 背景レイヤー */}
+      <AmbientBG />
+
+      {/* 管理者モードバナー */}
+      {isAdmin && (
+        <div className="relative z-[4] h-9 px-7 bg-(--admin-bg) border-b border-(--admin-border)/80 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="size-1.5 rounded-full bg-(--admin) animate-pulse" />
+            <span className="text-xs font-semibold text-(--admin) tracking-wide">
+              管理者モード
+            </span>
+          </div>
+          <a
+            href="/dashboard"
+            className="flex items-center gap-1.5 text-xs font-medium text-(--admin) hover:text-(--admin-hover) transition-all duration-150 hover:gap-2"
+          >
+            <Cog6ToothIcon className="size-3.5" />
+            管理画面
+          </a>
+        </div>
+      )}
+
+      {/* TopBar */}
+      <TopBar onMenuClick={() => setIsSidebarOpen(true)} />
+
+      {/* メインコンテンツ */}
+      <main className="relative z-[2] flex-1 flex flex-col min-w-0 min-h-0">
+        {renderMain()}
+      </main>
+
       {/* サイドバーオーバーレイ */}
       {isSidebarOpen && (
         <button
           type="button"
-          className="fixed inset-0 bg-stone-900/25 backdrop-blur-[3px] z-10 md:hidden cursor-default animate-fade-in"
+          className="fixed inset-0 z-[40] bg-stone-900/30 backdrop-blur-[3px] cursor-default animate-fade-in"
           onClick={() => setIsSidebarOpen(false)}
           aria-label="サイドバーを閉じる"
         />
       )}
 
-      {/* サイドバー */}
+      {/* サイドバー（スライドインパネル） */}
       <aside
         className={cn(
-          "fixed md:relative z-20 w-[280px] h-full bg-(--color-surface) border-r border-(--color-border) flex flex-col",
-          "transition-transform duration-200 ease-out",
-          isSidebarOpen
-            ? "translate-x-0"
-            : "-translate-x-full md:translate-x-0 md:hidden",
+          "fixed top-0 right-0 z-[50] h-full w-[300px] max-w-[85vw]",
+          "bg-(--paper-0) border-l border-(--paper-200) flex flex-col",
+          "transition-transform duration-300 ease-out will-change-transform",
+          isSidebarOpen ? "translate-x-0" : "translate-x-full",
         )}
+        style={{ boxShadow: "var(--shadow-float-lg)" }}
       >
-        <div className="flex flex-col gap-3 p-4 border-b border-(--color-border)">
+        <div className="flex flex-col gap-3 p-4 border-b border-(--paper-200)">
           <div className="flex items-center justify-between">
-            <span className="text-base font-semibold text-(--color-text)">
+            <span className="text-base font-semibold text-(--fg-1) font-(family-name:--font-display)">
               スレッド
             </span>
             <button
               type="button"
               onClick={() => setIsSidebarOpen(false)}
-              className="p-1.5 hover:bg-(--color-surface-hover) rounded-sm transition-colors"
+              className="p-1.5 hover:bg-(--paper-100) rounded-md transition-colors"
               aria-label="閉じる"
             >
-              <XMarkIcon
-                className="w-5 h-5 text-(--color-text-muted)"
-                aria-hidden="true"
-              />
+              <XMarkIcon className="size-5 text-(--fg-3)" aria-hidden="true" />
             </button>
           </div>
           <button
@@ -204,19 +283,19 @@ export const ChatPage = () => {
             onClick={handleNewThread}
             disabled={createThreadMutation.isPending}
             className={cn(
-              "w-full rounded-sm text-sm font-medium transition-colors",
-              "bg-(--color-accent) text-white",
-              "hover:bg-(--color-accent-hover)",
+              "w-full rounded-lg text-sm font-medium transition-colors",
+              "bg-(--brand) text-(--paper-0)",
+              "hover:bg-(--brand-hover)",
               "disabled:opacity-60 disabled:cursor-not-allowed",
               "flex items-center justify-center gap-2",
+              "px-4 py-2.5",
             )}
-            style={{ padding: "10px 16px" }}
           >
             {createThreadMutation.isPending ? (
               <LoadingDots size="sm" />
             ) : (
               <>
-                <PlusIcon className="w-4 h-4" />
+                <PlusIcon className="size-4" />
                 新しい会話
               </>
             )}
@@ -230,29 +309,24 @@ export const ChatPage = () => {
               <div
                 key={thread.id}
                 className={cn(
-                  "group relative rounded-sm transition-colors",
-                  isSelected
-                    ? "bg-(--color-surface-hover)"
-                    : "hover:bg-(--color-surface-hover)",
+                  "group relative rounded-lg transition-colors",
+                  isSelected ? "bg-(--paper-100)" : "hover:bg-(--paper-100)",
                 )}
               >
                 <button
                   type="button"
                   onClick={() => handleSelectThread(thread.id)}
-                  className="w-full min-w-0 text-left flex flex-col gap-1"
-                  style={{ padding: "10px 16px" }}
+                  className="w-full min-w-0 text-left flex flex-col gap-1 px-4 py-2.5"
                 >
                   <div
                     className={cn(
                       "text-sm font-medium truncate",
-                      isSelected
-                        ? "text-(--color-text)"
-                        : "text-(--color-text-secondary)",
+                      isSelected ? "text-(--fg-1)" : "text-(--fg-2)",
                     )}
                   >
                     {thread.title ?? "新しい会話"}
                   </div>
-                  <div className="text-xs text-(--color-text-faint)">
+                  <div className="text-xs text-(--fg-4)">
                     {new Date(thread.updatedAt).toLocaleDateString("ja-JP")}
                   </div>
                 </button>
@@ -263,16 +337,16 @@ export const ChatPage = () => {
                     setThreadToDelete(thread.id);
                   }}
                   className={cn(
-                    "absolute top-2 right-2 p-1.5 rounded-sm transition-all duration-150",
+                    "absolute top-2 right-2 p-1.5 rounded-md transition-all duration-150",
                     "hover:bg-red-100 hover:text-red-600",
-                    "text-(--color-text-muted)",
+                    "text-(--fg-3)",
                     isSelected
                       ? "opacity-100"
                       : "opacity-0 group-hover:opacity-100",
                   )}
                   aria-label="スレッドを削除"
                 >
-                  <TrashIcon className="w-3.5 h-3.5" />
+                  <TrashIcon className="size-3.5" />
                 </button>
               </div>
             );
@@ -280,118 +354,23 @@ export const ChatPage = () => {
         </nav>
       </aside>
 
-      {/* メインコンテンツ */}
-      <main className="flex-1 flex flex-col min-w-0">
-        <header
-          className={cn(
-            "sticky top-0 z-10 bg-(--color-surface) px-4 md:px-6 flex flex-col shrink-0 transition-colors",
-            !isAdmin && "border-b border-(--color-border)",
-          )}
-          style={{ boxShadow: isAdmin ? "none" : "var(--shadow-xs)" }}
-        >
-          {/* 管理者モードバナー */}
-          {isAdmin && (
-            <div className="h-9 -mx-4 md:-mx-6 px-4 md:px-6 bg-(--color-admin-bg) border-b border-(--color-admin-border)/80 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-(--color-admin) animate-pulse" />
-                <span className="text-xs font-semibold text-(--color-admin) tracking-wide">
-                  管理者モード
-                </span>
-              </div>
-              <a
-                href="/dashboard"
-                className="flex items-center gap-1.5 text-xs font-medium text-(--color-admin) hover:text-(--color-admin-hover) transition-all duration-150 hover:gap-2"
-              >
-                <Cog6ToothIcon className="w-3.5 h-3.5" />
-                管理画面
-              </a>
-            </div>
-          )}
-
-          {/* メインヘッダー */}
-          <div
-            className={cn(
-              "h-12 md:h-14 flex items-center justify-between",
-              isAdmin && "border-b border-(--color-border)",
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="p-2 -ml-2 hover:bg-(--color-surface-hover) rounded-sm transition-colors"
-                aria-label="メニュー"
-              >
-                <Bars3Icon
-                  className="w-5 h-5 text-(--color-text-muted)"
-                  aria-hidden="true"
-                />
-              </button>
-              <h1 className="text-base font-semibold text-(--color-text) tracking-tight">
-                ねっぷちゃん
-              </h1>
-            </div>
-            <button
-              type="button"
-              onClick={handleNewThread}
-              disabled={createThreadMutation.isPending}
-              className={cn(
-                "text-sm font-medium transition-all duration-150 disabled:opacity-60 flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-(--color-surface-hover)",
-                isAdmin
-                  ? "text-(--color-admin) hover:text-(--color-admin-hover)"
-                  : "text-(--color-accent) hover:text-(--color-accent-hover)",
-              )}
-            >
-              <PlusIcon className="w-4 h-4" />
-              新しい会話
-            </button>
-          </div>
-        </header>
-
-        {currentThreadId && !messagesLoading ? (
-          <AssistantProvider
-            key={currentThreadId}
-            threadId={currentThreadId}
-            initialMessages={initialMessages}
-            greetingPrompt={greetingPrompt}
-          >
-            <FeedbackProvider threadId={currentThreadId}>
-              <Thread />
-              <FeedbackModalWrapper />
-            </FeedbackProvider>
-          </AssistantProvider>
-        ) : (
-          <div className="flex-1 flex items-center justify-center bg-(--color-bg)">
-            {currentThreadId || messagesLoading ? (
-              <div className="flex flex-col items-center gap-4">
-                <LoadingDots />
-                <span className="text-sm text-(--color-text-muted) font-medium">
-                  読み込み中
-                </span>
-              </div>
-            ) : (
-              <span className="text-(--color-text-muted) font-medium">
-                スレッドを選択してください
-              </span>
-            )}
-          </div>
-        )}
-      </main>
-
       {/* 削除確認モーダル */}
       {threadToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
           <button
             type="button"
-            className="absolute inset-0 bg-stone-900/25 backdrop-blur-[3px] cursor-default"
+            className="absolute inset-0 bg-stone-900/30 backdrop-blur-[3px] cursor-default"
             onClick={() => setThreadToDelete(null)}
             aria-label="キャンセル"
           />
-          <div className="relative bg-white rounded-2xl p-6 w-80 shadow-xl">
-            <h2 className="text-base font-semibold text-(--color-text) mb-2">
+          <div
+            className="relative bg-(--paper-0) rounded-2xl p-6 w-80 border border-(--paper-200)"
+            style={{ boxShadow: "var(--shadow-float-lg)" }}
+          >
+            <h2 className="text-base font-semibold text-(--fg-1) mb-2 font-(family-name:--font-display)">
               スレッドを削除
             </h2>
-            <p className="text-sm text-(--color-text-secondary) mb-6">
+            <p className="text-sm text-(--fg-2) mb-6">
               このスレッドを削除しますか？会話履歴は復元できません。
             </p>
             <div className="flex gap-3 justify-end">
@@ -399,7 +378,7 @@ export const ChatPage = () => {
                 type="button"
                 onClick={() => setThreadToDelete(null)}
                 disabled={deleteThreadMutation.isPending}
-                className="px-4 py-2 text-sm font-medium text-(--color-text-secondary) hover:bg-(--color-surface-hover) rounded-lg transition-colors disabled:opacity-60"
+                className="px-4 py-2 text-sm font-medium text-(--fg-2) hover:bg-(--paper-100) rounded-lg transition-colors disabled:opacity-60"
               >
                 キャンセル
               </button>

@@ -9,25 +9,26 @@ import { ToolUIRegistry } from "~/components/assistant-ui/tool-uis";
 import { API_BASE } from "~/lib/api/client";
 import { getBearerToken } from "~/lib/auth-token";
 
+/** 既存スレッドの再開時に system 役で送る挨拶要求プロンプト */
 export const GREETING_PROMPT =
   "新しい会話が始まりました。時間帯や季節に合った短い挨拶をしてください。";
 
-export const ONBOARDING_PROMPT =
-  "はじめてのユーザーとの会話です。自己紹介と、どのようなことができるか簡潔に説明してください。";
-
-export const GREETING_PROMPTS = [GREETING_PROMPT, ONBOARDING_PROMPT];
+/** マウント時に append する最初のメッセージ */
+export type InitialMessage =
+  | { type: "greeting" }
+  | { type: "user"; text: string };
 
 interface Props {
   threadId: string;
   initialMessages?: UIMessage[];
-  greetingPrompt?: string;
+  initialMessage?: InitialMessage;
   children: ReactNode;
 }
 
 export const AssistantProvider = ({
   threadId,
   initialMessages,
-  greetingPrompt,
+  initialMessage,
   children,
 }: Props) => {
   const runtime = useChatRuntime({
@@ -51,9 +52,7 @@ export const AssistantProvider = ({
               )
               .map((p) => p.text)
               .join("");
-            const intent = GREETING_PROMPTS.includes(lastText ?? "")
-              ? "casual"
-              : undefined;
+            const intent = lastText === GREETING_PROMPT ? "casual" : undefined;
             return {
               body: {
                 message: lastMessage,
@@ -68,10 +67,14 @@ export const AssistantProvider = ({
 
   const sent = useRef(false);
   useEffect(() => {
-    if (!greetingPrompt || sent.current) return;
+    if (sent.current || !initialMessage) return;
     sent.current = true;
-    runtime.thread.append(greetingPrompt);
-  }, [runtime, greetingPrompt]);
+    const text =
+      initialMessage.type === "greeting"
+        ? GREETING_PROMPT
+        : initialMessage.text;
+    runtime.thread.append(text);
+  }, [runtime, initialMessage]);
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>

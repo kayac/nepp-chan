@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { API_BASE } from "~/lib/api/client";
 import { getSessionToken, setSessionToken } from "~/lib/auth-token";
 import { setResourceId } from "~/lib/resource";
 
 type SessionState = {
   isReady: boolean;
+  /** マウント時に session token が未保存だった = この訪問が初回 */
+  isFirstVisit: boolean;
 };
 
 const acquireSessionToken = async (): Promise<{
@@ -21,7 +23,10 @@ const acquireSessionToken = async (): Promise<{
 };
 
 export const useAnonymousSession = (): SessionState => {
-  const [isReady, setIsReady] = useState(() => !!getSessionToken());
+  const initialHadToken = useRef(
+    typeof window !== "undefined" && !!getSessionToken(),
+  );
+  const [isReady, setIsReady] = useState(initialHadToken.current);
 
   useEffect(() => {
     if (isReady) return;
@@ -38,5 +43,5 @@ export const useAnonymousSession = (): SessionState => {
       });
   }, [isReady]);
 
-  return { isReady };
+  return { isReady, isFirstVisit: !initialHadToken.current };
 };

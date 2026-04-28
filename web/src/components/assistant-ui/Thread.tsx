@@ -6,6 +6,7 @@ import {
   ErrorPrimitive,
   MessagePrimitive,
   ThreadPrimitive,
+  useComposerRuntime,
   useMessage,
   useMessageRuntime,
 } from "@assistant-ui/react";
@@ -19,23 +20,29 @@ import {
   ThumbsDownIcon,
   ThumbsUpIcon,
 } from "lucide-react";
-import { GREETING_PROMPTS } from "~/app/chat/AssistantProvider";
+import { GREETING_PROMPT } from "~/app/chat/AssistantProvider";
+import { SpeechBubble } from "~/app/chat/components/SpeechBubble";
 import { useFeedback } from "~/app/chat/FeedbackContext";
 import { MarkdownText } from "~/components/assistant-ui/MarkdownText";
 import { ToolFallback } from "~/components/assistant-ui/ToolFallback";
 import { TooltipIconButton } from "~/components/assistant-ui/TooltipIconButton";
 import { toolsByName } from "~/components/assistant-ui/tool-uis";
-import { Button } from "~/components/ui/Button";
 import { cn } from "~/lib/class-merge";
 
 export const Thread = () => (
   <ThreadPrimitive.Root
-    className="aui-root aui-thread-root @container flex flex-1 min-h-0 flex-col bg-(--color-bg)"
+    className="aui-root aui-thread-root @container relative flex flex-1 min-h-0 flex-col"
     style={{
       ["--thread-max-width" as string]: "42rem",
     }}
   >
-    <ThreadPrimitive.Viewport className="aui-thread-viewport relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth px-4 pt-6 md:px-6">
+    <ThreadPrimitive.Viewport
+      className={cn(
+        "aui-thread-viewport relative flex flex-1 flex-col scroll-smooth",
+        "overflow-x-auto overflow-y-scroll",
+        "px-4 pt-6 md:px-6",
+      )}
+    >
       <ThreadPrimitive.Messages
         components={{
           UserMessage,
@@ -43,7 +50,7 @@ export const Thread = () => (
         }}
       />
 
-      <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mx-auto mt-auto flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-4">
+      <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer pointer-events-none sticky bottom-0 mx-auto mt-auto flex w-full max-w-(--thread-max-width) flex-col items-center gap-3 overflow-visible pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-4">
         <ThreadScrollToBottom />
         <Composer />
       </ThreadPrimitive.ViewportFooter>
@@ -53,15 +60,20 @@ export const Thread = () => (
 
 const ThreadScrollToBottom = () => (
   <ThreadPrimitive.ScrollToBottom asChild>
-    <Button
-      variant="outline"
-      size="icon-sm"
-      className="aui-thread-scroll-to-bottom absolute -top-10 right-0 z-10 rounded-full p-2 disabled:invisible bg-(--color-surface) hover:bg-(--color-surface-hover) border border-(--color-border) transition-all duration-200 hover:scale-105 opacity-80 hover:opacity-100"
-      style={{ boxShadow: "var(--shadow-sm)" }}
+    <button
+      type="button"
+      className={cn(
+        "aui-thread-scroll-to-bottom pointer-events-auto",
+        "size-9 rounded-full grid place-items-center",
+        "bg-(--paper-0) border border-(--paper-200) text-(--fg-2)",
+        "transition-all duration-200 hover:border-(--teal-300) hover:text-(--teal-700)",
+        "disabled:invisible opacity-90 hover:opacity-100",
+      )}
+      style={{ boxShadow: "var(--shadow-float-sm)" }}
       aria-label="下にスクロール"
     >
-      <ArrowDownIcon className="size-3.5" />
-    </Button>
+      <ArrowDownIcon className="size-3.5" aria-hidden="true" />
+    </button>
   </ThreadPrimitive.ScrollToBottom>
 );
 
@@ -69,67 +81,85 @@ const isTouchDevice =
   typeof window !== "undefined" &&
   window.matchMedia("(pointer: coarse)").matches;
 
-const Composer = () => (
-  <ComposerPrimitive.Root
-    className="aui-composer-root relative flex w-full flex-col"
-    style={{ boxShadow: "var(--shadow-card)" }}
-  >
-    <ComposerPrimitive.Input
-      placeholder="メッセージを入力..."
-      submitOnEnter={!isTouchDevice}
-      className="aui-composer-input mb-1 max-h-36 min-h-[3.5rem] w-full resize-none rounded-2xl border border-(--color-border) bg-(--color-surface) px-5 pt-4 pb-3 pr-14 text-base text-(--color-text) outline-none placeholder:text-(--color-text-faint) focus:border-(--color-accent-light) transition-all duration-200"
-      style={{
-        boxShadow: "var(--shadow-sm)",
-      }}
-      onFocus={(e) => {
-        e.currentTarget.style.boxShadow = "var(--shadow-input-focus)";
-        if (isTouchDevice) {
-          setTimeout(() => {
-            e.target.scrollIntoView({ behavior: "smooth", block: "end" });
-          }, 300);
-        }
-      }}
-      onBlur={(e) => {
-        e.currentTarget.style.boxShadow = "var(--shadow-sm)";
-      }}
-      rows={1}
-      autoFocus
-      aria-label="メッセージ入力"
-    />
-    <ComposerAction />
-  </ComposerPrimitive.Root>
-);
+const Composer = () => {
+  const composerRuntime = useComposerRuntime();
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // タッチデバイスでは Enter で改行、送信ボタンで送信
+    if (isTouchDevice) return;
+    if (e.key !== "Enter" || e.shiftKey) return;
+    // IME 変換中の Enter は送信せず、変換確定として扱う
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+    e.preventDefault();
+    composerRuntime.send();
+  };
+
+  return (
+    <ComposerPrimitive.Root
+      className={cn(
+        "aui-composer-root pointer-events-auto",
+        "relative flex w-full items-center gap-2",
+        "rounded-(--r-footer) border-2 border-(--teal-500) bg-(--paper-0)",
+        "px-5 py-2.5",
+      )}
+      style={{ boxShadow: "var(--shadow-floating-input)" }}
+    >
+      <ComposerPrimitive.Input
+        placeholder="ねっぷちゃんに話しかける…"
+        submitOnEnter={false}
+        className={cn(
+          "aui-composer-input flex-1 resize-none border-0 bg-transparent outline-none",
+          "px-1 py-2 text-base text-(--fg-1) placeholder:text-(--fg-4) leading-snug",
+          "min-h-[24px] max-h-32",
+        )}
+        onKeyDown={handleKeyDown}
+        onFocus={(e) => {
+          if (isTouchDevice) {
+            setTimeout(() => {
+              e.target.scrollIntoView({ behavior: "smooth", block: "end" });
+            }, 300);
+          }
+        }}
+        rows={1}
+        autoFocus
+        aria-label="メッセージ入力"
+      />
+      <ComposerAction />
+    </ComposerPrimitive.Root>
+  );
+};
 
 const ComposerAction = () => (
-  <div className="aui-composer-action-wrapper absolute right-3 bottom-3 flex items-center">
+  <div className="aui-composer-action-wrapper flex items-center flex-none">
     <AssistantIf condition={({ thread }) => !thread.isRunning}>
       <ComposerPrimitive.Send asChild>
-        <TooltipIconButton
-          tooltip="送信"
-          side="top"
+        <button
           type="submit"
-          variant="default"
-          size="icon"
-          className="aui-composer-send size-9 rounded-full bg-(--color-accent) hover:bg-(--color-accent-hover) transition-all duration-200 hover:scale-105 active:scale-95"
-          style={{ boxShadow: "var(--shadow-sm)" }}
           aria-label="送信"
+          className={cn(
+            "aui-composer-send size-10 rounded-full grid place-items-center",
+            "bg-(--teal-700) text-(--paper-0)",
+            "transition-colors hover:bg-(--teal-800)",
+            "disabled:bg-(--paper-100) disabled:text-(--fg-4)",
+          )}
+          style={{ boxShadow: "0 4px 12px rgba(15, 118, 110, 0.35)" }}
         >
           <SendIcon className="aui-composer-send-icon size-4" />
-        </TooltipIconButton>
+        </button>
       </ComposerPrimitive.Send>
     </AssistantIf>
 
     <AssistantIf condition={({ thread }) => thread.isRunning}>
       <ComposerPrimitive.Cancel asChild>
-        <Button
+        <button
           type="button"
-          variant="secondary"
-          size="icon"
-          className="aui-composer-cancel size-9 rounded-full transition-all duration-200 hover:scale-105"
           aria-label="停止"
+          className={cn(
+            "aui-composer-cancel size-10 rounded-full grid place-items-center",
+            "bg-(--paper-100) text-(--fg-2) transition-colors hover:bg-(--paper-200)",
+          )}
         >
           <SquareIcon className="aui-composer-cancel-icon size-3 fill-current" />
-        </Button>
+        </button>
       </ComposerPrimitive.Cancel>
     </AssistantIf>
   </div>
@@ -137,7 +167,7 @@ const ComposerAction = () => (
 
 const MessageError = () => (
   <MessagePrimitive.Error>
-    <ErrorPrimitive.Root className="aui-message-error-root mt-2 rounded-lg border border-red-200 bg-(--color-danger-bg) p-3 text-(--color-danger) text-sm">
+    <ErrorPrimitive.Root className="aui-message-error-root mt-2 rounded-lg border border-red-200 bg-(--danger-bg) p-3 text-(--danger) text-sm">
       <ErrorPrimitive.Message className="aui-message-error-message line-clamp-2" />
     </ErrorPrimitive.Root>
   </MessagePrimitive.Error>
@@ -148,23 +178,25 @@ const AssistantMessage = () => (
     className="aui-assistant-message-root fade-in slide-in-from-bottom-1 relative mx-auto w-full max-w-(--thread-max-width) animate-in py-4 duration-200"
     data-role="assistant"
   >
-    <div className="text-xs text-(--color-text-muted) mb-2 font-medium tracking-wide">
+    <div className="text-xs text-(--fg-3) mb-2 font-(family-name:--font-display) tracking-wide pl-1">
       ねっぷちゃん
     </div>
-    <div
-      className="aui-assistant-message-content wrap-break-word rounded-2xl bg-(--color-surface) border border-(--color-border)/60 px-5 py-4 text-(--color-text) leading-relaxed"
-      style={{ boxShadow: "var(--shadow-xs)" }}
-    >
-      <MessagePrimitive.Parts
-        components={{
-          Text: MarkdownText,
-          tools: { by_name: toolsByName, Fallback: ToolFallback },
-        }}
-      />
-      <MessageError />
+    <div className="flex justify-start">
+      <SpeechBubble
+        variant="assistant"
+        className="max-w-[92%] md:max-w-[88%] py-4"
+      >
+        <MessagePrimitive.Parts
+          components={{
+            Text: MarkdownText,
+            tools: { by_name: toolsByName, Fallback: ToolFallback },
+          }}
+        />
+        <MessageError />
+      </SpeechBubble>
     </div>
 
-    <div className="aui-assistant-message-footer mt-2.5 flex">
+    <div className="aui-assistant-message-footer mt-4 flex pl-1">
       <BranchPicker />
       <AssistantActionBar />
     </div>
@@ -181,21 +213,21 @@ const FeedbackButtons = () => {
       <TooltipIconButton
         tooltip="良い回答"
         onClick={() => onFeedbackClick(messageId, "good")}
-        className="hover:text-(--color-success) transition-colors duration-150"
+        className="hover:text-(--success) transition-colors duration-150"
       >
         <ThumbsUpIcon className="size-3.5" />
       </TooltipIconButton>
       <TooltipIconButton
         tooltip="改善が必要"
         onClick={() => onFeedbackClick(messageId, "bad")}
-        className="hover:text-(--color-danger) transition-colors duration-150"
+        className="hover:text-(--danger) transition-colors duration-150"
       >
         <ThumbsDownIcon className="size-3.5" />
       </TooltipIconButton>
       <TooltipIconButton
         tooltip="アイディア"
         onClick={() => onFeedbackClick(messageId, "idea")}
-        className="hover:text-(--color-warning) transition-colors duration-150"
+        className="hover:text-(--warning) transition-colors duration-150"
       >
         <LightbulbIcon className="size-3.5" />
       </TooltipIconButton>
@@ -206,11 +238,9 @@ const FeedbackButtons = () => {
 const AssistantActionBar = () => (
   <ActionBarPrimitive.Root
     hideWhenRunning
-    className="aui-assistant-action-bar-root flex items-center gap-1.5 text-(--color-text-faint)"
+    className="aui-assistant-action-bar-root flex items-center gap-1.5 text-(--fg-4)"
   >
-    <span className="text-xs text-(--color-text-muted)">
-      この回答は役に立ちましたか？
-    </span>
+    <span className="text-xs text-(--fg-3)">この回答は役に立ちましたか？</span>
     <FeedbackButtons />
   </ActionBarPrimitive.Root>
 );
@@ -218,7 +248,7 @@ const AssistantActionBar = () => (
 const UserMessage = () => {
   const message = useMessage();
   const isGreeting = message.content?.some(
-    (part) => part.type === "text" && GREETING_PROMPTS.includes(part.text),
+    (part) => part.type === "text" && part.text === GREETING_PROMPT,
   );
 
   if (isGreeting) return null;
@@ -228,12 +258,9 @@ const UserMessage = () => {
       className="aui-user-message-root fade-in slide-in-from-bottom-1 mx-auto flex w-full max-w-(--thread-max-width) animate-in justify-end py-4 duration-200"
       data-role="user"
     >
-      <div
-        className="aui-user-message-content wrap-break-word max-w-[80%] rounded-2xl rounded-br-md bg-(--color-user-message) px-5 py-3 text-white/95 leading-relaxed"
-        style={{ boxShadow: "var(--shadow-sm)" }}
-      >
+      <SpeechBubble variant="user" className="max-w-[80%]">
         <MessagePrimitive.Parts />
-      </div>
+      </SpeechBubble>
     </MessagePrimitive.Root>
   );
 };
@@ -245,7 +272,7 @@ const BranchPicker = ({
   <BranchPickerPrimitive.Root
     hideWhenSingleBranch
     className={cn(
-      "aui-branch-picker-root mr-2 -ml-2 inline-flex items-center text-(--color-text-muted) text-xs",
+      "aui-branch-picker-root mr-2 -ml-2 inline-flex items-center text-(--fg-3) text-xs",
       className,
     )}
     {...rest}

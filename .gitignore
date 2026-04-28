@@ -64,3 +64,6 @@ dataset/eval/.gemini-usage-*.log
 
 # web build output
 server/public/
+
+# Design handoff bundle (Claude Design export, not committed)
+design-reference/
