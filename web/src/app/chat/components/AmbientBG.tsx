@@ -39,9 +39,17 @@ type Flake = {
 
 type FieldParticle = Dot | Flake;
 
-const MAX_DOTS = 30;
-const MAX_FLAKES = 6;
-const DOT_SPAWN_MS = 600;
+// 初期化時の画面幅で上限を決定 (モバイルは半減 + spawn 間隔も延長)
+const FIELD_LIMITS_DESKTOP = {
+  maxDots: 30,
+  maxFlakes: 6,
+  dotSpawnMs: 600,
+};
+const FIELD_LIMITS_MOBILE = {
+  maxDots: 15,
+  maxFlakes: 3,
+  dotSpawnMs: 900,
+};
 
 const FLAKE_SVG = `
   <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none">
@@ -136,6 +144,13 @@ const AmbientCanvas = () => {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
+
+    // 初期幅で前景パーティクルの上限を確定
+    const {
+      maxDots: MAX_DOTS,
+      maxFlakes: MAX_FLAKES,
+      dotSpawnMs: DOT_SPAWN_MS,
+    } = w < 768 ? FIELD_LIMITS_MOBILE : FIELD_LIMITS_DESKTOP;
 
     // ---------- Snowflake ラスタライズ済み Image ----------
     const flakeImg = new Image();
