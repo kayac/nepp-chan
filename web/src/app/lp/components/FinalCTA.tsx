@@ -11,7 +11,7 @@ export const FinalCTA = () => {
         data-revealed={reveal.revealed}
         className="mx-auto max-w-[880px] rounded-[40px] border border-(--paper-200) bg-[radial-gradient(ellipse_at_top,_var(--teal-50),_var(--paper-0))] px-7 py-16 text-center opacity-0 translate-y-3 shadow-(--shadow-float-md) transition-all duration-700 ease-out data-[revealed=true]:opacity-100 data-[revealed=true]:translate-y-0 md:px-12 md:py-20"
       >
-        <h2 className="font-(family-name:--font-display) text-[clamp(26px,4vw,40px)] font-black leading-[1.4] text-(--snow-800)">
+        <h2 className="font-(family-name:--font-display) text-xl font-black sm:text-2xl md:text-3xl lg:text-[40px] leading-[1.4] text-(--snow-800)">
           さっそく、
           <br />
           ねっぷちゃんに話しかけてみよう

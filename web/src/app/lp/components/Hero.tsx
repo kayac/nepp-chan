@@ -22,11 +22,11 @@ export const Hero = () => {
             音威子府村 公式 AI副村長
           </span>
 
-          <h1 className="mt-6 font-(family-name:--font-display) text-[clamp(22px,5vw,48px)] font-black leading-[1.35] tracking-[0.01em] text-(--snow-800)">
+          <h1 className="mt-6 font-(family-name:--font-display) text-2xl font-black leading-[1.4] tracking-[0.01em] text-(--snow-800) md:text-3xl lg:text-4xl xl:text-5xl">
             駅も、宿も、役場も。
-            <br />
+            <br className="hidden lg:inline" />
             <span className="text-(--brand)">音威子府のことはぜんぶ、</span>
-            <br />
+            <br className="hidden lg:inline" />
             ねっぷちゃんに聞いてね。
           </h1>
 
@@ -76,7 +76,7 @@ export const Hero = () => {
         >
           <div
             aria-hidden="true"
-            className="absolute -top-[60px] -right-2 z-10 size-[140px] animate-[lp-mascot-tilt_5s_ease-in-out_infinite] [filter:drop-shadow(0_8px_16px_rgba(15,118,110,0.14))]"
+            className="absolute -top-[60px] right-0 z-10 size-24 animate-[lp-mascot-tilt_5s_ease-in-out_infinite] [filter:drop-shadow(0_8px_16px_rgba(15,118,110,0.14))] sm:size-[140px]"
           >
             <img
               src="/mascot/pose-wave.png"

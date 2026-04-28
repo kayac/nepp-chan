@@ -24,7 +24,7 @@ export const ProfileSection = () => {
           <div className="inline-block rounded-(--r-pill) bg-(--teal-50) px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-(--brand)">
             Profile
           </div>
-          <h2 className="mt-4 font-(family-name:--font-display) text-[clamp(28px,4vw,44px)] font-bold leading-[1.35] text-(--snow-800)">
+          <h2 className="mt-4 font-(family-name:--font-display) text-xl font-bold sm:text-2xl md:text-3xl lg:text-4xl xl:text-[44px] leading-[1.35] text-(--snow-800)">
             ねっぷちゃんって、どんな子？
           </h2>
         </div>

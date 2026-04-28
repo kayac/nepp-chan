@@ -19,7 +19,7 @@ export const Survey = () => {
       <div
         ref={visual.ref}
         data-revealed={visual.revealed}
-        className="opacity-0 translate-y-3 transition-all duration-700 ease-out data-[revealed=true]:opacity-100 data-[revealed=true]:translate-y-0"
+        className="min-w-0 opacity-0 translate-y-3 transition-all duration-700 ease-out data-[revealed=true]:opacity-100 data-[revealed=true]:translate-y-0"
       >
         <div className="rounded-[28px] border border-(--paper-200) bg-white p-6 shadow-(--shadow-float-md)">
           <div className="flex items-center gap-3">
@@ -85,7 +85,7 @@ export const Survey = () => {
       <div
         ref={body.ref}
         data-revealed={body.revealed}
-        className="opacity-0 translate-y-3 transition-all delay-200 duration-700 ease-out data-[revealed=true]:opacity-100 data-[revealed=true]:translate-y-0 md:order-2"
+        className="min-w-0 opacity-0 translate-y-3 transition-all delay-200 duration-700 ease-out data-[revealed=true]:opacity-100 data-[revealed=true]:translate-y-0 md:order-2"
       >
         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-(--brand)">
           <span className="grid size-6 place-items-center rounded-full bg-(--teal-700) text-[12px] text-white">
@@ -93,7 +93,7 @@ export const Survey = () => {
           </span>
           VOICE
         </div>
-        <h3 className="mt-4 font-(family-name:--font-display) text-[clamp(24px,3.5vw,34px)] font-bold leading-[1.35] text-(--snow-800)">
+        <h3 className="mt-4 font-(family-name:--font-display) text-xl font-bold sm:text-2xl md:text-[28px] lg:text-[34px] leading-[1.35] text-(--snow-800)">
           たまに
           <br />
           アンケートも
