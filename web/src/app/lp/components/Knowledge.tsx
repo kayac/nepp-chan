@@ -82,15 +82,17 @@ export const Knowledge = () => {
           {ROWS.map((row) => (
             <div
               key={row.label}
-              className="flex items-center gap-3 rounded-2xl bg-(--paper-50) px-4 py-3"
+              className="flex min-w-0 items-center gap-3 rounded-2xl bg-(--paper-50) px-4 py-3"
             >
               <span
                 className={`grid size-9 flex-none place-items-center rounded-full ${row.iconBg}`}
               >
                 <Icon name={row.icon} size={16} />
               </span>
-              <span className="font-medium text-(--fg-1)">{row.label}</span>
-              <span className="ml-auto truncate text-xs text-(--fg-3)">
+              <span className="flex-none font-medium text-(--fg-1)">
+                {row.label}
+              </span>
+              <span className="ml-auto min-w-0 truncate text-xs text-(--fg-3)">
                 {row.ex}
               </span>
             </div>

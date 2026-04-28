@@ -7,14 +7,14 @@ const LINKS = [
 
 export const Nav = () => (
   <nav className="sticky top-0 z-50 border-b border-(--paper-200) bg-[rgba(254,253,251,0.85)] [backdrop-filter:saturate(160%)_blur(10px)]">
-    <div className="mx-auto flex max-w-[1200px] items-center gap-4 px-7 py-3.5">
-      <div className="flex items-center gap-2.5 font-(family-name:--font-display) text-lg font-bold text-(--snow-800)">
+    <div className="mx-auto flex max-w-[1200px] items-center gap-2 px-4 py-3 sm:gap-4 sm:px-7 sm:py-3.5">
+      <div className="flex items-center gap-2 font-(family-name:--font-display) text-lg font-bold text-(--snow-800) sm:gap-2.5">
         <img
-          className="block h-[52px] w-auto"
+          className="block h-9 w-auto sm:h-[52px]"
           src="/lp/logo-neppu.png"
           alt="ねっぷちゃん"
         />
-        <span className="rounded-(--r-pill) bg-(--teal-50) px-2 py-0.5 text-[11px] font-medium tracking-[0.04em] text-(--brand)">
+        <span className="rounded-(--r-pill) bg-(--teal-50) px-2 py-0.5 text-[10px] font-medium tracking-[0.04em] text-(--brand) sm:text-[11px]">
           BETA
         </span>
       </div>
@@ -33,7 +33,7 @@ export const Nav = () => (
 
       <a
         href="#chat"
-        className="ml-auto rounded-(--r-pill) bg-(--brand) px-4 py-2 text-sm font-semibold text-white shadow-(--shadow-sm) transition-all duration-200 hover:-translate-y-px hover:bg-(--brand-hover) hover:shadow-(--shadow-brand) md:ml-0"
+        className="ml-auto rounded-(--r-pill) bg-(--brand) px-3 py-1.5 text-xs font-semibold text-white shadow-(--shadow-sm) transition-all duration-200 hover:-translate-y-px hover:bg-(--brand-hover) hover:shadow-(--shadow-brand) sm:px-4 sm:py-2 sm:text-sm md:ml-0"
       >
         いますぐ話す
       </a>
