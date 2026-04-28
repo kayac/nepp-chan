@@ -24,9 +24,9 @@ export const Hero = () => {
 
           <h1 className="mt-6 font-(family-name:--font-display) text-2xl font-black leading-[1.4] tracking-[0.01em] text-(--snow-800) md:text-3xl lg:text-4xl xl:text-5xl">
             駅も、宿も、役場も。
-            <br className="hidden lg:inline" />
+            <br />
             <span className="text-(--brand)">音威子府のことはぜんぶ、</span>
-            <br className="hidden lg:inline" />
+            <br />
             ねっぷちゃんに聞いてね。
           </h1>
 
