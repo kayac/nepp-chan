@@ -7,10 +7,10 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import type { UIMessage } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AmbientBG } from "~/app/chat/components/AmbientBG";
 import { ChatStandingMascot } from "~/app/chat/components/ChatStandingMascot";
 import { Landing } from "~/app/chat/components/Landing";
 import { TopBar } from "~/app/chat/components/TopBar";
+import { AmbientBG } from "~/components/AmbientBG";
 import { Thread } from "~/components/assistant-ui/Thread";
 import { LoadingDots } from "~/components/ui/Loading";
 import { useAdminUser } from "~/hooks/useAdminUser";
