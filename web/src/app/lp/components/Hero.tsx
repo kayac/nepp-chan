@@ -22,7 +22,7 @@ export const Hero = () => {
             音威子府村 公式 AI副村長
           </span>
 
-          <h1 className="mt-6 font-(family-name:--font-display) text-[26px] font-black leading-[1.4] tracking-[0.01em] text-(--snow-800) md:text-3xl lg:text-4xl xl:text-5xl">
+          <h1 className="mt-6 font-(family-name:--font-display) text-[clamp(24px,7vw,30px)] font-black leading-[1.4] tracking-[0.01em] text-(--snow-800) md:text-2xl lg:text-3xl xl:text-4xl">
             駅も、宿も、役場も。
             <br />
             <span className="text-(--brand)">音威子府のことはぜんぶ、</span>
