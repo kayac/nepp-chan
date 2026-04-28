@@ -1,4 +1,4 @@
-import { Icon } from "./Icon";
+import { MailIcon } from "lucide-react";
 
 export const FooterSection = () => (
   <footer className="border-t border-(--paper-200) bg-(--paper-100)/40 px-7 pb-10 pt-16">
@@ -69,7 +69,8 @@ export const FooterSection = () => (
               href="mailto:nepp-chan@kayac.com"
               className="inline-flex items-center gap-1.5 text-(--fg-2) transition-colors hover:text-(--brand)"
             >
-              <Icon name="mail" size={12} /> nepp-chan@kayac.com
+              <MailIcon className="size-3" aria-hidden="true" />{" "}
+              nepp-chan@kayac.com
             </a>
           </li>
           <li>

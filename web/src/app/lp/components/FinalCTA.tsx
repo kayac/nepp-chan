@@ -1,5 +1,6 @@
+import { MessageCircleIcon } from "lucide-react";
 import { useScrollReveal } from "~/hooks/useScrollReveal";
-import { Icon, LineIcon } from "./Icon";
+import { LineIcon } from "./LineIcon";
 
 export const FinalCTA = () => {
   const reveal = useScrollReveal<HTMLDivElement>();
@@ -24,7 +25,7 @@ export const FinalCTA = () => {
             href="/"
             className="inline-flex items-center gap-2 rounded-(--r-pill) bg-(--brand) px-6 py-3.5 text-sm font-bold text-white shadow-(--shadow-brand) transition-all duration-200 hover:-translate-y-0.5 hover:bg-(--brand-hover)"
           >
-            <Icon name="message-circle" size={16} />
+            <MessageCircleIcon className="size-4" aria-hidden="true" />
             Web版でいますぐ話しかける
           </a>
           {/* TODO: LINE 公式アカウント URL 確定後、href を実 URL に差し替え (#541) */}

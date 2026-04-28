@@ -1,6 +1,6 @@
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useRef } from "react";
 import { useScrollReveal } from "~/hooks/useScrollReveal";
-import { Icon } from "./Icon";
 
 type MediaKind = "paper" | "web" | "tv" | "radio" | "mag";
 
@@ -177,7 +177,7 @@ export const MediaSection = () => {
               onClick={() => scroll(-1)}
               className="grid size-10 place-items-center rounded-full border border-(--paper-200) bg-white text-(--fg-2) shadow-(--shadow-sm) transition-colors hover:bg-(--teal-50) hover:text-(--brand)"
             >
-              <Icon name="chevron-left" size={18} />
+              <ChevronLeftIcon className="size-[18px]" aria-hidden="true" />
             </button>
             <button
               type="button"
@@ -185,7 +185,7 @@ export const MediaSection = () => {
               onClick={() => scroll(1)}
               className="grid size-10 place-items-center rounded-full border border-(--paper-200) bg-white text-(--fg-2) shadow-(--shadow-sm) transition-colors hover:bg-(--teal-50) hover:text-(--brand)"
             >
-              <Icon name="chevron-right" size={18} />
+              <ChevronRightIcon className="size-[18px]" aria-hidden="true" />
             </button>
           </div>
         </div>

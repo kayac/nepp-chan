@@ -1,10 +1,16 @@
+import {
+  CloudIcon,
+  HomeIcon,
+  LeafIcon,
+  type LucideIcon,
+  TrainFrontIcon,
+} from "lucide-react";
 import { useScrollReveal } from "~/hooks/useScrollReveal";
-import { Icon } from "./Icon";
 
 type Row = {
   label: string;
   ex: string;
-  icon: "cloud" | "train" | "home" | "leaf";
+  icon: LucideIcon;
   iconBg: string;
 };
 
@@ -12,25 +18,25 @@ const ROWS: ReadonlyArray<Row> = [
   {
     label: "天気・今日の気分",
     ex: "「今日寒い？」「お昼どうしよう？」",
-    icon: "cloud",
+    icon: CloudIcon,
     iconBg: "bg-(--teal-50) text-(--teal-700)",
   },
   {
     label: "観光のお客さん",
     ex: "「おすすめのお蕎麦屋さんは？」",
-    icon: "train",
+    icon: TrainFrontIcon,
     iconBg: "bg-(--apricot-50) text-(--honey)",
   },
   {
     label: "移住を考えている方",
     ex: "「移住の補助金ってあるの？」",
-    icon: "home",
+    icon: HomeIcon,
     iconBg: "bg-(--moss-50) text-(--pine)",
   },
   {
     label: "村に住んでいる方",
     ex: "「今日のゴミ、何の日だっけ？」",
-    icon: "leaf",
+    icon: LeafIcon,
     iconBg: "bg-[#fdf2f3] text-(--berry)",
   },
 ];
@@ -87,7 +93,7 @@ export const Knowledge = () => {
               <span
                 className={`grid size-9 flex-none place-items-center rounded-full ${row.iconBg}`}
               >
-                <Icon name={row.icon} size={16} />
+                <row.icon className="size-4" aria-hidden="true" />
               </span>
               <span className="flex-none font-medium text-(--fg-1)">
                 {row.label}

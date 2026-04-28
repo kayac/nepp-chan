@@ -1,5 +1,6 @@
+import { MessageSquareIcon } from "lucide-react";
 import { useScrollReveal } from "~/hooks/useScrollReveal";
-import { LineIcon } from "./Icon";
+import { LineIcon } from "./LineIcon";
 import { MiniChat } from "./MiniChat";
 
 export const Hero = () => {
@@ -43,18 +44,7 @@ export const Hero = () => {
               href="/"
               className="flex items-center justify-center gap-2 rounded-(--r-pill) bg-(--brand) px-6 py-3.5 text-sm font-bold text-white shadow-(--shadow-brand) transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:bg-(--brand-hover) hover:shadow-[0_10px_24px_rgba(15,118,110,0.32)]"
             >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-                className="size-4"
-              >
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
+              <MessageSquareIcon className="size-4" aria-hidden="true" />
               いますぐ話しかける
             </a>
             <a

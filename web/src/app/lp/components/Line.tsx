@@ -1,5 +1,5 @@
 import { useScrollReveal } from "~/hooks/useScrollReveal";
-import { LineIcon } from "./Icon";
+import { LineIcon } from "./LineIcon";
 
 export const Line = () => {
   const body = useScrollReveal<HTMLDivElement>();
