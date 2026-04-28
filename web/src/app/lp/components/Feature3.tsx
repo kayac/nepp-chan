@@ -14,7 +14,6 @@ export const Feature3 = () => {
       id="line"
       className="grid scroll-mt-20 items-center gap-10 py-12 md:grid-cols-2 md:gap-20 md:py-20"
     >
-      {/* body — md では左 */}
       <div
         ref={body.ref}
         data-revealed={body.revealed}
@@ -50,7 +49,6 @@ export const Feature3 = () => {
         </button>
       </div>
 
-      {/* visual — md では右 */}
       <div
         ref={visual.ref}
         data-revealed={visual.revealed}

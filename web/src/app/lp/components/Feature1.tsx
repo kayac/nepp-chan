@@ -41,7 +41,6 @@ export const Feature1 = () => {
 
   return (
     <div className="grid items-center gap-10 py-12 md:grid-cols-2 md:gap-20 md:py-20">
-      {/* body — md では左、モバイルでは上 */}
       <div
         ref={body.ref}
         data-revealed={body.revealed}
@@ -74,7 +73,6 @@ export const Feature1 = () => {
         </p>
       </div>
 
-      {/* visual — md では右 */}
       <div
         ref={visual.ref}
         data-revealed={visual.revealed}
