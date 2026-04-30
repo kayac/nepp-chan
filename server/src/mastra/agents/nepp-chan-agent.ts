@@ -189,12 +189,19 @@ type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
   isAdmin?: boolean;
   platform?: "web" | "line";
   modelConfig: ModelTierConfig;
+  /**
+   * Memory（履歴保存・working memory）を有効にするか。
+   * /simple-chat のような使い捨て応答では false にしてサブエージェント含めて永続化を行わない。
+   * デフォルトは true。
+   */
+  withMemory?: boolean;
 };
 
 export const createNeppChanAgent = ({
   isAdmin = false,
   platform = "web",
   modelConfig,
+  withMemory = true,
   ...agentOptions
 }: Props) => {
   const agents = isAdmin ? adminAgents : baseAgents;
@@ -217,16 +224,18 @@ export const createNeppChanAgent = ({
     ...modelConfig,
     agents,
     tools,
-    memory: ({ requestContext }) =>
-      getMemoryFromContext(requestContext, {
-        generateTitle: true,
-        workingMemory: {
-          enabled: true,
-          scope: "resource",
-          schema: personaSchema,
-        },
-        lastMessages: 20,
-      }),
+    ...(withMemory && {
+      memory: ({ requestContext }) =>
+        getMemoryFromContext(requestContext, {
+          generateTitle: true,
+          workingMemory: {
+            enabled: true,
+            scope: "resource",
+            schema: personaSchema,
+          },
+          lastMessages: 20,
+        }),
+    }),
     ...agentOptions,
   });
 };
