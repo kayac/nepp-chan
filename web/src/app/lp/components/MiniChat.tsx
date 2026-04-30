@@ -1,6 +1,6 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { ArrowRightIcon, EllipsisIcon } from "lucide-react";
+import { EllipsisIcon, SendIcon } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -231,7 +231,7 @@ export const MiniChat = () => {
             "disabled:cursor-not-allowed disabled:opacity-55",
           )}
         >
-          <ArrowRightIcon className="size-[18px]" aria-hidden="true" />
+          <SendIcon className="size-[18px]" aria-hidden="true" />
         </button>
       </form>
     </div>
