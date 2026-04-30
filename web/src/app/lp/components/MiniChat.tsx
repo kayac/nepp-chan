@@ -173,6 +173,18 @@ export const MiniChat = () => {
                       {children}
                     </code>
                   ),
+                  pre: ({ children }) => (
+                    <pre
+                      className={cn(
+                        "my-1 overflow-x-auto rounded p-2 text-[0.8em] first:mt-0 last:mb-0",
+                        m.role === "user"
+                          ? "bg-white/10"
+                          : "bg-(--paper-200) text-(--fg-1)",
+                      )}
+                    >
+                      {children}
+                    </pre>
+                  ),
                 }}
               >
                 {text}
