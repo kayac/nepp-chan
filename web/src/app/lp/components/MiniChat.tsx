@@ -54,8 +54,6 @@ export const MiniChat = () => {
   });
 
   const isBusy = status === "submitted" || status === "streaming";
-  // ストリーム継続中（テキスト到来後でもツール呼び出し中などで処理が走り続けている間）は
-  // 常にインジケータを出す。status が "ready" になるまで表示し続ける。
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: messages/status 変更時に最下部追従させたい
   useEffect(() => {

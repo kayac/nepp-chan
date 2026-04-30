@@ -55,7 +55,6 @@ simpleChatRoutes.openapi(simpleChatRoute, async (c) => {
 
   logger.info("[SimpleChat] request received");
 
-  // LP / ウィジェット用途では一律 casual ティアでレイテンシを抑える
   const modelConfig = resolveModelTier({
     intent: "casual",
     platform: "web",
@@ -80,7 +79,6 @@ simpleChatRoutes.openapi(simpleChatRoute, async (c) => {
     env: c.env,
   });
 
-  // memory パラメータを渡さないことで D1 への履歴書き込みをスキップする
   const stream = await handleChatStream({
     mastra,
     agentId: "neppChanAgent",
