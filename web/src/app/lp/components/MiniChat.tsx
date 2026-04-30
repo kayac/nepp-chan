@@ -54,14 +54,8 @@ export const MiniChat = () => {
   });
 
   const isBusy = status === "submitted" || status === "streaming";
-  const lastMessage = messages[messages.length - 1];
-  // dots は「アシスタントのテキストがまだ届いていない間」表示し続けたい。
-  // ツール実行中など、空 parts の assistant message が先に挿入されるケースもカバー。
-  const isAwaitingResponse =
-    isBusy &&
-    (!lastMessage ||
-      lastMessage.role === "user" ||
-      messageText(lastMessage).length === 0);
+  // ストリーム継続中（テキスト到来後でもツール呼び出し中などで処理が走り続けている間）は
+  // 常にインジケータを出す。status が "ready" になるまで表示し続ける。
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: messages/status 変更時に最下部追従させたい
   useEffect(() => {
@@ -176,7 +170,7 @@ export const MiniChat = () => {
             </div>
           );
         })}
-        {isAwaitingResponse && (
+        {isBusy && (
           <div className="flex w-fit max-w-[78%] items-center gap-2 self-start rounded-(--r-bubble) bg-(--paper-50) px-[18px] py-3">
             <span className="size-2 rounded-full bg-orange-500 animate-pulse" />
             <span className="text-xs font-medium text-(--fg-2)">
