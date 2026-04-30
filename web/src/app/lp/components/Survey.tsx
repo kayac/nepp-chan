@@ -37,22 +37,33 @@ export const Survey = () => {
           <p className="mt-4 font-(family-name:--font-display) text-base font-bold leading-[1.6] text-(--snow-800)">
             来年度、村でいちばん力を入れてほしいのはどれ？
           </p>
-          <div className="mt-4 flex flex-col gap-2">
+          <fieldset className="mt-4 flex flex-col gap-2">
+            <legend className="sr-only">
+              来年度、村でいちばん力を入れてほしいのはどれ？
+            </legend>
             {OPTIONS.map((option, i) => {
               const isSelected = selected === i;
               return (
-                <button
+                <label
                   key={option}
-                  type="button"
-                  onClick={() => setSelected(i)}
                   className={cn(
-                    "flex items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition-colors",
+                    "flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition-colors",
+                    "focus-within:border-(--teal-400) focus-within:shadow-(--ring-brand)",
                     isSelected
                       ? "border-(--brand) bg-(--brand-soft) text-(--fg-1)"
                       : "border-(--paper-200) bg-(--paper-50) text-(--fg-2) hover:border-(--teal-300)",
                   )}
                 >
+                  <input
+                    type="radio"
+                    name="survey-priority"
+                    value={option}
+                    checked={isSelected}
+                    onChange={() => setSelected(i)}
+                    className="sr-only"
+                  />
                   <span
+                    aria-hidden="true"
                     className={cn(
                       "grid size-4 flex-none place-items-center rounded-full border-2",
                       isSelected
@@ -65,10 +76,10 @@ export const Survey = () => {
                     )}
                   </span>
                   {option}
-                </button>
+                </label>
               );
             })}
-          </div>
+          </fieldset>
           <div className="mt-4 flex items-center justify-between text-xs text-(--fg-3)">
             <span>所要時間: 約30秒</span>
             <button
