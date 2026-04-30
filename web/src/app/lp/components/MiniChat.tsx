@@ -6,6 +6,7 @@ import {
   Fragment,
   type ReactNode,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -54,20 +55,32 @@ export const MiniChat = () => {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const streamRef = useRef<HTMLDivElement | null>(null);
 
-  const { messages, sendMessage, status } = useChat({
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: `${API_BASE}/simple-chat`,
+        prepareSendMessagesRequest({ messages: msgs }) {
+          return { body: { message: msgs[msgs.length - 1] } };
+        },
+      }),
+    [],
+  );
+
+  const { messages, sendMessage, status, error } = useChat({
     messages: [INITIAL_MESSAGE],
-    transport: new DefaultChatTransport({
-      api: `${API_BASE}/simple-chat`,
-      prepareSendMessagesRequest({ messages: msgs }) {
-        return { body: { message: msgs[msgs.length - 1] } };
-      },
-    }),
+    transport,
+    experimental_throttle: 50,
   });
 
   const isBusy = status === "submitted" || status === "streaming";
   const lastMessage = messages[messages.length - 1];
-  const isAwaitingFirstToken =
-    isBusy && (!lastMessage || lastMessage.role === "user");
+  // dots は「アシスタントのテキストがまだ届いていない間」表示し続けたい。
+  // ツール実行中など、空 parts の assistant message が先に挿入されるケースもカバー。
+  const isAwaitingResponse =
+    isBusy &&
+    (!lastMessage ||
+      lastMessage.role === "user" ||
+      messageText(lastMessage).length === 0);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: messages/status 変更時に最下部追従させたい
   useEffect(() => {
@@ -78,9 +91,9 @@ export const MiniChat = () => {
   const ask = (q: string) => {
     const trimmed = q.trim();
     if (!trimmed || isBusy) return;
+    sendMessage({ text: trimmed });
     setInput("");
     setShowSuggestions(false);
-    sendMessage({ text: trimmed });
   };
 
   const handleSubmit = (e: FormEvent) => {
@@ -138,7 +151,7 @@ export const MiniChat = () => {
             </div>
           );
         })}
-        {isAwaitingFirstToken && (
+        {isAwaitingResponse && (
           <div className="flex max-w-[86%] items-center gap-1.5 self-start rounded-(--r-bubble) bg-(--paper-50) px-[18px] py-3">
             {[0, 1, 2].map((dotIndex) => (
               <span
@@ -147,6 +160,11 @@ export const MiniChat = () => {
                 style={{ animationDelay: `${dotIndex * 0.15}s` }}
               />
             ))}
+          </div>
+        )}
+        {error && (
+          <div className="self-start max-w-[86%] rounded-(--r-bubble) bg-red-50 px-[18px] py-3 text-sm text-red-700">
+            通信エラーが発生したよ。もう一度試してみてね。
           </div>
         )}
       </div>
