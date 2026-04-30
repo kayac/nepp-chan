@@ -189,11 +189,6 @@ type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
   isAdmin?: boolean;
   platform?: "web" | "line";
   modelConfig: ModelTierConfig;
-  /**
-   * Memory（履歴保存・working memory）を有効にするか。
-   * /simple-chat のような使い捨て応答では false にしてサブエージェント含めて永続化を行わない。
-   * デフォルトは true。
-   */
   withMemory?: boolean;
 };
 
