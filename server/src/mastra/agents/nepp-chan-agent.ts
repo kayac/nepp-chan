@@ -138,6 +138,11 @@ const adminAgents = {
   personaAnalystAgent,
 };
 
+const simpleAgents = {
+  knowledgeAgent,
+  webResearcherAgent,
+};
+
 const defaultTools = {
   broadcastGetTool,
   pollGetTool,
@@ -148,6 +153,10 @@ const webTools = {
   displayChartTool,
   displayTableTool,
   displayTimelineTool,
+};
+
+const simpleTools = {
+  broadcastGetTool,
 };
 
 const getTools = (platform: "web" | "line") => {
@@ -190,6 +199,7 @@ type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
   platform?: "web" | "line";
   modelConfig: ModelTierConfig;
   withMemory?: boolean;
+  simple?: boolean;
 };
 
 export const createNeppChanAgent = ({
@@ -197,10 +207,11 @@ export const createNeppChanAgent = ({
   platform = "web",
   modelConfig,
   withMemory = true,
+  simple = false,
   ...agentOptions
 }: Props) => {
-  const agents = isAdmin ? adminAgents : baseAgents;
-  const tools = getTools(platform);
+  const agents = simple ? simpleAgents : isAdmin ? adminAgents : baseAgents;
+  const tools = simple ? simpleTools : getTools(platform);
 
   const instructions = () =>
     [

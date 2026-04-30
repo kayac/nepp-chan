@@ -64,6 +64,7 @@ simpleChatRoutes.openapi(simpleChatRoute, async (c) => {
     isAdmin: false,
     modelConfig,
     withMemory: false,
+    simple: true,
   });
   const mastra = new Mastra({
     agents: { neppChanAgent },
