@@ -20,7 +20,7 @@ export const TopBar = ({ onMenuClick, className }: Props) => (
     >
       <img
         className="block h-9 w-auto sm:h-[52px]"
-        src="/lp/logo-neppu.png"
+        src="/logo-neppu.png"
         alt="ねっぷちゃん"
       />
       <span className="rounded-(--r-pill) bg-(--teal-50) px-2 py-0.5 text-[10px] font-medium tracking-[0.04em] text-(--brand) sm:text-[11px]">

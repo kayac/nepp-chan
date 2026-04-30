@@ -11,7 +11,7 @@ export const Nav = () => (
       <div className="flex items-center gap-2 font-(family-name:--font-display) text-lg font-bold text-(--snow-800) sm:gap-2.5">
         <img
           className="block h-9 w-auto sm:h-[52px]"
-          src="/lp/logo-neppu.png"
+          src="/logo-neppu.png"
           alt="ねっぷちゃん"
         />
         <span className="rounded-(--r-pill) bg-(--teal-50) px-2 py-0.5 text-[10px] font-medium tracking-[0.04em] text-(--brand) sm:text-[11px]">
