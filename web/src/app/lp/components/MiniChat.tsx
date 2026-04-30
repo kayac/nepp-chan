@@ -152,14 +152,9 @@ export const MiniChat = () => {
           );
         })}
         {isAwaitingResponse && (
-          <div className="flex max-w-[86%] items-center gap-1.5 self-start rounded-(--r-bubble) bg-(--paper-50) px-[18px] py-3">
-            {[0, 1, 2].map((dotIndex) => (
-              <span
-                key={`typing-dot-${dotIndex}`}
-                className="size-[7px] rounded-full bg-(--teal-500) opacity-35 animate-[lp-bubble-typing_1.2s_infinite]"
-                style={{ animationDelay: `${dotIndex * 0.15}s` }}
-              />
-            ))}
+          <div className="flex max-w-[86%] items-center gap-2 self-start rounded-(--r-bubble) bg-(--paper-50) px-[18px] py-3">
+            <span className="size-2 rounded-full bg-orange-500 animate-pulse" />
+            <span className="text-xs font-medium text-(--fg-2)">考え中…</span>
           </div>
         )}
         {error && (
