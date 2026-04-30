@@ -4,7 +4,6 @@ import { Mastra } from "@mastra/core/mastra";
 import { createUIMessageStreamResponse, type UIMessage } from "ai";
 import { resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
-import { getStorage } from "~/lib/storage";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 
@@ -61,8 +60,6 @@ simpleChatRoutes.openapi(simpleChatRoute, async (c) => {
     isAdmin: false,
   });
 
-  const storage = await getStorage(c.env.DB);
-
   const neppChanAgent = createNeppChanAgent({
     isAdmin: false,
     modelConfig,
@@ -70,11 +67,9 @@ simpleChatRoutes.openapi(simpleChatRoute, async (c) => {
   });
   const mastra = new Mastra({
     agents: { neppChanAgent },
-    storage,
   });
 
   const requestContext = createRequestContext({
-    storage,
     db: c.env.DB,
     env: c.env,
   });
