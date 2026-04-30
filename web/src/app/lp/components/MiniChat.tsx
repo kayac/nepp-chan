@@ -179,7 +179,9 @@ export const MiniChat = () => {
         {isAwaitingResponse && (
           <div className="flex w-fit max-w-[78%] items-center gap-2 self-start rounded-(--r-bubble) bg-(--paper-50) px-[18px] py-3">
             <span className="size-2 rounded-full bg-orange-500 animate-pulse" />
-            <span className="text-xs font-medium text-(--fg-2)">考え中…</span>
+            <span className="text-xs font-medium text-(--fg-2)">
+              ちょっと待ってね…
+            </span>
           </div>
         )}
         {error && (
