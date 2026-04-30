@@ -9,10 +9,13 @@ Astro のファイルベースルーティングで MPA 構成、各ページは
 | --------------------- | -------------------------------------- |
 | ページルーティング    | `pages/*.astro`                        |
 | チャット画面          | `app/chat/`                            |
+| LP（ランディング）    | `app/lp/`                              |
 | チャット UI           | `components/assistant-ui/`             |
 | ツール表示 UI         | `components/assistant-ui/tool-uis/`    |
 | 共通 UI               | `components/ui/`                       |
 | 共通レイアウト        | `components/RootLayout.tsx`            |
+| マスコット表示        | `components/Mascot.tsx`                |
+| 背景アニメーション    | `components/AmbientBG.tsx`             |
 | ダッシュボード画面    | `app/dashboard/`                       |
 | 認証画面              | `app/auth/`                            |
 | API クライアント      | `repository/*-repository.ts`           |
@@ -28,6 +31,7 @@ web/
 ├── src/
 │   ├── pages/                 # Astro ファイルベースルーティング
 │   │   ├── index.astro        # / → チャット画面
+│   │   ├── lp.astro           # /lp → ランディングページ
 │   │   ├── dashboard.astro    # /dashboard → ダッシュボード
 │   │   ├── login.astro        # /login → ログイン
 │   │   ├── register.astro     # /register → 登録
@@ -38,6 +42,9 @@ web/
 │   │   │   ├── ChatPage.tsx         # メインページ（スレッド管理）
 │   │   │   ├── AssistantProvider.tsx # Runtime Provider
 │   │   │   └── FeedbackContext.tsx   # フィードバック状態管理
+│   │   ├── lp/                # ランディングページ
+│   │   │   ├── LpPage.tsx           # エントリー（RootLayout + AmbientBG）
+│   │   │   └── components/          # Hero, MiniChat, Knowledge/Guide/Line/Survey, MediaSection, ProfileSection, FinalCTA, FooterSection, Nav, LineIcon
 │   │   ├── auth/              # 認証画面
 │   │   │   ├── LoginPage.tsx        # ログインページ
 │   │   │   └── RegisterPage.tsx     # 登録ページ
@@ -50,13 +57,15 @@ web/
 │   │       └── components/          # パネル群
 │   ├── components/
 │   │   ├── RootLayout.tsx     # 共通レイアウト（StrictMode + Sentry）
+│   │   ├── AmbientBG.tsx      # bg-winter + 雪 + 星座を統合した canvas 背景（chat / LP 共用）
+│   │   ├── Mascot.tsx         # マスコット表示（chat / LP 共用）
 │   │   ├── assistant-ui/      # assistant-ui ベースのチャット UI
 │   │   │   ├── Thread.tsx
 │   │   │   ├── MarkdownText.tsx
 │   │   │   ├── ToolFallback.tsx
 │   │   │   └── tool-uis/
 │   │   └── ui/                # shadcn/ui ベース共通コンポーネント
-│   ├── hooks/                 # 共有フック
+│   ├── hooks/                 # 共有フック（useScrollReveal 等）
 │   ├── repository/            # API クライアント（Repository パターン）
 │   ├── lib/
 │   │   ├── api/client.ts      # 共通 API クライアント
@@ -161,6 +170,7 @@ export const toolsByName = {
 | パス         | .astro ファイル        | React コンポーネント    |
 | ------------ | ---------------------- | ----------------------- |
 | `/`          | `pages/index.astro`    | `app/chat/App`          |
+| `/lp`        | `pages/lp.astro`       | `app/lp/LpPage`         |
 | `/dashboard` | `pages/dashboard.astro`| `app/dashboard/DashboardPage` |
 | `/login`     | `pages/login.astro`    | `app/auth/LoginPage`    |
 | `/register`  | `pages/register.astro` | `app/auth/RegisterPage` |
