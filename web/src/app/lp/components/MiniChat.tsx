@@ -31,6 +31,45 @@ const messageText = (msg: UIMessage) =>
     .map((p) => p.text)
     .join("");
 
+// ツール ID → ユーザー向け活動ラベル。未登録のツールは generic な文言にフォールバックする。
+const TOOL_ACTIVITY_LABEL: Record<string, string> = {
+  "knowledge-search": "村のことを調べているよ",
+  "google-search": "ウェブで調べているよ",
+  "village-search": "村について調べているよ",
+  "emergency-report": "情報を書き留めているよ",
+  "broadcast-get": "お知らせを確認しているよ",
+};
+
+const isAssistantToolPartActive = (part: {
+  type: string;
+  state?: string;
+  toolName?: string;
+}) => {
+  if (part.type !== "dynamic-tool" && !part.type.startsWith("tool-")) {
+    return false;
+  }
+  return part.state === "input-streaming" || part.state === "input-available";
+};
+
+const getActivityLabel = (msg: UIMessage | undefined): string => {
+  if (!msg || msg.role !== "assistant") return "考え中…";
+  // 直近の active なツール部分を後ろから探す
+  for (let i = msg.parts.length - 1; i >= 0; i--) {
+    const part = msg.parts[i] as {
+      type: string;
+      state?: string;
+      toolName?: string;
+    };
+    if (!isAssistantToolPartActive(part)) continue;
+    const toolName =
+      part.type === "dynamic-tool"
+        ? (part.toolName ?? "tool")
+        : part.type.slice("tool-".length);
+    return `${TOOL_ACTIVITY_LABEL[toolName] ?? "ちょっと調べているよ"}…`;
+  }
+  return "考え中…";
+};
+
 export const MiniChat = () => {
   const [input, setInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(true);
@@ -179,7 +218,9 @@ export const MiniChat = () => {
         {isAwaitingResponse && (
           <div className="flex w-fit max-w-[78%] items-center gap-2 self-start rounded-(--r-bubble) bg-(--paper-50) px-[18px] py-3">
             <span className="size-2 rounded-full bg-orange-500 animate-pulse" />
-            <span className="text-xs font-medium text-(--fg-2)">考え中…</span>
+            <span className="text-xs font-medium text-(--fg-2)">
+              {getActivityLabel(lastMessage)}
+            </span>
           </div>
         )}
         {error && (
