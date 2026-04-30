@@ -9,20 +9,24 @@ type Props = {
 export const TopBar = ({ onMenuClick, className }: Props) => (
   <div
     className={cn(
-      "relative z-[3] flex items-center justify-between px-7 py-5",
+      "relative z-[3] flex items-center justify-between px-4 py-3 sm:px-7 sm:py-3.5",
       className,
     )}
   >
-    <div className="flex items-center gap-2.5">
-      <span
-        className="size-2 rounded-full bg-(--teal-500)"
-        style={{ boxShadow: "0 0 0 3px rgba(20, 184, 166, 0.18)" }}
-        aria-hidden="true"
+    <a
+      href="/lp"
+      className="flex items-center gap-2 font-(family-name:--font-display) text-lg font-bold text-(--snow-800) sm:gap-2.5 transition-opacity hover:opacity-80"
+      aria-label="ねっぷちゃん 紹介ページへ"
+    >
+      <img
+        className="block h-9 w-auto sm:h-[52px]"
+        src="/lp/logo-neppu.png"
+        alt="ねっぷちゃん"
       />
-      <span className="font-(family-name:--font-display) font-bold text-(--snow-800) tracking-wider text-base">
-        ねっぷちゃん
+      <span className="rounded-(--r-pill) bg-(--teal-50) px-2 py-0.5 text-[10px] font-medium tracking-[0.04em] text-(--brand) sm:text-[11px]">
+        BETA
       </span>
-    </div>
+    </a>
 
     <button
       type="button"
