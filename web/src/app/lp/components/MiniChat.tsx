@@ -59,7 +59,11 @@ export const MiniChat = () => {
     const el = streamRef.current;
     if (!el) return;
     const observer = new MutationObserver(() => {
-      el.scrollTop = el.scrollHeight;
+      const distanceFromBottom =
+        el.scrollHeight - el.scrollTop - el.clientHeight;
+      if (distanceFromBottom < 80) {
+        el.scrollTop = el.scrollHeight;
+      }
     });
     observer.observe(el, {
       childList: true,
