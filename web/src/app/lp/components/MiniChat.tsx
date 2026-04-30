@@ -1,6 +1,6 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { ArrowRightIcon, EllipsisIcon, PlusIcon } from "lucide-react";
+import { ArrowRightIcon, EllipsisIcon } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -214,14 +214,6 @@ export const MiniChat = () => {
           "transition-shadow duration-200 focus-within:border-(--teal-400) focus-within:shadow-(--ring-brand)",
         )}
       >
-        <button
-          type="button"
-          tabIndex={-1}
-          aria-label="添付"
-          className="grid size-7 place-items-center rounded-full text-(--fg-3) transition-colors hover:bg-(--teal-50) hover:text-(--teal-700)"
-        >
-          <PlusIcon className="size-[18px]" aria-hidden="true" />
-        </button>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
