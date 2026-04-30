@@ -1,15 +1,9 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { ArrowRightIcon, EllipsisIcon, PlusIcon } from "lucide-react";
-import {
-  type FormEvent,
-  Fragment,
-  type ReactNode,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { API_BASE } from "~/lib/api/client";
 import { cn } from "~/lib/class-merge";
 
@@ -29,19 +23,6 @@ const INITIAL_MESSAGE: UIMessage = {
       text: "こんにちは〜！ねっぷちゃんだよ 😊\n音威子府のことなら、なんでも聞いてみてね！",
     },
   ],
-};
-
-// `**bold**` を <strong> 要素に分解する。マークダウン全体を解釈せず装飾だけ最低限拾う。
-const renderInlineBold = (line: string): ReactNode => {
-  const parts = line.split(/\*\*(.+?)\*\*/g);
-  return parts.map((part, i) => {
-    const key = `${i}-${part}`;
-    return i % 2 === 1 ? (
-      <strong key={key}>{part}</strong>
-    ) : (
-      <Fragment key={key}>{part}</Fragment>
-    );
-  });
 };
 
 const messageText = (msg: UIMessage) =>
@@ -137,28 +118,72 @@ export const MiniChat = () => {
             <div
               key={m.id}
               className={cn(
-                "max-w-[86%] break-words rounded-(--r-bubble) px-[18px] py-3 text-sm leading-[1.7]",
+                "w-fit max-w-[78%] break-words rounded-(--r-bubble) px-[18px] py-3 text-sm leading-[1.7]",
                 "animate-[lp-bubble-in_400ms_cubic-bezier(0.22,1,0.36,1)] shadow-(--shadow-float-sm)",
                 m.role === "user"
                   ? "self-end bg-(--teal-700) text-white"
                   : "self-start bg-(--paper-50) text-(--fg-1)",
               )}
             >
-              {text.split("\n").map((line, j) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: split の行順序は固定で id 単位でユニーク
-                <div key={`${m.id}-${j}`}>{renderInlineBold(line)}</div>
-              ))}
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  p: ({ children }) => (
+                    <p className="my-1 first:mt-0 last:mb-0">{children}</p>
+                  ),
+                  ul: ({ children }) => (
+                    <ul className="my-1 list-disc pl-5 first:mt-0 last:mb-0">
+                      {children}
+                    </ul>
+                  ),
+                  ol: ({ children }) => (
+                    <ol className="my-1 list-decimal pl-5 first:mt-0 last:mb-0">
+                      {children}
+                    </ol>
+                  ),
+                  li: ({ children }) => <li className="my-0.5">{children}</li>,
+                  a: ({ href, children }) => (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "underline underline-offset-2",
+                        m.role === "user"
+                          ? "text-white/90 hover:text-white"
+                          : "text-(--brand) hover:text-(--brand-hover)",
+                      )}
+                    >
+                      {children}
+                    </a>
+                  ),
+                  code: ({ children }) => (
+                    <code
+                      className={cn(
+                        "rounded px-1 py-0.5 font-mono text-[0.85em]",
+                        m.role === "user"
+                          ? "bg-white/15"
+                          : "bg-(--paper-200) text-(--fg-1)",
+                      )}
+                    >
+                      {children}
+                    </code>
+                  ),
+                }}
+              >
+                {text}
+              </ReactMarkdown>
             </div>
           );
         })}
         {isAwaitingResponse && (
-          <div className="flex max-w-[86%] items-center gap-2 self-start rounded-(--r-bubble) bg-(--paper-50) px-[18px] py-3">
+          <div className="flex w-fit max-w-[78%] items-center gap-2 self-start rounded-(--r-bubble) bg-(--paper-50) px-[18px] py-3">
             <span className="size-2 rounded-full bg-orange-500 animate-pulse" />
             <span className="text-xs font-medium text-(--fg-2)">考え中…</span>
           </div>
         )}
         {error && (
-          <div className="self-start max-w-[86%] rounded-(--r-bubble) bg-red-50 px-[18px] py-3 text-sm text-red-700">
+          <div className="w-fit max-w-[78%] self-start rounded-(--r-bubble) bg-red-50 px-[18px] py-3 text-sm text-red-700">
             通信エラーが発生したよ。もう一度試してみてね。
           </div>
         )}
