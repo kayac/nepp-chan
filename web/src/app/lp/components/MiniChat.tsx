@@ -55,11 +55,19 @@ export const MiniChat = () => {
 
   const isBusy = status === "submitted" || status === "streaming";
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: messages/status 変更時に最下部追従させたい
   useEffect(() => {
     const el = streamRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages, status]);
+    if (!el) return;
+    const observer = new MutationObserver(() => {
+      el.scrollTop = el.scrollHeight;
+    });
+    observer.observe(el, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+    return () => observer.disconnect();
+  }, []);
 
   const ask = (q: string) => {
     const trimmed = q.trim();
