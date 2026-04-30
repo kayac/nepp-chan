@@ -27,7 +27,7 @@ const INITIAL_MESSAGE: UIMessage = {
 
 const messageText = (msg: UIMessage) =>
   msg.parts
-    .filter((p): p is { type: "text"; text: string } => p.type === "text")
+    .filter((p) => p.type === "text")
     .map((p) => p.text)
     .join("");
 
