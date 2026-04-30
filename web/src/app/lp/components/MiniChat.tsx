@@ -1,6 +1,6 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { EllipsisIcon, SendIcon } from "lucide-react";
+import { ArrowRightIcon, EllipsisIcon, SendIcon } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -54,6 +54,8 @@ export const MiniChat = () => {
   });
 
   const isBusy = status === "submitted" || status === "streaming";
+  const hasCompletedExchange =
+    status === "ready" && messages.some((m) => m.role === "user");
 
   useEffect(() => {
     const el = streamRef.current;
@@ -228,34 +230,49 @@ export const MiniChat = () => {
         </div>
       )}
 
-      <form
-        onSubmit={handleSubmit}
-        className={cn(
-          "mt-3 flex items-center gap-2 rounded-(--r-pill)",
-          "border border-(--paper-200) bg-(--paper-50) px-3 py-2",
-          "transition-shadow duration-200 focus-within:border-(--teal-400) focus-within:shadow-(--ring-brand)",
-        )}
-      >
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="ねっぷちゃんに話しかける…"
-          disabled={isBusy}
-          className="flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-(--fg-4)"
-        />
-        <button
-          type="submit"
-          disabled={isBusy || !input.trim()}
-          aria-label="送信"
+      {hasCompletedExchange ? (
+        <a
+          href="/"
           className={cn(
-            "grid size-8 place-items-center rounded-full bg-(--teal-700) text-white",
-            "transition-colors hover:bg-(--teal-800)",
-            "disabled:cursor-not-allowed disabled:opacity-55",
+            "mt-3 flex items-center justify-center gap-2 rounded-(--r-pill)",
+            "bg-(--brand) px-4 py-3 text-sm font-bold text-white shadow-(--shadow-brand)",
+            "transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            "hover:-translate-y-0.5 hover:bg-(--brand-hover)",
           )}
         >
-          <SendIcon className="size-[18px]" aria-hidden="true" />
-        </button>
-      </form>
+          続きはチャットでお話しよう
+          <ArrowRightIcon className="size-4" aria-hidden="true" />
+        </a>
+      ) : (
+        <form
+          onSubmit={handleSubmit}
+          className={cn(
+            "mt-3 flex items-center gap-2 rounded-(--r-pill)",
+            "border border-(--paper-200) bg-(--paper-50) px-3 py-2",
+            "transition-shadow duration-200 focus-within:border-(--teal-400) focus-within:shadow-(--ring-brand)",
+          )}
+        >
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="ねっぷちゃんに話しかける…"
+            disabled={isBusy}
+            className="flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-(--fg-4)"
+          />
+          <button
+            type="submit"
+            disabled={isBusy || !input.trim()}
+            aria-label="送信"
+            className={cn(
+              "grid size-8 place-items-center rounded-full bg-(--teal-700) text-white",
+              "transition-colors hover:bg-(--teal-800)",
+              "disabled:cursor-not-allowed disabled:opacity-55",
+            )}
+          >
+            <SendIcon className="size-[18px]" aria-hidden="true" />
+          </button>
+        </form>
+      )}
     </div>
   );
 };
