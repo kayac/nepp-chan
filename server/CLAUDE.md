@@ -49,6 +49,7 @@ server/src/
 | `/threads/:threadId`               | GET/DELETE | スレッド詳細・削除           |
 | `/threads/:threadId/messages`      | GET      | メッセージ履歴                 |
 | `/threads/:threadId/chat`          | POST     | チャット（ストリーミング）     |
+| `/simple-chat`                     | POST     | シンプルなチャット（履歴保存なし・ストリーミング、LP/ウィジェット用） |
 | `/feedback`                        | POST     | フィードバック送信             |
 | `/admin/knowledge/sync`            | POST     | ナレッジ同期                   |
 | `/admin/knowledge`                 | DELETE   | ナレッジ削除                   |
