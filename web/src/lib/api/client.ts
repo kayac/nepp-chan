@@ -1,10 +1,12 @@
 import * as Sentry from "@sentry/react";
 import createClient from "openapi-fetch";
+import { adminUserKeys } from "~/hooks/useAdminUser";
 import {
-  getAuthToken,
   getBearerToken,
+  getSessionToken,
   removeAuthToken,
 } from "~/lib/auth-token";
+import { queryClient } from "~/providers/QueryProvider";
 import type { paths } from "~/types/api";
 
 class ApiError extends Error {
@@ -19,16 +21,20 @@ class ApiError extends Error {
 const API_BASE = import.meta.env.PUBLIC_API_URL || "";
 
 // 401 が返って admin token が原因と判定できれば、token を破棄してフォールバックで再試行する。
+// 並行リクエストで判定がぶれないよう、送信時の Authorization ヘッダーを起点に判定する。
 const fetchWithAuthRetry = async (request: Request): Promise<Response> => {
   const retryRequest = request.clone();
   const response = await fetch(request);
   if (response.status !== 401) return response;
 
-  const adminToken = getAuthToken();
   const sentAuth = retryRequest.headers.get("Authorization");
-  if (!adminToken || sentAuth !== `Bearer ${adminToken}`) return response;
+  if (!sentAuth) return response;
+  const sessionToken = getSessionToken();
+  const wasAdminAuth = !sessionToken || sentAuth !== `Bearer ${sessionToken}`;
+  if (!wasAdminAuth) return response;
 
   removeAuthToken();
+  queryClient.invalidateQueries({ queryKey: adminUserKeys.current });
   const headers = new Headers(retryRequest.headers);
   const fallbackToken = getBearerToken();
   if (fallbackToken) {
