@@ -17,7 +17,9 @@ import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
 import { pollGetTool } from "~/mastra/tools/poll-get-tool";
 import { personaSchema } from "~/schemas/persona-schema";
 
-const baseInstructions = (platform: "web" | "line") => `
+type Platform = "web" | "line" | "widget";
+
+const baseInstructions = (platform: Platform) => `
 あなたは北海道音威子府（おといねっぷ）村に住む17歳の女の子「ねっぷちゃん」。
 村の魅力を伝え、村民の話し相手になるのが仕事。明るく元気に、語尾は「〜だよ」「〜だね」で話す。
 
@@ -39,14 +41,14 @@ const baseInstructions = (platform: "web" | "line") => `
 エージェント名・ツール名・内部のシステム名をユーザーに見せてはいけない。
 「調べてみるね」「確認するね」のような自然な表現を使う。
 ${
-  platform === "web"
-    ? `
+  platform === "line"
+    ? ""
+    : `
 ### ステップ0: 必ずテキストを先に出力する
 エージェントやツールを呼ぶ前に、必ずまず一言リアクション（1〜3文）をテキストとして出力する。
 テキスト出力前にエージェントを呼んではいけない。
 このテキストでは事実や情報を述べない。共感・おうむ返し・「調べてみるね！」のみにとどめる。
 `
-    : ""
 }
 ### ステップ1: 検索前に情報の十分さを確認する
 検索やエージェント委譲の前に、以下をチェックする。1つでも該当すれば、推測で検索せず選択肢を提示して聞き返す。
@@ -138,6 +140,11 @@ const adminAgents = {
   personaAnalystAgent,
 };
 
+const widgetAgents = {
+  knowledgeAgent,
+  webResearcherAgent,
+};
+
 const defaultTools = {
   broadcastGetTool,
   pollGetTool,
@@ -150,7 +157,12 @@ const webTools = {
   displayTimelineTool,
 };
 
-const getTools = (platform: "web" | "line") => {
+const widgetTools = {
+  broadcastGetTool,
+};
+
+const getTools = (platform: Platform) => {
+  if (platform === "widget") return widgetTools;
   if (platform === "line") return defaultTools;
   return { ...defaultTools, ...webTools };
 };
@@ -187,17 +199,20 @@ const lineInstructions = `
 
 type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
   isAdmin?: boolean;
-  platform?: "web" | "line";
+  platform?: Platform;
   modelConfig: ModelTierConfig;
+  withMemory?: boolean;
 };
 
 export const createNeppChanAgent = ({
   isAdmin = false,
   platform = "web",
   modelConfig,
+  withMemory = true,
   ...agentOptions
 }: Props) => {
-  const agents = isAdmin ? adminAgents : baseAgents;
+  const agents =
+    platform === "widget" ? widgetAgents : isAdmin ? adminAgents : baseAgents;
   const tools = getTools(platform);
 
   const instructions = () =>
@@ -217,16 +232,18 @@ export const createNeppChanAgent = ({
     ...modelConfig,
     agents,
     tools,
-    memory: ({ requestContext }) =>
-      getMemoryFromContext(requestContext, {
-        generateTitle: true,
-        workingMemory: {
-          enabled: true,
-          scope: "resource",
-          schema: personaSchema,
-        },
-        lastMessages: 20,
-      }),
+    ...(withMemory && {
+      memory: ({ requestContext }) =>
+        getMemoryFromContext(requestContext, {
+          generateTitle: true,
+          workingMemory: {
+            enabled: true,
+            scope: "resource",
+            schema: personaSchema,
+          },
+          lastMessages: 20,
+        }),
+    }),
     ...agentOptions,
   });
 };

@@ -25,6 +25,7 @@ import {
   personaAdminRoutes,
   pollAdminRoutes,
   pollRoutes,
+  simpleChatRoutes,
   threadsRoutes,
 } from "~/routes";
 import type { LineEventMessage } from "~/schemas/line-schema";
@@ -39,6 +40,7 @@ app.onError(errorHandler);
 
 app.route("/health", healthRoutes);
 app.route("/feedback", feedbackRoutes);
+app.route("/simple-chat", simpleChatRoutes);
 app.route("/threads", threadsRoutes);
 app.route("/admin/broadcast", broadcastAdminRoutes);
 app.route("/broadcast/media", broadcastMediaRoutes);

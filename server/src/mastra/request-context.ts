@@ -4,7 +4,7 @@ import { RequestContext } from "@mastra/core/request-context";
 import type { AuthUser } from "~/schemas/auth-schema";
 
 export type MastraRequestContextType = {
-  storage: D1Store;
+  storage?: D1Store;
   db: D1Database;
   env: CloudflareBindings;
   conversationEndedAt?: string;
@@ -13,7 +13,9 @@ export type MastraRequestContextType = {
 
 export const createRequestContext = (values: MastraRequestContextType) => {
   const requestContext = new RequestContext();
-  requestContext.set("storage", values.storage);
+  if (values.storage) {
+    requestContext.set("storage", values.storage);
+  }
   requestContext.set("db", values.db);
   requestContext.set("env", values.env);
   if (values.conversationEndedAt) {
