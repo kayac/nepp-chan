@@ -1,5 +1,27 @@
 # Changelog
 
+## [v0.4.4](https://github.com/kayac/nepp-chan/compare/v0.4.3...v0.4.4) - 2026-05-01
+- v5 データ処理 + 検索精度改善 by @vesperworks in https://github.com/kayac/nepp-chan/pull/427
+- 認証主体を Principal に統一 + Intent 2段化 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/434
+- chore(deps-dev): bump vite-tsconfig-paths from 5.1.4 to 6.1.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/429
+- refactor: admin 認証を opaque session に移行し認証認可を整理 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/507
+- feat: LINE 配信メッセージのスレッド注入と検索統合 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/509
+- feat: アンケート投票結果の公開ページを追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/511
+- fix(server): admin_sessions マイグレーションを冪等に修正 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/512
+- feat(server): 投票結果リンクを回答完了時に送信 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/513
+- fix(server): 名前不明時のプレースホルダー呼称を禁止 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/514
+- refactor: アンケート機能を投票機能に一本化し、回答後のねっぷちゃん会話継続を実装 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/516
+- feat(server): 投票のフォローアップ方針を内部メモ形式で強化 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/520
+- feat(server): 管理者モード向けに投票結果取得ツール pollGetTool を追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/521
+- feat(server): LINE配信におしらせ解説ボタンを追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/522
+- fix(server): 解説ボタンのラベルを短縮して見切れを防止 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/523
+- feat(server): 解説ボタンに説明文を添えて意図を明確化 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/524
+- feat(web): Companion v2 デザインをチャット画面に適用 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/539
+- feat(web): LP (/lp) 追加 + AmbientBG・Mascot を共通化 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/542
+- feat(web): chat ヘッダーを LP のトンマナに統一しロゴから /lp へ遷移可能に by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/543
+- feat: LP の MiniChat にストリーミング対応のシンプルなチャット API を実装 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/544
+- feat: LP を独立した lp パッケージに切り出す by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/545
+
 ## [v0.4.3](https://github.com/kayac/nepp-chan/compare/v0.4.2...v0.4.3) - 2026-04-03
 - feat: URL正答率改善 + ナレッジデータ v5 by @vesperworks in https://github.com/kayac/nepp-chan/pull/423
 - fix(server): ペルソナ一括抽出で処理済みスレッドのスキップコストを削減 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/425
