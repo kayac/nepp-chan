@@ -1,5 +1,5 @@
 import { MailIcon } from "lucide-react";
-import { WEB_URL } from "~/lib/web-url";
+import { WEB_URL } from "~/constants/urls";
 
 export const FooterSection = () => (
   <footer className="border-t border-(--paper-200) bg-(--paper-100)/40 px-7 pb-10 pt-16">

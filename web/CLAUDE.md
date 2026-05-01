@@ -23,7 +23,7 @@ LP（apex 配信の静的サイト）は別パッケージ `lp/` にある。
 | 共通フック            | `hooks/`                               |
 | 型定義                | `types/`                               |
 | Basic 認証            | `functions/_middleware.ts`             |
-| LP への外部リンク     | `lib/lp-url.ts`                        |
+| LP への外部リンク     | `constants/urls.ts`                    |
 
 ## ディレクトリ構成
 
@@ -71,8 +71,9 @@ web/
 │   │   ├── session-token.ts   # セッショントークン（localStorage）
 │   │   ├── resource.ts        # resourceId 生成・取得
 │   │   ├── sentry.ts          # Sentry 初期化
-│   │   ├── class-merge.ts     # cn ユーティリティ
-│   │   └── lp-url.ts          # LP の外部 URL（PUBLIC_LP_URL）
+│   │   └── class-merge.ts     # cn ユーティリティ
+│   ├── constants/
+│   │   └── urls.ts            # 外部 URL 定数（PUBLIC_LP_URL 等）
 │   ├── providers/             # QueryProvider 等
 │   ├── types/                 # 共有型定義
 │   └── index.css              # グローバル CSS（CSS 変数定義含む）

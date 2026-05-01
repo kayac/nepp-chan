@@ -4,10 +4,8 @@ import { ArrowRightIcon, EllipsisIcon, SendIcon } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { API_URL, WEB_URL } from "~/constants/urls";
 import { cn } from "~/lib/class-merge";
-import { WEB_URL } from "~/lib/web-url";
-
-const API_BASE = import.meta.env.PUBLIC_API_URL || "";
 
 const SAMPLE_QUESTIONS: ReadonlyArray<string> = [
   "移住の補助金はある？",
@@ -41,7 +39,7 @@ export const MiniChat = () => {
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
-        api: `${API_BASE}/simple-chat`,
+        api: `${API_URL}/simple-chat`,
         prepareSendMessagesRequest({ messages: msgs }) {
           return { body: { message: msgs[msgs.length - 1] } };
         },

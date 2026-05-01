@@ -1,6 +1,6 @@
 import { Bars3Icon } from "@heroicons/react/24/outline";
+import { LP_URL } from "~/constants/urls";
 import { cn } from "~/lib/class-merge";
-import { LP_URL } from "~/lib/lp-url";
 
 type Props = {
   onMenuClick: () => void;

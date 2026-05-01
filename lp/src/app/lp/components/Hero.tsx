@@ -1,6 +1,6 @@
 import { MessageSquareIcon } from "lucide-react";
+import { WEB_URL } from "~/constants/urls";
 import { useScrollReveal } from "~/hooks/useScrollReveal";
-import { WEB_URL } from "~/lib/web-url";
 import { LineIcon } from "./LineIcon";
 import { MiniChat } from "./MiniChat";
 

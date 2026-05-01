@@ -1,4 +1,4 @@
-import { WEB_URL } from "~/lib/web-url";
+import { WEB_URL } from "~/constants/urls";
 
 const LINKS = [
   { href: "#chat", label: "話しかける" },
