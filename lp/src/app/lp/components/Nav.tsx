@@ -1,3 +1,5 @@
+import { WEB_URL } from "~/lib/web-url";
+
 const LINKS = [
   { href: "#chat", label: "話しかける" },
   { href: "#features", label: "機能" },
@@ -32,7 +34,7 @@ export const Nav = () => (
       </div>
 
       <a
-        href="/"
+        href={WEB_URL}
         className="ml-auto rounded-(--r-pill) bg-(--brand) px-3 py-1.5 text-xs font-semibold text-white shadow-(--shadow-sm) transition-all duration-200 hover:-translate-y-px hover:bg-(--brand-hover) hover:shadow-(--shadow-brand) sm:px-4 sm:py-2 sm:text-sm md:ml-0"
       >
         いますぐ話す

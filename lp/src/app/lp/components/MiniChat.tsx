@@ -5,6 +5,7 @@ import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "~/lib/class-merge";
+import { WEB_URL } from "~/lib/web-url";
 
 const API_BASE = import.meta.env.PUBLIC_API_URL || "";
 
@@ -233,7 +234,7 @@ export const MiniChat = () => {
 
       {hasCompletedExchange ? (
         <a
-          href="/"
+          href={WEB_URL}
           className={cn(
             "mt-3 flex items-center justify-center gap-2 rounded-(--r-pill)",
             "bg-(--brand) px-4 py-3 text-sm font-bold text-white shadow-(--shadow-brand)",

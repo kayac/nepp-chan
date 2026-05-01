@@ -1,5 +1,6 @@
 import { MessageCircleIcon } from "lucide-react";
 import { useScrollReveal } from "~/hooks/useScrollReveal";
+import { WEB_URL } from "~/lib/web-url";
 import { LineIcon } from "./LineIcon";
 
 export const FinalCTA = () => {
@@ -22,7 +23,7 @@ export const FinalCTA = () => {
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <a
-            href="/"
+            href={WEB_URL}
             className="inline-flex items-center gap-2 rounded-(--r-pill) bg-(--brand) px-6 py-3.5 text-sm font-bold text-white shadow-(--shadow-brand) transition-all duration-200 hover:-translate-y-0.5 hover:bg-(--brand-hover)"
           >
             <MessageCircleIcon className="size-4" aria-hidden="true" />
