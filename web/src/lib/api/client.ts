@@ -18,55 +18,44 @@ class ApiError extends Error {
 
 const API_BASE = import.meta.env.PUBLIC_API_URL || "";
 
-export const client = createClient<paths>({ baseUrl: API_BASE });
+// 401 が返って admin token が原因と判定できれば、token を破棄してフォールバックで再試行する。
+const fetchWithAuthRetry = async (request: Request): Promise<Response> => {
+  const retryRequest = request.clone();
+  const response = await fetch(request);
+  if (response.status !== 401) return response;
 
-const adminTokenRequests = new Map<string, Request>();
+  const adminToken = getAuthToken();
+  const sentAuth = retryRequest.headers.get("Authorization");
+  if (!adminToken || sentAuth !== `Bearer ${adminToken}`) return response;
+
+  removeAuthToken();
+  const headers = new Headers(retryRequest.headers);
+  const fallbackToken = getBearerToken();
+  if (fallbackToken) {
+    headers.set("Authorization", `Bearer ${fallbackToken}`);
+  } else {
+    headers.delete("Authorization");
+  }
+  return fetch(new Request(retryRequest, { headers }));
+};
+
+export const client = createClient<paths>({
+  baseUrl: API_BASE,
+  fetch: fetchWithAuthRetry,
+});
 
 client.use({
-  async onRequest({ request, id }) {
-    const adminToken = getAuthToken();
+  async onRequest({ request }) {
     const token = getBearerToken();
     if (token) {
       request.headers.set("Authorization", `Bearer ${token}`);
-    }
-    if (adminToken && token === adminToken) {
-      adminTokenRequests.set(id, request.clone());
     }
     return request;
   },
 });
 
 client.use({
-  async onResponse({ response, id }) {
-    const adminTokenRequest = adminTokenRequests.get(id);
-    adminTokenRequests.delete(id);
-
-    if (response.status === 401 && adminTokenRequest) {
-      removeAuthToken();
-      const retryHeaders = new Headers(adminTokenRequest.headers);
-      retryHeaders.delete("Authorization");
-      const fallbackToken = getBearerToken();
-      if (fallbackToken) {
-        retryHeaders.set("Authorization", `Bearer ${fallbackToken}`);
-      }
-      const retryResponse = await fetch(adminTokenRequest.url, {
-        method: adminTokenRequest.method,
-        headers: retryHeaders,
-        body: adminTokenRequest.body,
-        credentials: adminTokenRequest.credentials,
-        // @ts-expect-error duplex is required when streaming a body
-        duplex: adminTokenRequest.body ? "half" : undefined,
-      });
-      if (!retryResponse.ok) {
-        const message = await parseErrorResponse(retryResponse);
-        if (retryResponse.status >= 500) {
-          Sentry.captureException(new ApiError(message, retryResponse.status));
-        }
-        throw new ApiError(message, retryResponse.status);
-      }
-      return retryResponse;
-    }
-
+  async onResponse({ response }) {
     if (!response.ok) {
       const message = await parseErrorResponse(response);
       if (response.status >= 500) {
