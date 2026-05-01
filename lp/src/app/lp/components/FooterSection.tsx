@@ -1,4 +1,5 @@
 import { MailIcon } from "lucide-react";
+import { WEB_URL } from "~/constants/urls";
 
 export const FooterSection = () => (
   <footer className="border-t border-(--paper-200) bg-(--paper-100)/40 px-7 pb-10 pt-16">
@@ -33,7 +34,7 @@ export const FooterSection = () => (
         <ul className="mt-3 flex flex-col gap-2 text-[13px]">
           <li>
             <a
-              href="/"
+              href={WEB_URL}
               className="text-(--fg-2) transition-colors hover:text-(--brand)"
             >
               Web版で話す

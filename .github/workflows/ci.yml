@@ -39,6 +39,9 @@ jobs:
       - name: TypeScript (web)
         run: pnpm --filter @nepp-chan/web exec tsc --noEmit
 
+      - name: TypeScript (lp)
+        run: pnpm --filter @nepp-chan/lp exec tsc --noEmit
+
   test:
     name: Test
     runs-on: ubuntu-latest

@@ -68,7 +68,8 @@
       },
       "vars": {
         "ENVIRONMENT": "local",
-        "WEB_URL": "http://localhost:5173"
+        "WEB_URL": "http://localhost:5173",
+        "LP_URL": "http://localhost:5174"
       }
     },
     "development": {
@@ -117,7 +118,8 @@
       },
       "vars": {
         "ENVIRONMENT": "development",
-        "WEB_URL": "https://dev-web.nepp-chan.ai"
+        "WEB_URL": "https://dev-web.nepp-chan.ai",
+        "LP_URL": "https://dev-lp.nepp-chan.ai"
       }
     },
     "production": {
@@ -165,7 +167,8 @@
       },
       "vars": {
         "ENVIRONMENT": "production",
-        "WEB_URL": "https://web.nepp-chan.ai"
+        "WEB_URL": "https://web.nepp-chan.ai",
+        "LP_URL": "https://nepp-chan.ai"
       }
     }
   }

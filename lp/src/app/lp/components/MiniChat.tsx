@@ -4,7 +4,7 @@ import { ArrowRightIcon, EllipsisIcon, SendIcon } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { API_BASE } from "~/lib/api/client";
+import { API_URL, WEB_URL } from "~/constants/urls";
 import { cn } from "~/lib/class-merge";
 
 const SAMPLE_QUESTIONS: ReadonlyArray<string> = [
@@ -39,7 +39,7 @@ export const MiniChat = () => {
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
-        api: `${API_BASE}/simple-chat`,
+        api: `${API_URL}/simple-chat`,
         prepareSendMessagesRequest({ messages: msgs }) {
           return { body: { message: msgs[msgs.length - 1] } };
         },
@@ -232,7 +232,7 @@ export const MiniChat = () => {
 
       {hasCompletedExchange ? (
         <a
-          href="/"
+          href={WEB_URL}
           className={cn(
             "mt-3 flex items-center justify-center gap-2 rounded-(--r-pill)",
             "bg-(--brand) px-4 py-3 text-sm font-bold text-white shadow-(--shadow-brand)",
