@@ -9,6 +9,7 @@ Cloudflare Workers（API）+ Pages（Web）のモノレポ構成。
 # 開発
 pnpm server:dev          # API 開発サーバー（8787）
 pnpm web:dev             # Web 開発サーバー（5173）
+pnpm lp:dev              # LP 開発サーバー（5174）
 
 # 品質チェック
 pnpm lint                # Biome + astro check + tsc
@@ -30,7 +31,8 @@ pnpm knowledge:upload:prd    # prd 環境
 
 ```text
 server/              → API（詳細: server/CLAUDE.md）
-web/                 → フロントエンド（詳細: web/CLAUDE.md）
+web/                 → アプリ（チャット・ダッシュボード等）（詳細: web/CLAUDE.md）
+lp/                  → LP（apex 配信の静的サイト）
 knowledge/           → RAG 用 Markdown ファイル
 ```
 
@@ -128,11 +130,11 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 
 ## デプロイ環境
 
-| 環境 | Web | API |
-| ---- | --- | --- |
-| ローカル | http://localhost:5173 | http://localhost:8787 |
-| dev | https://dev-web.nepp-chan.ai | https://dev-api.nepp-chan.ai |
-| prd | https://web.nepp-chan.ai | https://api.nepp-chan.ai |
+| 環境 | LP | Web | API |
+| ---- | --- | --- | --- |
+| ローカル | http://localhost:5174 | http://localhost:5173 | http://localhost:8787 |
+| dev | https://dev-lp.nepp-chan.ai | https://dev-web.nepp-chan.ai | https://dev-api.nepp-chan.ai |
+| prd | https://nepp-chan.ai | https://web.nepp-chan.ai | https://api.nepp-chan.ai |
 
 ## ブランチ
 
