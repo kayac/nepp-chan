@@ -1,5 +1,4 @@
 import react from "@astrojs/react";
-import { sentryVitePlugin } from "@sentry/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
 
@@ -8,28 +7,11 @@ export default defineConfig({
   server: { port: 5174 },
   integrations: [react()],
   vite: {
-    plugins: [
-      tailwindcss(),
-      ...(process.env.SENTRY_AUTH_TOKEN
-        ? [
-            sentryVitePlugin({
-              org: process.env.SENTRY_ORG,
-              project: process.env.SENTRY_PROJECT_LP,
-              authToken: process.env.SENTRY_AUTH_TOKEN,
-              sourcemaps: {
-                filesToDeleteAfterUpload: ["./dist/**/*.map"],
-              },
-            }),
-          ]
-        : []),
-    ],
+    plugins: [tailwindcss()],
     resolve: {
       alias: {
         "~": "/src",
       },
-    },
-    build: {
-      sourcemap: "hidden",
     },
   },
 });
