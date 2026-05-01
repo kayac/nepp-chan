@@ -1,5 +1,6 @@
 import { Bars3Icon } from "@heroicons/react/24/outline";
 import { cn } from "~/lib/class-merge";
+import { LP_URL } from "~/lib/lp-url";
 
 type Props = {
   onMenuClick: () => void;
@@ -14,7 +15,7 @@ export const TopBar = ({ onMenuClick, className }: Props) => (
     )}
   >
     <a
-      href="/lp"
+      href={LP_URL}
       className="flex items-center gap-2 font-(family-name:--font-display) text-lg font-bold text-(--snow-800) sm:gap-2.5 transition-opacity hover:opacity-80"
       aria-label="ねっぷちゃん 紹介ページへ"
     >
