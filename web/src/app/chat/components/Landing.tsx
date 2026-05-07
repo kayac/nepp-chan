@@ -1,5 +1,7 @@
 import { Mascot } from "@nepp-chan/shared/components/Mascot";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
+import { Button } from "@nepp-chan/shared/ui/Button";
+import { PromptChip } from "@nepp-chan/shared/ui/PromptChip";
 import { SendIcon } from "lucide-react";
 import { type FormEvent, useState } from "react";
 
@@ -67,23 +69,15 @@ export const Landing = ({ onSubmit, disabled = false }: Props) => {
         <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 w-full">
           <div className="flex-1 flex flex-col gap-2 w-full md:max-w-md">
             {QUICK_PROMPTS.map((p) => (
-              <button
+              <PromptChip
                 key={p.text}
-                type="button"
+                icon={p.icon}
                 onClick={() => handlePromptTap(p.text)}
                 disabled={disabled}
-                className={cn(
-                  "w-full text-left flex items-center gap-2.5",
-                  "rounded-full border border-(--paper-200) bg-(--paper-0)",
-                  "px-4 py-2.5 text-sm text-(--snow-700) font-medium",
-                  "transition-colors hover:border-(--teal-300) hover:text-(--teal-700)",
-                  "shadow-(--shadow-float-sm)",
-                  "disabled:opacity-60 disabled:cursor-not-allowed",
-                )}
+                className="w-full text-left"
               >
-                <span aria-hidden="true">{p.icon}</span>
-                <span>{p.text}</span>
-              </button>
+                {p.text}
+              </PromptChip>
             ))}
           </div>
 
@@ -103,13 +97,7 @@ export const Landing = ({ onSubmit, disabled = false }: Props) => {
 
         <form
           onSubmit={handleSubmit}
-          className={cn(
-            "w-full max-w-xl mt-2",
-            "flex items-center gap-2",
-            "rounded-(--r-footer) border-2 border-(--teal-500) bg-(--paper-0)",
-            "px-5 py-2.5",
-          )}
-          style={{ boxShadow: "var(--shadow-floating-input)" }}
+          className="chat-composer-frame max-w-xl mt-2"
         >
           <input
             type="text"
@@ -123,20 +111,15 @@ export const Landing = ({ onSubmit, disabled = false }: Props) => {
               "px-1 py-2 text-base text-(--fg-1) placeholder:text-(--fg-4) leading-snug",
             )}
           />
-          <button
+          <Button
             type="submit"
             aria-label="送信"
+            size="icon-circle"
             disabled={disabled || !text.trim()}
-            className={cn(
-              "size-10 rounded-full grid place-items-center flex-none",
-              "bg-(--teal-700) text-(--paper-0)",
-              "transition-colors hover:bg-(--teal-800)",
-              "disabled:bg-(--paper-100) disabled:text-(--fg-4) disabled:cursor-not-allowed",
-            )}
-            style={{ boxShadow: "0 4px 12px rgba(15, 118, 110, 0.35)" }}
+            className="shadow-[0_4px_12px_rgba(15,118,110,0.35)] disabled:bg-(--paper-100) disabled:text-(--fg-4) disabled:opacity-100"
           >
             <SendIcon className="size-4" aria-hidden="true" />
-          </button>
+          </Button>
         </form>
       </div>
     </div>

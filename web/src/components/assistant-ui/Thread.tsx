@@ -10,6 +10,7 @@ import {
   useMessage,
   useMessageRuntime,
 } from "@assistant-ui/react";
+import { SpeechBubble } from "@nepp-chan/shared/components/SpeechBubble";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { Button } from "@nepp-chan/shared/ui/Button";
 import {
@@ -23,7 +24,6 @@ import {
   ThumbsUpIcon,
 } from "lucide-react";
 import { GREETING_PROMPT } from "~/app/chat/AssistantProvider";
-import { SpeechBubble } from "~/app/chat/components/SpeechBubble";
 import { useFeedback } from "~/app/chat/FeedbackContext";
 import { MarkdownText } from "~/components/assistant-ui/MarkdownText";
 import { ToolFallback } from "~/components/assistant-ui/ToolFallback";
@@ -96,12 +96,8 @@ const Composer = () => {
   return (
     <ComposerPrimitive.Root
       className={cn(
-        "aui-composer-root pointer-events-auto",
-        "relative flex w-full items-center gap-2",
-        "rounded-(--r-footer) border-2 border-(--teal-500) bg-(--paper-0)",
-        "px-5 py-2.5",
+        "chat-composer-frame aui-composer-root relative pointer-events-auto",
       )}
-      style={{ boxShadow: "var(--shadow-floating-input)" }}
     >
       <ComposerPrimitive.Input
         placeholder="ねっぷちゃんに話しかける…"
@@ -132,34 +128,28 @@ const ComposerAction = () => (
   <div className="aui-composer-action-wrapper flex items-center flex-none">
     <AssistantIf condition={({ thread }) => !thread.isRunning}>
       <ComposerPrimitive.Send asChild>
-        <button
+        <Button
           type="submit"
           aria-label="送信"
-          className={cn(
-            "aui-composer-send size-10 rounded-full grid place-items-center",
-            "bg-(--teal-700) text-(--paper-0)",
-            "transition-colors hover:bg-(--teal-800)",
-            "disabled:bg-(--paper-100) disabled:text-(--fg-4)",
-          )}
-          style={{ boxShadow: "0 4px 12px rgba(15, 118, 110, 0.35)" }}
+          size="icon-circle"
+          className="aui-composer-send shadow-[0_4px_12px_rgba(15,118,110,0.35)] disabled:bg-(--paper-100) disabled:text-(--fg-4) disabled:opacity-100"
         >
           <SendIcon className="aui-composer-send-icon size-4" />
-        </button>
+        </Button>
       </ComposerPrimitive.Send>
     </AssistantIf>
 
     <AssistantIf condition={({ thread }) => thread.isRunning}>
       <ComposerPrimitive.Cancel asChild>
-        <button
+        <Button
           type="button"
           aria-label="停止"
-          className={cn(
-            "aui-composer-cancel size-10 rounded-full grid place-items-center",
-            "bg-(--paper-100) text-(--fg-2) transition-colors hover:bg-(--paper-200)",
-          )}
+          variant="secondary"
+          size="icon-circle"
+          className="aui-composer-cancel"
         >
           <SquareIcon className="aui-composer-cancel-icon size-3 fill-current" />
-        </button>
+        </Button>
       </ComposerPrimitive.Cancel>
     </AssistantIf>
   </div>
