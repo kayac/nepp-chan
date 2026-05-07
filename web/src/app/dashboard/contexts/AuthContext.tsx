@@ -1,8 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createContext, type ReactNode, useCallback, useContext } from "react";
 
-import { adminUserKeys, useAdminUser } from "~/hooks/useAdminUser";
+import { useAdminUser } from "~/hooks/useAdminUser";
 import { type AdminUser, postLogout } from "~/lib/api/auth";
+import { adminUserKeys } from "~/lib/api/keys";
 import { removeAuthToken } from "~/lib/auth-token";
 
 type AuthContextType = {
