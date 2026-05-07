@@ -1,5 +1,7 @@
 import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
 import { makeAssistantToolUI } from "@assistant-ui/react";
+import { cn } from "@nepp-chan/shared/lib/class-merge";
+import { ToolLoadingState } from "@nepp-chan/shared/ui/Loading";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -8,9 +10,6 @@ import {
   TableIcon,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-
-import { ToolLoadingState } from "~/components/ui/Loading";
-import { cn } from "~/lib/class-merge";
 
 type DataTableArgs = {
   title?: string;

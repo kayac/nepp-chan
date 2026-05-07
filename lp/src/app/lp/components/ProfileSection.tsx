@@ -1,4 +1,4 @@
-import { useScrollReveal } from "~/hooks/useScrollReveal";
+import { useScrollReveal } from "@nepp-chan/shared/hooks/useScrollReveal";
 
 const ROWS: ReadonlyArray<{ label: string; value: string }> = [
   { label: "名前", value: "ねっぷちゃん" },

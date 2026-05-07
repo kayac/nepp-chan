@@ -1,3 +1,4 @@
+import { useScrollReveal } from "@nepp-chan/shared/hooks/useScrollReveal";
 import {
   CloudIcon,
   HomeIcon,
@@ -5,7 +6,6 @@ import {
   type LucideIcon,
   TrainFrontIcon,
 } from "lucide-react";
-import { useScrollReveal } from "~/hooks/useScrollReveal";
 
 type Row = {
   label: string;

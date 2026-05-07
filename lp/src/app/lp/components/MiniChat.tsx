@@ -1,11 +1,11 @@
 import { useChat } from "@ai-sdk/react";
+import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { ArrowRightIcon, EllipsisIcon, SendIcon } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { API_URL, WEB_URL } from "~/constants/urls";
-import { cn } from "~/lib/class-merge";
 
 const SAMPLE_QUESTIONS: ReadonlyArray<string> = [
   "移住の補助金はある？",

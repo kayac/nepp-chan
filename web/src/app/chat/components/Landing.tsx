@@ -1,7 +1,7 @@
+import { Mascot } from "@nepp-chan/shared/components/Mascot";
+import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { SendIcon } from "lucide-react";
 import { type FormEvent, useState } from "react";
-import { Mascot } from "~/components/Mascot";
-import { cn } from "~/lib/class-merge";
 
 const QUICK_PROMPTS: ReadonlyArray<{ icon: string; text: string }> = [
   { icon: "🧭", text: "音威子府村って、どんなところ？" },

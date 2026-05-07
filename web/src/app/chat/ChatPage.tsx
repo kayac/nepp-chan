@@ -4,15 +4,16 @@ import {
   TrashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { AmbientBG } from "@nepp-chan/shared/components/AmbientBG";
+import { cn } from "@nepp-chan/shared/lib/class-merge";
+import { LoadingDots } from "@nepp-chan/shared/ui/Loading";
 import { useQuery } from "@tanstack/react-query";
 import type { UIMessage } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChatStandingMascot } from "~/app/chat/components/ChatStandingMascot";
 import { Landing } from "~/app/chat/components/Landing";
 import { TopBar } from "~/app/chat/components/TopBar";
-import { AmbientBG } from "~/components/AmbientBG";
 import { Thread } from "~/components/assistant-ui/Thread";
-import { LoadingDots } from "~/components/ui/Loading";
 import { useAdminUser } from "~/hooks/useAdminUser";
 import { useAnonymousSession } from "~/hooks/useAnonymousSession";
 import {
@@ -21,7 +22,6 @@ import {
   useDeleteThread,
   useThreads,
 } from "~/hooks/useThreads";
-import { cn } from "~/lib/class-merge";
 import { getResourceId } from "~/lib/resource";
 import { fetchMessages } from "~/repository/thread-repository";
 import type { Thread as ThreadType } from "~/types";

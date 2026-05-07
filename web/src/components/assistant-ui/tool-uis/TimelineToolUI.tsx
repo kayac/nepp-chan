@@ -1,10 +1,10 @@
 import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
 import { makeAssistantToolUI } from "@assistant-ui/react";
-import { CalendarIcon } from "lucide-react";
+import { cn } from "@nepp-chan/shared/lib/class-merge";
 
-import { ToolEmptyState } from "~/components/ui/EmptyState";
-import { ToolLoadingState } from "~/components/ui/Loading";
-import { cn } from "~/lib/class-merge";
+import { ToolEmptyState } from "@nepp-chan/shared/ui/EmptyState";
+import { ToolLoadingState } from "@nepp-chan/shared/ui/Loading";
+import { CalendarIcon } from "lucide-react";
 
 type TimelineEvent = {
   date: string;

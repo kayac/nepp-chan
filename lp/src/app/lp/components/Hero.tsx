@@ -1,6 +1,6 @@
+import { useScrollReveal } from "@nepp-chan/shared/hooks/useScrollReveal";
 import { MessageSquareIcon } from "lucide-react";
 import { WEB_URL } from "~/constants/urls";
-import { useScrollReveal } from "~/hooks/useScrollReveal";
 import { LineIcon } from "./LineIcon";
 import { MiniChat } from "./MiniChat";
 

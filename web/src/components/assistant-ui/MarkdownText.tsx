@@ -7,12 +7,11 @@ import {
   unstable_memoizeMarkdownComponents as memoizeMarkdownComponents,
   useIsMarkdownCodeBlock,
 } from "@assistant-ui/react-markdown";
+import { cn } from "@nepp-chan/shared/lib/class-merge";
+import { Button } from "@nepp-chan/shared/ui/Button";
 import { CheckIcon, CopyIcon } from "lucide-react";
 import remarkGfm from "remark-gfm";
-
-import { TooltipIconButton } from "~/components/assistant-ui/TooltipIconButton";
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
-import { cn } from "~/lib/class-merge";
 
 const CodeHeader = ({ language, code }: CodeHeaderProps) => {
   const { isCopied, copyToClipboard } = useCopyToClipboard();
@@ -26,10 +25,10 @@ const CodeHeader = ({ language, code }: CodeHeaderProps) => {
       <span className="aui-code-header-language lowercase [&>span]:text-xs">
         {language}
       </span>
-      <TooltipIconButton tooltip="Copy" onClick={onCopy}>
+      <Button variant="ghost" size="icon-xs" aria-label="Copy" onClick={onCopy}>
         {!isCopied && <CopyIcon />}
         {isCopied && <CheckIcon />}
-      </TooltipIconButton>
+      </Button>
     </div>
   );
 };

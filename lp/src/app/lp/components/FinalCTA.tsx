@@ -1,6 +1,6 @@
+import { useScrollReveal } from "@nepp-chan/shared/hooks/useScrollReveal";
 import { MessageCircleIcon } from "lucide-react";
 import { WEB_URL } from "~/constants/urls";
-import { useScrollReveal } from "~/hooks/useScrollReveal";
 import { LineIcon } from "./LineIcon";
 
 export const FinalCTA = () => {

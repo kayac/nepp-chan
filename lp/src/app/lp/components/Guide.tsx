@@ -1,4 +1,4 @@
-import { useScrollReveal } from "~/hooks/useScrollReveal";
+import { useScrollReveal } from "@nepp-chan/shared/hooks/useScrollReveal";
 
 const PILLS: ReadonlyArray<{ label: string; color: string }> = [
   { label: "音威子府駅", color: "#c4553f" },

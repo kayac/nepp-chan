@@ -1,4 +1,4 @@
-import { AmbientBG } from "~/components/AmbientBG";
+import { AmbientBG } from "@nepp-chan/shared/components/AmbientBG";
 import { RootLayout } from "~/components/RootLayout";
 import { FinalCTA } from "./components/FinalCTA";
 import { FooterSection } from "./components/FooterSection";

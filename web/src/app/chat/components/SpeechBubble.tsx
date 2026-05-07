@@ -1,5 +1,5 @@
+import { cn } from "@nepp-chan/shared/lib/class-merge";
 import type { CSSProperties, ReactNode } from "react";
-import { cn } from "~/lib/class-merge";
 
 type Variant = "assistant" | "user";
 
