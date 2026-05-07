@@ -1,3 +1,4 @@
+import { Mascot } from "@nepp-chan/shared/components/Mascot";
 import { MailIcon } from "lucide-react";
 import { WEB_URL } from "~/constants/urls";
 
@@ -7,10 +8,12 @@ export const FooterSection = () => (
       <div>
         <div className="flex items-center gap-3">
           <span className="grid size-11 place-items-center overflow-hidden rounded-full bg-(--teal-50)">
-            <img
-              src="/mascot/expr-wave-smile.png"
+            <Mascot
+              expression="wave-smile"
+              size={40}
+              showHalo={false}
+              floating={false}
               alt=""
-              className="size-10 object-contain"
             />
           </span>
           <div>

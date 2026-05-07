@@ -1,3 +1,4 @@
+import { Mascot } from "@nepp-chan/shared/components/Mascot";
 import { MessageSquareIcon } from "lucide-react";
 import { WEB_URL } from "~/constants/urls";
 import { useScrollReveal } from "~/hooks/useScrollReveal";
@@ -66,16 +67,13 @@ export const Hero = () => {
           data-revealed={chat.revealed}
           className="relative scroll-mt-20 opacity-0 translate-y-3 transition-all duration-700 delay-150 ease-out data-[revealed=true]:opacity-100 data-[revealed=true]:translate-y-0"
         >
-          <div
-            aria-hidden="true"
-            className="absolute -top-[60px] right-0 z-10 size-24 animate-[lp-mascot-tilt_5s_ease-in-out_infinite] [filter:drop-shadow(0_8px_16px_rgba(15,118,110,0.14))] sm:size-[140px]"
-          >
-            <img
-              src="/mascot/pose-wave.png"
-              alt=""
-              className="size-full object-contain"
-            />
-          </div>
+          <Mascot
+            expression="wave"
+            showHalo={false}
+            floating={false}
+            alt=""
+            className="absolute -top-[60px] right-0 z-10 size-24 animate-[lp-mascot-tilt_5s_ease-in-out_infinite] sm:size-[140px]"
+          />
           <MiniChat />
         </div>
       </div>

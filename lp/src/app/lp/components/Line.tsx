@@ -1,3 +1,4 @@
+import { Mascot } from "@nepp-chan/shared/components/Mascot";
 import { useScrollReveal } from "~/hooks/useScrollReveal";
 import { LineIcon } from "./LineIcon";
 
@@ -70,10 +71,12 @@ export const Line = () => {
           <div className="flex flex-col gap-3 px-4 py-5">
             <div className="flex items-end gap-2">
               <span className="grid size-7 flex-none place-items-center overflow-hidden rounded-full bg-(--teal-50)">
-                <img
-                  src="/mascot/expr-wave-smile.png"
+                <Mascot
+                  expression="wave-smile"
+                  size={24}
+                  showHalo={false}
+                  floating={false}
                   alt=""
-                  className="size-6 object-contain"
                 />
               </span>
               <div className="max-w-[200px] rounded-2xl rounded-bl-md bg-white px-3 py-2 text-xs leading-relaxed text-(--fg-1) shadow-(--shadow-xs)">
@@ -87,10 +90,12 @@ export const Line = () => {
             </div>
             <div className="flex items-end gap-2">
               <span className="grid size-7 flex-none place-items-center overflow-hidden rounded-full bg-(--teal-50)">
-                <img
-                  src="/mascot/expr-content.png"
+                <Mascot
+                  expression="content"
+                  size={24}
+                  showHalo={false}
+                  floating={false}
                   alt=""
-                  className="size-6 object-contain"
                 />
               </span>
               <div className="max-w-[210px] rounded-2xl rounded-bl-md bg-white px-3 py-2 text-xs leading-relaxed text-(--fg-1) shadow-(--shadow-xs)">

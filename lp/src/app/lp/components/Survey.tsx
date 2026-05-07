@@ -1,4 +1,6 @@
+import { Mascot } from "@nepp-chan/shared/components/Mascot";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
+import { Button } from "@nepp-chan/shared/ui/Button";
 import { useState } from "react";
 import { useScrollReveal } from "~/hooks/useScrollReveal";
 
@@ -24,10 +26,12 @@ export const Survey = () => {
         <div className="rounded-[28px] border border-(--paper-200) bg-white p-6 shadow-(--shadow-float-md)">
           <div className="flex items-center gap-3">
             <span className="grid size-8 place-items-center overflow-hidden rounded-full bg-(--teal-50)">
-              <img
-                src="/mascot/expr-surprise.png"
+              <Mascot
+                expression="surprise"
+                size={30}
+                showHalo={false}
+                floating={false}
                 alt=""
-                className="size-[30px] object-contain"
               />
             </span>
             <span className="rounded-(--r-pill) bg-(--apricot-50) px-3 py-1 text-xs font-medium text-(--apricot-700)">
@@ -82,13 +86,13 @@ export const Survey = () => {
           </fieldset>
           <div className="mt-4 flex items-center justify-between text-xs text-(--fg-3)">
             <span>所要時間: 約30秒</span>
-            <button
-              type="button"
+            <Button
+              size="sm"
               disabled={selected === null}
-              className="rounded-(--r-pill) bg-(--brand) px-4 py-2 text-xs font-bold text-white shadow-(--shadow-brand) transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-(--r-pill) px-4 py-2 font-bold shadow-(--shadow-brand)"
             >
               回答する
-            </button>
+            </Button>
           </div>
         </div>
       </div>

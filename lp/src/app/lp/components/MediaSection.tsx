@@ -1,3 +1,4 @@
+import { Button } from "@nepp-chan/shared/ui/Button";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useRef } from "react";
 import { useScrollReveal } from "~/hooks/useScrollReveal";
@@ -171,22 +172,24 @@ export const MediaSection = () => {
           </div>
 
           <div className="mt-4 flex justify-center gap-2">
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="icon-circle"
               aria-label="前へ"
               onClick={() => scroll(-1)}
-              className="grid size-10 place-items-center rounded-full border border-(--paper-200) bg-white text-(--fg-2) shadow-(--shadow-sm) transition-colors hover:bg-(--teal-50) hover:text-(--brand)"
+              className="shadow-(--shadow-sm) hover:bg-(--teal-50) hover:text-(--brand)"
             >
               <ChevronLeftIcon className="size-[18px]" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="outline"
+              size="icon-circle"
               aria-label="次へ"
               onClick={() => scroll(1)}
-              className="grid size-10 place-items-center rounded-full border border-(--paper-200) bg-white text-(--fg-2) shadow-(--shadow-sm) transition-colors hover:bg-(--teal-50) hover:text-(--brand)"
+              className="shadow-(--shadow-sm) hover:bg-(--teal-50) hover:text-(--brand)"
             >
               <ChevronRightIcon className="size-[18px]" aria-hidden="true" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>

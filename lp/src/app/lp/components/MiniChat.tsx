@@ -1,5 +1,9 @@
 import { useChat } from "@ai-sdk/react";
+import { Mascot } from "@nepp-chan/shared/components/Mascot";
+import { SpeechBubble } from "@nepp-chan/shared/components/SpeechBubble";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
+import { Button } from "@nepp-chan/shared/ui/Button";
+import { PromptChip } from "@nepp-chan/shared/ui/PromptChip";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { ArrowRightIcon, EllipsisIcon, SendIcon } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
@@ -92,10 +96,12 @@ export const MiniChat = () => {
     <div className="flex flex-col rounded-[28px] border border-(--paper-200) bg-white p-5 shadow-(--shadow-float-md)">
       <div className="flex items-center gap-3 border-b border-(--paper-200) pb-3">
         <span className="grid size-9 place-items-center overflow-hidden rounded-full bg-(--teal-50)">
-          <img
-            src="/mascot/expr-wave-smile.png"
+          <Mascot
+            expression="wave-smile"
+            size={34}
+            showHalo={false}
+            floating={false}
             alt=""
-            className="size-[34px] object-contain"
           />
         </span>
         <div className="flex flex-col">
@@ -121,14 +127,12 @@ export const MiniChat = () => {
           const text = messageText(m);
           if (!text) return null;
           return (
-            <div
+            <SpeechBubble
               key={m.id}
+              variant={m.role === "user" ? "user" : "assistant"}
               className={cn(
-                "w-fit max-w-[78%] break-words rounded-(--r-bubble) px-[18px] py-3 text-sm leading-[1.7]",
-                "animate-[lp-bubble-in_400ms_cubic-bezier(0.22,1,0.36,1)] shadow-(--shadow-float-sm)",
-                m.role === "user"
-                  ? "self-end bg-(--teal-700) text-white"
-                  : "self-start bg-(--paper-50) text-(--fg-1)",
+                "text-sm leading-[1.7] animate-[lp-bubble-in_400ms_cubic-bezier(0.22,1,0.36,1)]",
+                m.role === "user" ? "self-end" : "self-start",
               )}
             >
               <ReactMarkdown
@@ -191,7 +195,7 @@ export const MiniChat = () => {
               >
                 {text}
               </ReactMarkdown>
-            </div>
+            </SpeechBubble>
           );
         })}
         {isBusy && (
@@ -212,20 +216,14 @@ export const MiniChat = () => {
       {showSuggestions && (
         <div className="mt-1 flex flex-wrap gap-1.5">
           {SAMPLE_QUESTIONS.map((q) => (
-            <button
+            <PromptChip
               key={q}
-              type="button"
+              size="sm"
               onClick={() => ask(q)}
               disabled={isBusy}
-              className={cn(
-                "rounded-(--r-pill) border border-(--paper-200) bg-white px-3 py-1.5 text-xs text-(--fg-2)",
-                "transition-colors duration-150",
-                "hover:border-(--teal-300) hover:bg-(--teal-50) hover:text-(--brand)",
-                "disabled:cursor-not-allowed disabled:opacity-50",
-              )}
             >
               {q}
-            </button>
+            </PromptChip>
           ))}
         </div>
       )}
@@ -259,18 +257,15 @@ export const MiniChat = () => {
             disabled={isBusy}
             className="flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-(--fg-4)"
           />
-          <button
+          <Button
             type="submit"
+            size="icon-circle"
             disabled={isBusy || !input.trim()}
             aria-label="送信"
-            className={cn(
-              "grid size-8 place-items-center rounded-full bg-(--teal-700) text-white",
-              "transition-colors hover:bg-(--teal-800)",
-              "disabled:cursor-not-allowed disabled:opacity-55",
-            )}
+            className="size-8"
           >
             <SendIcon className="size-[18px]" aria-hidden="true" />
-          </button>
+          </Button>
         </form>
       )}
     </div>
