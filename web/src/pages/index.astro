@@ -1,19 +1,8 @@
 ---
-import "~/index.css";
 import { App } from "~/app/chat/App";
+import Layout from "~/layouts/Layout.astro";
 ---
 
-<html lang="ja">
-	<head>
-		<meta charset="UTF-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon-chat.svg" />
-		<meta
-			name="viewport"
-			content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content, viewport-fit=cover"
-		/>
-		<title>ねっぷちゃん</title>
-	</head>
-	<body>
-		<App client:only="react" />
-	</body>
-</html>
+<Layout title="ねっぷちゃん">
+	<App client:only="react" />
+</Layout>
