@@ -1,4 +1,4 @@
-import { useScrollReveal } from "@nepp-chan/shared/hooks/useScrollReveal";
+import { useScrollReveal } from "~/hooks/useScrollReveal";
 import { LineIcon } from "./LineIcon";
 
 export const Line = () => {

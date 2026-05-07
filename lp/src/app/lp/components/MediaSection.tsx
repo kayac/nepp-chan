@@ -1,6 +1,6 @@
-import { useScrollReveal } from "@nepp-chan/shared/hooks/useScrollReveal";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useRef } from "react";
+import { useScrollReveal } from "~/hooks/useScrollReveal";
 
 type MediaKind = "paper" | "web" | "tv" | "radio" | "mag";
 
