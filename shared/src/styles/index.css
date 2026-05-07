@@ -189,6 +189,19 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* チャット入力フォームの共通枠（送信ボタン込みの行） */
+.chat-composer-frame {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--r-footer);
+  border: 2px solid var(--teal-500);
+  background: var(--paper-0);
+  padding: 0.625rem 1.25rem;
+  box-shadow: var(--shadow-floating-input);
+}
+
 /* スクロールバー - 控えめに */
 ::-webkit-scrollbar {
   width: 6px;

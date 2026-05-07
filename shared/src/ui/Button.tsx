@@ -54,6 +54,7 @@ const buttonVariants = cva(
         "icon-xs": "size-6 p-1 rounded-(--r-sm)",
         "icon-sm": "size-7 rounded-(--r-sm)",
         "icon-lg": "size-10 rounded-(--r-md)",
+        "icon-circle": "size-10 rounded-full",
       },
     },
     defaultVariants: {

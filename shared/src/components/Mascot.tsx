@@ -73,7 +73,7 @@ type Props = {
 export const Mascot = ({
   state = "idle",
   expression,
-  size = 200,
+  size,
   floating = true,
   haloColor = "var(--teal-300)",
   showHalo = true,
@@ -84,10 +84,14 @@ export const Mascot = ({
   const key: MascotExpression = expression ?? STATE_MAP[state];
   const src = MASCOT_ASSETS[key];
 
+  // size 指定なしのときは Tailwind class や親要素の size に従う
+  const sizeStyle =
+    size !== undefined ? { width: size, height: size } : undefined;
+
   return (
     <div
       className={cn("relative inline-block", className)}
-      style={{ width: size, height: size, ...style }}
+      style={{ ...sizeStyle, ...style }}
     >
       {showHalo && (
         <span
