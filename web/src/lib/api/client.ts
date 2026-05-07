@@ -1,7 +1,13 @@
 import * as Sentry from "@sentry/react";
 import createClient from "openapi-fetch";
-import { getBearerToken } from "~/lib/auth-token";
+import {
+  getBearerToken,
+  getSessionToken,
+  removeAuthToken,
+} from "~/lib/auth-token";
+import { queryClient } from "~/lib/query-client";
 import type { paths } from "~/types/api";
+import { adminUserKeys } from "./keys";
 
 class ApiError extends Error {
   status: number;
@@ -14,7 +20,35 @@ class ApiError extends Error {
 
 const API_BASE = import.meta.env.PUBLIC_API_URL || "";
 
-export const client = createClient<paths>({ baseUrl: API_BASE });
+// 401 が返って admin token が原因と判定できれば、token を破棄してフォールバックで再試行する。
+// session token は不変なので、「送ったヘッダが session token と一致しない」を起点に判定する。
+// admin token は破棄後も並行リクエストで判定がぶれないよう、現在値ではなく送信ヘッダ側を見る。
+const fetchWithAuthRetry = async (request: Request): Promise<Response> => {
+  const retryRequest = request.clone();
+  const response = await fetch(request);
+  if (response.status !== 401) return response;
+
+  const sentAuth = retryRequest.headers.get("Authorization");
+  if (!sentAuth) return response;
+  const sessionToken = getSessionToken();
+  if (sessionToken && sentAuth === `Bearer ${sessionToken}`) return response;
+
+  removeAuthToken();
+  queryClient.invalidateQueries({ queryKey: adminUserKeys.current });
+  const headers = new Headers(retryRequest.headers);
+  const fallbackToken = getBearerToken();
+  if (fallbackToken) {
+    headers.set("Authorization", `Bearer ${fallbackToken}`);
+  } else {
+    headers.delete("Authorization");
+  }
+  return fetch(new Request(retryRequest, { headers }));
+};
+
+export const client = createClient<paths>({
+  baseUrl: API_BASE,
+  fetch: fetchWithAuthRetry,
+});
 
 client.use({
   async onRequest({ request }) {

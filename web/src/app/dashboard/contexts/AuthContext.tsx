@@ -1,77 +1,42 @@
-import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { createContext, type ReactNode, useCallback, useContext } from "react";
 
-import { type AdminUser, fetchCurrentUser, postLogout } from "~/lib/api/auth";
+import { useAdminUser } from "~/hooks/useAdminUser";
+import { type AdminUser, postLogout } from "~/lib/api/auth";
+import { adminUserKeys } from "~/lib/api/keys";
 import { removeAuthToken } from "~/lib/auth-token";
 
-type AuthState = {
+type AuthContextType = {
   user: AdminUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-};
-
-type AuthContextType = AuthState & {
-  checkAuth: () => Promise<void>;
   logout: () => Promise<void>;
-  setUser: (user: AdminUser | null) => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    isLoading: true,
-    isAuthenticated: false,
-  });
-
-  const checkAuth = useCallback(async () => {
-    try {
-      const user = await fetchCurrentUser();
-      if (user) {
-        setState({ user, isLoading: false, isAuthenticated: true });
-      } else {
-        setState({ user: null, isLoading: false, isAuthenticated: false });
-      }
-    } catch (error) {
-      console.error("認証チェック失敗:", error);
-      setState({ user: null, isLoading: false, isAuthenticated: false });
-    }
-  }, []);
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useAdminUser();
+  const user = data ?? null;
 
   const logout = useCallback(async () => {
     try {
       await postLogout();
     } finally {
       removeAuthToken();
-      setState({ user: null, isLoading: false, isAuthenticated: false });
+      queryClient.setQueryData(adminUserKeys.current, null);
     }
-  }, []);
+  }, [queryClient]);
 
-  const setUser = useCallback((user: AdminUser | null) => {
-    setState({
-      user,
-      isLoading: false,
-      isAuthenticated: user !== null,
-    });
-  }, []);
-
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
-
-  if (state.isLoading) {
+  if (isLoading) {
     return null;
   }
 
   return (
-    <AuthContext.Provider value={{ ...state, checkAuth, logout, setUser }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, isAuthenticated: !!user, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );
