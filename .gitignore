@@ -15,6 +15,7 @@ dist/
 .agent/
 review/
 .claude/settings.local.json
+.claude/worktrees/
 
 # deps
 node_modules/
