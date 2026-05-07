@@ -1,5 +1,5 @@
+import { cn } from "@nepp-chan/shared/lib/class-merge";
 import type { CSSProperties } from "react";
-import { cn } from "~/lib/class-merge";
 
 const MASCOT_ASSETS = {
   // 表情（頭・胸あたり）

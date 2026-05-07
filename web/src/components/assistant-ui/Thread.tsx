@@ -10,6 +10,8 @@ import {
   useMessage,
   useMessageRuntime,
 } from "@assistant-ui/react";
+import { cn } from "@nepp-chan/shared/lib/class-merge";
+import { Button } from "@nepp-chan/shared/ui/Button";
 import {
   ArrowDownIcon,
   ChevronLeftIcon,
@@ -25,9 +27,7 @@ import { SpeechBubble } from "~/app/chat/components/SpeechBubble";
 import { useFeedback } from "~/app/chat/FeedbackContext";
 import { MarkdownText } from "~/components/assistant-ui/MarkdownText";
 import { ToolFallback } from "~/components/assistant-ui/ToolFallback";
-import { TooltipIconButton } from "~/components/assistant-ui/TooltipIconButton";
 import { toolsByName } from "~/components/assistant-ui/tool-uis";
-import { cn } from "~/lib/class-merge";
 
 export const Thread = () => (
   <ThreadPrimitive.Root
@@ -210,27 +210,33 @@ const FeedbackButtons = () => {
 
   return (
     <>
-      <TooltipIconButton
-        tooltip="良い回答"
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        aria-label="良い回答"
         onClick={() => onFeedbackClick(messageId, "good")}
         className="hover:text-(--success) transition-colors duration-150"
       >
         <ThumbsUpIcon className="size-3.5" />
-      </TooltipIconButton>
-      <TooltipIconButton
-        tooltip="改善が必要"
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        aria-label="改善が必要"
         onClick={() => onFeedbackClick(messageId, "bad")}
         className="hover:text-(--danger) transition-colors duration-150"
       >
         <ThumbsDownIcon className="size-3.5" />
-      </TooltipIconButton>
-      <TooltipIconButton
-        tooltip="アイディア"
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        aria-label="アイディア"
         onClick={() => onFeedbackClick(messageId, "idea")}
         className="hover:text-(--warning) transition-colors duration-150"
       >
         <LightbulbIcon className="size-3.5" />
-      </TooltipIconButton>
+      </Button>
     </>
   );
 };
@@ -278,17 +284,17 @@ const BranchPicker = ({
     {...rest}
   >
     <BranchPickerPrimitive.Previous asChild>
-      <TooltipIconButton tooltip="前へ">
+      <Button variant="ghost" size="icon-xs" aria-label="前へ">
         <ChevronLeftIcon />
-      </TooltipIconButton>
+      </Button>
     </BranchPickerPrimitive.Previous>
     <span className="aui-branch-picker-state font-medium">
       <BranchPickerPrimitive.Number /> / <BranchPickerPrimitive.Count />
     </span>
     <BranchPickerPrimitive.Next asChild>
-      <TooltipIconButton tooltip="次へ">
+      <Button variant="ghost" size="icon-xs" aria-label="次へ">
         <ChevronRightIcon />
-      </TooltipIconButton>
+      </Button>
     </BranchPickerPrimitive.Next>
   </BranchPickerPrimitive.Root>
 );

@@ -1,4 +1,6 @@
 import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
+import { cn } from "@nepp-chan/shared/lib/class-merge";
+import { Spinner } from "@nepp-chan/shared/ui/Loading";
 import {
   AlertCircleIcon,
   CheckCircle2Icon,
@@ -9,9 +11,6 @@ import {
 } from "lucide-react";
 import type { FC, ReactNode } from "react";
 import { useState } from "react";
-
-import { Spinner } from "~/components/ui/Loading";
-import { cn } from "~/lib/class-merge";
 
 const REPORT_TOOLS = ["emergencyReportTool", "emergencyUpdateTool"];
 const MEMORY_TOOLS = ["updateWorkingMemory"];

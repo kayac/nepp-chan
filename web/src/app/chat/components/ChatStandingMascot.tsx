@@ -1,11 +1,11 @@
 import { useThreadRuntime } from "@assistant-ui/react";
-import { useEffect, useRef, useState } from "react";
 import {
   Mascot,
   type MascotExpression,
   type MascotState,
-} from "~/components/Mascot";
-import { cn } from "~/lib/class-merge";
+} from "@nepp-chan/shared/components/Mascot";
+import { cn } from "@nepp-chan/shared/lib/class-merge";
+import { useEffect, useRef, useState } from "react";
 
 // 応答完了直後にランダムで選ぶ表情。talking 多めで、たまに笑顔・驚きが混じる
 const POST_RESPONSE_STATES: readonly MascotState[] = [

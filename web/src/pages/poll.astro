@@ -1,19 +1,8 @@
 ---
-import "~/index.css";
 import { PollResultsPage } from "~/app/poll/PollResultsPage";
+import Layout from "~/layouts/Layout.astro";
 ---
 
-<html lang="ja">
-	<head>
-		<meta charset="UTF-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon-chat.svg" />
-		<meta
-			name="viewport"
-			content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content, viewport-fit=cover"
-		/>
-		<title>投票結果 | ねっぷちゃん</title>
-	</head>
-	<body>
-		<PollResultsPage client:only="react" />
-	</body>
-</html>
+<Layout title="投票結果 | ねっぷちゃん">
+	<PollResultsPage client:only="react" />
+</Layout>

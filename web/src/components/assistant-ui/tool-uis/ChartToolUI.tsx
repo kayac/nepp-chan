@@ -1,5 +1,7 @@
 import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
 import { makeAssistantToolUI } from "@assistant-ui/react";
+import { ToolEmptyState } from "@nepp-chan/shared/ui/EmptyState";
+import { ToolLoadingState } from "@nepp-chan/shared/ui/Loading";
 import { BarChartIcon, LineChartIcon, PieChartIcon } from "lucide-react";
 import {
   Bar,
@@ -15,8 +17,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ToolEmptyState } from "~/components/ui/EmptyState";
-import { ToolLoadingState } from "~/components/ui/Loading";
 
 type ChartType = "line" | "bar" | "pie";
 

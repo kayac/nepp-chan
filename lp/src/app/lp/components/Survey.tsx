@@ -1,6 +1,6 @@
+import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { useState } from "react";
 import { useScrollReveal } from "~/hooks/useScrollReveal";
-import { cn } from "~/lib/class-merge";
 
 const OPTIONS: ReadonlyArray<string> = [
   "除雪の頻度や範囲",

@@ -1,9 +1,8 @@
 import { makeAssistantToolUI } from "@assistant-ui/react";
+import { cn } from "@nepp-chan/shared/lib/class-merge";
+import { ToolLoadingState } from "@nepp-chan/shared/ui/Loading";
 import { CheckCircleIcon } from "lucide-react";
 import { useState } from "react";
-
-import { ToolLoadingState } from "~/components/ui/Loading";
-import { cn } from "~/lib/class-merge";
 
 type ChoiceArgs = {
   question: string;

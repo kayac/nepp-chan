@@ -1,4 +1,4 @@
-import { cn } from "~/lib/class-merge";
+import { cn } from "@nepp-chan/shared/lib/class-merge";
 
 type LoadingDotsProps = {
   className?: string;

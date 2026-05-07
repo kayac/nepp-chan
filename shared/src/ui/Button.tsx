@@ -1,8 +1,7 @@
+import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ComponentProps } from "react";
-
-import { cn } from "~/lib/class-merge";
 
 const buttonVariants = cva(
   [
@@ -52,6 +51,7 @@ const buttonVariants = cva(
         sm: "h-8 gap-1.5 rounded-(--r-sm) px-3 text-xs has-[>svg]:px-2.5",
         lg: "h-11 rounded-(--r-md) px-6 has-[>svg]:px-5",
         icon: "size-9 rounded-(--r-md)",
+        "icon-xs": "size-6 p-1 rounded-(--r-sm)",
         "icon-sm": "size-7 rounded-(--r-sm)",
         "icon-lg": "size-10 rounded-(--r-md)",
       },

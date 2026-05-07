@@ -14,6 +14,8 @@
       "!**/.astro",
       "!**/.mastra",
       "!**/.wrangler",
+      "!**/.claude",
+      "!**/*.astro",
       "!**/*.d.ts",
       "!**/server/public",
       "!design-reference"
@@ -29,21 +31,14 @@
       "recommended": true
     }
   },
-  "overrides": [
-    {
-      "includes": ["**/*.astro"],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noUnusedImports": "off"
-          }
-        }
-      }
-    }
-  ],
   "javascript": {
     "formatter": {
       "quoteStyle": "double"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   },
   "assist": {

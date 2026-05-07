@@ -10,11 +10,10 @@ import {
   UserGroupIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { useMemo, useState } from "react";
-
 import { useRole } from "~/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
-import { cn } from "~/lib/class-merge";
 
 import { BroadcastPanel } from "./components/BroadcastPanel";
 import { EmergencyPanel } from "./components/EmergencyPanel";
