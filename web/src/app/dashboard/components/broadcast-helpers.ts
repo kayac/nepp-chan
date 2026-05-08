@@ -11,22 +11,21 @@ export type PartState = { id: string } & (
 
 /**
  * 既存 broadcast を編集 form の初期 state に変換する。
- * - parts が JSON として保存されていればそれをパース
- * - parts が無い・パース失敗時は body をテキストパート 1 件として復元
+ * parts が無いかパース失敗時は body をテキストパート 1 件として復元する。
  */
 export const parseParts = (
   broadcast: BroadcastMessage,
   generateId: () => string,
 ): PartState[] => {
-  if (!broadcast.parts) {
-    return [{ id: generateId(), type: "text", text: broadcast.body }];
+  if (broadcast.parts) {
+    try {
+      const raw = JSON.parse(broadcast.parts) as Omit<PartState, "id">[];
+      return raw.map((p) => ({ ...p, id: generateId() }) as PartState);
+    } catch {
+      // body fallback
+    }
   }
-  try {
-    const raw = JSON.parse(broadcast.parts) as Omit<PartState, "id">[];
-    return raw.map((p) => ({ ...p, id: generateId() }) as PartState);
-  } catch {
-    return [{ id: generateId(), type: "text", text: broadcast.body }];
-  }
+  return [{ id: generateId(), type: "text", text: broadcast.body }];
 };
 
 export const getImageUrl = (imageR2Key: string) =>
