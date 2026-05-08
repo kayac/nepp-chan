@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { RootLayout } from "~/components/RootLayout";
 import { QueryProvider } from "~/providers/QueryProvider";
-import { pollRepository } from "~/repository";
+import { pollRepository } from "~/lib/api/repository";
 import type { PollChoiceResult } from "~/types";
 
 const usePollResultsPublic = (id: string | null) =>

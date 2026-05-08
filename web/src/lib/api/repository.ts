@@ -7,7 +7,7 @@ import { createPersonaRepository } from "@nepp-chan/shared/api/repository/person
 import { createPollRepository } from "@nepp-chan/shared/api/repository/poll-repository";
 import { createThreadRepository } from "@nepp-chan/shared/api/repository/thread-repository";
 
-import { API_BASE, client } from "~/lib/api/client";
+import { API_BASE, client } from "./client";
 
 /**
  * shared/api/repository の factory を web の client で合成した repository 群。

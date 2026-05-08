@@ -23,7 +23,7 @@ import {
   useThreads,
 } from "~/hooks/useThreads";
 import { getResourceId } from "~/lib/resource";
-import { threadRepository } from "~/repository";
+import { threadRepository } from "~/lib/api/repository";
 import type { Thread as ThreadType } from "~/types";
 
 import { AssistantProvider, type InitialMessage } from "./AssistantProvider";

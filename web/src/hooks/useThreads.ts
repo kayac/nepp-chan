@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { threadRepository } from "~/repository";
+import { threadRepository } from "~/lib/api/repository";
 
 export const threadKeys = {
   all: ["threads"] as const,

@@ -5,7 +5,7 @@ import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
 import { ROLE_LABELS, useRole } from "~/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
 import { formatDateTime } from "~/lib/format";
-import { invitationRepository } from "~/repository";
+import { invitationRepository } from "~/lib/api/repository";
 
 export const InvitationsPanel = () => {
   const queryClient = useQueryClient();

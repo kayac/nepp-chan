@@ -1,5 +1,5 @@
 import { formatDateTime } from "~/lib/format";
-import { knowledgeRepository } from "~/repository";
+import { knowledgeRepository } from "~/lib/api/repository";
 import type { UnifiedFileInfo } from "~/types";
 
 /**

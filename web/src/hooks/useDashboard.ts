@@ -11,7 +11,7 @@ import {
   knowledgeRepository,
   personaRepository,
   pollRepository,
-} from "~/repository";
+} from "~/lib/api/repository";
 import type { PollStatus } from "~/types";
 
 export const dashboardKeys = {
