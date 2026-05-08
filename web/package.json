@@ -8,8 +8,8 @@
     "build": "astro build",
     "check": "astro check",
     "preview": "astro preview",
-    "test": "vitest",
-    "test:cov": "vitest run --coverage",
+    "test": "TZ=Asia/Tokyo vitest",
+    "test:cov": "TZ=Asia/Tokyo vitest run --coverage",
     "deploy": "pnpm build && wrangler pages deploy --project-name nepp-chan-web-dev --branch develop",
     "deploy:prd": "pnpm build && wrangler pages deploy --project-name nepp-chan-web-prd --branch main",
     "openapi:generate": "openapi-typescript http://localhost:8787/doc -o src/types/api.d.ts"
