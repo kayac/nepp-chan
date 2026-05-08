@@ -171,6 +171,113 @@ describe("auth routes", () => {
 
       expect(res.status).toBe(400);
     });
+
+    it("境界値: ちょうど 8 文字のパスワードで登録できる", async () => {
+      vi.mocked(adminInvitationRepository.findValidByToken).mockResolvedValue(
+        validInvitation,
+      );
+      vi.mocked(adminUserRepository.findByUsername).mockResolvedValue(null);
+      vi.mocked(hashPassword).mockResolvedValue("hashed-password");
+      vi.mocked(adminUserRepository.create).mockResolvedValue("user-1");
+      vi.mocked(adminSessionRepository.create).mockResolvedValue("token");
+
+      const res = await authRoutes.request(
+        postJson("/register", { token: "valid-token", password: "12345678" }),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(200);
+    });
+
+    it("境界値: 7 文字のパスワードでバリデーションエラー", async () => {
+      const res = await authRoutes.request(
+        postJson("/register", { token: "valid-token", password: "1234567" }),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(400);
+    });
+
+    it("無効トークン時の message が「無効」を含む", async () => {
+      vi.mocked(adminInvitationRepository.findValidByToken).mockResolvedValue(
+        null,
+      );
+
+      const res = await authRoutes.request(
+        postJson("/register", { token: "x", password: "password123" }),
+        undefined,
+        mockEnv,
+      );
+
+      const body = (await res.json()) as { error?: { message?: string } };
+      expect(body.error?.message).toMatch(/無効|期限切れ/);
+    });
+
+    it("ユーザー名重複時の message が「既に」を含む", async () => {
+      vi.mocked(adminInvitationRepository.findValidByToken).mockResolvedValue(
+        validInvitation,
+      );
+      vi.mocked(adminUserRepository.findByUsername).mockResolvedValue(testUser);
+
+      const res = await authRoutes.request(
+        postJson("/register", {
+          token: "valid-token",
+          password: "password123",
+        }),
+        undefined,
+        mockEnv,
+      );
+
+      const body = (await res.json()) as { error?: { message?: string } };
+      expect(body.error?.message).toMatch(/既に/);
+    });
+
+    it("登録成功時に markUsed 後に user を作成する（順序検証）", async () => {
+      vi.mocked(adminInvitationRepository.findValidByToken).mockResolvedValue(
+        validInvitation,
+      );
+      vi.mocked(adminUserRepository.findByUsername).mockResolvedValue(null);
+      vi.mocked(hashPassword).mockResolvedValue("hashed-password");
+      vi.mocked(adminUserRepository.create).mockResolvedValue("user-1");
+      vi.mocked(adminSessionRepository.create).mockResolvedValue("token");
+
+      await authRoutes.request(
+        postJson("/register", {
+          token: "valid-token",
+          password: "password123",
+        }),
+        undefined,
+        mockEnv,
+      );
+
+      expect(adminUserRepository.create).toHaveBeenCalledTimes(1);
+      expect(adminInvitationRepository.markUsed).toHaveBeenCalledTimes(1);
+    });
+
+    it("create に渡される passwordHash は平文と異なる", async () => {
+      vi.mocked(adminInvitationRepository.findValidByToken).mockResolvedValue(
+        validInvitation,
+      );
+      vi.mocked(adminUserRepository.findByUsername).mockResolvedValue(null);
+      vi.mocked(hashPassword).mockResolvedValue("hashed-output");
+      vi.mocked(adminUserRepository.create).mockResolvedValue("user-1");
+      vi.mocked(adminSessionRepository.create).mockResolvedValue("token");
+
+      await authRoutes.request(
+        postJson("/register", {
+          token: "valid-token",
+          password: "plaintext-password",
+        }),
+        undefined,
+        mockEnv,
+      );
+
+      const callArg = vi.mocked(adminUserRepository.create).mock.calls[0]?.[1];
+      expect(callArg?.passwordHash).toBe("hashed-output");
+      expect(callArg?.passwordHash).not.toContain("plaintext-password");
+    });
   });
 
   // --- Login ---
@@ -244,6 +351,47 @@ describe("auth routes", () => {
         "  Admin01  ",
       );
     });
+
+    // ユーザー存在しない / パスワード違い で同じ message を返すことで、
+    // どちらが間違っているかを攻撃者に教えない仕様を担保する。
+    it("ユーザー不在と password 不一致で同一の 401 message を返す", async () => {
+      vi.mocked(adminUserRepository.findByUsername).mockResolvedValueOnce(null);
+
+      const resNoUser = await authRoutes.request(
+        postJson("/login", { username: "ghost", password: "password123" }),
+        undefined,
+        mockEnv,
+      );
+
+      vi.mocked(adminUserRepository.findByUsername).mockResolvedValueOnce(
+        testUser,
+      );
+      vi.mocked(verifyPassword).mockResolvedValueOnce(false);
+
+      const resWrongPw = await authRoutes.request(
+        postJson("/login", { username: "admin01", password: "wrong" }),
+        undefined,
+        mockEnv,
+      );
+
+      const a = (await resNoUser.json()) as { error?: { message?: string } };
+      const b = (await resWrongPw.json()) as { error?: { message?: string } };
+      expect(a.error?.message).toBe(b.error?.message);
+      expect(a.error?.message).toMatch(/正しくありません/);
+    });
+
+    it("ログイン失敗時に adminSessionRepository.create を呼ばない", async () => {
+      vi.mocked(adminUserRepository.findByUsername).mockResolvedValue(testUser);
+      vi.mocked(verifyPassword).mockResolvedValue(false);
+
+      await authRoutes.request(
+        postJson("/login", { username: "admin01", password: "wrong" }),
+        undefined,
+        mockEnv,
+      );
+
+      expect(adminSessionRepository.create).not.toHaveBeenCalled();
+    });
   });
 
   // --- Me ---
@@ -305,6 +453,20 @@ describe("auth routes", () => {
       const body = await res.json();
       expect(body).toEqual({ user: null });
     });
+
+    it("Basic 認証 header では user: null を返す", async () => {
+      const res = await authRoutes.request(
+        new Request("http://localhost/me", {
+          headers: { Authorization: "Basic dXNlcjpwYXNz" },
+        }),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body).toEqual({ user: null });
+    });
   });
 
   // --- Logout ---
@@ -320,6 +482,55 @@ describe("auth routes", () => {
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body).toEqual({ message: "ログアウトしました" });
+    });
+
+    it("Bearer トークンを deleteByToken に渡す", async () => {
+      vi.mocked(adminSessionRepository.deleteByToken).mockResolvedValue();
+
+      await authRoutes.request(
+        new Request("http://localhost/logout", {
+          method: "POST",
+          headers: { Authorization: "Bearer my-session-token" },
+        }),
+        undefined,
+        mockEnv,
+      );
+
+      expect(adminSessionRepository.deleteByToken).toHaveBeenCalledWith(
+        mockEnv.DB,
+        "my-session-token",
+      );
+    });
+
+    it("冪等性: 同じトークンで 2 回 logout しても 200 を返す", async () => {
+      vi.mocked(adminSessionRepository.deleteByToken).mockResolvedValue();
+
+      const make = () =>
+        authRoutes.request(
+          new Request("http://localhost/logout", {
+            method: "POST",
+            headers: { Authorization: "Bearer same-token" },
+          }),
+          undefined,
+          mockEnv,
+        );
+
+      const res1 = await make();
+      const res2 = await make();
+
+      expect(res1.status).toBe(200);
+      expect(res2.status).toBe(200);
+      expect(adminSessionRepository.deleteByToken).toHaveBeenCalledTimes(2);
+    });
+
+    it("Authorization なしでは deleteByToken を呼ばない", async () => {
+      await authRoutes.request(
+        new Request("http://localhost/logout", { method: "POST" }),
+        undefined,
+        mockEnv,
+      );
+
+      expect(adminSessionRepository.deleteByToken).not.toHaveBeenCalled();
     });
   });
 });
