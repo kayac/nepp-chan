@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
-import { lineSignatureVerify } from "~/middleware/line-signature";
+import { lineSignatureVerify } from "./line-signature";
 
 const CHANNEL_SECRET = "test-channel-secret";
 

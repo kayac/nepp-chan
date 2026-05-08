@@ -2,7 +2,7 @@ import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { adminInvitations } from "~/db";
-import { createTestDb, type TestDb } from "./helpers/test-db";
+import { createTestDb, type TestDb } from "../test-helpers/test-db";
 
 /**
  * admin_invitations テーブルに対する Drizzle ORM クエリの統合テスト

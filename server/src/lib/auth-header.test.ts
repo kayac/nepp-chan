@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getTokenFromHeader } from "~/lib/auth-header";
+import { getTokenFromHeader } from "./auth-header";
 
 describe("getTokenFromHeader", () => {
   const createMockContext = (authHeader?: string) => ({

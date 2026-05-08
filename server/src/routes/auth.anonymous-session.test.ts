@@ -36,9 +36,9 @@ vi.mock("~/repository/admin-session-repository", () => ({
   },
 }));
 
-const { authRoutes: rawAuthRoutes } = await import("~/routes/auth");
+const { authRoutes: rawAuthRoutes } = await import("./auth");
 
-import { withResolvePrincipal } from "./helpers/test-app";
+import { withResolvePrincipal } from "../test-helpers/test-app";
 
 const authRoutes = await withResolvePrincipal(rawAuthRoutes);
 

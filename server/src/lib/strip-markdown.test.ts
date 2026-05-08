@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { stripMarkdown } from "~/lib/strip-markdown";
+import { stripMarkdown } from "./strip-markdown";
 
 describe("stripMarkdown", () => {
   it("太字を除去する", () => {

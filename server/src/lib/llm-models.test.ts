@@ -4,7 +4,7 @@ import {
   GEMINI_FLASH_LITE,
   type Intent,
   resolveModelTier,
-} from "~/lib/llm-models";
+} from "./llm-models";
 
 describe("resolveModelTier", () => {
   describe("Admin は常に thinking/web ティア", () => {

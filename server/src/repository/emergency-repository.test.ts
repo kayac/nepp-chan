@@ -2,7 +2,7 @@ import { desc, eq, gte } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { emergencyReports } from "~/db";
-import { createTestDb, type TestDb } from "./helpers/test-db";
+import { createTestDb, type TestDb } from "../test-helpers/test-db";
 
 /**
  * emergency_reports テーブルに対する Drizzle ORM クエリの統合テスト

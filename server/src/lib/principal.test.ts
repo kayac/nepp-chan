@@ -6,7 +6,7 @@ import {
   type LinePrincipal,
   requireAdminUser,
   toResourceId,
-} from "~/lib/principal";
+} from "./principal";
 
 describe("toResourceId", () => {
   it("anonymous: id をそのまま返す", () => {

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { feedbackRepository } from "~/repository/feedback-repository";
 import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
-import { deleteThreadWithRelatedData } from "~/services/thread";
+import { deleteThreadWithRelatedData } from "./thread";
 
 // モック
 vi.mock("~/lib/storage", () => ({

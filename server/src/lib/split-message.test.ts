@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { splitMessagesForLine } from "~/lib/split-message";
+import { splitMessagesForLine } from "./split-message";
 
 describe("splitMessagesForLine", () => {
   it("空配列を渡すと空配列を返す", () => {

@@ -1,7 +1,7 @@
 import type { messagingApi } from "@line/bot-sdk";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { sendLineMessages } from "~/services/line-messaging";
+import { sendLineMessages } from "./line-messaging";
 
 describe("sendLineMessages", () => {
   const mockReplyMessage = vi.fn();

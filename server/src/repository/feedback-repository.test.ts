@@ -2,7 +2,7 @@ import { count, desc, eq, sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { messageFeedback } from "~/db";
-import { createTestDb, type TestDb } from "./helpers/test-db";
+import { createTestDb, type TestDb } from "../test-helpers/test-db";
 
 /**
  * message_feedback テーブルに対する Drizzle ORM クエリの統合テスト

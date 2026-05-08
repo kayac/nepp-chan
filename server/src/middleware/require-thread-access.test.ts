@@ -15,9 +15,7 @@ vi.mock("@mastra/memory", () => ({
   })),
 }));
 
-const { requireThreadAccess } = await import(
-  "~/middleware/require-thread-access"
-);
+const { requireThreadAccess } = await import("./require-thread-access");
 
 const mockThread = {
   id: "thread-123",

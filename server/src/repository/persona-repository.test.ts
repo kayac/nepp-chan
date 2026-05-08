@@ -2,7 +2,7 @@ import { and, count, desc, eq, like, lt, or } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { persona } from "~/db";
-import { createTestDb, type TestDb } from "./helpers/test-db";
+import { createTestDb, type TestDb } from "../test-helpers/test-db";
 
 /**
  * persona テーブルに対する Drizzle ORM クエリの統合テスト

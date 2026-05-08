@@ -1,10 +1,7 @@
 import { HTTPException } from "hono/http-exception";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  requireApiKey,
-  validateFileKey,
-} from "~/routes/admin/knowledge/schemas";
+import { requireApiKey, validateFileKey } from "./schemas";
 
 vi.mock("~/services/knowledge", () => ({
   listFiles: vi.fn(),
@@ -43,9 +40,9 @@ const { adminSessionRepository } = await import(
 const { adminUserRepository } = await import(
   "~/repository/admin-user-repository"
 );
-const { knowledgeAdminRoutes } = await import("~/routes/admin/knowledge");
+const { knowledgeAdminRoutes } = await import(".");
 
-import { withResolvePrincipal } from "./helpers/test-app";
+import { withResolvePrincipal } from "../../../test-helpers/test-app";
 
 const app = await withResolvePrincipal(knowledgeAdminRoutes);
 

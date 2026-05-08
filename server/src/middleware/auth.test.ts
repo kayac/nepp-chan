@@ -26,8 +26,8 @@ const { adminUserRepository } = await import(
   "~/repository/admin-user-repository"
 );
 const sessionService = await import("~/services/auth/anonymous-session");
-const { resolvePrincipal } = await import("~/middleware/resolve-principal");
-const { requireAuth } = await import("~/middleware/auth");
+const { resolvePrincipal } = await import("./resolve-principal");
+const { requireAuth } = await import("./auth");
 
 describe("requireAuth", () => {
   const mockEnv = {

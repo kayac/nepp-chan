@@ -78,7 +78,7 @@ import { threadPersonaStatusRepository } from "~/repository/thread-persona-statu
 import {
   deleteAllPersonas,
   extractPersonaFromThreadById,
-} from "~/services/persona-extractor";
+} from "./persona-extractor";
 
 describe("extractPersonaFromThreadById", () => {
   const threadId = "thread-123";

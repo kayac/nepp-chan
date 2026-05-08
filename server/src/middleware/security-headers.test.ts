@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
-import { securityHeaders } from "~/middleware/security-headers";
+import { securityHeaders } from "./security-headers";
 
 describe("securityHeaders ミドルウェア", () => {
   const createApp = () => {

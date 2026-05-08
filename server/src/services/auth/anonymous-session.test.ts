@@ -4,7 +4,7 @@ import {
   generateAnonymousToken,
   isValidUuidV4,
   verifyAnonymousToken,
-} from "~/services/auth/anonymous-session";
+} from "./anonymous-session";
 
 describe("anonymous-session", () => {
   const jwtSecret = "test-jwt-secret-must-be-at-least-32-chars";

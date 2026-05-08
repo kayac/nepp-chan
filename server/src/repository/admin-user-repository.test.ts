@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { adminUsers } from "~/db";
-import { createTestDb, type TestDb } from "./helpers/test-db";
+import { createTestDb, type TestDb } from "../test-helpers/test-db";
 
 describe("adminUsers Drizzle クエリ", () => {
   let db: TestDb;

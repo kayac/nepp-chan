@@ -23,9 +23,9 @@ const { adminSessionRepository } = await import(
 const { adminUserRepository } = await import(
   "~/repository/admin-user-repository"
 );
-const { resolvePrincipal } = await import("~/middleware/resolve-principal");
-const { requireAuth } = await import("~/middleware/auth");
-const { requireRole } = await import("~/middleware/require-role");
+const { resolvePrincipal } = await import("./resolve-principal");
+const { requireAuth } = await import("./auth");
+const { requireRole } = await import("./require-role");
 
 describe("requireRole ミドルウェア", () => {
   const mockEnv = {

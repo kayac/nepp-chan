@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
-import { corsMiddleware } from "~/middleware/cors";
+import { corsMiddleware } from "./cors";
 
 describe("corsMiddleware", () => {
   const createApp = (webUrl = "https://web.nepp-chan.ai") => {
