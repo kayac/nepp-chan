@@ -52,25 +52,37 @@ describe("ApiError", () => {
   });
 });
 
+/**
+ * 401 retry テスト用: 各 GET の Authorization ヘッダ履歴を記録しつつ
+ * 呼び出し回数で挙動を切り替える handler を登録する。
+ */
+const recordGetCalls = (
+  path: string,
+  responder: (callIndex: number) => Response,
+) => {
+  const seenAuth: (string | null)[] = [];
+  let calls = 0;
+  server.use(
+    http.get(`${API}${path}`, ({ request }) => {
+      seenAuth.push(request.headers.get("authorization"));
+      const response = responder(calls);
+      calls += 1;
+      return response;
+    }),
+  );
+  return { seenAuth, getCalls: () => calls };
+};
+
+const unauthorized = () =>
+  HttpResponse.json({ error: { message: "unauthorized" } }, { status: 401 });
+
 describe("client: 401 fallback retry", () => {
   it("admin token で 401 → session token で再試行して 200", async () => {
     setAuthToken("expired-admin");
     setSessionToken("valid-session");
 
-    const seenAuth: string[] = [];
-    let call = 0;
-    server.use(
-      http.get(`${API}/admin/emergency`, ({ request }) => {
-        seenAuth.push(request.headers.get("authorization") ?? "");
-        call += 1;
-        if (call === 1) {
-          return HttpResponse.json(
-            { error: { message: "expired" } },
-            { status: 401 },
-          );
-        }
-        return HttpResponse.json({ emergencies: [] });
-      }),
+    const { seenAuth, getCalls } = recordGetCalls("/admin/emergency", (i) =>
+      i === 0 ? unauthorized() : HttpResponse.json({ emergencies: [] }),
     );
 
     const { data, error } = await client.GET("/admin/emergency", {
@@ -79,75 +91,45 @@ describe("client: 401 fallback retry", () => {
 
     expect(error).toBeUndefined();
     expect(data).toBeDefined();
-    expect(call).toBe(2);
-    expect(seenAuth[0]).toBe("Bearer expired-admin");
-    expect(seenAuth[1]).toBe("Bearer valid-session");
+    expect(getCalls()).toBe(2);
+    expect(seenAuth).toEqual(["Bearer expired-admin", "Bearer valid-session"]);
     expect(localStorage.getItem("auth_token")).toBeNull();
   });
 
   it("session token のみで 401 はリトライしない", async () => {
     setSessionToken("only-session");
 
-    let call = 0;
-    server.use(
-      http.get(`${API}/threads`, () => {
-        call += 1;
-        return HttpResponse.json(
-          { error: { message: "unauthorized" } },
-          { status: 401 },
-        );
-      }),
-    );
+    const { getCalls } = recordGetCalls("/threads", () => unauthorized());
 
     await expect(
       client.GET("/threads", { params: { query: {} } }),
     ).rejects.toBeDefined();
 
-    expect(call).toBe(1);
+    expect(getCalls()).toBe(1);
   });
 
   it("Authorization 未送信で 401 ならリトライしない", async () => {
-    let call = 0;
-    server.use(
-      http.get(`${API}/threads`, () => {
-        call += 1;
-        return HttpResponse.json(
-          { error: { message: "no token" } },
-          { status: 401 },
-        );
-      }),
-    );
+    const { getCalls } = recordGetCalls("/threads", () => unauthorized());
 
     await expect(
       client.GET("/threads", { params: { query: {} } }),
     ).rejects.toBeDefined();
 
-    expect(call).toBe(1);
+    expect(getCalls()).toBe(1);
   });
 
   it("admin token 401 で session token が無ければ Authorization なしで再試行", async () => {
     setAuthToken("expired-admin");
-    // session token は設定しない
 
-    const seenAuth: (string | null)[] = [];
-    let call = 0;
-    server.use(
-      http.get(`${API}/admin/emergency`, ({ request }) => {
-        seenAuth.push(request.headers.get("authorization"));
-        call += 1;
-        return HttpResponse.json(
-          { error: { message: "expired" } },
-          { status: 401 },
-        );
-      }),
+    const { seenAuth, getCalls } = recordGetCalls("/admin/emergency", () =>
+      unauthorized(),
     );
 
     await expect(
       client.GET("/admin/emergency", { params: { query: { limit: 10 } } }),
     ).rejects.toBeDefined();
 
-    expect(call).toBe(2);
-    expect(seenAuth[0]).toBe("Bearer expired-admin");
-    expect(seenAuth[1]).toBeNull();
+    expect(getCalls()).toBe(2);
+    expect(seenAuth).toEqual(["Bearer expired-admin", null]);
   });
 });
