@@ -1,5 +1,5 @@
 import { formatDateTime } from "~/lib/format";
-import { getOriginalFileUrl } from "~/repository/knowledge-repository";
+import { getOriginalFileUrl } from "~/repository";
 import type { UnifiedFileInfo } from "~/types";
 
 /**

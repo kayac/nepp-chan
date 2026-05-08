@@ -8,7 +8,7 @@ import {
   createInvitation,
   deleteInvitation,
   fetchInvitations,
-} from "~/repository/invitation-repository";
+} from "~/repository";
 import { useAuth } from "../contexts/AuthContext";
 
 export const InvitationsPanel = () => {

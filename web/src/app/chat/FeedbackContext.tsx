@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 
-import { submitFeedback } from "~/repository/feedback-repository";
+import { submitFeedback } from "~/repository";
 import type {
   ConversationContext,
   FeedbackCategory,
