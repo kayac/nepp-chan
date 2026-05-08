@@ -62,10 +62,18 @@ jobs:
       - name: Run tests with coverage
         run: pnpm test:cov
 
-      - name: Upload coverage report
+      - name: Upload server coverage
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-server
           path: server/coverage/
+          retention-days: 14
+
+      - name: Upload web coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-web
+          path: web/coverage/
           retention-days: 14
