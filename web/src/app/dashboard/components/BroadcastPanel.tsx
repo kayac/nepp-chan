@@ -23,9 +23,9 @@ import {
   useUploadBroadcastImage,
 } from "~/hooks/useDashboard";
 import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
-import { API_BASE } from "~/lib/api/client";
 import { formatDateTime } from "~/lib/format";
 import type { BroadcastMessage, BroadcastPart, BroadcastStatus } from "~/types";
+import { getImageUrl, type PartState, parseParts } from "./broadcast-helpers";
 
 const STATUS_LABELS: Record<BroadcastStatus, string> = {
   draft: "下書き",
@@ -52,28 +52,6 @@ const MAX_PARTS = 5;
 
 let partIdCounter = 0;
 const nextPartId = () => `part-${++partIdCounter}`;
-
-type PartState = { id: string } & (
-  | Extract<BroadcastPart, { type: "text" }>
-  | (Extract<BroadcastPart, { type: "image" }> & {
-      file?: File;
-      previewUrl?: string;
-    })
-);
-
-const parseParts = (broadcast: BroadcastMessage): PartState[] => {
-  if (!broadcast.parts)
-    return [{ id: nextPartId(), type: "text", text: broadcast.body }];
-  try {
-    const raw = JSON.parse(broadcast.parts) as Omit<PartState, "id">[];
-    return raw.map((p) => ({ ...p, id: nextPartId() }) as PartState);
-  } catch {
-    return [{ id: nextPartId(), type: "text", text: broadcast.body }];
-  }
-};
-
-const getImageUrl = (imageR2Key: string) =>
-  `${API_BASE}/broadcast/media/${imageR2Key}`;
 
 type ModalMode = "create" | "edit";
 
@@ -271,7 +249,7 @@ const BroadcastFormModal = ({
 }: BroadcastFormModalProps) => {
   const [parts, setParts] = useState<PartState[]>(
     broadcast
-      ? parseParts(broadcast)
+      ? parseParts(broadcast, nextPartId)
       : [{ id: nextPartId(), type: "text", text: "" }],
   );
   const [timing, setTiming] = useState<SendTiming>(

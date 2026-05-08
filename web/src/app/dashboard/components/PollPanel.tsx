@@ -22,6 +22,11 @@ import {
 import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
 import { formatDateTime } from "~/lib/format";
 import type { CreatePollRequest, Poll, PollStatus } from "~/types";
+import {
+  type ChoiceFormState,
+  collectValidChoices,
+  isPollFormValid,
+} from "./poll-helpers";
 
 const STATUS_LABELS: Record<PollStatus, string> = {
   draft: "下書き",
@@ -36,8 +41,6 @@ const STATUS_STYLES: Record<PollStatus, string> = {
   sent: "bg-green-100 text-green-700",
   closed: "bg-stone-200 text-stone-500",
 };
-
-type ChoiceFormState = { id: string; value: string };
 
 const emptyChoice = (): ChoiceFormState => ({
   id: crypto.randomUUID(),
@@ -69,10 +72,8 @@ const PollForm = ({ poll, onClose }: { poll?: Poll; onClose: () => void }) => {
   const updateChoice = (id: string, value: string) =>
     setChoices(choices.map((c) => (c.id === id ? { ...c, value } : c)));
 
-  const validChoices = choices
-    .map((c) => c.value.trim())
-    .filter((v) => v.length > 0);
-  const isValid = !!title.trim() && validChoices.length >= 2;
+  const validChoices = collectValidChoices(choices);
+  const isValid = isPollFormValid(title, validChoices);
 
   const handleSubmit = async (sendNow: boolean) => {
     if (sendNow && !isEditMode) {
