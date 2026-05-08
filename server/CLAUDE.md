@@ -37,7 +37,9 @@ server/src/
 │   ├── schema.ts            # テーブルスキーマ
 │   ├── client.ts            # DB クライアント
 │   └── migrations/          # マイグレーションファイル
-└── __tests__/               # テスト
+├── __tests__/               # framework レベルの横断テスト
+├── test-helpers/            # test-app / test-db / tool-context などの共通ヘルパ
+└── *.test.ts                # 単体テストは対象ファイルと co-located
 ```
 
 ## API エンドポイント
@@ -494,7 +496,19 @@ thread_persona_status 更新
 
 ```bash
 pnpm dev               # 開発サーバー（http://localhost:8787）
-pnpm test              # テスト実行
+pnpm test              # vitest 実行（istanbul provider）
+pnpm test --coverage   # カバレッジ計測
 pnpm deploy            # dev 環境にデプロイ
 pnpm deploy:prd        # prd 環境にデプロイ
 ```
+
+## テスト
+
+- ランナー: vitest + libsql（テスト DB）+ msw
+- 配置: 対象ファイルの隣に `*.test.ts` を置く co-located 方式
+- 共通ヘルパ: `test-helpers/`
+  - `test-db.ts`: in-memory libsql + DDL（`broadcast_messages` / `polls` 等を含む）
+  - `test-app.ts`: `resolvePrincipal` + `errorHandler` 込みの Hono アプリを返す
+  - `tool-context.ts`: Mastra tool の `execute` を実行するための `buildToolContext` / `callTool`
+- ルート/サービス/リポジトリ/Mastra tools/ハンドラーの単体・統合テストを揃える
+- カバレッジ閾値は `vitest.config.ts` で管理。`mastra/public/` 等は除外
