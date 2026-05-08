@@ -5,38 +5,12 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
-  closePoll,
-  convertFile,
-  createBroadcast,
-  createPoll,
-  deleteAllFeedbacks,
-  deleteAllKnowledge,
-  deleteAllPersonas,
-  deleteBroadcast,
-  deleteFile,
-  deletePoll,
-  extractPersonas,
-  fetchBroadcasts,
-  fetchEmergencies,
-  fetchFeedbackById,
-  fetchFeedbacks,
-  fetchFileContent,
-  fetchFiles,
-  fetchPersonas,
-  fetchPollResultsAdmin,
-  fetchPolls,
-  fetchUnifiedFiles,
-  reconvertFile,
-  resolveFeedback,
-  saveFile,
-  sendBroadcastNow,
-  sendPollNow,
-  syncKnowledge,
-  unresolveFeedback,
-  updateBroadcast,
-  updatePoll,
-  uploadBroadcastImage,
-  uploadFile,
+  broadcastRepository,
+  emergencyRepository,
+  feedbackRepository,
+  knowledgeRepository,
+  personaRepository,
+  pollRepository,
 } from "~/repository";
 import type { PollStatus } from "~/types";
 
@@ -58,7 +32,8 @@ export const dashboardKeys = {
 export const usePersonas = (limit = 30) =>
   useInfiniteQuery({
     queryKey: [...dashboardKeys.personas, limit],
-    queryFn: ({ pageParam }) => fetchPersonas({ limit, cursor: pageParam }),
+    queryFn: ({ pageParam }) =>
+      personaRepository.fetchPersonas({ limit, cursor: pageParam }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });
@@ -66,23 +41,23 @@ export const usePersonas = (limit = 30) =>
 export const useEmergencies = (limit = 100) =>
   useQuery({
     queryKey: dashboardKeys.emergencies,
-    queryFn: () => fetchEmergencies(limit),
+    queryFn: () => emergencyRepository.fetchEmergencies(limit),
   });
 
 export const useSyncKnowledge = () =>
   useMutation({
-    mutationFn: syncKnowledge,
+    mutationFn: knowledgeRepository.syncKnowledge,
   });
 
 export const useDeleteKnowledge = () =>
   useMutation({
-    mutationFn: deleteAllKnowledge,
+    mutationFn: knowledgeRepository.deleteAllKnowledge,
   });
 
 export const useExtractPersonas = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: extractPersonas,
+    mutationFn: personaRepository.extractPersonas,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.personas });
     },
@@ -92,7 +67,7 @@ export const useExtractPersonas = () => {
 export const useDeletePersonas = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: deleteAllPersonas,
+    mutationFn: personaRepository.deleteAllPersonas,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.personas });
     },
@@ -103,7 +78,7 @@ export const useDeletePersonas = () => {
 export const useKnowledgeFiles = () =>
   useQuery({
     queryKey: dashboardKeys.knowledgeFiles,
-    queryFn: fetchFiles,
+    queryFn: knowledgeRepository.fetchFiles,
   });
 
 export const useKnowledgeFile = (key: string | null) =>
@@ -111,7 +86,7 @@ export const useKnowledgeFile = (key: string | null) =>
     queryKey: dashboardKeys.knowledgeFile(key ?? ""),
     queryFn: () => {
       if (!key) throw new Error("Key is required");
-      return fetchFileContent(key);
+      return knowledgeRepository.fetchFileContent(key);
     },
     enabled: !!key,
   });
@@ -120,7 +95,7 @@ export const useSaveFile = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ key, content }: { key: string; content: string }) =>
-      saveFile(key, content),
+      knowledgeRepository.saveFile(key, content),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.knowledgeFiles });
       queryClient.invalidateQueries({
@@ -133,7 +108,7 @@ export const useSaveFile = () => {
 export const useDeleteFile = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: deleteFile,
+    mutationFn: knowledgeRepository.deleteFile,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.knowledgeFiles });
       queryClient.invalidateQueries({
@@ -147,7 +122,7 @@ export const useUploadFile = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ file, filename }: { file: File; filename?: string }) =>
-      uploadFile(file, filename),
+      knowledgeRepository.uploadFile(file, filename),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.knowledgeFiles });
       queryClient.invalidateQueries({
@@ -161,7 +136,7 @@ export const useConvertFile = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ file, filename }: { file: File; filename: string }) =>
-      convertFile(file, filename),
+      knowledgeRepository.convertFile(file, filename),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.knowledgeFiles });
       queryClient.invalidateQueries({
@@ -175,7 +150,7 @@ export const useConvertFile = () => {
 export const useUnifiedFiles = () =>
   useQuery({
     queryKey: dashboardKeys.knowledgeUnifiedFiles,
-    queryFn: fetchUnifiedFiles,
+    queryFn: knowledgeRepository.fetchUnifiedFiles,
   });
 
 // 元ファイルからMarkdownを再生成
@@ -188,7 +163,7 @@ export const useReconvertFile = () => {
     }: {
       originalKey: string;
       filename: string;
-    }) => reconvertFile(originalKey, filename),
+    }) => knowledgeRepository.reconvertFile(originalKey, filename),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: dashboardKeys.knowledgeUnifiedFiles,
@@ -205,7 +180,11 @@ export const useFeedbacks = (
   useInfiniteQuery({
     queryKey: [...dashboardKeys.feedbacks, limit, options?.rating],
     queryFn: ({ pageParam }) =>
-      fetchFeedbacks({ limit, cursor: pageParam, rating: options?.rating }),
+      feedbackRepository.fetchFeedbacks({
+        limit,
+        cursor: pageParam,
+        rating: options?.rating,
+      }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });
@@ -215,7 +194,7 @@ export const useFeedbackDetail = (id: string | null) =>
     queryKey: dashboardKeys.feedbackDetail(id ?? ""),
     queryFn: () => {
       if (!id) throw new Error("ID is required");
-      return fetchFeedbackById(id);
+      return feedbackRepository.fetchFeedbackById(id);
     },
     enabled: !!id,
   });
@@ -223,7 +202,7 @@ export const useFeedbackDetail = (id: string | null) =>
 export const useDeleteFeedbacks = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: deleteAllFeedbacks,
+    mutationFn: feedbackRepository.deleteAllFeedbacks,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.feedbacks });
     },
@@ -233,7 +212,7 @@ export const useDeleteFeedbacks = () => {
 export const useResolveFeedback = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: resolveFeedback,
+    mutationFn: feedbackRepository.resolveFeedback,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.feedbacks });
     },
@@ -243,7 +222,7 @@ export const useResolveFeedback = () => {
 export const useUnresolveFeedback = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: unresolveFeedback,
+    mutationFn: feedbackRepository.unresolveFeedback,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.feedbacks });
     },
@@ -258,7 +237,11 @@ export const useBroadcasts = (
   useInfiniteQuery({
     queryKey: [...dashboardKeys.broadcasts, limit, options?.status],
     queryFn: ({ pageParam }) =>
-      fetchBroadcasts({ limit, cursor: pageParam, status: options?.status }),
+      broadcastRepository.fetchBroadcasts({
+        limit,
+        cursor: pageParam,
+        status: options?.status,
+      }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });
@@ -266,7 +249,7 @@ export const useBroadcasts = (
 export const useCreateBroadcast = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createBroadcast,
+    mutationFn: broadcastRepository.createBroadcast,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.broadcasts });
     },
@@ -281,8 +264,8 @@ export const useUpdateBroadcast = () => {
       data,
     }: {
       id: string;
-      data: Parameters<typeof updateBroadcast>[1];
-    }) => updateBroadcast(id, data),
+      data: Parameters<typeof broadcastRepository.updateBroadcast>[1];
+    }) => broadcastRepository.updateBroadcast(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.broadcasts });
     },
@@ -292,7 +275,7 @@ export const useUpdateBroadcast = () => {
 export const useDeleteBroadcast = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: deleteBroadcast,
+    mutationFn: broadcastRepository.deleteBroadcast,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.broadcasts });
     },
@@ -302,7 +285,7 @@ export const useDeleteBroadcast = () => {
 export const useSendBroadcast = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: sendBroadcastNow,
+    mutationFn: broadcastRepository.sendBroadcastNow,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.broadcasts });
     },
@@ -310,7 +293,7 @@ export const useSendBroadcast = () => {
 };
 
 export const useUploadBroadcastImage = () =>
-  useMutation({ mutationFn: uploadBroadcastImage });
+  useMutation({ mutationFn: broadcastRepository.uploadBroadcastImage });
 
 // 投票関連 hooks
 export const usePolls = (
@@ -322,7 +305,7 @@ export const usePolls = (
   useInfiniteQuery({
     queryKey: [...dashboardKeys.polls, limit, options?.status],
     queryFn: ({ pageParam }) =>
-      fetchPolls({
+      pollRepository.fetchPolls({
         limit,
         cursor: pageParam,
         status: options?.status,
@@ -334,7 +317,7 @@ export const usePolls = (
 export const useCreatePoll = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createPoll,
+    mutationFn: pollRepository.createPoll,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.polls });
     },
@@ -349,8 +332,8 @@ export const useUpdatePoll = () => {
       data,
     }: {
       id: string;
-      data: Parameters<typeof updatePoll>[1];
-    }) => updatePoll(id, data),
+      data: Parameters<typeof pollRepository.updatePoll>[1];
+    }) => pollRepository.updatePoll(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.polls });
     },
@@ -360,7 +343,7 @@ export const useUpdatePoll = () => {
 export const useDeletePoll = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: deletePoll,
+    mutationFn: pollRepository.deletePoll,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.polls });
     },
@@ -370,7 +353,7 @@ export const useDeletePoll = () => {
 export const useSendPoll = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: sendPollNow,
+    mutationFn: pollRepository.sendPollNow,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.polls });
     },
@@ -380,7 +363,7 @@ export const useSendPoll = () => {
 export const useClosePoll = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: closePoll,
+    mutationFn: pollRepository.closePoll,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.polls });
     },
@@ -392,7 +375,7 @@ export const usePollResults = (id: string | null) =>
     queryKey: dashboardKeys.pollResults(id ?? ""),
     queryFn: () => {
       if (!id) throw new Error("ID is required");
-      return fetchPollResultsAdmin(id);
+      return pollRepository.fetchPollResultsAdmin(id);
     },
     enabled: !!id,
   });

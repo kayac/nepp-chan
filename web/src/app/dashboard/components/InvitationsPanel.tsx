@@ -4,11 +4,7 @@ import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
 import { ROLE_LABELS, useRole } from "~/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
 import { formatDateTime } from "~/lib/format";
-import {
-  createInvitation,
-  deleteInvitation,
-  fetchInvitations,
-} from "~/repository";
+import { invitationRepository } from "~/repository";
 import { useAuth } from "../contexts/AuthContext";
 
 export const InvitationsPanel = () => {
@@ -23,7 +19,7 @@ export const InvitationsPanel = () => {
 
   const { data, isLoading } = useQuery({
     queryKey: ["invitations"],
-    queryFn: fetchInvitations,
+    queryFn: invitationRepository.fetchInvitations,
   });
 
   const createMutation = useMutation({
@@ -33,7 +29,7 @@ export const InvitationsPanel = () => {
     }: {
       username: string;
       role: AdminUser["role"];
-    }) => createInvitation(username, role),
+    }) => invitationRepository.createInvitation(username, role),
     onSuccess: (data) => {
       const baseUrl = window.location.origin;
       const url = `${baseUrl}/register?token=${data.invitation.token}`;
@@ -49,7 +45,7 @@ export const InvitationsPanel = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: deleteInvitation,
+    mutationFn: invitationRepository.deleteInvitation,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
     },

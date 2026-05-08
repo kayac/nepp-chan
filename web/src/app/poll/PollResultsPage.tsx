@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { RootLayout } from "~/components/RootLayout";
 import { QueryProvider } from "~/providers/QueryProvider";
-import { fetchPollResults } from "~/repository";
+import { pollRepository } from "~/repository";
 import type { PollChoiceResult } from "~/types";
 
 const usePollResultsPublic = (id: string | null) =>
   useQuery({
     queryKey: ["poll-results", id],
-    queryFn: () => fetchPollResults(id as string),
+    queryFn: () => pollRepository.fetchPollResults(id as string),
     enabled: !!id,
   });
 

@@ -10,71 +10,14 @@ import { createThreadRepository } from "@nepp-chan/shared/api/repository/thread-
 import { API_BASE, client } from "~/lib/api/client";
 
 /**
- * shared/api/repository の factory 群を web の client で合成し、
- * 名前付き関数として一括 export する。
- * ここが web における API 呼び出しの単一エントリ。
+ * shared/api/repository の factory を web の client で合成した repository 群。
+ * domain ごとに名前空間として export する。
  */
-export const {
-  // broadcast
-  fetchBroadcasts,
-  fetchBroadcastById,
-  createBroadcast,
-  updateBroadcast,
-  deleteBroadcast,
-  sendBroadcastNow,
-  uploadBroadcastImage,
-  // emergency
-  fetchEmergencies,
-  // feedback
-  submitFeedback,
-  fetchFeedbacks,
-  fetchFeedbackById,
-  deleteAllFeedbacks,
-  resolveFeedback,
-  unresolveFeedback,
-  // invitation
-  fetchInvitations,
-  createInvitation,
-  deleteInvitation,
-  // knowledge
-  syncKnowledge,
-  deleteAllKnowledge,
-  fetchFiles,
-  fetchFileContent,
-  saveFile,
-  deleteFile,
-  uploadFile,
-  convertFile,
-  fetchUnifiedFiles,
-  reconvertFile,
-  getOriginalFileUrl,
-  // persona
-  fetchPersonas,
-  extractPersonas,
-  deleteAllPersonas,
-  // poll
-  fetchPolls,
-  fetchPollById,
-  createPoll,
-  updatePoll,
-  deletePoll,
-  sendPollNow,
-  closePoll,
-  fetchPollResultsAdmin,
-  fetchPollResults,
-  // thread
-  fetchThreads,
-  createThread,
-  deleteThread,
-  fetchThread,
-  fetchMessages,
-} = {
-  ...createBroadcastRepository(client),
-  ...createEmergencyRepository(client),
-  ...createFeedbackRepository(client),
-  ...createInvitationRepository(client),
-  ...createKnowledgeRepository(client, API_BASE),
-  ...createPersonaRepository(client),
-  ...createPollRepository(client),
-  ...createThreadRepository(client),
-};
+export const broadcastRepository = createBroadcastRepository(client);
+export const emergencyRepository = createEmergencyRepository(client);
+export const feedbackRepository = createFeedbackRepository(client);
+export const invitationRepository = createInvitationRepository(client);
+export const knowledgeRepository = createKnowledgeRepository(client, API_BASE);
+export const personaRepository = createPersonaRepository(client);
+export const pollRepository = createPollRepository(client);
+export const threadRepository = createThreadRepository(client);

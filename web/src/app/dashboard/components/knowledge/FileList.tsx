@@ -1,5 +1,5 @@
 import { formatDateTime } from "~/lib/format";
-import { getOriginalFileUrl } from "~/repository";
+import { knowledgeRepository } from "~/repository";
 import type { UnifiedFileInfo } from "~/types";
 
 /**
@@ -88,7 +88,9 @@ export const FileList = ({
                       }
                       return (
                         <a
-                          href={getOriginalFileUrl(orig.key)}
+                          href={knowledgeRepository.getOriginalFileUrl(
+                            orig.key,
+                          )}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-sm text-teal-600 hover:text-teal-800 hover:underline"
@@ -155,7 +157,7 @@ export const FileList = ({
                 </span>
                 {orig && (
                   <a
-                    href={getOriginalFileUrl(orig.key)}
+                    href={knowledgeRepository.getOriginalFileUrl(orig.key)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-xs text-teal-600 hover:text-teal-800 shrink-0"

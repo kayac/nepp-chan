@@ -1,11 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  createThread,
-  deleteThread,
-  fetchMessages,
-  fetchThread,
-  fetchThreads,
-} from "~/repository";
+import { threadRepository } from "~/repository";
 
 export const threadKeys = {
   all: ["threads"] as const,
@@ -19,20 +13,20 @@ export const threadKeys = {
 export const useThreads = (page = 0, perPage = 20) =>
   useQuery({
     queryKey: threadKeys.list(),
-    queryFn: () => fetchThreads(page, perPage),
+    queryFn: () => threadRepository.fetchThreads(page, perPage),
   });
 
 export const useThread = (threadId: string) =>
   useQuery({
     queryKey: threadKeys.detail(threadId),
-    queryFn: () => fetchThread(threadId),
+    queryFn: () => threadRepository.fetchThread(threadId),
     enabled: !!threadId,
   });
 
 export const useMessages = (threadId: string) =>
   useQuery({
     queryKey: threadKeys.messages(threadId),
-    queryFn: () => fetchMessages(threadId),
+    queryFn: () => threadRepository.fetchMessages(threadId),
     enabled: !!threadId,
   });
 
@@ -40,7 +34,7 @@ export const useCreateThread = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (title?: string) => createThread(title),
+    mutationFn: (title?: string) => threadRepository.createThread(title),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: threadKeys.list() });
     },
@@ -51,7 +45,7 @@ export const useDeleteThread = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (threadId: string) => deleteThread(threadId),
+    mutationFn: (threadId: string) => threadRepository.deleteThread(threadId),
     onSuccess: (_data, threadId) => {
       queryClient.invalidateQueries({ queryKey: threadKeys.list() });
       queryClient.removeQueries({ queryKey: threadKeys.detail(threadId) });
