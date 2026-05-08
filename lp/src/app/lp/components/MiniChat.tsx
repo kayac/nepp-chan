@@ -1,4 +1,5 @@
 import { useChat } from "@ai-sdk/react";
+import type { paths } from "@nepp-chan/shared/api";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { ArrowRightIcon, EllipsisIcon, SendIcon } from "lucide-react";
@@ -6,6 +7,10 @@ import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { API_URL, WEB_URL } from "~/constants/urls";
+
+type SimpleChatRequest = NonNullable<
+  paths["/simple-chat"]["post"]["requestBody"]
+>["content"]["application/json"];
 
 const SAMPLE_QUESTIONS: ReadonlyArray<string> = [
   "移住の補助金はある？",
@@ -41,7 +46,12 @@ export const MiniChat = () => {
       new DefaultChatTransport({
         api: `${API_URL}/simple-chat`,
         prepareSendMessagesRequest({ messages: msgs }) {
-          return { body: { message: msgs[msgs.length - 1] } };
+          const last = msgs[msgs.length - 1];
+          if (!last) throw new Error("送信するメッセージがありません");
+          const body: SimpleChatRequest = {
+            message: last as SimpleChatRequest["message"],
+          };
+          return { body };
         },
       }),
     [],
