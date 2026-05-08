@@ -8,6 +8,8 @@
     "build": "astro build",
     "check": "astro check",
     "preview": "astro preview",
+    "test": "TZ=Asia/Tokyo vitest",
+    "test:cov": "TZ=Asia/Tokyo vitest run --coverage",
     "deploy": "pnpm build && wrangler pages deploy --project-name nepp-chan-web-dev --branch develop",
     "deploy:prd": "pnpm build && wrangler pages deploy --project-name nepp-chan-web-prd --branch main",
     "openapi:generate": "openapi-typescript http://localhost:8787/doc -o src/types/api.d.ts"
@@ -36,14 +38,22 @@
   "devDependencies": {
     "@sentry/vite-plugin": "^5.1.1",
     "@tailwindcss/vite": "^4.2.2",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@vitest/coverage-v8": "~3.2.4",
     "autoprefixer": "^10.4.27",
+    "jsdom": "^29.1.1",
+    "msw": "^2.14.5",
     "openapi-typescript": "^7.13.0",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.1.10",
     "typescript": "~5.9.3",
+    "vitest": "~3.2.4",
     "wrangler": "^4.76.0"
   }
 }

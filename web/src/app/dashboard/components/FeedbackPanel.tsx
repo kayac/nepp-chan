@@ -20,6 +20,11 @@ import {
   type FeedbackCategory,
   type MessageFeedback,
 } from "~/types";
+import {
+  countResolvedAndUnresolved,
+  filterFeedbacksByResolved,
+  type ResolvedFilter,
+} from "./feedback-helpers";
 
 type FeedbackDetailModalProps = {
   feedback: MessageFeedback;
@@ -234,9 +239,7 @@ export const FeedbackPanel = () => {
   const [ratingFilter, setRatingFilter] = useState<
     "good" | "bad" | "idea" | undefined
   >(undefined);
-  const [resolvedFilter, setResolvedFilter] = useState<
-    "all" | "unresolved" | "resolved"
-  >("all");
+  const [resolvedFilter, setResolvedFilter] = useState<ResolvedFilter>("all");
   const {
     data,
     isLoading,
@@ -284,15 +287,11 @@ export const FeedbackPanel = () => {
   }
 
   const allFeedbacks = data?.pages.flatMap((page) => page.feedbacks) ?? [];
-  const feedbacks = allFeedbacks.filter((f) => {
-    if (resolvedFilter === "unresolved") return !f.resolvedAt;
-    if (resolvedFilter === "resolved") return !!f.resolvedAt;
-    return true;
-  });
+  const feedbacks = filterFeedbacksByResolved(allFeedbacks, resolvedFilter);
   const stats = data?.pages[0]?.stats;
   const total = data?.pages[0]?.total ?? 0;
-  const unresolvedCount = allFeedbacks.filter((f) => !f.resolvedAt).length;
-  const resolvedCount = allFeedbacks.filter((f) => !!f.resolvedAt).length;
+  const { unresolved: unresolvedCount, resolved: resolvedCount } =
+    countResolvedAndUnresolved(allFeedbacks);
 
   return (
     <div className="space-y-4">

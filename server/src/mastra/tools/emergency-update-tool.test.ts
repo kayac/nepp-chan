@@ -1,0 +1,72 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("~/repository/emergency-repository", () => ({
+  emergencyRepository: {
+    findById: vi.fn(),
+    update: vi.fn(),
+  },
+}));
+
+const { emergencyRepository } = await import(
+  "~/repository/emergency-repository"
+);
+const { emergencyUpdateTool } = await import("./emergency-update-tool");
+
+import { buildToolContext } from "../../test-helpers/tool-context";
+
+const fakeDb = {} as D1Database;
+const ctx = buildToolContext({ db: fakeDb });
+
+const sampleReport = {
+  id: "e-1",
+  type: "野生動物目撃",
+  description: null,
+  location: null,
+  reportedAt: "2025-01-01T00:00:00Z",
+  updatedAt: null,
+};
+
+describe("emergencyUpdateTool.execute", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("正常系: description だけ更新", async () => {
+    vi.mocked(emergencyRepository.findById).mockResolvedValue(sampleReport);
+    vi.mocked(emergencyRepository.update).mockResolvedValue();
+
+    const result: any = await emergencyUpdateTool.execute!(
+      { reportId: "e-1", description: "詳細追加" },
+      ctx,
+    );
+
+    expect(result.success).toBe(true);
+    expect(emergencyRepository.update).toHaveBeenCalledWith(fakeDb, "e-1", {
+      description: "詳細追加",
+      location: undefined,
+    });
+  });
+
+  it("更新項目なしは NO_UPDATE_FIELDS", async () => {
+    const result: any = await emergencyUpdateTool.execute!(
+      { reportId: "e-1" },
+      ctx,
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("NO_UPDATE_FIELDS");
+    expect(emergencyRepository.findById).not.toHaveBeenCalled();
+  });
+
+  it("存在しない reportId は REPORT_NOT_FOUND", async () => {
+    vi.mocked(emergencyRepository.findById).mockResolvedValue(null);
+
+    const result: any = await emergencyUpdateTool.execute!(
+      { reportId: "missing", description: "x" },
+      ctx,
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("REPORT_NOT_FOUND");
+  });
+});

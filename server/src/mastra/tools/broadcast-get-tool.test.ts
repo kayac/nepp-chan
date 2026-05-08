@@ -1,0 +1,117 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("~/repository/broadcast-repository", () => ({
+  broadcastRepository: {
+    findById: vi.fn(),
+    findAll: vi.fn(),
+    findByKeyword: vi.fn(),
+  },
+}));
+
+const { broadcastRepository } = await import(
+  "~/repository/broadcast-repository"
+);
+const { broadcastGetTool } = await import("./broadcast-get-tool");
+
+import { buildToolContext } from "../../test-helpers/tool-context";
+
+const fakeDb = {} as D1Database;
+const ctx = buildToolContext({ db: fakeDb });
+
+const sample = {
+  id: "b-1",
+  title: "おしらせ",
+  body: "本文",
+  parts: null,
+  status: "sent",
+  scheduledAt: null,
+  sentAt: "2025-01-01T00:00:00Z",
+  errorMessage: null,
+  createdBy: "u-1",
+  createdAt: "2025-01-01T00:00:00Z",
+  updatedAt: null,
+};
+
+describe("broadcastGetTool.execute", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("id 指定: 該当ありで 1 件返す", async () => {
+    vi.mocked(broadcastRepository.findById).mockResolvedValue(sample);
+
+    const result: any = await broadcastGetTool.execute!(
+      { id: "b-1", limit: 10 },
+      ctx,
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.count).toBe(1);
+  });
+
+  it("id 指定: 該当なしで 0 件 + 専用メッセージ", async () => {
+    vi.mocked(broadcastRepository.findById).mockResolvedValue(null);
+
+    const result: any = await broadcastGetTool.execute!(
+      { id: "missing", limit: 10 },
+      ctx,
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.count).toBe(0);
+    expect(result.message).toMatch(/見つかりません/);
+  });
+
+  it("keyword 指定: findByKeyword の結果を返す", async () => {
+    vi.mocked(broadcastRepository.findByKeyword).mockResolvedValue([sample]);
+
+    const result: any = await broadcastGetTool.execute!(
+      { keyword: "雪", limit: 5 },
+      ctx,
+    );
+
+    expect(broadcastRepository.findByKeyword).toHaveBeenCalledWith(
+      fakeDb,
+      "雪",
+      5,
+    );
+    expect(result.count).toBe(1);
+  });
+
+  it("keyword ヒット 0 は専用メッセージ", async () => {
+    vi.mocked(broadcastRepository.findByKeyword).mockResolvedValue([]);
+
+    const result: any = await broadcastGetTool.execute!(
+      { keyword: "ない", limit: 10 },
+      ctx,
+    );
+
+    expect(result.message).toMatch(/一致する.*ありません/);
+  });
+
+  it("引数なし: status=sent の最新を取る", async () => {
+    vi.mocked(broadcastRepository.findAll).mockResolvedValue({
+      broadcasts: [sample],
+      nextCursor: null,
+      hasMore: false,
+    });
+
+    const result: any = await broadcastGetTool.execute!({ limit: 10 }, ctx);
+
+    expect(broadcastRepository.findAll).toHaveBeenCalledWith(fakeDb, {
+      limit: 10,
+      status: "sent",
+    });
+    expect(result.count).toBe(1);
+  });
+
+  it("DB なしは DB_NOT_AVAILABLE", async () => {
+    const result: any = await broadcastGetTool.execute!(
+      { limit: 10 },
+      buildToolContext({}),
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("DB_NOT_AVAILABLE");
+  });
+});

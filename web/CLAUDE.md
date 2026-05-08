@@ -228,6 +228,16 @@ Tailwind CSS 4 の短縮記法と CSS 変数記法を使用。
 pnpm dev               # 開発サーバー（http://localhost:5173）
 pnpm build             # ビルド → dist/
 pnpm check             # 型チェック（astro check）
+pnpm test              # vitest 実行（jsdom + msw）
+pnpm test --coverage   # カバレッジ計測（v8 provider）
 pnpm deploy            # dev 環境にデプロイ
 pnpm deploy:prd        # prd 環境にデプロイ
 ```
+
+## テスト
+
+- ランナー: vitest（jsdom）+ Testing Library + msw
+- 配置: `src/foo.ts` の隣に `src/foo.test.ts` を置く co-located 方式
+- 共通ヘルパ: `src/test/`（msw-server / QueryClientProvider 付きの `renderHookWithQuery` / `renderWithQuery` / setup）
+- カバレッジ閾値は `vitest.config.ts` で管理。Sentry init / 薄いラッパー / 外部 SDK 連携が深い tsx は除外
+- E2E は未導入
