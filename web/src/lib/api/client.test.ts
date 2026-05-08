@@ -1,7 +1,11 @@
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { server } from "../../test/msw-server";
-import { removeAuthToken, setAuthToken, setSessionToken } from "../auth-token";
+import {
+  removeAuthToken,
+  setAuthToken,
+  setSessionToken,
+} from "~/lib/auth-token";
+import { server } from "~/test/msw-server";
 import { ApiError, client, parseErrorResponse } from "./client";
 
 const API = "http://localhost:8787";

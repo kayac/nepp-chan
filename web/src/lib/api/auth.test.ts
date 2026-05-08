@@ -1,7 +1,7 @@
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { server } from "../../test/msw-server";
-import { setAuthToken } from "../auth-token";
+import { setAuthToken } from "~/lib/auth-token";
+import { server } from "~/test/msw-server";
 import { fetchCurrentUser, login, postLogout, register } from "./auth";
 
 const API_BASE = "http://localhost:8787"; // PUBLIC_API_URL は test 環境では空文字

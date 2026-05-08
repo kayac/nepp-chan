@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { MessageFeedback } from "../../../types";
+import type { MessageFeedback } from "~/types";
 import {
   countResolvedAndUnresolved,
   filterFeedbacksByResolved,

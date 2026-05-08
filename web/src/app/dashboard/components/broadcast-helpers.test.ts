@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { BroadcastMessage } from "../../../types";
+import type { BroadcastMessage } from "~/types";
 import { getImageUrl, type PartState, parseParts } from "./broadcast-helpers";
 
 const idGen = () => {

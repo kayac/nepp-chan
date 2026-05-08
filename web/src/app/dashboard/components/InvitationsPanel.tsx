@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useAuth } from "~/app/dashboard/contexts/AuthContext";
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
 import { ROLE_LABELS, useRole } from "~/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
 import { formatDateTime } from "~/lib/format";
 import { invitationRepository } from "~/repository";
-import { useAuth } from "../contexts/AuthContext";
 
 export const InvitationsPanel = () => {
   const queryClient = useQueryClient();
