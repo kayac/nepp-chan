@@ -127,5 +127,9 @@ export type UpdatePollRequest = PutBody<"/admin/polls/{id}">;
 export type PollResultsResponse = GetOk<"/polls/{id}">;
 export type PollChoiceResult = PollResultsResponse["choiceResults"][number];
 
+// シンプルチャット（lp / ウィジェット用ストリーミング）
+export type SimpleChatRequest = PostBody<"/simple-chat">;
+export type SimpleChatMessage = SimpleChatRequest["message"];
+
 // OpenAPI paths 自体も再エクスポート
 export type { paths } from "./types.d";
