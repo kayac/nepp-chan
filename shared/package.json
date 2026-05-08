@@ -10,15 +10,20 @@
     "./styles/*": "./src/styles/*",
     "./ui/*": "./src/ui/*.tsx",
     "./components/*": "./src/components/*.tsx",
-    "./lib/*": "./src/lib/*.ts"
+    "./lib/*": "./src/lib/*.ts",
+    "./api": "./src/api/index.ts",
+    "./api/repository/*": "./src/api/repository/*.ts"
   },
   "scripts": {
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "test": "vitest",
+    "test:cov": "vitest run --coverage"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "openapi-fetch": "^0.17.0",
     "tailwind-merge": "^3.4.0"
   },
   "peerDependencies": {
@@ -28,6 +33,10 @@
   "devDependencies": {
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "typescript": "~5.9.3"
+    "@vitest/coverage-istanbul": "~3.2.4",
+    "jsdom": "^29.1.1",
+    "msw": "^2.14.5",
+    "typescript": "~5.9.3",
+    "vitest": "~3.2.4"
   }
 }

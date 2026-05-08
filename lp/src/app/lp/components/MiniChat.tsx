@@ -1,4 +1,5 @@
 import { useChat } from "@ai-sdk/react";
+import type { SimpleChatRequest } from "@nepp-chan/shared/api";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { ArrowRightIcon, EllipsisIcon, SendIcon } from "lucide-react";
@@ -41,7 +42,12 @@ export const MiniChat = () => {
       new DefaultChatTransport({
         api: `${API_URL}/simple-chat`,
         prepareSendMessagesRequest({ messages: msgs }) {
-          return { body: { message: msgs[msgs.length - 1] } };
+          const last = msgs[msgs.length - 1];
+          if (!last) throw new Error("送信するメッセージがありません");
+          const body: SimpleChatRequest = {
+            message: last as SimpleChatRequest["message"],
+          };
+          return { body };
         },
       }),
     [],

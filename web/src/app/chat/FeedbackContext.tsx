@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 
-import { submitFeedback } from "~/repository/feedback-repository";
+import { feedbackRepository } from "~/lib/api/repository";
 import type {
   ConversationContext,
   FeedbackCategory,
@@ -173,7 +173,7 @@ export const FeedbackProvider = ({ children, threadId }: Props) => {
 
       setIsSubmitting(true);
       try {
-        await submitFeedback({
+        await feedbackRepository.submitFeedback({
           threadId,
           messageId: feedbackModal.messageId,
           rating: feedbackModal.rating,

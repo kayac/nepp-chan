@@ -1,18 +1,14 @@
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { setAuthToken } from "../lib/auth-token";
-import { server } from "../test/msw-server";
 import {
-  createBroadcast,
-  deleteBroadcast,
-  fetchBroadcastById,
-  fetchBroadcasts,
-  sendBroadcastNow,
-  updateBroadcast,
-  uploadBroadcastImage,
-} from "./broadcast-repository";
+  TEST_API_BASE as API,
+  setTestAuthToken,
+  testApiClient,
+} from "../../test/api-client";
+import { server } from "../../test/msw-server";
+import { createBroadcastRepository } from "./broadcast-repository";
 
-const API = "http://localhost:8787";
+const repo = createBroadcastRepository(testApiClient);
 
 const sample = {
   id: "b-1",
@@ -29,12 +25,11 @@ const sample = {
 };
 
 beforeEach(() => {
-  localStorage.clear();
-  setAuthToken("admin-token");
+  setTestAuthToken("admin-token");
 });
 
 afterEach(() => {
-  localStorage.clear();
+  setTestAuthToken(null);
 });
 
 describe("broadcast-repository", () => {
@@ -51,7 +46,7 @@ describe("broadcast-repository", () => {
       }),
     );
 
-    await fetchBroadcasts({ status: "sent" });
+    await repo.fetchBroadcasts({ status: "sent" });
   });
 
   it("fetchBroadcastById", async () => {
@@ -59,7 +54,7 @@ describe("broadcast-repository", () => {
       http.get(`${API}/admin/broadcast/b-1`, () => HttpResponse.json(sample)),
     );
 
-    const result = await fetchBroadcastById("b-1");
+    const result = await repo.fetchBroadcastById("b-1");
     expect(result?.id).toBe("b-1");
   });
 
@@ -72,7 +67,7 @@ describe("broadcast-repository", () => {
       }),
     );
 
-    await createBroadcast({ parts: [{ type: "text", text: "x" }] });
+    await repo.createBroadcast({ parts: [{ type: "text", text: "x" }] });
   });
 
   it("updateBroadcast: PUT", async () => {
@@ -80,7 +75,9 @@ describe("broadcast-repository", () => {
       http.put(`${API}/admin/broadcast/b-1`, () => HttpResponse.json(sample)),
     );
 
-    await updateBroadcast("b-1", { parts: [{ type: "text", text: "y" }] });
+    await repo.updateBroadcast("b-1", {
+      parts: [{ type: "text", text: "y" }],
+    });
   });
 
   it("deleteBroadcast: DELETE", async () => {
@@ -90,7 +87,7 @@ describe("broadcast-repository", () => {
       ),
     );
 
-    await deleteBroadcast("b-1");
+    await repo.deleteBroadcast("b-1");
   });
 
   it("sendBroadcastNow: /:id/send", async () => {
@@ -100,7 +97,7 @@ describe("broadcast-repository", () => {
       ),
     );
 
-    await sendBroadcastNow("b-1");
+    await repo.sendBroadcastNow("b-1");
   });
 
   it("uploadBroadcastImage: multipart で送る", async () => {
@@ -111,7 +108,7 @@ describe("broadcast-repository", () => {
     );
 
     const file = new File(["x"], "test.jpg", { type: "image/jpeg" });
-    const result = await uploadBroadcastImage(file);
+    const result = await repo.uploadBroadcastImage(file);
     expect(result?.imageR2Key).toBe("k.jpg");
   });
 
@@ -122,6 +119,6 @@ describe("broadcast-repository", () => {
       ),
     );
 
-    await expect(fetchBroadcasts()).rejects.toBeDefined();
+    await expect(repo.fetchBroadcasts()).rejects.toBeDefined();
   });
 });

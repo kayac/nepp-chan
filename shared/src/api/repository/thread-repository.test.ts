@@ -1,28 +1,27 @@
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { setAuthToken } from "../lib/auth-token";
-import { server } from "../test/msw-server";
 import {
-  createThread,
-  deleteThread,
-  fetchMessages,
-  fetchThread,
-  fetchThreads,
-} from "./thread-repository";
+  TEST_API_BASE as API,
+  setTestAuthToken,
+  testApiClient,
+} from "../../test/api-client";
+import { server } from "../../test/msw-server";
+import { createThreadRepository } from "./thread-repository";
+
+const repo = createThreadRepository(testApiClient);
 
 beforeEach(() => {
-  localStorage.clear();
-  setAuthToken("test-token");
+  setTestAuthToken("test-token");
 });
 
 afterEach(() => {
-  localStorage.clear();
+  setTestAuthToken(null);
 });
 
 describe("fetchThreads", () => {
   it("正常系: ページとサイズをクエリで送る", async () => {
     server.use(
-      http.get("http://localhost:8787/threads", ({ request }) => {
+      http.get(`${API}/threads`, ({ request }) => {
         const url = new URL(request.url);
         expect(url.searchParams.get("page")).toBe("2");
         expect(url.searchParams.get("perPage")).toBe("10");
@@ -36,13 +35,13 @@ describe("fetchThreads", () => {
       }),
     );
 
-    const result = await fetchThreads(2, 10);
+    const result = await repo.fetchThreads(2, 10);
     expect(result?.page).toBe(2);
   });
 
   it("デフォルトは page=0 / perPage=20", async () => {
     server.use(
-      http.get("http://localhost:8787/threads", ({ request }) => {
+      http.get(`${API}/threads`, ({ request }) => {
         const url = new URL(request.url);
         expect(url.searchParams.get("page")).toBe("0");
         expect(url.searchParams.get("perPage")).toBe("20");
@@ -56,13 +55,13 @@ describe("fetchThreads", () => {
       }),
     );
 
-    await fetchThreads();
+    await repo.fetchThreads();
   });
 
   it("Authorization ヘッダに Bearer token を付ける", async () => {
     let receivedAuth: string | null = null;
     server.use(
-      http.get("http://localhost:8787/threads", ({ request }) => {
+      http.get(`${API}/threads`, ({ request }) => {
         receivedAuth = request.headers.get("authorization");
         return HttpResponse.json({
           threads: [],
@@ -74,25 +73,25 @@ describe("fetchThreads", () => {
       }),
     );
 
-    await fetchThreads();
+    await repo.fetchThreads();
     expect(receivedAuth).toBe("Bearer test-token");
   });
 
   it("500 エラーは throw", async () => {
     server.use(
-      http.get("http://localhost:8787/threads", () =>
+      http.get(`${API}/threads`, () =>
         HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
       ),
     );
 
-    await expect(fetchThreads()).rejects.toBeDefined();
+    await expect(repo.fetchThreads()).rejects.toBeDefined();
   });
 });
 
 describe("createThread", () => {
   it("title を渡せる", async () => {
     server.use(
-      http.post("http://localhost:8787/threads", async ({ request }) => {
+      http.post(`${API}/threads`, async ({ request }) => {
         const body = (await request.json()) as { title?: string };
         expect(body.title).toBe("新スレッド");
         return HttpResponse.json(
@@ -109,13 +108,13 @@ describe("createThread", () => {
       }),
     );
 
-    const result = await createThread("新スレッド");
+    const result = await repo.createThread("新スレッド");
     expect(result?.id).toBe("t-1");
   });
 
   it("title 省略可", async () => {
     server.use(
-      http.post("http://localhost:8787/threads", async ({ request }) => {
+      http.post(`${API}/threads`, async ({ request }) => {
         const body = (await request.json()) as { title?: string };
         expect(body.title).toBeUndefined();
         return HttpResponse.json(
@@ -132,7 +131,7 @@ describe("createThread", () => {
       }),
     );
 
-    const result = await createThread();
+    const result = await repo.createThread();
     expect(result?.id).toBe("t-2");
   });
 });
@@ -140,7 +139,7 @@ describe("createThread", () => {
 describe("fetchThread", () => {
   it("path に threadId を埋め込む", async () => {
     server.use(
-      http.get("http://localhost:8787/threads/abc", () =>
+      http.get(`${API}/threads/abc`, () =>
         HttpResponse.json({
           id: "abc",
           resourceId: "r",
@@ -152,32 +151,32 @@ describe("fetchThread", () => {
       ),
     );
 
-    const result = await fetchThread("abc");
+    const result = await repo.fetchThread("abc");
     expect(result?.id).toBe("abc");
   });
 
   it("404 は throw", async () => {
     server.use(
-      http.get("http://localhost:8787/threads/missing", () =>
+      http.get(`${API}/threads/missing`, () =>
         HttpResponse.json({ error: { message: "not found" } }, { status: 404 }),
       ),
     );
 
-    await expect(fetchThread("missing")).rejects.toBeDefined();
+    await expect(repo.fetchThread("missing")).rejects.toBeDefined();
   });
 });
 
 describe("fetchMessages", () => {
   it("messages 配列を返す", async () => {
     server.use(
-      http.get("http://localhost:8787/threads/t-1/messages", () =>
+      http.get(`${API}/threads/t-1/messages`, () =>
         HttpResponse.json({
           messages: [{ id: "m-1", role: "user", parts: [] }],
         }),
       ),
     );
 
-    const result = await fetchMessages("t-1");
+    const result = await repo.fetchMessages("t-1");
     expect(result?.messages).toHaveLength(1);
   });
 });
@@ -185,12 +184,12 @@ describe("fetchMessages", () => {
 describe("deleteThread", () => {
   it("正常系", async () => {
     server.use(
-      http.delete("http://localhost:8787/threads/t-1", () =>
+      http.delete(`${API}/threads/t-1`, () =>
         HttpResponse.json({ message: "deleted" }),
       ),
     );
 
-    const result = await deleteThread("t-1");
+    const result = await repo.deleteThread("t-1");
     expect(result?.message).toBe("deleted");
   });
 });

@@ -19,7 +19,7 @@ LP（apex 配信の静的サイト）は別パッケージ `lp/` にある。
 | 背景アニメーション    | `components/AmbientBG.tsx`             |
 | ダッシュボード画面    | `app/dashboard/`                       |
 | 認証画面              | `app/auth/`                            |
-| API クライアント      | `repository/*-repository.ts`           |
+| API クライアント      | `lib/api/repository.ts`（factory は `@nepp-chan/shared/api`） |
 | 共通フック            | `hooks/`                               |
 | 型定義                | `types/`                               |
 | Basic 認証            | `functions/_middleware.ts`             |
@@ -64,11 +64,11 @@ web/
 │   │   │   └── tool-uis/
 │   │   └── ui/                # shadcn/ui ベース共通コンポーネント
 │   ├── hooks/                 # 共有フック（useScrollReveal 等）
-│   ├── repository/            # API クライアント（Repository パターン）
 │   ├── lib/
-│   │   ├── api/client.ts      # 共通 API クライアント
-│   │   ├── auth-token.ts      # 管理者トークン（localStorage）
-│   │   ├── session-token.ts   # セッショントークン（localStorage）
+│   │   ├── api/
+│   │   │   ├── client.ts      # 共通 API クライアント（shared/api factory を web 依存で wiring）
+│   │   │   └── repository.ts  # 各 domain の repository 実体（shared/api/repository factory + client）
+│   │   ├── auth-token.ts      # 管理者トークン / セッショントークン（localStorage）
 │   │   ├── resource.ts        # resourceId 生成・取得
 │   │   ├── sentry.ts          # Sentry 初期化
 │   │   └── class-merge.ts     # cn ユーティリティ

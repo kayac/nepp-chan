@@ -1,9 +1,9 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { getSessionToken, setSessionToken } from "../lib/auth-token";
-import { getResourceId } from "../lib/resource";
-import { server } from "../test/msw-server";
+import { getSessionToken, setSessionToken } from "~/lib/auth-token";
+import { getResourceId } from "~/lib/resource";
+import { server } from "~/test/msw-server";
 import { useAnonymousSession } from "./useAnonymousSession";
 
 const API = "http://localhost:8787";

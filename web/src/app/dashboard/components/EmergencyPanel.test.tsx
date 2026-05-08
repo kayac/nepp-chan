@@ -1,9 +1,9 @@
 import { screen, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { setAuthToken } from "../../../lib/auth-token";
-import { server } from "../../../test/msw-server";
-import { renderWithQuery } from "../../../test/query";
+import { setAuthToken } from "~/lib/auth-token";
+import { server } from "~/test/msw-server";
+import { renderWithQuery } from "~/test/query";
 import { EmergencyPanel } from "./EmergencyPanel";
 
 const API = "http://localhost:8787";

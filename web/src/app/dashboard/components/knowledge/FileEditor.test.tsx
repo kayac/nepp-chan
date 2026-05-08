@@ -1,9 +1,9 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { setAuthToken } from "../../../../lib/auth-token";
-import { server } from "../../../../test/msw-server";
-import { renderWithQuery } from "../../../../test/query";
+import { setAuthToken } from "~/lib/auth-token";
+import { server } from "~/test/msw-server";
+import { renderWithQuery } from "~/test/query";
 import { FileEditor } from "./FileEditor";
 
 const API = "http://localhost:8787";

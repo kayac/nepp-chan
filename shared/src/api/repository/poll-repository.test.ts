@@ -1,20 +1,14 @@
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { setAuthToken } from "../lib/auth-token";
-import { server } from "../test/msw-server";
 import {
-  closePoll,
-  createPoll,
-  deletePoll,
-  fetchPollById,
-  fetchPollResults,
-  fetchPollResultsAdmin,
-  fetchPolls,
-  sendPollNow,
-  updatePoll,
-} from "./poll-repository";
+  TEST_API_BASE as API,
+  setTestAuthToken,
+  testApiClient,
+} from "../../test/api-client";
+import { server } from "../../test/msw-server";
+import { createPollRepository } from "./poll-repository";
 
-const API = "http://localhost:8787";
+const repo = createPollRepository(testApiClient);
 
 const sample = {
   id: "p-1",
@@ -31,12 +25,11 @@ const sample = {
 };
 
 beforeEach(() => {
-  localStorage.clear();
-  setAuthToken("admin-token");
+  setTestAuthToken("admin-token");
 });
 
 afterEach(() => {
-  localStorage.clear();
+  setTestAuthToken(null);
 });
 
 describe("poll-repository", () => {
@@ -52,7 +45,7 @@ describe("poll-repository", () => {
       }),
     );
 
-    await fetchPolls({ status: "sent" });
+    await repo.fetchPolls({ status: "sent" });
   });
 
   it("fetchPollById", async () => {
@@ -60,7 +53,7 @@ describe("poll-repository", () => {
       http.get(`${API}/admin/polls/p-1`, () => HttpResponse.json(sample)),
     );
 
-    const result = await fetchPollById("p-1");
+    const result = await repo.fetchPollById("p-1");
     expect(result?.id).toBe("p-1");
   });
 
@@ -71,7 +64,7 @@ describe("poll-repository", () => {
       ),
     );
 
-    await createPoll({ title: "x", choices: ["a", "b"] });
+    await repo.createPoll({ title: "x", choices: ["a", "b"] });
   });
 
   it("updatePoll: PUT", async () => {
@@ -79,7 +72,7 @@ describe("poll-repository", () => {
       http.put(`${API}/admin/polls/p-1`, () => HttpResponse.json(sample)),
     );
 
-    await updatePoll("p-1", { title: "更新" });
+    await repo.updatePoll("p-1", { title: "更新" });
   });
 
   it("deletePoll: DELETE", async () => {
@@ -89,7 +82,7 @@ describe("poll-repository", () => {
       ),
     );
 
-    await deletePoll("p-1");
+    await repo.deletePoll("p-1");
   });
 
   it("sendPollNow: /:id/send", async () => {
@@ -99,7 +92,7 @@ describe("poll-repository", () => {
       ),
     );
 
-    await sendPollNow("p-1");
+    await repo.sendPollNow("p-1");
   });
 
   it("closePoll: /:id/close", async () => {
@@ -109,7 +102,7 @@ describe("poll-repository", () => {
       ),
     );
 
-    await closePoll("p-1");
+    await repo.closePoll("p-1");
   });
 
   it("fetchPollResultsAdmin: 管理画面用結果", async () => {
@@ -124,7 +117,7 @@ describe("poll-repository", () => {
       ),
     );
 
-    const result = await fetchPollResultsAdmin("p-1");
+    const result = await repo.fetchPollResultsAdmin("p-1");
     expect(result?.pollId).toBe("p-1");
   });
 
@@ -140,7 +133,7 @@ describe("poll-repository", () => {
       ),
     );
 
-    const result = await fetchPollResults("p-1");
+    const result = await repo.fetchPollResults("p-1");
     expect(result?.totalSubmissions).toBe(5);
   });
 
@@ -151,7 +144,7 @@ describe("poll-repository", () => {
       ),
     );
 
-    await expect(fetchPolls()).rejects.toBeDefined();
+    await expect(repo.fetchPolls()).rejects.toBeDefined();
   });
 
   it("失敗系: createPoll 400 は throw", async () => {
@@ -162,7 +155,7 @@ describe("poll-repository", () => {
     );
 
     await expect(
-      createPoll({ title: "x", choices: ["a", "b"] }),
+      repo.createPoll({ title: "x", choices: ["a", "b"] }),
     ).rejects.toBeDefined();
   });
 });
