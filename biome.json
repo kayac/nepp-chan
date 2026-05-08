@@ -15,6 +15,7 @@
       "!**/.mastra",
       "!**/.wrangler",
       "!**/.claude",
+      "!**/coverage",
       "!**/*.astro",
       "!**/*.d.ts",
       "!**/server/public",
