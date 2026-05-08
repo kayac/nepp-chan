@@ -1,5 +1,5 @@
+import type { paths } from "@nepp-chan/shared/api";
 import { getAuthToken, removeAuthToken } from "~/lib/auth-token";
-import type { paths } from "~/types/api";
 import { API_BASE, parseErrorResponse } from "./client";
 
 type AdminUser = NonNullable<
