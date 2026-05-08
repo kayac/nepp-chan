@@ -11,6 +11,9 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
+    env: {
+      PUBLIC_API_URL: "http://localhost:8787",
+    },
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "json-summary"],
@@ -23,10 +26,10 @@ export default defineConfig({
         "src/pages/**",
       ],
       thresholds: {
-        branches: 0,
-        lines: 0,
-        functions: 0,
-        statements: 0,
+        branches: 60,
+        lines: 11,
+        functions: 60,
+        statements: 11,
       },
     },
   },
