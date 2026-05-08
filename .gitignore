@@ -50,6 +50,10 @@ lerna-debug.log*
 # misc
 .DS_Store
 
+# coverage
+coverage/
+**/coverage/
+
 # mastra
 .mastra/
 server/todos/
