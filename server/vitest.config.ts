@@ -23,6 +23,7 @@ export default defineConfig({
         "src/__mocks__/**",
         "src/__tests__/**",
         "src/db/migrations/**",
+        "src/mastra/public/**",
         "src/index.ts",
         "src/env.d.ts",
       ],
