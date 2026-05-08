@@ -24,6 +24,18 @@ export default defineConfig({
         "src/**/*.d.ts",
         "src/types/**",
         "src/pages/**",
+        // Sentry 初期化・薄いラッパー類はユニットテスト対象外
+        "src/lib/sentry.ts",
+        "src/providers/**",
+        "src/components/RootLayout.tsx",
+        "src/components/SentryErrorBoundary.tsx",
+        // ページエントリ（Astro から client:only でマウントされる薄い Shell）
+        "src/app/chat/App.tsx",
+        "src/app/dashboard/DashboardPage.tsx",
+        // 外部 SDK 連携が深く E2E 領域。ユニットテストでは費用対効果が見合わない
+        "src/components/assistant-ui/Thread.tsx",
+        "src/components/assistant-ui/MarkdownText.tsx",
+        "src/app/chat/AssistantProvider.tsx",
       ],
       thresholds: {
         branches: 70,
