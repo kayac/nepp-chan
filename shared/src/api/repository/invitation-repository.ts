@@ -1,26 +1,34 @@
-import type { AdminUser } from "~/lib/api/auth";
-import { client } from "~/lib/api/client";
+import type { ApiClient } from "../create-client";
+import type { paths } from "../types";
 
-export const fetchInvitations = async () => {
-  const { data, error } = await client.GET("/admin/invitations");
-  if (error) throw error;
-  return data;
-};
+type CreateInvitationBody = NonNullable<
+  paths["/admin/invitations"]["post"]["requestBody"]
+>["content"]["application/json"];
+type AdminRole = CreateInvitationBody["role"];
 
-export const createInvitation = async (
-  username: string,
-  role: AdminUser["role"],
-) => {
-  const { data, error } = await client.POST("/admin/invitations", {
-    body: { username, role },
-  });
-  if (error) throw error;
-  return data;
-};
+export const createInvitationRepository = (client: ApiClient) => ({
+  fetchInvitations: async () => {
+    const { data, error } = await client.GET("/admin/invitations");
+    if (error) throw error;
+    return data;
+  },
 
-export const deleteInvitation = async (id: string) => {
-  const { error } = await client.DELETE("/admin/invitations/{id}", {
-    params: { path: { id } },
-  });
-  if (error) throw error;
-};
+  createInvitation: async (username: string, role: AdminRole) => {
+    const { data, error } = await client.POST("/admin/invitations", {
+      body: { username, role },
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  deleteInvitation: async (id: string) => {
+    const { error } = await client.DELETE("/admin/invitations/{id}", {
+      params: { path: { id } },
+    });
+    if (error) throw error;
+  },
+});
+
+export type InvitationRepository = ReturnType<
+  typeof createInvitationRepository
+>;

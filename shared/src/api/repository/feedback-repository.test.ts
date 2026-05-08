@@ -1,25 +1,21 @@
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { setAuthToken } from "../lib/auth-token";
-import { server } from "../test/msw-server";
 import {
-  deleteAllFeedbacks,
-  fetchFeedbackById,
-  fetchFeedbacks,
-  resolveFeedback,
-  submitFeedback,
-  unresolveFeedback,
-} from "./feedback-repository";
+  TEST_API_BASE as API,
+  setTestAuthToken,
+  testApiClient,
+} from "../../test/api-client";
+import { server } from "../../test/msw-server";
+import { createFeedbackRepository } from "./feedback-repository";
 
-const API = "http://localhost:8787";
+const repo = createFeedbackRepository(testApiClient);
 
 beforeEach(() => {
-  localStorage.clear();
-  setAuthToken("admin-token");
+  setTestAuthToken("admin-token");
 });
 
 afterEach(() => {
-  localStorage.clear();
+  setTestAuthToken(null);
 });
 
 const validFeedback = {
@@ -43,7 +39,7 @@ describe("submitFeedback", () => {
       }),
     );
 
-    const result = await submitFeedback(validFeedback);
+    const result = await repo.submitFeedback(validFeedback);
     expect(result?.id).toBe("fb-1");
   });
 });
@@ -63,7 +59,7 @@ describe("fetchFeedbacks", () => {
       }),
     );
 
-    await fetchFeedbacks();
+    await repo.fetchFeedbacks();
   });
 
   it("rating / cursor を渡せる", async () => {
@@ -82,7 +78,7 @@ describe("fetchFeedbacks", () => {
       }),
     );
 
-    await fetchFeedbacks({ rating: "bad", cursor: "cur" });
+    await repo.fetchFeedbacks({ rating: "bad", cursor: "cur" });
   });
 });
 
@@ -109,7 +105,7 @@ describe("fetchFeedbackById", () => {
       ),
     );
 
-    const result = await fetchFeedbackById("fb-1");
+    const result = await repo.fetchFeedbackById("fb-1");
     expect(result?.id).toBe("fb-1");
   });
 
@@ -120,7 +116,7 @@ describe("fetchFeedbackById", () => {
       ),
     );
 
-    await expect(fetchFeedbackById("missing")).rejects.toBeDefined();
+    await expect(repo.fetchFeedbackById("missing")).rejects.toBeDefined();
   });
 });
 
@@ -132,7 +128,7 @@ describe("resolveFeedback / unresolveFeedback / deleteAllFeedbacks", () => {
       ),
     );
 
-    const result = await resolveFeedback("fb-1");
+    const result = await repo.resolveFeedback("fb-1");
     expect(result?.message).toBe("ok");
   });
 
@@ -143,7 +139,7 @@ describe("resolveFeedback / unresolveFeedback / deleteAllFeedbacks", () => {
       ),
     );
 
-    const result = await unresolveFeedback("fb-1");
+    const result = await repo.unresolveFeedback("fb-1");
     expect(result?.message).toBe("ok");
   });
 
@@ -154,7 +150,7 @@ describe("resolveFeedback / unresolveFeedback / deleteAllFeedbacks", () => {
       ),
     );
 
-    const result = await deleteAllFeedbacks();
+    const result = await repo.deleteAllFeedbacks();
     expect(result?.count).toBe(5);
   });
 });

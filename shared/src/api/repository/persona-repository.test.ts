@@ -1,22 +1,21 @@
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { setAuthToken } from "../lib/auth-token";
-import { server } from "../test/msw-server";
 import {
-  deleteAllPersonas,
-  extractPersonas,
-  fetchPersonas,
-} from "./persona-repository";
+  TEST_API_BASE as API,
+  setTestAuthToken,
+  testApiClient,
+} from "../../test/api-client";
+import { server } from "../../test/msw-server";
+import { createPersonaRepository } from "./persona-repository";
 
-const API = "http://localhost:8787";
+const repo = createPersonaRepository(testApiClient);
 
 beforeEach(() => {
-  localStorage.clear();
-  setAuthToken("admin-token");
+  setTestAuthToken("admin-token");
 });
 
 afterEach(() => {
-  localStorage.clear();
+  setTestAuthToken(null);
 });
 
 describe("fetchPersonas", () => {
@@ -33,7 +32,7 @@ describe("fetchPersonas", () => {
       }),
     );
 
-    await fetchPersonas();
+    await repo.fetchPersonas();
   });
 
   it("cursor を渡せる", async () => {
@@ -49,7 +48,7 @@ describe("fetchPersonas", () => {
       }),
     );
 
-    await fetchPersonas({ cursor: "cur-1" });
+    await repo.fetchPersonas({ cursor: "cur-1" });
   });
 });
 
@@ -61,7 +60,7 @@ describe("extractPersonas", () => {
       ),
     );
 
-    const result = await extractPersonas();
+    const result = await repo.extractPersonas();
     expect(result?.message).toBe("done");
   });
 });
@@ -74,7 +73,7 @@ describe("deleteAllPersonas", () => {
       ),
     );
 
-    const result = await deleteAllPersonas();
+    const result = await repo.deleteAllPersonas();
     expect(result?.count).toBe(3);
   });
 });
@@ -87,7 +86,7 @@ describe("失敗系", () => {
       ),
     );
 
-    await expect(fetchPersonas()).rejects.toBeDefined();
+    await expect(repo.fetchPersonas()).rejects.toBeDefined();
   });
 
   it("extractPersonas: 500 は throw", async () => {
@@ -97,7 +96,7 @@ describe("失敗系", () => {
       ),
     );
 
-    await expect(extractPersonas()).rejects.toBeDefined();
+    await expect(repo.extractPersonas()).rejects.toBeDefined();
   });
 
   it("deleteAllPersonas: 500 は throw", async () => {
@@ -107,6 +106,6 @@ describe("失敗系", () => {
       ),
     );
 
-    await expect(deleteAllPersonas()).rejects.toBeDefined();
+    await expect(repo.deleteAllPersonas()).rejects.toBeDefined();
   });
 });

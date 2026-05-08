@@ -1,18 +1,21 @@
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { setAuthToken } from "../lib/auth-token";
-import { server } from "../test/msw-server";
-import { fetchEmergencies } from "./emergency-repository";
+import {
+  TEST_API_BASE as API,
+  setTestAuthToken,
+  testApiClient,
+} from "../../test/api-client";
+import { server } from "../../test/msw-server";
+import { createEmergencyRepository } from "./emergency-repository";
 
-const API = "http://localhost:8787";
+const repo = createEmergencyRepository(testApiClient);
 
 beforeEach(() => {
-  localStorage.clear();
-  setAuthToken("admin-token");
+  setTestAuthToken("admin-token");
 });
 
 afterEach(() => {
-  localStorage.clear();
+  setTestAuthToken(null);
 });
 
 describe("fetchEmergencies", () => {
@@ -24,7 +27,7 @@ describe("fetchEmergencies", () => {
       }),
     );
 
-    const result = await fetchEmergencies();
+    const result = await repo.fetchEmergencies();
     expect(result?.total).toBe(0);
   });
 
@@ -36,7 +39,7 @@ describe("fetchEmergencies", () => {
       }),
     );
 
-    await fetchEmergencies(10);
+    await repo.fetchEmergencies(10);
   });
 
   it("500 エラーは throw", async () => {
@@ -46,6 +49,6 @@ describe("fetchEmergencies", () => {
       ),
     );
 
-    await expect(fetchEmergencies()).rejects.toBeDefined();
+    await expect(repo.fetchEmergencies()).rejects.toBeDefined();
   });
 });

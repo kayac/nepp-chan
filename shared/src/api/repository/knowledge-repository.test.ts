@@ -1,30 +1,21 @@
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { setAuthToken } from "../lib/auth-token";
-import { server } from "../test/msw-server";
 import {
-  convertFile,
-  deleteAllKnowledge,
-  deleteFile,
-  fetchFileContent,
-  fetchFiles,
-  fetchUnifiedFiles,
-  getOriginalFileUrl,
-  reconvertFile,
-  saveFile,
-  syncKnowledge,
-  uploadFile,
-} from "./knowledge-repository";
+  TEST_API_BASE as API,
+  setTestAuthToken,
+  testApiClient,
+} from "../../test/api-client";
+import { server } from "../../test/msw-server";
+import { createKnowledgeRepository } from "./knowledge-repository";
 
-const API = "http://localhost:8787";
+const repo = createKnowledgeRepository(testApiClient, API);
 
 beforeEach(() => {
-  localStorage.clear();
-  setAuthToken("admin-token");
+  setTestAuthToken("admin-token");
 });
 
 afterEach(() => {
-  localStorage.clear();
+  setTestAuthToken(null);
 });
 
 describe("knowledge-repository", () => {
@@ -35,7 +26,7 @@ describe("knowledge-repository", () => {
       ),
     );
 
-    await syncKnowledge();
+    await repo.syncKnowledge();
   });
 
   it("deleteAllKnowledge: DELETE /admin/knowledge", async () => {
@@ -45,7 +36,7 @@ describe("knowledge-repository", () => {
       ),
     );
 
-    const result = await deleteAllKnowledge();
+    const result = await repo.deleteAllKnowledge();
     expect(result?.count).toBe(100);
   });
 
@@ -56,7 +47,7 @@ describe("knowledge-repository", () => {
       ),
     );
 
-    await fetchFiles();
+    await repo.fetchFiles();
   });
 
   it("fetchFileContent: key を path に埋め込む", async () => {
@@ -66,7 +57,7 @@ describe("knowledge-repository", () => {
       ),
     );
 
-    const result = await fetchFileContent("doc.md");
+    const result = await repo.fetchFileContent("doc.md");
     expect(result?.content).toBe("# title");
   });
 
@@ -79,7 +70,7 @@ describe("knowledge-repository", () => {
       }),
     );
 
-    await saveFile("doc.md", "# new");
+    await repo.saveFile("doc.md", "# new");
   });
 
   it("deleteFile: DELETE", async () => {
@@ -89,7 +80,7 @@ describe("knowledge-repository", () => {
       ),
     );
 
-    await deleteFile("doc.md");
+    await repo.deleteFile("doc.md");
   });
 
   it("uploadFile: multipart に file + filename を入れる", async () => {
@@ -99,7 +90,7 @@ describe("knowledge-repository", () => {
       ),
     );
 
-    await uploadFile(new File(["x"], "foo.md"), "foo.md");
+    await repo.uploadFile(new File(["x"], "foo.md"), "foo.md");
   });
 
   it("convertFile: multipart で送る", async () => {
@@ -109,7 +100,7 @@ describe("knowledge-repository", () => {
       ),
     );
 
-    await convertFile(new File(["x"], "in.pdf"), "in.pdf");
+    await repo.convertFile(new File(["x"], "in.pdf"), "in.pdf");
   });
 
   it("fetchUnifiedFiles", async () => {
@@ -119,7 +110,7 @@ describe("knowledge-repository", () => {
       ),
     );
 
-    await fetchUnifiedFiles();
+    await repo.fetchUnifiedFiles();
   });
 
   it("reconvertFile: originalKey を JSON 送信", async () => {
@@ -131,11 +122,11 @@ describe("knowledge-repository", () => {
       }),
     );
 
-    await reconvertFile("originals/x.pdf", "x.md");
+    await repo.reconvertFile("originals/x.pdf", "x.md");
   });
 
   it("getOriginalFileUrl: originals/ プレフィックスを除いて URL 生成", () => {
-    const url = getOriginalFileUrl("originals/foo bar.pdf");
+    const url = repo.getOriginalFileUrl("originals/foo bar.pdf");
     expect(url).toMatch(/foo%20bar\.pdf$/);
     expect(url).not.toContain("originals/originals");
   });
@@ -147,7 +138,7 @@ describe("knowledge-repository", () => {
       ),
     );
 
-    await expect(syncKnowledge()).rejects.toBeDefined();
+    await expect(repo.syncKnowledge()).rejects.toBeDefined();
   });
 
   it("失敗系: fetchFileContent 404 は throw", async () => {
@@ -157,7 +148,7 @@ describe("knowledge-repository", () => {
       ),
     );
 
-    await expect(fetchFileContent("missing.md")).rejects.toBeDefined();
+    await expect(repo.fetchFileContent("missing.md")).rejects.toBeDefined();
   });
 
   it("失敗系: saveFile 500 は throw", async () => {
@@ -167,6 +158,6 @@ describe("knowledge-repository", () => {
       ),
     );
 
-    await expect(saveFile("doc.md", "x")).rejects.toBeDefined();
+    await expect(repo.saveFile("doc.md", "x")).rejects.toBeDefined();
   });
 });

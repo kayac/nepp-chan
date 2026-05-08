@@ -1,22 +1,21 @@
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { setAuthToken } from "../lib/auth-token";
-import { server } from "../test/msw-server";
 import {
-  createInvitation,
-  deleteInvitation,
-  fetchInvitations,
-} from "./invitation-repository";
+  TEST_API_BASE as API,
+  setTestAuthToken,
+  testApiClient,
+} from "../../test/api-client";
+import { server } from "../../test/msw-server";
+import { createInvitationRepository } from "./invitation-repository";
 
-const API = "http://localhost:8787";
+const repo = createInvitationRepository(testApiClient);
 
 beforeEach(() => {
-  localStorage.clear();
-  setAuthToken("admin-token");
+  setTestAuthToken("admin-token");
 });
 
 afterEach(() => {
-  localStorage.clear();
+  setTestAuthToken(null);
 });
 
 describe("invitation-repository", () => {
@@ -27,7 +26,7 @@ describe("invitation-repository", () => {
       ),
     );
 
-    const result = await fetchInvitations();
+    const result = await repo.fetchInvitations();
     expect(result?.invitations).toEqual([]);
   });
 
@@ -51,7 +50,7 @@ describe("invitation-repository", () => {
       }),
     );
 
-    const result = await createInvitation("u", "staff");
+    const result = await repo.createInvitation("u", "staff");
     expect(result?.invitation.token).toBe("tok");
   });
 
@@ -64,7 +63,7 @@ describe("invitation-repository", () => {
       }),
     );
 
-    await deleteInvitation("i-1");
+    await repo.deleteInvitation("i-1");
     expect(called).toBe(true);
   });
 
@@ -75,7 +74,7 @@ describe("invitation-repository", () => {
       ),
     );
 
-    await expect(fetchInvitations()).rejects.toBeDefined();
+    await expect(repo.fetchInvitations()).rejects.toBeDefined();
   });
 
   it("失敗系: createInvitation 409 は throw", async () => {
@@ -85,6 +84,6 @@ describe("invitation-repository", () => {
       ),
     );
 
-    await expect(createInvitation("u", "staff")).rejects.toBeDefined();
+    await expect(repo.createInvitation("u", "staff")).rejects.toBeDefined();
   });
 });
