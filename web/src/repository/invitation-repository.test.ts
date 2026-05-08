@@ -67,4 +67,24 @@ describe("invitation-repository", () => {
     await deleteInvitation("i-1");
     expect(called).toBe(true);
   });
+
+  it("失敗系: fetchInvitations 500 は throw", async () => {
+    server.use(
+      http.get(`${API}/admin/invitations`, () =>
+        HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
+      ),
+    );
+
+    await expect(fetchInvitations()).rejects.toBeDefined();
+  });
+
+  it("失敗系: createInvitation 409 は throw", async () => {
+    server.use(
+      http.post(`${API}/admin/invitations`, () =>
+        HttpResponse.json({ error: { message: "duplicate" } }, { status: 409 }),
+      ),
+    );
+
+    await expect(createInvitation("u", "staff")).rejects.toBeDefined();
+  });
 });

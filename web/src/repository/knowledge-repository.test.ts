@@ -139,4 +139,34 @@ describe("knowledge-repository", () => {
     expect(url).toMatch(/foo%20bar\.pdf$/);
     expect(url).not.toContain("originals/originals");
   });
+
+  it("失敗系: syncKnowledge 500 は throw", async () => {
+    server.use(
+      http.post(`${API}/admin/knowledge/sync`, () =>
+        HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
+      ),
+    );
+
+    await expect(syncKnowledge()).rejects.toBeDefined();
+  });
+
+  it("失敗系: fetchFileContent 404 は throw", async () => {
+    server.use(
+      http.get(`${API}/admin/knowledge/files/missing.md`, () =>
+        HttpResponse.json({ error: { message: "not found" } }, { status: 404 }),
+      ),
+    );
+
+    await expect(fetchFileContent("missing.md")).rejects.toBeDefined();
+  });
+
+  it("失敗系: saveFile 500 は throw", async () => {
+    server.use(
+      http.put(`${API}/admin/knowledge/files/doc.md`, () =>
+        HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
+      ),
+    );
+
+    await expect(saveFile("doc.md", "x")).rejects.toBeDefined();
+  });
 });

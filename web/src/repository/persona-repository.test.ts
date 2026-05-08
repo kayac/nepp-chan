@@ -78,3 +78,35 @@ describe("deleteAllPersonas", () => {
     expect(result?.count).toBe(3);
   });
 });
+
+describe("失敗系", () => {
+  it("fetchPersonas: 500 は throw", async () => {
+    server.use(
+      http.get(`${API}/admin/persona`, () =>
+        HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
+      ),
+    );
+
+    await expect(fetchPersonas()).rejects.toBeDefined();
+  });
+
+  it("extractPersonas: 500 は throw", async () => {
+    server.use(
+      http.post(`${API}/admin/persona/extract`, () =>
+        HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
+      ),
+    );
+
+    await expect(extractPersonas()).rejects.toBeDefined();
+  });
+
+  it("deleteAllPersonas: 500 は throw", async () => {
+    server.use(
+      http.delete(`${API}/admin/persona`, () =>
+        HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
+      ),
+    );
+
+    await expect(deleteAllPersonas()).rejects.toBeDefined();
+  });
+});

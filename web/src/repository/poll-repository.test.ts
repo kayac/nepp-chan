@@ -143,4 +143,26 @@ describe("poll-repository", () => {
     const result = await fetchPollResults("p-1");
     expect(result?.totalSubmissions).toBe(5);
   });
+
+  it("失敗系: fetchPolls 500 は throw", async () => {
+    server.use(
+      http.get(`${API}/admin/polls`, () =>
+        HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
+      ),
+    );
+
+    await expect(fetchPolls()).rejects.toBeDefined();
+  });
+
+  it("失敗系: createPoll 400 は throw", async () => {
+    server.use(
+      http.post(`${API}/admin/polls`, () =>
+        HttpResponse.json({ error: { message: "invalid" } }, { status: 400 }),
+      ),
+    );
+
+    await expect(
+      createPoll({ title: "x", choices: ["a", "b"] }),
+    ).rejects.toBeDefined();
+  });
 });
