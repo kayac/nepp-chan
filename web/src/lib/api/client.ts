@@ -12,15 +12,15 @@ const API_BASE = import.meta.env.PUBLIC_API_URL || "";
 
 /**
  * 401 を受けたら admin token を破棄して anonymous session に切替えて再試行するか判定する。
- * - 既に session token で送っていた場合は再試行しない（fallback 不在）
- * - admin token で送って失敗した場合のみ admin を破棄して fallback 再試行する
+ * 判定はリクエストが実際に送った Authorization ヘッダ (`sentAuth`) を起点にする。
+ * 並行 401 で他のリクエストが先に admin token を破棄済みでも、自分が admin で送っていたなら fallback retry する。
+ *
+ * - sentAuth が session token と一致する場合: 既に anonymous なので fallback 経路がない → false
+ * - それ以外（admin token を送っていた場合）: admin を破棄して fallback retry する → true
  */
-const handleUnauthorized = (): boolean => {
+const handleUnauthorized = (sentAuth: string): boolean => {
   const sessionToken = getSessionToken();
-  const currentBearer = getBearerToken();
-
-  // session token しか持っていない場合は admin → anonymous の fallback 経路がない
-  if (!currentBearer || (sessionToken && currentBearer === sessionToken)) {
+  if (sessionToken && sentAuth === `Bearer ${sessionToken}`) {
     return false;
   }
 

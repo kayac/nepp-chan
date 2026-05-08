@@ -136,4 +136,39 @@ describe("client: 401 fallback retry", () => {
     expect(getCalls()).toBe(2);
     expect(seenAuth).toEqual(["Bearer expired-admin", null]);
   });
+
+  it("並行 401: 他のリクエストが先に admin を破棄しても自分の sentAuth で fallback 判定する", async () => {
+    setAuthToken("expired-admin");
+    setSessionToken("valid-session");
+
+    const seenAuth: (string | null)[] = [];
+    let calls = 0;
+    server.use(
+      http.get(`${API}/admin/emergency`, ({ request }) => {
+        const auth = request.headers.get("authorization");
+        seenAuth.push(auth);
+        calls += 1;
+        if (auth === "Bearer valid-session") {
+          return HttpResponse.json({ emergencies: [] });
+        }
+        return unauthorized();
+      }),
+    );
+
+    // 2 並行で admin token を持って 401 を受け取らせる
+    const [a, b] = await Promise.all([
+      client.GET("/admin/emergency", { params: { query: { limit: 10 } } }),
+      client.GET("/admin/emergency", { params: { query: { limit: 10 } } }),
+    ]);
+
+    expect(a.error).toBeUndefined();
+    expect(b.error).toBeUndefined();
+    expect(calls).toBe(4);
+    expect(seenAuth.filter((a) => a === "Bearer expired-admin")).toHaveLength(
+      2,
+    );
+    expect(seenAuth.filter((a) => a === "Bearer valid-session")).toHaveLength(
+      2,
+    );
+  });
 });

@@ -11,11 +11,14 @@ export type CreateApiClientOptions = {
   getAuthToken?: () => string | null;
   /**
    * 401 を受けたとき呼ばれる。トークン破棄やキャッシュ無効化など app 側の後処理に使う。
+   * `sentAuth` は失敗したリクエストが実際に送った Authorization ヘッダ値。
+   * 並行呼び出しで getAuthToken() が破棄済み状態を返すケースでも、
+   * リクエスト単位の判定ができるようリクエスト由来の値を渡す。
    * 戻り値で「fallback トークンで再試行するか」を制御する:
-   * - 何も返さない: 再試行しない（fallback 不在）
+   * - 何も返さない / false: 再試行しない（fallback 不在）
    * - true: getAuthToken() を再評価し、前回送信と異なるトークンが取れれば再試行
    */
-  onUnauthorized?: () => boolean | void;
+  onUnauthorized?: (sentAuth: string) => boolean | void;
   /** 5xx 系のときだけ呼ばれる observer。Sentry 等の通報先に流す用途 */
   onServerError?: (error: ApiError, response: Response) => void;
 };
@@ -35,7 +38,7 @@ const buildFetch = (options: CreateApiClientOptions) => {
     const sentAuth = retryRequest.headers.get("Authorization");
     if (!sentAuth) return response;
 
-    const shouldRetry = onUnauthorized();
+    const shouldRetry = onUnauthorized(sentAuth);
     if (!shouldRetry) return response;
 
     const headers = new Headers(retryRequest.headers);
