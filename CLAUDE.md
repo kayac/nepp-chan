@@ -136,6 +136,37 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 | dev | https://dev-lp.nepp-chan.ai | https://dev-web.nepp-chan.ai | https://dev-api.nepp-chan.ai |
 | prd | https://nepp-chan.ai | https://web.nepp-chan.ai | https://api.nepp-chan.ai |
 
+## テスト
+
+汎用的な書き方の観点・規則は `test-writing-rules` スキルを参照。
+ここではこのプロジェクト固有の決定だけを書く。
+
+### 道具
+
+- 配置: co-located（`foo.ts` の隣に `foo.test.ts`）
+- server: vitest + libsql（in-memory）+ msw / coverage-istanbul
+- web: vitest + jsdom + Testing Library + msw / coverage-v8
+- web は `TZ=Asia/Tokyo` 固定で実行（`package.json` の test スクリプトで指定）
+
+### 共通ヘルパ
+
+- server: `server/src/test-helpers/`（`test-app` / `test-db` / `tool-context`）
+- web: `web/src/test/`（`msw-server` / `renderHookWithQuery` / `renderWithQuery` / `setup`）
+
+### カバレッジ集計の除外（プロジェクト固有の判断）
+
+`vitest.config.ts` の `coverage.exclude` で除外:
+
+- web/`lib/sentry.ts` / `providers/**` / `RootLayout.tsx` / `SentryErrorBoundary.tsx` — Sentry 初期化や StrictMode を巻くだけのラッパーで分岐がない
+- web/`app/chat/App.tsx` / `app/dashboard/DashboardPage.tsx` / `pages/**` — Astro から client:only でマウントされる薄い shell
+- web/`assistant-ui/Thread.tsx` / `assistant-ui/MarkdownText.tsx` / `chat/AssistantProvider.tsx` — 外部 SDK 連携が深く E2E 領域
+- server/`mastra/public/**` — Mastra の自動生成資源
+
+### カバレッジ閾値
+
+- 実測値ベースで段階引き上げ（`vitest.config.ts` の `coverage.thresholds`）
+- UI 層の lines% は意図的に低い（E2E で担保する設計）。ロジック層は branches で評価する
+
 ## ブランチ
 
 - メイン: `develop`
