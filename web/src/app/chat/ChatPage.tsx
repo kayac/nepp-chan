@@ -22,8 +22,8 @@ import {
   useDeleteThread,
   useThreads,
 } from "~/hooks/useThreads";
-import { getResourceId } from "~/lib/resource";
 import { threadRepository } from "~/lib/api/repository";
+import { getResourceId } from "~/lib/resource";
 import type { Thread as ThreadType } from "~/types";
 
 import { AssistantProvider, type InitialMessage } from "./AssistantProvider";

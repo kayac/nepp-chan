@@ -4,8 +4,8 @@ import { useAuth } from "~/app/dashboard/contexts/AuthContext";
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
 import { ROLE_LABELS, useRole } from "~/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
-import { formatDateTime } from "~/lib/format";
 import { invitationRepository } from "~/lib/api/repository";
+import { formatDateTime } from "~/lib/format";
 
 export const InvitationsPanel = () => {
   const queryClient = useQueryClient();
