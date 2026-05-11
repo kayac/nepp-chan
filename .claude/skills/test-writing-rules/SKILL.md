@@ -3,10 +3,9 @@ name: test-writing-rules
 description: "テストを書く前に発動。仕様から観点とテストケースを導出するための 3 軸チェックリストと技法カタログ。実装の翻訳ではなく仕様の検証になるテストを設計する。"
 ---
 
-# テスト作成ルール（nepp-chan）
+# テスト作成ルール
 
 テストを書く前に発動し、対象機能に対して仕様ベースで最適なケース集合を設計するための指針。
-このリポジトリは Cloudflare Workers（API）+ Cloudflare Pages（Astro + React）の構成で、Mastra でエージェント / ツールを組んでいる。観点と例はその前提で書いてある。
 
 ## 大原則
 
@@ -41,12 +40,17 @@ description: "テストを書く前に発動。仕様から観点とテストケ
 
 - 冪等性 / 並行性 / 順序依存 / タイムアウト・リトライ / 部分失敗 / リソースリーク / 入力サニタイズ / i18n・エンコーディング
 
-### 軸 3: nepp-chan で必ず当てる観点
+### 軸 3: ドメイン / 基盤の観点
 
-- **Mastra エージェント / ツール**: tool call の空・重複・無限ループ、structured output のスキーマ違反、`requestContext.get("env")` の未設定
-- **Cloudflare ランタイム**: D1 のトランザクション境界、R2 の eventual visibility、Vectorize の次元数整合、Cron Trigger の重複起動
-- **認証 / 認可**: 未認証 / `requireRole("admin")` 不一致 / 別オーナー / `admin_sessions` 期限切れ / anonymous JWT 不正
-- **フロントエンド**: msw で外したリクエスト、TanStack Query の retry 挙動、`TZ=Asia/Tokyo` 前提の日付描画
+機能が触る基盤・ドメインに応じて当てる。実装の癖（特定 middleware の優先順位、特定 helper の init 忘れ等）はテスト観点ではなく実装詳細なので含めない。詳細は `references/perspectives.md`。
+
+- **LLM / Agent**: tool call の異常、structured output のスキーマ違反、非決定性の固定、PII 混入
+- **RDB / KV / オブジェクトストレージ / ベクトル検索**: トランザクション境界、UNIQUE 制約違反、eventual consistency、次元数整合
+- **外部 API / Webhook**: 署名検証、4xx/5xx の retry 可否分岐、レート制限、部分失敗
+- **状態遷移ドメイン**: 不正遷移、戻り遷移、遷移時の副作用
+- **認証 / 認可**: 未認証 / ロール不足 / 別オーナー / 期限切れ / 不正署名
+- **テストランナー / モック / クエリキャッシュ**: 未モックリクエスト検知、handler リセット境界、fake timers の時刻基準、独立 QueryClient
+- **ブラウザ / UI**: ストリーミングの中間状態、画面離脱後の async、a11y
 
 ## ミューテーション思考
 
@@ -72,29 +76,19 @@ description: "テストを書く前に発動。仕様から観点とテストケ
 - 時刻依存は `vi.useFakeTimers()` または DI された clock。`new Date()` 直接呼び出しはラップ提案を一緒に出す
 - モック戻り値は本番スキーマ（Zod / Drizzle の型）に準拠させる
 
-## このリポジトリの道具
+## テスト道具の使い方（指針）
 
-- **server**: vitest + libsql（in-memory）+ msw / coverage-istanbul。ヘルパは `server/src/test-helpers/` の `test-app.ts`（resolvePrincipal + errorHandler 込みの Hono アプリ）/ `test-db.ts`（in-memory SQLite + DDL）/ `tool-context.ts`（`buildToolContext` / `callTool` で Mastra tool を実行）
-- **web**: vitest + jsdom + Testing Library + msw / coverage-v8。`TZ=Asia/Tokyo` 固定。ヘルパは `web/src/test/` の `msw-server.ts`（`server.use(...)` でテスト毎にハンドラ差し替え）/ `query.ts`（`renderHookWithQuery` / `renderWithQuery`）/ `setup.ts`（msw の lifecycle）
-- 配置は co-located（`foo.ts` の隣に `foo.test.ts`）
-- カバレッジ閾値・除外は各 `vitest.config.ts`。Sentry init や薄い shell（`pages/**`, `RootLayout.tsx`, `app/chat/App.tsx` 等）は意図的に除外しているため、そこを稼ぐためのテストを書かない
+「どこに何があるか」ではなく「どう使うか」の指針。詳細パスは CLAUDE.md / server/CLAUDE.md / web/CLAUDE.md を参照。
 
-### ヘルパ最小例
-
-```ts
-// server: Mastra tool（tool-context.ts）
-import { callTool } from "~/test-helpers/tool-context";
-const result = await callTool(emergencyReportTool, { type: "fire" }, { env });
-
-// server: Hono ルート（test-app.ts + test-db.ts）
-const db = await createTestDb();
-const app = await withResolvePrincipal(adminBroadcastRoutes);
-const res = await app.request("/admin/broadcast", { method: "POST", body }, { DB: ..., ... });
-
-// web: フック（query.ts + msw-server.ts）
-server.use(http.get("*/threads", () => HttpResponse.json({ items: [] })));
-const { result } = renderHookWithQuery(() => useThreads());
-```
+- **モック境界**: 外部 I/O（HTTP / DB / オブジェクトストレージ / 時刻 / 乱数 / LLM）に限ってモック。ドメインロジック自体はモックしない
+- **Hono ルートを叩く時**: 本番と同じ middleware スタック（principal 解決 + errorHandler）込みのアプリで叩く。生 Hono を直接組み立てて middleware を省いたテストは仕様検証にならない
+- **DB を伴うテスト**: in-memory SQLite ヘルパを使い、`beforeEach` で毎回作り直して状態を隔離。テスト間で row を引き継がない
+- **Mastra tool の execute**: テスト用 context builder で `RuntimeContext` の中身を **必ず明示**（特に `env`）。default を信用しない
+- **msw**: 各テスト先頭で `server.use(...)` を必ず書く。`setup.ts` が `onUnhandledRequest: "error"` のため未モック呼び出しは即落ちる。`afterEach` の `resetHandlers` でテスト間の漏れを防ぐ
+- **QueryClient**: テスト毎に独立クライアントを作るヘルパで包む。retry: false / gcTime: 0 / staleTime: 0 が前提で、retry 挙動を確認したいケースは別途モック
+- **時刻 / 日付**: web は `TZ=Asia/Tokyo` 固定で実行。時刻依存ロジックは `vi.useFakeTimers()` か DI された clock を使う。`new Date()` 直接呼び出しは避ける
+- **co-located 配置**: テストは対象ファイルの隣に置く（`foo.ts` の隣に `foo.test.ts`）
+- **書かない領域**: `vitest.config.ts` で除外されているファイル（Sentry init / Astro shell / 外部 SDK 連携の深い tsx 等）にカバレッジ目当てのテストを足さない
 
 ## ケース設計の出力フォーマット
 
@@ -121,5 +115,6 @@ const { result } = renderHookWithQuery(() => useThreads());
 
 ## 参照
 
-- 観点 3 軸の詳細とこのリポジトリでの具体例: `references/perspectives.md`
+- 観点 3 軸の詳細: `references/perspectives.md`
 - 技法カタログ（同値分割 / 境界値 / デシジョンテーブル / 状態遷移 / ペアワイズ / エラー推測）と適用例: `references/techniques.md`
+- このリポジトリでのテスト最小コード例（Hono ルート / Mastra tool / DB / web フック・コンポーネント / fakeTimers）: `references/examples.md`

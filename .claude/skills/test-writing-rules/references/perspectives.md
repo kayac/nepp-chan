@@ -1,6 +1,6 @@
 # 観点チェックリスト（3 軸詳細）
 
-テスト設計時、以下の 3 軸を順に当てて漏れを潰す。例はこのリポジトリ（nepp-chan）の実テーブル・ルート・ツールに揃えている。
+テスト設計時、以下の 3 軸を順に当てて漏れを潰す。
 
 **このチェックリストは「全部をテスト化するためのリスト」ではなく「該当性を判定するためのチェックリスト」**。各項目は「該当するか」を 1 度判定し、該当しないものは書かないで良い。形式的にケースを増やすほうが害が大きい。
 
@@ -92,51 +92,20 @@
 - タイムゾーン: web は `TZ=Asia/Tokyo` 固定、API は UTC 保存・JST 表示が基本。日付境界（`+00:00` vs `+09:00`）と DST 境界
 - 文字長の数え方（`.length` vs grapheme cluster）
 
-## 軸 3: nepp-chan のドメイン観点
+## 軸 3: ドメイン / 基盤の観点
 
-このリポジトリで頻出するドメイン。該当機能を書く時は必ずこのリストを当てる。
+対象機能が使う基盤・ドメインに応じて当てる。実装の癖（特定 middleware の優先順位、特定 helper の init 忘れ等）はここに書かない（テスト観点ではなく実装詳細）。
 
-### Mastra エージェント / ツール
-
-- **tool call の異常**: 空配列 / 重複呼び出し / 無限ループ（同じ tool を呼び続ける）に対するガード
-- **structured output のスキーマ違反**: `inputSchema` / `outputSchema` の Zod `safeParse` 失敗パス、各 field 欠落
-- **`requestContext` の未設定**: `context?.requestContext?.get("env")` が `undefined` になり得る経路を踏んでいないか（`buildToolContext` でセットしていないキーを参照していないか）
-- **管理者専用 tool の呼び出し制限**: `description` に `【管理者専用】` が付いた tool を一般ユーザーの agent から呼べないこと
-- **D1Store**: `await storage.init()` を忘れていないか（テストでも初期化が必要）
-- **PII / secret の漏れ**: ログ・モデル入力にトークンや個人情報が混ざっていないか
-- **temperature / 非決定性**: テストで実モデルを直接呼ばない（msw / fixture で固定）
-
-### Cloudflare ランタイム
-
-- **D1**: 単発クエリのトランザクション境界、`prepare().bind()` のパラメータバインド、`db.batch([...])` の atomic 性、`UNIQUE` 制約違反のエラー型
-- **R2**: eventual visibility、`KNOWLEDGE_BUCKET` のオブジェクト一覧 cursor、broadcast 用画像 key の衝突、presigned URL の期限
-- **Vectorize**: 検索の eventual consistency、ベクター次元数の整合（`gemini-embedding-001` は 1536 次元）、`upsert` の重複キー
-- **Cron Trigger**: `*/5 * * * *` で重複起動した時の冪等性（broadcast 予約・poll 予約・persona 抽出）
-- **Workers の制限**: subrequest 数（一斉配信で大量に LINE API を叩く時）、CPU time、リクエスト body サイズ
-
-### LINE webhook / 配信
-
-- **署名検証**: `x-line-signature` が無い / 不正な時に 400 を返すか
-- **イベント型網羅**: message / follow / unfollow / postback の各イベントで分岐が踏まれるか
-- **配信ステータス遷移**: `draft → scheduled → sent → failed` の不正遷移を弾くか（既に `sent` の broadcast を再送できないか）
-- **poll 結果集計**: `poll_submissions` の集計が `closed` 後でも崩れないか
-
-### 認証 / 認可
-
-- **resolvePrincipal**: opaque session（`admin_sessions`）→ anonymous JWT の優先順位、両方無いとき principal が null
-- **requireRole**: 未認証 401 / 権限不足 403 / 期限切れ session の扱い
-- **requireThreadAccess**: 別ユーザーの thread にアクセスしたら 403
-- **anonymous JWT**: 不正署名 / 期限切れ / 別 issuer
-- **register/login**: パスワードハッシュ比較の timing attack、`admin_invitations.token` の使い回し（`used_at` セット後の拒否）
-
-### フロントエンド
-
-- **msw**: `setup.ts` で `onUnhandledRequest: "error"` なので、未モックのエンドポイントを叩いたテストは落ちる。テスト先頭で `server.use(...)` を必ず書く
-- **TanStack Query**: テスト用 `QueryClient` は retry: false / gcTime: 0 / staleTime: 0。retry を期待するロジックは別途モックする
-- **renderHookWithQuery / renderWithQuery**: 各テストで新しい `QueryClient` が作られるので、テスト間でキャッシュが残らない前提で書く
-- **assistant-ui**: ストリーミング応答の途中状態（`status.type === "running"`）と完了後の表示が分岐するか
-- **a11y**: role / label / focus 順序、`dvh` を使って vh の落とし穴を踏んでいないか
-- **route 変化中の async**: 画面離脱後の setState（Astro の MPA 構成でもクライアント遷移をする画面）
+- **LLM / Agent (Mastra 等)**: tool call の異常（空・重複・無限ループ）、structured output のスキーマ違反パス、非決定性をテストで実モデルに依存させない（fixture / msw で固定）、PII / secret の混入チェック
+- **RDB / KV (D1・SQLite 等)**: トランザクション境界、UNIQUE 制約違反のエラー型、`ORDER BY` 無しでの戻り順、eventual consistency、batch の atomic 性
+- **オブジェクトストレージ (R2 等)**: eventual visibility、オブジェクトキー衝突、署名付き URL の期限
+- **ベクトル検索 (Vectorize 等)**: 検索結果の eventual consistency、次元数不整合、`upsert` の重複キー
+- **外部 API / Webhook**: 署名検証の不正系、4xx と 5xx の retry 可否分岐、レート制限、部分失敗（バッチ N 件中 M 件失敗時の方針）
+- **状態遷移を持つドメイン**: 不正遷移、戻り遷移、遷移時の副作用（timestamp 更新・通知発火）
+- **認証 / 認可**: 未認証 / ロール不足 / 別オーナー / 期限切れトークン / 不正署名 / token 使い回し
+- **テストランナー / モック (Vitest・MSW)**: 未モックリクエストの検知設定、handler リセットの境界、fake timers の時刻基準
+- **クエリキャッシュ (TanStack Query 等)**: テスト毎の独立クライアント、retry の振る舞い、stale な値の読み出し
+- **ブラウザ / UI (Testing Library)**: ストリーミングの中間状態、画面離脱後の async（setState 警告）、focus 順序、a11y ラベル
 
 ## 各軸の使い方
 
