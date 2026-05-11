@@ -1,5 +1,6 @@
 import type { messagingApi } from "@line/bot-sdk";
 
+import { hmacSha256 } from "~/lib/crypto";
 import { logger } from "~/lib/logger";
 import { toLineResourceId, toLineThreadId } from "~/lib/principal";
 import { type Poll, pollRepository } from "~/repository/poll-repository";
@@ -31,9 +32,11 @@ export const handlePollPostback = async (
   const { pollId, selectedChoice } = decodePollPostback(data);
   if (!pollId || !selectedChoice) return { status: "invalid" };
 
+  const hashedUserId = await hmacSha256(userId, env.RESOURCE_ID_HASH_SECRET);
+
   const [poll, existing] = await Promise.all([
     pollRepository.findById(env.DB, pollId),
-    pollRepository.findSubmission(env.DB, pollId, userId),
+    pollRepository.findSubmission(env.DB, pollId, hashedUserId),
   ]);
 
   if (!poll) return { status: "invalid" };
@@ -63,7 +66,7 @@ export const handlePollPostback = async (
   await pollRepository.createSubmission(env.DB, {
     id: crypto.randomUUID(),
     pollId,
-    userId,
+    userId: hashedUserId,
     selectedChoice,
     createdAt: now,
   });
