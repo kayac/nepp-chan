@@ -115,7 +115,7 @@ it("送信失敗時は failed になり error_message が記録される", () =>
 
 ### 例
 - `resolveModelTier({ intent, platform, isAdmin })` のような複数次元の決定関数: intent 2 値 × platform 3 値 × isAdmin 2 値 = 12 通りをペアワイズで 6 通り程度に削減
-- ツール: PICT、`@fast-check/vitest`（プロパティベースで近似）
+- ツール: PICT
 
 ### 使い時
 - 設定オプション 4 つ以上の関数

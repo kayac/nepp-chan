@@ -14,6 +14,7 @@ description: "テストを書く前に発動。仕様から観点とテストケ
 - テストの本質は **仕様の検証**。実装の振る舞いを写し取るのが目的ではない
 - 実装を読んでアサーションに翻訳した「tautological test」は禁止。実装にバグがあっても通るため
 - 順序は **仕様（型 / 関数名 / OpenAPI スキーマ / ドキュメント / 呼び出し側）から先に観点を導出 → 後から実装を読んで漏れを補強**
+- 各テストは F.I.R.S.T.（Fast / Independent / Repeatable / Self-validating / Timely）を満たす。本 Skill の指針はこの原則の具体化
 
 ## ワークフロー
 
@@ -31,10 +32,10 @@ description: "テストを書く前に発動。仕様から観点とテストケ
 
 ### 軸 1: 入出力の分類
 
-- **正常系**: 仕様通りの入力で仕様通りの出力
-- **準正常系**: 仕様の許容範囲内だが境界・特殊・冗長な入力（空白、重複、順不同、Unicode、長文、`null` / `undefined` / `NaN`）
-- **異常系**: 明確なエラーが返るべき入力。`HTTPException` の **status・コード・message** までアサート（`error-handler` で `{ error: { code, message } }` に整形される）
-- **例外系**: throw が起きる経路。`expect(...).toThrow(SpecificError)` で型まで確認
+- **正常系 (Happy Path)**: 仕様通りの入力で仕様通りの出力
+- **準正常系 (Edge Case)**: 仕様の許容範囲内だが境界・特殊・冗長な入力（空白、重複、順不同、Unicode、長文、`null` / `undefined` / `NaN`）
+- **異常系 (Sad Path / Negative)**: 明確なエラーが返るべき入力。`HTTPException` の **status・コード・message** までアサート（`error-handler` で `{ error: { code, message } }` に整形される）
+- **例外系 (Error Path)**: throw が起きる経路。`expect(...).toThrow(SpecificError)` で型まで確認
 
 ### 軸 2: 機能横断の観点
 
@@ -71,10 +72,15 @@ description: "テストを書く前に発動。仕様から観点とテストケ
 
 ## テストダブル
 
-- モックは **I/O 境界** に限定（HTTP / D1 / R2 / Vectorize / 時刻 / 乱数 / LLM）
-- ドメインロジック自体や自分のコードはモックしない
+- テストダブルは **I/O 境界** に限定（HTTP / DB / オブジェクトストレージ / 時刻 / 乱数 / LLM）。ドメインロジック自体や自分のコードはモックしない
 - 時刻依存は `vi.useFakeTimers()` または DI された clock。`new Date()` 直接呼び出しはラップ提案を一緒に出す
-- モック戻り値は本番スキーマ（Zod / Drizzle の型）に準拠させる
+- 戻り値は本番スキーマ（Zod / Drizzle の型）に準拠させる
+- 「モック」と一括りにせず種類を意識する（[Martin Fowler の分類](https://martinfowler.com/bliki/TestDouble.html) より）:
+  - **Stub**: 決まった値を返すだけ。状態確認しない
+  - **Spy**: 呼ばれた事実・引数・回数を記録する（`vi.fn()` の典型用途）
+  - **Mock**: 期待される呼び出しを事前定義し、満たさないと失敗する（厳格な振る舞い検証）
+  - **Fake**: 軽量だが動作する代替実装（`createTestDb()` の in-memory SQLite / `msw` のリクエストハンドラ / `vi.useFakeTimers()` の仮想時計が該当）
+- Fake で代替できるなら Stub/Spy より Fake を優先する。本番に近い挙動で検証できるため
 
 ## テスト道具の使い方（指針）
 
