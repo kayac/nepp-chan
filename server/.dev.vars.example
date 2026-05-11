@@ -13,6 +13,3 @@ OPENAI_API_KEY=
 # LINE Messaging API
 LINE_CHANNEL_SECRET=your-channel-secret-here
 LINE_CHANNEL_ACCESS_TOKEN=your-chan=======
-
-# Sentry
-SENTRY_DSN=

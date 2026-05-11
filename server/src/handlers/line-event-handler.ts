@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/cloudflare";
 import { logger } from "~/lib/logger";
 import type { LinePrincipal } from "~/lib/principal";
 import { toResourceId } from "~/lib/principal";
@@ -38,7 +37,6 @@ export const handleLineEvent = async (
 
       message.ack();
     } catch (error) {
-      Sentry.captureException(error, { tags: { handler: "line-event" } });
       logger.error(`LINE reply failed for user ${userId}`, error);
       message.retry();
     }
