@@ -157,7 +157,7 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 
 `vitest.config.ts` の `coverage.exclude` で除外:
 
-- web/`lib/sentry.ts` / `providers/**` / `RootLayout.tsx` / `SentryErrorBoundary.tsx` — Sentry 初期化や StrictMode を巻くだけのラッパーで分岐がない
+- web/`providers/**` / `RootLayout.tsx` / `ErrorBoundary.tsx` — StrictMode やフォールバック UI を巻くだけのラッパーで分岐がない
 - web/`app/chat/App.tsx` / `app/dashboard/DashboardPage.tsx` / `pages/**` — Astro から client:only でマウントされる薄い shell
 - web/`assistant-ui/Thread.tsx` / `assistant-ui/MarkdownText.tsx` / `chat/AssistantProvider.tsx` — 外部 SDK 連携が深く E2E 領域
 - server/`mastra/public/**` — Mastra の自動生成資源
