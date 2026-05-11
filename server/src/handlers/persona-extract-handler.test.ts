@@ -44,7 +44,7 @@ describe("handlePersonaExtract", () => {
     ).resolves.toBeUndefined();
   });
 
-  it("失敗時は throw（withSentry が拾う）", async () => {
+  it("失敗時は throw して Cron Trigger に再試行させる", async () => {
     vi.mocked(extractAllPendingThreads).mockRejectedValue(new Error("db"));
 
     await expect(handlePersonaExtract(buildEvent(), env, ctx)).rejects.toThrow(
