@@ -27,15 +27,11 @@ export const toResourceId = (p: Principal): string => {
   }
 };
 
-export const toLineResourceId = async (
-  p: LinePrincipal,
-  secret: string,
-): Promise<string> => `line:${await hmacSha256(p.id, secret)}`;
+export const toLineResourceId = async (p: LinePrincipal, secret: string) =>
+  `line:${await hmacSha256(p.id, secret)}`;
 
-export const toLineThreadId = async (
-  p: LinePrincipal,
-  secret: string,
-): Promise<string> => `line-thread:${await hmacSha256(p.id, secret)}`;
+export const toLineThreadId = async (p: LinePrincipal, secret: string) =>
+  `line-thread:${await hmacSha256(p.id, secret)}`;
 
 export const requireAdminUser = (
   principal: Principal | undefined,

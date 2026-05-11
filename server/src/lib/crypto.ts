@@ -2,7 +2,7 @@
  * 暗号化関連のユーティリティ関数
  */
 
-const toBase64Url = (bytes: ArrayBuffer): string => {
+const toBase64Url = (bytes: ArrayBuffer) => {
   const u8 = new Uint8Array(bytes);
   let binary = "";
   for (const byte of u8) binary += String.fromCharCode(byte);
@@ -12,10 +12,7 @@ const toBase64Url = (bytes: ArrayBuffer): string => {
     .replace(/=+$/, "");
 };
 
-export const hmacSha256 = async (
-  value: string,
-  secret: string,
-): Promise<string> => {
+export const hmacSha256 = async (value: string, secret: string) => {
   if (!secret) {
     throw new Error("hmacSha256: secret は空にできません");
   }
