@@ -33,6 +33,7 @@ const env = {
   DB: {} as D1Database,
   LINE_CHANNEL_ACCESS_TOKEN: "token",
   WEB_URL: "https://web.example.com",
+  RESOURCE_ID_HASH_SECRET: "test-secret",
 } as unknown as CloudflareBindings;
 
 const dbRow = {

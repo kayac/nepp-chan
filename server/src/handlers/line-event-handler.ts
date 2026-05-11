@@ -1,6 +1,6 @@
 import { logger } from "~/lib/logger";
 import type { LinePrincipal } from "~/lib/principal";
-import { toResourceId } from "~/lib/principal";
+import { toLineResourceId, toLineThreadId } from "~/lib/principal";
 import type { LineEventMessage } from "~/schemas/line-schema";
 import {
   createLineClient,
@@ -13,16 +13,22 @@ export const handleLineEvent = async (
   env: CloudflareBindings,
 ) => {
   const client = createLineClient(env.LINE_CHANNEL_ACCESS_TOKEN);
+  const secret = env.RESOURCE_ID_HASH_SECRET;
 
   for (const message of batch.messages) {
     const { userId, userMessage, replyToken } = message.body;
 
     try {
       const principal: LinePrincipal = { type: "line", id: userId };
+      const [resourceId, threadId] = await Promise.all([
+        toLineResourceId(principal, secret),
+        toLineThreadId(principal, secret),
+      ]);
       const replyTexts = await generateReply({
         userMessage,
-        resourceId: toResourceId(principal),
-        threadId: `line-thread:${userId}`,
+        userId,
+        resourceId,
+        threadId,
         env,
       });
 

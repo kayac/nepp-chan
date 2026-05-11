@@ -1,4 +1,5 @@
 import { HTTPException } from "hono/http-exception";
+import { hmacSha256 } from "~/lib/crypto";
 import type { AuthUser } from "~/schemas/auth-schema";
 
 export type AnonymousPrincipal = { type: "anonymous"; id: string };
@@ -18,9 +19,23 @@ export const toResourceId = (p: Principal): string => {
     case "admin":
       return `admin:${p.id}`;
     case "line":
-      return `line:${p.id}`;
+      // LINE ケースはハッシュ化が必須。誤って平文 resourceId が永続化されないよう、
+      // 平文を返さず toLineResourceId() の利用を強制する。
+      throw new Error(
+        "toResourceId: LINE principal は toLineResourceId(p, secret) を使ってください",
+      );
   }
 };
+
+export const toLineResourceId = async (
+  p: LinePrincipal,
+  secret: string,
+): Promise<string> => `line:${await hmacSha256(p.id, secret)}`;
+
+export const toLineThreadId = async (
+  p: LinePrincipal,
+  secret: string,
+): Promise<string> => `line-thread:${await hmacSha256(p.id, secret)}`;
 
 export const requireAdminUser = (
   principal: Principal | undefined,

@@ -2,7 +2,7 @@ import { Memory } from "@mastra/memory";
 import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
 import type { PrincipalVariables } from "~/lib/principal";
-import { toResourceId } from "~/lib/principal";
+import { toLineResourceId, toResourceId } from "~/lib/principal";
 import { getStorage } from "~/lib/storage";
 
 export type ThreadVariables = {
@@ -38,7 +38,11 @@ export const requireThreadAccess = createMiddleware<{
     throw new HTTPException(404, { message: "スレッドが見つかりません" });
   }
 
-  if (thread.resourceId !== toResourceId(principal)) {
+  const expectedResourceId =
+    principal.type === "line"
+      ? await toLineResourceId(principal, c.env.RESOURCE_ID_HASH_SECRET)
+      : toResourceId(principal);
+  if (thread.resourceId !== expectedResourceId) {
     throw new HTTPException(404, { message: "スレッドが見つかりません" });
   }
 

@@ -16,6 +16,7 @@ export const createLineClient = (token: string) =>
 
 export const generateReply = async (params: {
   userMessage: string;
+  userId: string;
   resourceId: string;
   threadId: string;
   env: CloudflareBindings;
@@ -28,22 +29,20 @@ export const generateReply = async (params: {
     env: params.env,
   });
 
-  // 未注入の配信メッセージ／投票お知らせをスレッドに system として追加
-  const lineUserId = params.threadId.replace("line-thread:", "");
   await Promise.all([
     injectBroadcastsToThread({
       d1: params.env.DB,
       storage,
       threadId: params.threadId,
       resourceId: params.resourceId,
-      userId: lineUserId,
+      userId: params.userId,
     }),
     injectPollsToThread({
       d1: params.env.DB,
       storage,
       threadId: params.threadId,
       resourceId: params.resourceId,
-      userId: lineUserId,
+      userId: params.userId,
     }),
   ]);
 
