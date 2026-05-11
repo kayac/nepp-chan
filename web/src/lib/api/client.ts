@@ -1,5 +1,4 @@
 import { createApiClient } from "@nepp-chan/shared/api";
-import * as Sentry from "@sentry/react";
 import {
   getBearerToken,
   getSessionToken,
@@ -33,7 +32,7 @@ export const client = createApiClient({
   baseUrl: API_BASE,
   getAuthToken: getBearerToken,
   onUnauthorized: handleUnauthorized,
-  onServerError: (error) => Sentry.captureException(error),
+  onServerError: (error) => console.error("API server error", error),
 });
 
 export { API_BASE };

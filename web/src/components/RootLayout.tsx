@@ -1,11 +1,8 @@
 import { type ReactNode, StrictMode } from "react";
-import { SentryErrorBoundary } from "~/components/SentryErrorBoundary";
-import { initSentry } from "~/lib/sentry";
-
-initSentry();
+import { ErrorBoundary } from "~/components/ErrorBoundary";
 
 export const RootLayout = ({ children }: { children: ReactNode }) => (
   <StrictMode>
-    <SentryErrorBoundary>{children}</SentryErrorBoundary>
+    <ErrorBoundary>{children}</ErrorBoundary>
   </StrictMode>
 );
