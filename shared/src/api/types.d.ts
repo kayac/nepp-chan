@@ -122,6 +122,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/simple-chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * シンプルなチャット (履歴保存なし)
+         * @description 履歴を保持しない 1 往復のシンプルなチャットエンドポイント。LP の MiniChat やウィジェット埋め込みなど、その場限りの応答用途を想定する。
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        message: {
+                            id: string;
+                            /** @enum {string} */
+                            role: "user" | "assistant" | "system";
+                            parts: ({
+                                type: string;
+                            } & {
+                                [key: string]: unknown;
+                            })[];
+                            /** Format: date-time */
+                            createdAt?: string | null;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description ストリーミングレスポンス */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/event-stream": string;
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/threads": {
         parameters: {
             query?: never;
@@ -2985,7 +3041,6 @@ export interface paths {
                                 sentAt: string | null;
                                 closedAt: string | null;
                             }[];
-                            total: number;
                             nextCursor: string | null;
                             hasMore: boolean;
                         };

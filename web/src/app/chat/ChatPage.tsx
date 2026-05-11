@@ -22,8 +22,8 @@ import {
   useDeleteThread,
   useThreads,
 } from "~/hooks/useThreads";
+import { threadRepository } from "~/lib/api/repository";
 import { getResourceId } from "~/lib/resource";
-import { fetchMessages } from "~/repository/thread-repository";
 import type { Thread as ThreadType } from "~/types";
 
 import { AssistantProvider, type InitialMessage } from "./AssistantProvider";
@@ -71,7 +71,7 @@ export const ChatPage = () => {
 
   const { data: messagesData, isLoading: messagesLoading } = useQuery({
     queryKey: threadKeys.messages(currentThreadId ?? ""),
-    queryFn: () => fetchMessages(currentThreadId ?? ""),
+    queryFn: () => threadRepository.fetchMessages(currentThreadId ?? ""),
     enabled: !!currentThreadId,
   });
   const initialMessages = messagesData?.messages as UIMessage[] | undefined;
