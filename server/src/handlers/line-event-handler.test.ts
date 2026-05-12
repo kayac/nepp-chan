@@ -15,6 +15,7 @@ const { handleLineEvent } = await import("./line-event-handler");
 
 const env = {
   LINE_CHANNEL_ACCESS_TOKEN: "token",
+  RESOURCE_ID_HASH_SECRET: "test-secret",
 } as unknown as CloudflareBindings;
 
 const buildMessage = (body: {
@@ -59,9 +60,14 @@ describe("handleLineEvent", () => {
     expect(mockGenerateReply).toHaveBeenCalledWith(
       expect.objectContaining({
         userMessage: "こんにちは",
-        threadId: "line-thread:U1",
+        userId: "U1",
+        threadId: expect.stringMatching(/^line-thread:[A-Za-z0-9_-]+$/),
+        resourceId: expect.stringMatching(/^line:[A-Za-z0-9_-]+$/),
       }),
     );
+    const callArg = mockGenerateReply.mock.calls[0]?.[0];
+    expect(callArg.threadId).not.toContain("U1");
+    expect(callArg.resourceId).not.toContain("U1");
     expect(mockSendLineMessages).toHaveBeenCalled();
     expect(msg.ack).toHaveBeenCalled();
     expect(msg.retry).not.toHaveBeenCalled();

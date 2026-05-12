@@ -1,5 +1,5 @@
 import { logger } from "~/lib/logger";
-import { toResourceId } from "~/lib/principal";
+import { toLineResourceId, toLineThreadId } from "~/lib/principal";
 import {
   type BroadcastMessage,
   broadcastRepository,
@@ -56,8 +56,11 @@ export const generateBroadcastExplanation = async (
   replyToken: string,
 ) => {
   try {
-    const threadId = `line-thread:${userId}`;
-    const resourceId = toResourceId({ type: "line", id: userId });
+    const principal = { type: "line", id: userId } as const;
+    const [resourceId, threadId] = await Promise.all([
+      toLineResourceId(principal, env.RESOURCE_ID_HASH_SECRET),
+      toLineThreadId(principal, env.RESOURCE_ID_HASH_SECRET),
+    ]);
 
     const bodyText = extractBodyText(broadcast);
     const userMessage = `（おしらせ解説リクエスト）「${broadcast.title}」のおしらせについて、ねっぷちゃんの視点でやさしく解説して！
@@ -67,6 +70,7 @@ ${bodyText}`;
 
     const replyTexts = await generateReply({
       userMessage,
+      userId,
       resourceId,
       threadId,
       env,

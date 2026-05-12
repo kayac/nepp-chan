@@ -33,6 +33,7 @@ const env = {
   DB: {} as D1Database,
   LINE_CHANNEL_ACCESS_TOKEN: "token",
   WEB_URL: "https://web.example.com",
+  RESOURCE_ID_HASH_SECRET: "test-secret",
 } as unknown as CloudflareBindings;
 
 const dbRow = {
@@ -127,12 +128,27 @@ describe("handlePollPostback", () => {
       env.DB,
       expect.objectContaining({
         pollId: "p-1",
-        userId: "U1",
+        userId: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
         selectedChoice: "春",
       }),
     );
+    const savedUserId = vi.mocked(pollRepository.createSubmission).mock
+      .calls[0]?.[1].userId;
+    expect(savedUserId).not.toBe("U1");
     const reply = mockReplyMessage.mock.calls[0]?.[0];
     expect(reply.messages[0].type).toBe("flex");
+  });
+
+  it("findSubmission にはハッシュ化済み userId が渡される", async () => {
+    vi.mocked(pollRepository.findById).mockResolvedValue(dbRow);
+    vi.mocked(pollRepository.findSubmission).mockResolvedValue(null);
+
+    await handlePollPostback(env, "U1", "poll=p-1&c=春", "rt");
+
+    const [, , passedUserId] = vi.mocked(pollRepository.findSubmission).mock
+      .calls[0]!;
+    expect(passedUserId).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(passedUserId).not.toBe("U1");
   });
 
   it("URL エンコードされた選択肢もデコードして処理", async () => {

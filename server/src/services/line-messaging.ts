@@ -1,6 +1,7 @@
 import { messagingApi } from "@line/bot-sdk";
 import { Mastra } from "@mastra/core/mastra";
 import { classifyIntent } from "~/lib/classify-intent";
+import { hmacSha256 } from "~/lib/crypto";
 import { resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { splitMessagesForLine } from "~/lib/split-message";
@@ -16,10 +17,11 @@ export const createLineClient = (token: string) =>
 
 export const generateReply = async (params: {
   userMessage: string;
+  userId: string;
   resourceId: string;
   threadId: string;
   env: CloudflareBindings;
-}): Promise<string[]> => {
+}) => {
   const storage = await getStorage(params.env.DB);
 
   const requestContext = createRequestContext({
@@ -28,22 +30,25 @@ export const generateReply = async (params: {
     env: params.env,
   });
 
-  // 未注入の配信メッセージ／投票お知らせをスレッドに system として追加
-  const lineUserId = params.threadId.replace("line-thread:", "");
+  const hashedUserId = await hmacSha256(
+    params.userId,
+    params.env.RESOURCE_ID_HASH_SECRET,
+  );
+
   await Promise.all([
     injectBroadcastsToThread({
       d1: params.env.DB,
       storage,
       threadId: params.threadId,
       resourceId: params.resourceId,
-      userId: lineUserId,
+      userId: hashedUserId,
     }),
     injectPollsToThread({
       d1: params.env.DB,
       storage,
       threadId: params.threadId,
       resourceId: params.resourceId,
-      userId: lineUserId,
+      userId: hashedUserId,
     }),
   ]);
 
