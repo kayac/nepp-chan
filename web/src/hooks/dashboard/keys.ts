@@ -11,4 +11,5 @@ export const dashboardKeys = {
     ["dashboard", "knowledge", "file", key] as const,
   polls: ["dashboard", "polls"] as const,
   pollResults: (id: string) => ["dashboard", "poll", "results", id] as const,
+  invitations: ["dashboard", "invitations"] as const,
 };
