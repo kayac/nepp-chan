@@ -1,14 +1,18 @@
 import { act, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
 import { setAuthToken } from "~/lib/auth-token";
 import { server } from "~/test/msw-server";
 import { renderHookWithQuery } from "~/test/query";
 import {
   useBroadcasts,
   useCreateBroadcast,
-  usePollResults,
-} from "./useDashboard";
+  useDeleteBroadcast,
+  useSendBroadcast,
+  useUpdateBroadcast,
+  useUploadBroadcastImage,
+} from "./useBroadcasts";
 
 const API = "http://localhost:8787";
 
@@ -21,15 +25,8 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe("条件付き enabled 系 query", () => {
-  it("usePollResults: id=null なら fetchStatus は idle", () => {
-    const { result } = renderHookWithQuery(() => usePollResults(null));
-    expect(result.current.fetchStatus).toBe("idle");
-  });
-});
-
-describe("infinite query 系", () => {
-  it("useBroadcasts: status filter をクエリに含む", async () => {
+describe("useBroadcasts", () => {
+  it("status フィルタがクエリに含まれる", async () => {
     let received: string | null = null;
     server.use(
       http.get(`${API}/admin/broadcast`, ({ request }) => {
@@ -47,8 +44,8 @@ describe("infinite query 系", () => {
   });
 });
 
-describe("mutation 系", () => {
-  it("useCreateBroadcast: 成功後に broadcasts を invalidate", async () => {
+describe("broadcast mutations", () => {
+  it("useCreateBroadcast: 成功で id を返す", async () => {
     server.use(
       http.post(`${API}/admin/broadcast`, () =>
         HttpResponse.json(
@@ -79,8 +76,44 @@ describe("mutation 系", () => {
         parts: [{ type: "text", text: "hello" }],
       });
     });
-
     expect(returned?.id).toBe("b-1");
+  });
+
+  it("useDeleteBroadcast: 成功で isSuccess", async () => {
+    server.use(
+      http.delete(`${API}/admin/broadcast/b-1`, () =>
+        HttpResponse.json({ message: "deleted" }),
+      ),
+    );
+
+    const { result } = renderHookWithQuery(() => useDeleteBroadcast());
+
+    await act(async () => {
+      await result.current.mutateAsync("b-1");
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
+  });
+
+  it("useSendBroadcast: 成功で isSuccess", async () => {
+    server.use(
+      http.post(`${API}/admin/broadcast/b-1/send`, () =>
+        HttpResponse.json({ message: "sent" }),
+      ),
+    );
+
+    const { result } = renderHookWithQuery(() => useSendBroadcast());
+
+    await act(async () => {
+      await result.current.mutateAsync("b-1");
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+  });
+
+  it("useUpdateBroadcast / useUploadBroadcastImage: インスタンス化できる", () => {
+    const update = renderHookWithQuery(() => useUpdateBroadcast());
+    expect(typeof update.result.current.mutateAsync).toBe("function");
+
+    const upload = renderHookWithQuery(() => useUploadBroadcastImage());
+    expect(typeof upload.result.current.mutateAsync).toBe("function");
   });
 });

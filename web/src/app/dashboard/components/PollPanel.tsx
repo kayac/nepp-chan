@@ -18,7 +18,7 @@ import {
   usePolls,
   useSendPoll,
   useUpdatePoll,
-} from "~/hooks/useDashboard";
+} from "~/hooks/dashboard/usePolls";
 import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
 import { formatDateTime } from "~/lib/format";
 import type { CreatePollRequest, Poll, PollStatus } from "~/types";

@@ -21,7 +21,7 @@ import {
   useSendBroadcast,
   useUpdateBroadcast,
   useUploadBroadcastImage,
-} from "~/hooks/useDashboard";
+} from "~/hooks/dashboard/useBroadcasts";
 import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
 import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
