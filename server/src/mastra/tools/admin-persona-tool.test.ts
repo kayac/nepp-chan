@@ -10,11 +10,11 @@ vi.mock("~/repository/persona-repository", () => ({
 const { personaRepository } = await import("~/repository/persona-repository");
 const { adminPersonaTool } = await import("./admin-persona-tool");
 
-import { buildToolContext } from "../../test-helpers/tool-context";
+import { callTool } from "../../test-helpers/tool-context";
 
 const fakeDb = {} as D1Database;
 const adminUser = { id: "u-1", role: "admin" as const };
-const ctx = buildToolContext({ db: fakeDb, adminUser });
+const adminValues = { db: fakeDb, adminUser };
 
 const samplePersona = {
   id: "p-1",
@@ -50,7 +50,7 @@ describe("adminPersonaTool.execute", () => {
     });
     vi.mocked(personaRepository.getStats).mockResolvedValue(sampleStats);
 
-    const result: any = await adminPersonaTool.execute!({ limit: 30 }, ctx);
+    const result = await callTool(adminPersonaTool, { limit: 30 }, adminValues);
 
     expect(result.success).toBe(true);
     expect(result.count).toBe(1);
@@ -65,9 +65,10 @@ describe("adminPersonaTool.execute", () => {
     });
     vi.mocked(personaRepository.getStats).mockResolvedValue(sampleStats);
 
-    await adminPersonaTool.execute!(
+    await callTool(
+      adminPersonaTool,
       { category: "要望", sentiment: "request", limit: 30 },
-      ctx,
+      adminValues,
     );
 
     expect(personaRepository.list).toHaveBeenCalledWith(fakeDb, {
@@ -78,9 +79,10 @@ describe("adminPersonaTool.execute", () => {
   });
 
   it("非管理者は NOT_AUTHORIZED", async () => {
-    const result: any = await adminPersonaTool.execute!(
+    const result = await callTool(
+      adminPersonaTool,
       { limit: 30 },
-      buildToolContext({ db: fakeDb }),
+      { db: fakeDb },
     );
 
     expect(result.success).toBe(false);

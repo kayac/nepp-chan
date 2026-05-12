@@ -10,10 +10,10 @@ vi.mock("~/repository/persona-repository", () => ({
 const { personaRepository } = await import("~/repository/persona-repository");
 const { personaUpdateTool } = await import("./persona-update-tool");
 
-import { buildToolContext } from "../../test-helpers/tool-context";
+import { callTool } from "../../test-helpers/tool-context";
 
 const fakeDb = {} as D1Database;
-const ctx = buildToolContext({ db: fakeDb });
+const dbValues = { db: fakeDb };
 
 const sampleRow = {
   id: "p-1",
@@ -39,9 +39,10 @@ describe("personaUpdateTool.execute", () => {
     vi.mocked(personaRepository.findById).mockResolvedValue(sampleRow);
     vi.mocked(personaRepository.update).mockResolvedValue();
 
-    const result: any = await personaUpdateTool.execute!(
+    const result = await callTool(
+      personaUpdateTool,
       { id: "p-1", content: "新しい内容" },
-      ctx,
+      dbValues,
     );
 
     expect(result.success).toBe(true);
@@ -54,7 +55,11 @@ describe("personaUpdateTool.execute", () => {
   });
 
   it("更新項目が 1 つも無いと NO_UPDATE_FIELDS", async () => {
-    const result: any = await personaUpdateTool.execute!({ id: "p-1" }, ctx);
+    const result = await callTool(
+      personaUpdateTool,
+      { id: "p-1" },
+      dbValues,
+    );
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("NO_UPDATE_FIELDS");
@@ -64,9 +69,10 @@ describe("personaUpdateTool.execute", () => {
   it("存在しない id は NOT_FOUND", async () => {
     vi.mocked(personaRepository.findById).mockResolvedValue(null);
 
-    const result: any = await personaUpdateTool.execute!(
+    const result = await callTool(
+      personaUpdateTool,
       { id: "missing", content: "x" },
-      ctx,
+      dbValues,
     );
 
     expect(result.success).toBe(false);
@@ -75,9 +81,10 @@ describe("personaUpdateTool.execute", () => {
   });
 
   it("DB なしは DB_NOT_AVAILABLE", async () => {
-    const result: any = await personaUpdateTool.execute!(
+    const result = await callTool(
+      personaUpdateTool,
       { id: "p-1", content: "x" },
-      buildToolContext({}),
+      {},
     );
 
     expect(result.success).toBe(false);

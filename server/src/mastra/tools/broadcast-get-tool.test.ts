@@ -13,10 +13,10 @@ const { broadcastRepository } = await import(
 );
 const { broadcastGetTool } = await import("./broadcast-get-tool");
 
-import { buildToolContext } from "../../test-helpers/tool-context";
+import { callTool } from "../../test-helpers/tool-context";
 
 const fakeDb = {} as D1Database;
-const ctx = buildToolContext({ db: fakeDb });
+const dbValues = { db: fakeDb };
 
 const sample = {
   id: "b-1",
@@ -40,9 +40,10 @@ describe("broadcastGetTool.execute", () => {
   it("id 指定: 該当ありで 1 件返す", async () => {
     vi.mocked(broadcastRepository.findById).mockResolvedValue(sample);
 
-    const result: any = await broadcastGetTool.execute!(
+    const result = await callTool(
+      broadcastGetTool,
       { id: "b-1", limit: 10 },
-      ctx,
+      dbValues,
     );
 
     expect(result.success).toBe(true);
@@ -52,9 +53,10 @@ describe("broadcastGetTool.execute", () => {
   it("id 指定: 該当なしで 0 件 + 専用メッセージ", async () => {
     vi.mocked(broadcastRepository.findById).mockResolvedValue(null);
 
-    const result: any = await broadcastGetTool.execute!(
+    const result = await callTool(
+      broadcastGetTool,
       { id: "missing", limit: 10 },
-      ctx,
+      dbValues,
     );
 
     expect(result.success).toBe(true);
@@ -65,9 +67,10 @@ describe("broadcastGetTool.execute", () => {
   it("keyword 指定: findByKeyword の結果を返す", async () => {
     vi.mocked(broadcastRepository.findByKeyword).mockResolvedValue([sample]);
 
-    const result: any = await broadcastGetTool.execute!(
+    const result = await callTool(
+      broadcastGetTool,
       { keyword: "雪", limit: 5 },
-      ctx,
+      dbValues,
     );
 
     expect(broadcastRepository.findByKeyword).toHaveBeenCalledWith(
@@ -81,9 +84,10 @@ describe("broadcastGetTool.execute", () => {
   it("keyword ヒット 0 は専用メッセージ", async () => {
     vi.mocked(broadcastRepository.findByKeyword).mockResolvedValue([]);
 
-    const result: any = await broadcastGetTool.execute!(
+    const result = await callTool(
+      broadcastGetTool,
       { keyword: "ない", limit: 10 },
-      ctx,
+      dbValues,
     );
 
     expect(result.message).toMatch(/一致する.*ありません/);
@@ -96,7 +100,7 @@ describe("broadcastGetTool.execute", () => {
       hasMore: false,
     });
 
-    const result: any = await broadcastGetTool.execute!({ limit: 10 }, ctx);
+    const result = await callTool(broadcastGetTool, { limit: 10 }, dbValues);
 
     expect(broadcastRepository.findAll).toHaveBeenCalledWith(fakeDb, {
       limit: 10,
@@ -106,10 +110,7 @@ describe("broadcastGetTool.execute", () => {
   });
 
   it("DB なしは DB_NOT_AVAILABLE", async () => {
-    const result: any = await broadcastGetTool.execute!(
-      { limit: 10 },
-      buildToolContext({}),
-    );
+    const result = await callTool(broadcastGetTool, { limit: 10 }, {});
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("DB_NOT_AVAILABLE");

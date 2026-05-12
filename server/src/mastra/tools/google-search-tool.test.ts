@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { buildToolContext } from "../../test-helpers/tool-context";
+import { callTool } from "../../test-helpers/tool-context";
 import { searchGoogleTool } from "./google-search-tool";
 
 const env = {
@@ -7,7 +7,7 @@ const env = {
   GOOGLE_SEARCH_ENGINE_ID: "engine",
 } as unknown as CloudflareBindings;
 
-const ctx = buildToolContext({ env });
+const envValues = { env };
 
 const fetchSpy = vi.spyOn(globalThis, "fetch");
 
@@ -21,10 +21,7 @@ afterEach(() => {
 
 describe("searchGoogleTool.execute", () => {
   it("API key / engine id が無いと API_KEY_MISSING", async () => {
-    const result: any = await searchGoogleTool.execute!(
-      { query: "x" },
-      buildToolContext({ env: {} }),
-    );
+    const result = await callTool(searchGoogleTool, { query: "x" }, { env: {} });
 
     expect(result.error).toBe("API_KEY_MISSING");
     expect(result.results).toEqual([]);
@@ -46,9 +43,10 @@ describe("searchGoogleTool.execute", () => {
       ),
     );
 
-    const result: any = await searchGoogleTool.execute!(
+    const result = await callTool(
+      searchGoogleTool,
       { query: "音威子府" },
-      ctx,
+      envValues,
     );
 
     expect(result.results).toEqual([
@@ -63,7 +61,7 @@ describe("searchGoogleTool.execute", () => {
   it("429 はレート制限エラー", async () => {
     fetchSpy.mockResolvedValue(new Response("Rate Limit", { status: 429 }));
 
-    const result: any = await searchGoogleTool.execute!({ query: "x" }, ctx);
+    const result = await callTool(searchGoogleTool, { query: "x" }, envValues);
 
     expect(result.error).toBe("RATE_LIMIT_EXCEEDED");
   });
@@ -75,7 +73,7 @@ describe("searchGoogleTool.execute", () => {
       }),
     );
 
-    const result: any = await searchGoogleTool.execute!({ query: "x" }, ctx);
+    const result = await callTool(searchGoogleTool, { query: "x" }, envValues);
 
     expect(result.error).toBe("API key invalid");
   });
@@ -85,7 +83,7 @@ describe("searchGoogleTool.execute", () => {
       new Response(JSON.stringify({}), { status: 200 }),
     );
 
-    const result: any = await searchGoogleTool.execute!({ query: "x" }, ctx);
+    const result = await callTool(searchGoogleTool, { query: "x" }, envValues);
 
     expect(result.results).toEqual([]);
   });
@@ -93,7 +91,7 @@ describe("searchGoogleTool.execute", () => {
   it("fetch が throw するとエラー文字列を返す", async () => {
     fetchSpy.mockRejectedValue(new Error("network down"));
 
-    const result: any = await searchGoogleTool.execute!({ query: "x" }, ctx);
+    const result = await callTool(searchGoogleTool, { query: "x" }, envValues);
 
     expect(result.error).toBe("network down");
   });

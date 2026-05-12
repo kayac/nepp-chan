@@ -9,11 +9,11 @@ vi.mock("~/repository/persona-repository", () => ({
 const { personaRepository } = await import("~/repository/persona-repository");
 const { personaAggregateTool } = await import("./persona-aggregate-tool");
 
-import { buildToolContext } from "../../test-helpers/tool-context";
+import { callTool } from "../../test-helpers/tool-context";
 
 const fakeDb = {} as D1Database;
 const adminUser = { id: "u-1", role: "admin" as const };
-const ctx = buildToolContext({ db: fakeDb, adminUser });
+const adminValues = { db: fakeDb, adminUser };
 
 describe("personaAggregateTool.execute", () => {
   beforeEach(() => {
@@ -23,9 +23,10 @@ describe("personaAggregateTool.execute", () => {
   it("空配列なら totalCount=0 のメッセージ", async () => {
     vi.mocked(personaRepository.aggregateByTopic).mockResolvedValue([]);
 
-    const result: any = await personaAggregateTool.execute!(
+    const result = await callTool(
+      personaAggregateTool,
       { resourceId: "v-1", limit: 20 },
-      ctx,
+      adminValues,
     );
 
     expect(result.success).toBe(true);
@@ -44,9 +45,10 @@ describe("personaAggregateTool.execute", () => {
       },
     ]);
 
-    const result: any = await personaAggregateTool.execute!(
+    const result = await callTool(
+      personaAggregateTool,
       { resourceId: "v-1", limit: 20 },
-      ctx,
+      adminValues,
     );
 
     expect(result.aggregations[0].demographics).toBe("60代(2), 村内(1)");
@@ -63,9 +65,10 @@ describe("personaAggregateTool.execute", () => {
       },
     ]);
 
-    const result: any = await personaAggregateTool.execute!(
+    const result = await callTool(
+      personaAggregateTool,
       { resourceId: "v-1", limit: 20 },
-      ctx,
+      adminValues,
     );
 
     expect(result.aggregations[0].samples).toEqual(["a", "b", "c"]);
@@ -82,9 +85,10 @@ describe("personaAggregateTool.execute", () => {
       },
     ]);
 
-    const result: any = await personaAggregateTool.execute!(
+    const result = await callTool(
+      personaAggregateTool,
       { resourceId: "v-1", limit: 20 },
-      ctx,
+      adminValues,
     );
 
     expect(result.aggregations[0].demographics).toBe("不明");
@@ -109,18 +113,20 @@ describe("personaAggregateTool.execute", () => {
       },
     ]);
 
-    const result: any = await personaAggregateTool.execute!(
+    const result = await callTool(
+      personaAggregateTool,
       { resourceId: "v-1", limit: 20 },
-      ctx,
+      adminValues,
     );
 
     expect(result.totalCount).toBe(10);
   });
 
   it("非管理者は NOT_AUTHORIZED", async () => {
-    const result: any = await personaAggregateTool.execute!(
+    const result = await callTool(
+      personaAggregateTool,
       { resourceId: "v-1", limit: 20 },
-      buildToolContext({ db: fakeDb }),
+      { db: fakeDb },
     );
 
     expect(result.success).toBe(false);
