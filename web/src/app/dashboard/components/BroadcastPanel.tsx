@@ -16,17 +16,15 @@ import { useCallback, useRef, useState } from "react";
 
 import {
   useBroadcasts,
-  useCreateBroadcast,
   useDeleteBroadcast,
   useSendBroadcast,
-  useUpdateBroadcast,
-  useUploadBroadcastImage,
 } from "~/hooks/dashboard/useBroadcasts";
 import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
 import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 import type { BroadcastMessage, BroadcastPart, BroadcastStatus } from "~/types";
-import { getImageUrl, type PartState, parseParts } from "./broadcast-helpers";
+import { getImageUrl, type PartState } from "./broadcast-helpers";
+import { MAX_PARTS, type ModalMode, useBroadcastForm } from "./useBroadcastForm";
 
 const STATUS_LABELS: Record<BroadcastStatus, string> = {
   draft: "下書き",
@@ -49,20 +47,11 @@ const STATUS_ACTIVE_STYLES: Record<BroadcastStatus, string> = {
   failed: "bg-red-600 text-white",
 };
 
-const MAX_PARTS = 5;
-
-let partIdCounter = 0;
-const nextPartId = () => `part-${++partIdCounter}`;
-
-type ModalMode = "create" | "edit";
-
 type BroadcastFormModalProps = {
   mode: ModalMode;
   broadcast?: BroadcastMessage;
   onClose: () => void;
 };
-
-type SendTiming = "now" | "schedule";
 
 const PartEditor = ({
   part,
@@ -248,123 +237,22 @@ const BroadcastFormModal = ({
   broadcast,
   onClose,
 }: BroadcastFormModalProps) => {
-  const [parts, setParts] = useState<PartState[]>(
-    broadcast
-      ? parseParts(broadcast, nextPartId)
-      : [{ id: nextPartId(), type: "text", text: "" }],
-  );
-  const [timing, setTiming] = useState<SendTiming>(
-    broadcast?.scheduledAt ? "schedule" : "now",
-  );
-  const [scheduledAt, setScheduledAt] = useState(
-    broadcast?.scheduledAt?.slice(0, 16) ?? "",
-  );
-
-  const createMutation = useCreateBroadcast();
-  const updateMutation = useUpdateBroadcast();
-  const sendMutation = useSendBroadcast();
-  const uploadMutation = useUploadBroadcastImage();
-
-  const isPending =
-    createMutation.isPending ||
-    updateMutation.isPending ||
-    sendMutation.isPending ||
-    uploadMutation.isPending;
-
-  const isValid =
-    parts.length > 0 &&
-    parts.every((p) => {
-      if (p.type === "text") return p.text.trim().length > 0;
-      if (p.type === "image") return p.imageR2Key || p.file;
-      return false;
-    }) &&
-    (timing === "now" || (timing === "schedule" && scheduledAt.length > 0));
-
-  const handlePartChange = useCallback((index: number, part: PartState) => {
-    setParts((prev) => prev.map((p, i) => (i === index ? part : p)));
-  }, []);
-
-  const handlePartRemove = useCallback((index: number) => {
-    setParts((prev) => prev.filter((_, i) => i !== index));
-  }, []);
-
-  const handlePartMove = useCallback(
-    (index: number, direction: "up" | "down") => {
-      setParts((prev) => {
-        const next = [...prev];
-        const target = direction === "up" ? index - 1 : index + 1;
-        [next[index], next[target]] = [next[target], next[index]];
-        return next;
-      });
-    },
-    [],
-  );
-
-  const handleAddPart = () => {
-    if (parts.length >= MAX_PARTS) return;
-    setParts((prev) => [...prev, { id: nextPartId(), type: "text", text: "" }]);
-  };
-
-  const handleSubmit = async () => {
-    if (!isValid) return;
-
-    if (timing === "now") {
-      if (
-        !confirmDialog(
-          "この配信メッセージをLINE全フォロワーに即時送信しますか？",
-        )
-      ) {
-        return;
-      }
-    }
-
-    const uploadedParts: BroadcastPart[] = await Promise.all(
-      parts.map(async (part) => {
-        if (part.type === "text") {
-          return { type: "text" as const, text: part.text };
-        }
-        if (part.file) {
-          const { imageR2Key, imageDescription } =
-            await uploadMutation.mutateAsync(part.file);
-          return { type: "image" as const, imageR2Key, imageDescription };
-        }
-        return {
-          type: "image" as const,
-          imageR2Key: part.imageR2Key,
-          imageDescription: part.imageDescription,
-        };
-      }),
-    );
-
-    if (timing === "now") {
-      if (mode === "create") {
-        await createMutation.mutateAsync({
-          parts: uploadedParts,
-          sendNow: true,
-        });
-      } else if (broadcast) {
-        await updateMutation.mutateAsync({
-          id: broadcast.id,
-          data: { parts: uploadedParts },
-        });
-        await sendMutation.mutateAsync(broadcast.id);
-      }
-    } else {
-      const isoDate = new Date(scheduledAt).toISOString();
-      if (mode === "create") {
-        await createMutation.mutateAsync({
-          parts: uploadedParts,
-          scheduledAt: isoDate,
-        });
-      } else if (broadcast) {
-        await updateMutation.mutateAsync({
-          id: broadcast.id,
-          data: { parts: uploadedParts, scheduledAt: isoDate },
-        });
-      }
-    }
-    onClose();
-  };
+  const {
+    parts,
+    timing,
+    setTiming,
+    scheduledAt,
+    setScheduledAt,
+    isPending,
+    isValid,
+    isError,
+    errorMessage,
+    handlePartChange,
+    handlePartRemove,
+    handlePartMove,
+    handleAddPart,
+    handleSubmit,
+  } = useBroadcastForm({ mode, broadcast, onClose });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -466,16 +354,9 @@ const BroadcastFormModal = ({
           )}
         </div>
 
-        {(createMutation.isError ||
-          updateMutation.isError ||
-          sendMutation.isError ||
-          uploadMutation.isError) && (
+        {isError && (
           <div className="mt-4 px-4 py-3 rounded-lg text-sm bg-red-50 text-red-700">
-            {createMutation.error?.message ||
-              updateMutation.error?.message ||
-              sendMutation.error?.message ||
-              uploadMutation.error?.message ||
-              "エラーが発生しました"}
+            {errorMessage || "エラーが発生しました"}
           </div>
         )}
 
