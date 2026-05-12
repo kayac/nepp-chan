@@ -37,10 +37,10 @@ export default defineConfig({
         "src/app/chat/AssistantProvider.tsx",
       ],
       thresholds: {
-        branches: 85,
-        lines: 39,
+        branches: 86,
+        lines: 47,
         functions: 76,
-        statements: 39,
+        statements: 47,
       },
     },
   },
