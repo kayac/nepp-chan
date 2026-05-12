@@ -4,7 +4,7 @@ import {
   type ChoiceFormState,
   collectValidChoices,
   isPollFormValid,
-} from "./poll-helpers";
+} from "./helpers";
 
 const choice = (id: string, value: string): ChoiceFormState => ({ id, value });
 
