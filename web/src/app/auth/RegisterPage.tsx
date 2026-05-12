@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { type SubmitEvent, useEffect, useState } from "react";
 import { RootLayout } from "~/components/RootLayout";
 import { register } from "~/lib/api/auth";
 import { setAuthToken } from "~/lib/auth-token";
@@ -18,7 +18,7 @@ export const RegisterPage = () => {
     }
   }, [token]);
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!token) return;
 

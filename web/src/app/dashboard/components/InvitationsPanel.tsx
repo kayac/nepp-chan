@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { type SubmitEvent, useState } from "react";
 import { useAuth } from "~/app/dashboard/contexts/AuthContext";
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
 import { ROLE_LABELS, useRole } from "~/hooks/useRole";
@@ -51,7 +51,7 @@ export const InvitationsPanel = () => {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!username.trim()) return;
     createMutation.mutate({ username: username.trim(), role });
