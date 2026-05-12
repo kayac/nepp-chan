@@ -1,7 +1,6 @@
 import { messagingApi } from "@line/bot-sdk";
 import { Mastra } from "@mastra/core/mastra";
 import { classifyIntent } from "~/lib/classify-intent";
-import { hmacSha256 } from "~/lib/crypto";
 import { resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { splitMessagesForLine } from "~/lib/split-message";
@@ -18,6 +17,7 @@ export const createLineClient = (token: string) =>
 export const generateReply = async (params: {
   userMessage: string;
   userId: string;
+  hashedUserId: string;
   resourceId: string;
   threadId: string;
   env: CloudflareBindings;
@@ -30,25 +30,20 @@ export const generateReply = async (params: {
     env: params.env,
   });
 
-  const hashedUserId = await hmacSha256(
-    params.userId,
-    params.env.RESOURCE_ID_HASH_SECRET,
-  );
-
   await Promise.all([
     injectBroadcastsToThread({
       d1: params.env.DB,
       storage,
       threadId: params.threadId,
       resourceId: params.resourceId,
-      userId: hashedUserId,
+      userId: params.hashedUserId,
     }),
     injectPollsToThread({
       d1: params.env.DB,
       storage,
       threadId: params.threadId,
       resourceId: params.resourceId,
-      userId: hashedUserId,
+      userId: params.hashedUserId,
     }),
   ]);
 
