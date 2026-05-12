@@ -17,13 +17,15 @@ export const handleLineEvent = async (
 
   for (const message of batch.messages) {
     const { userId, userMessage, replyToken } = message.body;
+    let threadId: string | undefined;
 
     try {
       const principal: LinePrincipal = { type: "line", id: userId };
-      const [resourceId, threadId] = await Promise.all([
+      const [resourceId, hashedThreadId] = await Promise.all([
         toLineResourceId(principal, secret),
         toLineThreadId(principal, secret),
       ]);
+      threadId = hashedThreadId;
       const replyTexts = await generateReply({
         userMessage,
         userId,
@@ -37,13 +39,18 @@ export const handleLineEvent = async (
           client,
           replyToken,
           userId,
+          threadId,
           texts: replyTexts,
         });
       }
 
       message.ack();
     } catch (error) {
-      logger.error(`LINE reply failed for user ${userId}`, error);
+      logger.error(
+        "LINE reply failed",
+        error,
+        threadId ? { threadId } : undefined,
+      );
       message.retry();
     }
   }

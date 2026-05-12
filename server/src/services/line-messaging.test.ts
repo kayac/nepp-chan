@@ -15,6 +15,7 @@ describe("sendLineMessages", () => {
     client,
     replyToken: "token-123",
     userId: "user-456",
+    threadId: "line-thread-hash-abc",
     texts: ["こんにちは", "元気？"],
   };
 
