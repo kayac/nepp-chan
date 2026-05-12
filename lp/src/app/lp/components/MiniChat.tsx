@@ -3,7 +3,7 @@ import type { SimpleChatRequest } from "@nepp-chan/shared/api";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { ArrowRightIcon, EllipsisIcon, SendIcon } from "lucide-react";
-import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type SubmitEvent, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { API_URL, WEB_URL } from "~/constants/urls";
@@ -89,7 +89,7 @@ export const MiniChat = () => {
     setShowSuggestions(false);
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     ask(input);
   };

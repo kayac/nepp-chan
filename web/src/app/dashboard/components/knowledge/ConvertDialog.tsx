@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type SubmitEvent, useState } from "react";
 
 type Props = {
   file: File;
@@ -17,7 +17,7 @@ export const ConvertDialog = ({
   const defaultName = file.name.replace(/\.[^/.]+$/, "");
   const [filename, setFilename] = useState(defaultName);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (filename.trim()) {
       onConvert(filename.trim());

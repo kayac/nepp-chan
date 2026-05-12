@@ -7,7 +7,7 @@ vi.mock("~/services/knowledge/search", () => ({
 const { searchKnowledge } = await import("~/services/knowledge/search");
 const { knowledgeSearchTool } = await import("./knowledge-search-tool");
 
-import { buildToolContext } from "../../test-helpers/tool-context";
+import { callTool } from "../../test-helpers/tool-context";
 
 describe("knowledgeSearchTool.execute", () => {
   beforeEach(() => {
@@ -15,22 +15,20 @@ describe("knowledgeSearchTool.execute", () => {
   });
 
   it("VECTORIZE binding が無いと VECTORIZE_NOT_CONFIGURED", async () => {
-    const result: any = await knowledgeSearchTool.execute!(
+    const result = await callTool(
+      knowledgeSearchTool,
       { query: "x" },
-      buildToolContext({
-        env: { GOOGLE_GENERATIVE_AI_API_KEY: "k" } as never,
-      }),
+      { env: { GOOGLE_GENERATIVE_AI_API_KEY: "k" } as never },
     );
 
     expect(result.error).toBe("VECTORIZE_NOT_CONFIGURED");
   });
 
   it("API key が無いと API_KEY_MISSING", async () => {
-    const result: any = await knowledgeSearchTool.execute!(
+    const result = await callTool(
+      knowledgeSearchTool,
       { query: "x" },
-      buildToolContext({
-        env: { VECTORIZE: {} } as never,
-      }),
+      { env: { VECTORIZE: {} } as never },
     );
 
     expect(result.error).toBe("API_KEY_MISSING");
@@ -52,9 +50,10 @@ describe("knowledgeSearchTool.execute", () => {
       GOOGLE_GENERATIVE_AI_API_KEY: "key",
     } as unknown as CloudflareBindings;
 
-    const result: any = await knowledgeSearchTool.execute!(
+    const result = await callTool(
+      knowledgeSearchTool,
       { query: "歴史" },
-      buildToolContext({ env }),
+      { env },
     );
 
     expect(result.results).toHaveLength(1);
