@@ -1,12 +1,14 @@
+import type { MessageEvent, UnfollowEvent } from "@line/bot-sdk";
+
 export type LineMessageEvent = {
-  type: "message";
+  type: MessageEvent["type"];
   userId: string;
   userMessage: string;
   replyToken: string;
 };
 
 export type LineUnfollowEvent = {
-  type: "unfollow";
+  type: UnfollowEvent["type"];
   userId: string;
 };
 
