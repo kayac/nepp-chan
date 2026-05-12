@@ -7,6 +7,7 @@ import {
   generateReply,
   sendLineMessages,
 } from "~/services/line-messaging";
+import { deleteAllByLineUserId } from "~/services/user-deletion";
 
 export const handleLineEvent = async (
   batch: MessageBatch<LineEventMessage>,
@@ -16,10 +17,22 @@ export const handleLineEvent = async (
   const secret = env.RESOURCE_ID_HASH_SECRET;
 
   for (const message of batch.messages) {
-    const { userId, userMessage, replyToken } = message.body;
-    let threadId: string | undefined;
+    const body = message.body;
 
+    if (body.type === "unfollow") {
+      try {
+        await deleteAllByLineUserId(env, body.userId);
+        message.ack();
+      } catch (error) {
+        logger.error("LINE unfollow deletion failed", error);
+        message.retry();
+      }
+      continue;
+    }
+
+    let threadId: string | undefined;
     try {
+      const { userId, userMessage, replyToken } = body;
       const principal: LinePrincipal = { type: "line", id: userId };
       const [resourceId, hashedThreadId] = await Promise.all([
         toLineResourceId(principal, secret),
