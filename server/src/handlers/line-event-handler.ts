@@ -1,6 +1,6 @@
 import { logger } from "~/lib/logger";
 import type { LinePrincipal } from "~/lib/principal";
-import { toLineResourceId, toLineThreadId } from "~/lib/principal";
+import { toLineIds } from "~/lib/principal";
 import type { LineEventMessage } from "~/schemas/line-schema";
 import {
   createLineClient,
@@ -34,14 +34,16 @@ export const handleLineEvent = async (
     try {
       const { userId, userMessage, replyToken } = body;
       const principal: LinePrincipal = { type: "line", id: userId };
-      const [resourceId, hashedThreadId] = await Promise.all([
-        toLineResourceId(principal, secret),
-        toLineThreadId(principal, secret),
-      ]);
-      threadId = hashedThreadId;
+      const {
+        hashedUserId,
+        resourceId,
+        threadId: t,
+      } = await toLineIds(principal, secret);
+      threadId = t;
       const replyTexts = await generateReply({
         userMessage,
         userId,
+        hashedUserId,
         resourceId,
         threadId,
         env,
