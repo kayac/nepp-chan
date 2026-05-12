@@ -8,7 +8,7 @@ import {
 } from "~/hooks/dashboard/useBroadcasts";
 import { confirmDialog } from "~/lib/dialog";
 import type { BroadcastMessage, BroadcastPart } from "~/types";
-import { type PartState, parseParts } from "./broadcast-helpers";
+import { type PartState, parseParts } from "./helpers";
 
 export const MAX_PARTS = 5;
 

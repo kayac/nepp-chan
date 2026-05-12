@@ -64,21 +64,34 @@ describe("初期状態", () => {
 
     expect(result.current.timing).toBe("schedule");
     expect(result.current.scheduledAt).toBe("2030-01-01T10:00");
-    expect(result.current.parts[0]).toMatchObject({ type: "text", text: "hello" });
+    expect(result.current.parts[0]).toMatchObject({
+      type: "text",
+      text: "hello",
+    });
   });
 });
 
 describe("バリデーション", () => {
   it("テキストが空白のみだと isValid=false", () => {
     const { result } = renderForm();
-    act(() => result.current.handlePartChange(0, { id: result.current.parts[0].id, type: "text", text: "   " }));
+    act(() =>
+      result.current.handlePartChange(0, {
+        id: result.current.parts[0].id,
+        type: "text",
+        text: "   ",
+      }),
+    );
     expect(result.current.isValid).toBe(false);
   });
 
   it("schedule で scheduledAt 未入力なら isValid=false", () => {
     const { result } = renderForm();
     act(() => {
-      result.current.handlePartChange(0, { id: result.current.parts[0].id, type: "text", text: "hi" });
+      result.current.handlePartChange(0, {
+        id: result.current.parts[0].id,
+        type: "text",
+        text: "hi",
+      });
       result.current.setTiming("schedule");
     });
     expect(result.current.isValid).toBe(false);
@@ -216,7 +229,11 @@ describe("handleSubmit", () => {
 
     const { result } = renderForm();
     act(() => {
-      result.current.handlePartChange(0, { id: result.current.parts[0].id, type: "text", text: "hi" });
+      result.current.handlePartChange(0, {
+        id: result.current.parts[0].id,
+        type: "text",
+        text: "hi",
+      });
       result.current.setTiming("schedule");
       result.current.setScheduledAt("2030-01-01T10:00");
     });
