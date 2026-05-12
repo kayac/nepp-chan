@@ -1,33 +1,16 @@
-import { useState } from "react";
 import { RootLayout } from "~/components/RootLayout";
-import { login } from "~/lib/api/auth";
-import { setAuthToken } from "~/lib/auth-token";
+import { useLoginForm } from "./useLoginForm";
 
 export const LoginPage = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
-
-    try {
-      const result = await login(username, password);
-      setAuthToken(result.accessToken);
-      window.location.href = "/dashboard";
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("ログイン中にエラーが発生しました");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    username,
+    setUsername,
+    password,
+    setPassword,
+    error,
+    isLoading,
+    handleSubmit,
+  } = useLoginForm();
 
   return (
     <RootLayout>
@@ -45,7 +28,7 @@ export const LoginPage = () => {
               </div>
             )}
 
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label
                   htmlFor="username"

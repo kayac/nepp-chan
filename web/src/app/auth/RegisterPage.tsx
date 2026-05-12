@@ -1,54 +1,17 @@
-import { useEffect, useState } from "react";
 import { RootLayout } from "~/components/RootLayout";
-import { register } from "~/lib/api/auth";
-import { setAuthToken } from "~/lib/auth-token";
+import { useRegisterForm } from "./useRegisterForm";
 
 export const RegisterPage = () => {
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get("token");
-
-  useEffect(() => {
-    if (!token) {
-      setError("招待トークンがありません");
-    }
-  }, [token]);
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!token) return;
-
-    if (password !== confirmPassword) {
-      setError("パスワードが一致しません");
-      return;
-    }
-
-    if (password.length < 8) {
-      setError("パスワードは8文字以上で入力してください");
-      return;
-    }
-
-    setError(null);
-    setIsLoading(true);
-
-    try {
-      const result = await register(token, password);
-      setAuthToken(result.accessToken);
-      window.location.href = "/dashboard";
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("登録中にエラーが発生しました");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    token,
+    password,
+    setPassword,
+    confirmPassword,
+    setConfirmPassword,
+    error,
+    isLoading,
+    handleSubmit,
+  } = useRegisterForm();
 
   return (
     <RootLayout>
@@ -69,7 +32,7 @@ export const RegisterPage = () => {
             )}
 
             {token ? (
-              <form onSubmit={handleRegister} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label
                     htmlFor="password"

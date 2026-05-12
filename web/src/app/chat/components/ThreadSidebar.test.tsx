@@ -64,7 +64,7 @@ describe("ThreadSidebar", () => {
 
   it("isCreating=true で新しい会話ボタンが disabled", () => {
     render(<ThreadSidebar {...baseProps} isCreating />);
-    const buttons = screen.getAllByRole("button");
+    const buttons = screen.getAllByRole("button") as HTMLButtonElement[];
     const createBtn = buttons.find((b) => b.disabled);
     expect(createBtn).toBeDefined();
   });
