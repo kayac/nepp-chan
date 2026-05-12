@@ -2,7 +2,7 @@ import {
   useDeletePersonas,
   useExtractPersonas,
   usePersonas,
-} from "~/hooks/useDashboard";
+} from "~/hooks/dashboard/usePersonas";
 import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
 import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";

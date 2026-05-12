@@ -6,44 +6,16 @@ import {
 } from "@tanstack/react-query";
 import {
   broadcastRepository,
-  emergencyRepository,
   feedbackRepository,
   knowledgeRepository,
-  personaRepository,
   pollRepository,
 } from "~/lib/api/repository";
 import type { PollStatus } from "~/types";
+import { dashboardKeys } from "./dashboard/keys";
 
-export const dashboardKeys = {
-  broadcasts: ["dashboard", "broadcasts"] as const,
-  broadcastDetail: (id: string) => ["dashboard", "broadcast", id] as const,
-  personas: ["dashboard", "personas"] as const,
-  emergencies: ["dashboard", "emergencies"] as const,
-  feedbacks: ["dashboard", "feedbacks"] as const,
-  feedbackDetail: (id: string) => ["dashboard", "feedback", id] as const,
-  knowledgeFiles: ["dashboard", "knowledge", "files"] as const,
-  knowledgeUnifiedFiles: ["dashboard", "knowledge", "unified"] as const,
-  knowledgeFile: (key: string) =>
-    ["dashboard", "knowledge", "file", key] as const,
-  polls: ["dashboard", "polls"] as const,
-  pollResults: (id: string) => ["dashboard", "poll", "results", id] as const,
-};
+export { dashboardKeys };
 
-export const usePersonas = (limit = 30) =>
-  useInfiniteQuery({
-    queryKey: [...dashboardKeys.personas, limit],
-    queryFn: ({ pageParam }) =>
-      personaRepository.fetchPersonas({ limit, cursor: pageParam }),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-  });
-
-export const useEmergencies = (limit = 100) =>
-  useQuery({
-    queryKey: dashboardKeys.emergencies,
-    queryFn: () => emergencyRepository.fetchEmergencies(limit),
-  });
-
+// ナレッジファイル関連 hooks
 export const useSyncKnowledge = () =>
   useMutation({
     mutationFn: knowledgeRepository.syncKnowledge,
@@ -54,27 +26,6 @@ export const useDeleteKnowledge = () =>
     mutationFn: knowledgeRepository.deleteAllKnowledge,
   });
 
-export const useExtractPersonas = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: personaRepository.extractPersonas,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: dashboardKeys.personas });
-    },
-  });
-};
-
-export const useDeletePersonas = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: personaRepository.deleteAllPersonas,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: dashboardKeys.personas });
-    },
-  });
-};
-
-// ナレッジファイル関連 hooks
 export const useKnowledgeFiles = () =>
   useQuery({
     queryKey: dashboardKeys.knowledgeFiles,

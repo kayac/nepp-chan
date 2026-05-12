@@ -7,11 +7,9 @@ import { renderHookWithQuery } from "~/test/query";
 import {
   useBroadcasts,
   useCreateBroadcast,
-  useEmergencies,
   useFeedbackDetail,
   useKnowledgeFile,
   useKnowledgeFiles,
-  usePersonas,
   usePollResults,
   useSyncKnowledge,
   useUnifiedFiles,
@@ -81,53 +79,9 @@ describe("単純 query", () => {
     const { result } = renderHookWithQuery(() => useUnifiedFiles());
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
   });
-
-  it("useEmergencies", async () => {
-    server.use(
-      http.get(`${API}/admin/emergency`, () =>
-        HttpResponse.json({ emergencies: [] }),
-      ),
-    );
-
-    const { result } = renderHookWithQuery(() => useEmergencies());
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-  });
 });
 
 describe("infinite query 系", () => {
-  it("usePersonas: nextCursor を辿って fetchNextPage できる", async () => {
-    let calls = 0;
-    server.use(
-      http.get(`${API}/admin/persona`, ({ request }) => {
-        calls += 1;
-        const url = new URL(request.url);
-        const cursor = url.searchParams.get("cursor");
-        if (cursor) {
-          return HttpResponse.json({
-            personas: [{ id: "p-2" }],
-            nextCursor: null,
-          });
-        }
-        return HttpResponse.json({
-          personas: [{ id: "p-1" }],
-          nextCursor: "cursor-1",
-        });
-      }),
-    );
-
-    const { result } = renderHookWithQuery(() => usePersonas(10));
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.hasNextPage).toBe(true);
-
-    await act(async () => {
-      await result.current.fetchNextPage();
-    });
-
-    await waitFor(() => expect(result.current.hasNextPage).toBe(false));
-    expect(calls).toBeGreaterThanOrEqual(2);
-  });
-
   it("useBroadcasts: status filter をクエリに含む", async () => {
     let received: string | null = null;
     server.use(

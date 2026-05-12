@@ -1,4 +1,4 @@
-import { useEmergencies } from "~/hooks/useDashboard";
+import { useEmergencies } from "~/hooks/dashboard/useEmergencies";
 import { formatDateTime } from "~/lib/format";
 
 export const EmergencyPanel = () => {
