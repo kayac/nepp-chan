@@ -55,11 +55,7 @@ describe("personaUpdateTool.execute", () => {
   });
 
   it("更新項目が 1 つも無いと NO_UPDATE_FIELDS", async () => {
-    const result = await callTool(
-      personaUpdateTool,
-      { id: "p-1" },
-      dbValues,
-    );
+    const result = await callTool(personaUpdateTool, { id: "p-1" }, dbValues);
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("NO_UPDATE_FIELDS");

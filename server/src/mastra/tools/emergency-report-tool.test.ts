@@ -63,11 +63,7 @@ describe("emergencyReportTool.execute", () => {
   it("create が throw すると success: false", async () => {
     vi.mocked(emergencyRepository.create).mockRejectedValue(new Error("db"));
 
-    const result = await callTool(
-      emergencyReportTool,
-      { type: "x" },
-      dbValues,
-    );
+    const result = await callTool(emergencyReportTool, { type: "x" }, dbValues);
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("db");

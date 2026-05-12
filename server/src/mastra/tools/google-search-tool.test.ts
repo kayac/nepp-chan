@@ -21,7 +21,11 @@ afterEach(() => {
 
 describe("searchGoogleTool.execute", () => {
   it("API key / engine id が無いと API_KEY_MISSING", async () => {
-    const result = await callTool(searchGoogleTool, { query: "x" }, { env: {} });
+    const result = await callTool(
+      searchGoogleTool,
+      { query: "x" },
+      { env: {} },
+    );
 
     expect(result.error).toBe("API_KEY_MISSING");
     expect(result.results).toEqual([]);
