@@ -83,6 +83,7 @@ ${bodyText}`;
       client,
       replyToken,
       userId,
+      threadId,
       texts: replyTexts,
     });
   } catch (error) {

@@ -99,6 +99,7 @@ export const sendLineMessages = async (params: {
   client: messagingApi.MessagingApiClient;
   replyToken: string;
   userId: string;
+  threadId: string;
   texts: string[];
 }) => {
   const messages = params.texts.map((text) => ({
@@ -111,12 +112,12 @@ export const sendLineMessages = async (params: {
       replyToken: params.replyToken,
       messages,
     });
-    logger.info(`LINE replyMessage sent to ${params.userId}`);
+    logger.info("[LINE] replyMessage sent", { threadId: params.threadId });
   } catch {
-    logger.warn(
-      `LINE replyMessage failed for ${params.userId}, falling back to pushMessage`,
-    );
+    logger.warn("[LINE] replyMessage failed, falling back to pushMessage", {
+      threadId: params.threadId,
+    });
     await params.client.pushMessage({ to: params.userId, messages });
-    logger.info(`LINE pushMessage sent to ${params.userId}`);
+    logger.info("[LINE] pushMessage sent", { threadId: params.threadId });
   }
 };
