@@ -138,6 +138,21 @@ export const createTestDb = async () => {
       user_id TEXT PRIMARY KEY,
       last_injected_at TEXT NOT NULL
     );
+
+    -- Mastra 管理テーブル（read-only スキーマ。テストのフィクスチャ生成用に最低限のカラムを定義）
+    CREATE TABLE IF NOT EXISTS mastra_threads (
+      id TEXT PRIMARY KEY,
+      resourceId TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS mastra_messages (
+      id TEXT PRIMARY KEY,
+      thread_id TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS mastra_resources (
+      id TEXT PRIMARY KEY
+    );
   `);
 
   return drizzle(client, { schema });
