@@ -121,10 +121,35 @@ describe("lineRoutes: POST /webhook", () => {
 
       expect(res.status).toBe(200);
       expect(queueSend).toHaveBeenCalledWith({
+        type: "message",
         userId: "U123",
         userMessage: "こんにちは",
         replyToken: "reply-1",
       });
+    });
+
+    it("unfollow event は { type: 'unfollow', userId } を LINE_QUEUE に送る", async () => {
+      const unfollowEvent = {
+        type: "unfollow",
+        timestamp: 0,
+        source: { userId: "U999", type: "user" },
+      };
+
+      const res = await sendWebhook([unfollowEvent]);
+
+      expect(res.status).toBe(200);
+      expect(queueSend).toHaveBeenCalledWith({
+        type: "unfollow",
+        userId: "U999",
+      });
+    });
+
+    it("unfollow event に userId が無ければスキップ", async () => {
+      await sendWebhook([
+        { type: "unfollow", timestamp: 0, source: { type: "user" } },
+      ]);
+
+      expect(queueSend).not.toHaveBeenCalled();
     });
 
     it("非テキスト message はキューに送らない", async () => {

@@ -11,6 +11,14 @@ vi.mock("~/services/line-messaging", () => ({
   sendLineMessages: mockSendLineMessages,
 }));
 
+const { mockDeleteAllByLineUserId } = vi.hoisted(() => ({
+  mockDeleteAllByLineUserId: vi.fn(),
+}));
+
+vi.mock("~/services/user-deletion", () => ({
+  deleteAllByLineUserId: mockDeleteAllByLineUserId,
+}));
+
 const { handleLineEvent } = await import("./line-event-handler");
 
 const env = {
@@ -20,10 +28,18 @@ const env = {
 
 const buildMessage = (body: {
   userId: string;
-  userMessage: string;
-  replyToken: string;
+  userMessage?: string;
+  replyToken?: string;
+  type?: "message" | "unfollow";
 }) => ({
-  body,
+  body: {
+    type: body.type ?? "message",
+    userId: body.userId,
+    ...(body.userMessage !== undefined
+      ? { userMessage: body.userMessage }
+      : {}),
+    ...(body.replyToken !== undefined ? { replyToken: body.replyToken } : {}),
+  },
   ack: vi.fn(),
   retry: vi.fn(),
   id: "m-1",
@@ -96,6 +112,31 @@ describe("handleLineEvent", () => {
       userMessage: "x",
       replyToken: "rt",
     });
+
+    await handleLineEvent(buildBatch([msg]), env);
+
+    expect(msg.ack).not.toHaveBeenCalled();
+    expect(msg.retry).toHaveBeenCalled();
+  });
+
+  it("unfollow は deleteAllByLineUserId を呼んで ack（generateReply は呼ばない）", async () => {
+    mockDeleteAllByLineUserId.mockResolvedValue(undefined);
+
+    const msg = buildMessage({ userId: "U-bye", type: "unfollow" });
+
+    await handleLineEvent(buildBatch([msg]), env);
+
+    expect(mockDeleteAllByLineUserId).toHaveBeenCalledWith(env, "U-bye");
+    expect(mockGenerateReply).not.toHaveBeenCalled();
+    expect(mockSendLineMessages).not.toHaveBeenCalled();
+    expect(msg.ack).toHaveBeenCalled();
+    expect(msg.retry).not.toHaveBeenCalled();
+  });
+
+  it("unfollow の削除が失敗したら retry", async () => {
+    mockDeleteAllByLineUserId.mockRejectedValue(new Error("DB down"));
+
+    const msg = buildMessage({ userId: "U-bye", type: "unfollow" });
 
     await handleLineEvent(buildBatch([msg]), env);
 

@@ -97,11 +97,22 @@ const enqueueLineEvents = async (
       continue;
     }
 
+    if (event.type === "unfollow") {
+      if (!event.source.userId) continue;
+      const unfollow: LineEventMessage = {
+        type: "unfollow",
+        userId: event.source.userId,
+      };
+      await env.LINE_QUEUE.send(unfollow);
+      continue;
+    }
+
     if (event.type !== "message" || event.message.type !== "text") continue;
     if (!("replyToken" in event) || !event.replyToken) continue;
     if (!event.source.userId) continue;
 
     const message: LineEventMessage = {
+      type: "message",
       userId: event.source.userId,
       userMessage: event.message.text,
       replyToken: event.replyToken,
