@@ -5,6 +5,7 @@ import {
   type AnonymousPrincipal,
   type LinePrincipal,
   requireAdminUser,
+  toLineIds,
   toLineResourceId,
   toLineThreadId,
   toResourceId,
@@ -91,6 +92,34 @@ describe("toLineThreadId", () => {
       SECRET,
     );
     expect(out).not.toContain("U1234567890");
+  });
+});
+
+describe("toLineIds", () => {
+  it("resourceId / threadId / hashedUserId をまとめて返す", async () => {
+    const p: LinePrincipal = { type: "line", id: "U1234567890" };
+    const ids = await toLineIds(p, SECRET);
+    expect(ids.hashedUserId).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(ids.resourceId).toBe(`line:${ids.hashedUserId}`);
+    expect(ids.threadId).toBe(`line-thread:${ids.hashedUserId}`);
+  });
+
+  it("toLineResourceId / toLineThreadId と同じ値を返す（互換性）", async () => {
+    const p: LinePrincipal = { type: "line", id: "U1234567890" };
+    const [ids, resourceId, threadId] = await Promise.all([
+      toLineIds(p, SECRET),
+      toLineResourceId(p, SECRET),
+      toLineThreadId(p, SECRET),
+    ]);
+    expect(ids.resourceId).toBe(resourceId);
+    expect(ids.threadId).toBe(threadId);
+  });
+
+  it("出力に平文 userId を含まない", async () => {
+    const ids = await toLineIds({ type: "line", id: "U1234567890" }, SECRET);
+    expect(ids.hashedUserId).not.toContain("U1234567890");
+    expect(ids.resourceId).not.toContain("U1234567890");
+    expect(ids.threadId).not.toContain("U1234567890");
   });
 });
 

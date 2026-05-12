@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type SubmitEvent, useState } from "react";
 
 import { useAuth } from "~/app/dashboard/contexts/AuthContext";
 import {
@@ -26,7 +26,7 @@ export const InvitationsPanel = () => {
   const createMutation = useCreateInvitation();
   const deleteMutation = useDeleteInvitation();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!username.trim()) return;
     setError(null);

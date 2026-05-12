@@ -125,7 +125,6 @@ const agent = createNeppChanAgent({ modelConfig });
 | ツール名（変数名）       | ツール ID            | 説明                                   |
 | ------------------------ | -------------------- | -------------------------------------- |
 | `searchGoogleTool`       | `google-search`      | Google Custom Search                   |
-| `devTool`                | `dev-tool`           | Working Memory 表示（デバッグ）        |
 | `displayChartTool`       | `display-chart`      | グラフ表示（line/bar/pie）             |
 | `displayTableTool`       | `display-table`      | テーブル表示                           |
 | `displayTimelineTool`    | `display-timeline`   | タイムライン表示                       |

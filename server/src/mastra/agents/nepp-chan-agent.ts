@@ -10,7 +10,6 @@ import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
 import { broadcastGetTool } from "~/mastra/tools/broadcast-get-tool";
-import { devTool } from "~/mastra/tools/dev-tool";
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
@@ -105,9 +104,6 @@ ${
 - 訂正された場合のみ上書き。重複は追加しない
 - 記録した情報を会話に自然に織り込む（preferredNameがあればそちらで呼ぶ）
 - 名前やpreferredNameが不明な場合は、呼称を使わずに話す。「○○さん」のようなプレースホルダーは絶対に使わない
-
-## コマンド
-/dev → dev-tool でユーザーペルソナを自然言語で表示
 `;
 
 const adminInstructions = `
@@ -151,7 +147,6 @@ const defaultTools = {
 };
 
 const webTools = {
-  devTool,
   displayChartTool,
   displayTableTool,
   displayTimelineTool,

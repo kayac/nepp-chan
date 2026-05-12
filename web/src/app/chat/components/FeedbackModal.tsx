@@ -4,7 +4,7 @@ import {
   LightBulbIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { type SubmitEvent, useState } from "react";
 
 import type { FeedbackCategory, FeedbackRating } from "~/types";
 
@@ -38,7 +38,7 @@ export const FeedbackModal = ({
 
   const isBadRating = rating === "bad";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     onSubmit({
       category: isBadRating ? category : undefined,

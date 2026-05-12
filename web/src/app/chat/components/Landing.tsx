@@ -1,7 +1,7 @@
 import { Mascot } from "@nepp-chan/shared/components/Mascot";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { SendIcon } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type SubmitEvent, useState } from "react";
 
 const QUICK_PROMPTS: ReadonlyArray<{ icon: string; text: string }> = [
   { icon: "🧭", text: "音威子府村って、どんなところ？" },
@@ -23,7 +23,7 @@ type Props = {
 export const Landing = ({ onSubmit, disabled = false }: Props) => {
   const [text, setText] = useState("");
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     const t = text.trim();
     if (!t || disabled) return;
