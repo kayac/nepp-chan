@@ -4,6 +4,7 @@ import {
   usePersonas,
 } from "~/hooks/useDashboard";
 import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
+import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 
 export const PersonaPanel = () => {
@@ -29,9 +30,7 @@ export const PersonaPanel = () => {
 
   const handleDelete = () => {
     if (
-      !window.confirm(
-        "全てのペルソナを削除しますか？この操作は取り消せません。",
-      )
+      !confirmDialog("全てのペルソナを削除しますか？この操作は取り消せません。")
     ) {
       return;
     }

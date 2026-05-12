@@ -23,6 +23,7 @@ import {
   useUploadBroadcastImage,
 } from "~/hooks/useDashboard";
 import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
+import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 import type { BroadcastMessage, BroadcastPart, BroadcastStatus } from "~/types";
 import { getImageUrl, type PartState, parseParts } from "./broadcast-helpers";
@@ -309,7 +310,7 @@ const BroadcastFormModal = ({
 
     if (timing === "now") {
       if (
-        !window.confirm(
+        !confirmDialog(
           "この配信メッセージをLINE全フォロワーに即時送信しますか？",
         )
       ) {
@@ -573,7 +574,7 @@ export const BroadcastPanel = () => {
   });
 
   const handleDelete = (broadcast: BroadcastMessage) => {
-    if (!window.confirm(`「${broadcast.body.slice(0, 30)}」を削除しますか？`)) {
+    if (!confirmDialog(`「${broadcast.body.slice(0, 30)}」を削除しますか？`)) {
       return;
     }
     deleteMutation.mutate(broadcast.id);
@@ -581,7 +582,7 @@ export const BroadcastPanel = () => {
 
   const handleSendNow = (broadcast: BroadcastMessage) => {
     if (
-      !window.confirm(
+      !confirmDialog(
         `「${broadcast.body.slice(0, 30)}」をLINE全フォロワーに即時送信しますか？`,
       )
     ) {

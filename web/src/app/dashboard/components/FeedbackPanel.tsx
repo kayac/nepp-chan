@@ -14,6 +14,7 @@ import {
   useUnresolveFeedback,
 } from "~/hooks/useDashboard";
 import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
+import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 import {
   FEEDBACK_CATEGORY_LABELS,
@@ -261,7 +262,7 @@ export const FeedbackPanel = () => {
 
   const handleDelete = () => {
     if (
-      !window.confirm(
+      !confirmDialog(
         "全てのフィードバックを削除しますか？この操作は取り消せません。",
       )
     ) {
