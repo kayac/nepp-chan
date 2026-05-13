@@ -12,17 +12,16 @@ import {
 } from "@heroicons/react/24/outline";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { useMemo, useState } from "react";
+import { BroadcastPanel } from "~/app/dashboard/components/BroadcastPanel";
+import { EmergencyPanel } from "~/app/dashboard/components/EmergencyPanel";
+import { FeedbackPanel } from "~/app/dashboard/components/FeedbackPanel";
+import { InvitationsPanel } from "~/app/dashboard/components/InvitationsPanel";
+import { KnowledgePanel } from "~/app/dashboard/components/KnowledgePanel";
+import { PersonaPanel } from "~/app/dashboard/components/PersonaPanel";
+import { PollPanel } from "~/app/dashboard/components/PollPanel";
+import { useAuth } from "~/app/dashboard/contexts/AuthContext";
+import { useRole } from "~/app/dashboard/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
-
-import { BroadcastPanel } from "./components/BroadcastPanel";
-import { EmergencyPanel } from "./components/EmergencyPanel";
-import { FeedbackPanel } from "./components/FeedbackPanel";
-import { InvitationsPanel } from "./components/InvitationsPanel";
-import { KnowledgePanel } from "./components/KnowledgePanel";
-import { PersonaPanel } from "./components/PersonaPanel";
-import { PollPanel } from "./components/PollPanel";
-import { useAuth } from "./contexts/AuthContext";
-import { useRole } from "./hooks/useRole";
 
 type Tab =
   | "knowledge"

@@ -7,7 +7,9 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
-
+import { BroadcastFormModal } from "~/app/dashboard/components/broadcast/BroadcastFormModal";
+import { BroadcastPartPreview } from "~/app/dashboard/components/broadcast/BroadcastPartPreview";
+import type { ModalMode } from "~/app/dashboard/hooks/useBroadcastForm";
 import {
   useBroadcasts,
   useDeleteBroadcast,
@@ -17,9 +19,6 @@ import { useInfiniteScroll } from "~/app/dashboard/hooks/useInfiniteScroll";
 import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 import type { BroadcastMessage, BroadcastStatus } from "~/types";
-import { BroadcastFormModal } from "./broadcast/BroadcastFormModal";
-import { BroadcastPartPreview } from "./broadcast/BroadcastPartPreview";
-import type { ModalMode } from "./broadcast/useBroadcastForm";
 
 const STATUS_LABELS: Record<BroadcastStatus, string> = {
   draft: "下書き",

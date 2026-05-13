@@ -4,14 +4,14 @@ import { LoadingDots } from "@nepp-chan/shared/ui/Loading";
 import { useState } from "react";
 
 import { ChatStandingMascot } from "~/app/chat/components/ChatStandingMascot";
+import { FeedbackModalWrapper } from "~/app/chat/components/FeedbackModalWrapper";
 import { Landing } from "~/app/chat/components/Landing";
+import { ThreadDeleteModal } from "~/app/chat/components/ThreadDeleteModal";
+import { ThreadSidebar } from "~/app/chat/components/ThreadSidebar";
 import { TopBar } from "~/app/chat/components/TopBar";
 import { Thread } from "~/components/assistant-ui/Thread";
 
 import { AssistantProvider } from "./AssistantProvider";
-import { FeedbackModalWrapper } from "./components/FeedbackModalWrapper";
-import { ThreadDeleteModal } from "./components/ThreadDeleteModal";
-import { ThreadSidebar } from "./components/ThreadSidebar";
 import { FeedbackProvider } from "./FeedbackContext";
 import { useThreadManager } from "./useThreadManager";
 

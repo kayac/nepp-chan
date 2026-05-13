@@ -2,17 +2,17 @@ import { useQuery } from "@tanstack/react-query";
 import type { UIMessage } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { useAdminUser } from "~/hooks/useAdminUser";
-import { threadRepository } from "~/lib/api/repository";
-import { getResourceId } from "~/lib/resource";
-import type { InitialMessage } from "./AssistantProvider";
-import { useAnonymousSession } from "./hooks/useAnonymousSession";
+import { useAnonymousSession } from "~/app/chat/hooks/useAnonymousSession";
 import {
   threadKeys,
   useCreateThread,
   useDeleteThread,
   useThreads,
-} from "./hooks/useThreads";
+} from "~/app/chat/hooks/useThreads";
+import { useAdminUser } from "~/hooks/useAdminUser";
+import { threadRepository } from "~/lib/api/repository";
+import { getResourceId } from "~/lib/resource";
+import type { InitialMessage } from "./AssistantProvider";
 
 const storageKey = (resourceId: string) => `chat_threadId_${resourceId}`;
 
