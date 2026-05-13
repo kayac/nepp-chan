@@ -57,12 +57,19 @@ export default defineConfig({
         // ドラッグ&ドロップ + mutation の orchestration shell。type 判定は trivial で
         // ConvertDialog / useUploadFile / useConvertFile は別途テスト済み
         "src/app/dashboard/components/knowledge/FileUpload.tsx",
+        // assistant-ui の useThreadRuntime に強く依存し、Math.random と
+        // runtime.subscribe による副作用が中心。E2E で担保する設計
+        "src/app/chat/components/ChatStandingMascot.tsx",
+        // useThreads / useCreateThread / useDeleteThread / useAdminUser /
+        // useAnonymousSession の wiring と localStorage sync を行う orchestration
+        // hook。依存 hook 側で個々のロジックはテスト済み
+        "src/app/chat/useThreadManager.ts",
       ],
       thresholds: {
-        branches: 78,
-        lines: 82,
-        functions: 82,
-        statements: 82,
+        branches: 85,
+        lines: 92,
+        functions: 90,
+        statements: 92,
       },
     },
   },
