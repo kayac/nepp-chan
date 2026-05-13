@@ -56,9 +56,11 @@ vi.mock("~/lib/storage", () => ({
 }));
 
 vi.mock("@mastra/memory", () => ({
-  Memory: vi.fn().mockImplementation(() => ({
-    recall: mockMemoryRecall,
-  })),
+  Memory: vi.fn(function () {
+    return {
+      recall: mockMemoryRecall,
+    };
+  }),
 }));
 
 vi.mock("~/mastra/memory", () => ({
@@ -66,11 +68,13 @@ vi.mock("~/mastra/memory", () => ({
 }));
 
 vi.mock("@mastra/core/mastra", () => ({
-  Mastra: vi.fn().mockImplementation(() => ({
-    getAgent: vi.fn().mockReturnValue({
-      generate: mockGenerate,
-    }),
-  })),
+  Mastra: vi.fn(function () {
+    return {
+      getAgent: vi.fn().mockReturnValue({
+        generate: mockGenerate,
+      }),
+    };
+  }),
 }));
 
 vi.mock("~/mastra/agents/persona-agent", () => ({

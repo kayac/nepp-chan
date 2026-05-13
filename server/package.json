@@ -51,13 +51,13 @@
   "devDependencies": {
     "@libsql/client": "^0.17.3",
     "@types/node": "^25.7.0",
-    "@vitest/coverage-istanbul": "~3.2.4",
+    "@vitest/coverage-istanbul": "~4.1.6",
     "drizzle-kit": "^0.31.10",
     "mastra": "1.3.14",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "~3.2.4",
+    "vitest": "~4.1.6",
     "wrangler": "^4.90.1"
   }
 }

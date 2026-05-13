@@ -8,9 +8,11 @@ const { agentHolder } = vi.hoisted(() => ({
 }));
 
 vi.mock("@mastra/core/mastra", () => ({
-  Mastra: vi.fn().mockImplementation(() => ({
-    getAgent: vi.fn(() => agentHolder),
-  })),
+  Mastra: vi.fn(function () {
+    return {
+      getAgent: vi.fn(() => agentHolder),
+    };
+  }),
 }));
 
 vi.mock("~/lib/storage", () => ({
