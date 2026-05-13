@@ -155,19 +155,30 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 - server: `server/src/test-helpers/`（`test-app` / `test-db` / `tool-context`）
 - web: `web/src/test/`（`msw-server` / `renderHookWithQuery` / `renderWithQuery` / `setup`）
 
-### カバレッジ集計の除外（プロジェクト固有の判断）
+### カバレッジ集計の除外
 
-`vitest.config.ts` の `coverage.exclude` で除外:
+vitest v4 + `@vitest/coverage-v8` は `include` 対象の未テストファイルも母数に含めるようになった（v3 はテスト対象になったファイルだけが母数）。**「カバレッジを上げるためだけの薄いテストは書かない」方針**に従い、本質的ロジックを持たないファイルは exclude する。
 
-- web/`providers/**` / `RootLayout.tsx` / `ErrorBoundary.tsx` — StrictMode やフォールバック UI を巻くだけのラッパーで分岐がない
-- web/`app/chat/App.tsx` / `app/dashboard/DashboardPage.tsx` / `pages/**` — Astro から client:only でマウントされる薄い shell
-- web/`assistant-ui/Thread.tsx` / `assistant-ui/MarkdownText.tsx` / `chat/AssistantProvider.tsx` — 外部 SDK 連携が深く E2E 領域
-- server/`mastra/public/**` — Mastra の自動生成資源
+`vitest.config.ts` の `coverage.exclude` で除外する判断軸:
+
+- **StrictMode / フォールバック UI ラッパー**: web/`providers/**` / `RootLayout.tsx` / `ErrorBoundary.tsx`
+- **Astro から client:only でマウントされる薄い shell**: web/`app/chat/App.tsx` / `app/dashboard/DashboardPage.tsx` / `app/auth/{LoginPage,RegisterPage}.tsx` / `pages/**`
+- **外部 SDK 連携が深く E2E 領域**: web/`assistant-ui/Thread.tsx` / `assistant-ui/MarkdownText.tsx` / `chat/AssistantProvider.tsx` / `chat/components/ChatStandingMascot.tsx` / `chat/useThreadManager.ts`
+- **HOC で囲んだ登録 / barrel / registry**: web/`assistant-ui/tool-uis/index.tsx`
+- **orchestration shell（責務分離後の Panel）**: web/`app/chat/ChatPage.tsx` / `app/chat/FeedbackContext.tsx` / `app/dashboard/App.tsx` / `app/dashboard/components/{Broadcast,Feedback,Invitations,Knowledge,Persona,Poll}Panel.tsx` / `app/dashboard/components/knowledge/FileUpload.tsx`
+- **context から取り出して別コンポーネントに渡すだけの wrapper**: web/`app/chat/components/FeedbackModalWrapper.tsx`
+- **自動生成資源**: server/`mastra/public/**`
+
+orchestration shell を exclude するときは「本質的ロジックが hooks / helpers / 子コンポーネントに抽出済みで、別途テストされている」ことを確認してから行う。
 
 ### カバレッジ閾値
 
 - 実測値ベースで段階引き上げ（`vitest.config.ts` の `coverage.thresholds`）
-- UI 層の lines% は意図的に低い（E2E で担保する設計）。ロジック層は branches で評価する
+- ぎりぎりではなく**実測 - 1〜2pt** のマージンを付ける（CI のノイズ防止）
+- 現在の閾値（参考）:
+  - web: branches 85 / lines 92 / functions 90 / statements 92
+  - server: branches 86 / lines 95 / functions 95 / statements 95
+  - shared: branches 62 / lines 98 / functions 98 / statements 80
 
 ## ブランチ
 
