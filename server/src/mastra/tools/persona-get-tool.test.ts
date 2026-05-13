@@ -22,7 +22,6 @@ const adminValues = (overrides: Record<string, unknown> = {}) => ({
 
 const samplePersona = {
   id: "p-1",
-  resourceId: "v-1",
   category: "意見",
   tags: null,
   content: "x",
@@ -43,17 +42,12 @@ describe("personaGetTool.execute", () => {
   it("正常系: 結果を返す", async () => {
     vi.mocked(personaRepository.search).mockResolvedValue([samplePersona]);
 
-    const result = await callTool(
-      personaGetTool,
-      { resourceId: "v-1", limit: 20 },
-      adminValues(),
-    );
+    const result = await callTool(personaGetTool, { limit: 20 }, adminValues());
 
     expect(result.success).toBe(true);
     expect(result.count).toBe(1);
     expect(result.personas[0]).toMatchObject({
       id: "p-1",
-      resourceId: "v-1",
       category: "意見",
       content: "x",
     });
@@ -62,11 +56,7 @@ describe("personaGetTool.execute", () => {
   it("ヒット 0 件は専用メッセージ", async () => {
     vi.mocked(personaRepository.search).mockResolvedValue([]);
 
-    const result = await callTool(
-      personaGetTool,
-      { resourceId: "v-1", limit: 20 },
-      adminValues(),
-    );
+    const result = await callTool(personaGetTool, { limit: 20 }, adminValues());
 
     expect(result.success).toBe(true);
     expect(result.count).toBe(0);
@@ -76,7 +66,7 @@ describe("personaGetTool.execute", () => {
   it("非管理者は NOT_AUTHORIZED", async () => {
     const result = await callTool(
       personaGetTool,
-      { resourceId: "v-1", limit: 20 },
+      { limit: 20 },
       { db: fakeDb },
     );
 
@@ -88,7 +78,7 @@ describe("personaGetTool.execute", () => {
   it("staff ロールも NOT_AUTHORIZED（admin 以上必須）", async () => {
     const result = await callTool(
       personaGetTool,
-      { resourceId: "v-1", limit: 20 },
+      { limit: 20 },
       { db: fakeDb, adminUser: { id: "u-2", role: "staff" } },
     );
 
@@ -99,11 +89,7 @@ describe("personaGetTool.execute", () => {
   it("search が throw すると success: false", async () => {
     vi.mocked(personaRepository.search).mockRejectedValue(new Error("db"));
 
-    const result = await callTool(
-      personaGetTool,
-      { resourceId: "v-1", limit: 20 },
-      adminValues(),
-    );
+    const result = await callTool(personaGetTool, { limit: 20 }, adminValues());
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("db");

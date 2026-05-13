@@ -25,7 +25,7 @@ describe("personaAggregateTool.execute", () => {
 
     const result = await callTool(
       personaAggregateTool,
-      { resourceId: "v-1", limit: 20 },
+      { limit: 20 },
       adminValues,
     );
 
@@ -47,7 +47,7 @@ describe("personaAggregateTool.execute", () => {
 
     const result = await callTool(
       personaAggregateTool,
-      { resourceId: "v-1", limit: 20 },
+      { limit: 20 },
       adminValues,
     );
 
@@ -67,7 +67,7 @@ describe("personaAggregateTool.execute", () => {
 
     const result = await callTool(
       personaAggregateTool,
-      { resourceId: "v-1", limit: 20 },
+      { limit: 20 },
       adminValues,
     );
 
@@ -87,7 +87,7 @@ describe("personaAggregateTool.execute", () => {
 
     const result = await callTool(
       personaAggregateTool,
-      { resourceId: "v-1", limit: 20 },
+      { limit: 20 },
       adminValues,
     );
 
@@ -115,7 +115,7 @@ describe("personaAggregateTool.execute", () => {
 
     const result = await callTool(
       personaAggregateTool,
-      { resourceId: "v-1", limit: 20 },
+      { limit: 20 },
       adminValues,
     );
 
@@ -125,7 +125,7 @@ describe("personaAggregateTool.execute", () => {
   it("非管理者は NOT_AUTHORIZED", async () => {
     const result = await callTool(
       personaAggregateTool,
-      { resourceId: "v-1", limit: 20 },
+      { limit: 20 },
       { db: fakeDb },
     );
 
