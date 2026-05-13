@@ -157,16 +157,15 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 
 ### カバレッジ集計の除外
 
-vitest v4 + `@vitest/coverage-v8` は `include` 対象の未テストファイルも母数に含めるようになった（v3 はテスト対象になったファイルだけが母数）。**「カバレッジを上げるためだけの薄いテストは書かない」方針**に従い、本質的ロジックを持たないファイルは exclude する。
+vitest v4 + `@vitest/coverage-v8` は `include` 対象の未テストファイルも母数に含めるようになった（v3 はテスト対象になったファイルだけが母数）。「カバレッジを上げるためだけの薄いテストは書かない」方針に従い、本質的ロジックを持たないファイルは exclude する。
 
-`vitest.config.ts` の `coverage.exclude` で除外する判断軸:
+判断軸（具体的なファイルは各 `vitest.config.ts` の `coverage.exclude` に理由コメント付きで列挙）:
 
-- **StrictMode / フォールバック UI ラッパー**: web/`providers/**` / `RootLayout.tsx` / `ErrorBoundary.tsx`
-- **Astro から client:only でマウントされる薄い shell**: web/`app/chat/App.tsx` / `app/dashboard/DashboardPage.tsx` / `app/auth/{LoginPage,RegisterPage}.tsx` / `pages/**`
-- **外部 SDK 連携が深く E2E 領域**: web/`assistant-ui/Thread.tsx` / `assistant-ui/MarkdownText.tsx` / `chat/AssistantProvider.tsx` / `chat/components/ChatStandingMascot.tsx` / `chat/useThreadManager.ts`
-- **HOC で囲んだ登録 / barrel / registry**: web/`assistant-ui/tool-uis/index.tsx`
-- **orchestration shell（責務分離後の Panel）**: web/`app/chat/ChatPage.tsx` / `app/chat/FeedbackContext.tsx` / `app/dashboard/App.tsx` / `app/dashboard/components/{Broadcast,Feedback,Invitations,Knowledge,Persona,Poll}Panel.tsx` / `app/dashboard/components/knowledge/FileUpload.tsx`
-- **context から取り出して別コンポーネントに渡すだけの wrapper**: web/`app/chat/components/FeedbackModalWrapper.tsx`
+- StrictMode / フォールバック UI ラッパー
+- Astro から `client:only` でマウントされる薄い page shell
+- 外部 SDK 連携が深く E2E 領域に該当するもの（assistant-ui まわりなど）
+- HOC で囲んだ登録 / barrel / registry
+- 責務分離が完了して orchestration だけになった Panel / Provider / context wrapper
 
 orchestration shell を exclude するときは「本質的ロジックが hooks / helpers / 子コンポーネントに抽出済みで、別途テストされている」ことを確認してから行う。
 
