@@ -35,5 +35,5 @@ export const client = createApiClient({
   onServerError: (error) => console.error("API server error", error),
 });
 
-export { API_BASE };
 export { ApiError, parseErrorResponse } from "@nepp-chan/shared/api";
+export { API_BASE };
