@@ -42,6 +42,17 @@ export default defineConfig({
         "src/components/assistant-ui/tool-uis/index.tsx",
         // context から取り出して FeedbackModal に渡すだけの 14 行 wrapper
         "src/app/chat/components/FeedbackModalWrapper.tsx",
+        // dashboard / chat のオーケストレーション shell。ロジックは hooks/dashboard・
+        // helpers・子コンポーネント側に抽出済みで、Panel 自身は tab/filter state と
+        // 子コンポーネントの mount を担うだけ。テストは抽出済みの helper / hook 側で行う
+        "src/app/chat/ChatPage.tsx",
+        "src/app/dashboard/App.tsx",
+        "src/app/dashboard/components/BroadcastPanel.tsx",
+        "src/app/dashboard/components/FeedbackPanel.tsx",
+        "src/app/dashboard/components/InvitationsPanel.tsx",
+        "src/app/dashboard/components/KnowledgePanel.tsx",
+        "src/app/dashboard/components/PersonaPanel.tsx",
+        "src/app/dashboard/components/PollPanel.tsx",
       ],
       thresholds: {
         branches: 50,
