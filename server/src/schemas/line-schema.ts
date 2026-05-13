@@ -1,14 +1,14 @@
-import type { MessageEvent, UnfollowEvent } from "@line/bot-sdk";
+import type { webhook } from "@line/bot-sdk";
 
 export type LineMessageEvent = {
-  type: MessageEvent["type"];
+  type: webhook.MessageEvent["type"];
   userId: string;
   userMessage: string;
   replyToken: string;
 };
 
 export type LineUnfollowEvent = {
-  type: UnfollowEvent["type"];
+  type: webhook.UnfollowEvent["type"];
   userId: string;
 };
 
