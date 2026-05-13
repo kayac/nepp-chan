@@ -17,9 +17,9 @@ export default defineConfig({
       include: ["src/api/**/*.ts"],
       exclude: ["src/api/**/*.test.ts", "src/api/**/*.d.ts", "src/test/**"],
       thresholds: {
-        branches: 60,
-        lines: 80,
-        functions: 80,
+        branches: 62,
+        lines: 98,
+        functions: 98,
         statements: 80,
       },
     },
