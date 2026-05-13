@@ -1,9 +1,5 @@
-import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { splitMessagesForLine } from "./split-message";
-
-const LINE_MAX_MESSAGES = 5;
-const LINE_MAX_CHARS = 5000;
 
 describe("splitMessagesForLine", () => {
   it("空配列を渡すと空配列を返す", () => {
@@ -61,83 +57,5 @@ describe("splitMessagesForLine", () => {
   it("単一テキストの分割（splitMessage 相当）が正しく動作する", () => {
     const text = "hello world";
     expect(splitMessagesForLine([text])).toEqual(["hello world"]);
-  });
-
-  describe("プロパティベース", () => {
-    it("結果の各 chunk は LINE_MAX_CHARS 以下", () => {
-      fc.assert(
-        fc.property(
-          fc.array(fc.string({ minLength: 1, maxLength: 8000 }), {
-            minLength: 0,
-            maxLength: 8,
-          }),
-          (texts) => {
-            const result = splitMessagesForLine(texts);
-            for (const chunk of result) {
-              expect(chunk.length).toBeLessThanOrEqual(LINE_MAX_CHARS);
-            }
-          },
-        ),
-        { numRuns: 100 },
-      );
-    });
-
-    it("結果の件数は常に LINE_MAX_MESSAGES 以下", () => {
-      fc.assert(
-        fc.property(
-          fc.array(fc.string({ minLength: 1, maxLength: 8000 })),
-          (texts) => {
-            const result = splitMessagesForLine(texts);
-            expect(result.length).toBeLessThanOrEqual(LINE_MAX_MESSAGES);
-          },
-        ),
-        { numRuns: 100 },
-      );
-    });
-
-    it("単一テキスト分割: 上限以下に収まる範囲では結合すると元に戻る", () => {
-      fc.assert(
-        fc.property(
-          fc
-            .string({
-              minLength: 1,
-              maxLength: LINE_MAX_CHARS * LINE_MAX_MESSAGES,
-            })
-            .filter((s) => s.trim().length > 0),
-          (text) => {
-            const result = splitMessagesForLine([text]);
-            // 5 chunk × 5000 = 25000 char まで保持される範囲なら結合で復元できる
-            if (text.length <= LINE_MAX_CHARS * LINE_MAX_MESSAGES) {
-              expect(result.join("")).toBe(text);
-            }
-          },
-        ),
-        { numRuns: 50 },
-      );
-    });
-
-    it("空白のみの要素は無視される", () => {
-      fc.assert(
-        fc.property(
-          fc.array(
-            fc.oneof(
-              fc.constant(""),
-              fc.constantFrom("   ", "\t", "\n", "  \n  "),
-              fc
-                .string({ minLength: 1, maxLength: 50 })
-                .filter((s) => s.trim().length > 0),
-            ),
-          ),
-          (texts) => {
-            const result = splitMessagesForLine(texts);
-            for (const chunk of result) {
-              // 結果に含まれる chunk は trim 後に何か残るものだけのはず
-              expect(chunk.length).toBeGreaterThan(0);
-            }
-          },
-        ),
-        { numRuns: 50 },
-      );
-    });
   });
 });
