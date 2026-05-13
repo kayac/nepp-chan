@@ -73,6 +73,33 @@ describe("PartEditor: 画像パート", () => {
     renderEditor({ part: imagePartEmpty });
     expect(screen.getByText("写真をアップロード")).toBeInTheDocument();
   });
+
+  it("プレビュー右上の X ボタンで imageR2Key をクリア", () => {
+    const { props, container } = renderEditor({ part: imagePartFilled });
+    // プレビューの absolute 位置の X ボタンは class top-1 right-1 で識別
+    const clearBtn = container.querySelector(
+      "button.absolute.top-1.right-1",
+    ) as HTMLButtonElement | null;
+    expect(clearBtn).toBeTruthy();
+    fireEvent.click(clearBtn!);
+    expect(props.onChange).toHaveBeenCalledWith(0, {
+      id: "p-3",
+      type: "image",
+      imageR2Key: "",
+    });
+  });
+
+  it("既にテキストパートでテキストボタンを押しても onChange を呼ばない", () => {
+    const { props } = renderEditor({ part: textPart });
+    fireEvent.click(screen.getByText("テキスト"));
+    expect(props.onChange).not.toHaveBeenCalled();
+  });
+
+  it("既に画像パートで画像ボタンを押しても onChange を呼ばない", () => {
+    const { props } = renderEditor({ part: imagePartEmpty });
+    fireEvent.click(screen.getByText("画像"));
+    expect(props.onChange).not.toHaveBeenCalled();
+  });
 });
 
 describe("PartEditor: 並び替え", () => {

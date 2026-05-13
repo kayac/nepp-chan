@@ -89,4 +89,38 @@ describe("FileEditor", () => {
       expect(screen.getByText(/エラー:/)).toBeDefined();
     });
   });
+
+  it("保存失敗時はフッターにエラーを表示し onClose は呼ばれない", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    server.use(
+      http.get(`${API}/admin/knowledge/files/doc.md`, () =>
+        HttpResponse.json({ content: "# old" }),
+      ),
+      http.put(`${API}/admin/knowledge/files/doc.md`, () =>
+        HttpResponse.json(
+          { error: { message: "save-failed" } },
+          { status: 500 },
+        ),
+      ),
+    );
+
+    const onClose = vi.fn();
+    renderWithQuery(<FileEditor fileKey="doc.md" onClose={onClose} />);
+
+    await waitFor(() =>
+      expect(screen.getByPlaceholderText("Markdown を入力...")).toBeDefined(),
+    );
+
+    fireEvent.click(screen.getByText("保存"));
+
+    await waitFor(() =>
+      expect(screen.getByText(/保存に失敗しました/)).toBeDefined(),
+    );
+    expect(onClose).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    consoleErrorSpy.mockRestore();
+  });
 });

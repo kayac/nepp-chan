@@ -135,14 +135,57 @@ describe("knowledge mutations", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
   });
 
-  it("useUploadFile / useConvertFile / useReconvertFile はインスタンス化できる", () => {
-    const upload = renderHookWithQuery(() => useUploadFile());
-    expect(typeof upload.result.current.mutateAsync).toBe("function");
+  it("useUploadFile: 成功で isSuccess", async () => {
+    server.use(
+      http.post(`${API}/admin/knowledge/upload`, () =>
+        HttpResponse.json({ key: "k", chunks: 1 }),
+      ),
+    );
 
-    const convert = renderHookWithQuery(() => useConvertFile());
-    expect(typeof convert.result.current.mutateAsync).toBe("function");
+    const { result } = renderHookWithQuery(() => useUploadFile());
 
-    const reconvert = renderHookWithQuery(() => useReconvertFile());
-    expect(typeof reconvert.result.current.mutateAsync).toBe("function");
+    await act(async () => {
+      await result.current.mutateAsync({
+        file: new File(["x"], "f.md"),
+        filename: "f.md",
+      });
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+  });
+
+  it("useConvertFile: 成功で isSuccess", async () => {
+    server.use(
+      http.post(`${API}/admin/knowledge/convert`, () =>
+        HttpResponse.json({ key: "k", chunks: 1, originalType: "image/png" }),
+      ),
+    );
+
+    const { result } = renderHookWithQuery(() => useConvertFile());
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        file: new File(["x"], "f.png", { type: "image/png" }),
+        filename: "f",
+      });
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+  });
+
+  it("useReconvertFile: 成功で isSuccess", async () => {
+    server.use(
+      http.post(`${API}/admin/knowledge/reconvert`, () =>
+        HttpResponse.json({ key: "k", chunks: 1 }),
+      ),
+    );
+
+    const { result } = renderHookWithQuery(() => useReconvertFile());
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        originalKey: "originals/x.pdf",
+        filename: "x",
+      });
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
   });
 });

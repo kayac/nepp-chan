@@ -109,11 +109,52 @@ describe("broadcast mutations", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
   });
 
-  it("useUpdateBroadcast / useUploadBroadcastImage: インスタンス化できる", () => {
-    const update = renderHookWithQuery(() => useUpdateBroadcast());
-    expect(typeof update.result.current.mutateAsync).toBe("function");
+  it("useUpdateBroadcast: 成功で isSuccess", async () => {
+    server.use(
+      http.put(`${API}/admin/broadcast/b-1`, () =>
+        HttpResponse.json({
+          id: "b-1",
+          title: null,
+          messageType: "text",
+          content: "y",
+          metadata: null,
+          scheduledAt: null,
+          sentAt: null,
+          status: "draft",
+          createdAt: "x",
+          updatedAt: "x",
+        }),
+      ),
+    );
 
-    const upload = renderHookWithQuery(() => useUploadBroadcastImage());
-    expect(typeof upload.result.current.mutateAsync).toBe("function");
+    const { result } = renderHookWithQuery(() => useUpdateBroadcast());
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        id: "b-1",
+        data: { parts: [{ type: "text", text: "y" }] },
+      });
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+  });
+
+  it("useUploadBroadcastImage: 成功で imageR2Key を返す", async () => {
+    server.use(
+      http.post(`${API}/admin/broadcast/upload-image`, () =>
+        HttpResponse.json({ imageR2Key: "img-k" }),
+      ),
+    );
+
+    const { result } = renderHookWithQuery(() => useUploadBroadcastImage());
+
+    let returned:
+      | Awaited<ReturnType<typeof result.current.mutateAsync>>
+      | undefined;
+    await act(async () => {
+      returned = await result.current.mutateAsync(
+        new File(["x"], "p.jpg", { type: "image/jpeg" }),
+      );
+    });
+    expect(returned?.imageR2Key).toBe("img-k");
   });
 });

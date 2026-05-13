@@ -92,4 +92,68 @@ describe("FeedbackDetailModal", () => {
     expect(screen.getByText("ツール実行結果")).toBeInTheDocument();
     expect(screen.getByText("test-tool")).toBeInTheDocument();
   });
+
+  it("output がオブジェクトなら JSON.stringify で表示", () => {
+    render(
+      <FeedbackDetailModal
+        feedback={{
+          ...baseFeedback,
+          toolExecutions: [
+            {
+              toolName: "obj-tool",
+              state: "result",
+              input: undefined,
+              output: { ok: true, value: 1 },
+              errorText: undefined,
+            },
+          ],
+        }}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByText(/"ok": true/)).toBeInTheDocument();
+  });
+
+  it("state=call は『call』バッジを描画", () => {
+    render(
+      <FeedbackDetailModal
+        feedback={{
+          ...baseFeedback,
+          toolExecutions: [
+            {
+              toolName: "calling",
+              state: "call",
+              input: undefined,
+              output: undefined,
+              errorText: undefined,
+            },
+          ],
+        }}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("call")).toBeInTheDocument();
+  });
+
+  it("state=error + errorText でエラーセクションを描画", () => {
+    render(
+      <FeedbackDetailModal
+        feedback={{
+          ...baseFeedback,
+          toolExecutions: [
+            {
+              toolName: "err-tool",
+              state: "error",
+              input: undefined,
+              output: undefined,
+              errorText: "API failed",
+            },
+          ],
+        }}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("エラー:")).toBeInTheDocument();
+    expect(screen.getByText("API failed")).toBeInTheDocument();
+  });
 });
