@@ -371,6 +371,18 @@ UNIQUE INDEX: `(poll_id, user_id)` で重複回答を防止
 | user_id          | TEXT | PRIMARY KEY（LINE userId）    |
 | last_injected_at | TEXT | 最終投票注入日時（NOT NULL）  |
 
+### data_retention_logs
+
+保管期間ポリシーによる自動削除の実行ログ。3年（1095日）経過した行は自身も削除対象。
+
+| カラム        | 型      | 説明                                          |
+| ------------- | ------- | --------------------------------------------- |
+| id            | TEXT    | PRIMARY KEY                                   |
+| executed_at   | TEXT    | 実行時刻（NOT NULL）                          |
+| target_table  | TEXT    | 削除対象テーブル名（NOT NULL）                |
+| deleted_count | INTEGER | 削除件数（NOT NULL）                          |
+| created_at    | TEXT    | 作成時刻（NOT NULL）                          |
+
 ## Drizzle ORM
 
 ### スキーマ定義
@@ -477,11 +489,27 @@ thread_persona_status 更新
 
 ### Cron Trigger
 
-| スケジュール   | ハンドラー           | 説明                          |
-| -------------- | -------------------- | ----------------------------- |
-| `*/5 * * * *`  | handleBroadcastCheck | 配信予約チェック（5分ごと）        |
-| `*/5 * * * *`  | handlePollCheck          | 投票予約配信チェック（5分ごと） |
-| `0 18 * * *`   | handlePersonaExtract | ペルソナ抽出（毎日03:00 JST）      |
+| スケジュール   | ハンドラー                              | 説明                                                              |
+| -------------- | --------------------------------------- | ----------------------------------------------------------------- |
+| `*/5 * * * *`  | handleBroadcastCheck                    | 配信予約チェック（5分ごと）                                        |
+| `*/5 * * * *`  | handlePollCheck                         | 投票予約配信チェック（5分ごと）                                    |
+| `0 18 * * *`   | handlePersonaExtract → handleDataRetention | ペルソナ抽出 + 保管期間自動削除（毎日03:00 JST、順次実行）        |
+
+### 保管期間自動削除
+
+`handleDataRetention` は以下のテーブルを期限超過行で削除する。実行結果は `data_retention_logs` に記録される。
+
+| 対象テーブル              | 保管期間 | 判定キー                                                                  |
+| ------------------------- | -------- | ------------------------------------------------------------------------- |
+| `mastra_messages`         | 30日     | `createdAt`                                                               |
+| `mastra_threads`          | 30日     | 紐づくメッセージが無い AND `createdAt` 経過（空スレッドへの猶予）         |
+| `thread_persona_status`   | -        | 紐づく `mastra_threads` が無くなった孤立分                                |
+| `mastra_resources`        | 180日    | `updatedAt`（working memory の最終更新）                                  |
+| `message_feedback`        | 180日    | `created_at`                                                              |
+| `poll_submissions`        | 365日    | `created_at`                                                              |
+| `data_retention_logs`     | 1095日   | `executed_at`                                                             |
+
+`mastra_messages` 削除後は `thread_persona_status.last_message_count` を残メッセージ数に再計算する（persona-extractor が新規メッセージを取りこぼさないように）。
 
 ## デプロイ環境
 
