@@ -46,7 +46,6 @@ export type Persona = z.infer<typeof personaSchema>;
 // ツール output 用のペルソナスキーマ（DB レコード形式）
 export const personaOutputSchema = z.object({
   id: z.string(),
-  resourceId: z.string(),
   category: z.string(),
   tags: z.string().nullable(),
   content: z.string(),

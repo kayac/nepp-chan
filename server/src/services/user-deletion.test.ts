@@ -142,7 +142,6 @@ const insertFixtures = async (
   // persona は削除対象外（個人データ非該当）
   await db.insert(persona).values({
     id: "pe1",
-    resourceId: targetResourceId,
     category: "cat",
     content: "c",
     createdAt: "2025-01-01T00:00:00Z",

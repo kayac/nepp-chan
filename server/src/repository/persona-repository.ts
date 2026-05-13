@@ -28,7 +28,6 @@ export const personaRepository = {
 
     await db.insert(persona).values({
       id: input.id,
-      resourceId: input.resourceId,
       category: input.category,
       tags: input.tags ?? null,
       content: input.content,
@@ -74,21 +73,8 @@ export const personaRepository = {
     return result ?? null;
   },
 
-  async findByResourceId(d1: D1Database, resourceId: string, limit = 100) {
-    const db = createDb(d1);
-
-    return db
-      .select()
-      .from(persona)
-      .where(eq(persona.resourceId, resourceId))
-      .orderBy(desc(persona.createdAt))
-      .limit(limit)
-      .all();
-  },
-
   async search(
     d1: D1Database,
-    resourceId: string,
     options: {
       category?: string;
       tags?: string[];
@@ -98,7 +84,7 @@ export const personaRepository = {
   ) {
     const db = createDb(d1);
 
-    const conditions = [eq(persona.resourceId, resourceId)];
+    const conditions: SQL[] = [];
 
     if (options.category) {
       conditions.push(eq(persona.category, options.category));
@@ -131,7 +117,7 @@ export const personaRepository = {
     return db
       .select()
       .from(persona)
-      .where(and(...conditions))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(desc(persona.createdAt))
       .limit(options.limit ?? 50)
       .all();
@@ -139,15 +125,11 @@ export const personaRepository = {
 
   async aggregateByTopic(
     d1: D1Database,
-    resourceId: string,
     options: { category?: string; limit?: number } = {},
   ): Promise<TopicAggregation[]> {
     const db = createDb(d1);
 
-    const conditions = [
-      eq(persona.resourceId, resourceId),
-      sql`${persona.topic} IS NOT NULL`,
-    ];
+    const conditions: SQL[] = [sql`${persona.topic} IS NOT NULL`];
 
     if (options.category) {
       conditions.push(eq(persona.category, options.category));

@@ -21,7 +21,6 @@ export const createTestDb = async () => {
     -- 村の集合知（ペルソナ）テーブル
     CREATE TABLE IF NOT EXISTS persona (
       id TEXT PRIMARY KEY,
-      resource_id TEXT NOT NULL,
       category TEXT NOT NULL,
       tags TEXT,
       content TEXT NOT NULL,
