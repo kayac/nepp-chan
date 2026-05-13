@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { useKnowledgeFile, useSaveFile } from "~/hooks/dashboard/useKnowledge";
+import {
+  useKnowledgeFile,
+  useSaveFile,
+} from "~/app/dashboard/hooks/useKnowledge";
 
 type Props = {
   fileKey: string;

@@ -5,14 +5,19 @@ import {
   LightBulbIcon,
 } from "@heroicons/react/24/solid";
 import { useState } from "react";
-
+import { FeedbackDetailModal } from "~/app/dashboard/components/feedback/FeedbackDetailModal";
+import {
+  countResolvedAndUnresolved,
+  filterFeedbacksByResolved,
+  type ResolvedFilter,
+} from "~/app/dashboard/components/feedback/helpers";
 import {
   useDeleteFeedbacks,
   useFeedbacks,
   useResolveFeedback,
   useUnresolveFeedback,
-} from "~/hooks/dashboard/useFeedback";
-import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
+} from "~/app/dashboard/hooks/useFeedback";
+import { useInfiniteScroll } from "~/app/dashboard/hooks/useInfiniteScroll";
 import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 import {
@@ -20,12 +25,6 @@ import {
   type FeedbackCategory,
   type MessageFeedback,
 } from "~/types";
-import { FeedbackDetailModal } from "./feedback/FeedbackDetailModal";
-import {
-  countResolvedAndUnresolved,
-  filterFeedbacksByResolved,
-  type ResolvedFilter,
-} from "./feedback/helpers";
 
 export const FeedbackPanel = () => {
   const [ratingFilter, setRatingFilter] = useState<

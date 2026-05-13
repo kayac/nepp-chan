@@ -20,7 +20,7 @@ LP（apex 配信の静的サイト）は別パッケージ `lp/` にある。
 | ダッシュボード画面    | `app/dashboard/`                       |
 | 認証画面              | `app/auth/`                            |
 | API クライアント      | `lib/api/repository.ts`（factory は `@nepp-chan/shared/api`） |
-| 共通フック            | `hooks/`                               |
+| 共通フック            | `hooks/`（app 固有のフックは `app/<feature>/hooks/`） |
 | 型定義                | `types/`                               |
 | Basic 認証            | `functions/_middleware.ts`             |
 | LP への外部リンク     | `constants/urls.ts`                    |
@@ -42,7 +42,8 @@ web/
 │   │   │   ├── App.tsx              # エントリー（RootLayout + QueryProvider）
 │   │   │   ├── ChatPage.tsx         # メインページ（スレッド管理）
 │   │   │   ├── AssistantProvider.tsx # Runtime Provider
-│   │   │   └── FeedbackContext.tsx   # フィードバック状態管理
+│   │   │   ├── FeedbackContext.tsx   # フィードバック状態管理
+│   │   │   └── hooks/                # chat 専用フック（useThreads / useAnonymousSession）
 │   │   ├── auth/              # 認証画面
 │   │   │   ├── LoginPage.tsx        # ログインページ
 │   │   │   └── RegisterPage.tsx     # 登録ページ
@@ -52,6 +53,7 @@ web/
 │   │       ├── DashboardPage.tsx    # エントリー（RootLayout + Providers）
 │   │       ├── App.tsx              # ダッシュボード本体（認証ガード含む）
 │   │       ├── contexts/            # AuthContext
+│   │       ├── hooks/               # dashboard 専用フック（useBroadcasts / useEmergencies / useFeedback / useInvitations / useKnowledge / usePersonas / usePolls / useInfiniteScroll / useRole / keys）
 │   │       └── components/          # パネル群
 │   ├── components/
 │   │   ├── RootLayout.tsx     # 共通レイアウト（StrictMode + ErrorBoundary）
@@ -64,7 +66,7 @@ web/
 │   │   │   ├── ToolFallback.tsx
 │   │   │   └── tool-uis/
 │   │   └── ui/                # shadcn/ui ベース共通コンポーネント
-│   ├── hooks/                 # 共有フック（useScrollReveal 等）
+│   ├── hooks/                 # 複数 app から使う共有フック（useAdminUser / useCopyToClipboard）
 │   ├── lib/
 │   │   ├── api/
 │   │   │   ├── client.ts      # 共通 API クライアント（shared/api factory を web 依存で wiring）

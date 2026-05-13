@@ -1,6 +1,9 @@
 import { useState } from "react";
-import { useDeleteFile, useUnifiedFiles } from "~/hooks/dashboard/useKnowledge";
-import { FileList, FileViewer } from "./knowledge";
+import { FileList, FileViewer } from "~/app/dashboard/components/knowledge";
+import {
+  useDeleteFile,
+  useUnifiedFiles,
+} from "~/app/dashboard/hooks/useKnowledge";
 
 /**
  * ナレッジ管理パネル

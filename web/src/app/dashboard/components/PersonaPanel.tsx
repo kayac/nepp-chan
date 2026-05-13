@@ -1,12 +1,12 @@
+import { getSentimentStyle } from "~/app/dashboard/components/persona/helpers";
+import { useInfiniteScroll } from "~/app/dashboard/hooks/useInfiniteScroll";
 import {
   useDeletePersonas,
   useExtractPersonas,
   usePersonas,
-} from "~/hooks/dashboard/usePersonas";
-import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
+} from "~/app/dashboard/hooks/usePersonas";
 import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
-import { getSentimentStyle } from "./persona/helpers";
 
 export const PersonaPanel = () => {
   const {

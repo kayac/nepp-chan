@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 
+import { ChoiceBar } from "~/app/poll/components/ChoiceBar";
 import { RootLayout } from "~/components/RootLayout";
 import { pollRepository } from "~/lib/api/repository";
 import { getCurrentSearchParams } from "~/lib/redirect";
 import { QueryProvider } from "~/providers/QueryProvider";
 import { isLeadingChoice, maxChoiceCount } from "./aggregator";
-import { ChoiceBar } from "./components/ChoiceBar";
 
 const usePollResultsPublic = (id: string | null) =>
   useQuery({

@@ -1,6 +1,6 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
-import { usePollResults } from "~/hooks/dashboard/usePolls";
+import { usePollResults } from "~/app/dashboard/hooks/usePolls";
 
 type Props = {
   pollId: string;

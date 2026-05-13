@@ -1,16 +1,18 @@
 import { type SubmitEvent, useState } from "react";
-
+import {
+  buildInvitationUrl,
+  isExpired,
+} from "~/app/dashboard/components/invitation/helpers";
 import { useAuth } from "~/app/dashboard/contexts/AuthContext";
 import {
   useCreateInvitation,
   useDeleteInvitation,
   useInvitations,
-} from "~/hooks/dashboard/useInvitations";
+} from "~/app/dashboard/hooks/useInvitations";
+import { ROLE_LABELS, useRole } from "~/app/dashboard/hooks/useRole";
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
-import { ROLE_LABELS, useRole } from "~/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
 import { formatDateTime } from "~/lib/format";
-import { buildInvitationUrl, isExpired } from "./invitation/helpers";
 
 export const InvitationsPanel = () => {
   const { user } = useAuth();

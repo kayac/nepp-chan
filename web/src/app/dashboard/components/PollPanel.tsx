@@ -7,19 +7,18 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { useCallback, useState } from "react";
-
+import { PollForm } from "~/app/dashboard/components/poll/PollForm";
+import { ResultsModal } from "~/app/dashboard/components/poll/ResultsModal";
+import { useInfiniteScroll } from "~/app/dashboard/hooks/useInfiniteScroll";
 import {
   useClosePoll,
   useDeletePoll,
   usePolls,
   useSendPoll,
-} from "~/hooks/dashboard/usePolls";
-import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
+} from "~/app/dashboard/hooks/usePolls";
 import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 import type { Poll, PollStatus } from "~/types";
-import { PollForm } from "./poll/PollForm";
-import { ResultsModal } from "./poll/ResultsModal";
 
 const STATUS_LABELS: Record<PollStatus, string> = {
   draft: "下書き",
