@@ -1,5 +1,5 @@
 import { logger } from "~/lib/logger";
-import { toResourceId } from "~/lib/principal";
+import { toLineIds } from "~/lib/principal";
 import {
   type BroadcastMessage,
   broadcastRepository,
@@ -56,8 +56,11 @@ export const generateBroadcastExplanation = async (
   replyToken: string,
 ) => {
   try {
-    const threadId = `line-thread:${userId}`;
-    const resourceId = toResourceId({ type: "line", id: userId });
+    const principal = { type: "line", id: userId } as const;
+    const { hashedUserId, resourceId, threadId } = await toLineIds(
+      principal,
+      env.RESOURCE_ID_HASH_SECRET,
+    );
 
     const bodyText = extractBodyText(broadcast);
     const userMessage = `（おしらせ解説リクエスト）「${broadcast.title}」のおしらせについて、ねっぷちゃんの視点でやさしく解説して！
@@ -67,6 +70,8 @@ ${bodyText}`;
 
     const replyTexts = await generateReply({
       userMessage,
+      userId,
+      hashedUserId,
       resourceId,
       threadId,
       env,
@@ -79,6 +84,7 @@ ${bodyText}`;
       client,
       replyToken,
       userId,
+      threadId,
       texts: replyTexts,
     });
   } catch (error) {

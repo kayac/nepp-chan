@@ -16,10 +16,12 @@ export const createLineClient = (token: string) =>
 
 export const generateReply = async (params: {
   userMessage: string;
+  userId: string;
+  hashedUserId: string;
   resourceId: string;
   threadId: string;
   env: CloudflareBindings;
-}): Promise<string[]> => {
+}) => {
   const storage = await getStorage(params.env.DB);
 
   const requestContext = createRequestContext({
@@ -28,22 +30,20 @@ export const generateReply = async (params: {
     env: params.env,
   });
 
-  // 未注入の配信メッセージ／投票お知らせをスレッドに system として追加
-  const lineUserId = params.threadId.replace("line-thread:", "");
   await Promise.all([
     injectBroadcastsToThread({
       d1: params.env.DB,
       storage,
       threadId: params.threadId,
       resourceId: params.resourceId,
-      userId: lineUserId,
+      userId: params.hashedUserId,
     }),
     injectPollsToThread({
       d1: params.env.DB,
       storage,
       threadId: params.threadId,
       resourceId: params.resourceId,
-      userId: lineUserId,
+      userId: params.hashedUserId,
     }),
   ]);
 
@@ -94,6 +94,7 @@ export const sendLineMessages = async (params: {
   client: messagingApi.MessagingApiClient;
   replyToken: string;
   userId: string;
+  threadId: string;
   texts: string[];
 }) => {
   const messages = params.texts.map((text) => ({
@@ -106,12 +107,12 @@ export const sendLineMessages = async (params: {
       replyToken: params.replyToken,
       messages,
     });
-    logger.info(`LINE replyMessage sent to ${params.userId}`);
+    logger.info("[LINE] replyMessage sent", { threadId: params.threadId });
   } catch {
-    logger.warn(
-      `LINE replyMessage failed for ${params.userId}, falling back to pushMessage`,
-    );
+    logger.warn("[LINE] replyMessage failed, falling back to pushMessage", {
+      threadId: params.threadId,
+    });
     await params.client.pushMessage({ to: params.userId, messages });
-    logger.info(`LINE pushMessage sent to ${params.userId}`);
+    logger.info("[LINE] pushMessage sent", { threadId: params.threadId });
   }
 };

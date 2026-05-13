@@ -10,7 +10,6 @@ export const personaAggregateTool = createTool({
   description:
     "【管理者専用】村の集合知をトピック別に集計します。「バスの増便要望が5件（60代が多い）」のような形式で傾向を把握できます。",
   inputSchema: z.object({
-    resourceId: z.string().describe("リソースID（村やグループの識別子）"),
     category: z
       .string()
       .optional()
@@ -51,10 +50,10 @@ export const personaAggregateTool = createTool({
     }
     const { db } = result;
 
-    const { resourceId, category, limit } = inputData;
+    const { category, limit } = inputData;
 
     try {
-      const results = await personaRepository.aggregateByTopic(db, resourceId, {
+      const results = await personaRepository.aggregateByTopic(db, {
         category,
         limit,
       });

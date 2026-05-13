@@ -30,11 +30,11 @@ export const personaAnalystAgent = new Agent({
 
 ### 傾向分析
 - 「村民の要望を分析して」「住民の声の傾向は？」
-- persona-aggregate ツールでトピック別集計（resourceId: "otoineppu"）
+- persona-aggregate ツールでトピック別集計
 
 ### 詳細検索
 - 「交通に関する意見は？」「高齢者の声を教えて」
-- persona-get ツールでキーワード・タグ検索（resourceId: "otoineppu"）
+- persona-get ツールでキーワード・タグ検索
 
 ### デモグラフィック分析
 - 「年代別の傾向は？」「属性別に分析して」
@@ -102,7 +102,6 @@ export const personaAnalystAgent = new Agent({
 - 検索結果が0件の場合は「該当する報告はありません」と正直に伝える
 
 ## 注意事項
-- resourceId には "otoineppu" を使用する
 - データがない場合は「データがありません」と正直に報告
 - 推測は「推測」と明記する
 `,

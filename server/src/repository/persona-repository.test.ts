@@ -21,7 +21,6 @@ describe("persona Drizzle クエリ", () => {
     it("新しいペルソナを作成できる", async () => {
       await db.insert(persona).values({
         id: "test-id",
-        resourceId: "village-1",
         category: "好み",
         tags: "男性,高齢者",
         content: "村民は地元産の野菜を好む",
@@ -44,7 +43,6 @@ describe("persona Drizzle クエリ", () => {
     it("オプション項目なしでも作成できる", async () => {
       await db.insert(persona).values({
         id: "test-id-2",
-        resourceId: "village-1",
         category: "価値観",
         content: "助け合いを大切にする",
         createdAt: "2024-01-01T00:00:00Z",
@@ -66,7 +64,6 @@ describe("persona Drizzle クエリ", () => {
     beforeEach(async () => {
       await db.insert(persona).values({
         id: "update-test",
-        resourceId: "village-1",
         category: "好み",
         content: "元の内容",
         createdAt: "2024-01-01T00:00:00Z",
@@ -78,28 +75,8 @@ describe("persona Drizzle クエリ", () => {
         .update(persona)
         .set({
           content: "更新された内容",
-          updatedAt: new Date().toISOString(),
-        })
-        .where(eq(persona.id, "update-test"));
-
-      const updated = await db
-        .select()
-        .from(persona)
-        .where(eq(persona.id, "update-test"))
-        .get();
-
-      expect(updated?.content).toBe("更新された内容");
-      expect(updated?.updatedAt).not.toBeNull();
-    });
-
-    it("複数項目を同時に更新できる", async () => {
-      await db
-        .update(persona)
-        .set({
           category: "新カテゴリ",
           tags: "新タグ",
-          content: "新しい内容",
-          updatedAt: new Date().toISOString(),
         })
         .where(eq(persona.id, "update-test"));
 
@@ -111,7 +88,7 @@ describe("persona Drizzle クエリ", () => {
 
       expect(updated?.category).toBe("新カテゴリ");
       expect(updated?.tags).toBe("新タグ");
-      expect(updated?.content).toBe("新しい内容");
+      expect(updated?.content).toBe("更新された内容");
     });
   });
 
@@ -119,7 +96,6 @@ describe("persona Drizzle クエリ", () => {
     beforeEach(async () => {
       await db.insert(persona).values({
         id: "find-test",
-        resourceId: "village-1",
         category: "好み",
         tags: "男性",
         content: "テスト内容",
@@ -150,55 +126,38 @@ describe("persona Drizzle クエリ", () => {
     });
   });
 
-  describe("select by resourceId", () => {
+  describe("list", () => {
     beforeEach(async () => {
       await db.insert(persona).values([
         {
           id: "1",
-          resourceId: "village-1",
           category: "好み",
           content: "内容1",
           createdAt: "2024-01-01T00:00:00Z",
         },
         {
           id: "2",
-          resourceId: "village-1",
           category: "価値観",
           content: "内容2",
           createdAt: "2024-01-02T00:00:00Z",
         },
         {
           id: "3",
-          resourceId: "village-2",
           category: "好み",
-          content: "別の村",
+          content: "内容3",
           createdAt: "2024-01-03T00:00:00Z",
         },
       ]);
-    });
-
-    it("リソースIDでペルソナ一覧を取得できる", async () => {
-      const result = await db
-        .select()
-        .from(persona)
-        .where(eq(persona.resourceId, "village-1"))
-        .orderBy(desc(persona.createdAt))
-        .all();
-
-      expect(result).toHaveLength(2);
-      expect(result.every((p) => p.resourceId === "village-1")).toBe(true);
     });
 
     it("降順でソートされる", async () => {
       const result = await db
         .select()
         .from(persona)
-        .where(eq(persona.resourceId, "village-1"))
         .orderBy(desc(persona.createdAt))
         .all();
 
-      expect(result[0].id).toBe("2"); // 最新が先頭
-      expect(result[1].id).toBe("1");
+      expect(result.map((p) => p.id)).toEqual(["3", "2", "1"]);
     });
   });
 
@@ -207,7 +166,6 @@ describe("persona Drizzle クエリ", () => {
       await db.insert(persona).values([
         {
           id: "s1",
-          resourceId: "village-1",
           category: "好み",
           tags: "男性,高齢者",
           content: "地元産の野菜が人気",
@@ -215,7 +173,6 @@ describe("persona Drizzle クエリ", () => {
         },
         {
           id: "s2",
-          resourceId: "village-1",
           category: "好み",
           tags: "女性",
           content: "お米を好む",
@@ -223,7 +180,6 @@ describe("persona Drizzle クエリ", () => {
         },
         {
           id: "s3",
-          resourceId: "village-1",
           category: "価値観",
           tags: "男性",
           content: "伝統を大切にする",
@@ -236,12 +192,7 @@ describe("persona Drizzle クエリ", () => {
       const result = await db
         .select()
         .from(persona)
-        .where(
-          and(
-            eq(persona.resourceId, "village-1"),
-            eq(persona.category, "好み"),
-          ),
-        )
+        .where(eq(persona.category, "好み"))
         .all();
 
       expect(result).toHaveLength(2);
@@ -252,12 +203,7 @@ describe("persona Drizzle クエリ", () => {
       const result = await db
         .select()
         .from(persona)
-        .where(
-          and(
-            eq(persona.resourceId, "village-1"),
-            like(persona.tags, "%男性%"),
-          ),
-        )
+        .where(like(persona.tags, "%男性%"))
         .all();
 
       expect(result).toHaveLength(2);
@@ -268,12 +214,7 @@ describe("persona Drizzle クエリ", () => {
       const result = await db
         .select()
         .from(persona)
-        .where(
-          and(
-            eq(persona.resourceId, "village-1"),
-            or(like(persona.tags, "%女性%"), like(persona.tags, "%高齢者%")),
-          ),
-        )
+        .where(or(like(persona.tags, "%女性%"), like(persona.tags, "%高齢者%")))
         .all();
 
       expect(result).toHaveLength(2);
@@ -283,12 +224,7 @@ describe("persona Drizzle クエリ", () => {
       const result = await db
         .select()
         .from(persona)
-        .where(
-          and(
-            eq(persona.resourceId, "village-1"),
-            like(persona.content, "%野菜%"),
-          ),
-        )
+        .where(like(persona.content, "%野菜%"))
         .all();
 
       expect(result).toHaveLength(1);
@@ -301,7 +237,6 @@ describe("persona Drizzle クエリ", () => {
         .from(persona)
         .where(
           and(
-            eq(persona.resourceId, "village-1"),
             eq(persona.category, "好み"),
             like(persona.tags, "%男性%"),
             like(persona.content, "%野菜%"),
@@ -320,28 +255,24 @@ describe("persona Drizzle クエリ", () => {
       await db.insert(persona).values([
         {
           id: "admin-1",
-          resourceId: "village-1",
           category: "好み",
           content: "内容1",
           createdAt: "2024-01-01T00:00:00Z",
         },
         {
           id: "admin-2",
-          resourceId: "village-1",
           category: "価値観",
           content: "内容2",
           createdAt: "2024-01-02T00:00:00Z",
         },
         {
           id: "admin-3",
-          resourceId: "village-2",
           category: "好み",
           content: "内容3",
           createdAt: "2024-01-03T00:00:00Z",
         },
         {
           id: "admin-4",
-          resourceId: "village-1",
           category: "意見",
           content: "内容4",
           createdAt: "2024-01-03T00:00:00Z", // admin-3 と同じ createdAt
@@ -471,7 +402,6 @@ describe("persona Drizzle クエリ", () => {
     beforeEach(async () => {
       await db.insert(persona).values({
         id: "delete-test",
-        resourceId: "village-1",
         category: "好み",
         content: "削除対象",
         createdAt: "2024-01-01T00:00:00Z",

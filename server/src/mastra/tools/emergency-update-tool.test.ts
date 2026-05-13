@@ -12,10 +12,10 @@ const { emergencyRepository } = await import(
 );
 const { emergencyUpdateTool } = await import("./emergency-update-tool");
 
-import { buildToolContext } from "../../test-helpers/tool-context";
+import { callTool } from "../../test-helpers/tool-context";
 
 const fakeDb = {} as D1Database;
-const ctx = buildToolContext({ db: fakeDb });
+const dbValues = { db: fakeDb };
 
 const sampleReport = {
   id: "e-1",
@@ -35,9 +35,10 @@ describe("emergencyUpdateTool.execute", () => {
     vi.mocked(emergencyRepository.findById).mockResolvedValue(sampleReport);
     vi.mocked(emergencyRepository.update).mockResolvedValue();
 
-    const result: any = await emergencyUpdateTool.execute!(
+    const result = await callTool(
+      emergencyUpdateTool,
       { reportId: "e-1", description: "詳細追加" },
-      ctx,
+      dbValues,
     );
 
     expect(result.success).toBe(true);
@@ -48,9 +49,10 @@ describe("emergencyUpdateTool.execute", () => {
   });
 
   it("更新項目なしは NO_UPDATE_FIELDS", async () => {
-    const result: any = await emergencyUpdateTool.execute!(
+    const result = await callTool(
+      emergencyUpdateTool,
       { reportId: "e-1" },
-      ctx,
+      dbValues,
     );
 
     expect(result.success).toBe(false);
@@ -61,9 +63,10 @@ describe("emergencyUpdateTool.execute", () => {
   it("存在しない reportId は REPORT_NOT_FOUND", async () => {
     vi.mocked(emergencyRepository.findById).mockResolvedValue(null);
 
-    const result: any = await emergencyUpdateTool.execute!(
+    const result = await callTool(
+      emergencyUpdateTool,
       { reportId: "missing", description: "x" },
-      ctx,
+      dbValues,
     );
 
     expect(result.success).toBe(false);

@@ -10,11 +10,11 @@ vi.mock("~/repository/feedback-repository", () => ({
 const { feedbackRepository } = await import("~/repository/feedback-repository");
 const { adminFeedbackTool } = await import("./admin-feedback-tool");
 
-import { buildToolContext } from "../../test-helpers/tool-context";
+import { callTool } from "../../test-helpers/tool-context";
 
 const fakeDb = {} as D1Database;
 const adminUser = { id: "u-1", role: "admin" as const };
-const ctx = buildToolContext({ db: fakeDb, adminUser });
+const adminValues = { db: fakeDb, adminUser };
 
 const sampleFeedback = {
   id: "f-1",
@@ -50,9 +50,10 @@ describe("adminFeedbackTool.execute", () => {
     });
     vi.mocked(feedbackRepository.getStats).mockResolvedValue(sampleStats);
 
-    const result: any = await adminFeedbackTool.execute!(
+    const result = await callTool(
+      adminFeedbackTool,
       { limit: 30, includeStats: true },
-      ctx,
+      adminValues,
     );
 
     expect(result.success).toBe(true);
@@ -67,9 +68,10 @@ describe("adminFeedbackTool.execute", () => {
       hasMore: false,
     });
 
-    const result: any = await adminFeedbackTool.execute!(
+    const result = await callTool(
+      adminFeedbackTool,
       { limit: 30, includeStats: false },
-      ctx,
+      adminValues,
     );
 
     expect(result.stats).toBeUndefined();
@@ -84,9 +86,10 @@ describe("adminFeedbackTool.execute", () => {
     });
     vi.mocked(feedbackRepository.getStats).mockResolvedValue(sampleStats);
 
-    await adminFeedbackTool.execute!(
+    await callTool(
+      adminFeedbackTool,
       { rating: "bad", limit: 30, includeStats: true },
-      ctx,
+      adminValues,
     );
 
     expect(feedbackRepository.list).toHaveBeenCalledWith(fakeDb, {
@@ -96,9 +99,10 @@ describe("adminFeedbackTool.execute", () => {
   });
 
   it("非管理者は NOT_AUTHORIZED", async () => {
-    const result: any = await adminFeedbackTool.execute!(
+    const result = await callTool(
+      adminFeedbackTool,
       { limit: 30, includeStats: true },
-      buildToolContext({ db: fakeDb }),
+      { db: fakeDb },
     );
 
     expect(result.success).toBe(false);
@@ -119,9 +123,10 @@ describe("adminFeedbackTool.execute", () => {
       byCategory: {},
     });
 
-    const result: any = await adminFeedbackTool.execute!(
+    const result = await callTool(
+      adminFeedbackTool,
       { limit: 30, includeStats: true },
-      ctx,
+      adminValues,
     );
 
     expect(result.message).toMatch(/満足率: 80%/);

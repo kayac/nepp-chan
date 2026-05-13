@@ -9,12 +9,11 @@ vi.mock("~/repository/persona-repository", () => ({
 const { personaRepository } = await import("~/repository/persona-repository");
 const { personaSaveTool } = await import("./persona-save-tool");
 
-import { buildToolContext } from "../../test-helpers/tool-context";
+import { callTool } from "../../test-helpers/tool-context";
 
 const fakeDb = {} as D1Database;
 
 const validInput = {
-  resourceId: "village-1",
   category: "意見",
   content: "村民は地元産の野菜を好む",
 };
@@ -27,17 +26,13 @@ describe("personaSaveTool.execute", () => {
   it("正常系: persona を作成して success を返す", async () => {
     vi.mocked(personaRepository.create).mockResolvedValue("mock-id");
 
-    const result: any = await personaSaveTool.execute!(
-      validInput,
-      buildToolContext({ db: fakeDb }),
-    );
+    const result = await callTool(personaSaveTool, validInput, { db: fakeDb });
 
     expect(result.success).toBe(true);
     expect(result.personaId).toBeDefined();
     expect(personaRepository.create).toHaveBeenCalledWith(
       fakeDb,
       expect.objectContaining({
-        resourceId: "village-1",
         category: "意見",
         content: "村民は地元産の野菜を好む",
       }),
@@ -47,23 +42,17 @@ describe("personaSaveTool.execute", () => {
   it("conversationEndedAt があれば create に渡す", async () => {
     vi.mocked(personaRepository.create).mockResolvedValue("mock-id");
 
-    await personaSaveTool.execute!(
-      validInput,
-      buildToolContext({
-        db: fakeDb,
-        conversationEndedAt: "2025-06-01T00:00:00Z",
-      }),
-    );
+    await callTool(personaSaveTool, validInput, {
+      db: fakeDb,
+      conversationEndedAt: "2025-06-01T00:00:00Z",
+    });
 
     const arg = vi.mocked(personaRepository.create).mock.calls[0]?.[1];
     expect(arg?.conversationEndedAt).toBe("2025-06-01T00:00:00Z");
   });
 
   it("DB なしは DB_NOT_AVAILABLE を返す", async () => {
-    const result: any = await personaSaveTool.execute!(
-      validInput,
-      buildToolContext({}),
-    );
+    const result = await callTool(personaSaveTool, validInput, {});
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("DB_NOT_AVAILABLE");
@@ -75,10 +64,7 @@ describe("personaSaveTool.execute", () => {
       new Error("DB write error"),
     );
 
-    const result: any = await personaSaveTool.execute!(
-      validInput,
-      buildToolContext({ db: fakeDb }),
-    );
+    const result = await callTool(personaSaveTool, validInput, { db: fakeDb });
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("DB write error");

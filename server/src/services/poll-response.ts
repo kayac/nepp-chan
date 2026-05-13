@@ -1,7 +1,7 @@
 import type { messagingApi } from "@line/bot-sdk";
 
 import { logger } from "~/lib/logger";
-import { toResourceId } from "~/lib/principal";
+import { toLineIds } from "~/lib/principal";
 import { type Poll, pollRepository } from "~/repository/poll-repository";
 import { createLineClient, generateReply } from "~/services/line-messaging";
 
@@ -31,9 +31,15 @@ export const handlePollPostback = async (
   const { pollId, selectedChoice } = decodePollPostback(data);
   if (!pollId || !selectedChoice) return { status: "invalid" };
 
+  const principal = { type: "line", id: userId } as const;
+  const { hashedUserId } = await toLineIds(
+    principal,
+    env.RESOURCE_ID_HASH_SECRET,
+  );
+
   const [poll, existing] = await Promise.all([
     pollRepository.findById(env.DB, pollId),
-    pollRepository.findSubmission(env.DB, pollId, userId),
+    pollRepository.findSubmission(env.DB, pollId, hashedUserId),
   ]);
 
   if (!poll) return { status: "invalid" };
@@ -63,7 +69,7 @@ export const handlePollPostback = async (
   await pollRepository.createSubmission(env.DB, {
     id: crypto.randomUUID(),
     pollId,
-    userId,
+    userId: hashedUserId,
     selectedChoice,
     createdAt: now,
   });
@@ -139,13 +145,18 @@ export const generatePollFollowUp = async (
   selectedChoice: string,
 ) => {
   try {
-    const threadId = `line-thread:${userId}`;
-    const resourceId = toResourceId({ type: "line", id: userId });
+    const principal = { type: "line", id: userId } as const;
+    const { hashedUserId, resourceId, threadId } = await toLineIds(
+      principal,
+      env.RESOURCE_ID_HASH_SECRET,
+    );
 
     const userMessage = `（投票）「${poll.title}」で「${selectedChoice}」を選んだよ。`;
 
     const replyTexts = await generateReply({
       userMessage,
+      userId,
+      hashedUserId,
       resourceId,
       threadId,
       env,

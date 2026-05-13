@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { hmacSha256 } from "~/lib/crypto";
 import type { Principal } from "~/lib/principal";
 
 const mockGetThreadById = vi.fn();
@@ -28,6 +29,7 @@ const mockThread = {
 
 const mockEnv = {
   DB: {} as D1Database,
+  RESOURCE_ID_HASH_SECRET: "test-secret",
 } as unknown as CloudflareBindings;
 
 const createApp = () => {
@@ -116,8 +118,9 @@ describe("requireThreadAccess", () => {
     expect(res.status).toBe(404);
   });
 
-  it("line principal + 所有スレッド → 通過", async () => {
-    const lineThread = { ...mockThread, resourceId: "line:U123" };
+  it("line principal + 所有スレッド（ハッシュ化された resourceId）→ 通過", async () => {
+    const hashed = await hmacSha256("U123", "test-secret");
+    const lineThread = { ...mockThread, resourceId: `line:${hashed}` };
     mockGetThreadById.mockResolvedValue(lineThread);
     const principal: Principal = { type: "line", id: "U123" };
 
@@ -128,6 +131,20 @@ describe("requireThreadAccess", () => {
     );
 
     expect(res.status).toBe(200);
+  });
+
+  it("line principal + 平文 resourceId のスレッド → 404（ハッシュ化前提のため）", async () => {
+    const lineThread = { ...mockThread, resourceId: "line:U123" };
+    mockGetThreadById.mockResolvedValue(lineThread);
+    const principal: Principal = { type: "line", id: "U123" };
+
+    const res = await createApp().request(
+      makeRequest("thread-123", principal),
+      {},
+      mockEnv,
+    );
+
+    expect(res.status).toBe(404);
   });
 
   it("存在しない threadId → 404", async () => {

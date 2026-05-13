@@ -103,13 +103,15 @@ cp web/.env.example web/.env
 
 ### server 環境変数
 
-| 変数名                         | 用途              |
-| ------------------------------ | ----------------- |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API        |
-| `GOOGLE_SEARCH_ENGINE_ID`      | Custom Search     |
-| `WEB_URL`                      | Web URL           |
-| `LINE_CHANNEL_SECRET`          | LINE 署名検証     |
-| `LINE_CHANNEL_ACCESS_TOKEN`    | LINE API 認証     |
+| 変数名                         | 用途                                  |
+| ------------------------------ | ------------------------------------- |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API                            |
+| `GOOGLE_SEARCH_ENGINE_ID`      | Custom Search                         |
+| `WEB_URL`                      | Web URL                               |
+| `LINE_CHANNEL_SECRET`          | LINE 署名検証                         |
+| `LINE_CHANNEL_ACCESS_TOKEN`    | LINE API 認証                         |
+| `JWT_SECRET`                   | anonymous セッション JWT 署名         |
+| `RESOURCE_ID_HASH_SECRET`      | LINE userId のハッシュ化（HMAC-SHA256）|
 
 ### web 環境変数
 

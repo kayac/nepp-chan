@@ -11,10 +11,10 @@ const { emergencyRepository } = await import(
 );
 const { emergencyReportTool } = await import("./emergency-report-tool");
 
-import { buildToolContext } from "../../test-helpers/tool-context";
+import { callTool } from "../../test-helpers/tool-context";
 
 const fakeDb = {} as D1Database;
-const ctx = buildToolContext({ db: fakeDb });
+const dbValues = { db: fakeDb };
 
 describe("emergencyReportTool.execute", () => {
   beforeEach(() => {
@@ -24,9 +24,10 @@ describe("emergencyReportTool.execute", () => {
   it("正常系: 報告を作って reportId を返す", async () => {
     vi.mocked(emergencyRepository.create).mockResolvedValue("mock-id");
 
-    const result: any = await emergencyReportTool.execute!(
+    const result = await callTool(
+      emergencyReportTool,
       { type: "野生動物目撃", description: "クマ", location: "○○地区" },
-      ctx,
+      dbValues,
     );
 
     expect(result.success).toBe(true);
@@ -43,19 +44,17 @@ describe("emergencyReportTool.execute", () => {
   it("description / location 省略でも作成可能", async () => {
     vi.mocked(emergencyRepository.create).mockResolvedValue("mock-id");
 
-    const result: any = await emergencyReportTool.execute!(
+    const result = await callTool(
+      emergencyReportTool,
       { type: "火災" },
-      ctx,
+      dbValues,
     );
 
     expect(result.success).toBe(true);
   });
 
   it("DB なしは DB_NOT_AVAILABLE", async () => {
-    const result: any = await emergencyReportTool.execute!(
-      { type: "x" },
-      buildToolContext({}),
-    );
+    const result = await callTool(emergencyReportTool, { type: "x" }, {});
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("DB_NOT_AVAILABLE");
@@ -64,7 +63,7 @@ describe("emergencyReportTool.execute", () => {
   it("create が throw すると success: false", async () => {
     vi.mocked(emergencyRepository.create).mockRejectedValue(new Error("db"));
 
-    const result: any = await emergencyReportTool.execute!({ type: "x" }, ctx);
+    const result = await callTool(emergencyReportTool, { type: "x" }, dbValues);
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("db");

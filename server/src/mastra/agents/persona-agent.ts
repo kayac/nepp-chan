@@ -13,7 +13,6 @@ export const personaAgent = new Agent({
 純粋な挨拶や天気確認のみの場合は保存不要。それ以外は積極的に保存する。
 
 ## persona-save の使い方
-- resourceId: "otoineppu"
 - category / content / topic / sentiment / tags / demographicSummary: 下記ルール参照
 - source: "会話"
 

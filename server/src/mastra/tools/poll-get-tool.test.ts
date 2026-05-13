@@ -15,10 +15,10 @@ const { pollRepository } = await import("~/repository/poll-repository");
 const { getPollResults } = await import("~/services/poll-response");
 const { pollGetTool } = await import("./poll-get-tool");
 
-import { buildToolContext } from "../../test-helpers/tool-context";
+import { callTool } from "../../test-helpers/tool-context";
 
 const fakeDb = {} as D1Database;
-const ctx = buildToolContext({ db: fakeDb });
+const dbValues = { db: fakeDb };
 
 const dbRow = {
   id: "p-1",
@@ -53,9 +53,10 @@ describe("pollGetTool.execute", () => {
     vi.mocked(pollRepository.findById).mockResolvedValue(dbRow);
     vi.mocked(getPollResults).mockResolvedValue(sampleResults);
 
-    const result: any = await pollGetTool.execute!(
+    const result = await callTool(
+      pollGetTool,
       { id: "p-1", limit: 10 },
-      ctx,
+      dbValues,
     );
 
     expect(result.success).toBe(true);
@@ -73,9 +74,10 @@ describe("pollGetTool.execute", () => {
       status: "draft",
     });
 
-    const result: any = await pollGetTool.execute!(
+    const result = await callTool(
+      pollGetTool,
       { id: "p-1", limit: 10 },
-      ctx,
+      dbValues,
     );
 
     expect(result.count).toBe(0);
@@ -90,7 +92,7 @@ describe("pollGetTool.execute", () => {
     });
     vi.mocked(getPollResults).mockResolvedValue(sampleResults);
 
-    const result: any = await pollGetTool.execute!({ limit: 10 }, ctx);
+    const result = await callTool(pollGetTool, { limit: 10 }, dbValues);
 
     expect(pollRepository.findAll).toHaveBeenCalledWith(fakeDb, {
       limit: 10,
@@ -100,10 +102,7 @@ describe("pollGetTool.execute", () => {
   });
 
   it("DB なしは DB_NOT_AVAILABLE", async () => {
-    const result: any = await pollGetTool.execute!(
-      { limit: 10 },
-      buildToolContext({}),
-    );
+    const result = await callTool(pollGetTool, { limit: 10 }, {});
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("DB_NOT_AVAILABLE");

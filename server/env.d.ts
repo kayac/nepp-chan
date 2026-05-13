@@ -5,4 +5,5 @@
  */
 interface CloudflareBindings {
   JWT_SECRET: string;
+  RESOURCE_ID_HASH_SECRET: string;
 }

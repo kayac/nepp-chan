@@ -11,11 +11,11 @@ const { emergencyRepository } = await import(
 );
 const { emergencyGetTool } = await import("./emergency-get-tool");
 
-import { buildToolContext } from "../../test-helpers/tool-context";
+import { callTool } from "../../test-helpers/tool-context";
 
 const fakeDb = {} as D1Database;
 const adminUser = { id: "u-1", role: "admin" as const };
-const ctx = buildToolContext({ db: fakeDb, adminUser });
+const adminValues = { db: fakeDb, adminUser };
 
 const sample = {
   id: "e-1",
@@ -34,9 +34,10 @@ describe("emergencyGetTool.execute", () => {
   it("正常系: 件数とリストを返す", async () => {
     vi.mocked(emergencyRepository.findRecent).mockResolvedValue([sample]);
 
-    const result: any = await emergencyGetTool.execute!(
+    const result = await callTool(
+      emergencyGetTool,
       { days: 7, limit: 20 },
-      ctx,
+      adminValues,
     );
 
     expect(result.success).toBe(true);
@@ -47,9 +48,10 @@ describe("emergencyGetTool.execute", () => {
   it("ヒットゼロは専用メッセージ", async () => {
     vi.mocked(emergencyRepository.findRecent).mockResolvedValue([]);
 
-    const result: any = await emergencyGetTool.execute!(
+    const result = await callTool(
+      emergencyGetTool,
       { days: 7, limit: 20 },
-      ctx,
+      adminValues,
     );
 
     expect(result.success).toBe(true);
@@ -58,9 +60,10 @@ describe("emergencyGetTool.execute", () => {
   });
 
   it("非管理者は NOT_AUTHORIZED", async () => {
-    const result: any = await emergencyGetTool.execute!(
+    const result = await callTool(
+      emergencyGetTool,
       { days: 7, limit: 20 },
-      buildToolContext({ db: fakeDb }),
+      { db: fakeDb },
     );
 
     expect(result.success).toBe(false);
