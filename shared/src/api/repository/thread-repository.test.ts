@@ -192,4 +192,33 @@ describe("deleteThread", () => {
     const result = await repo.deleteThread("t-1");
     expect(result?.message).toBe("deleted");
   });
+
+  it("失敗系は throw", async () => {
+    server.use(
+      http.delete(`${API}/threads/x`, () =>
+        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+      ),
+    );
+    await expect(repo.deleteThread("x")).rejects.toBeDefined();
+  });
+});
+
+describe("createThread / fetchMessages の失敗系", () => {
+  it("createThread: 5xx は throw", async () => {
+    server.use(
+      http.post(`${API}/threads`, () =>
+        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+      ),
+    );
+    await expect(repo.createThread("title")).rejects.toBeDefined();
+  });
+
+  it("fetchMessages: 5xx は throw", async () => {
+    server.use(
+      http.get(`${API}/threads/x/messages`, () =>
+        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+      ),
+    );
+    await expect(repo.fetchMessages("x")).rejects.toBeDefined();
+  });
 });
