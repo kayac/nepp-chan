@@ -157,7 +157,7 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 
 ### カバレッジ集計の除外
 
-vitest v4 + `@vitest/coverage-v8` は `include` 対象の未テストファイルも母数に含めるようになった（v3 はテスト対象になったファイルだけが母数）。「カバレッジを上げるためだけの薄いテストは書かない」方針に従い、本質的ロジックを持たないファイルは exclude する。
+カバレッジは `include` 対象の未テストファイルも母数に含むため、「カバレッジを上げるためだけの薄いテストは書かない」方針に従い、本質的ロジックを持たないファイルは exclude する。
 
 判断軸（具体的なファイルは各 `vitest.config.ts` の `coverage.exclude` に理由コメント付きで列挙）:
 
