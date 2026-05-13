@@ -112,13 +112,75 @@ describe("broadcast-repository", () => {
     expect(result?.imageR2Key).toBe("k.jpg");
   });
 
-  it("失敗系: 5xx は throw", async () => {
-    server.use(
-      http.get(`${API}/admin/broadcast`, () =>
-        HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
-      ),
-    );
+  describe("失敗系", () => {
+    it("fetchBroadcasts: 5xx は throw", async () => {
+      server.use(
+        http.get(`${API}/admin/broadcast`, () =>
+          HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
+        ),
+      );
+      await expect(repo.fetchBroadcasts()).rejects.toBeDefined();
+    });
 
-    await expect(repo.fetchBroadcasts()).rejects.toBeDefined();
+    it("fetchBroadcastById: 404 は throw", async () => {
+      server.use(
+        http.get(`${API}/admin/broadcast/missing`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 404 }),
+        ),
+      );
+      await expect(repo.fetchBroadcastById("missing")).rejects.toBeDefined();
+    });
+
+    it("createBroadcast: 5xx は throw", async () => {
+      server.use(
+        http.post(`${API}/admin/broadcast`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(
+        repo.createBroadcast({ parts: [{ type: "text", text: "x" }] }),
+      ).rejects.toBeDefined();
+    });
+
+    it("updateBroadcast: 5xx は throw", async () => {
+      server.use(
+        http.put(`${API}/admin/broadcast/x`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(
+        repo.updateBroadcast("x", {
+          parts: [{ type: "text", text: "x" }],
+        }),
+      ).rejects.toBeDefined();
+    });
+
+    it("deleteBroadcast: 5xx は throw", async () => {
+      server.use(
+        http.delete(`${API}/admin/broadcast/x`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(repo.deleteBroadcast("x")).rejects.toBeDefined();
+    });
+
+    it("sendBroadcastNow: 5xx は throw", async () => {
+      server.use(
+        http.post(`${API}/admin/broadcast/x/send`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(repo.sendBroadcastNow("x")).rejects.toBeDefined();
+    });
+
+    it("uploadBroadcastImage: 5xx は throw", async () => {
+      server.use(
+        http.post(`${API}/admin/broadcast/upload-image`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      const file = new File(["x"], "test.jpg", { type: "image/jpeg" });
+      await expect(repo.uploadBroadcastImage(file)).rejects.toBeDefined();
+    });
   });
 });

@@ -109,6 +109,34 @@ describe("adminFeedbackTool.execute", () => {
     expect(result.error).toBe("NOT_AUTHORIZED");
   });
 
+  it("repository が throw したら success=false で error を返す", async () => {
+    vi.mocked(feedbackRepository.list).mockRejectedValueOnce(
+      new Error("db error"),
+    );
+
+    const result = await callTool(
+      adminFeedbackTool,
+      { limit: 30, includeStats: true },
+      adminValues,
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("db error");
+    expect(result.feedbacks).toEqual([]);
+  });
+
+  it("非 Error の throw は Unknown error", async () => {
+    vi.mocked(feedbackRepository.list).mockRejectedValueOnce("oops");
+
+    const result = await callTool(
+      adminFeedbackTool,
+      { limit: 30, includeStats: true },
+      adminValues,
+    );
+
+    expect(result.error).toBe("Unknown error");
+  });
+
   it("メッセージに満足率を含む", async () => {
     vi.mocked(feedbackRepository.list).mockResolvedValue({
       feedbacks: [],

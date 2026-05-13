@@ -3,7 +3,7 @@ import type { MessageFeedback } from "~/types";
 import {
   countResolvedAndUnresolved,
   filterFeedbacksByResolved,
-} from "./feedback-helpers";
+} from "./helpers";
 
 const fb = (id: string, resolvedAt: string | null): MessageFeedback =>
   ({

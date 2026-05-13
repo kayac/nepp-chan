@@ -69,4 +69,32 @@ describe("emergencyGetTool.execute", () => {
     expect(result.success).toBe(false);
     expect(result.error).toBe("NOT_AUTHORIZED");
   });
+
+  it("repository が throw したら success=false で error を返す", async () => {
+    vi.mocked(emergencyRepository.findRecent).mockRejectedValueOnce(
+      new Error("db error"),
+    );
+
+    const result = await callTool(
+      emergencyGetTool,
+      { days: 7, limit: 20 },
+      adminValues,
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("db error");
+    expect(result.reports).toEqual([]);
+  });
+
+  it("非 Error の throw は Unknown error", async () => {
+    vi.mocked(emergencyRepository.findRecent).mockRejectedValueOnce("oops");
+
+    const result = await callTool(
+      emergencyGetTool,
+      { days: 7, limit: 20 },
+      adminValues,
+    );
+
+    expect(result.error).toBe("Unknown error");
+  });
 });

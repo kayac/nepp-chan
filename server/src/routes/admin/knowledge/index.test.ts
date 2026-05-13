@@ -285,5 +285,310 @@ describe("knowledge routes 統合テスト", () => {
 
       expect(res.status).toBe(404);
     });
+
+    it("正常系: body と Content-Type を返す", async () => {
+      const bytes = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
+      vi.mocked(knowledgeService.getOriginalFile).mockResolvedValue({
+        body: bytes.buffer,
+        contentType: "application/pdf",
+        size: 8,
+      });
+
+      const res = await app.request(
+        authedRequest("/originals/doc.pdf"),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.headers.get("Content-Type")).toBe("application/pdf");
+      expect(res.headers.get("Content-Length")).toBe("8");
+      const returned = new Uint8Array(await res.arrayBuffer());
+      expect(Array.from(returned)).toEqual(Array.from(bytes));
+    });
+  });
+
+  describe("PUT /files/:key", () => {
+    const jsonBody = (data: Record<string, unknown>): RequestInit => ({
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    it("API キー未設定なら 500", async () => {
+      const res = await app.request(
+        authedRequest("/files/doc.md", jsonBody({ content: "x" })),
+        undefined,
+        {
+          ...mockEnv,
+          GOOGLE_GENERATIVE_AI_API_KEY: undefined,
+        } as never,
+      );
+      expect(res.status).toBe(500);
+    });
+
+    it("正常系: bucket.put → syncFile → 200", async () => {
+      vi.mocked(knowledgeService.syncFile).mockResolvedValue({ chunks: 4 });
+
+      const res = await app.request(
+        authedRequest("/files/doc.md", jsonBody({ content: "# c" })),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(200);
+      expect(mockEnv.KNOWLEDGE_BUCKET.put).toHaveBeenCalledWith(
+        "doc.md",
+        "# c",
+        { httpMetadata: { contentType: "text/markdown" } },
+      );
+      expect(knowledgeService.syncFile).toHaveBeenCalledWith(
+        "doc.md",
+        "# c",
+        expect.objectContaining({ apiKey: "test-api-key" }),
+      );
+      const body = (await res.json()) as { chunks: number };
+      expect(body.chunks).toBe(4);
+    });
+  });
+
+  describe("POST /upload", () => {
+    const buildForm = (
+      file: File | string | null,
+      filename?: string | null,
+    ) => {
+      const form = new FormData();
+      if (file !== null) form.append("file", file);
+      if (filename !== undefined && filename !== null)
+        form.append("filename", filename);
+      return form;
+    };
+
+    it("File でない値は 400", async () => {
+      const res = await app.request(
+        authedRequest("/upload", {
+          method: "POST",
+          body: buildForm("not-a-file"),
+        }),
+        undefined,
+        mockEnv,
+      );
+      expect(res.status).toBe(400);
+    });
+
+    it("customFilename が不正なら 400", async () => {
+      const file = new File(["# c"], "doc.md", { type: "text/markdown" });
+      const res = await app.request(
+        authedRequest("/upload", {
+          method: "POST",
+          body: buildForm(file, "../etc/passwd"),
+        }),
+        undefined,
+        mockEnv,
+      );
+      expect(res.status).toBe(400);
+    });
+
+    it("API キー未設定なら 500", async () => {
+      const file = new File(["# c"], "doc.md", { type: "text/markdown" });
+      const res = await app.request(
+        authedRequest("/upload", {
+          method: "POST",
+          body: buildForm(file),
+        }),
+        undefined,
+        { ...mockEnv, GOOGLE_GENERATIVE_AI_API_KEY: undefined } as never,
+      );
+      expect(res.status).toBe(500);
+    });
+
+    it("正常系: uploadMarkdownFile を呼び 200 を返す", async () => {
+      vi.mocked(knowledgeService.uploadMarkdownFile).mockResolvedValue({
+        key: "doc.md",
+        chunks: 4,
+      });
+      const file = new File(["# c"], "doc.md", { type: "text/markdown" });
+
+      const res = await app.request(
+        authedRequest("/upload", {
+          method: "POST",
+          body: buildForm(file, "doc.md"),
+        }),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { key: string; chunks: number };
+      expect(body.key).toBe("doc.md");
+      expect(body.chunks).toBe(4);
+      expect(knowledgeService.uploadMarkdownFile).toHaveBeenCalledWith(
+        expect.any(File),
+        "doc.md",
+        expect.objectContaining({ apiKey: "test-api-key" }),
+      );
+    });
+
+    it("filename 省略時は null を渡す", async () => {
+      vi.mocked(knowledgeService.uploadMarkdownFile).mockResolvedValue({
+        key: "x.md",
+        chunks: 1,
+      });
+      const file = new File(["# c"], "x.md", { type: "text/markdown" });
+
+      await app.request(
+        authedRequest("/upload", {
+          method: "POST",
+          body: buildForm(file),
+        }),
+        undefined,
+        mockEnv,
+      );
+
+      expect(knowledgeService.uploadMarkdownFile).toHaveBeenCalledWith(
+        expect.any(File),
+        null,
+        expect.any(Object),
+      );
+    });
+  });
+
+  describe("POST /convert", () => {
+    const buildForm = (file: File | string | null, filename: string | null) => {
+      const form = new FormData();
+      if (file !== null) form.append("file", file);
+      if (filename !== null) form.append("filename", filename);
+      return form;
+    };
+
+    it("File でない値は 400", async () => {
+      const res = await app.request(
+        authedRequest("/convert", {
+          method: "POST",
+          body: buildForm("not-a-file", "out.md"),
+        }),
+        undefined,
+        mockEnv,
+      );
+      expect(res.status).toBe(400);
+    });
+
+    it("filename 未指定は 400", async () => {
+      const file = new File(["x"], "in.png", { type: "image/png" });
+      const res = await app.request(
+        authedRequest("/convert", {
+          method: "POST",
+          body: buildForm(file, null),
+        }),
+        undefined,
+        mockEnv,
+      );
+      expect(res.status).toBe(400);
+    });
+
+    it("filename が不正なら 400", async () => {
+      const file = new File(["x"], "in.png", { type: "image/png" });
+      const res = await app.request(
+        authedRequest("/convert", {
+          method: "POST",
+          body: buildForm(file, "../bad"),
+        }),
+        undefined,
+        mockEnv,
+      );
+      expect(res.status).toBe(400);
+    });
+
+    it("正常系: convertAndUpload を呼び 200 を返す", async () => {
+      vi.mocked(knowledgeService.convertAndUpload).mockResolvedValue({
+        key: "out.md",
+        originalType: "image/png",
+        chunks: 3,
+      });
+      const file = new File(["x"], "in.png", { type: "image/png" });
+
+      const res = await app.request(
+        authedRequest("/convert", {
+          method: "POST",
+          body: buildForm(file, "out"),
+        }),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as {
+        key: string;
+        originalType: string;
+        chunks: number;
+      };
+      expect(body).toMatchObject({
+        key: "out.md",
+        originalType: "image/png",
+        chunks: 3,
+      });
+    });
+  });
+
+  describe("POST /reconvert", () => {
+    const jsonBody = (data: Record<string, unknown>): RequestInit => ({
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    it("originalKey が originals/ で始まらないと 400", async () => {
+      const res = await app.request(
+        authedRequest(
+          "/reconvert",
+          jsonBody({ originalKey: "other/x.pdf", filename: "out" }),
+        ),
+        undefined,
+        mockEnv,
+      );
+      expect(res.status).toBe(400);
+    });
+
+    it("filename が不正なら 400", async () => {
+      const res = await app.request(
+        authedRequest(
+          "/reconvert",
+          jsonBody({
+            originalKey: "originals/x.pdf",
+            filename: "/etc/passwd",
+          }),
+        ),
+        undefined,
+        mockEnv,
+      );
+      expect(res.status).toBe(400);
+    });
+
+    it("正常系: reconvertFromOriginal を呼び 200 を返す", async () => {
+      vi.mocked(knowledgeService.reconvertFromOriginal).mockResolvedValue({
+        key: "out.md",
+        originalType: "application/pdf",
+        chunks: 7,
+      });
+
+      const res = await app.request(
+        authedRequest(
+          "/reconvert",
+          jsonBody({ originalKey: "originals/x.pdf", filename: "out" }),
+        ),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { key: string; chunks: number };
+      expect(body.key).toBe("out.md");
+      expect(body.chunks).toBe(7);
+      expect(knowledgeService.reconvertFromOriginal).toHaveBeenCalledWith(
+        "originals/x.pdf",
+        "out",
+        expect.any(Object),
+      );
+    });
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BroadcastMessage } from "~/types";
-import { getImageUrl, type PartState, parseParts } from "./broadcast-helpers";
+import { getImageUrl, type PartState, parseParts } from "./helpers";
 
 const idGen = () => {
   let i = 0;

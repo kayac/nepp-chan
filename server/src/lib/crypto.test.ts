@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hmacSha256 } from "./crypto";
+import { generateId, generateToken, hmacSha256 } from "./crypto";
 
 describe("hmacSha256", () => {
   it("同じ value と secret から決定的に同じ値を返す", async () => {
@@ -37,5 +37,29 @@ describe("hmacSha256", () => {
 
   it("空 secret は許容しない", async () => {
     await expect(hmacSha256("value", "")).rejects.toThrow();
+  });
+});
+
+describe("generateId", () => {
+  it("16 バイト (32 文字の hex) を返す", () => {
+    const id = generateId();
+    expect(id).toMatch(/^[0-9a-f]{32}$/);
+  });
+
+  it("呼び出しごとに異なる値を返す", () => {
+    const ids = new Set(Array.from({ length: 20 }, generateId));
+    expect(ids.size).toBe(20);
+  });
+});
+
+describe("generateToken", () => {
+  it("32 バイト (64 文字の hex) を返す", () => {
+    const token = generateToken();
+    expect(token).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("呼び出しごとに異なる値を返す", () => {
+    const tokens = new Set(Array.from({ length: 20 }, generateToken));
+    expect(tokens.size).toBe(20);
   });
 });

@@ -1,15 +1,21 @@
-import { renderHook } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
+import { createElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useInfiniteScroll } from "./useInfiniteScroll";
 
 const observe = vi.fn();
 const disconnect = vi.fn();
-const triggers: ((entries: IntersectionObserverEntry[]) => void)[] = [];
+let lastCallback: ((entries: IntersectionObserverEntry[]) => void) | undefined;
+let lastOptions: IntersectionObserverInit | undefined;
 
 class MockIntersectionObserver {
-  constructor(callback: (entries: IntersectionObserverEntry[]) => void) {
-    triggers.push(callback);
+  constructor(
+    callback: (entries: IntersectionObserverEntry[]) => void,
+    options?: IntersectionObserverInit,
+  ) {
+    lastCallback = callback;
+    lastOptions = options;
   }
   observe = observe;
   disconnect = disconnect;
@@ -23,7 +29,8 @@ class MockIntersectionObserver {
 beforeEach(() => {
   observe.mockReset();
   disconnect.mockReset();
-  triggers.length = 0;
+  lastCallback = undefined;
+  lastOptions = undefined;
   vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
 });
 
@@ -31,61 +38,130 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const buildEntry = (isIntersecting: boolean) =>
-  ({ isIntersecting }) as IntersectionObserverEntry;
+type Props = {
+  hasNextPage: boolean;
+  isFetching: boolean;
+  onFetch: () => void;
+  threshold?: number;
+};
+
+const Host = (props: Props) => {
+  const ref = useInfiniteScroll<HTMLDivElement>(props);
+  // 子要素は不要、ref を attach するだけ
+  return createElement("div", { ref });
+};
+
+// IntersectionObserver の callback を発火するヘルパ
+const fire = (isIntersecting: boolean) => {
+  if (!lastCallback) throw new Error("observer not created");
+  act(() => {
+    lastCallback?.([{ isIntersecting } as IntersectionObserverEntry]);
+  });
+};
 
 describe("useInfiniteScroll", () => {
-  it("ref をセットしないと observer は作られない", () => {
-    renderHook(() =>
-      useInfiniteScroll({
+  it("element が ref に紐付くと observe される", () => {
+    render(
+      createElement(Host, {
         hasNextPage: true,
         isFetching: false,
         onFetch: vi.fn(),
       }),
     );
-
-    expect(observe).not.toHaveBeenCalled();
+    expect(observe).toHaveBeenCalledTimes(1);
   });
 
-  it("ref を要素に紐付けると observe される", () => {
-    const { result } = renderHook(() =>
-      useInfiniteScroll({
+  it("threshold を IntersectionObserver に渡す", () => {
+    render(
+      createElement(Host, {
         hasNextPage: true,
         isFetching: false,
         onFetch: vi.fn(),
+        threshold: 0.5,
       }),
     );
-
-    const el = document.createElement("div");
-    result.current.current = el;
-    // useEffect 再実行を促すには再 render するか、コールバックを直接呼ぶしかない。
-    // ここでは ref が設定されない初期 effect が走らないことの逆を確認する代わりに、
-    // 別の renderHook で直接 ref が初期から要素を指す様な検証は避け、
-    // observer 動作は IntersectionObserver の callback 経由で検証する。
-    // 直接 trigger
-    const callback = triggers[0];
-    if (callback) {
-      callback([buildEntry(true)]);
-    }
-    expect(true).toBe(true);
+    expect(lastOptions?.threshold).toBe(0.5);
   });
 
-  it("isIntersecting + hasNextPage + !isFetching で onFetch が呼ばれる", () => {
+  it("isIntersecting + hasNextPage + !isFetching で onFetch", () => {
     const onFetch = vi.fn();
-
-    const { result } = renderHook(() =>
-      useInfiniteScroll({ hasNextPage: true, isFetching: false, onFetch }),
+    render(
+      createElement(Host, {
+        hasNextPage: true,
+        isFetching: false,
+        onFetch,
+      }),
     );
 
-    // ref を要素に設定して再 render を強制
-    const el = document.createElement("div");
-    document.body.appendChild(el);
-    result.current.current = el;
+    fire(true);
+    expect(onFetch).toHaveBeenCalledTimes(1);
+  });
 
-    // useEffect は ref.current === null だったため observer 未生成。
-    // ref を設定した状態で再 render を起こして effect を走らせるため hook 再呼び出しは不可。
-    // → 代替: callback を triggers から取得できないため、IntersectionObserver の挙動は
-    // 「initial の null ref では何もしない」だけ確認。
+  it("isIntersecting=false なら onFetch は呼ばない", () => {
+    const onFetch = vi.fn();
+    render(
+      createElement(Host, {
+        hasNextPage: true,
+        isFetching: false,
+        onFetch,
+      }),
+    );
+    fire(false);
+    expect(onFetch).not.toHaveBeenCalled();
+  });
+
+  it("hasNextPage=false なら onFetch は呼ばない", () => {
+    const onFetch = vi.fn();
+    render(
+      createElement(Host, {
+        hasNextPage: false,
+        isFetching: false,
+        onFetch,
+      }),
+    );
+    fire(true);
+    expect(onFetch).not.toHaveBeenCalled();
+  });
+
+  it("isFetching=true なら onFetch は呼ばない", () => {
+    const onFetch = vi.fn();
+    render(
+      createElement(Host, {
+        hasNextPage: true,
+        isFetching: true,
+        onFetch,
+      }),
+    );
+    fire(true);
+    expect(onFetch).not.toHaveBeenCalled();
+  });
+
+  it("アンマウント時に disconnect される", () => {
+    const { unmount } = render(
+      createElement(Host, {
+        hasNextPage: true,
+        isFetching: false,
+        onFetch: vi.fn(),
+      }),
+    );
+    unmount();
+    expect(disconnect).toHaveBeenCalled();
+  });
+
+  it("element が無ければ observe しない (条件付き render)", () => {
+    const Conditional = (props: { mount: boolean }) => {
+      // hook は常に呼ぶが、ref を attach する div は条件付き
+      const ref = useInfiniteScroll<HTMLDivElement>({
+        hasNextPage: true,
+        isFetching: false,
+        onFetch: vi.fn(),
+      });
+      // mount=false の時は何もレンダリングしない
+      return props.mount ? createElement("div", { ref }) : null;
+    };
+
+    // ref の初期 effect で ref.current が null
+    render(createElement(Conditional, { mount: false }));
     expect(observe).not.toHaveBeenCalled();
   });
 });

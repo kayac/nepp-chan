@@ -86,4 +86,31 @@ describe("personaUpdateTool.execute", () => {
     expect(result.success).toBe(false);
     expect(result.error).toBe("DB_NOT_AVAILABLE");
   });
+
+  it("update が throw すると success: false で error を返す", async () => {
+    vi.mocked(personaRepository.findById).mockResolvedValue(sampleRow);
+    vi.mocked(personaRepository.update).mockRejectedValue(new Error("db"));
+
+    const result = await callTool(
+      personaUpdateTool,
+      { id: "p-1", content: "x" },
+      dbValues,
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("db");
+  });
+
+  it("非 Error の throw は Unknown error", async () => {
+    vi.mocked(personaRepository.findById).mockResolvedValue(sampleRow);
+    vi.mocked(personaRepository.update).mockRejectedValue("oops");
+
+    const result = await callTool(
+      personaUpdateTool,
+      { id: "p-1", content: "x" },
+      dbValues,
+    );
+
+    expect(result.error).toBe("Unknown error");
+  });
 });

@@ -88,4 +88,24 @@ describe("adminPersonaTool.execute", () => {
     expect(result.success).toBe(false);
     expect(result.error).toBe("NOT_AUTHORIZED");
   });
+
+  it("repository が throw したら success=false で error を返す", async () => {
+    vi.mocked(personaRepository.list).mockRejectedValueOnce(
+      new Error("db error"),
+    );
+
+    const result = await callTool(adminPersonaTool, { limit: 30 }, adminValues);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("db error");
+    expect(result.personas).toEqual([]);
+  });
+
+  it("非 Error の throw は Unknown error", async () => {
+    vi.mocked(personaRepository.list).mockRejectedValueOnce("oops");
+
+    const result = await callTool(adminPersonaTool, { limit: 30 }, adminValues);
+
+    expect(result.error).toBe("Unknown error");
+  });
 });

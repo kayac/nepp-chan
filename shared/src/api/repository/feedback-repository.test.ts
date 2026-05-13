@@ -120,6 +120,28 @@ describe("fetchFeedbackById", () => {
   });
 });
 
+describe("submitFeedback error", () => {
+  it("5xx は throw する", async () => {
+    server.use(
+      http.post(`${API}/feedback`, () =>
+        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+      ),
+    );
+    await expect(repo.submitFeedback(validFeedback)).rejects.toBeDefined();
+  });
+});
+
+describe("fetchFeedbacks error", () => {
+  it("5xx は throw する", async () => {
+    server.use(
+      http.get(`${API}/admin/feedback`, () =>
+        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+      ),
+    );
+    await expect(repo.fetchFeedbacks()).rejects.toBeDefined();
+  });
+});
+
 describe("resolveFeedback / unresolveFeedback / deleteAllFeedbacks", () => {
   it("resolve は PUT", async () => {
     server.use(
@@ -152,5 +174,32 @@ describe("resolveFeedback / unresolveFeedback / deleteAllFeedbacks", () => {
 
     const result = await repo.deleteAllFeedbacks();
     expect(result?.count).toBe(5);
+  });
+
+  it("resolveFeedback の error 経路", async () => {
+    server.use(
+      http.put(`${API}/admin/feedback/x/resolve`, () =>
+        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+      ),
+    );
+    await expect(repo.resolveFeedback("x")).rejects.toBeDefined();
+  });
+
+  it("unresolveFeedback の error 経路", async () => {
+    server.use(
+      http.delete(`${API}/admin/feedback/x/resolve`, () =>
+        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+      ),
+    );
+    await expect(repo.unresolveFeedback("x")).rejects.toBeDefined();
+  });
+
+  it("deleteAllFeedbacks の error 経路", async () => {
+    server.use(
+      http.delete(`${API}/admin/feedback`, () =>
+        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+      ),
+    );
+    await expect(repo.deleteAllFeedbacks()).rejects.toBeDefined();
   });
 });

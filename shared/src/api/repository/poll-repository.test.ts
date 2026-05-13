@@ -158,4 +158,69 @@ describe("poll-repository", () => {
       repo.createPoll({ title: "x", choices: ["a", "b"] }),
     ).rejects.toBeDefined();
   });
+
+  describe("残りの失敗系", () => {
+    it("fetchPollById: 404 は throw", async () => {
+      server.use(
+        http.get(`${API}/admin/polls/missing`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 404 }),
+        ),
+      );
+      await expect(repo.fetchPollById("missing")).rejects.toBeDefined();
+    });
+
+    it("updatePoll: 5xx は throw", async () => {
+      server.use(
+        http.put(`${API}/admin/polls/x`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(repo.updatePoll("x", { title: "更" })).rejects.toBeDefined();
+    });
+
+    it("deletePoll: 5xx は throw", async () => {
+      server.use(
+        http.delete(`${API}/admin/polls/x`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(repo.deletePoll("x")).rejects.toBeDefined();
+    });
+
+    it("sendPollNow: 5xx は throw", async () => {
+      server.use(
+        http.post(`${API}/admin/polls/x/send`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(repo.sendPollNow("x")).rejects.toBeDefined();
+    });
+
+    it("closePoll: 5xx は throw", async () => {
+      server.use(
+        http.post(`${API}/admin/polls/x/close`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(repo.closePoll("x")).rejects.toBeDefined();
+    });
+
+    it("fetchPollResultsAdmin: 5xx は throw", async () => {
+      server.use(
+        http.get(`${API}/admin/polls/x/results`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(repo.fetchPollResultsAdmin("x")).rejects.toBeDefined();
+    });
+
+    it("fetchPollResults: 5xx は throw", async () => {
+      server.use(
+        http.get(`${API}/polls/x`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(repo.fetchPollResults("x")).rejects.toBeDefined();
+    });
+  });
 });
