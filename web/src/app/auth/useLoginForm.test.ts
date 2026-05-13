@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
+import type { SubmitEvent } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getAuthToken } from "~/lib/auth-token";
@@ -26,7 +27,7 @@ afterEach(() => {
 const { useLoginForm } = await import("./useLoginForm");
 
 const submitEvent = () =>
-  ({ preventDefault: vi.fn() }) as unknown as React.FormEvent;
+  ({ preventDefault: vi.fn() }) as unknown as SubmitEvent<HTMLFormElement>;
 
 describe("useLoginForm", () => {
   it("初期状態は空 + isLoading=false + error=null", () => {

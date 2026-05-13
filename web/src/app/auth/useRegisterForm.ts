@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { type SubmitEvent, useEffect, useState } from "react";
 
 import { register } from "~/lib/api/auth";
 import { setAuthToken } from "~/lib/auth-token";
@@ -18,7 +18,7 @@ export const useRegisterForm = () => {
     }
   }, [token]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!token) return;
 
