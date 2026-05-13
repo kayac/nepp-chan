@@ -171,12 +171,8 @@ orchestration shell を exclude するときは「本質的ロジックが hooks
 
 ### カバレッジ閾値
 
-- 実測値ベースで段階引き上げ（`vitest.config.ts` の `coverage.thresholds`）
-- ぎりぎりではなく**実測 - 1〜2pt** のマージンを付ける（CI のノイズ防止）
-- 現在の閾値（参考）:
-  - web: branches 85 / lines 92 / functions 90 / statements 92
-  - server: branches 86 / lines 95 / functions 95 / statements 95
-  - shared: branches 62 / lines 98 / functions 98 / statements 80
+- 実測値ベースで段階引き上げ（各 `vitest.config.ts` の `coverage.thresholds`）
+- ぎりぎりではなく実測 - 1〜2pt のマージンを付ける（CI のノイズ防止）
 
 ## ブランチ
 
