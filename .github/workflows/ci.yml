@@ -77,3 +77,11 @@ jobs:
           name: coverage-web
           path: web/coverage/
           retention-days: 14
+
+      - name: Upload shared coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-shared
+          path: shared/coverage/
+          retention-days: 14
