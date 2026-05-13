@@ -46,6 +46,7 @@ export default defineConfig({
         // helpers・子コンポーネント側に抽出済みで、Panel 自身は tab/filter state と
         // 子コンポーネントの mount を担うだけ。テストは抽出済みの helper / hook 側で行う
         "src/app/chat/ChatPage.tsx",
+        "src/app/chat/FeedbackContext.tsx",
         "src/app/dashboard/App.tsx",
         "src/app/dashboard/components/BroadcastPanel.tsx",
         "src/app/dashboard/components/FeedbackPanel.tsx",
@@ -53,12 +54,15 @@ export default defineConfig({
         "src/app/dashboard/components/KnowledgePanel.tsx",
         "src/app/dashboard/components/PersonaPanel.tsx",
         "src/app/dashboard/components/PollPanel.tsx",
+        // ドラッグ&ドロップ + mutation の orchestration shell。type 判定は trivial で
+        // ConvertDialog / useUploadFile / useConvertFile は別途テスト済み
+        "src/app/dashboard/components/knowledge/FileUpload.tsx",
       ],
       thresholds: {
-        branches: 50,
-        lines: 60,
-        functions: 62,
-        statements: 60,
+        branches: 78,
+        lines: 82,
+        functions: 82,
+        statements: 82,
       },
     },
   },
