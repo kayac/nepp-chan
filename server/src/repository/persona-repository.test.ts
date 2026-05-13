@@ -1,493 +1,437 @@
-import { and, count, desc, eq, like, lt, or } from "drizzle-orm";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { persona } from "~/db";
 import { createTestDb, type TestDb } from "../test-helpers/test-db";
 
-/**
- * persona テーブルに対する Drizzle ORM クエリの統合テスト
- *
- * personaRepository は D1Database を受け取る設計のため、
- * ここでは libsql の in-memory DB を使って Drizzle クエリ自体をテストする
- */
-describe("persona Drizzle クエリ", () => {
-  let db: TestDb;
+const { testDbHolder } = vi.hoisted(() => ({
+  testDbHolder: { db: null as TestDb | null },
+}));
 
+vi.mock("~/db", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("~/db")>();
+  return {
+    ...actual,
+    createDb: () => testDbHolder.db,
+  };
+});
+
+const { personaRepository } = await import("./persona-repository");
+
+const fakeD1 = {} as D1Database;
+
+type CreateOverrides = {
+  id?: string;
+  resourceId?: string;
+  category?: string;
+  tags?: string | null;
+  content?: string;
+  source?: string | null;
+  topic?: string | null;
+  sentiment?: string | null;
+  demographicSummary?: string | null;
+  createdAt?: string;
+  conversationEndedAt?: string | null;
+};
+
+const baseInput = (overrides: CreateOverrides = {}) => ({
+  id: overrides.id ?? "p-1",
+  resourceId: overrides.resourceId ?? "r-1",
+  category: overrides.category ?? "preference",
+  tags: "tags" in overrides ? (overrides.tags ?? null) : "tag1,tag2",
+  content: overrides.content ?? "好きな食べ物はラーメン",
+  source: "source" in overrides ? (overrides.source ?? null) : "chat",
+  topic: "topic" in overrides ? (overrides.topic ?? null) : "food",
+  sentiment:
+    "sentiment" in overrides ? (overrides.sentiment ?? null) : "positive",
+  demographicSummary:
+    "demographicSummary" in overrides
+      ? (overrides.demographicSummary ?? null)
+      : "20代,男性",
+  createdAt: overrides.createdAt ?? "2030-01-01T00:00:00Z",
+  conversationEndedAt:
+    "conversationEndedAt" in overrides
+      ? (overrides.conversationEndedAt ?? null)
+      : null,
+});
+
+describe("personaRepository", () => {
   beforeEach(async () => {
-    db = await createTestDb();
+    testDbHolder.db = await createTestDb();
   });
 
-  describe("insert", () => {
-    it("新しいペルソナを作成できる", async () => {
-      await db.insert(persona).values({
-        id: "test-id",
-        resourceId: "village-1",
-        category: "好み",
-        tags: "男性,高齢者",
-        content: "村民は地元産の野菜を好む",
-        source: "会話サマリー",
-        createdAt: "2024-01-01T00:00:00Z",
+  describe("create", () => {
+    it("入力した id を返し、レコードを挿入する", async () => {
+      const id = await personaRepository.create(fakeD1, baseInput());
+      expect(id).toBe("p-1");
+
+      const found = await personaRepository.findById(fakeD1, "p-1");
+      expect(found).toMatchObject({
+        id: "p-1",
+        resourceId: "r-1",
+        category: "preference",
+        topic: "food",
+        sentiment: "positive",
       });
-
-      const saved = await db
-        .select()
-        .from(persona)
-        .where(eq(persona.id, "test-id"))
-        .get();
-
-      expect(saved).not.toBeNull();
-      expect(saved?.content).toBe("村民は地元産の野菜を好む");
-      expect(saved?.category).toBe("好み");
-      expect(saved?.tags).toBe("男性,高齢者");
     });
 
-    it("オプション項目なしでも作成できる", async () => {
-      await db.insert(persona).values({
-        id: "test-id-2",
-        resourceId: "village-1",
-        category: "価値観",
-        content: "助け合いを大切にする",
-        createdAt: "2024-01-01T00:00:00Z",
+    it("sentiment 未指定は 'neutral' がデフォルト", async () => {
+      await personaRepository.create(fakeD1, {
+        id: "p-min",
+        resourceId: "r-1",
+        category: "preference",
+        content: "x",
+        createdAt: "2030-01-01T00:00:00Z",
       });
+      const found = await personaRepository.findById(fakeD1, "p-min");
+      expect(found?.sentiment).toBe("neutral");
+    });
 
-      const saved = await db
-        .select()
-        .from(persona)
-        .where(eq(persona.id, "test-id-2"))
-        .get();
-
-      expect(saved?.tags).toBeNull();
-      expect(saved?.source).toBeNull();
-      expect(saved?.sentiment).toBe("neutral");
+    it("optional フィールド未指定なら null", async () => {
+      await personaRepository.create(fakeD1, {
+        id: "p-min",
+        resourceId: "r-1",
+        category: "preference",
+        content: "x",
+        createdAt: "2030-01-01T00:00:00Z",
+      });
+      const found = await personaRepository.findById(fakeD1, "p-min");
+      expect(found?.tags).toBeNull();
+      expect(found?.source).toBeNull();
+      expect(found?.topic).toBeNull();
+      expect(found?.demographicSummary).toBeNull();
+      expect(found?.conversationEndedAt).toBeNull();
     });
   });
 
   describe("update", () => {
     beforeEach(async () => {
-      await db.insert(persona).values({
-        id: "update-test",
-        resourceId: "village-1",
-        category: "好み",
-        content: "元の内容",
-        createdAt: "2024-01-01T00:00:00Z",
+      await personaRepository.create(fakeD1, baseInput());
+    });
+
+    it("category だけ更新", async () => {
+      await personaRepository.update(fakeD1, "p-1", { category: "interest" });
+      const found = await personaRepository.findById(fakeD1, "p-1");
+      expect(found?.category).toBe("interest");
+      expect(found?.topic).toBe("food");
+    });
+
+    it("複数フィールド同時更新", async () => {
+      await personaRepository.update(fakeD1, "p-1", {
+        topic: "music",
+        sentiment: "negative",
+        content: "ラーメン苦手",
       });
+      const found = await personaRepository.findById(fakeD1, "p-1");
+      expect(found?.topic).toBe("music");
+      expect(found?.sentiment).toBe("negative");
+      expect(found?.content).toBe("ラーメン苦手");
     });
 
-    it("ペルソナの内容を更新できる", async () => {
-      await db
-        .update(persona)
-        .set({
-          content: "更新された内容",
-          updatedAt: new Date().toISOString(),
-        })
-        .where(eq(persona.id, "update-test"));
+    it("updatedAt が今の時刻でセットされる", async () => {
+      const before = Date.now();
+      await personaRepository.update(fakeD1, "p-1", { topic: "x" });
+      const after = Date.now();
 
-      const updated = await db
-        .select()
-        .from(persona)
-        .where(eq(persona.id, "update-test"))
-        .get();
-
-      expect(updated?.content).toBe("更新された内容");
-      expect(updated?.updatedAt).not.toBeNull();
-    });
-
-    it("複数項目を同時に更新できる", async () => {
-      await db
-        .update(persona)
-        .set({
-          category: "新カテゴリ",
-          tags: "新タグ",
-          content: "新しい内容",
-          updatedAt: new Date().toISOString(),
-        })
-        .where(eq(persona.id, "update-test"));
-
-      const updated = await db
-        .select()
-        .from(persona)
-        .where(eq(persona.id, "update-test"))
-        .get();
-
-      expect(updated?.category).toBe("新カテゴリ");
-      expect(updated?.tags).toBe("新タグ");
-      expect(updated?.content).toBe("新しい内容");
+      const found = await personaRepository.findById(fakeD1, "p-1");
+      const ms = new Date(found!.updatedAt!).getTime();
+      expect(ms).toBeGreaterThanOrEqual(before);
+      expect(ms).toBeLessThanOrEqual(after);
     });
   });
 
-  describe("select by id", () => {
-    beforeEach(async () => {
-      await db.insert(persona).values({
-        id: "find-test",
-        resourceId: "village-1",
-        category: "好み",
-        tags: "男性",
-        content: "テスト内容",
-        createdAt: "2024-01-01T00:00:00Z",
-      });
-    });
-
-    it("IDでペルソナを取得できる", async () => {
-      const result = await db
-        .select()
-        .from(persona)
-        .where(eq(persona.id, "find-test"))
-        .get();
-
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("find-test");
-      expect(result?.content).toBe("テスト内容");
-    });
-
-    it("存在しないIDの場合はundefinedを返す", async () => {
-      const result = await db
-        .select()
-        .from(persona)
-        .where(eq(persona.id, "non-existent"))
-        .get();
-
-      expect(result).toBeUndefined();
+  describe("findById", () => {
+    it("存在しなければ null", async () => {
+      expect(await personaRepository.findById(fakeD1, "ghost")).toBeNull();
     });
   });
 
-  describe("select by resourceId", () => {
-    beforeEach(async () => {
-      await db.insert(persona).values([
-        {
-          id: "1",
-          resourceId: "village-1",
-          category: "好み",
-          content: "内容1",
-          createdAt: "2024-01-01T00:00:00Z",
-        },
-        {
-          id: "2",
-          resourceId: "village-1",
-          category: "価値観",
-          content: "内容2",
-          createdAt: "2024-01-02T00:00:00Z",
-        },
-        {
-          id: "3",
-          resourceId: "village-2",
-          category: "好み",
-          content: "別の村",
-          createdAt: "2024-01-03T00:00:00Z",
-        },
-      ]);
+  describe("findByResourceId", () => {
+    it("該当 resourceId の persona を createdAt 降順で返す", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({
+          id: "p-1",
+          resourceId: "r-a",
+          createdAt: "2030-01-01T00:00:00Z",
+        }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({
+          id: "p-2",
+          resourceId: "r-a",
+          createdAt: "2030-02-01T00:00:00Z",
+        }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-3", resourceId: "r-b" }),
+      );
+
+      const result = await personaRepository.findByResourceId(fakeD1, "r-a");
+      expect(result.map((p) => p.id)).toEqual(["p-2", "p-1"]);
     });
 
-    it("リソースIDでペルソナ一覧を取得できる", async () => {
-      const result = await db
-        .select()
-        .from(persona)
-        .where(eq(persona.resourceId, "village-1"))
-        .orderBy(desc(persona.createdAt))
-        .all();
-
+    it("limit を適用", async () => {
+      for (let i = 0; i < 5; i++) {
+        await personaRepository.create(
+          fakeD1,
+          baseInput({
+            id: `p-${i}`,
+            resourceId: "r-a",
+            createdAt: `2030-01-0${i + 1}T00:00:00Z`,
+          }),
+        );
+      }
+      const result = await personaRepository.findByResourceId(fakeD1, "r-a", 2);
       expect(result).toHaveLength(2);
-      expect(result.every((p) => p.resourceId === "village-1")).toBe(true);
-    });
-
-    it("降順でソートされる", async () => {
-      const result = await db
-        .select()
-        .from(persona)
-        .where(eq(persona.resourceId, "village-1"))
-        .orderBy(desc(persona.createdAt))
-        .all();
-
-      expect(result[0].id).toBe("2"); // 最新が先頭
-      expect(result[1].id).toBe("1");
     });
   });
 
   describe("search", () => {
     beforeEach(async () => {
-      await db.insert(persona).values([
-        {
-          id: "s1",
-          resourceId: "village-1",
-          category: "好み",
-          tags: "男性,高齢者",
-          content: "地元産の野菜が人気",
-          createdAt: "2024-01-01T00:00:00Z",
-        },
-        {
-          id: "s2",
-          resourceId: "village-1",
-          category: "好み",
-          tags: "女性",
-          content: "お米を好む",
-          createdAt: "2024-01-02T00:00:00Z",
-        },
-        {
-          id: "s3",
-          resourceId: "village-1",
-          category: "価値観",
-          tags: "男性",
-          content: "伝統を大切にする",
-          createdAt: "2024-01-03T00:00:00Z",
-        },
-      ]);
+      await personaRepository.create(
+        fakeD1,
+        baseInput({
+          id: "p-1",
+          resourceId: "r-1",
+          category: "preference",
+          tags: "music,rock",
+          content: "ロックが好き",
+          createdAt: "2030-01-01T00:00:00Z",
+        }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({
+          id: "p-2",
+          resourceId: "r-1",
+          category: "interest",
+          tags: "food,ramen",
+          content: "ラーメンが好き",
+          createdAt: "2030-01-02T00:00:00Z",
+        }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({
+          id: "p-other",
+          resourceId: "r-other",
+          content: "他",
+          createdAt: "2030-01-03T00:00:00Z",
+        }),
+      );
     });
 
-    it("カテゴリで検索できる", async () => {
-      const result = await db
-        .select()
-        .from(persona)
-        .where(
-          and(
-            eq(persona.resourceId, "village-1"),
-            eq(persona.category, "好み"),
-          ),
-        )
-        .all();
-
-      expect(result).toHaveLength(2);
-      expect(result.every((p) => p.category === "好み")).toBe(true);
+    it("resourceId 指定のみで該当だけ取得", async () => {
+      const result = await personaRepository.search(fakeD1, "r-1");
+      expect(result.map((p) => p.id)).toEqual(["p-2", "p-1"]);
     });
 
-    it("タグで検索できる", async () => {
-      const result = await db
-        .select()
-        .from(persona)
-        .where(
-          and(
-            eq(persona.resourceId, "village-1"),
-            like(persona.tags, "%男性%"),
-          ),
-        )
-        .all();
-
-      expect(result).toHaveLength(2);
-      expect(result.every((p) => p.tags?.includes("男性"))).toBe(true);
+    it("category フィルタが効く", async () => {
+      const result = await personaRepository.search(fakeD1, "r-1", {
+        category: "interest",
+      });
+      expect(result.map((p) => p.id)).toEqual(["p-2"]);
     });
 
-    it("複数タグのOR検索ができる", async () => {
-      const result = await db
-        .select()
-        .from(persona)
-        .where(
-          and(
-            eq(persona.resourceId, "village-1"),
-            or(like(persona.tags, "%女性%"), like(persona.tags, "%高齢者%")),
-          ),
-        )
-        .all();
+    it("tags フィルタは OR 検索", async () => {
+      const result = await personaRepository.search(fakeD1, "r-1", {
+        tags: ["rock", "ramen"],
+      });
+      expect(result.map((p) => p.id).sort()).toEqual(["p-1", "p-2"]);
+    });
 
+    it("keyword 1 語は LIKE 検索", async () => {
+      const result = await personaRepository.search(fakeD1, "r-1", {
+        keyword: "ラーメン",
+      });
+      expect(result.map((p) => p.id)).toEqual(["p-2"]);
+    });
+
+    it("keyword 複数語は OR 検索", async () => {
+      const result = await personaRepository.search(fakeD1, "r-1", {
+        keyword: "ロック ラーメン",
+      });
+      expect(result.map((p) => p.id).sort()).toEqual(["p-1", "p-2"]);
+    });
+
+    it("keyword 空白だけは効かない（resourceId のみで取得）", async () => {
+      const result = await personaRepository.search(fakeD1, "r-1", {
+        keyword: "   ",
+      });
       expect(result).toHaveLength(2);
     });
 
-    it("キーワードで検索できる", async () => {
-      const result = await db
-        .select()
-        .from(persona)
-        .where(
-          and(
-            eq(persona.resourceId, "village-1"),
-            like(persona.content, "%野菜%"),
-          ),
-        )
-        .all();
-
+    it("limit を適用", async () => {
+      const result = await personaRepository.search(fakeD1, "r-1", {
+        limit: 1,
+      });
       expect(result).toHaveLength(1);
-      expect(result[0].content).toContain("野菜");
+    });
+  });
+
+  describe("aggregateByTopic", () => {
+    it("topic + category でグルーピングし件数降順", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-1", topic: "food", category: "preference" }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-2", topic: "food", category: "preference" }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-3", topic: "music", category: "preference" }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-no", topic: null }),
+      );
+
+      const result = await personaRepository.aggregateByTopic(fakeD1, "r-1");
+      expect(result[0]).toMatchObject({ topic: "food", count: 2 });
+      expect(result[1]).toMatchObject({ topic: "music", count: 1 });
+      // topic=null は除外
+      expect(result.find((r) => r.topic === null)).toBeUndefined();
     });
 
-    it("複合条件で検索できる", async () => {
-      const result = await db
-        .select()
-        .from(persona)
-        .where(
-          and(
-            eq(persona.resourceId, "village-1"),
-            eq(persona.category, "好み"),
-            like(persona.tags, "%男性%"),
-            like(persona.content, "%野菜%"),
-          ),
-        )
-        .limit(10)
-        .all();
+    it("category フィルタが効く", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-1", topic: "food", category: "preference" }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-2", topic: "food", category: "complaint" }),
+      );
+      const result = await personaRepository.aggregateByTopic(fakeD1, "r-1", {
+        category: "complaint",
+      });
+      expect(result.every((r) => r.category === "complaint")).toBe(true);
+    });
+  });
 
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe("s1");
+  describe("delete / deleteAll", () => {
+    beforeEach(async () => {
+      await personaRepository.create(fakeD1, baseInput({ id: "p-1" }));
+      await personaRepository.create(fakeD1, baseInput({ id: "p-2" }));
+    });
+
+    it("delete: 該当のみ", async () => {
+      await personaRepository.delete(fakeD1, "p-1");
+      expect(await personaRepository.findById(fakeD1, "p-1")).toBeNull();
+      expect(await personaRepository.findById(fakeD1, "p-2")).not.toBeNull();
+    });
+
+    it("deleteAll: 全件削除", async () => {
+      await personaRepository.deleteAll(fakeD1);
+      const stats = await personaRepository.getStats(fakeD1);
+      expect(stats.total).toBe(0);
+    });
+  });
+
+  describe("list", () => {
+    const seed = async () => {
+      for (let i = 0; i < 5; i++) {
+        await personaRepository.create(
+          fakeD1,
+          baseInput({
+            id: `p-${i}`,
+            category: i % 2 === 0 ? "preference" : "interest",
+            sentiment: i < 3 ? "positive" : "negative",
+            createdAt: `2030-01-0${i + 1}T00:00:00Z`,
+          }),
+        );
+      }
+    };
+
+    it("デフォルトで createdAt 降順最大 30 件", async () => {
+      await seed();
+      const result = await personaRepository.list(fakeD1);
+      expect(result.personas[0].id).toBe("p-4");
+      expect(result.hasMore).toBe(false);
+    });
+
+    it("limit + cursor 動作", async () => {
+      await seed();
+      const first = await personaRepository.list(fakeD1, { limit: 2 });
+      expect(first.personas).toHaveLength(2);
+      expect(first.hasMore).toBe(true);
+      expect(first.nextCursor).toBeTruthy();
+
+      const next = await personaRepository.list(fakeD1, {
+        limit: 2,
+        cursor: first.nextCursor!,
+      });
+      expect(next.personas[0].id).toBe("p-2");
+    });
+
+    it("category / sentiment フィルタ", async () => {
+      await seed();
+      const result = await personaRepository.list(fakeD1, {
+        category: "preference",
+        sentiment: "positive",
+      });
+      const ids = result.personas.map((p) => p.id);
+      expect(ids).toEqual(["p-2", "p-0"]);
     });
   });
 
   describe("listForAdmin", () => {
-    beforeEach(async () => {
-      await db.insert(persona).values([
-        {
-          id: "admin-1",
-          resourceId: "village-1",
-          category: "好み",
-          content: "内容1",
-          createdAt: "2024-01-01T00:00:00Z",
-        },
-        {
-          id: "admin-2",
-          resourceId: "village-1",
-          category: "価値観",
-          content: "内容2",
-          createdAt: "2024-01-02T00:00:00Z",
-        },
-        {
-          id: "admin-3",
-          resourceId: "village-2",
-          category: "好み",
-          content: "内容3",
-          createdAt: "2024-01-03T00:00:00Z",
-        },
-        {
-          id: "admin-4",
-          resourceId: "village-1",
-          category: "意見",
-          content: "内容4",
-          createdAt: "2024-01-03T00:00:00Z", // admin-3 と同じ createdAt
-        },
-      ]);
-    });
+    it("createdAt + id の複合ソートとカーソル", async () => {
+      // 同じ createdAt で id が違う persona を作る
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-a", createdAt: "2030-01-01T00:00:00Z" }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-b", createdAt: "2030-01-01T00:00:00Z" }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-c", createdAt: "2030-02-01T00:00:00Z" }),
+      );
 
-    it("total 付きで全件取得できる", async () => {
-      const results = await db
-        .select()
-        .from(persona)
-        .orderBy(desc(persona.createdAt), desc(persona.id))
-        .all();
+      const first = await personaRepository.listForAdmin(fakeD1, { limit: 1 });
+      expect(first.personas[0].id).toBe("p-c");
+      expect(first.total).toBe(3);
+      expect(first.hasMore).toBe(true);
 
-      const countResult = await db
-        .select({ count: count() })
-        .from(persona)
-        .get();
-
-      expect(results).toHaveLength(4);
-      expect(countResult?.count).toBe(4);
-    });
-
-    it("limit で取得件数を制限できる", async () => {
-      const limit = 2;
-      const results = await db
-        .select()
-        .from(persona)
-        .orderBy(desc(persona.createdAt), desc(persona.id))
-        .limit(limit + 1)
-        .all();
-
-      const hasMore = results.length > limit;
-      const items = hasMore ? results.slice(0, limit) : results;
-
-      expect(items).toHaveLength(2);
-      expect(hasMore).toBe(true);
-    });
-
-    it("複合カーソル（createdAt_id）で次ページを取得できる", async () => {
-      const limit = 2;
-
-      // 1ページ目
-      const page1 = await db
-        .select()
-        .from(persona)
-        .orderBy(desc(persona.createdAt), desc(persona.id))
-        .limit(limit + 1)
-        .all();
-
-      const items1 = page1.slice(0, limit);
-      const lastItem = items1[items1.length - 1];
-      const cursor = `${lastItem.createdAt}_${lastItem.id}`;
-
-      // 2ページ目: 複合カーソル条件
-      const [cursorCreatedAt, cursorId] = cursor.split("_");
-      const page2 = await db
-        .select()
-        .from(persona)
-        .where(
-          or(
-            lt(persona.createdAt, cursorCreatedAt),
-            and(
-              eq(persona.createdAt, cursorCreatedAt),
-              lt(persona.id, cursorId),
-            ),
-          ),
-        )
-        .orderBy(desc(persona.createdAt), desc(persona.id))
-        .limit(limit + 1)
-        .all();
-
-      // 2ページ目のアイテムは1ページ目と重複しない
-      const page1Ids = items1.map((p) => p.id);
-      for (const item of page2) {
-        expect(page1Ids).not.toContain(item.id);
-      }
-    });
-
-    it("空結果の場合", async () => {
-      // 全データ削除
-      await db.delete(persona);
-
-      const results = await db
-        .select()
-        .from(persona)
-        .orderBy(desc(persona.createdAt), desc(persona.id))
-        .all();
-
-      const countResult = await db
-        .select({ count: count() })
-        .from(persona)
-        .get();
-
-      expect(results).toHaveLength(0);
-      expect(countResult?.count).toBe(0);
-    });
-
-    it("hasMore が正しく判定される", async () => {
-      // limit=4 → 4件ちょうどなので hasMore=false
-      const limit = 4;
-      const results = await db
-        .select()
-        .from(persona)
-        .orderBy(desc(persona.createdAt), desc(persona.id))
-        .limit(limit + 1)
-        .all();
-
-      const hasMore = results.length > limit;
-      expect(hasMore).toBe(false);
-
-      // limit=3 → 4件あるので hasMore=true
-      const limit2 = 3;
-      const results2 = await db
-        .select()
-        .from(persona)
-        .orderBy(desc(persona.createdAt), desc(persona.id))
-        .limit(limit2 + 1)
-        .all();
-
-      const hasMore2 = results2.length > limit2;
-      expect(hasMore2).toBe(true);
+      const next = await personaRepository.listForAdmin(fakeD1, {
+        limit: 1,
+        cursor: first.nextCursor!,
+      });
+      // 同 createdAt なら id 降順
+      expect(next.personas[0].id).toBe("p-b");
     });
   });
 
-  describe("delete", () => {
-    beforeEach(async () => {
-      await db.insert(persona).values({
-        id: "delete-test",
-        resourceId: "village-1",
-        category: "好み",
-        content: "削除対象",
-        createdAt: "2024-01-01T00:00:00Z",
-      });
+  describe("getStats", () => {
+    it("空のとき全部 0 / 空オブジェクト", async () => {
+      const stats = await personaRepository.getStats(fakeD1);
+      expect(stats).toEqual({ total: 0, byCategory: {}, bySentiment: {} });
     });
 
-    it("ペルソナを削除できる", async () => {
-      await db.delete(persona).where(eq(persona.id, "delete-test"));
+    it("カテゴリ・センチメントの集計", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-1", category: "preference", sentiment: "positive" }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-2", category: "preference", sentiment: "negative" }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-3", category: "interest", sentiment: "positive" }),
+      );
 
-      const deleted = await db
-        .select()
-        .from(persona)
-        .where(eq(persona.id, "delete-test"))
-        .get();
-
-      expect(deleted).toBeUndefined();
+      const stats = await personaRepository.getStats(fakeD1);
+      expect(stats.total).toBe(3);
+      expect(stats.byCategory).toEqual({ preference: 2, interest: 1 });
+      expect(stats.bySentiment).toEqual({ positive: 2, negative: 1 });
     });
   });
 });
