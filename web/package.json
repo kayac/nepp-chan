@@ -49,7 +49,7 @@
     "msw": "^2.14.5",
     "openapi-typescript": "^7.13.0",
     "postcss": "^8.5.8",
-    "tailwindcss": "^4.1.10",
+    "tailwindcss": "^4.3.0",
     "typescript": "~5.9.3",
     "vitest": "~3.2.4",
     "wrangler": "^4.76.0"
