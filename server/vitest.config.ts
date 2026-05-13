@@ -14,7 +14,6 @@ export default defineConfig({
         "src/test-helpers/**",
         "src/__tests__/**",
         "src/db/migrations/**",
-        "src/mastra/public/**",
         "src/index.ts",
         "src/env.d.ts",
       ],

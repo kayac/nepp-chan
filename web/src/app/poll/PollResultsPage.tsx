@@ -75,7 +75,7 @@ const PollContent = ({ id }: { id: string }) => {
   );
 };
 
-const PollResultsInner = () => {
+export const PollResultsInner = () => {
   const id = getCurrentSearchParams().get("id");
 
   if (!id) {
