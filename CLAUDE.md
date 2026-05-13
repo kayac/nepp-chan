@@ -167,7 +167,6 @@ vitest v4 + `@vitest/coverage-v8` は `include` 対象の未テストファイ�
 - **HOC で囲んだ登録 / barrel / registry**: web/`assistant-ui/tool-uis/index.tsx`
 - **orchestration shell（責務分離後の Panel）**: web/`app/chat/ChatPage.tsx` / `app/chat/FeedbackContext.tsx` / `app/dashboard/App.tsx` / `app/dashboard/components/{Broadcast,Feedback,Invitations,Knowledge,Persona,Poll}Panel.tsx` / `app/dashboard/components/knowledge/FileUpload.tsx`
 - **context から取り出して別コンポーネントに渡すだけの wrapper**: web/`app/chat/components/FeedbackModalWrapper.tsx`
-- **自動生成資源**: server/`mastra/public/**`
 
 orchestration shell を exclude するときは「本質的ロジックが hooks / helpers / 子コンポーネントに抽出済みで、別途テストされている」ことを確認してから行う。
 
