@@ -13,7 +13,6 @@ export const emergencyReports = sqliteTable("emergency_reports", {
 // ペルソナ（村の集合知）
 export const persona = sqliteTable("persona", {
   id: text("id").primaryKey(),
-  resourceId: text("resource_id").notNull(),
   category: text("category").notNull(),
   tags: text("tags"),
   content: text("content").notNull(),

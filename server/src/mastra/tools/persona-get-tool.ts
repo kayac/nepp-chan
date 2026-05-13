@@ -10,7 +10,6 @@ export const personaGetTool = createTool({
   description:
     "【管理者専用】村の集合知（ペルソナ）を検索・取得します。自然言語のキーワードやカテゴリ、タグで検索できます。",
   inputSchema: z.object({
-    resourceId: z.string().describe("リソースID（村やグループの識別子）"),
     category: z
       .string()
       .optional()
@@ -38,7 +37,6 @@ export const personaGetTool = createTool({
     personas: z.array(
       personaOutputSchema.pick({
         id: true,
-        resourceId: true,
         category: true,
         tags: true,
         content: true,
@@ -64,10 +62,10 @@ export const personaGetTool = createTool({
     }
     const { db } = result;
 
-    const { resourceId, category, tags, keyword, limit } = inputData;
+    const { category, tags, keyword, limit } = inputData;
 
     try {
-      const personas = await personaRepository.search(db, resourceId, {
+      const personas = await personaRepository.search(db, {
         category,
         tags,
         keyword,

@@ -64,7 +64,6 @@ export const adminPersonaTool = createTool({
 
       const personas = result.personas.map((p) => ({
         id: p.id,
-        resourceId: p.resourceId,
         category: p.category,
         tags: p.tags,
         content: p.content,

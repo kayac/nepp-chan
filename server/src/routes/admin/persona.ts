@@ -19,7 +19,6 @@ personaAdminRoutes.use("*", requireRole("admin"));
 
 const PersonaSchema = z.object({
   id: z.string(),
-  resourceId: z.string(),
   category: z.string(),
   tags: z.string().nullable(),
   content: z.string(),
