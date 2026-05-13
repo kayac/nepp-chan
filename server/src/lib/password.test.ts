@@ -1,3 +1,4 @@
+import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import { hashPassword, verifyPassword } from "./password";
@@ -47,6 +48,53 @@ describe("password", () => {
 
     it("不正なフォーマットのハッシュではエラーになる", async () => {
       await expect(verifyPassword("pass", "invalid")).rejects.toThrow();
+    });
+  });
+
+  describe("プロパティベース", () => {
+    // PBKDF2 100k iter は実行が重いので numRuns は控えめに
+    it("hash → verify は常に true (任意のパスワード)", async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.string({ minLength: 0, maxLength: 64 }),
+          async (password) => {
+            const hash = await hashPassword(password);
+            expect(await verifyPassword(password, hash)).toBe(true);
+          },
+        ),
+        { numRuns: 8 },
+      );
+    });
+
+    it("異なるパスワード同士の hash → verify は false", async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.tuple(
+            fc.string({ minLength: 1, maxLength: 32 }),
+            fc.string({ minLength: 1, maxLength: 32 }),
+          ),
+          async ([a, b]) => {
+            fc.pre(a !== b);
+            const hash = await hashPassword(a);
+            expect(await verifyPassword(b, hash)).toBe(false);
+          },
+        ),
+        { numRuns: 6 },
+      );
+    });
+
+    it("同じパスワードを 2 回 hash すると異なるハッシュになる (ソルト)", async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.string({ minLength: 1, maxLength: 32 }),
+          async (password) => {
+            const h1 = await hashPassword(password);
+            const h2 = await hashPassword(password);
+            expect(h1).not.toBe(h2);
+          },
+        ),
+        { numRuns: 6 },
+      );
     });
   });
 });

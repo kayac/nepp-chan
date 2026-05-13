@@ -1,3 +1,4 @@
+import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { stripMarkdown } from "./strip-markdown";
 
@@ -48,6 +49,70 @@ describe("stripMarkdown", () => {
 
   it("連続空行を1つにまとめる", () => {
     expect(stripMarkdown("上\n\n\n\n下")).toBe("上\n\n下");
+  });
+
+  describe("プロパティベース", () => {
+    it("Markdown 記号を含まない平文は trim 以外変化しない (idempotent on plain)", () => {
+      fc.assert(
+        fc.property(
+          fc
+            .stringMatching(/^[ぁ-んァ-ン一-龯a-zA-Z0-9 、。!?]+$/)
+            .filter((s) => s.length > 0 && s.length < 200),
+          (plain) => {
+            // 内側の連続空白以外は変化しないはず（trim を考慮）
+            const out = stripMarkdown(plain);
+            expect(out).toBe(plain.trim());
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it("2 回適用しても結果が同じ (idempotent)", () => {
+      fc.assert(
+        fc.property(fc.string({ maxLength: 500 }), (input) => {
+          const once = stripMarkdown(input);
+          const twice = stripMarkdown(once);
+          expect(twice).toBe(once);
+        }),
+        { numRuns: 100 },
+      );
+    });
+
+    it("* を含まないテキストを ** で囲めば出力に ** は残らない", () => {
+      fc.assert(
+        fc.property(
+          // inner 内に *・改行を含まないようにして、強調マーカーの相互作用を避ける
+          fc.string({ maxLength: 100 }).filter(
+            (s) =>
+              s.length > 0 &&
+              !s.includes("*") &&
+              !s.includes("\n") &&
+              // 末尾空白は強調パターンにマッチしないため除外
+              !s.startsWith(" ") &&
+              !s.endsWith(" "),
+          ),
+          (inner) => {
+            const wrapped = `**${inner}**`;
+            const out = stripMarkdown(wrapped);
+            expect(out).not.toContain("**");
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it("出力長は入力長以下 (Markdown 記号は除去のみで増加させない)", () => {
+      fc.assert(
+        fc.property(fc.string({ maxLength: 500 }), (input) => {
+          const out = stripMarkdown(input);
+          // リスト記号 "- " → "・" は 2 char → 1 char、リンク [a](b) → "a b" は 4 char 削除、
+          // など全て短くなるか同等の置換のため、入力長を超えない
+          expect(out.length).toBeLessThanOrEqual(input.length);
+        }),
+        { numRuns: 100 },
+      );
+    });
   });
 
   it("実際のLINE応答例を正しく変換する", () => {
