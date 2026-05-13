@@ -1,13 +1,12 @@
 import { useCallback, useState } from "react";
-
-import { useCreatePoll, useUpdatePoll } from "~/app/dashboard/hooks/usePolls";
-import { confirmDialog } from "~/lib/dialog";
-import type { CreatePollRequest, Poll } from "~/types";
 import {
   type ChoiceFormState,
   collectValidChoices,
   isPollFormValid,
-} from "./helpers";
+} from "~/app/dashboard/components/poll/helpers";
+import { useCreatePoll, useUpdatePoll } from "~/app/dashboard/hooks/usePolls";
+import { confirmDialog } from "~/lib/dialog";
+import type { CreatePollRequest, Poll } from "~/types";
 
 const emptyChoice = (): ChoiceFormState => ({
   id: crypto.randomUUID(),

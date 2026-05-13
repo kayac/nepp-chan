@@ -5,13 +5,13 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 
-import type { BroadcastMessage } from "~/types";
-import { PartEditor } from "./PartEditor";
 import {
   MAX_PARTS,
   type ModalMode,
   useBroadcastForm,
-} from "./useBroadcastForm";
+} from "~/app/dashboard/hooks/useBroadcastForm";
+import type { BroadcastMessage } from "~/types";
+import { PartEditor } from "./PartEditor";
 
 type Props = {
   mode: ModalMode;

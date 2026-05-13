@@ -1,5 +1,8 @@
 import { useCallback, useRef, useState } from "react";
-
+import {
+  type PartState,
+  parseParts,
+} from "~/app/dashboard/components/broadcast/helpers";
 import {
   useCreateBroadcast,
   useSendBroadcast,
@@ -8,7 +11,6 @@ import {
 } from "~/app/dashboard/hooks/useBroadcasts";
 import { confirmDialog } from "~/lib/dialog";
 import type { BroadcastMessage, BroadcastPart } from "~/types";
-import { type PartState, parseParts } from "./helpers";
 
 export const MAX_PARTS = 5;
 
