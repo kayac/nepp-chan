@@ -43,7 +43,7 @@
     "@types/node": "^25.7.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitest/coverage-v8": "~3.2.4",
+    "@vitest/coverage-v8": "~4.1.6",
     "autoprefixer": "^10.5.0",
     "jsdom": "^29.1.1",
     "msw": "^2.14.6",
@@ -51,7 +51,7 @@
     "postcss": "^8.5.14",
     "tailwindcss": "^4.3.0",
     "typescript": "~5.9.3",
-    "vitest": "~3.2.4",
+    "vitest": "~4.1.6",
     "wrangler": "^4.90.1"
   }
 }
