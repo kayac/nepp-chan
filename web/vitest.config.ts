@@ -35,6 +35,8 @@ export default defineConfig({
         "src/components/assistant-ui/Thread.tsx",
         "src/components/assistant-ui/MarkdownText.tsx",
         "src/app/chat/AssistantProvider.tsx",
+        // barrel / registry。assistant-ui の HOC で囲んだ登録だけで分岐ロジックを持たない
+        "src/components/assistant-ui/tool-uis/index.tsx",
       ],
       thresholds: {
         branches: 46,
