@@ -2,29 +2,43 @@ import { HTTPException } from "hono/http-exception";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // vi.hoisted で vi.mock 内から参照できる変数を定義
-const { mockGet, mockSelect, mockDelete, mockDeleteFrom, mockMemoryRecall } =
-  vi.hoisted(() => {
-    const mockGet = vi.fn();
-    const mockAll = vi.fn();
-    const mockWhere = vi.fn().mockReturnValue({ get: mockGet, all: mockAll });
-    const mockFrom = vi
-      .fn()
-      .mockReturnValue({ where: mockWhere, get: mockGet });
-    const mockDeleteFrom = vi.fn().mockResolvedValue(undefined);
-    const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
-    const mockDelete = vi.fn().mockReturnValue(mockDeleteFrom);
-    const mockMemoryRecall = vi.fn();
-    return {
-      mockGet,
-      mockAll,
-      mockWhere,
-      mockFrom,
-      mockSelect,
-      mockDelete,
-      mockDeleteFrom,
-      mockMemoryRecall,
-    };
+const {
+  mockGet,
+  mockAll,
+  mockSelect,
+  mockDelete,
+  mockDeleteFrom,
+  mockMemoryRecall,
+  mockGenerate,
+} = vi.hoisted(() => {
+  const mockGet = vi.fn();
+  const mockAll = vi.fn();
+  const mockOrderBy = vi.fn().mockReturnValue({ all: mockAll });
+  const mockGroupBy = vi.fn().mockReturnValue({ all: mockAll });
+  const mockWhere = vi.fn().mockReturnValue({ get: mockGet, all: mockAll });
+  const mockFrom = vi.fn().mockReturnValue({
+    where: mockWhere,
+    get: mockGet,
+    orderBy: mockOrderBy,
+    groupBy: mockGroupBy,
   });
+  const mockDeleteFrom = vi.fn().mockResolvedValue(undefined);
+  const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
+  const mockDelete = vi.fn().mockReturnValue(mockDeleteFrom);
+  const mockMemoryRecall = vi.fn();
+  const mockGenerate = vi.fn().mockResolvedValue({});
+  return {
+    mockGet,
+    mockAll,
+    mockWhere,
+    mockFrom,
+    mockSelect,
+    mockDelete,
+    mockDeleteFrom,
+    mockMemoryRecall,
+    mockGenerate,
+  };
+});
 
 vi.mock("~/db", async (importOriginal) => {
   const actual = await importOriginal<typeof import("~/db")>();
@@ -54,7 +68,7 @@ vi.mock("~/mastra/memory", () => ({
 vi.mock("@mastra/core/mastra", () => ({
   Mastra: vi.fn().mockImplementation(() => ({
     getAgent: vi.fn().mockReturnValue({
-      generate: vi.fn().mockResolvedValue({}),
+      generate: mockGenerate,
     }),
   })),
 }));
@@ -70,6 +84,7 @@ vi.mock("~/mastra/request-context", () => ({
 vi.mock("~/repository/thread-persona-status-repository", () => ({
   threadPersonaStatusRepository: {
     findByThreadId: vi.fn(),
+    findAll: vi.fn(),
     upsert: vi.fn(),
   },
 }));
@@ -77,6 +92,7 @@ vi.mock("~/repository/thread-persona-status-repository", () => ({
 import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
 import {
   deleteAllPersonas,
+  extractAllPendingThreads,
   extractPersonaFromThreadById,
 } from "./persona-extractor";
 
@@ -209,5 +225,144 @@ describe("deleteAllPersonas", () => {
     const result = await deleteAllPersonas({} as D1Database);
 
     expect(result.count).toBe(0);
+  });
+});
+
+describe("extractPersonaFromThreadById エラー処理", () => {
+  const threadId = "thread-err";
+  const mockEnv = { DB: {} as D1Database } as CloudflareBindings;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGet.mockResolvedValue({ id: threadId, resourceId: "village" });
+    vi.mocked(threadPersonaStatusRepository.findByThreadId).mockResolvedValue(
+      null,
+    );
+    mockMemoryRecall.mockResolvedValue({
+      messages: [{ role: "user", content: "hi", createdAt: new Date() }],
+    });
+  });
+
+  it("Invalid JSON response エラーは no_persona_found としてスキップ", async () => {
+    mockGenerate.mockRejectedValueOnce(new Error("Invalid JSON response"));
+
+    const result = await extractPersonaFromThreadById(threadId, mockEnv);
+
+    expect(result.result).toMatchObject({
+      skipped: true,
+      reason: "no_persona_found",
+    });
+    expect(threadPersonaStatusRepository.upsert).not.toHaveBeenCalled();
+  });
+
+  it("その他のエラーは extraction_error としてスキップ", async () => {
+    mockGenerate.mockRejectedValueOnce(new Error("boom"));
+
+    const result = await extractPersonaFromThreadById(threadId, mockEnv);
+
+    expect(result.result).toMatchObject({
+      skipped: true,
+      reason: "extraction_error",
+    });
+  });
+});
+
+describe("extractAllPendingThreads", () => {
+  const mockEnv = { DB: {} as D1Database } as CloudflareBindings;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("スレッド 0 件なら空配列", async () => {
+    vi.mocked(threadPersonaStatusRepository.findAll).mockResolvedValue([]);
+    mockAll
+      .mockResolvedValueOnce([]) // getAllThreads
+      .mockResolvedValueOnce([]); // getMessageCountsByThread
+
+    const result = await extractAllPendingThreads(mockEnv);
+    expect(result).toEqual([]);
+  });
+
+  it("resourceId が null のスレッドは除外", async () => {
+    vi.mocked(threadPersonaStatusRepository.findAll).mockResolvedValue([]);
+    mockAll
+      .mockResolvedValueOnce([
+        { id: "t1", resourceId: null },
+        { id: "t2", resourceId: "r2" },
+      ])
+      .mockResolvedValueOnce([{ threadId: "t2", count: 0 }]);
+
+    const result = await extractAllPendingThreads(mockEnv);
+    expect(result.map((r) => r.threadId)).toEqual(["t2"]);
+  });
+
+  it("DB のメッセージ数 <= lastMessageCount なら memory.recall を呼ばずにスキップ", async () => {
+    vi.mocked(threadPersonaStatusRepository.findAll).mockResolvedValue([
+      {
+        threadId: "t1",
+        lastExtractedAt: "2030-01-01T00:00:00Z",
+        lastMessageCount: 5,
+      },
+    ]);
+    mockAll
+      .mockResolvedValueOnce([{ id: "t1", resourceId: "r1" }])
+      .mockResolvedValueOnce([{ threadId: "t1", count: 5 }]);
+
+    const result = await extractAllPendingThreads(mockEnv);
+
+    expect(result[0].result).toMatchObject({
+      skipped: true,
+      reason: "no_new_messages",
+    });
+    expect(mockMemoryRecall).not.toHaveBeenCalled();
+    expect(threadPersonaStatusRepository.upsert).not.toHaveBeenCalled();
+  });
+
+  it("メッセージ数が増えていれば extractPersonaFromThread を呼びステータスを更新", async () => {
+    vi.mocked(threadPersonaStatusRepository.findAll).mockResolvedValue([]);
+    mockAll
+      .mockResolvedValueOnce([{ id: "t1", resourceId: "r1" }])
+      .mockResolvedValueOnce([{ threadId: "t1", count: 3 }]);
+    mockMemoryRecall.mockResolvedValue({
+      messages: [
+        { role: "user", content: "u1", createdAt: new Date() },
+        { role: "assistant", content: "a1", createdAt: new Date() },
+        { role: "user", content: "u2", createdAt: new Date() },
+      ],
+    });
+
+    const result = await extractAllPendingThreads(mockEnv);
+
+    expect(result[0].result).toMatchObject({ extracted: true });
+    expect(threadPersonaStatusRepository.upsert).toHaveBeenCalledWith(
+      mockEnv.DB,
+      expect.objectContaining({
+        threadId: "t1",
+        lastMessageCount: 3,
+      }),
+    );
+  });
+
+  it("Invalid JSON エラー時も messageCount を含むスキップなら upsert する", async () => {
+    vi.mocked(threadPersonaStatusRepository.findAll).mockResolvedValue([]);
+    mockAll
+      .mockResolvedValueOnce([{ id: "t1", resourceId: "r1" }])
+      .mockResolvedValueOnce([{ threadId: "t1", count: 2 }]);
+    mockMemoryRecall.mockResolvedValue({
+      messages: [
+        { role: "user", content: "u1", createdAt: new Date() },
+        { role: "assistant", content: "a1", createdAt: new Date() },
+      ],
+    });
+    mockGenerate.mockRejectedValueOnce(new Error("Invalid JSON response"));
+
+    const result = await extractAllPendingThreads(mockEnv);
+
+    expect(result[0].result).toMatchObject({
+      skipped: true,
+      reason: "no_persona_found",
+    });
+    expect(threadPersonaStatusRepository.upsert).toHaveBeenCalled();
   });
 });
