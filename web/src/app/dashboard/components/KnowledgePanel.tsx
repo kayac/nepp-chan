@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { useDeleteFile, useUnifiedFiles } from "~/hooks/dashboard/useKnowledge";
+import {
+  useDeleteFile,
+  useUnifiedFiles,
+} from "~/app/dashboard/hooks/useKnowledge";
 import { FileList, FileViewer } from "./knowledge";
 
 /**

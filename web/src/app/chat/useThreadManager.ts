@@ -3,16 +3,16 @@ import type { UIMessage } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useAdminUser } from "~/hooks/useAdminUser";
-import { useAnonymousSession } from "~/hooks/useAnonymousSession";
+import { threadRepository } from "~/lib/api/repository";
+import { getResourceId } from "~/lib/resource";
+import type { InitialMessage } from "./AssistantProvider";
+import { useAnonymousSession } from "./hooks/useAnonymousSession";
 import {
   threadKeys,
   useCreateThread,
   useDeleteThread,
   useThreads,
-} from "~/hooks/useThreads";
-import { threadRepository } from "~/lib/api/repository";
-import { getResourceId } from "~/lib/resource";
-import type { InitialMessage } from "./AssistantProvider";
+} from "./hooks/useThreads";
 
 const storageKey = (resourceId: string) => `chat_threadId_${resourceId}`;
 

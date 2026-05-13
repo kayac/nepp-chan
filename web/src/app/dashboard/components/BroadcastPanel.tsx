@@ -12,8 +12,8 @@ import {
   useBroadcasts,
   useDeleteBroadcast,
   useSendBroadcast,
-} from "~/hooks/dashboard/useBroadcasts";
-import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
+} from "~/app/dashboard/hooks/useBroadcasts";
+import { useInfiniteScroll } from "~/app/dashboard/hooks/useInfiniteScroll";
 import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 import type { BroadcastMessage, BroadcastStatus } from "~/types";

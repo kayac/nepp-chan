@@ -5,7 +5,7 @@ import {
   useSendBroadcast,
   useUpdateBroadcast,
   useUploadBroadcastImage,
-} from "~/hooks/dashboard/useBroadcasts";
+} from "~/app/dashboard/hooks/useBroadcasts";
 import { confirmDialog } from "~/lib/dialog";
 import type { BroadcastMessage, BroadcastPart } from "~/types";
 import { type PartState, parseParts } from "./helpers";

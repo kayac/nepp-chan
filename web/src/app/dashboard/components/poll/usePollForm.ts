@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-import { useCreatePoll, useUpdatePoll } from "~/hooks/dashboard/usePolls";
+import { useCreatePoll, useUpdatePoll } from "~/app/dashboard/hooks/usePolls";
 import { confirmDialog } from "~/lib/dialog";
 import type { CreatePollRequest, Poll } from "~/types";
 import {

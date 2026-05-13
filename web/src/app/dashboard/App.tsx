@@ -12,7 +12,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { useMemo, useState } from "react";
-import { useRole } from "~/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
 
 import { BroadcastPanel } from "./components/BroadcastPanel";
@@ -23,6 +22,7 @@ import { KnowledgePanel } from "./components/KnowledgePanel";
 import { PersonaPanel } from "./components/PersonaPanel";
 import { PollPanel } from "./components/PollPanel";
 import { useAuth } from "./contexts/AuthContext";
+import { useRole } from "./hooks/useRole";
 
 type Tab =
   | "knowledge"

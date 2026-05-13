@@ -8,13 +8,13 @@ import {
 } from "@heroicons/react/24/outline";
 import { useCallback, useState } from "react";
 
+import { useInfiniteScroll } from "~/app/dashboard/hooks/useInfiniteScroll";
 import {
   useClosePoll,
   useDeletePoll,
   usePolls,
   useSendPoll,
-} from "~/hooks/dashboard/usePolls";
-import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
+} from "~/app/dashboard/hooks/usePolls";
 import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 import type { Poll, PollStatus } from "~/types";

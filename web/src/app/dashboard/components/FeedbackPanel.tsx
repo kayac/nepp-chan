@@ -11,8 +11,8 @@ import {
   useFeedbacks,
   useResolveFeedback,
   useUnresolveFeedback,
-} from "~/hooks/dashboard/useFeedback";
-import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
+} from "~/app/dashboard/hooks/useFeedback";
+import { useInfiniteScroll } from "~/app/dashboard/hooks/useInfiniteScroll";
 import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 import {
