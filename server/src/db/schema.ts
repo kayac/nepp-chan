@@ -11,9 +11,9 @@ export const emergencyReports = sqliteTable("emergency_reports", {
 });
 
 // ペルソナ（村の集合知）
+// 案 C: resource_id 廃止により個人非紐付けの抽象化集合知として運用
 export const persona = sqliteTable("persona", {
   id: text("id").primaryKey(),
-  resourceId: text("resource_id").notNull(),
   category: text("category").notNull(),
   tags: text("tags"),
   content: text("content").notNull(),

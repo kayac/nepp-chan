@@ -19,9 +19,9 @@ export const createTestDb = async () => {
     );
 
     -- 村の集合知（ペルソナ）テーブル
+    -- 案 C: resource_id 廃止により個人非紐付け
     CREATE TABLE IF NOT EXISTS persona (
       id TEXT PRIMARY KEY,
-      resource_id TEXT NOT NULL,
       category TEXT NOT NULL,
       tags TEXT,
       content TEXT NOT NULL,
