@@ -7,15 +7,15 @@ vi.mock("@ai-sdk/google", () => ({
 }));
 
 vi.mock("@mastra/core/llm", () => ({
-  ModelRouterLanguageModel: vi.fn().mockImplementation((modelId: string) => ({
-    modelId,
-  })),
+  ModelRouterLanguageModel: vi.fn(function (modelId: string) {
+    return { modelId };
+  }),
 }));
 
 vi.mock("@mastra/rag", () => ({
-  MastraAgentRelevanceScorer: vi
-    .fn()
-    .mockImplementation((id: string, model: unknown) => ({ id, model })),
+  MastraAgentRelevanceScorer: vi.fn(function (id: string, model: unknown) {
+    return { id, model };
+  }),
   rerankWithScorer: vi.fn(),
 }));
 

@@ -11,9 +11,11 @@ vi.mock("~/lib/storage", () => ({
 }));
 
 vi.mock("@mastra/memory", () => ({
-  Memory: vi.fn().mockImplementation(() => ({
-    getThreadById: mockGetThreadById,
-  })),
+  Memory: vi.fn(function () {
+    return {
+      getThreadById: mockGetThreadById,
+    };
+  }),
 }));
 
 const { requireThreadAccess } = await import("./require-thread-access");

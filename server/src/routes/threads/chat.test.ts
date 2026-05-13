@@ -39,12 +39,14 @@ vi.mock("~/mastra/request-context", () => ({
 }));
 
 vi.mock("@mastra/memory", () => ({
-  Memory: vi.fn().mockImplementation(() => ({
-    listThreads: vi.fn(),
-    createThread: vi.fn(),
-    recall: vi.fn(),
-    getThreadById: mockGetThreadById,
-  })),
+  Memory: vi.fn(function () {
+    return {
+      listThreads: vi.fn(),
+      createThread: vi.fn(),
+      recall: vi.fn(),
+      getThreadById: mockGetThreadById,
+    };
+  }),
 }));
 
 vi.mock("@mastra/core/agent", () => ({

@@ -14,10 +14,12 @@ const mockGetThreadById = vi.fn();
 const mockDeleteThread = vi.fn();
 
 vi.mock("@mastra/memory", () => ({
-  Memory: vi.fn().mockImplementation(() => ({
-    getThreadById: mockGetThreadById,
-    deleteThread: mockDeleteThread,
-  })),
+  Memory: vi.fn(function () {
+    return {
+      getThreadById: mockGetThreadById,
+      deleteThread: mockDeleteThread,
+    };
+  }),
 }));
 
 vi.mock("~/repository/feedback-repository", () => ({

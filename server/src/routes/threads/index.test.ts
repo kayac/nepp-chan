@@ -13,12 +13,14 @@ vi.mock("~/lib/storage", () => ({
 }));
 
 vi.mock("@mastra/memory", () => ({
-  Memory: vi.fn().mockImplementation(() => ({
-    listThreads: mockListThreads,
-    createThread: mockCreateThread,
-    getThreadById: mockGetThreadById,
-    recall: mockRecall,
-  })),
+  Memory: vi.fn(function () {
+    return {
+      listThreads: mockListThreads,
+      createThread: mockCreateThread,
+      getThreadById: mockGetThreadById,
+      recall: mockRecall,
+    };
+  }),
 }));
 
 vi.mock("@mastra/core/agent", () => ({
