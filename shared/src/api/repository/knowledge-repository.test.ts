@@ -160,4 +160,75 @@ describe("knowledge-repository", () => {
 
     await expect(repo.saveFile("doc.md", "x")).rejects.toBeDefined();
   });
+
+  describe("残りの失敗系", () => {
+    it("deleteAllKnowledge: 5xx は throw", async () => {
+      server.use(
+        http.delete(`${API}/admin/knowledge`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(repo.deleteAllKnowledge()).rejects.toBeDefined();
+    });
+
+    it("fetchFiles: 5xx は throw", async () => {
+      server.use(
+        http.get(`${API}/admin/knowledge/files`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(repo.fetchFiles()).rejects.toBeDefined();
+    });
+
+    it("deleteFile: 5xx は throw", async () => {
+      server.use(
+        http.delete(`${API}/admin/knowledge/files/x`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(repo.deleteFile("x")).rejects.toBeDefined();
+    });
+
+    it("uploadFile: 5xx は throw", async () => {
+      server.use(
+        http.post(`${API}/admin/knowledge/upload`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(
+        repo.uploadFile(new File(["x"], "f.md"), "f.md"),
+      ).rejects.toBeDefined();
+    });
+
+    it("convertFile: 5xx は throw", async () => {
+      server.use(
+        http.post(`${API}/admin/knowledge/convert`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(
+        repo.convertFile(new File(["x"], "f.pdf"), "f.pdf"),
+      ).rejects.toBeDefined();
+    });
+
+    it("fetchUnifiedFiles: 5xx は throw", async () => {
+      server.use(
+        http.get(`${API}/admin/knowledge/unified`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(repo.fetchUnifiedFiles()).rejects.toBeDefined();
+    });
+
+    it("reconvertFile: 5xx は throw", async () => {
+      server.use(
+        http.post(`${API}/admin/knowledge/reconvert`, () =>
+          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+        ),
+      );
+      await expect(
+        repo.reconvertFile("originals/x.pdf", "x.md"),
+      ).rejects.toBeDefined();
+    });
+  });
 });

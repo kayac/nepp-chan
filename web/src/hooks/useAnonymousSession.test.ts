@@ -53,4 +53,17 @@ describe("useAnonymousSession", () => {
     await waitFor(() => expect(result.current.isReady).toBe(true));
     expect(getSessionToken()).toBeNull();
   });
+
+  it("5xx でも !res.ok 経路を通って isReady=true", async () => {
+    server.use(
+      http.post(`${API}/auth/anonymous-session`, () =>
+        HttpResponse.json({ error: "boom" }, { status: 500 }),
+      ),
+    );
+
+    const { result } = renderHook(() => useAnonymousSession());
+
+    await waitFor(() => expect(result.current.isReady).toBe(true));
+    expect(getSessionToken()).toBeNull();
+  });
 });

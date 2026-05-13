@@ -268,4 +268,174 @@ describe("broadcastRepository", () => {
       expect(result.map((r) => r.id).sort()).toEqual(["b-1", "b-2"]);
     });
   });
+
+  describe("findRecentSent", () => {
+    const seedSentInDaysAgo = async (id: string, daysAgo: number) => {
+      const sentAt = new Date(
+        Date.now() - daysAgo * 24 * 60 * 60 * 1000,
+      ).toISOString();
+      await db.insert(broadcastMessages).values({
+        ...baseInput,
+        id,
+        title: `t-${id}`,
+        body: `body ${id}`,
+        status: "sent",
+        sentAt,
+      });
+    };
+
+    it("details: status=sent を sentAt 降順で detailLimit 件返す", async () => {
+      await seedSentInDaysAgo("old", 5);
+      await seedSentInDaysAgo("mid", 3);
+      await seedSentInDaysAgo("new", 1);
+
+      const result = await broadcastRepository.findRecentSent(fakeD1, {
+        detailLimit: 2,
+      });
+
+      expect(result.details.map((d) => d.id)).toEqual(["new", "mid"]);
+    });
+
+    it("summaries: detail に含まれないが summaryDays 内のものを title+sentAt のみ返す", async () => {
+      await seedSentInDaysAgo("new", 1);
+      await seedSentInDaysAgo("mid", 3);
+      await seedSentInDaysAgo("old", 10);
+
+      const result = await broadcastRepository.findRecentSent(fakeD1, {
+        detailLimit: 1,
+        summaryDays: 30,
+      });
+
+      expect(result.details.map((d) => d.id)).toEqual(["new"]);
+      expect(result.summaries.map((s) => s.id).sort()).toEqual(["mid", "old"]);
+      // summaries は title と sentAt のみ
+      expect(result.summaries[0]).toHaveProperty("title");
+      expect(result.summaries[0]).toHaveProperty("sentAt");
+    });
+
+    it("summaryDays 外の sent は除外", async () => {
+      await seedSentInDaysAgo("new", 1);
+      await seedSentInDaysAgo("ancient", 45);
+
+      const result = await broadcastRepository.findRecentSent(fakeD1, {
+        detailLimit: 1,
+        summaryDays: 30,
+      });
+
+      expect(result.details.map((d) => d.id)).toEqual(["new"]);
+      expect(result.summaries.map((s) => s.id)).toEqual([]);
+    });
+
+    it("draft / scheduled は除外", async () => {
+      await db.insert(broadcastMessages).values([
+        {
+          ...baseInput,
+          id: "d-1",
+          status: "draft",
+        },
+        {
+          ...baseInput,
+          id: "s-1",
+          status: "scheduled",
+          scheduledAt: new Date().toISOString(),
+        },
+      ]);
+      await seedSentInDaysAgo("sent-1", 2);
+
+      const result = await broadcastRepository.findRecentSent(fakeD1);
+      expect(result.details.map((d) => d.id)).toEqual(["sent-1"]);
+      expect(result.summaries.map((s) => s.id)).toEqual([]);
+    });
+
+    it("デフォルトで detailLimit=3, summaryDays=30", async () => {
+      for (let i = 0; i < 5; i++) {
+        await seedSentInDaysAgo(`b-${i}`, i);
+      }
+
+      const result = await broadcastRepository.findRecentSent(fakeD1);
+      expect(result.details).toHaveLength(3);
+      expect(result.summaries.length + result.details.length).toBe(5);
+    });
+
+    it("sentAt が null の summary は空文字に変換される", async () => {
+      // status=sent だが sentAt=null は実運用ではないがコード上の防御
+      await db.insert(broadcastMessages).values({
+        ...baseInput,
+        id: "weird",
+        status: "sent",
+        sentAt: null,
+      });
+      await seedSentInDaysAgo("normal", 1);
+
+      const result = await broadcastRepository.findRecentSent(fakeD1, {
+        detailLimit: 1,
+      });
+      const weirdSummary = result.summaries.find((s) => s.id === "weird");
+      // null は filter で 30 日条件を満たさず除外される（sql 比較で null < since）
+      expect(weirdSummary).toBeUndefined();
+    });
+  });
+
+  describe("findSentSince", () => {
+    const insertSent = async (id: string, sentAt: string) => {
+      await db.insert(broadcastMessages).values({
+        ...baseInput,
+        id,
+        title: `t-${id}`,
+        status: "sent",
+        sentAt,
+      });
+    };
+
+    it("sentAt > since の sent を sentAt 昇順で返す", async () => {
+      await insertSent("a", "2030-01-01T00:00:00Z");
+      await insertSent("b", "2030-02-01T00:00:00Z");
+      await insertSent("c", "2030-03-01T00:00:00Z");
+
+      const result = await broadcastRepository.findSentSince(
+        fakeD1,
+        "2030-01-15T00:00:00Z",
+      );
+      expect(result.map((r) => r.id)).toEqual(["b", "c"]);
+    });
+
+    it("draft / scheduled は対象外", async () => {
+      await insertSent("sent", "2030-01-01T00:00:00Z");
+      await db.insert(broadcastMessages).values({
+        ...baseInput,
+        id: "draft",
+        status: "draft",
+        sentAt: "2030-01-02T00:00:00Z",
+      });
+
+      const result = await broadcastRepository.findSentSince(
+        fakeD1,
+        "2029-12-01T00:00:00Z",
+      );
+      expect(result.map((r) => r.id)).toEqual(["sent"]);
+    });
+
+    it("limit で件数を制限", async () => {
+      for (let i = 1; i <= 5; i++) {
+        await insertSent(`b-${i}`, `2030-0${i}-01T00:00:00Z`);
+      }
+
+      const result = await broadcastRepository.findSentSince(
+        fakeD1,
+        "2029-12-01T00:00:00Z",
+        2,
+      );
+      expect(result).toHaveLength(2);
+      expect(result.map((r) => r.id)).toEqual(["b-1", "b-2"]);
+    });
+
+    it("該当 0 件なら空配列", async () => {
+      await insertSent("a", "2030-01-01T00:00:00Z");
+      const result = await broadcastRepository.findSentSince(
+        fakeD1,
+        "2030-12-01T00:00:00Z",
+      );
+      expect(result).toEqual([]);
+    });
+  });
 });

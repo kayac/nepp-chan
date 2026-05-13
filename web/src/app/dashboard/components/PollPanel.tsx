@@ -1,32 +1,25 @@
 import {
   ChartBarIcon,
-  InformationCircleIcon,
   LockClosedIcon,
   PaperAirplaneIcon,
   PencilSquareIcon,
   PlusIcon,
   TrashIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useCallback, useState } from "react";
 
 import {
   useClosePoll,
-  useCreatePoll,
   useDeletePoll,
-  usePollResults,
   usePolls,
   useSendPoll,
-  useUpdatePoll,
-} from "~/hooks/useDashboard";
+} from "~/hooks/dashboard/usePolls";
 import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
+import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
-import type { CreatePollRequest, Poll, PollStatus } from "~/types";
-import {
-  type ChoiceFormState,
-  collectValidChoices,
-  isPollFormValid,
-} from "./poll-helpers";
+import type { Poll, PollStatus } from "~/types";
+import { PollForm } from "./poll/PollForm";
+import { ResultsModal } from "./poll/ResultsModal";
 
 const STATUS_LABELS: Record<PollStatus, string> = {
   draft: "下書き",
@@ -41,269 +34,6 @@ const STATUS_STYLES: Record<PollStatus, string> = {
   sent: "bg-green-100 text-green-700",
   closed: "bg-stone-200 text-stone-500",
 };
-
-const emptyChoice = (): ChoiceFormState => ({
-  id: crypto.randomUUID(),
-  value: "",
-});
-
-// --- 投票作成／編集フォーム（TypeSelector2 レイアウト） ---
-
-const PollForm = ({ poll, onClose }: { poll?: Poll; onClose: () => void }) => {
-  const [title, setTitle] = useState(poll?.title ?? "");
-  const [choices, setChoices] = useState<ChoiceFormState[]>(() => {
-    if (poll?.choices?.length) {
-      return poll.choices.map((c) => ({ id: crypto.randomUUID(), value: c }));
-    }
-    return [emptyChoice(), emptyChoice()];
-  });
-  const [followUpPrompt, setFollowUpPrompt] = useState(
-    poll?.followUpPrompt ?? "",
-  );
-
-  const createMutation = useCreatePoll();
-  const updateMutation = useUpdatePoll();
-  const isSubmitting = createMutation.isPending || updateMutation.isPending;
-  const isEditMode = !!poll;
-
-  const addChoice = () => setChoices([...choices, emptyChoice()]);
-  const removeChoice = (id: string) =>
-    setChoices(choices.filter((c) => c.id !== id));
-  const updateChoice = (id: string, value: string) =>
-    setChoices(choices.map((c) => (c.id === id ? { ...c, value } : c)));
-
-  const validChoices = collectValidChoices(choices);
-  const isValid = isPollFormValid(title, validChoices);
-
-  const handleSubmit = async (sendNow: boolean) => {
-    if (sendNow && !isEditMode) {
-      if (!confirm("この投票をLINE全フォロワーに即時配信しますか？")) return;
-    }
-    const payload: CreatePollRequest = {
-      title: title.trim(),
-      choices: validChoices,
-      followUpPrompt: followUpPrompt.trim() || undefined,
-      ...(!isEditMode && sendNow && { sendNow: true }),
-    };
-    if (isEditMode) {
-      await updateMutation.mutateAsync({ id: poll.id, data: payload });
-    } else {
-      await createMutation.mutateAsync(payload);
-    }
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 bg-stone-900/30 backdrop-blur-[2px] z-50 flex items-start justify-center pt-8 overflow-y-auto">
-      <div className="bg-stone-50 rounded-xl shadow-xl w-full max-w-xl mx-4 mb-8 overflow-hidden">
-        {/* ヘッダー */}
-        <div className="flex items-start justify-between px-8 pt-8 pb-4">
-          <div>
-            <h3 className="text-2xl font-semibold text-stone-800">
-              {isEditMode ? "投票を編集" : "新規作成"}
-            </h3>
-            <p className="text-sm text-stone-500 mt-1">何を聞きますか？</p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 hover:bg-stone-100 rounded-lg -mr-2"
-          >
-            <XMarkIcon className="w-5 h-5 text-stone-500" />
-          </button>
-        </div>
-
-        {/* 本体カード */}
-        <div className="px-8 pb-4">
-          <div className="bg-white border border-stone-200 rounded-lg p-5 space-y-6">
-            {/* お題 */}
-            <div className="space-y-1.5">
-              <label
-                htmlFor="poll-title"
-                className="block text-sm font-medium text-stone-600"
-              >
-                お題
-              </label>
-              <input
-                id="poll-title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="みんなに聞きたいことを入力"
-                className="w-full px-3 py-2.5 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
-            </div>
-
-            {/* 選択肢 */}
-            <div className="space-y-2">
-              <span className="block text-sm font-medium text-stone-600">
-                あなたならどれ？
-              </span>
-              {choices.map((choice, i) => (
-                <div key={choice.id} className="flex items-center gap-2">
-                  <span className="text-sm text-stone-400 w-5 shrink-0">
-                    {i + 1}.
-                  </span>
-                  <input
-                    type="text"
-                    value={choice.value}
-                    onChange={(e) => updateChoice(choice.id, e.target.value)}
-                    placeholder="選択肢を入力"
-                    className="flex-1 px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                  {choices.length > 2 && (
-                    <button
-                      type="button"
-                      onClick={() => removeChoice(choice.id)}
-                      className="p-1 hover:bg-red-50 rounded text-stone-400 hover:text-red-500"
-                      aria-label="選択肢を削除"
-                    >
-                      <XMarkIcon className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={addChoice}
-                className="flex items-center gap-1 text-sm text-teal-700 hover:text-teal-800 pt-1"
-              >
-                <PlusIcon className="w-4 h-4" />
-                選択肢を追加
-              </button>
-            </div>
-
-            {/* ねっぷちゃんに聞いてほしいこと（任意） */}
-            <div className="space-y-1.5">
-              <div className="flex items-baseline gap-2">
-                <label
-                  htmlFor="poll-followup"
-                  className="block text-sm font-medium text-stone-600"
-                >
-                  ねっぷちゃんに聞いてほしいこと
-                </label>
-                <span className="text-xs text-stone-400">（任意）</span>
-              </div>
-              <p className="text-xs text-stone-500">
-                回答後にねっぷちゃんが会話を広げるヒントになります
-              </p>
-              <textarea
-                id="poll-followup"
-                value={followUpPrompt}
-                onChange={(e) => setFollowUpPrompt(e.target.value)}
-                placeholder="例：なぜその選択肢を選んだか聞いてみて"
-                rows={3}
-                className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* フッター */}
-        <div className="px-8 py-4 border-t border-stone-200 bg-white">
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => handleSubmit(false)}
-              disabled={!isValid || isSubmitting}
-              className="flex-1 px-4 py-2.5 text-sm font-medium text-stone-700 border border-stone-300 rounded-lg hover:bg-stone-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              下書き保存
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSubmit(true)}
-              disabled={!isValid || isSubmitting}
-              className="flex-1 px-5 py-2.5 text-sm font-medium text-white bg-teal-700 hover:bg-teal-800 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
-            >
-              <PaperAirplaneIcon className="w-4 h-4" />
-              {isSubmitting ? "処理中..." : isEditMode ? "保存" : "投票を開始"}
-            </button>
-          </div>
-        </div>
-
-        {/* 注記 */}
-        <div className="px-8 pb-6 pt-2">
-          <div className="flex items-start gap-2 p-3 bg-stone-100/70 rounded-lg">
-            <InformationCircleIcon className="w-4 h-4 text-stone-400 mt-0.5 shrink-0" />
-            <p className="text-xs text-stone-500 leading-relaxed">
-              投票の結果はみんなに共有されます。
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- 結果モーダル ---
-
-const ResultsModal = ({
-  pollId,
-  onClose,
-}: {
-  pollId: string;
-  onClose: () => void;
-}) => {
-  const { data: results, isLoading } = usePollResults(pollId);
-
-  return (
-    <div className="fixed inset-0 bg-stone-900/30 backdrop-blur-[2px] z-50 flex items-start justify-center pt-8 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 mb-8">
-        <div className="flex items-center justify-between p-5 border-b border-stone-200">
-          <h3 className="text-lg font-semibold text-stone-800">投票結果</h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 hover:bg-stone-100 rounded-lg"
-          >
-            <XMarkIcon className="w-5 h-5 text-stone-500" />
-          </button>
-        </div>
-        <div className="p-5 space-y-5">
-          {isLoading && (
-            <p className="text-sm text-stone-500 text-center py-8">
-              読み込み中...
-            </p>
-          )}
-
-          {results && (
-            <>
-              <div>
-                <h4 className="text-base font-medium text-stone-800">
-                  {results.title}
-                </h4>
-                <p className="text-sm text-stone-500 mt-1">
-                  {results.totalSubmissions}人が参加
-                </p>
-              </div>
-              <div className="space-y-3">
-                {results.choiceResults.map((cr) => (
-                  <div key={cr.choice} className="space-y-1">
-                    <div className="flex items-center justify-between text-sm text-stone-600">
-                      <span>{cr.choice}</span>
-                      <span className="tabular-nums">
-                        {cr.count}票（{cr.percentage}%）
-                      </span>
-                    </div>
-                    <div className="h-5 bg-stone-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-teal-500 rounded-full transition-all"
-                        style={{ width: `${cr.percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- メインパネル ---
 
 type ModalState =
   | { type: "create" }
@@ -334,7 +64,7 @@ export const PollPanel = () => {
 
   const handleSend = useCallback(
     async (id: string) => {
-      if (!confirm("LINEに配信しますか？")) return;
+      if (!confirmDialog("LINEに配信しますか？")) return;
       await sendMutation.mutateAsync(id);
     },
     [sendMutation],
@@ -342,7 +72,7 @@ export const PollPanel = () => {
 
   const handleClose = useCallback(
     async (id: string) => {
-      if (!confirm("回答受付を締め切りますか？")) return;
+      if (!confirmDialog("回答受付を締め切りますか？")) return;
       await closeMutation.mutateAsync(id);
     },
     [closeMutation],
@@ -350,7 +80,7 @@ export const PollPanel = () => {
 
   const handleDelete = useCallback(
     async (id: string) => {
-      if (!confirm("削除しますか？")) return;
+      if (!confirmDialog("削除しますか？")) return;
       await deleteMutation.mutateAsync(id);
     },
     [deleteMutation],

@@ -1,5 +1,5 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import { useKnowledgeFile } from "~/hooks/useDashboard";
+import { useKnowledgeFile } from "~/hooks/dashboard/useKnowledge";
 
 type Props = {
   fileKey: string;

@@ -1,282 +1,203 @@
-import { eq } from "drizzle-orm";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { adminUsers } from "~/db";
 import { createTestDb, type TestDb } from "../test-helpers/test-db";
 
-describe("adminUsers Drizzle クエリ", () => {
-  let db: TestDb;
+const { testDbHolder } = vi.hoisted(() => ({
+  testDbHolder: { db: null as TestDb | null },
+}));
 
+vi.mock("~/db", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("~/db")>();
+  return {
+    ...actual,
+    createDb: () => testDbHolder.db,
+  };
+});
+
+const { adminUserRepository } = await import("./admin-user-repository");
+
+const fakeD1 = {} as D1Database;
+
+describe("adminUserRepository", () => {
   beforeEach(async () => {
-    db = await createTestDb();
+    testDbHolder.db = await createTestDb();
   });
 
-  describe("insert", () => {
-    it("新しい管理者ユーザーを作成できる", async () => {
-      await db.insert(adminUsers).values({
-        id: "user-1",
+  describe("create", () => {
+    it("入力した id を返し、レコードを挿入する", async () => {
+      const id = await adminUserRepository.create(fakeD1, {
+        id: "u-1",
         username: "admin01",
         name: "管理者",
         role: "admin",
         passwordHash: "100000:salt:hash",
-        createdAt: "2024-01-01T00:00:00Z",
+        createdAt: "2030-01-01T00:00:00Z",
       });
+      expect(id).toBe("u-1");
 
-      const saved = await db
-        .select()
-        .from(adminUsers)
-        .where(eq(adminUsers.id, "user-1"))
-        .get();
-
-      expect(saved).not.toBeNull();
-      expect(saved?.username).toBe("admin01");
-      expect(saved?.name).toBe("管理者");
-      expect(saved?.role).toBe("admin");
-    });
-
-    it("名前なしでも作成できる", async () => {
-      await db.insert(adminUsers).values({
-        id: "user-2",
-        username: "admin02",
+      const found = await adminUserRepository.findById(fakeD1, "u-1");
+      expect(found).toMatchObject({
+        id: "u-1",
+        username: "admin01",
+        name: "管理者",
         role: "admin",
-        passwordHash: "100000:salt:hash",
-        createdAt: "2024-01-01T00:00:00Z",
       });
-
-      const saved = await db
-        .select()
-        .from(adminUsers)
-        .where(eq(adminUsers.id, "user-2"))
-        .get();
-
-      expect(saved?.name).toBeNull();
-      expect(saved?.username).toBe("admin02");
     });
 
-    it("super_admin ロールで作成できる", async () => {
-      await db.insert(adminUsers).values({
-        id: "user-3",
-        username: "superadmin",
-        role: "super_admin",
-        passwordHash: "100000:salt:hash",
-        createdAt: "2024-01-01T00:00:00Z",
+    it("name 未指定なら null", async () => {
+      await adminUserRepository.create(fakeD1, {
+        id: "u-2",
+        username: "u2",
+        passwordHash: "h",
+        createdAt: "2030-01-01T00:00:00Z",
       });
-
-      const saved = await db
-        .select()
-        .from(adminUsers)
-        .where(eq(adminUsers.id, "user-3"))
-        .get();
-
-      expect(saved?.role).toBe("super_admin");
+      const found = await adminUserRepository.findById(fakeD1, "u-2");
+      expect(found?.name).toBeNull();
     });
 
-    it("同じユーザー名で重複作成するとエラーになる", async () => {
-      await db.insert(adminUsers).values({
-        id: "user-dup-1",
-        username: "duplicate",
-        role: "admin",
-        passwordHash: "100000:salt:hash",
-        createdAt: "2024-01-01T00:00:00Z",
+    it("role 未指定なら admin がデフォルト", async () => {
+      await adminUserRepository.create(fakeD1, {
+        id: "u-3",
+        username: "u3",
+        passwordHash: "h",
+        createdAt: "2030-01-01T00:00:00Z",
       });
-
-      await expect(
-        db.insert(adminUsers).values({
-          id: "user-dup-2",
-          username: "duplicate",
-          role: "admin",
-          passwordHash: "100000:salt:hash",
-          createdAt: "2024-01-02T00:00:00Z",
-        }),
-      ).rejects.toThrow();
+      const found = await adminUserRepository.findById(fakeD1, "u-3");
+      expect(found?.role).toBe("admin");
     });
   });
 
-  describe("select by id", () => {
-    beforeEach(async () => {
-      await db.insert(adminUsers).values({
-        id: "find-test",
-        username: "finduser",
-        name: "検索テスト",
-        role: "admin",
-        passwordHash: "100000:salt:hash",
-        createdAt: "2024-01-01T00:00:00Z",
-      });
-    });
-
-    it("IDでユーザーを取得できる", async () => {
-      const result = await db
-        .select()
-        .from(adminUsers)
-        .where(eq(adminUsers.id, "find-test"))
-        .get();
-
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("find-test");
-      expect(result?.username).toBe("finduser");
-    });
-
-    it("存在しないIDの場合はundefinedを返す", async () => {
-      const result = await db
-        .select()
-        .from(adminUsers)
-        .where(eq(adminUsers.id, "non-existent"))
-        .get();
-
-      expect(result).toBeUndefined();
+  describe("findById", () => {
+    it("存在しなければ null", async () => {
+      expect(await adminUserRepository.findById(fakeD1, "ghost")).toBeNull();
     });
   });
 
-  describe("select by username", () => {
+  describe("findByUsername", () => {
     beforeEach(async () => {
-      await db.insert(adminUsers).values({
-        id: "username-test",
-        username: "usernametest",
-        name: "ユーザー名テスト",
-        role: "admin",
-        passwordHash: "100000:salt:hash",
-        createdAt: "2024-01-01T00:00:00Z",
+      await adminUserRepository.create(fakeD1, {
+        id: "u-1",
+        username: "alice",
+        passwordHash: "h",
+        createdAt: "2030-01-01T00:00:00Z",
       });
     });
 
-    it("ユーザー名でユーザーを取得できる", async () => {
-      const result = await db
-        .select()
-        .from(adminUsers)
-        .where(eq(adminUsers.username, "usernametest"))
-        .get();
-
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("username-test");
+    it("そのままの username で取得", async () => {
+      const result = await adminUserRepository.findByUsername(fakeD1, "alice");
+      expect(result?.id).toBe("u-1");
     });
 
-    it("存在しないユーザー名の場合はundefinedを返す", async () => {
-      const result = await db
-        .select()
-        .from(adminUsers)
-        .where(eq(adminUsers.username, "nonexistent"))
-        .get();
+    it("大文字混在は lowercase に正規化されて取得できる", async () => {
+      const result = await adminUserRepository.findByUsername(fakeD1, "ALICE");
+      expect(result?.id).toBe("u-1");
+    });
 
-      expect(result).toBeUndefined();
+    it("前後の空白は trim される", async () => {
+      const result = await adminUserRepository.findByUsername(
+        fakeD1,
+        "  alice  ",
+      );
+      expect(result?.id).toBe("u-1");
+    });
+
+    it("存在しない username は null", async () => {
+      expect(
+        await adminUserRepository.findByUsername(fakeD1, "bob"),
+      ).toBeNull();
+    });
+  });
+
+  describe("list", () => {
+    it("全件を返す", async () => {
+      await adminUserRepository.create(fakeD1, {
+        id: "u-1",
+        username: "u1",
+        passwordHash: "h",
+        createdAt: "2030-01-01T00:00:00Z",
+      });
+      await adminUserRepository.create(fakeD1, {
+        id: "u-2",
+        username: "u2",
+        passwordHash: "h",
+        createdAt: "2030-01-02T00:00:00Z",
+      });
+
+      const result = await adminUserRepository.list(fakeD1);
+      expect(result).toHaveLength(2);
+    });
+
+    it("0 件なら空配列", async () => {
+      expect(await adminUserRepository.list(fakeD1)).toEqual([]);
     });
   });
 
   describe("update", () => {
     beforeEach(async () => {
-      await db.insert(adminUsers).values({
-        id: "update-test",
-        username: "updateuser",
-        name: "元の名前",
-        role: "admin",
-        passwordHash: "100000:salt:hash",
-        createdAt: "2024-01-01T00:00:00Z",
+      await adminUserRepository.create(fakeD1, {
+        id: "u-1",
+        username: "u1",
+        name: "old",
+        role: "staff",
+        passwordHash: "old-hash",
+        createdAt: "2030-01-01T00:00:00Z",
       });
     });
 
-    it("名前を更新できる", async () => {
-      await db
-        .update(adminUsers)
-        .set({
-          name: "新しい名前",
-          updatedAt: "2024-01-02T00:00:00Z",
-        })
-        .where(eq(adminUsers.id, "update-test"));
-
-      const updated = await db
-        .select()
-        .from(adminUsers)
-        .where(eq(adminUsers.id, "update-test"))
-        .get();
-
-      expect(updated?.name).toBe("新しい名前");
-      expect(updated?.updatedAt).toBe("2024-01-02T00:00:00Z");
+    it("name のみ更新", async () => {
+      await adminUserRepository.update(fakeD1, "u-1", { name: "new" });
+      const found = await adminUserRepository.findById(fakeD1, "u-1");
+      expect(found?.name).toBe("new");
+      expect(found?.role).toBe("staff");
     });
 
-    it("ロールを更新できる", async () => {
-      await db
-        .update(adminUsers)
-        .set({
-          role: "super_admin",
-          updatedAt: "2024-01-02T00:00:00Z",
-        })
-        .where(eq(adminUsers.id, "update-test"));
+    it("role と passwordHash を更新", async () => {
+      await adminUserRepository.update(fakeD1, "u-1", {
+        role: "admin",
+        passwordHash: "new-hash",
+      });
+      const found = await adminUserRepository.findById(fakeD1, "u-1");
+      expect(found?.role).toBe("admin");
+      expect(found?.passwordHash).toBe("new-hash");
+    });
 
-      const updated = await db
-        .select()
-        .from(adminUsers)
-        .where(eq(adminUsers.id, "update-test"))
-        .get();
+    it("updatedAt が更新される", async () => {
+      const before = Date.now();
+      await adminUserRepository.update(fakeD1, "u-1", { name: "x" });
+      const after = Date.now();
 
-      expect(updated?.role).toBe("super_admin");
+      const found = await adminUserRepository.findById(fakeD1, "u-1");
+      const ms = new Date(found!.updatedAt!).getTime();
+      expect(ms).toBeGreaterThanOrEqual(before);
+      expect(ms).toBeLessThanOrEqual(after);
     });
   });
 
   describe("delete", () => {
-    beforeEach(async () => {
-      await db.insert(adminUsers).values({
-        id: "delete-test",
-        username: "deleteuser",
-        role: "admin",
-        passwordHash: "100000:salt:hash",
-        createdAt: "2024-01-01T00:00:00Z",
+    it("該当 id のみ削除", async () => {
+      await adminUserRepository.create(fakeD1, {
+        id: "u-1",
+        username: "u1",
+        passwordHash: "h",
+        createdAt: "2030-01-01T00:00:00Z",
       });
+      await adminUserRepository.create(fakeD1, {
+        id: "u-2",
+        username: "u2",
+        passwordHash: "h",
+        createdAt: "2030-01-01T00:00:00Z",
+      });
+
+      await adminUserRepository.delete(fakeD1, "u-1");
+
+      expect(await adminUserRepository.findById(fakeD1, "u-1")).toBeNull();
+      expect(await adminUserRepository.findById(fakeD1, "u-2")).not.toBeNull();
     });
 
-    it("ユーザーを削除できる", async () => {
-      await db.delete(adminUsers).where(eq(adminUsers.id, "delete-test"));
-
-      const deleted = await db
-        .select()
-        .from(adminUsers)
-        .where(eq(adminUsers.id, "delete-test"))
-        .get();
-
-      expect(deleted).toBeUndefined();
-    });
-  });
-
-  describe("list", () => {
-    beforeEach(async () => {
-      await db.insert(adminUsers).values([
-        {
-          id: "list-1",
-          username: "listuser1",
-          role: "admin",
-          passwordHash: "100000:salt:hash",
-          createdAt: "2024-01-01T00:00:00Z",
-        },
-        {
-          id: "list-2",
-          username: "listuser2",
-          role: "super_admin",
-          passwordHash: "100000:salt:hash",
-          createdAt: "2024-01-02T00:00:00Z",
-        },
-        {
-          id: "list-3",
-          username: "listuser3",
-          role: "admin",
-          passwordHash: "100000:salt:hash",
-          createdAt: "2024-01-03T00:00:00Z",
-        },
-      ]);
-    });
-
-    it("全てのユーザーを取得できる", async () => {
-      const result = await db.select().from(adminUsers).all();
-
-      expect(result).toHaveLength(3);
-    });
-
-    it("ロールでフィルターできる", async () => {
-      const result = await db
-        .select()
-        .from(adminUsers)
-        .where(eq(adminUsers.role, "admin"))
-        .all();
-
-      expect(result).toHaveLength(2);
-      expect(result.every((u) => u.role === "admin")).toBe(true);
+    it("存在しない id でも throw しない", async () => {
+      await expect(
+        adminUserRepository.delete(fakeD1, "ghost"),
+      ).resolves.toBeUndefined();
     });
   });
 });

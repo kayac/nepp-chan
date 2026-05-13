@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+
 import { RootLayout } from "~/components/RootLayout";
 import { pollRepository } from "~/lib/api/repository";
+import { getCurrentSearchParams } from "~/lib/redirect";
 import { QueryProvider } from "~/providers/QueryProvider";
-import type { PollChoiceResult } from "~/types";
+import { isLeadingChoice, maxChoiceCount } from "./aggregator";
+import { ChoiceBar } from "./components/ChoiceBar";
 
 const usePollResultsPublic = (id: string | null) =>
   useQuery({
@@ -10,33 +13,6 @@ const usePollResultsPublic = (id: string | null) =>
     queryFn: () => pollRepository.fetchPollResults(id as string),
     enabled: !!id,
   });
-
-const ChoiceBar = ({
-  choice,
-  count,
-  percentage,
-  isLeading,
-}: PollChoiceResult & { isLeading: boolean }) => (
-  <div className="space-y-1.5">
-    <div className="flex items-baseline justify-between gap-2">
-      <span className="text-sm font-medium text-stone-700 truncate">
-        {choice}
-      </span>
-      <span className="text-sm tabular-nums shrink-0 text-stone-500">
-        {count}票
-      </span>
-    </div>
-    <div className="h-9 bg-stone-100 rounded-lg overflow-hidden relative">
-      <div
-        className={`h-full rounded-lg ${isLeading ? "bg-teal-500" : "bg-teal-300"}`}
-        style={{ width: `${Math.max(percentage, 2)}%` }}
-      />
-      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-stone-600 tabular-nums">
-        {percentage}%
-      </span>
-    </div>
-  </div>
-);
 
 const PollContent = ({ id }: { id: string }) => {
   const { data, isLoading, isError } = usePollResultsPublic(id);
@@ -65,7 +41,7 @@ const PollContent = ({ id }: { id: string }) => {
     );
   }
 
-  const maxCount = Math.max(...data.choiceResults.map((cr) => cr.count), 0);
+  const maxCount = maxChoiceCount(data.choiceResults);
 
   return (
     <div className="min-h-dvh bg-stone-50">
@@ -89,7 +65,7 @@ const PollContent = ({ id }: { id: string }) => {
               <ChoiceBar
                 key={cr.choice}
                 {...cr}
-                isLeading={cr.count === maxCount && maxCount > 0}
+                isLeading={isLeadingChoice(cr, maxCount)}
               />
             ))}
           </div>
@@ -100,7 +76,7 @@ const PollContent = ({ id }: { id: string }) => {
 };
 
 const PollResultsInner = () => {
-  const id = new URLSearchParams(window.location.search).get("id");
+  const id = getCurrentSearchParams().get("id");
 
   if (!id) {
     return (

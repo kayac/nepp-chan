@@ -67,4 +67,32 @@ describe("adminEmergencyTool.execute", () => {
     expect(result.success).toBe(false);
     expect(result.error).toBe("NOT_AUTHORIZED");
   });
+
+  it("repository が throw したら success=false で error メッセージを返す", async () => {
+    vi.mocked(emergencyRepository.findRecent).mockRejectedValueOnce(
+      new Error("db down"),
+    );
+
+    const result = await callTool(
+      adminEmergencyTool,
+      { days: 30, limit: 50 },
+      adminValues,
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("db down");
+    expect(result.reports).toEqual([]);
+  });
+
+  it("非 Error の throw は Unknown error として扱う", async () => {
+    vi.mocked(emergencyRepository.findRecent).mockRejectedValueOnce("boom");
+
+    const result = await callTool(
+      adminEmergencyTool,
+      { days: 30, limit: 50 },
+      adminValues,
+    );
+
+    expect(result.error).toBe("Unknown error");
+  });
 });

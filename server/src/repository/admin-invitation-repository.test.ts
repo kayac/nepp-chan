@@ -1,431 +1,302 @@
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { adminInvitations } from "~/db";
 import { createTestDb, type TestDb } from "../test-helpers/test-db";
 
-/**
- * admin_invitations テーブルに対する Drizzle ORM クエリの統合テスト
- */
-describe("adminInvitations Drizzle クエリ", () => {
-  let db: TestDb;
+const { testDbHolder } = vi.hoisted(() => ({
+  testDbHolder: { db: null as TestDb | null },
+}));
 
-  const futureDate = new Date(
-    Date.now() + 7 * 24 * 60 * 60 * 1000,
-  ).toISOString();
-  const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+vi.mock("~/db", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("~/db")>();
+  return {
+    ...actual,
+    createDb: () => testDbHolder.db,
+  };
+});
 
+const { adminInvitationRepository } = await import(
+  "./admin-invitation-repository"
+);
+
+const fakeD1 = {} as D1Database;
+
+const futureDate = (offsetMs = 7 * 24 * 60 * 60 * 1000) =>
+  new Date(Date.now() + offsetMs).toISOString();
+const pastDate = (offsetMs = 24 * 60 * 60 * 1000) =>
+  new Date(Date.now() - offsetMs).toISOString();
+
+const baseInput = (
+  overrides: Partial<
+    Parameters<typeof adminInvitationRepository.create>[1]
+  > = {},
+) => ({
+  id: overrides.id ?? "inv-1",
+  username: overrides.username ?? "user@example.com",
+  token: overrides.token ?? "tok-abc",
+  invitedBy: overrides.invitedBy ?? "system",
+  role: overrides.role ?? "admin",
+  expiresAt: overrides.expiresAt ?? futureDate(),
+  usedAt: overrides.usedAt,
+  createdAt: overrides.createdAt ?? new Date().toISOString(),
+});
+
+describe("adminInvitationRepository", () => {
   beforeEach(async () => {
-    db = await createTestDb();
+    testDbHolder.db = await createTestDb();
   });
 
-  describe("insert", () => {
-    it("新しい招待を作成できる", async () => {
-      await db.insert(adminInvitations).values({
+  describe("create", () => {
+    it("入力された id を返し、レコードを挿入する", async () => {
+      const id = await adminInvitationRepository.create(fakeD1, baseInput());
+      expect(id).toBe("inv-1");
+
+      const found = await adminInvitationRepository.findById(fakeD1, "inv-1");
+      expect(found).toMatchObject({
         id: "inv-1",
-        username: "invite@example.com",
-        token: "token-abc123",
-        invitedBy: "system",
+        username: "user@example.com",
+        token: "tok-abc",
         role: "admin",
-        expiresAt: futureDate,
-        createdAt: "2024-01-01T00:00:00Z",
       });
-
-      const saved = await db
-        .select()
-        .from(adminInvitations)
-        .where(eq(adminInvitations.id, "inv-1"))
-        .get();
-
-      expect(saved).not.toBeNull();
-      expect(saved?.username).toBe("invite@example.com");
-      expect(saved?.token).toBe("token-abc123");
-      expect(saved?.invitedBy).toBe("system");
-      expect(saved?.role).toBe("admin");
-      expect(saved?.usedAt).toBeNull();
     });
 
-    it("super_admin ロールで招待を作成できる", async () => {
-      await db.insert(adminInvitations).values({
-        id: "inv-super",
-        username: "super@example.com",
-        token: "token-super",
-        invitedBy: "admin-1",
-        role: "super_admin",
-        expiresAt: futureDate,
-        createdAt: "2024-01-01T00:00:00Z",
-      });
-
-      const saved = await db
-        .select()
-        .from(adminInvitations)
-        .where(eq(adminInvitations.id, "inv-super"))
-        .get();
-
-      expect(saved?.role).toBe("super_admin");
+    it("role 未指定なら admin", async () => {
+      await adminInvitationRepository.create(
+        fakeD1,
+        baseInput({ id: "inv-2", role: undefined }),
+      );
+      const found = await adminInvitationRepository.findById(fakeD1, "inv-2");
+      expect(found?.role).toBe("admin");
     });
 
-    it("同じメールアドレスで重複作成するとエラーになる", async () => {
-      await db.insert(adminInvitations).values({
-        id: "inv-dup-1",
-        username: "duplicate@example.com",
-        token: "token-1",
-        invitedBy: "system",
-        role: "admin",
-        expiresAt: futureDate,
-        createdAt: "2024-01-01T00:00:00Z",
-      });
-
-      await expect(
-        db.insert(adminInvitations).values({
-          id: "inv-dup-2",
-          username: "duplicate@example.com",
-          token: "token-2",
-          invitedBy: "system",
-          role: "admin",
-          expiresAt: futureDate,
-          createdAt: "2024-01-02T00:00:00Z",
-        }),
-      ).rejects.toThrow();
-    });
-
-    it("同じトークンで重複作成するとエラーになる", async () => {
-      await db.insert(adminInvitations).values({
-        id: "inv-tok-1",
-        username: "token1@example.com",
-        token: "same-token",
-        invitedBy: "system",
-        role: "admin",
-        expiresAt: futureDate,
-        createdAt: "2024-01-01T00:00:00Z",
-      });
-
-      await expect(
-        db.insert(adminInvitations).values({
-          id: "inv-tok-2",
-          username: "token2@example.com",
-          token: "same-token",
-          invitedBy: "system",
-          role: "admin",
-          expiresAt: futureDate,
-          createdAt: "2024-01-02T00:00:00Z",
-        }),
-      ).rejects.toThrow();
+    it("usedAt 未指定なら null", async () => {
+      await adminInvitationRepository.create(fakeD1, baseInput());
+      const found = await adminInvitationRepository.findById(fakeD1, "inv-1");
+      expect(found?.usedAt).toBeNull();
     });
   });
 
-  describe("select by token", () => {
+  describe("findById / findByToken / findByUsername", () => {
     beforeEach(async () => {
-      await db.insert(adminInvitations).values({
-        id: "find-by-token",
-        username: "token-search@example.com",
-        token: "unique-token",
-        invitedBy: "system",
-        role: "admin",
-        expiresAt: futureDate,
-        createdAt: "2024-01-01T00:00:00Z",
-      });
+      await adminInvitationRepository.create(
+        fakeD1,
+        baseInput({ id: "i1", username: "u1", token: "t1" }),
+      );
     });
 
-    it("トークンで招待を取得できる", async () => {
-      const result = await db
-        .select()
-        .from(adminInvitations)
-        .where(eq(adminInvitations.token, "unique-token"))
-        .get();
-
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("find-by-token");
+    it("存在する id で取得", async () => {
+      const result = await adminInvitationRepository.findById(fakeD1, "i1");
+      expect(result?.username).toBe("u1");
     });
 
-    it("存在しないトークンの場合はundefinedを返す", async () => {
-      const result = await db
-        .select()
-        .from(adminInvitations)
-        .where(eq(adminInvitations.token, "nonexistent-token"))
-        .get();
-
-      expect(result).toBeUndefined();
-    });
-  });
-
-  describe("select by username", () => {
-    beforeEach(async () => {
-      await db.insert(adminInvitations).values({
-        id: "find-by-username",
-        username: "username-search@example.com",
-        token: "username-token",
-        invitedBy: "system",
-        role: "admin",
-        expiresAt: futureDate,
-        createdAt: "2024-01-01T00:00:00Z",
-      });
+    it("存在しない id は null", async () => {
+      expect(
+        await adminInvitationRepository.findById(fakeD1, "ghost"),
+      ).toBeNull();
     });
 
-    it("メールアドレスで招待を取得できる", async () => {
-      const result = await db
-        .select()
-        .from(adminInvitations)
-        .where(eq(adminInvitations.username, "username-search@example.com"))
-        .get();
+    it("token で取得", async () => {
+      const result = await adminInvitationRepository.findByToken(fakeD1, "t1");
+      expect(result?.id).toBe("i1");
+    });
 
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("find-by-username");
+    it("存在しない token は null", async () => {
+      expect(
+        await adminInvitationRepository.findByToken(fakeD1, "ghost-tok"),
+      ).toBeNull();
+    });
+
+    it("username で取得", async () => {
+      const result = await adminInvitationRepository.findByUsername(
+        fakeD1,
+        "u1",
+      );
+      expect(result?.token).toBe("t1");
+    });
+
+    it("存在しない username は null", async () => {
+      expect(
+        await adminInvitationRepository.findByUsername(fakeD1, "nobody"),
+      ).toBeNull();
     });
   });
 
   describe("findValidByToken", () => {
-    it("未使用かつ期限内の招待を取得できる", async () => {
-      await db.insert(adminInvitations).values({
-        id: "valid-inv",
-        username: "valid@example.com",
-        token: "valid-token",
-        invitedBy: "system",
-        role: "admin",
-        expiresAt: futureDate,
-        usedAt: null,
-        createdAt: "2024-01-01T00:00:00Z",
-      });
-
-      const now = new Date().toISOString();
-      const result = await db
-        .select()
-        .from(adminInvitations)
-        .where(
-          and(
-            eq(adminInvitations.token, "valid-token"),
-            isNull(adminInvitations.usedAt),
-            sql`${adminInvitations.expiresAt} > ${now}`,
-          ),
-        )
-        .get();
-
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("valid-inv");
+    it("未使用 + 期限内なら取得", async () => {
+      await adminInvitationRepository.create(
+        fakeD1,
+        baseInput({ id: "v1", token: "valid-tok" }),
+      );
+      const result = await adminInvitationRepository.findValidByToken(
+        fakeD1,
+        "valid-tok",
+      );
+      expect(result?.id).toBe("v1");
     });
 
-    it("使用済みの招待は取得できない", async () => {
-      await db.insert(adminInvitations).values({
-        id: "used-inv",
-        username: "used@example.com",
-        token: "used-token",
-        invitedBy: "system",
-        role: "admin",
-        expiresAt: futureDate,
-        usedAt: "2024-01-01T12:00:00Z",
-        createdAt: "2024-01-01T00:00:00Z",
-      });
-
-      const now = new Date().toISOString();
-      const result = await db
-        .select()
-        .from(adminInvitations)
-        .where(
-          and(
-            eq(adminInvitations.token, "used-token"),
-            isNull(adminInvitations.usedAt),
-            sql`${adminInvitations.expiresAt} > ${now}`,
-          ),
-        )
-        .get();
-
-      expect(result).toBeUndefined();
+    it("期限切れは null", async () => {
+      await adminInvitationRepository.create(
+        fakeD1,
+        baseInput({
+          id: "v2",
+          token: "exp-tok",
+          expiresAt: pastDate(),
+        }),
+      );
+      expect(
+        await adminInvitationRepository.findValidByToken(fakeD1, "exp-tok"),
+      ).toBeNull();
     });
 
-    it("期限切れの招待は取得できない", async () => {
-      await db.insert(adminInvitations).values({
-        id: "expired-inv",
-        username: "expired@example.com",
-        token: "expired-token",
-        invitedBy: "system",
-        role: "admin",
-        expiresAt: pastDate,
-        usedAt: null,
-        createdAt: "2024-01-01T00:00:00Z",
-      });
+    it("使用済みは null", async () => {
+      await adminInvitationRepository.create(
+        fakeD1,
+        baseInput({
+          id: "v3",
+          token: "used-tok",
+          usedAt: new Date().toISOString(),
+        }),
+      );
+      expect(
+        await adminInvitationRepository.findValidByToken(fakeD1, "used-tok"),
+      ).toBeNull();
+    });
 
-      const now = new Date().toISOString();
-      const result = await db
-        .select()
-        .from(adminInvitations)
-        .where(
-          and(
-            eq(adminInvitations.token, "expired-token"),
-            isNull(adminInvitations.usedAt),
-            sql`${adminInvitations.expiresAt} > ${now}`,
-          ),
-        )
-        .get();
-
-      expect(result).toBeUndefined();
+    it("存在しない token は null", async () => {
+      expect(
+        await adminInvitationRepository.findValidByToken(fakeD1, "ghost"),
+      ).toBeNull();
     });
   });
 
-  describe("listPending", () => {
+  describe("list / listPending", () => {
     beforeEach(async () => {
-      await db.insert(adminInvitations).values([
-        // 有効な招待
-        {
-          id: "pending-1",
-          username: "pending1@example.com",
-          token: "pending-token-1",
-          invitedBy: "system",
-          role: "admin",
-          expiresAt: futureDate,
-          usedAt: null,
-          createdAt: "2024-01-01T00:00:00Z",
-        },
-        // 有効な招待
-        {
-          id: "pending-2",
-          username: "pending2@example.com",
-          token: "pending-token-2",
-          invitedBy: "system",
-          role: "admin",
-          expiresAt: futureDate,
-          usedAt: null,
-          createdAt: "2024-01-02T00:00:00Z",
-        },
-        // 使用済み
-        {
-          id: "used-1",
-          username: "used1@example.com",
-          token: "used-token-1",
-          invitedBy: "system",
-          role: "admin",
-          expiresAt: futureDate,
-          usedAt: "2024-01-01T12:00:00Z",
-          createdAt: "2024-01-01T00:00:00Z",
-        },
-        // 期限切れ
-        {
-          id: "expired-1",
-          username: "expired1@example.com",
-          token: "expired-token-1",
-          invitedBy: "system",
-          role: "admin",
-          expiresAt: pastDate,
-          usedAt: null,
-          createdAt: "2024-01-01T00:00:00Z",
-        },
-      ]);
+      // createdAt の前後で並び順を確認できるよう 3 件
+      await adminInvitationRepository.create(
+        fakeD1,
+        baseInput({
+          id: "old",
+          token: "t-old",
+          username: "old",
+          createdAt: "2030-01-01T00:00:00Z",
+        }),
+      );
+      await adminInvitationRepository.create(
+        fakeD1,
+        baseInput({
+          id: "mid",
+          token: "t-mid",
+          username: "mid",
+          createdAt: "2030-02-01T00:00:00Z",
+        }),
+      );
+      await adminInvitationRepository.create(
+        fakeD1,
+        baseInput({
+          id: "new",
+          token: "t-new",
+          username: "new",
+          createdAt: "2030-03-01T00:00:00Z",
+        }),
+      );
     });
 
-    it("未使用かつ期限内の招待一覧を取得できる", async () => {
-      const now = new Date().toISOString();
-      const result = await db
-        .select()
-        .from(adminInvitations)
-        .where(
-          and(
-            isNull(adminInvitations.usedAt),
-            sql`${adminInvitations.expiresAt} > ${now}`,
-          ),
-        )
-        .orderBy(desc(adminInvitations.createdAt))
-        .all();
+    it("list: createdAt 降順で全件", async () => {
+      const result = await adminInvitationRepository.list(fakeD1);
+      expect(result.map((r) => r.id)).toEqual(["new", "mid", "old"]);
+    });
 
-      expect(result).toHaveLength(2);
-      expect(result.every((inv) => inv.usedAt === null)).toBe(true);
-      // 降順であることを確認
-      expect(result[0].id).toBe("pending-2");
-      expect(result[1].id).toBe("pending-1");
+    it("listPending: 未使用 + 期限内のみ", async () => {
+      // 1 件を使用済みに、1 件を期限切れに
+      await adminInvitationRepository.markUsed(fakeD1, "mid");
+      await adminInvitationRepository.create(
+        fakeD1,
+        baseInput({
+          id: "expired",
+          token: "t-exp",
+          username: "exp",
+          expiresAt: pastDate(),
+        }),
+      );
+
+      const result = await adminInvitationRepository.listPending(fakeD1);
+      const ids = result.map((r) => r.id);
+      expect(ids).toContain("new");
+      expect(ids).toContain("old");
+      expect(ids).not.toContain("mid");
+      expect(ids).not.toContain("expired");
     });
   });
 
   describe("markUsed", () => {
-    beforeEach(async () => {
-      await db.insert(adminInvitations).values({
-        id: "mark-used",
-        username: "markused@example.com",
-        token: "markused-token",
-        invitedBy: "system",
-        role: "admin",
-        expiresAt: futureDate,
-        usedAt: null,
-        createdAt: "2024-01-01T00:00:00Z",
-      });
-    });
+    it("usedAt が ISO 文字列でセットされる", async () => {
+      await adminInvitationRepository.create(fakeD1, baseInput());
 
-    it("招待を使用済みにできる", async () => {
-      const usedAt = new Date().toISOString();
-      await db
-        .update(adminInvitations)
-        .set({ usedAt })
-        .where(eq(adminInvitations.id, "mark-used"));
+      const before = Date.now();
+      await adminInvitationRepository.markUsed(fakeD1, "inv-1");
+      const after = Date.now();
 
-      const updated = await db
-        .select()
-        .from(adminInvitations)
-        .where(eq(adminInvitations.id, "mark-used"))
-        .get();
-
-      expect(updated?.usedAt).toBe(usedAt);
+      const found = await adminInvitationRepository.findById(fakeD1, "inv-1");
+      const usedAtMs = new Date(found!.usedAt!).getTime();
+      expect(usedAtMs).toBeGreaterThanOrEqual(before);
+      expect(usedAtMs).toBeLessThanOrEqual(after);
     });
   });
 
   describe("delete", () => {
-    beforeEach(async () => {
-      await db.insert(adminInvitations).values({
-        id: "delete-inv",
-        username: "delete@example.com",
-        token: "delete-token",
-        invitedBy: "system",
-        role: "admin",
-        expiresAt: futureDate,
-        createdAt: "2024-01-01T00:00:00Z",
-      });
+    it("該当 id のレコードのみ削除", async () => {
+      await adminInvitationRepository.create(
+        fakeD1,
+        baseInput({ id: "a", token: "ta", username: "ua" }),
+      );
+      await adminInvitationRepository.create(
+        fakeD1,
+        baseInput({ id: "b", token: "tb", username: "ub" }),
+      );
+
+      await adminInvitationRepository.delete(fakeD1, "a");
+
+      expect(await adminInvitationRepository.findById(fakeD1, "a")).toBeNull();
+      expect(
+        await adminInvitationRepository.findById(fakeD1, "b"),
+      ).not.toBeNull();
     });
 
-    it("招待を削除できる", async () => {
-      await db
-        .delete(adminInvitations)
-        .where(eq(adminInvitations.id, "delete-inv"));
-
-      const deleted = await db
-        .select()
-        .from(adminInvitations)
-        .where(eq(adminInvitations.id, "delete-inv"))
-        .get();
-
-      expect(deleted).toBeUndefined();
+    it("存在しない id でもエラーにならない（冪等）", async () => {
+      await expect(
+        adminInvitationRepository.delete(fakeD1, "ghost"),
+      ).resolves.toBeUndefined();
     });
   });
 
   describe("deleteExpired", () => {
-    beforeEach(async () => {
-      await db.insert(adminInvitations).values([
-        {
-          id: "valid-for-delete",
-          username: "valid@example.com",
-          token: "valid-delete-token",
-          invitedBy: "system",
-          role: "admin",
-          expiresAt: futureDate,
-          createdAt: "2024-01-01T00:00:00Z",
-        },
-        {
-          id: "expired-for-delete",
-          username: "expired@example.com",
-          token: "expired-delete-token",
-          invitedBy: "system",
-          role: "admin",
-          expiresAt: pastDate,
-          createdAt: "2024-01-01T00:00:00Z",
-        },
-      ]);
-    });
+    it("期限切れだけ削除する", async () => {
+      await adminInvitationRepository.create(
+        fakeD1,
+        baseInput({
+          id: "alive",
+          token: "ta",
+          username: "alive",
+          expiresAt: futureDate(),
+        }),
+      );
+      await adminInvitationRepository.create(
+        fakeD1,
+        baseInput({
+          id: "expired",
+          token: "te",
+          username: "expired",
+          expiresAt: pastDate(),
+        }),
+      );
 
-    it("期限切れの招待のみ削除できる", async () => {
-      const now = new Date().toISOString();
-      await db
-        .delete(adminInvitations)
-        .where(sql`${adminInvitations.expiresAt} < ${now}`);
+      await adminInvitationRepository.deleteExpired(fakeD1);
 
-      const remaining = await db.select().from(adminInvitations).all();
-
-      expect(remaining).toHaveLength(1);
-      expect(remaining[0].id).toBe("valid-for-delete");
+      expect(
+        await adminInvitationRepository.findById(fakeD1, "expired"),
+      ).toBeNull();
+      expect(
+        await adminInvitationRepository.findById(fakeD1, "alive"),
+      ).not.toBeNull();
     });
   });
 });
