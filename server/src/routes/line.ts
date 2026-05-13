@@ -1,5 +1,5 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import type { WebhookEvent, WebhookRequestBody } from "@line/bot-sdk";
+import type { webhook } from "@line/bot-sdk";
 
 import { logger } from "~/lib/logger";
 import { lineSignatureVerify } from "~/middleware";
@@ -21,7 +21,7 @@ export const lineRoutes = new OpenAPIHono<{
 lineRoutes.use("/*", lineSignatureVerify);
 
 lineRoutes.post("/webhook", async (c) => {
-  const body = c.get("parsedBody") as WebhookRequestBody;
+  const body = c.get("parsedBody") as webhook.CallbackRequest;
   const eventCount = body.events?.length ?? 0;
   logger.info(`[LINE] webhook received`, { eventCount });
 
@@ -35,13 +35,13 @@ lineRoutes.post("/webhook", async (c) => {
 });
 
 const enqueueLineEvents = async (
-  events: WebhookEvent[],
+  events: webhook.Event[],
   env: CloudflareBindings,
   executionCtx: { waitUntil: (promise: Promise<unknown>) => void },
 ) => {
   for (const event of events) {
     if (event.type === "postback") {
-      if (!event.source.userId || !event.replyToken) continue;
+      if (!event.source?.userId || !event.replyToken) continue;
       const userId = event.source.userId;
       const postbackData = event.postback.data;
 
@@ -98,7 +98,7 @@ const enqueueLineEvents = async (
     }
 
     if (event.type === "unfollow") {
-      if (!event.source.userId) continue;
+      if (!event.source?.userId) continue;
       const unfollow: LineEventMessage = {
         type: "unfollow",
         userId: event.source.userId,
@@ -109,7 +109,7 @@ const enqueueLineEvents = async (
 
     if (event.type !== "message" || event.message.type !== "text") continue;
     if (!("replyToken" in event) || !event.replyToken) continue;
-    if (!event.source.userId) continue;
+    if (!event.source?.userId) continue;
 
     const message: LineEventMessage = {
       type: "message",
