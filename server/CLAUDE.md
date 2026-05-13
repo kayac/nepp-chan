@@ -275,10 +275,11 @@ throw new HTTPException(404, { message: "Not found" });
 
 ### persona
 
+抽象化された村の集合知。案 C（2026-04-21 確定）により `resource_id` は廃止され、個人非紐付けで運用する。
+
 | カラム                | 型   | 説明                     |
 | --------------------- | ---- | ------------------------ |
 | id                    | TEXT | PRIMARY KEY              |
-| resource_id           | TEXT | リソース ID（NOT NULL）  |
 | category              | TEXT | カテゴリ（NOT NULL）     |
 | tags                  | TEXT | タグ（JSON 配列）        |
 | content               | TEXT | 内容（NOT NULL）         |
@@ -380,7 +381,7 @@ import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const persona = sqliteTable("persona", {
   id: text("id").primaryKey(),
-  resourceId: text("resource_id").notNull(),
+  category: text("category").notNull(),
   // ...
 });
 
