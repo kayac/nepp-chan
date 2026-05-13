@@ -30,7 +30,7 @@
     "@ai-sdk/openai": "^3.0.63",
     "@hono/swagger-ui": "^0.6.1",
     "@hono/zod-openapi": "^1.4.0",
-    "@line/bot-sdk": "^10.6.0",
+    "@line/bot-sdk": "^11.0.0",
     "@mastra/ai-sdk": "1.1.2",
     "@mastra/cloudflare-d1": "1.0.1",
     "@mastra/core": "1.10.0",
