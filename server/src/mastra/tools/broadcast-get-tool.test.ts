@@ -115,4 +115,22 @@ describe("broadcastGetTool.execute", () => {
     expect(result.success).toBe(false);
     expect(result.error).toBe("DB_NOT_AVAILABLE");
   });
+
+  it("repository が throw すると success: false で error を返す", async () => {
+    vi.mocked(broadcastRepository.findAll).mockRejectedValue(new Error("db"));
+
+    const result = await callTool(broadcastGetTool, { limit: 10 }, dbValues);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("db");
+    expect(result.broadcasts).toEqual([]);
+  });
+
+  it("非 Error の throw は Unknown error", async () => {
+    vi.mocked(broadcastRepository.findAll).mockRejectedValue("oops");
+
+    const result = await callTool(broadcastGetTool, { limit: 10 }, dbValues);
+
+    expect(result.error).toBe("Unknown error");
+  });
 });

@@ -108,4 +108,16 @@ describe("personaGetTool.execute", () => {
     expect(result.success).toBe(false);
     expect(result.error).toBe("db");
   });
+
+  it("非 Error の throw は Unknown error", async () => {
+    vi.mocked(personaRepository.search).mockRejectedValue("oops");
+
+    const result = await callTool(
+      personaGetTool,
+      { resourceId: "v-1", limit: 20 },
+      adminValues(),
+    );
+
+    expect(result.error).toBe("Unknown error");
+  });
 });

@@ -72,4 +72,31 @@ describe("emergencyUpdateTool.execute", () => {
     expect(result.success).toBe(false);
     expect(result.error).toBe("REPORT_NOT_FOUND");
   });
+
+  it("update が throw すると success: false", async () => {
+    vi.mocked(emergencyRepository.findById).mockResolvedValue(sampleReport);
+    vi.mocked(emergencyRepository.update).mockRejectedValue(new Error("db"));
+
+    const result = await callTool(
+      emergencyUpdateTool,
+      { reportId: "e-1", description: "x" },
+      dbValues,
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("db");
+  });
+
+  it("非 Error の throw は Unknown error", async () => {
+    vi.mocked(emergencyRepository.findById).mockResolvedValue(sampleReport);
+    vi.mocked(emergencyRepository.update).mockRejectedValue("oops");
+
+    const result = await callTool(
+      emergencyUpdateTool,
+      { reportId: "e-1", description: "x" },
+      dbValues,
+    );
+
+    expect(result.error).toBe("Unknown error");
+  });
 });
