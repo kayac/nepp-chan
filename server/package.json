@@ -45,7 +45,7 @@
     "drizzle-orm": "^0.45.1",
     "glob": "^13.0.6",
     "gray-matter": "^4.0.3",
-    "hono": "^4.12.10",
+    "hono": "^4.12.18",
     "zod": "^4.3.6"
   },
   "devDependencies": {
