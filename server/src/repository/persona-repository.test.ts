@@ -20,7 +20,6 @@ const fakeD1 = {} as D1Database;
 
 type CreateOverrides = {
   id?: string;
-  resourceId?: string;
   category?: string;
   tags?: string | null;
   content?: string;
@@ -34,7 +33,6 @@ type CreateOverrides = {
 
 const baseInput = (overrides: CreateOverrides = {}) => ({
   id: overrides.id ?? "p-1",
-  resourceId: overrides.resourceId ?? "r-1",
   category: overrides.category ?? "preference",
   tags: "tags" in overrides ? (overrides.tags ?? null) : "tag1,tag2",
   content: overrides.content ?? "好きな食べ物はラーメン",
@@ -66,7 +64,6 @@ describe("personaRepository", () => {
       const found = await personaRepository.findById(fakeD1, "p-1");
       expect(found).toMatchObject({
         id: "p-1",
-        resourceId: "r-1",
         category: "preference",
         topic: "food",
         sentiment: "positive",
@@ -76,7 +73,6 @@ describe("personaRepository", () => {
     it("sentiment 未指定は 'neutral' がデフォルト", async () => {
       await personaRepository.create(fakeD1, {
         id: "p-min",
-        resourceId: "r-1",
         category: "preference",
         content: "x",
         createdAt: "2030-01-01T00:00:00Z",
@@ -88,7 +84,6 @@ describe("personaRepository", () => {
     it("optional フィールド未指定なら null", async () => {
       await personaRepository.create(fakeD1, {
         id: "p-min",
-        resourceId: "r-1",
         category: "preference",
         content: "x",
         createdAt: "2030-01-01T00:00:00Z",
@@ -144,56 +139,12 @@ describe("personaRepository", () => {
     });
   });
 
-  describe("findByResourceId", () => {
-    it("該当 resourceId の persona を createdAt 降順で返す", async () => {
-      await personaRepository.create(
-        fakeD1,
-        baseInput({
-          id: "p-1",
-          resourceId: "r-a",
-          createdAt: "2030-01-01T00:00:00Z",
-        }),
-      );
-      await personaRepository.create(
-        fakeD1,
-        baseInput({
-          id: "p-2",
-          resourceId: "r-a",
-          createdAt: "2030-02-01T00:00:00Z",
-        }),
-      );
-      await personaRepository.create(
-        fakeD1,
-        baseInput({ id: "p-3", resourceId: "r-b" }),
-      );
-
-      const result = await personaRepository.findByResourceId(fakeD1, "r-a");
-      expect(result.map((p) => p.id)).toEqual(["p-2", "p-1"]);
-    });
-
-    it("limit を適用", async () => {
-      for (let i = 0; i < 5; i++) {
-        await personaRepository.create(
-          fakeD1,
-          baseInput({
-            id: `p-${i}`,
-            resourceId: "r-a",
-            createdAt: `2030-01-0${i + 1}T00:00:00Z`,
-          }),
-        );
-      }
-      const result = await personaRepository.findByResourceId(fakeD1, "r-a", 2);
-      expect(result).toHaveLength(2);
-    });
-  });
-
   describe("search", () => {
     beforeEach(async () => {
       await personaRepository.create(
         fakeD1,
         baseInput({
           id: "p-1",
-          resourceId: "r-1",
           category: "preference",
           tags: "music,rock",
           content: "ロックが好き",
@@ -204,68 +155,56 @@ describe("personaRepository", () => {
         fakeD1,
         baseInput({
           id: "p-2",
-          resourceId: "r-1",
           category: "interest",
           tags: "food,ramen",
           content: "ラーメンが好き",
           createdAt: "2030-01-02T00:00:00Z",
         }),
       );
-      await personaRepository.create(
-        fakeD1,
-        baseInput({
-          id: "p-other",
-          resourceId: "r-other",
-          content: "他",
-          createdAt: "2030-01-03T00:00:00Z",
-        }),
-      );
     });
 
-    it("resourceId 指定のみで該当だけ取得", async () => {
-      const result = await personaRepository.search(fakeD1, "r-1");
+    it("フィルタ無しなら全件 createdAt 降順", async () => {
+      const result = await personaRepository.search(fakeD1);
       expect(result.map((p) => p.id)).toEqual(["p-2", "p-1"]);
     });
 
     it("category フィルタが効く", async () => {
-      const result = await personaRepository.search(fakeD1, "r-1", {
+      const result = await personaRepository.search(fakeD1, {
         category: "interest",
       });
       expect(result.map((p) => p.id)).toEqual(["p-2"]);
     });
 
     it("tags フィルタは OR 検索", async () => {
-      const result = await personaRepository.search(fakeD1, "r-1", {
+      const result = await personaRepository.search(fakeD1, {
         tags: ["rock", "ramen"],
       });
       expect(result.map((p) => p.id).sort()).toEqual(["p-1", "p-2"]);
     });
 
     it("keyword 1 語は LIKE 検索", async () => {
-      const result = await personaRepository.search(fakeD1, "r-1", {
+      const result = await personaRepository.search(fakeD1, {
         keyword: "ラーメン",
       });
       expect(result.map((p) => p.id)).toEqual(["p-2"]);
     });
 
     it("keyword 複数語は OR 検索", async () => {
-      const result = await personaRepository.search(fakeD1, "r-1", {
+      const result = await personaRepository.search(fakeD1, {
         keyword: "ロック ラーメン",
       });
       expect(result.map((p) => p.id).sort()).toEqual(["p-1", "p-2"]);
     });
 
-    it("keyword 空白だけは効かない（resourceId のみで取得）", async () => {
-      const result = await personaRepository.search(fakeD1, "r-1", {
+    it("keyword 空白だけは効かない（フィルタなし扱い）", async () => {
+      const result = await personaRepository.search(fakeD1, {
         keyword: "   ",
       });
       expect(result).toHaveLength(2);
     });
 
     it("limit を適用", async () => {
-      const result = await personaRepository.search(fakeD1, "r-1", {
-        limit: 1,
-      });
+      const result = await personaRepository.search(fakeD1, { limit: 1 });
       expect(result).toHaveLength(1);
     });
   });
@@ -289,7 +228,7 @@ describe("personaRepository", () => {
         baseInput({ id: "p-no", topic: null }),
       );
 
-      const result = await personaRepository.aggregateByTopic(fakeD1, "r-1");
+      const result = await personaRepository.aggregateByTopic(fakeD1);
       expect(result[0]).toMatchObject({ topic: "food", count: 2 });
       expect(result[1]).toMatchObject({ topic: "music", count: 1 });
       // topic=null は除外
@@ -305,7 +244,7 @@ describe("personaRepository", () => {
         fakeD1,
         baseInput({ id: "p-2", topic: "food", category: "complaint" }),
       );
-      const result = await personaRepository.aggregateByTopic(fakeD1, "r-1", {
+      const result = await personaRepository.aggregateByTopic(fakeD1, {
         category: "complaint",
       });
       expect(result.every((r) => r.category === "complaint")).toBe(true);

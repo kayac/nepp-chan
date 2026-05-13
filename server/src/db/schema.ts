@@ -13,7 +13,6 @@ export const emergencyReports = sqliteTable("emergency_reports", {
 // ペルソナ（村の集合知）
 export const persona = sqliteTable("persona", {
   id: text("id").primaryKey(),
-  resourceId: text("resource_id").notNull(),
   category: text("category").notNull(),
   tags: text("tags"),
   content: text("content").notNull(),
@@ -38,15 +37,18 @@ export const threadPersonaStatus = sqliteTable("thread_persona_status", {
 export const mastraThreads = sqliteTable("mastra_threads", {
   id: text("id").primaryKey(),
   resourceId: text("resourceId"),
+  createdAt: text("createdAt"),
 });
 
 export const mastraMessages = sqliteTable("mastra_messages", {
   id: text("id").primaryKey(),
   threadId: text("thread_id").notNull(),
+  createdAt: text("createdAt"),
 });
 
 export const mastraResources = sqliteTable("mastra_resources", {
   id: text("id").primaryKey(),
+  updatedAt: text("updatedAt"),
 });
 
 // 型エクスポート
@@ -184,3 +186,15 @@ export const userPollState = sqliteTable("user_poll_state", {
 });
 
 export type UserPollState = typeof userPollState.$inferSelect;
+
+// 保管期間ポリシーによる削除実行ログ
+export const dataRetentionLogs = sqliteTable("data_retention_logs", {
+  id: text("id").primaryKey(),
+  executedAt: text("executed_at").notNull(),
+  targetTable: text("target_table").notNull(),
+  deletedCount: integer("deleted_count").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
+export type DataRetentionLog = typeof dataRetentionLogs.$inferSelect;
+export type NewDataRetentionLog = typeof dataRetentionLogs.$inferInsert;

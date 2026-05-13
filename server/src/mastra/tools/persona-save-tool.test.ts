@@ -14,7 +14,6 @@ import { callTool } from "../../test-helpers/tool-context";
 const fakeDb = {} as D1Database;
 
 const validInput = {
-  resourceId: "village-1",
   category: "意見",
   content: "村民は地元産の野菜を好む",
 };
@@ -34,7 +33,6 @@ describe("personaSaveTool.execute", () => {
     expect(personaRepository.create).toHaveBeenCalledWith(
       fakeDb,
       expect.objectContaining({
-        resourceId: "village-1",
         category: "意見",
         content: "村民は地元産の野菜を好む",
       }),
