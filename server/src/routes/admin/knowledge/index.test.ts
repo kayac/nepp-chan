@@ -285,6 +285,71 @@ describe("knowledge routes 統合テスト", () => {
 
       expect(res.status).toBe(404);
     });
+
+    it("正常系: body と Content-Type を返す", async () => {
+      const bytes = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
+      vi.mocked(knowledgeService.getOriginalFile).mockResolvedValue({
+        body: bytes.buffer,
+        contentType: "application/pdf",
+        size: 8,
+      });
+
+      const res = await app.request(
+        authedRequest("/originals/doc.pdf"),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.headers.get("Content-Type")).toBe("application/pdf");
+      expect(res.headers.get("Content-Length")).toBe("8");
+      const returned = new Uint8Array(await res.arrayBuffer());
+      expect(Array.from(returned)).toEqual(Array.from(bytes));
+    });
+  });
+
+  describe("PUT /files/:key", () => {
+    const jsonBody = (data: Record<string, unknown>): RequestInit => ({
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    it("API キー未設定なら 500", async () => {
+      const res = await app.request(
+        authedRequest("/files/doc.md", jsonBody({ content: "x" })),
+        undefined,
+        {
+          ...mockEnv,
+          GOOGLE_GENERATIVE_AI_API_KEY: undefined,
+        } as never,
+      );
+      expect(res.status).toBe(500);
+    });
+
+    it("正常系: bucket.put → syncFile → 200", async () => {
+      vi.mocked(knowledgeService.syncFile).mockResolvedValue({ chunks: 4 });
+
+      const res = await app.request(
+        authedRequest("/files/doc.md", jsonBody({ content: "# c" })),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(200);
+      expect(mockEnv.KNOWLEDGE_BUCKET.put).toHaveBeenCalledWith(
+        "doc.md",
+        "# c",
+        { httpMetadata: { contentType: "text/markdown" } },
+      );
+      expect(knowledgeService.syncFile).toHaveBeenCalledWith(
+        "doc.md",
+        "# c",
+        expect.objectContaining({ apiKey: "test-api-key" }),
+      );
+      const body = (await res.json()) as { chunks: number };
+      expect(body.chunks).toBe(4);
+    });
   });
 
   describe("POST /upload", () => {
