@@ -11,7 +11,6 @@ export default defineConfig({
       include: ["src/**/*.ts"],
       exclude: [
         "src/**/*.test.ts",
-        "src/test-helpers/**",
         "src/__tests__/**",
         "src/db/migrations/**",
         "src/index.ts",

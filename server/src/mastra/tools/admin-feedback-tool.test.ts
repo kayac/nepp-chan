@@ -10,7 +10,7 @@ vi.mock("~/repository/feedback-repository", () => ({
 const { feedbackRepository } = await import("~/repository/feedback-repository");
 const { adminFeedbackTool } = await import("./admin-feedback-tool");
 
-import { callTool } from "../../test-helpers/tool-context";
+import { callTool } from "~/__tests__/helpers/tool-context";
 
 const fakeDb = {} as D1Database;
 const adminUser = { id: "u-1", role: "admin" as const };

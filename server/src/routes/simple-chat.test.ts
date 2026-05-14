@@ -29,7 +29,7 @@ vi.mock("~/mastra/request-context", () => ({
 
 const { simpleChatRoutes: rawRoutes } = await import("./simple-chat");
 
-import { withResolvePrincipal } from "../test-helpers/test-app";
+import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
 
 const routes = await withResolvePrincipal(rawRoutes);
 

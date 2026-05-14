@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { broadcastMediaRoutes: rawRoutes } = await import("./broadcast-media");
 
-import { withResolvePrincipal } from "../test-helpers/test-app";
+import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
 
 const routes = await withResolvePrincipal(rawRoutes);
 

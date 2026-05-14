@@ -1,3 +1,4 @@
+import { logger } from "~/lib/logger";
 import { broadcastRepository } from "~/repository/broadcast-repository";
 import type { BroadcastPart } from "~/schemas/broadcast-schema";
 
@@ -13,9 +14,9 @@ const extractImageDescriptions = (partsJson: string | null): string[] => {
       .map((p) => p.imageDescription)
       .filter((d): d is string => !!d);
   } catch (e) {
-    console.warn("Failed to parse broadcast parts JSON", {
-      error: e,
-      partsJson,
+    logger.warn("Failed to parse broadcast parts JSON", {
+      partsJson: partsJson ?? "",
+      error: e instanceof Error ? e.message : String(e),
     });
     return [];
   }

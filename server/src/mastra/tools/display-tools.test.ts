@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { callTool } from "../../test-helpers/tool-context";
+import { callTool } from "~/__tests__/helpers/tool-context";
 import { displayChartTool } from "./display-chart-tool";
 import { displayTableTool } from "./display-table-tool";
 import { displayTimelineTool } from "./display-timeline-tool";

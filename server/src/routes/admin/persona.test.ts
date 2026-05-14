@@ -32,7 +32,7 @@ const { adminUserRepository } = await import(
 );
 const { personaAdminRoutes: rawRoutes } = await import("./persona");
 
-import { withResolvePrincipal } from "../../test-helpers/test-app";
+import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
 
 const routes = await withResolvePrincipal(rawRoutes);
 

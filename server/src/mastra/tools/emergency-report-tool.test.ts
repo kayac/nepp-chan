@@ -11,7 +11,7 @@ const { emergencyRepository } = await import(
 );
 const { emergencyReportTool } = await import("./emergency-report-tool");
 
-import { callTool } from "../../test-helpers/tool-context";
+import { callTool } from "~/__tests__/helpers/tool-context";
 
 const fakeDb = {} as D1Database;
 const dbValues = { db: fakeDb };

@@ -42,7 +42,7 @@ const { adminUserRepository } = await import(
 );
 const { knowledgeAdminRoutes } = await import(".");
 
-import { withResolvePrincipal } from "../../../test-helpers/test-app";
+import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
 
 const app = await withResolvePrincipal(knowledgeAdminRoutes);
 

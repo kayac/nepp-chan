@@ -18,6 +18,7 @@ export type CreateApiClientOptions = {
    * - 何も返さない / false: 再試行しない（fallback 不在）
    * - true: getAuthToken() を再評価し、前回送信と異なるトークンが取れれば再試行
    */
+  // biome-ignore lint/suspicious/noConfusingVoidType: 戻り値を持たないコールバック (() => void) も許容するため void union が必要
   onUnauthorized?: (sentAuth: string) => boolean | void;
   /** 5xx 系のときだけ呼ばれる observer。監視・ログ通報先に流す用途 */
   onServerError?: (error: ApiError, response: Response) => void;

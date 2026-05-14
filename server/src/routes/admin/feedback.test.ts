@@ -33,7 +33,7 @@ const { adminUserRepository } = await import(
 );
 const { feedbackAdminRoutes: rawRoutes } = await import("./feedback");
 
-import { withResolvePrincipal } from "../../test-helpers/test-app";
+import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
 
 const routes = await withResolvePrincipal(rawRoutes);
 

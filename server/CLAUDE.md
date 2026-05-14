@@ -37,8 +37,8 @@ server/src/
 │   ├── schema.ts            # テーブルスキーマ
 │   ├── client.ts            # DB クライアント
 │   └── migrations/          # マイグレーションファイル
-├── __tests__/               # framework レベルの横断テスト
-├── test-helpers/            # test-app / test-db / tool-context などの共通ヘルパ
+├── __tests__/
+│   └── helpers/             # test-app / test-db / tool-context などの共通ヘルパ
 └── *.test.ts                # 単体テストは対象ファイルと co-located
 ```
 
@@ -225,6 +225,15 @@ throw new HTTPException(404, { message: "Not found" });
 - 一般認証: `requireAuth` で `principal` の存在を保証（anonymous + admin 共通ルート用）
 - スレッドアクセス: `requireThreadAccess` ミドルウェアで所有権検証（`principal` + `threadId` → `thread`）
 - 共通スキーマ: `schemas/` から import（インライン定義を避ける）
+
+### middleware の適用方法
+
+- route ごとに必要な middleware が異なる、または handler 内で `c.get(...)` を non-optional に narrow させたい場合
+  → `createRoute({ middleware: [requireAuth, ...] as const })` で route 定義に紐付ける
+  - 例: `routes/threads/{chat,index}.ts` の `requireAuth` のみ vs `requireAuth + requireThreadAccess`
+- sub-app の全 route に同じ middleware を blanket でかける場合
+  → `app.use("*", mw)` で sub-app 入口にまとめる
+  - 例: `routes/admin/*` の `requireRole("staff")`、`routes/line.ts` の署名検証
 
 ## データベーステーブル
 
@@ -532,7 +541,7 @@ pnpm deploy:prd        # prd 環境にデプロイ
 
 - ランナー: vitest + libsql（テスト DB）+ msw
 - 配置: 対象ファイルの隣に `*.test.ts` を置く co-located 方式
-- 共通ヘルパ: `test-helpers/`
+- 共通ヘルパ: `__tests__/helpers/`
   - `test-db.ts`: in-memory libsql + DDL（`broadcast_messages` / `polls` 等を含む）
   - `test-app.ts`: `resolvePrincipal` + `errorHandler` 込みの Hono アプリを返す
   - `tool-context.ts`: Mastra tool の `execute` を実行するための `buildToolContext` / `callTool`

@@ -72,7 +72,7 @@ vi.mock("~/services/auth/anonymous-session", () => ({
 const sessionService = await import("~/services/auth/anonymous-session");
 const { threadsRoutes: rawThreadsRoutes } = await import("./index");
 
-import { withResolvePrincipal } from "../../test-helpers/test-app";
+import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
 
 const routes = await withResolvePrincipal(rawThreadsRoutes);
 

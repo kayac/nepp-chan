@@ -14,7 +14,7 @@ const { pollRepository } = await import("~/repository/poll-repository");
 const { getPollResults } = await import("~/services/poll-response");
 const { pollRoutes: rawRoutes } = await import("./poll");
 
-import { withResolvePrincipal } from "../test-helpers/test-app";
+import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
 
 const routes = await withResolvePrincipal(rawRoutes);
 

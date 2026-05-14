@@ -77,11 +77,11 @@ describe("PartEditor: 画像パート", () => {
   it("プレビュー右上の X ボタンで imageR2Key をクリア", () => {
     const { props, container } = renderEditor({ part: imagePartFilled });
     // プレビューの absolute 位置の X ボタンは class top-1 right-1 で識別
-    const clearBtn = container.querySelector(
+    const clearBtn = container.querySelector<HTMLButtonElement>(
       "button.absolute.top-1.right-1",
-    ) as HTMLButtonElement | null;
-    expect(clearBtn).toBeTruthy();
-    fireEvent.click(clearBtn!);
+    );
+    if (!clearBtn) throw new Error("クリアボタンが見つかりません");
+    fireEvent.click(clearBtn);
     expect(props.onChange).toHaveBeenCalledWith(0, {
       id: "p-3",
       type: "image",

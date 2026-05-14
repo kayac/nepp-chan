@@ -63,7 +63,7 @@ const { threadsRoutes: rawThreadsRoutes } = await import("./index");
 const { deleteThreadWithRelatedData } = await import("~/services/thread");
 const sessionService = await import("~/services/auth/anonymous-session");
 
-import { withResolvePrincipal } from "../../test-helpers/test-app";
+import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
 
 const threadsRoutes = await withResolvePrincipal(rawThreadsRoutes);
 

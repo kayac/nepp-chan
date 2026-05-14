@@ -18,7 +18,7 @@ export type ThreadVariables = {
 
 export const requireThreadAccess = createMiddleware<{
   Bindings: CloudflareBindings;
-  Variables: Partial<PrincipalVariables> & Partial<ThreadVariables>;
+  Variables: PrincipalVariables & ThreadVariables;
 }>(async (c, next) => {
   const principal = c.get("principal");
   if (!principal) {

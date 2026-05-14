@@ -34,7 +34,7 @@ const { adminUserRepository } = await import(
 const sessionService = await import("~/services/auth/anonymous-session");
 const { emergencyAdminRoutes: rawRoutes } = await import("./emergency");
 
-import { withResolvePrincipal } from "../../test-helpers/test-app";
+import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
 
 const routes = await withResolvePrincipal(rawRoutes);
 
