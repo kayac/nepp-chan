@@ -37,8 +37,8 @@ server/src/
 │   ├── schema.ts            # テーブルスキーマ
 │   ├── client.ts            # DB クライアント
 │   └── migrations/          # マイグレーションファイル
-├── __tests__/               # framework レベルの横断テスト
-├── test-helpers/            # test-app / test-db / tool-context などの共通ヘルパ
+├── __tests__/
+│   └── helpers/             # test-app / test-db / tool-context / assert-defined 等の共通ヘルパ
 └── *.test.ts                # 単体テストは対象ファイルと co-located
 ```
 
@@ -532,9 +532,10 @@ pnpm deploy:prd        # prd 環境にデプロイ
 
 - ランナー: vitest + libsql（テスト DB）+ msw
 - 配置: 対象ファイルの隣に `*.test.ts` を置く co-located 方式
-- 共通ヘルパ: `test-helpers/`
+- 共通ヘルパ: `__tests__/helpers/`
   - `test-db.ts`: in-memory libsql + DDL（`broadcast_messages` / `polls` 等を含む）
   - `test-app.ts`: `resolvePrincipal` + `errorHandler` 込みの Hono アプリを返す
   - `tool-context.ts`: Mastra tool の `execute` を実行するための `buildToolContext` / `callTool`
+  - `assert-defined.ts`: `null` / `undefined` を弾いて `NonNullable<T>` に narrow する assertion function
 - ルート/サービス/リポジトリ/Mastra tools/ハンドラーの単体・統合テストを揃える
 - カバレッジ閾値は `vitest.config.ts` で管理。`mastra/public/` 等は除外
