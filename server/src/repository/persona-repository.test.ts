@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { assertDefined } from "../test-helpers/assert-defined";
 import { createTestDb, type TestDb } from "../test-helpers/test-db";
 
 const { testDbHolder } = vi.hoisted(() => ({
@@ -127,7 +128,9 @@ describe("personaRepository", () => {
       const after = Date.now();
 
       const found = await personaRepository.findById(fakeD1, "p-1");
-      const ms = new Date(found!.updatedAt!).getTime();
+      assertDefined(found);
+      assertDefined(found.updatedAt);
+      const ms = new Date(found.updatedAt).getTime();
       expect(ms).toBeGreaterThanOrEqual(before);
       expect(ms).toBeLessThanOrEqual(after);
     });
@@ -299,9 +302,10 @@ describe("personaRepository", () => {
       expect(first.hasMore).toBe(true);
       expect(first.nextCursor).toBeTruthy();
 
+      assertDefined(first.nextCursor);
       const next = await personaRepository.list(fakeD1, {
         limit: 2,
-        cursor: first.nextCursor!,
+        cursor: first.nextCursor,
       });
       expect(next.personas[0].id).toBe("p-2");
     });
@@ -338,9 +342,10 @@ describe("personaRepository", () => {
       expect(first.total).toBe(3);
       expect(first.hasMore).toBe(true);
 
+      assertDefined(first.nextCursor);
       const next = await personaRepository.listForAdmin(fakeD1, {
         limit: 1,
-        cursor: first.nextCursor!,
+        cursor: first.nextCursor,
       });
       // 同 createdAt なら id 降順
       expect(next.personas[0].id).toBe("p-b");
