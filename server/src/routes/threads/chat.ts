@@ -2,7 +2,6 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { handleChatStream } from "@mastra/ai-sdk";
 import { Mastra } from "@mastra/core/mastra";
 import { createUIMessageStreamResponse, type UIMessage } from "ai";
-import { HTTPException } from "hono/http-exception";
 import { classifyIntent } from "~/lib/classify-intent";
 import { resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
@@ -62,16 +61,9 @@ const chatRoute = createRoute({
 chatRoutes.openapi(chatRoute, async (c) => {
   const { threadId } = c.req.valid("param");
   const { message, intent: fixedIntent } = c.req.valid("json");
-  const thread = c.get("thread");
-  const principal = c.get("principal");
-  if (!thread || !principal) {
-    logger.error("required context missing in handler", undefined, {
-      route: "POST /threads/:threadId/chat",
-      threadSet: thread != null,
-      principalSet: principal != null,
-    });
-    throw new HTTPException(500, { message: "Internal Server Error" });
-  }
+  // requireAuth / requireThreadAccess middleware を通過後なので必ずセットされている
+  const thread = c.get("thread") as ThreadVariables["thread"];
+  const principal = c.get("principal") as PrincipalVariables["principal"];
 
   logger.info(`[Chat] request received`, {
     threadId,
