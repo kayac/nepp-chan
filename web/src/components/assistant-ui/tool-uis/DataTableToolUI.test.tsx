@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 
 import { DisplayTableToolComponent } from "./DataTableToolUI";
 
-// テストで使うサブセットのみ型付けし、assistant-ui の厳密な ToolCallMessagePart 型は緩めて受ける
 const Comp = DisplayTableToolComponent as unknown as (
   props: Record<string, unknown>,
 ) => React.ReactElement;

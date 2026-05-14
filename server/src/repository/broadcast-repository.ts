@@ -255,7 +255,6 @@ export const broadcastRepository = {
       .orderBy(broadcastMessages.sentAt)
       .limit(limit)
       .all();
-    // status="sent" の行に限るため sentAt は非 null
     return rows as SentBroadcastMessage[];
   },
 

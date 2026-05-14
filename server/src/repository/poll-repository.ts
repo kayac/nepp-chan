@@ -137,7 +137,6 @@ export const pollRepository = {
       )
       .orderBy(polls.sentAt)
       .all();
-    // WHERE で sentAt IS NOT NULL を明示しているため非 null
     return rows as SentPoll[];
   },
 

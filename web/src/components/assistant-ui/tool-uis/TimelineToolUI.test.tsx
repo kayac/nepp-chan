@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 
 import { DisplayTimelineToolComponent } from "./TimelineToolUI";
 
-// テストで使うサブセットのみ型付けし、assistant-ui の厳密な ToolCallMessagePart 型は緩めて受ける
 const Comp = DisplayTimelineToolComponent as unknown as (
   props: Record<string, unknown>,
 ) => React.ReactElement;
