@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { assertDefined } from "~/__tests__/helpers/assert-defined";
 import { createTestDb, type TestDb } from "~/__tests__/helpers/test-db";
 
 const { testDbHolder } = vi.hoisted(() => ({
@@ -168,9 +167,7 @@ describe("adminUserRepository", () => {
       const after = Date.now();
 
       const found = await adminUserRepository.findById(fakeD1, "u-1");
-      assertDefined(found);
-      assertDefined(found.updatedAt);
-      const ms = new Date(found.updatedAt).getTime();
+      const ms = new Date(found!.updatedAt!).getTime();
       expect(ms).toBeGreaterThanOrEqual(before);
       expect(ms).toBeLessThanOrEqual(after);
     });

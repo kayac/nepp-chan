@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { assertDefined } from "~/__tests__/helpers/assert-defined";
 import { createTestDb, type TestDb } from "~/__tests__/helpers/test-db";
 
 const { testDbHolder } = vi.hoisted(() => ({
@@ -150,10 +149,9 @@ describe("broadcastRepository", () => {
       await seed(4);
 
       const first = await broadcastRepository.findAll(fakeD1, { limit: 2 });
-      assertDefined(first.nextCursor);
       const second = await broadcastRepository.findAll(fakeD1, {
         limit: 2,
-        cursor: first.nextCursor,
+        cursor: first.nextCursor!,
       });
 
       expect(first.broadcasts.map((b) => b.id)).toEqual(["b-03", "b-02"]);

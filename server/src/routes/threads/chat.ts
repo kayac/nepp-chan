@@ -2,8 +2,8 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { handleChatStream } from "@mastra/ai-sdk";
 import { Mastra } from "@mastra/core/mastra";
 import { createUIMessageStreamResponse, type UIMessage } from "ai";
+import { HTTPException } from "hono/http-exception";
 import { classifyIntent } from "~/lib/classify-intent";
-import { ensureContextValue } from "~/lib/context-vars";
 import { resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import type { PrincipalVariables } from "~/lib/principal";
@@ -62,8 +62,13 @@ const chatRoute = createRoute({
 chatRoutes.openapi(chatRoute, async (c) => {
   const { threadId } = c.req.valid("param");
   const { message, intent: fixedIntent } = c.req.valid("json");
-  const thread = ensureContextValue(c.get("thread"), "thread");
-  const principal = ensureContextValue(c.get("principal"), "principal");
+  const thread = c.get("thread");
+  const principal = c.get("principal");
+  if (!thread || !principal) {
+    throw new HTTPException(500, {
+      message: "thread / principal が middleware でセットされていない",
+    });
+  }
 
   logger.info(`[Chat] request received`, {
     threadId,

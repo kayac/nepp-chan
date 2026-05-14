@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { assertDefined } from "~/__tests__/helpers/assert-defined";
 import { createTestDb, type TestDb } from "~/__tests__/helpers/test-db";
 
 const { testDbHolder } = vi.hoisted(() => ({
@@ -54,8 +53,7 @@ describe("adminSessionRepository", () => {
         userId: "user-1",
       });
 
-      assertDefined(saved);
-      const expiresAt = new Date(saved.expiresAt).getTime();
+      const expiresAt = new Date(saved!.expiresAt).getTime();
       const sevenDays = 7 * 24 * 60 * 60 * 1000;
       expect(expiresAt - before).toBeGreaterThanOrEqual(sevenDays - 1000);
       expect(expiresAt - after).toBeLessThanOrEqual(sevenDays + 1000);

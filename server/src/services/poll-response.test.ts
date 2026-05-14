@@ -1,7 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { assertDefined } from "~/__tests__/helpers/assert-defined";
-
 vi.mock("~/repository/poll-repository", () => ({
   pollRepository: {
     findById: vi.fn(),
@@ -147,9 +145,8 @@ describe("handlePollPostback", () => {
 
     await handlePollPostback(env, "U1", "poll=p-1&c=春", "rt");
 
-    const firstCall = vi.mocked(pollRepository.findSubmission).mock.calls[0];
-    assertDefined(firstCall);
-    const [, , passedUserId] = firstCall;
+    const [, , passedUserId] = vi.mocked(pollRepository.findSubmission).mock
+      .calls[0]!;
     expect(passedUserId).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(passedUserId).not.toBe("U1");
   });

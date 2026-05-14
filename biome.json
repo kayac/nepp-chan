@@ -64,6 +64,9 @@
           "complexity": {
             "useArrowFunction": "off"
           },
+          "style": {
+            "noNonNullAssertion": "off"
+          },
           "suspicious": {
             "noConsole": "off"
           }

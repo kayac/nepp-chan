@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { convertMessages } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
-import { ensureContextValue } from "~/lib/context-vars";
+import { HTTPException } from "hono/http-exception";
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
 import { toResourceId } from "~/lib/principal";
@@ -89,7 +89,12 @@ const getThreadsRoute = createRoute({
 
 threadsRoutes.openapi(getThreadsRoute, async (c) => {
   const { page, perPage } = c.req.valid("query");
-  const principal = ensureContextValue(c.get("principal"), "principal");
+  const principal = c.get("principal");
+  if (!principal) {
+    throw new HTTPException(500, {
+      message: "principal が middleware でセットされていない",
+    });
+  }
   const memory = await getMemory(c.env.DB);
 
   const result = await memory.listThreads({
@@ -142,7 +147,12 @@ const createThreadRoute = createRoute({
 
 threadsRoutes.openapi(createThreadRoute, async (c) => {
   const { title, metadata } = c.req.valid("json");
-  const principal = ensureContextValue(c.get("principal"), "principal");
+  const principal = c.get("principal");
+  if (!principal) {
+    throw new HTTPException(500, {
+      message: "principal が middleware でセットされていない",
+    });
+  }
   const memory = await getMemory(c.env.DB);
 
   const thread = await memory.createThread({
@@ -179,7 +189,12 @@ const getThreadRoute = createRoute({
 });
 
 threadsRoutes.openapi(getThreadRoute, async (c) => {
-  const thread = ensureContextValue(c.get("thread"), "thread");
+  const thread = c.get("thread");
+  if (!thread) {
+    throw new HTTPException(500, {
+      message: "thread が middleware でセットされていない",
+    });
+  }
   return c.json(toThreadResponse(thread), 200);
 });
 
