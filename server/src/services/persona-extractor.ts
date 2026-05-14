@@ -228,7 +228,7 @@ const findThreadById = async (
     .where(eq(mastraThreads.id, threadId))
     .get();
 
-  if (!thread || !thread.resourceId) {
+  if (!thread?.resourceId) {
     throw new HTTPException(404, { message: "スレッドが見つかりません" });
   }
 
