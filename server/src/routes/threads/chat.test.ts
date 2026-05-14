@@ -39,6 +39,7 @@ vi.mock("~/mastra/request-context", () => ({
 }));
 
 vi.mock("@mastra/memory", () => ({
+  // biome-ignore lint/complexity/useArrowFunction: new で呼ばれる constructor mock
   Memory: vi.fn(function () {
     return {
       listThreads: vi.fn(),
