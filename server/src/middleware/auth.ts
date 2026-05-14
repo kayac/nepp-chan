@@ -5,7 +5,7 @@ import type { PrincipalVariables } from "~/lib/principal";
 
 export const requireAuth = createMiddleware<{
   Bindings: CloudflareBindings;
-  Variables: Partial<PrincipalVariables>;
+  Variables: PrincipalVariables;
 }>(async (c, next) => {
   if (!c.get("principal")) {
     logger.warn("[Auth] missing or invalid access token");
