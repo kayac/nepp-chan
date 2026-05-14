@@ -4,9 +4,9 @@ import { describe, expect, it } from "vitest";
 
 import { DisplayTimelineToolComponent } from "./TimelineToolUI";
 
-// biome-ignore lint/suspicious/noExplicitAny: テスト用
+// テストで使うサブセットのみ型付けし、assistant-ui の厳密な ToolCallMessagePart 型は緩めて受ける
 const Comp = DisplayTimelineToolComponent as unknown as (
-  props: any,
+  props: Record<string, unknown>,
 ) => React.ReactElement;
 
 const baseArgs = {

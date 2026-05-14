@@ -4,9 +4,9 @@ import { describe, expect, it } from "vitest";
 
 import { DisplayTableToolComponent } from "./DataTableToolUI";
 
-// biome-ignore lint/suspicious/noExplicitAny: テスト用に型を緩める
+// テストで使うサブセットのみ型付けし、assistant-ui の厳密な ToolCallMessagePart 型は緩めて受ける
 const Comp = DisplayTableToolComponent as unknown as (
-  props: any,
+  props: Record<string, unknown>,
 ) => React.ReactElement;
 
 const baseArgs = {
