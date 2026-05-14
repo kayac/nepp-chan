@@ -10,6 +10,8 @@ import {
 
 type PollStatus = Poll["status"];
 
+export type SentPoll = Poll & { sentAt: string };
+
 type CreatePollInput = {
   id: string;
   title: string;
@@ -121,7 +123,7 @@ export const pollRepository = {
       .all();
   },
 
-  async findSentSince(d1: D1Database, since: string) {
+  async findSentSince(d1: D1Database, since: string): Promise<SentPoll[]> {
     const db = createDb(d1);
     const rows = await db
       .select()
@@ -136,7 +138,7 @@ export const pollRepository = {
       .orderBy(polls.sentAt)
       .all();
     // WHERE で sentAt IS NOT NULL を明示しているため非 null
-    return rows as Array<(typeof rows)[number] & { sentAt: string }>;
+    return rows as SentPoll[];
   },
 
   // --- Submissions ---
