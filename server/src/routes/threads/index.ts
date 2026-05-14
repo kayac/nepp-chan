@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { convertMessages } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { HTTPException } from "hono/http-exception";
+import { logger } from "~/lib/logger";
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
 import { toResourceId } from "~/lib/principal";
@@ -91,9 +92,11 @@ threadsRoutes.openapi(getThreadsRoute, async (c) => {
   const { page, perPage } = c.req.valid("query");
   const principal = c.get("principal");
   if (!principal) {
-    throw new HTTPException(500, {
-      message: "principal が middleware でセットされていない",
+    logger.error("required context missing in handler", undefined, {
+      route: "GET /threads",
+      principalSet: false,
     });
+    throw new HTTPException(500, { message: "Internal Server Error" });
   }
   const memory = await getMemory(c.env.DB);
 
@@ -149,9 +152,11 @@ threadsRoutes.openapi(createThreadRoute, async (c) => {
   const { title, metadata } = c.req.valid("json");
   const principal = c.get("principal");
   if (!principal) {
-    throw new HTTPException(500, {
-      message: "principal が middleware でセットされていない",
+    logger.error("required context missing in handler", undefined, {
+      route: "POST /threads",
+      principalSet: false,
     });
+    throw new HTTPException(500, { message: "Internal Server Error" });
   }
   const memory = await getMemory(c.env.DB);
 
@@ -191,9 +196,11 @@ const getThreadRoute = createRoute({
 threadsRoutes.openapi(getThreadRoute, async (c) => {
   const thread = c.get("thread");
   if (!thread) {
-    throw new HTTPException(500, {
-      message: "thread が middleware でセットされていない",
+    logger.error("required context missing in handler", undefined, {
+      route: "GET /threads/:threadId",
+      threadSet: false,
     });
+    throw new HTTPException(500, { message: "Internal Server Error" });
   }
   return c.json(toThreadResponse(thread), 200);
 });

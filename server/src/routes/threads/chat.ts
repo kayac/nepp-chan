@@ -65,9 +65,12 @@ chatRoutes.openapi(chatRoute, async (c) => {
   const thread = c.get("thread");
   const principal = c.get("principal");
   if (!thread || !principal) {
-    throw new HTTPException(500, {
-      message: "thread / principal が middleware でセットされていない",
+    logger.error("required context missing in handler", undefined, {
+      route: "POST /threads/:threadId/chat",
+      threadSet: thread != null,
+      principalSet: principal != null,
     });
+    throw new HTTPException(500, { message: "Internal Server Error" });
   }
 
   logger.info(`[Chat] request received`, {
