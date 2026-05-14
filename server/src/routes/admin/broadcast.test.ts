@@ -43,7 +43,7 @@ const { adminUserRepository } = await import(
 );
 const { broadcastAdminRoutes: rawRoutes } = await import("./broadcast");
 
-import { withResolvePrincipal } from "../../test-helpers/test-app";
+import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
 
 const routes = await withResolvePrincipal(rawRoutes);
 

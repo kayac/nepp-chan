@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { assertDefined } from "../test-helpers/assert-defined";
+import { assertDefined } from "~/__tests__/helpers/assert-defined";
 
 vi.mock("~/repository/poll-repository", () => ({
   pollRepository: {

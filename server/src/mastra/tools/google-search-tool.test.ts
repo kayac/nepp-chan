@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { callTool } from "../../test-helpers/tool-context";
+import { callTool } from "~/__tests__/helpers/tool-context";
 import { searchGoogleTool } from "./google-search-tool";
 
 const env = {

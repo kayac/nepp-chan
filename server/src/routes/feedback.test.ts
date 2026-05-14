@@ -9,7 +9,7 @@ vi.mock("~/repository/feedback-repository", () => ({
 const { feedbackRepository } = await import("~/repository/feedback-repository");
 const { feedbackRoutes: rawFeedbackRoutes } = await import("./feedback");
 
-import { withResolvePrincipal } from "../test-helpers/test-app";
+import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
 
 const feedbackRoutes = await withResolvePrincipal(rawFeedbackRoutes);
 

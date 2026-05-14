@@ -56,7 +56,6 @@ vi.mock("~/lib/storage", () => ({
 }));
 
 vi.mock("@mastra/memory", () => ({
-  // biome-ignore lint/complexity/useArrowFunction: new で呼ばれる constructor mock
   Memory: vi.fn(function () {
     return {
       recall: mockMemoryRecall,
@@ -69,7 +68,6 @@ vi.mock("~/mastra/memory", () => ({
 }));
 
 vi.mock("@mastra/core/mastra", () => ({
-  // biome-ignore lint/complexity/useArrowFunction: new で呼ばれる constructor mock
   Mastra: vi.fn(function () {
     return {
       getAgent: vi.fn().mockReturnValue({

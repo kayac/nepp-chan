@@ -11,7 +11,7 @@ import {
   polls,
   threadPersonaStatus,
 } from "~/db";
-import { createTestDb, type TestDb } from "../test-helpers/test-db";
+import { createTestDb, type TestDb } from "~/__tests__/helpers/test-db";
 
 const { testDbHolder } = vi.hoisted(() => ({
   testDbHolder: { db: null as TestDb | null },

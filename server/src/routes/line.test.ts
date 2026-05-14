@@ -15,7 +15,7 @@ const broadcastResponse = await import("~/services/broadcast-response");
 const pollResponse = await import("~/services/poll-response");
 const { lineRoutes: rawRoutes } = await import("./line");
 
-import { withResolvePrincipal } from "../test-helpers/test-app";
+import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
 
 const routes = await withResolvePrincipal(rawRoutes);
 

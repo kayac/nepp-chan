@@ -152,7 +152,7 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 
 ### 共通ヘルパ
 
-- server: `server/src/test-helpers/`（`test-app` / `test-db` / `tool-context`）
+- server: `server/src/__tests__/helpers/`（`test-app` / `test-db` / `tool-context` / `assert-defined`）
 - web: `web/src/test/`（`msw-server` / `renderHookWithQuery` / `renderWithQuery` / `setup`）
 
 ### カバレッジ集計の除外

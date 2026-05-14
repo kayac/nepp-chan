@@ -7,7 +7,7 @@ vi.mock("~/services/knowledge/search", () => ({
 const { searchKnowledge } = await import("~/services/knowledge/search");
 const { knowledgeSearchTool } = await import("./knowledge-search-tool");
 
-import { callTool } from "../../test-helpers/tool-context";
+import { callTool } from "~/__tests__/helpers/tool-context";
 
 describe("knowledgeSearchTool.execute", () => {
   beforeEach(() => {

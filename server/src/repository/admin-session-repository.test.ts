@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { assertDefined } from "../test-helpers/assert-defined";
-import { createTestDb, type TestDb } from "../test-helpers/test-db";
+import { assertDefined } from "~/__tests__/helpers/assert-defined";
+import { createTestDb, type TestDb } from "~/__tests__/helpers/test-db";
 
 const { testDbHolder } = vi.hoisted(() => ({
   testDbHolder: { db: null as TestDb | null },

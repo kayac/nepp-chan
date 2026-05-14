@@ -48,7 +48,7 @@ const { adminSessionRepository } = await import(
 );
 const { authRoutes: rawAuthRoutes } = await import("./auth");
 
-import { withResolvePrincipal } from "../test-helpers/test-app";
+import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
 
 const authRoutes = await withResolvePrincipal(rawAuthRoutes);
 

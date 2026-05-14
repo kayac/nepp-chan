@@ -13,7 +13,6 @@ vi.mock("~/lib/storage", () => ({
 }));
 
 vi.mock("@mastra/memory", () => ({
-  // biome-ignore lint/complexity/useArrowFunction: new で呼ばれる constructor mock
   Memory: vi.fn(function () {
     return {
       listThreads: mockListThreads,
@@ -64,7 +63,7 @@ const { threadsRoutes: rawThreadsRoutes } = await import("./index");
 const { deleteThreadWithRelatedData } = await import("~/services/thread");
 const sessionService = await import("~/services/auth/anonymous-session");
 
-import { withResolvePrincipal } from "../../test-helpers/test-app";
+import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
 
 const threadsRoutes = await withResolvePrincipal(rawThreadsRoutes);
 

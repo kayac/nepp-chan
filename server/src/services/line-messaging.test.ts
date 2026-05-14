@@ -8,7 +8,6 @@ const { agentHolder } = vi.hoisted(() => ({
 }));
 
 vi.mock("@mastra/core/mastra", () => ({
-  // biome-ignore lint/complexity/useArrowFunction: new で呼ばれる constructor mock
   Mastra: vi.fn(function () {
     return {
       getAgent: vi.fn(() => agentHolder),

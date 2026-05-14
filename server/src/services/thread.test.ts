@@ -14,7 +14,6 @@ const mockGetThreadById = vi.fn();
 const mockDeleteThread = vi.fn();
 
 vi.mock("@mastra/memory", () => ({
-  // biome-ignore lint/complexity/useArrowFunction: new で呼ばれる constructor mock
   Memory: vi.fn(function () {
     return {
       getThreadById: mockGetThreadById,

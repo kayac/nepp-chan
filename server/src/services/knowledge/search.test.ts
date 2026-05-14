@@ -7,14 +7,12 @@ vi.mock("@ai-sdk/google", () => ({
 }));
 
 vi.mock("@mastra/core/llm", () => ({
-  // biome-ignore lint/complexity/useArrowFunction: new で呼ばれる constructor mock
   ModelRouterLanguageModel: vi.fn(function (modelId: string) {
     return { modelId };
   }),
 }));
 
 vi.mock("@mastra/rag", () => ({
-  // biome-ignore lint/complexity/useArrowFunction: new で呼ばれる constructor mock
   MastraAgentRelevanceScorer: vi.fn(function (id: string, model: unknown) {
     return { id, model };
   }),

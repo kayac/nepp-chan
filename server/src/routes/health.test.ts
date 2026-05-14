@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { withResolvePrincipal } from "../test-helpers/test-app";
+import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
 
 import { healthRoutes } from "./health";
 
