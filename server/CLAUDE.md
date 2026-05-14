@@ -226,6 +226,15 @@ throw new HTTPException(404, { message: "Not found" });
 - スレッドアクセス: `requireThreadAccess` ミドルウェアで所有権検証（`principal` + `threadId` → `thread`）
 - 共通スキーマ: `schemas/` から import（インライン定義を避ける）
 
+### middleware の適用方法
+
+- route ごとに必要な middleware が異なる、または handler 内で `c.get(...)` を non-optional に narrow させたい場合
+  → `createRoute({ middleware: [requireAuth, ...] as const })` で route 定義に紐付ける
+  - 例: `routes/threads/{chat,index}.ts` の `requireAuth` のみ vs `requireAuth + requireThreadAccess`
+- sub-app の全 route に同じ middleware を blanket でかける場合
+  → `app.use("*", mw)` で sub-app 入口にまとめる
+  - 例: `routes/admin/*` の `requireRole("staff")`、`routes/line.ts` の署名検証
+
 ## データベーステーブル
 
 ### admin_sessions
