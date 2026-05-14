@@ -3,6 +3,7 @@ import { handleChatStream } from "@mastra/ai-sdk";
 import { Mastra } from "@mastra/core/mastra";
 import { createUIMessageStreamResponse, type UIMessage } from "ai";
 import { classifyIntent } from "~/lib/classify-intent";
+import { ensureContextValue } from "~/lib/context-vars";
 import { resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import type { PrincipalVariables } from "~/lib/principal";
@@ -61,8 +62,8 @@ const chatRoute = createRoute({
 chatRoutes.openapi(chatRoute, async (c) => {
   const { threadId } = c.req.valid("param");
   const { message, intent: fixedIntent } = c.req.valid("json");
-  const thread = c.get("thread")!;
-  const principal = c.get("principal")!;
+  const thread = ensureContextValue(c.get("thread"), "thread");
+  const principal = ensureContextValue(c.get("principal"), "principal");
 
   logger.info(`[Chat] request received`, {
     threadId,
