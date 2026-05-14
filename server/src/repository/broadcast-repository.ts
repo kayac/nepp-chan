@@ -249,10 +249,8 @@ export const broadcastRepository = {
       .orderBy(broadcastMessages.sentAt)
       .limit(limit)
       .all();
-    // status="sent" 行に限り sentAt は必ず入っている。スキーマ上 nullable なため型ガードで narrow。
-    return rows.filter(
-      (r): r is typeof r & { sentAt: string } => r.sentAt !== null,
-    );
+    // status="sent" の行に限るため sentAt は非 null
+    return rows as Array<(typeof rows)[number] & { sentAt: string }>;
   },
 
   async delete(d1: D1Database, id: string) {

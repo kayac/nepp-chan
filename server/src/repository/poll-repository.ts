@@ -135,10 +135,8 @@ export const pollRepository = {
       )
       .orderBy(polls.sentAt)
       .all();
-    // WHERE で sentAt IS NOT NULL を明示しているが、スキーマ上 nullable なため型ガードで narrow。
-    return rows.filter(
-      (r): r is typeof r & { sentAt: string } => r.sentAt !== null,
-    );
+    // WHERE で sentAt IS NOT NULL を明示しているため非 null
+    return rows as Array<(typeof rows)[number] & { sentAt: string }>;
   },
 
   // --- Submissions ---
