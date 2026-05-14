@@ -65,7 +65,7 @@ export const injectPollsToThread = async (params: {
   const messages = polls.map((poll) => ({
     id: `poll-inject:${poll.id}:${threadId}`,
     role: "system" as const,
-    createdAt: new Date(poll.sentAt as string),
+    createdAt: new Date(poll.sentAt),
     threadId,
     resourceId,
     content: {
@@ -76,8 +76,9 @@ export const injectPollsToThread = async (params: {
 
   await memoryStore.saveMessages({ messages });
 
-  const latestSentAt = polls[polls.length - 1].sentAt as string;
-  await userPollStateRepository.upsert(d1, userId, latestSentAt);
+  const latest = polls.at(-1);
+  if (!latest) return;
+  await userPollStateRepository.upsert(d1, userId, latest.sentAt);
 
   logger.info(
     `[poll-inject] Injected ${messages.length} poll(s) into ${threadId}`,

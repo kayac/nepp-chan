@@ -44,7 +44,7 @@ export const injectBroadcastsToThread = async (params: {
   const messages = broadcasts.map((b) => ({
     id: `broadcast-inject:${b.id}:${threadId}`,
     role: "system" as const,
-    createdAt: new Date(b.sentAt!),
+    createdAt: new Date(b.sentAt),
     threadId,
     resourceId,
     content: {
@@ -52,7 +52,7 @@ export const injectBroadcastsToThread = async (params: {
       parts: [
         {
           type: "text" as const,
-          text: buildSystemContent(b.title, b.body, b.sentAt!),
+          text: buildSystemContent(b.title, b.body, b.sentAt),
         },
       ],
     },
@@ -60,8 +60,9 @@ export const injectBroadcastsToThread = async (params: {
 
   await memoryStore.saveMessages({ messages });
 
-  const latestSentAt = broadcasts[broadcasts.length - 1]!.sentAt!;
-  await userBroadcastStateRepository.upsert(d1, userId, latestSentAt);
+  const latest = broadcasts.at(-1);
+  if (!latest) return;
+  await userBroadcastStateRepository.upsert(d1, userId, latest.sentAt);
 
   logger.info(
     `[broadcast-inject] Injected ${messages.length} broadcast(s) into ${threadId}`,

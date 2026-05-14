@@ -237,7 +237,7 @@ export const broadcastRepository = {
   async findSentSince(d1: D1Database, since: string, limit = 10) {
     const db = createDb(d1);
 
-    return db
+    const rows = await db
       .select()
       .from(broadcastMessages)
       .where(
@@ -249,6 +249,10 @@ export const broadcastRepository = {
       .orderBy(broadcastMessages.sentAt)
       .limit(limit)
       .all();
+    // status="sent" 行に限り sentAt は必ず入っている。スキーマ上 nullable なため型ガードで narrow。
+    return rows.filter(
+      (r): r is typeof r & { sentAt: string } => r.sentAt !== null,
+    );
   },
 
   async delete(d1: D1Database, id: string) {

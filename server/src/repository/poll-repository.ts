@@ -123,7 +123,7 @@ export const pollRepository = {
 
   async findSentSince(d1: D1Database, since: string) {
     const db = createDb(d1);
-    return db
+    const rows = await db
       .select()
       .from(polls)
       .where(
@@ -135,6 +135,10 @@ export const pollRepository = {
       )
       .orderBy(polls.sentAt)
       .all();
+    // WHERE で sentAt IS NOT NULL を明示しているが、スキーマ上 nullable なため型ガードで narrow。
+    return rows.filter(
+      (r): r is typeof r & { sentAt: string } => r.sentAt !== null,
+    );
   },
 
   // --- Submissions ---
