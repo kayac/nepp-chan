@@ -6,7 +6,6 @@ export const getSentryOptions = (
   dsn: env.SENTRY_DSN,
   environment: env.ENVIRONMENT,
   tracesSampleRate: (env.ENVIRONMENT as string) === "production" ? 0.1 : 1.0,
-  sendDefaultPii: false,
   _experiments: {
     enableLogs: true,
   },
