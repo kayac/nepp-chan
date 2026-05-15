@@ -108,9 +108,10 @@ export const sendLineMessages = async (params: {
       messages,
     });
     logger.info("[LINE] replyMessage sent", { threadId: params.threadId });
-  } catch {
+  } catch (error) {
     logger.warn("[LINE] replyMessage failed, falling back to pushMessage", {
       threadId: params.threadId,
+      errorName: error instanceof Error ? error.name : "unknown",
     });
     await params.client.pushMessage({ to: params.userId, messages });
     logger.info("[LINE] pushMessage sent", { threadId: params.threadId });

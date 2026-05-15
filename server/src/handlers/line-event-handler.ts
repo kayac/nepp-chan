@@ -1,6 +1,8 @@
+import * as Sentry from "@sentry/cloudflare";
 import { logger } from "~/lib/logger";
 import type { LinePrincipal } from "~/lib/principal";
 import { toLineIds } from "~/lib/principal";
+import { reportPrivacyCriticalError } from "~/lib/sentry-helpers";
 import type { LineEventMessage } from "~/schemas/line-schema";
 import {
   createLineClient,
@@ -24,6 +26,7 @@ export const handleLineEvent = async (
         await deleteAllByLineUserId(env, body.userId);
         message.ack();
       } catch (error) {
+        reportPrivacyCriticalError(error, "line-unfollow-handler");
         logger.error("LINE unfollow deletion failed", error);
         message.retry();
       }
@@ -61,6 +64,9 @@ export const handleLineEvent = async (
 
       message.ack();
     } catch (error) {
+      Sentry.captureException(error, {
+        tags: { handler: "line-event" },
+      });
       logger.error(
         "LINE reply failed",
         error,

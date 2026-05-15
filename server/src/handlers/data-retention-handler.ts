@@ -1,4 +1,5 @@
 import { logger } from "~/lib/logger";
+import { markPrivacyCriticalScope } from "~/lib/sentry-helpers";
 import { runDataRetention } from "~/services/data-retention";
 
 export const handleDataRetention: ExportedHandlerScheduledHandler<
@@ -14,6 +15,7 @@ export const handleDataRetention: ExportedHandlerScheduledHandler<
       `[DataRetention] Completed: ${total} total rows deleted across ${results.length} tables`,
     );
   } catch (error) {
+    markPrivacyCriticalScope("data-retention-handler");
     logger.error("[DataRetention] Error", error);
     throw error;
   }

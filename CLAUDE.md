@@ -161,11 +161,12 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 
 判断軸（具体的なファイルは各 `vitest.config.ts` の `coverage.exclude` に理由コメント付きで列挙）:
 
-- StrictMode / フォールバック UI ラッパー
+- StrictMode / フォールバック UI ラッパー（Sentry / Error Boundary 初期化など）
 - Astro から `client:only` でマウントされる薄い page shell
 - 外部 SDK 連携が深く E2E 領域に該当するもの（assistant-ui まわりなど）
 - HOC で囲んだ登録 / barrel / registry
 - 責務分離が完了して orchestration だけになった Panel / Provider / context wrapper
+- 自動生成資源（Mastra の `mastra/public/**` 等）
 
 orchestration shell を exclude するときは「本質的ロジックが hooks / helpers / 子コンポーネントに抽出済みで、別途テストされている」ことを確認してから行う。
 

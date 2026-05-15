@@ -24,10 +24,11 @@ export default defineConfig({
         "src/**/*.d.ts",
         "src/types/**",
         "src/pages/**",
-        // 薄いラッパー類はユニットテスト対象外
+        // Sentry 初期化・薄いラッパー類はユニットテスト対象外
+        "src/lib/sentry.ts",
         "src/providers/**",
         "src/components/RootLayout.tsx",
-        "src/components/ErrorBoundary.tsx",
+        "src/components/SentryErrorBoundary.tsx",
         // ページエントリ（Astro から client:only でマウントされる薄い Shell）
         "src/app/chat/App.tsx",
         "src/app/dashboard/DashboardPage.tsx",

@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/cloudflare";
 import { logger } from "~/lib/logger";
 import {
   deleteKnowledgeBySource,
@@ -123,6 +124,7 @@ export const handleR2Event = async (
         message.retry();
       }
     } catch (error) {
+      Sentry.captureException(error, { tags: { handler: "r2-event" } });
       logger.error(`Error processing ${key}`, error);
       message.retry();
     }

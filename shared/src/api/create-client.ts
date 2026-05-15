@@ -20,7 +20,7 @@ export type CreateApiClientOptions = {
    */
   // biome-ignore lint/suspicious/noConfusingVoidType: 戻り値を持たないコールバック (() => void) も許容するため void union が必要
   onUnauthorized?: (sentAuth: string) => boolean | void;
-  /** 5xx 系のときだけ呼ばれる observer。監視・ログ通報先に流す用途 */
+  /** 5xx 系のときだけ呼ばれる observer。Sentry 等の通報先に流す用途 */
   onServerError?: (error: ApiError, response: Response) => void;
 };
 

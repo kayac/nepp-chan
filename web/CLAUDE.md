@@ -56,8 +56,7 @@ web/
 │   │       ├── hooks/               # dashboard 専用フック（useBroadcasts / useEmergencies / useFeedback / useInvitations / useKnowledge / usePersonas / usePolls / useInfiniteScroll / useRole / keys）
 │   │       └── components/          # パネル群
 │   ├── components/
-│   │   ├── RootLayout.tsx     # 共通レイアウト（StrictMode + ErrorBoundary）
-│   │   ├── ErrorBoundary.tsx  # UI 例外時のフォールバック
+│   │   ├── RootLayout.tsx     # 共通レイアウト（StrictMode + Sentry）
 │   │   ├── AmbientBG.tsx      # bg-winter + 雪 + 星座を統合した canvas 背景
 │   │   ├── Mascot.tsx         # マスコット表示
 │   │   ├── assistant-ui/      # assistant-ui ベースのチャット UI
@@ -73,6 +72,7 @@ web/
 │   │   │   └── repository.ts  # 各 domain の repository 実体（shared/api/repository factory + client）
 │   │   ├── auth-token.ts      # 管理者トークン / セッショントークン（localStorage）
 │   │   ├── resource.ts        # resourceId 生成・取得
+│   │   ├── sentry.ts          # Sentry 初期化
 │   │   └── class-merge.ts     # cn ユーティリティ
 │   ├── constants/
 │   │   └── urls.ts            # 外部 URL 定数（PUBLIC_LP_URL 等）
@@ -241,5 +241,5 @@ pnpm deploy:prd        # prd 環境にデプロイ
 - ランナー: vitest（jsdom）+ Testing Library + msw
 - 配置: `src/foo.ts` の隣に `src/foo.test.ts` を置く co-located 方式
 - 共通ヘルパ: `src/test/`（msw-server / QueryClientProvider 付きの `renderHookWithQuery` / `renderWithQuery` / setup）
-- カバレッジ閾値は `vitest.config.ts` で管理。薄いラッパー / 外部 SDK 連携が深い tsx は除外
+- カバレッジ閾値は `vitest.config.ts` で管理。Sentry init / 薄いラッパー / 外部 SDK 連携が深い tsx は除外
 - E2E は未導入

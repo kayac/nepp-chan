@@ -62,6 +62,10 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           PUBLIC_API_URL: https://dev-api.nepp-chan.ai
           PUBLIC_LP_URL: https://dev-lp.nepp-chan.ai
+          PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN_WEB }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT_WEB: ${{ secrets.SENTRY_PROJECT_WEB }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
   deploy-lp:
     name: Deploy LP
