@@ -20,7 +20,8 @@ export const logger = {
     Sentry.logger.warn(message, attrs);
   },
   error: (message: string, error?: unknown, attrs?: LogAttributes) => {
-    console.error(message, error ?? "");
-    Sentry.logger.error(message, { ...serializeError(error), ...attrs });
+    const merged = { ...serializeError(error), ...attrs };
+    console.error(message, merged);
+    Sentry.logger.error(message, merged);
   },
 } as const;
