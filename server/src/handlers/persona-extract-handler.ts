@@ -21,6 +21,7 @@ export const handlePersonaExtract: ExportedHandlerScheduledHandler<
     );
   } catch (error) {
     logger.error("[PersonaExtract] Error", error);
+    // withSentry が未捕捉例外として自動送信するため再 throw のみ
     throw error;
   }
 };

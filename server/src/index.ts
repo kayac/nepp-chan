@@ -1,8 +1,10 @@
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
+import * as Sentry from "@sentry/cloudflare";
 import { handleLineEvent, handleR2Event, handleScheduled } from "~/handlers";
 import type { R2EventMessage } from "~/handlers/r2-event-handler";
 import { logger } from "~/lib/logger";
+import { getSentryOptions } from "~/lib/sentry";
 import {
   corsMiddleware,
   errorHandler,
@@ -77,4 +79,7 @@ const handler: ExportedHandler<CloudflareBindings> = {
   scheduled: handleScheduled,
 };
 
-export default handler;
+export default Sentry.withSentry<CloudflareBindings>(
+  (env) => getSentryOptions(env),
+  handler,
+);
