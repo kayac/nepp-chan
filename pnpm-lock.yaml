@@ -129,6 +129,9 @@ importers:
       '@mastra/rag':
         specifier: 2.1.2
         version: 2.1.2(@mastra/core@1.10.0(@standard-community/standard-json@0.3.5(@standard-schema/spec@1.1.0)(@types/json-schema@7.0.15)(quansync@0.2.11)(zod-to-json-schema@3.25.2(zod@4.4.3))(zod@4.4.3))(@standard-community/standard-openapi@0.2.9(@standard-community/standard-json@0.3.5(@standard-schema/spec@1.1.0)(@types/json-schema@7.0.15)(quansync@0.2.11)(zod-to-json-schema@3.25.2(zod@4.4.3))(zod@4.4.3))(@standard-schema/spec@1.1.0)(openapi-types@12.1.3)(zod@4.4.3))(@types/json-schema@7.0.15)(openapi-types@12.1.3)(zod@4.4.3))(zod@4.4.3)
+      '@nepp-chan/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@sentry/cloudflare':
         specifier: ^10.45.0
         version: 10.45.0
