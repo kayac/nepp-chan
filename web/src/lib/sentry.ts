@@ -1,3 +1,4 @@
+import { scrubEvent } from "@nepp-chan/shared/lib/pii-scrub";
 import * as Sentry from "@sentry/react";
 
 export const initSentry = () => {
@@ -8,12 +9,10 @@ export const initSentry = () => {
     dsn,
     environment: import.meta.env.MODE,
     tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
+    sendDefaultPii: false,
     ignoreErrors: ["NotAllowedError", "AbortError", "ResizeObserver loop"],
     beforeSend(event) {
-      if (event.request?.data) {
-        event.request.data = "[Filtered]";
-      }
-      return event;
+      return scrubEvent(event);
     },
   });
 };
