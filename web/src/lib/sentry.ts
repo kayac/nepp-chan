@@ -1,4 +1,3 @@
-import { scrubEvent } from "@nepp-chan/shared/lib/pii-scrub";
 import * as Sentry from "@sentry/react";
 
 export const initSentry = () => {
@@ -12,7 +11,12 @@ export const initSentry = () => {
     sendDefaultPii: false,
     ignoreErrors: ["NotAllowedError", "AbortError", "ResizeObserver loop"],
     beforeSend(event) {
-      return scrubEvent(event);
+      if (event.request) {
+        event.request.data = undefined;
+        event.request.cookies = undefined;
+        event.request.query_string = undefined;
+      }
+      return event;
     },
   });
 };

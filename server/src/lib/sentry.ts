@@ -1,4 +1,3 @@
-import { scrubEvent } from "@nepp-chan/shared/lib/pii-scrub";
 import type { CloudflareOptions } from "@sentry/cloudflare";
 
 export const getSentryOptions = (
@@ -12,6 +11,11 @@ export const getSentryOptions = (
     enableLogs: true,
   },
   beforeSend(event) {
-    return scrubEvent(event);
+    if (event.request) {
+      event.request.data = undefined;
+      event.request.cookies = undefined;
+      event.request.query_string = undefined;
+    }
+    return event;
   },
 });
