@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/cloudflare";
 import { logger } from "~/lib/logger";
 import { runDataRetention } from "~/services/data-retention";
 
@@ -14,6 +15,10 @@ export const handleDataRetention: ExportedHandlerScheduledHandler<
       `[DataRetention] Completed: ${total} total rows deleted across ${results.length} tables`,
     );
   } catch (error) {
+    const scope = Sentry.getCurrentScope();
+    scope.setLevel("fatal");
+    scope.setTag("privacy_critical", "true");
+    scope.setTag("component", "data-retention-handler");
     logger.error("[DataRetention] Error", error);
     throw error;
   }
