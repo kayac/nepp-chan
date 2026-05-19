@@ -392,10 +392,7 @@ broadcastAdminRoutes.openapi(sendRoute, async (c) => {
 
   const result = await sendBroadcast(c.env, id);
   if (!result.success) {
-    logger.error("[Broadcast] Failed to send broadcast", {
-      id,
-      error: result.error,
-    });
+    logger.error("[Broadcast] Failed to send broadcast", result.error, { id });
     throw new HTTPException(500, {
       message: "配信の送信に失敗しました",
     });
