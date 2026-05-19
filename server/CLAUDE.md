@@ -501,7 +501,7 @@ thread_persona_status 更新
 | -------------- | --------------------------------------- | ----------------------------------------------------------------- |
 | `*/5 * * * *`  | handleBroadcastCheck                    | 配信予約チェック（5分ごと）                                        |
 | `*/5 * * * *`  | handlePollCheck                         | 投票予約配信チェック（5分ごと）                                    |
-| `0 18 * * *`   | handlePersonaExtract → handleDataRetention | ペルソナ抽出 + 保管期間自動削除（毎日03:00 JST、順次実行）        |
+| `0 18 * * *`   | handlePersonaExtract → handleDataRetention | ペルソナ抽出 + 保管期間自動削除（毎日03:00 JST、順次実行。retention は Sentry Cron Monitor で不起動検知） |
 
 ### 保管期間自動削除
 
