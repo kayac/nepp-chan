@@ -40,10 +40,6 @@ export const Guide = () => {
               </span>
             ))}
           </div>
-          <div className="absolute right-5 top-5 grid size-16 place-items-center rounded-full border-2 border-(--apricot-700) bg-white/90 text-center font-(family-name:--font-display) text-(--apricot-700) [transform:rotate(-8deg)]">
-            <div className="text-2xl font-black leading-none">音</div>
-            <div className="text-[8px] font-bold tracking-wider">OTOINEPPU</div>
-          </div>
         </div>
       </div>
 
@@ -52,8 +48,8 @@ export const Guide = () => {
         data-revealed={body.revealed}
         className="min-w-0 opacity-0 translate-y-3 transition-all delay-200 duration-700 ease-out data-[revealed=true]:opacity-100 data-[revealed=true]:translate-y-0 md:order-2"
       >
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-(--brand)">
-          <span className="grid size-6 place-items-center rounded-full bg-(--teal-700) text-[12px] text-white">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-(--brand-hover)">
+          <span className="grid size-6 place-items-center rounded-full bg-(--teal-600) text-[12px] text-white">
             2
           </span>
           GUIDE

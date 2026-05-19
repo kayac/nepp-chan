@@ -15,8 +15,8 @@ export const Line = () => {
         data-revealed={body.revealed}
         className="min-w-0 opacity-0 translate-y-3 transition-all duration-700 ease-out data-[revealed=true]:opacity-100 data-[revealed=true]:translate-y-0"
       >
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-(--brand)">
-          <span className="grid size-6 place-items-center rounded-full bg-(--teal-700) text-[12px] text-white">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-(--brand-hover)">
+          <span className="grid size-6 place-items-center rounded-full bg-(--teal-600) text-[12px] text-white">
             3
           </span>
           LINE
