@@ -133,7 +133,7 @@ export const MiniChat = () => {
                 "w-fit max-w-[78%] break-words rounded-(--r-bubble) px-[18px] py-3 text-sm leading-[1.7]",
                 "animate-[lp-bubble-in_400ms_cubic-bezier(0.22,1,0.36,1)] shadow-(--shadow-float-sm)",
                 m.role === "user"
-                  ? "self-end bg-(--teal-700) text-white"
+                  ? "self-end bg-(--brand-hover) text-white"
                   : "self-start bg-(--paper-50) text-(--fg-1)",
               )}
             >
