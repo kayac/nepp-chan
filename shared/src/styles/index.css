@@ -4,9 +4,9 @@
      =============================================== */
 
   /* Teal — primary brand (ねっぷちゃんのベレー帽 / マフラー)
-     H=183 (brand key #5CB7BB) unified. Saturation follows Tailwind teal
-     curve (high S at mid/dark for vivid shades), while teal-500 is pinned
-     to the brand key. */
+     teal-500 is pinned to the brand key #5CB7BB (H=183). Other shades
+     follow Tailwind teal's lightness/saturation curve, recentered around
+     that hue (small hue drift remains in darker shades for vividness). */
   --teal-50: #f0fbfd;
   --teal-100: #cdf3f7;
   --teal-200: #99ebf3;
