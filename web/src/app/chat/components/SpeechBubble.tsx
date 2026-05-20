@@ -16,8 +16,8 @@ const variantStyles: Record<Variant, string> = {
     "rounded-tl-[10px] shadow-[var(--shadow-float-sm)]",
   ),
   user: cn(
-    "bg-(--teal-700) text-(--paper-0) border border-(--teal-700)",
-    "rounded-tr-[10px] shadow-[0_8px_20px_rgba(15,118,110,0.22)]",
+    "bg-(--brand-hover) text-(--paper-0) border border-(--brand-hover)",
+    "rounded-tr-[10px] shadow-[0_8px_20px_rgba(13,146,150,0.22)]",
   ),
 };
 

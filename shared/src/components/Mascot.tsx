@@ -20,9 +20,9 @@ const MASCOT_ASSETS = {
   sleeping: "/mascot/pose-sleeping.png",
   stretch: "/mascot/pose-stretch.png",
   "shy-stand": "/mascot/pose-shy-stand.png",
-  // フルボディフォールバック
-  "fullbody-v3": "/mascot/pose-fullbody-v3.png",
-  "fullbody-v2": "/mascot/pose-fullbody-v2.png",
+  // フルボディ
+  normal: "/mascot/pose-normal.png",
+  thinking: "/mascot/pose-thinking.png",
 } as const;
 
 export type MascotExpression = keyof typeof MASCOT_ASSETS;
@@ -123,8 +123,7 @@ const PRELOAD_KEYS: readonly MascotExpression[] = [
   "content",
   "laugh",
   "surprise",
-  "point",
-  "sleeping",
+  "thinking",
 ];
 
 if (typeof window !== "undefined") {

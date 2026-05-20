@@ -15,8 +15,8 @@ export const Line = () => {
         data-revealed={body.revealed}
         className="min-w-0 opacity-0 translate-y-3 transition-all duration-700 ease-out data-[revealed=true]:opacity-100 data-[revealed=true]:translate-y-0"
       >
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-(--brand)">
-          <span className="grid size-6 place-items-center rounded-full bg-(--teal-700) text-[12px] text-white">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-(--brand-hover)">
+          <span className="grid size-6 place-items-center rounded-full bg-(--teal-600) text-[12px] text-white">
             3
           </span>
           LINE
@@ -71,7 +71,7 @@ export const Line = () => {
             <div className="flex items-end gap-2">
               <span className="grid size-7 flex-none place-items-center overflow-hidden rounded-full bg-(--teal-50)">
                 <img
-                  src="/mascot/expr-wave-smile.png"
+                  src="/mascot/icon.png"
                   alt=""
                   className="size-6 object-contain"
                 />
@@ -88,15 +88,14 @@ export const Line = () => {
             <div className="flex items-end gap-2">
               <span className="grid size-7 flex-none place-items-center overflow-hidden rounded-full bg-(--teal-50)">
                 <img
-                  src="/mascot/expr-content.png"
+                  src="/mascot/icon.png"
                   alt=""
                   className="size-6 object-contain"
                 />
               </span>
               <div className="max-w-[210px] rounded-2xl rounded-bl-md bg-white px-3 py-2 text-xs leading-relaxed text-(--fg-1) shadow-(--shadow-xs)">
-                駅の<strong>常盤軒</strong>
-                の黒いお蕎麦がおすすめ！今日はちょっと寒いから、あったかい一杯がいいかも
-                🥢
+                駅近の<strong>「満腹イケレ」</strong>や<strong>「咲来」</strong>
+                で、こだわりの美味しいおそばや丼ものがお腹いっぱい食べられるよ！🥢
               </div>
             </div>
           </div>

@@ -92,7 +92,7 @@ export const Landing = ({ onSubmit, disabled = false }: Props) => {
             className="w-[200px] md:w-[260px] aspect-[3/4] flex-none"
           >
             <Mascot
-              expression="fullbody-v3"
+              expression="normal"
               showHalo={false}
               floating={true}
               alt="ねっぷちゃん"

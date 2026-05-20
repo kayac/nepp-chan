@@ -14,7 +14,7 @@ describe("SpeechBubble", () => {
       <SpeechBubble variant="user">hi</SpeechBubble>,
     );
     const bubble = container.firstElementChild;
-    expect(bubble?.className).toContain("teal-700");
+    expect(bubble?.className).toContain("brand-hover");
   });
 
   it("variant 省略時は assistant スタイル", () => {

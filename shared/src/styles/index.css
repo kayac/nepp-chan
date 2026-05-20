@@ -3,17 +3,20 @@
      RAW PALETTE — Companion v2
      =============================================== */
 
-  /* Teal — primary brand (ねっぷちゃんのベレー帽 / マフラー) */
-  --teal-50: #f0fdfa;
-  --teal-100: #ccfbf1;
-  --teal-200: #99f6e4;
-  --teal-300: #5eead4;
-  --teal-400: #2dd4bf;
-  --teal-500: #14b8a6;
-  --teal-600: #0d9488;
-  --teal-700: #0f766e;
-  --teal-800: #115e59;
-  --teal-900: #134e4a;
+  /* Teal — primary brand (ねっぷちゃんのベレー帽 / マフラー)
+     teal-500 is pinned to the brand key #5CB7BB (H=183). Other shades
+     follow Tailwind teal's lightness/saturation curve, recentered around
+     that hue (small hue drift remains in darker shades for vividness). */
+  --teal-50: #f0fbfd;
+  --teal-100: #cdf3f7;
+  --teal-200: #99ebf3;
+  --teal-300: #4dd9e6;
+  --teal-400: #2bc1d3;
+  --teal-500: #5cb7bb;
+  --teal-600: #0d9296;
+  --teal-700: #0f7177;
+  --teal-800: #1b5e63;
+  --teal-900: #1f4d51;
 
   /* Snow — neutrals (warm stone palette) */
   --snow-0: #ffffff;
@@ -84,9 +87,9 @@
   --border-1: var(--paper-200);
   --border-2: var(--snow-300);
 
-  --brand: var(--teal-700);
-  --brand-hover: var(--teal-800);
-  --brand-press: var(--teal-900);
+  --brand: var(--teal-500);
+  --brand-hover: var(--teal-600);
+  --brand-press: var(--teal-700);
   --brand-soft: var(--teal-50);
   --brand-soft-2: var(--teal-100);
 
@@ -136,10 +139,10 @@
   --shadow-float-lg:
     0 28px 60px rgba(28, 25, 23, 0.1), 0 10px 20px rgba(28, 25, 23, 0.05);
   --shadow-floating-input:
-    0 20px 50px rgba(15, 118, 110, 0.08), 0 8px 16px rgba(28, 25, 23, 0.06),
+    0 20px 50px rgba(15, 113, 119, 0.08), 0 8px 16px rgba(28, 25, 23, 0.06),
     0 1px 3px rgba(28, 25, 23, 0.04);
-  --shadow-brand: 0 6px 16px rgba(15, 118, 110, 0.22);
-  --ring-brand: 0 0 0 3px rgba(20, 184, 166, 0.28);
+  --shadow-brand: 0 6px 16px rgba(15, 113, 119, 0.22);
+  --ring-brand: 0 0 0 3px rgba(92, 183, 187, 0.28);
 
   /* ===============================================
      TYPOGRAPHY

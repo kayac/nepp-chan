@@ -21,7 +21,7 @@ export const ProfileSection = () => {
           data-revealed={header.revealed}
           className="text-center opacity-0 translate-y-3 transition-all duration-700 ease-out data-[revealed=true]:opacity-100 data-[revealed=true]:translate-y-0"
         >
-          <div className="inline-block rounded-(--r-pill) bg-(--teal-50) px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-(--brand)">
+          <div className="inline-block rounded-(--r-pill) bg-(--teal-50) px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-(--brand-hover)">
             Profile
           </div>
           <h2 className="mt-4 font-(family-name:--font-display) text-xl font-bold sm:text-2xl md:text-3xl lg:text-4xl xl:text-[44px] leading-[1.35] text-(--snow-800)">
@@ -48,7 +48,7 @@ export const ProfileSection = () => {
                   key={row.label}
                   className="grid grid-cols-[120px_1fr] items-baseline gap-3 border-b border-dashed border-(--paper-200) pb-3 last:border-b-0 last:pb-0"
                 >
-                  <dt className="text-xs font-bold uppercase tracking-wider text-(--brand)">
+                  <dt className="text-xs font-bold uppercase tracking-wider text-(--brand-hover)">
                     {row.label}
                   </dt>
                   <dd className="font-(family-name:--font-display) text-base font-bold text-(--snow-800)">

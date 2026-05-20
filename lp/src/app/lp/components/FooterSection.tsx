@@ -8,7 +8,7 @@ export const FooterSection = () => (
         <div className="flex items-center gap-3">
           <span className="grid size-11 place-items-center overflow-hidden rounded-full bg-(--teal-50)">
             <img
-              src="/mascot/expr-wave-smile.png"
+              src="/mascot/icon.png"
               alt=""
               className="size-10 object-contain"
             />
@@ -28,7 +28,7 @@ export const FooterSection = () => (
       </div>
 
       <div>
-        <h4 className="text-xs font-bold uppercase tracking-[0.08em] text-(--brand)">
+        <h4 className="text-xs font-bold uppercase tracking-[0.08em] text-(--brand-hover)">
           ねっぷちゃん
         </h4>
         <ul className="mt-3 flex flex-col gap-2 text-[13px]">
@@ -60,7 +60,7 @@ export const FooterSection = () => (
       </div>
 
       <div>
-        <h4 className="text-xs font-bold uppercase tracking-[0.08em] text-(--brand)">
+        <h4 className="text-xs font-bold uppercase tracking-[0.08em] text-(--brand-hover)">
           お問い合わせ
         </h4>
         <ul className="mt-3 flex flex-col gap-2 text-[13px]">
