@@ -25,7 +25,7 @@ export const Survey = () => {
           <div className="flex items-center gap-3">
             <span className="grid size-8 place-items-center overflow-hidden rounded-full bg-(--teal-50)">
               <img
-                src="/mascot/expr-surprise.png"
+                src="/mascot/icon.png"
                 alt=""
                 className="size-[30px] object-contain"
               />

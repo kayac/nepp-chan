@@ -71,7 +71,7 @@ export const Line = () => {
             <div className="flex items-end gap-2">
               <span className="grid size-7 flex-none place-items-center overflow-hidden rounded-full bg-(--teal-50)">
                 <img
-                  src="/mascot/expr-wave-smile.png"
+                  src="/mascot/icon.png"
                   alt=""
                   className="size-6 object-contain"
                 />
@@ -88,15 +88,14 @@ export const Line = () => {
             <div className="flex items-end gap-2">
               <span className="grid size-7 flex-none place-items-center overflow-hidden rounded-full bg-(--teal-50)">
                 <img
-                  src="/mascot/expr-content.png"
+                  src="/mascot/icon.png"
                   alt=""
                   className="size-6 object-contain"
                 />
               </span>
               <div className="max-w-[210px] rounded-2xl rounded-bl-md bg-white px-3 py-2 text-xs leading-relaxed text-(--fg-1) shadow-(--shadow-xs)">
-                駅の<strong>常盤軒</strong>
-                の黒いお蕎麦がおすすめ！今日はちょっと寒いから、あったかい一杯がいいかも
-                🥢
+                駅近の<strong>「満腹イケレ」</strong>や<strong>「咲来」</strong>
+                で、こだわりの美味しいおそばや丼ものがお腹いっぱい食べられるよ！🥢
               </div>
             </div>
           </div>

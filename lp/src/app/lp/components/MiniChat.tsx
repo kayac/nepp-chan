@@ -99,7 +99,7 @@ export const MiniChat = () => {
       <div className="flex items-center gap-3 border-b border-(--paper-200) pb-3">
         <span className="grid size-9 place-items-center overflow-hidden rounded-full bg-(--teal-50)">
           <img
-            src="/mascot/expr-wave-smile.png"
+            src="/mascot/icon.png"
             alt=""
             className="size-[34px] object-contain"
           />
