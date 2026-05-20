@@ -67,9 +67,8 @@ const useMascotPresentation = (): Presentation => {
         wasRunningRef.current = true;
         const last = t.messages[t.messages.length - 1];
         const parts = (last?.content ?? []) as readonly ContentPart[];
-        // ツール実行中は指差しポーズ、それ以外は寝姿
         const expression: MascotExpression = hasRunningToolCall(parts)
-          ? "fullbody-v2"
+          ? "thinking"
           : "content";
         setPresIfChanged({ state: "thinking", expression });
         return;
@@ -100,7 +99,7 @@ const useMascotPresentation = (): Presentation => {
  * 画面端寄りに張り付ける。lg 以上で表示。
  *
  * - idle (待機): expr-wave-smile
- * - thinking + ツール実行中: pose-fullbody-v2
+ * - thinking + ツール実行中: pose-thinking
  * - thinking + テキスト生成のみ: expr-content
  * - 応答完了直後 3.5 秒: ランダムで content / laugh / surprise → idle に戻る
  */
@@ -129,7 +128,7 @@ export const ChatStandingMascot = () => {
         style={{
           width: "100%",
           height: "100%",
-          filter: "drop-shadow(0 6px 14px rgba(15, 118, 110, 0.2))",
+          filter: "drop-shadow(0 6px 14px rgba(15, 113, 119, 0.2))",
         }}
       />
     </div>
