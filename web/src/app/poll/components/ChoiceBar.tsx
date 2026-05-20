@@ -14,7 +14,7 @@ export const ChoiceBar = ({ choice, count, percentage, isLeading }: Props) => (
     </div>
     <div className="h-9 bg-stone-100 rounded-lg overflow-hidden relative">
       <div
-        className={`h-full rounded-lg ${isLeading ? "bg-teal-500" : "bg-teal-300"}`}
+        className={`h-full rounded-lg ${isLeading ? "bg-(--teal-500)" : "bg-(--teal-300)"}`}
         style={{ width: `${Math.max(percentage, 2)}%` }}
       />
       <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-stone-600 tabular-nums">
