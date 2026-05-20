@@ -63,7 +63,7 @@ export const buildPollFlexMessage = (poll: Poll): messagingApi.FlexMessage => {
         displayText: choice,
       },
       style: "primary" as const,
-      color: "#4A90D9",
+      color: "#0f7177",
       margin: "sm" as const,
       height: "sm" as const,
     }),
@@ -79,7 +79,7 @@ export const buildPollFlexMessage = (poll: Poll): messagingApi.FlexMessage => {
           type: "text",
           text: "ねっぷちゃんからの質問だよ！",
           size: "sm",
-          color: "#1DB446",
+          color: "#0d9296",
           weight: "bold",
         },
         {

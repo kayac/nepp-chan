@@ -122,7 +122,7 @@ const buildCompletionFlexMessage = (
             uri: pollUrl,
           },
           style: "primary",
-          color: "#0f766e",
+          color: "#0f7177",
           height: "sm",
         },
       ],

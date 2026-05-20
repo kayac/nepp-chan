@@ -49,7 +49,7 @@ const buildExplainButtonMessage = (
             displayText: "このおしらせ、ねっぷちゃんに解説してもらう！",
           },
           style: "primary",
-          color: "#0f766e",
+          color: "#0f7177",
           height: "sm",
         },
       ],
