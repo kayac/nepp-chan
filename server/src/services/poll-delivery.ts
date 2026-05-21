@@ -2,6 +2,7 @@ import type { messagingApi } from "@line/bot-sdk";
 
 import { logger } from "~/lib/logger";
 import { type Poll, pollRepository } from "~/repository/poll-repository";
+import { buildPanelBubble } from "~/services/line-flex";
 import { createLineClient } from "~/services/line-messaging";
 
 // --- LINE配信 ---
@@ -24,7 +25,7 @@ export const sendPoll = async (
   try {
     const client = createLineClient(env.LINE_CHANNEL_ACCESS_TOKEN);
     const retryKey = crypto.randomUUID();
-    const message = buildPollFlexMessage(poll);
+    const message = buildPollFlexMessage(poll, env.WEB_URL);
 
     await client.broadcast({ messages: [message] }, retryKey);
 
@@ -50,11 +51,15 @@ export const encodePollPostback = (pollId: string, choice: string) =>
 
 // --- Flex Message 生成 ---
 
-export const buildPollFlexMessage = (poll: Poll): messagingApi.FlexMessage => {
+export const buildPollFlexMessage = (
+  poll: Poll,
+  webUrl: string,
+): messagingApi.FlexMessage => {
   const choices = JSON.parse(poll.choices) as string[];
 
-  const footerContents: messagingApi.FlexComponent[] = choices.map(
-    (choice) => ({
+  // 1 つ目はプライマリ（teal 塗り・白文字）、2 つ目以降はセカンダリ（薄色・濃文字）
+  const choiceButtons: messagingApi.FlexComponent[] = choices.map(
+    (choice, index) => ({
       type: "button" as const,
       action: {
         type: "postback" as const,
@@ -62,43 +67,48 @@ export const buildPollFlexMessage = (poll: Poll): messagingApi.FlexMessage => {
         data: encodePollPostback(poll.id, choice),
         displayText: choice,
       },
-      style: "primary" as const,
-      color: "#0f7177",
-      margin: "sm" as const,
-      height: "sm" as const,
+      style: index === 0 ? ("primary" as const) : ("secondary" as const),
+      height: "md" as const,
+      color: index === 0 ? "#5cb7bb" : "#f3eee6",
+      adjustMode: "shrink-to-fit" as const,
+      scaling: true,
     }),
   );
 
-  const bubble: messagingApi.FlexBubble = {
-    type: "bubble",
-    body: {
-      type: "box",
-      layout: "vertical",
-      contents: [
-        {
-          type: "text",
-          text: "ねっぷちゃんからの質問だよ！",
-          size: "sm",
-          color: "#0d9296",
-          weight: "bold",
-        },
-        {
-          type: "text",
-          text: poll.title,
-          weight: "bold",
-          size: "md",
-          wrap: true,
-          margin: "md",
-        },
-      ],
+  const bubble = buildPanelBubble(webUrl, [
+    {
+      type: "text",
+      text: "ねっぷちゃんからの質問だよ！",
+      size: "md",
+      weight: "bold",
+      color: "#0d9296",
+      wrap: true,
+      scaling: true,
     },
-    footer: {
+    {
+      type: "text",
+      text: poll.title,
+      margin: "md",
+      size: "lg",
+      weight: "bold",
+      color: "#292524",
+      wrap: true,
+      lineSpacing: "4px",
+      scaling: true,
+    },
+    {
+      type: "separator",
+      margin: "xl",
+      color: "#cdd0d1",
+    },
+    {
       type: "box",
       layout: "vertical",
       spacing: "sm",
-      contents: footerContents,
+      margin: "lg",
+      contents: choiceButtons,
     },
-  };
+  ]);
 
   return {
     type: "flex",
