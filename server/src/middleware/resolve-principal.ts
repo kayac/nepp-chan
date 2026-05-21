@@ -7,6 +7,8 @@ import { adminUserRepository } from "~/repository/admin-user-repository";
 import { adminRoleSchema } from "~/schemas/auth-schema";
 import { verifyAnonymousToken } from "~/services/auth/anonymous-session";
 
+const OPAQUE_SESSION_TOKEN_PATTERN = /^[0-9a-f]{64}$/;
+
 export const resolvePrincipal = createMiddleware<{
   Bindings: CloudflareBindings;
   Variables: Partial<PrincipalVariables>;
@@ -18,7 +20,9 @@ export const resolvePrincipal = createMiddleware<{
   }
 
   // opaque session を試行（admin）
-  const session = await adminSessionRepository.findValid(c.env.DB, token);
+  const session = OPAQUE_SESSION_TOKEN_PATTERN.test(token)
+    ? await adminSessionRepository.findValid(c.env.DB, token)
+    : undefined;
   if (session) {
     const user = await adminUserRepository.findById(c.env.DB, session.userId);
     if (user) {
