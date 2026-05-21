@@ -74,9 +74,11 @@ describe("resolvePrincipal", () => {
     expect(body.principal).toBeNull();
   });
 
+  const validOpaqueToken = "a".repeat(64);
+
   it("Admin opaque session → AdminPrincipal", async () => {
     vi.mocked(adminSessionRepository.findValid).mockResolvedValue({
-      token: "valid-admin-token",
+      token: validOpaqueToken,
       userId: "user-1",
       expiresAt: new Date(Date.now() + 86400000).toISOString(),
       createdAt: "2024-01-01T00:00:00Z",
@@ -84,7 +86,7 @@ describe("resolvePrincipal", () => {
     vi.mocked(adminUserRepository.findById).mockResolvedValue(testUser);
 
     const req = new Request("http://localhost/test", {
-      headers: { Authorization: "Bearer valid-admin-token" },
+      headers: { Authorization: `Bearer ${validOpaqueToken}` },
     });
     const res = await createApp().request(req, {}, mockEnv);
 
@@ -123,7 +125,7 @@ describe("resolvePrincipal", () => {
 
   it("Admin opaque session が優先される", async () => {
     vi.mocked(adminSessionRepository.findValid).mockResolvedValue({
-      token: "admin-token",
+      token: validOpaqueToken,
       userId: "user-1",
       expiresAt: new Date(Date.now() + 86400000).toISOString(),
       createdAt: "2024-01-01T00:00:00Z",
@@ -131,7 +133,7 @@ describe("resolvePrincipal", () => {
     vi.mocked(adminUserRepository.findById).mockResolvedValue(testUser);
 
     const req = new Request("http://localhost/test", {
-      headers: { Authorization: "Bearer admin-token" },
+      headers: { Authorization: `Bearer ${validOpaqueToken}` },
     });
     const res = await createApp().request(req, {}, mockEnv);
 
@@ -148,11 +150,33 @@ describe("resolvePrincipal", () => {
     );
 
     const req = new Request("http://localhost/test", {
-      headers: { Authorization: "Bearer invalid-token" },
+      headers: { Authorization: `Bearer ${validOpaqueToken}` },
     });
     const res = await createApp().request(req, {}, mockEnv);
 
     expect(res.status).toBe(200);
+    const body = (await res.json()) as TestResponse;
+    expect(body.principal).toBeNull();
+  });
+
+  it("opaque 形式でないトークンは admin DB を引かない（旧 JWT を含む不正トークン耐性）", async () => {
+    vi.mocked(sessionService.verifyAnonymousToken).mockRejectedValue(
+      new Error("invalid"),
+    );
+
+    const legacyJwt =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ4In0.signature";
+    const req = new Request("http://localhost/test", {
+      headers: { Authorization: `Bearer ${legacyJwt}` },
+    });
+    const res = await createApp().request(req, {}, mockEnv);
+
+    expect(res.status).toBe(200);
+    expect(adminSessionRepository.findValid).not.toHaveBeenCalled();
+    expect(sessionService.verifyAnonymousToken).toHaveBeenCalledWith(
+      legacyJwt,
+      "test-secret-32-chars-long-enough",
+    );
     const body = (await res.json()) as TestResponse;
     expect(body.principal).toBeNull();
   });

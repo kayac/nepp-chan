@@ -58,7 +58,7 @@ describe("requireRole ミドルウェア", () => {
 
   const setupAdminSession = (role: string) => {
     vi.mocked(adminSessionRepository.findValid).mockResolvedValue({
-      token: "valid-token",
+      token: "a".repeat(64),
       userId: "user-1",
       expiresAt: new Date(Date.now() + 86400000).toISOString(),
       createdAt: "2024-01-01T00:00:00Z",
@@ -67,7 +67,7 @@ describe("requireRole ミドルウェア", () => {
   };
 
   // biome-ignore lint/suspicious/noExplicitAny: テスト用ヘルパーのため型制約を緩和
-  const requestWith = (app: Hono<any>, token = "valid-token") =>
+  const requestWith = (app: Hono<any>, token = "a".repeat(64)) =>
     app.request(
       new Request("http://localhost/test", {
         headers: { Authorization: `Bearer ${token}` },

@@ -66,9 +66,11 @@ const mockEnv = {
   JWT_SECRET: "test-secret-32-chars-long-enough",
 } as unknown as CloudflareBindings;
 
+const VALID_OPAQUE_TOKEN = "a".repeat(64);
+
 const authedRequest = (path: string, init?: RequestInit) => {
   const req = new Request(`http://localhost${path}`, init);
-  req.headers.set("Authorization", "Bearer valid-token");
+  req.headers.set("Authorization", `Bearer ${VALID_OPAQUE_TOKEN}`);
   return req;
 };
 
@@ -103,7 +105,7 @@ describe("knowledge routes 統合テスト", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(adminSessionRepository.findValid).mockResolvedValue({
-      token: "valid-token",
+      token: VALID_OPAQUE_TOKEN,
       userId: "user-1",
       expiresAt: new Date(Date.now() + 86400000).toISOString(),
       createdAt: "2024-01-01T00:00:00Z",

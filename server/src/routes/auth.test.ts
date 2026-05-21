@@ -398,8 +398,9 @@ describe("auth routes", () => {
 
   describe("GET /me", () => {
     it("有効な opaque session でユーザー情報を返す", async () => {
+      const opaqueToken = "a".repeat(64);
       vi.mocked(adminSessionRepository.findValid).mockResolvedValue({
-        token: "valid-token",
+        token: opaqueToken,
         userId: "user-1",
         expiresAt: new Date(Date.now() + 86400000).toISOString(),
         createdAt: "2024-01-01T00:00:00Z",
@@ -408,7 +409,7 @@ describe("auth routes", () => {
 
       const res = await authRoutes.request(
         new Request("http://localhost/me", {
-          headers: { Authorization: "Bearer valid-token" },
+          headers: { Authorization: `Bearer ${opaqueToken}` },
         }),
         undefined,
         mockEnv,
