@@ -3,7 +3,8 @@
 **AI Deputy Mayor for Otoineppu Village**
 
 [![AGPLv3 License](https://img.shields.io/badge/License-AGPLv3-blue.svg?style=for-the-badge)](LICENSE)
-[![Website](https://img.shields.io/badge/Website-nepp--chan.ai-blue?style=for-the-badge)](https://web.nepp-chan.ai)
+[![Website](https://img.shields.io/badge/Website-nepp--chan.ai-blue?style=for-the-badge)](https://nepp-chan.ai)
+[![Chat](https://img.shields.io/badge/Chat-web.nepp--chan.ai-blue?style=for-the-badge)](https://web.nepp-chan.ai)
 
 A chat application where you can talk with "Nepp-chan," the AI Deputy Mayor of Otoineppu Village, Hokkaido. By learning directly from village-specific official documents to local culture, Nepp-chan delivers natural conversations with a deep understanding of local nicknames, shops, winter snow removal, community events, and other contexts unique to Otoineppu.
 
@@ -11,7 +12,7 @@ In Otoineppu Village, we are experimenting with a world where AI is embraced not
 
 This is an **Open R&D** initiative that fully discloses the development process, serving as a model case for municipalities nationwide to introduce AI-based resident support at low cost.
 
-[Website](https://web.nepp-chan.ai) · [Getting Started](#getting-started) · [Roadmap](#roadmap) · [日本語](README.md)
+[Website](https://nepp-chan.ai) · [Chat](https://web.nepp-chan.ai) · [Getting Started](#getting-started) · [Roadmap](#roadmap) · [日本語](README.md)
 
 ---
 
@@ -54,11 +55,13 @@ To ensure no one is left behind — including those unfamiliar with digital tech
 
 ## Project Structure
 
-| Directory                   | Description                                 |
-| --------------------------- | ------------------------------------------- |
-| [server/](server/README.md) | Backend API (Cloudflare Workers)            |
-| [web/](web/README.md)       | Frontend Web (Cloudflare Pages)             |
-| knowledge/                  | Knowledge files for RAG                     |
+| Directory                   | Description                                       |
+| --------------------------- | ------------------------------------------------- |
+| [server/](server/README.md) | Backend API (Cloudflare Workers)                  |
+| [web/](web/README.md)       | Chat web app (Cloudflare Pages)                   |
+| lp/                         | Landing page (Cloudflare Pages)                   |
+| shared/                     | Shared TypeScript package for web / lp / server   |
+| knowledge/                  | Knowledge files for RAG                           |
 
 ## Getting Started
 
@@ -79,14 +82,18 @@ pnpm install
 Copy `.env.example` to create `.env` files.
 
 ```bash
+# root (for knowledge upload scripts)
+cp .env.example .env
+
 # server
 cp server/.env.example server/.env
-cp server/.env.example server/.env.production
 cp server/.dev.vars.example server/.dev.vars
 
 # web
 cp web/.env.example web/.env
-cp web/.env.example web/.env.production
+
+# lp
+cp lp/.env.example lp/.env
 ```
 
 Set appropriate values in each `.env` file.
@@ -95,18 +102,20 @@ Set appropriate values in each `.env` file.
 
 ```bash
 # Development (apply migrations)
-cd server
 pnpm db:migrate:local
 ```
 
 ## Development
 
 ```bash
-# Start API server
+# Start API server (http://localhost:8787)
 pnpm server:dev
 
-# Start Web dev server
+# Start Web dev server (http://localhost:5173)
 pnpm web:dev
+
+# Start LP dev server (http://localhost:5174)
+pnpm lp:dev
 
 # Start Mastra Playground
 pnpm mastra:dev
@@ -116,11 +125,11 @@ pnpm mastra:dev
 
 ### Environments
 
-| Environment | Trigger | Web URL | API URL |
-|-------------|---------|---------|---------|
-| Local | - | http://localhost:5173 | http://localhost:8787 |
-| dev | develop push | https://dev-web.nepp-chan.ai | https://dev-api.nepp-chan.ai |
-| prd | `v*` tag (tagpr) | https://web.nepp-chan.ai | https://api.nepp-chan.ai |
+| Environment | Trigger | LP | Web | API |
+|-------------|---------|----|-----|-----|
+| Local | - | http://localhost:5174 | http://localhost:5173 | http://localhost:8787 |
+| dev | `develop` push | https://dev.nepp-chan.ai | https://dev-web.nepp-chan.ai | https://dev-api.nepp-chan.ai |
+| prd | `v*` tag (tagpr) | https://nepp-chan.ai | https://web.nepp-chan.ai | https://api.nepp-chan.ai |
 
 ### Manual Deployment
 
@@ -128,10 +137,12 @@ pnpm mastra:dev
 # dev environment
 pnpm server:deploy:dev
 pnpm web:deploy:dev
+pnpm lp:deploy:dev
 
 # prd environment
 pnpm server:deploy:prd
 pnpm web:deploy:prd
+pnpm lp:deploy:prd
 ```
 
 ### CI/CD
