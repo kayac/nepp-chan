@@ -92,7 +92,7 @@ export const FooterSection = () => (
       <ul className="mb-3 flex flex-wrap justify-center gap-x-5 gap-y-2">
         <li>
           <a
-            href={`${WEB_URL}/privacy`}
+            href="/privacy"
             className="text-(--fg-2) transition-colors hover:text-(--brand)"
           >
             プライバシーポリシー
@@ -100,7 +100,7 @@ export const FooterSection = () => (
         </li>
         <li>
           <a
-            href={`${WEB_URL}/terms`}
+            href="/terms"
             className="text-(--fg-2) transition-colors hover:text-(--brand)"
           >
             利用規約
