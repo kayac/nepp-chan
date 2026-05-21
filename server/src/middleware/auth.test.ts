@@ -94,8 +94,9 @@ describe("requireAuth", () => {
   });
 
   it("有効な Admin opaque session で principal がセットされる", async () => {
+    const opaqueToken = "a".repeat(64);
     vi.mocked(adminSessionRepository.findValid).mockResolvedValue({
-      token: "valid-jwt-token",
+      token: opaqueToken,
       userId: "user-1",
       expiresAt: new Date(Date.now() + 86400000).toISOString(),
       createdAt: "2024-01-01T00:00:00Z",
@@ -105,7 +106,7 @@ describe("requireAuth", () => {
     const app = createApp();
     const req = new Request("http://localhost/protected", {
       headers: {
-        Authorization: "Bearer valid-jwt-token",
+        Authorization: `Bearer ${opaqueToken}`,
       },
     });
 

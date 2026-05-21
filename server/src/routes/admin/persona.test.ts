@@ -41,7 +41,7 @@ const mockEnv = {
   JWT_SECRET: "test-secret-32-chars-long-enough",
 } as unknown as CloudflareBindings;
 
-const ADMIN_TOKEN = "admin-token";
+const ADMIN_TOKEN = "a".repeat(64);
 
 const adminUser = {
   id: "u-1",

@@ -40,7 +40,7 @@ import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
 
 const routes = await withResolvePrincipal(rawRoutes);
 
-const TOKEN = "admin-token";
+const TOKEN = "a".repeat(64);
 const adminUser = {
   id: "u-1",
   username: "admin01",
