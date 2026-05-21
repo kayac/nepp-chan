@@ -13,7 +13,7 @@ declare namespace Cloudflare {
 		LINE_QUEUE: Queue;
 		ENVIRONMENT: "development";
 		WEB_URL: "https://dev-web.nepp-chan.ai";
-		LP_URL: "https://dev-lp.nepp-chan.ai";
+		LP_URL: "https://dev.nepp-chan.ai";
 		GOOGLE_GENERATIVE_AI_API_KEY: string;
 		GOOGLE_SEARCH_ENGINE_ID: string;
 		JWT_SECRET: string;

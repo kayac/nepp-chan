@@ -135,7 +135,7 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 | 環境 | LP | Web | API |
 | ---- | --- | --- | --- |
 | ローカル | http://localhost:5174 | http://localhost:5173 | http://localhost:8787 |
-| dev | https://dev-lp.nepp-chan.ai | https://dev-web.nepp-chan.ai | https://dev-api.nepp-chan.ai |
+| dev | https://dev.nepp-chan.ai | https://dev-web.nepp-chan.ai | https://dev-api.nepp-chan.ai |
 | prd | https://nepp-chan.ai | https://web.nepp-chan.ai | https://api.nepp-chan.ai |
 
 ## テスト

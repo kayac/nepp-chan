@@ -119,7 +119,7 @@
       "vars": {
         "ENVIRONMENT": "development",
         "WEB_URL": "https://dev-web.nepp-chan.ai",
-        "LP_URL": "https://dev-lp.nepp-chan.ai"
+        "LP_URL": "https://dev.nepp-chan.ai"
       }
     },
     "production": {
