@@ -1,5 +1,5 @@
 import { MailIcon } from "lucide-react";
-import { WEB_URL } from "~/constants/urls";
+import { LINE_FRIEND_URL, WEB_URL } from "~/constants/urls";
 
 export const FooterSection = () => (
   <footer className="border-t border-(--paper-200) bg-(--paper-100)/40 px-7 pb-10 pt-16">
@@ -42,7 +42,9 @@ export const FooterSection = () => (
           </li>
           <li>
             <a
-              href="#line"
+              href={LINE_FRIEND_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-(--fg-2) transition-colors hover:text-(--brand)"
             >
               LINEで友達追加

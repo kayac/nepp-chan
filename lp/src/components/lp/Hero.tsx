@@ -1,5 +1,5 @@
 import { MessageSquareIcon } from "lucide-react";
-import { WEB_URL } from "~/constants/urls";
+import { LINE_FRIEND_URL, WEB_URL } from "~/constants/urls";
 import { useScrollReveal } from "~/hooks/useScrollReveal";
 import { LineIcon } from "./LineIcon";
 import { MiniChat } from "./MiniChat";
@@ -51,7 +51,9 @@ export const Hero = () => {
               いますぐ話しかける
             </a>
             <a
-              href="#line"
+              href={LINE_FRIEND_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 rounded-(--r-pill) bg-[#06c755] px-6 py-3.5 text-sm font-bold text-white shadow-[0_6px_16px_rgba(6,199,85,0.22)] transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:bg-[#05b048] hover:shadow-[0_10px_24px_rgba(6,199,85,0.36)]"
             >
               <LineIcon size={20} />
