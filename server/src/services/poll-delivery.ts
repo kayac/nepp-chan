@@ -5,8 +5,6 @@ import { type Poll, pollRepository } from "~/repository/poll-repository";
 import { buildPanelBubble } from "~/services/line-flex";
 import { createLineClient } from "~/services/line-messaging";
 
-// --- LINE配信 ---
-
 export const sendPoll = async (
   env: CloudflareBindings,
   pollId: string,
@@ -44,12 +42,8 @@ export const sendPoll = async (
   }
 };
 
-// --- Postback エンコード ---
-
 export const encodePollPostback = (pollId: string, choice: string) =>
   `poll=${pollId}&c=${encodeURIComponent(choice)}`;
-
-// --- Flex Message 生成 ---
 
 export const buildPollFlexMessage = (
   poll: Poll,
@@ -57,7 +51,6 @@ export const buildPollFlexMessage = (
 ): messagingApi.FlexMessage => {
   const choices = JSON.parse(poll.choices) as string[];
 
-  // 1 つ目はプライマリ（teal 塗り・白文字）、2 つ目以降はセカンダリ（薄色・濃文字）
   const choiceButtons: messagingApi.FlexComponent[] = choices.map(
     (choice, index) => ({
       type: "button" as const,

@@ -46,7 +46,6 @@ const PollContent = ({ id }: { id: string }) => {
   return (
     <div className="min-h-dvh bg-(--panel)">
       <div className="max-w-lg mx-auto">
-        {/* 山ヘッダー: 裾が背景 #DFE2E3 と地続きになり溶け込む（LINE パネルと共通） */}
         <img
           src="/line-assets/hero-mountain-generated-20x2-full-nearest.png"
           alt=""

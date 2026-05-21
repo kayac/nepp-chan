@@ -6,8 +6,6 @@ import { type Poll, pollRepository } from "~/repository/poll-repository";
 import { buildPanelBubble } from "~/services/line-flex";
 import { createLineClient, generateReply } from "~/services/line-messaging";
 
-// --- Postback デコード ---
-
 const decodePollPostback = (data: string) => {
   const params = new URLSearchParams(data);
   return {
@@ -15,8 +13,6 @@ const decodePollPostback = (data: string) => {
     selectedChoice: params.get("c"),
   };
 };
-
-// --- Postback 回答処理 ---
 
 export type PollAnswerResult =
   | { status: "answered"; poll: Poll; selectedChoice: string }
@@ -128,8 +124,6 @@ const buildCompletionFlexMessage = (
   };
 };
 
-// --- 回答後のねっぷちゃんからのフォローアップ会話 ---
-
 export const generatePollFollowUp = async (
   env: CloudflareBindings,
   userId: string,
@@ -165,8 +159,6 @@ export const generatePollFollowUp = async (
     logger.error("[Poll] Follow-up push failed", error);
   }
 };
-
-// --- 集計 ---
 
 export const getPollResults = async (db: D1Database, pollId: string) => {
   const poll = await pollRepository.findById(db, pollId);
