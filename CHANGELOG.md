@@ -1,5 +1,8 @@
 # Changelog
 
+## [v1.0.1](https://github.com/kayac/nepp-chan/compare/v1.0.0...v1.0.1) - 2026-05-21
+- fix(server): 旧 admin JWT による /threads などの 500 を防ぐ by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/647
+
 ## [v1.0.0](https://github.com/kayac/nepp-chan/compare/v0.4.4...v1.0.0) - 2026-05-21
 - v5 データ処理 + 検索精度改善 by @vesperworks in https://github.com/kayac/nepp-chan/pull/427
 - 認証主体を Principal に統一 + Intent 2段化 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/434
