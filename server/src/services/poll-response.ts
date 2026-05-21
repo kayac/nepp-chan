@@ -3,9 +3,8 @@ import type { messagingApi } from "@line/bot-sdk";
 import { logger } from "~/lib/logger";
 import { toLineIds } from "~/lib/principal";
 import { type Poll, pollRepository } from "~/repository/poll-repository";
+import { buildPanelBubble } from "~/services/line-flex";
 import { createLineClient, generateReply } from "~/services/line-messaging";
-
-// --- Postback デコード ---
 
 const decodePollPostback = (data: string) => {
   const params = new URLSearchParams(data);
@@ -14,8 +13,6 @@ const decodePollPostback = (data: string) => {
     selectedChoice: params.get("c"),
   };
 };
-
-// --- Postback 回答処理 ---
 
 export type PollAnswerResult =
   | { status: "answered"; poll: Poll; selectedChoice: string }
@@ -95,39 +92,30 @@ const buildCompletionFlexMessage = (
 ): messagingApi.FlexMessage => {
   const pollUrl = `${webUrl}/poll?id=${poll.id}`;
 
-  const bubble: messagingApi.FlexBubble = {
-    type: "bubble",
-    size: "kilo",
-    body: {
-      type: "box",
-      layout: "vertical",
-      contents: [
-        {
-          type: "text",
-          text: `「${selectedChoice}」に投票しました`,
-          size: "sm",
-          wrap: true,
-        },
-      ],
+  const bubble = buildPanelBubble(webUrl, [
+    {
+      type: "text",
+      text: `「${selectedChoice}」に投票しました`,
+      size: "md",
+      color: "#292524",
+      wrap: true,
+      scaling: true,
     },
-    footer: {
-      type: "box",
-      layout: "vertical",
-      contents: [
-        {
-          type: "button",
-          action: {
-            type: "uri",
-            label: "結果を見る",
-            uri: pollUrl,
-          },
-          style: "primary",
-          color: "#0f7177",
-          height: "sm",
-        },
-      ],
+    {
+      type: "button",
+      action: {
+        type: "uri",
+        label: "結果を見る",
+        uri: pollUrl,
+      },
+      style: "primary",
+      height: "md",
+      margin: "xl",
+      color: "#5cb7bb",
+      adjustMode: "shrink-to-fit",
+      scaling: true,
     },
-  };
+  ]);
 
   return {
     type: "flex",
@@ -135,8 +123,6 @@ const buildCompletionFlexMessage = (
     contents: bubble,
   };
 };
-
-// --- 回答後のねっぷちゃんからのフォローアップ会話 ---
 
 export const generatePollFollowUp = async (
   env: CloudflareBindings,
@@ -173,8 +159,6 @@ export const generatePollFollowUp = async (
     logger.error("[Poll] Follow-up push failed", error);
   }
 };
-
-// --- 集計 ---
 
 export const getPollResults = async (db: D1Database, pollId: string) => {
   const poll = await pollRepository.findById(db, pollId);

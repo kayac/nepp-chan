@@ -4,6 +4,7 @@ import type { BroadcastMessage } from "~/db";
 import { logger } from "~/lib/logger";
 import { broadcastRepository } from "~/repository/broadcast-repository";
 import type { BroadcastPart } from "~/schemas/broadcast-schema";
+import { buildPanelBubble } from "~/services/line-flex";
 import { createLineClient } from "~/services/line-messaging";
 
 const generateTitle = (text: string) =>
@@ -24,37 +25,33 @@ const getPublicImageUrl = (env: CloudflareBindings, r2Key: string): string => {
 
 const buildExplainButtonMessage = (
   broadcastId: string,
+  webUrl: string,
 ): messagingApi.FlexMessage => {
-  const bubble: messagingApi.FlexBubble = {
-    type: "bubble",
-    size: "kilo",
-    body: {
-      type: "box",
-      layout: "vertical",
-      spacing: "md",
-      contents: [
-        {
-          type: "text",
-          text: "このおしらせ、ねっぷちゃんが解説するよ！",
-          size: "sm",
-          color: "#57534e",
-          wrap: true,
-        },
-        {
-          type: "button",
-          action: {
-            type: "postback",
-            label: "解説してもらう",
-            data: `broadcast=${broadcastId}`,
-            displayText: "このおしらせ、ねっぷちゃんに解説してもらう！",
-          },
-          style: "primary",
-          color: "#0f7177",
-          height: "sm",
-        },
-      ],
+  const bubble = buildPanelBubble(webUrl, [
+    {
+      type: "text",
+      text: "このおしらせ、ねっぷちゃんが解説するよ！",
+      size: "md",
+      color: "#292524",
+      wrap: true,
+      scaling: true,
     },
-  };
+    {
+      type: "button",
+      action: {
+        type: "postback",
+        label: "解説してもらう",
+        data: `broadcast=${broadcastId}`,
+        displayText: "このおしらせ、ねっぷちゃんに解説してもらう！",
+      },
+      style: "primary",
+      height: "md",
+      margin: "xl",
+      color: "#5cb7bb",
+      adjustMode: "shrink-to-fit",
+      scaling: true,
+    },
+  ]);
 
   return {
     type: "flex",
@@ -81,7 +78,10 @@ const buildLineMessages = (
   });
 
   if (!broadcastId) return contentMessages;
-  return [...contentMessages, buildExplainButtonMessage(broadcastId)];
+  return [
+    ...contentMessages,
+    buildExplainButtonMessage(broadcastId, env.WEB_URL),
+  ];
 };
 
 const parseParts = (broadcast: BroadcastMessage): BroadcastPart[] =>

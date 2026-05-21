@@ -77,6 +77,8 @@
   --bg-raised: var(--paper-0);
   --bg-sunken: var(--paper-100);
   --bg-overlay: rgba(28, 25, 23, 0.48);
+  /* LINE Flex / 投票結果のパネル地色。hero 画像（山）の裾と地続きにして溶け込ませる */
+  --panel: #dfe2e3;
 
   --fg-1: var(--snow-800);
   --fg-2: var(--snow-600);
