@@ -1,15 +1,15 @@
 import { AmbientBG } from "@nepp-chan/shared/components/AmbientBG";
 import { RootLayout } from "~/components/RootLayout";
-import { FinalCTA } from "./components/FinalCTA";
-import { FooterSection } from "./components/FooterSection";
-import { Guide } from "./components/Guide";
-import { Hero } from "./components/Hero";
-import { Knowledge } from "./components/Knowledge";
-import { Line } from "./components/Line";
-import { MediaSection } from "./components/MediaSection";
-import { Nav } from "./components/Nav";
-import { ProfileSection } from "./components/ProfileSection";
-import { Survey } from "./components/Survey";
+import { FinalCTA } from "./FinalCTA";
+import { FooterSection } from "./FooterSection";
+import { Guide } from "./Guide";
+import { Hero } from "./Hero";
+import { Knowledge } from "./Knowledge";
+import { Line } from "./Line";
+import { MediaSection } from "./MediaSection";
+import { Nav } from "./Nav";
+import { ProfileSection } from "./ProfileSection";
+import { Survey } from "./Survey";
 
 export const LpPage = () => (
   <RootLayout>
