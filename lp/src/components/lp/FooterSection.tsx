@@ -89,6 +89,24 @@ export const FooterSection = () => (
     </div>
 
     <div className="mx-auto mt-10 max-w-[1100px] border-t border-(--paper-200) pt-6 text-center text-xs text-(--fg-3)">
+      <ul className="mb-3 flex flex-wrap justify-center gap-x-5 gap-y-2">
+        <li>
+          <a
+            href="/privacy"
+            className="text-(--fg-2) transition-colors hover:text-(--brand)"
+          >
+            プライバシーポリシー
+          </a>
+        </li>
+        <li>
+          <a
+            href="/terms"
+            className="text-(--fg-2) transition-colors hover:text-(--brand)"
+          >
+            利用規約
+          </a>
+        </li>
+      </ul>
       © 2026 音威子府村 / 面白法人カヤック — Neppu-chan Project
     </div>
   </footer>
