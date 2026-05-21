@@ -1,5 +1,68 @@
 # Changelog
 
+## [v0.4.5](https://github.com/kayac/nepp-chan/compare/v0.4.4...v0.4.5) - 2026-05-21
+- v5 データ処理 + 検索精度改善 by @vesperworks in https://github.com/kayac/nepp-chan/pull/427
+- 認証主体を Principal に統一 + Intent 2段化 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/434
+- chore(deps-dev): bump vite-tsconfig-paths from 5.1.4 to 6.1.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/429
+- refactor: admin 認証を opaque session に移行し認証認可を整理 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/507
+- feat: LINE 配信メッセージのスレッド注入と検索統合 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/509
+- feat: アンケート投票結果の公開ページを追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/511
+- fix(server): admin_sessions マイグレーションを冪等に修正 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/512
+- feat(server): 投票結果リンクを回答完了時に送信 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/513
+- fix(server): 名前不明時のプレースホルダー呼称を禁止 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/514
+- refactor: アンケート機能を投票機能に一本化し、回答後のねっぷちゃん会話継続を実装 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/516
+- feat(server): 投票のフォローアップ方針を内部メモ形式で強化 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/520
+- feat(server): 管理者モード向けに投票結果取得ツール pollGetTool を追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/521
+- feat(server): LINE配信におしらせ解説ボタンを追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/522
+- fix(server): 解説ボタンのラベルを短縮して見切れを防止 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/523
+- feat(server): 解説ボタンに説明文を添えて意図を明確化 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/524
+- feat(web): Companion v2 デザインをチャット画面に適用 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/539
+- feat(web): LP (/lp) 追加 + AmbientBG・Mascot を共通化 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/542
+- feat(web): chat ヘッダーを LP のトンマナに統一しロゴから /lp へ遷移可能に by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/543
+- feat: LP の MiniChat にストリーミング対応のシンプルなチャット API を実装 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/544
+- feat: LP を独立した lp パッケージに切り出す by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/545
+- refactor: 共通 UI を @nepp-chan/shared に集約し Layout.astro で head を共通化 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/546
+- fix(web): ログアウト見え状態でのチャット 401 永続ローディングを解消する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/548
+- test: web/server のテスト基盤とカバレッジ整備 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/553
+- refactor: repository と API 型を @nepp-chan/shared に集約 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/554
+- refactor: repository と API 型を @nepp-chan/shared に集約 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/556
+- refactor: Sentry 依存を完全削除し Workers Logs に一本化する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/558
+- feat(server): LINE userId 由来の resourceId / threadId を HMAC-SHA256 でハッシュ化する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/559
+- fix(server): Workers Logs に LINE 生 userId を出さないようにする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/560
+- feat(server): LINE unfollow → 全関連データ削除パイプラインを実装する (#20) by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/561
+- refactor(server): LINE userId の HMAC 計算を 1 回にまとめる toLineIds を新設する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/562
+- refactor: LINE userId HMAC 統合と関連 lint クリーンアップ by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/563
+- feat(server): 保管期間自動削除 Cron を実装する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/564
+- ci: Dependabot の同時オープン PR 上限を 99 に引き上げる by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/566
+- refactor(server): persona の resource_id を廃止する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/565
+- build(deps): bump recharts from 3.7.0 to 3.8.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/503
+- chore(deps): 低リスクな依存を一括 bump する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/613
+- refactor: テスタビリティ向上とカバレッジ強化 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/611
+- build(deps): bump @line/bot-sdk from 10.6.0 to 11.0.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/584
+- chore(deps-dev): vitest を 4.1.6 に更新 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/614
+- build(deps-dev): bump typescript from 5.9.3 to 6.0.3 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/576
+- build(deps): bump lucide-react from 0.562.0 to 1.14.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/607
+- test: vitest v4 計測差異に合わせ web の coverage 閾値を 90% 台へ引き上げる by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/615
+- refactor(web): app に閉じる hooks を app/<feature>/hooks/ に colocate する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/616
+- fix(lint): biome 全 warning の解消と test 共通ヘルパの整理 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/617
+- feat: Sentry を再導入し個人情報保護クリティカル処理の重大通知を可視化する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/618
+- feat(data-retention): Sentry Cron Monitor で不起動検知を有効化 (closes #36) by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/639
+- refactor(logger): logger.error の Workers Logs 出力を serializeError 経由に揃えて PII 流出を防ぐ by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/640
+- build(deps): bump hono from 4.12.18 to 4.12.19 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/634
+- build(deps): bump lucide-react from 1.14.0 to 1.16.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/636
+- build(deps-dev): bump @types/node from 25.7.0 to 25.8.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/635
+- build(deps-dev): bump wrangler from 4.90.1 to 4.92.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/630
+- build(deps): bump @sentry/cloudflare from 10.45.0 to 10.53.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/625
+- build(deps): bump astro from 6.3.1 to 6.3.5 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/628
+- build(deps-dev): bump @sentry/vite-plugin from 5.1.1 to 5.3.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/629
+- build(deps-dev): bump tsx from 4.21.0 to 4.22.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/620
+- design: ブランドカラー刷新・マスコットアイコン更新・favicon SVG 化 by @vesperworks in https://github.com/kayac/nepp-chan/pull/641
+- style: LINE Flex Message と投票結果バーの色を新トンマナに揃える by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/642
+- build(deps): bump @sentry/react from 10.43.0 to 10.53.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/624
+- feat: プライバシーポリシー・利用規約ページを追加 by @vesperworks in https://github.com/kayac/nepp-chan/pull/643
+- feat: LINE Flex と投票結果ページのデザイン刷新（共通山ヘッダー・ブランド配色） by @vesperworks in https://github.com/kayac/nepp-chan/pull/644
+- feat(lp): LINE 友達追加ボタンを公式アカウント URL に反映 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/645
+
 ## [v0.4.3](https://github.com/kayac/nepp-chan/compare/v0.4.2...v0.4.3) - 2026-04-03
 - feat: URL正答率改善 + ナレッジデータ v5 by @vesperworks in https://github.com/kayac/nepp-chan/pull/423
 - fix(server): ペルソナ一括抽出で処理済みスレッドのスキップコストを削減 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/425
