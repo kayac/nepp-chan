@@ -108,46 +108,20 @@ pnpm db:migrate:local
 ## Development
 
 ```bash
-# Start API server (http://localhost:8787)
-pnpm server:dev
-
-# Start Web dev server (http://localhost:5173)
-pnpm web:dev
-
-# Start LP dev server (http://localhost:5174)
-pnpm lp:dev
-
-# Start Mastra Playground
-pnpm mastra:dev
+pnpm server:dev   # API
+pnpm web:dev      # Web
+pnpm lp:dev       # LP
+pnpm mastra:dev   # Mastra Playground
 ```
 
-## Deployment
+See [CLAUDE.md](CLAUDE.md) for local/dev URLs and detailed commands.
 
-### Environments
+## Production
 
-| Environment | Trigger | LP | Web | API |
-|-------------|---------|----|-----|-----|
-| Local | - | http://localhost:5174 | http://localhost:5173 | http://localhost:8787 |
-| dev | `develop` push | https://dev.nepp-chan.ai | https://dev-web.nepp-chan.ai | https://dev-api.nepp-chan.ai |
-| prd | `v*` tag (tagpr) | https://nepp-chan.ai | https://web.nepp-chan.ai | https://api.nepp-chan.ai |
+| | URL |
+| --- | --- |
+| LP | https://nepp-chan.ai |
+| Web | https://web.nepp-chan.ai |
+| API | https://api.nepp-chan.ai |
 
-### Manual Deployment
-
-```bash
-# dev environment
-pnpm server:deploy:dev
-pnpm web:deploy:dev
-pnpm lp:deploy:dev
-
-# prd environment
-pnpm server:deploy:prd
-pnpm web:deploy:prd
-pnpm lp:deploy:prd
-```
-
-### CI/CD
-
-Automatic deployment via GitHub Actions:
-- Push to `develop` → CI (lint + test) + dev deployment
-- Push to `develop` → tagpr creates version bump PR automatically
-- Merge version bump PR → tag + GitHub Release → prd deployment
+Merging into `develop` triggers CI, and [tagpr](https://github.com/Songmu/tagpr) automatically opens a version bump PR. Merging the bump PR creates a tag + GitHub Release + production deployment.

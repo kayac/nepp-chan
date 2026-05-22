@@ -108,46 +108,20 @@ pnpm db:migrate:local
 ## 開発
 
 ```bash
-# API サーバー起動（http://localhost:8787）
-pnpm server:dev
-
-# Web 開発サーバー起動（http://localhost:5173）
-pnpm web:dev
-
-# LP 開発サーバー起動（http://localhost:5174）
-pnpm lp:dev
-
-# Mastra Playground 起動
-pnpm mastra:dev
+pnpm server:dev   # API
+pnpm web:dev      # Web
+pnpm lp:dev       # LP
+pnpm mastra:dev   # Mastra Playground
 ```
 
-## デプロイ
+開発・dev 環境の URL、各種コマンドの詳細は [CLAUDE.md](CLAUDE.md) を参照してください。
 
-### 環境構成
+## 本番環境
 
-| 環境 | トリガー | LP | Web | API |
-|------|----------|----|-----|-----|
-| ローカル | - | http://localhost:5174 | http://localhost:5173 | http://localhost:8787 |
-| dev | `develop` push | https://dev.nepp-chan.ai | https://dev-web.nepp-chan.ai | https://dev-api.nepp-chan.ai |
-| prd | `v*` タグ（tagpr） | https://nepp-chan.ai | https://web.nepp-chan.ai | https://api.nepp-chan.ai |
+| | URL |
+| --- | --- |
+| LP | https://nepp-chan.ai |
+| Web | https://web.nepp-chan.ai |
+| API | https://api.nepp-chan.ai |
 
-### 手動デプロイ
-
-```bash
-# dev 環境
-pnpm server:deploy:dev
-pnpm web:deploy:dev
-pnpm lp:deploy:dev
-
-# prd 環境
-pnpm server:deploy:prd
-pnpm web:deploy:prd
-pnpm lp:deploy:prd
-```
-
-### CI/CD
-
-GitHub Actions で自動デプロイ:
-- `develop` push → CI（lint + test）+ dev 環境デプロイ
-- `develop` push → tagpr がバージョンバンプ PR を自動作成
-- バージョンバンプ PR マージ → タグ + GitHub Release → prd 環境デプロイ
+`develop` への merge で CI が走り、[tagpr](https://github.com/Songmu/tagpr) がバージョンバンプ PR を自動作成。バンプ PR をマージするとタグ + GitHub Release + 本番デプロイが連動します。
