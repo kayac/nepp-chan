@@ -107,17 +107,28 @@ const enqueueLineEvents = async (
       continue;
     }
 
-    if (event.type !== "message" || event.message.type !== "text") continue;
+    if (event.type !== "message") continue;
     if (!("replyToken" in event) || !event.replyToken) continue;
     if (!event.source?.userId) continue;
 
-    const message: LineEventMessage = {
-      type: "message",
-      userId: event.source.userId,
-      userMessage: event.message.text,
-      replyToken: event.replyToken,
-    };
+    if (event.message.type === "text") {
+      const message: LineEventMessage = {
+        type: "message",
+        userId: event.source.userId,
+        userMessage: event.message.text,
+        replyToken: event.replyToken,
+      };
+      await env.LINE_QUEUE.send(message);
+      continue;
+    }
 
-    await env.LINE_QUEUE.send(message);
+    if (event.message.type === "sticker") {
+      const sticker: LineEventMessage = {
+        type: "sticker",
+        userId: event.source.userId,
+        replyToken: event.replyToken,
+      };
+      await env.LINE_QUEUE.send(sticker);
+    }
   }
 };

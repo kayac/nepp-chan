@@ -7,9 +7,18 @@ export type LineMessageEvent = {
   replyToken: string;
 };
 
+export type LineStickerEvent = {
+  type: "sticker";
+  userId: string;
+  replyToken: string;
+};
+
 export type LineUnfollowEvent = {
   type: webhook.UnfollowEvent["type"];
   userId: string;
 };
 
-export type LineEventMessage = LineMessageEvent | LineUnfollowEvent;
+export type LineEventMessage =
+  | LineMessageEvent
+  | LineStickerEvent
+  | LineUnfollowEvent;
