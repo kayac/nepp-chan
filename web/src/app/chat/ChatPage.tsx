@@ -113,9 +113,12 @@ export const ChatPage = () => {
         </div>
       )}
 
-      <TopBar onMenuClick={() => setIsSidebarOpen(true)} />
-
       <main className="relative z-[2] flex-1 flex flex-col min-w-0 min-h-0">
+        <TopBar
+          onMenuClick={() => setIsSidebarOpen(true)}
+          className="absolute inset-x-0 top-0 z-[3]"
+        />
+
         {renderMain()}
       </main>
 

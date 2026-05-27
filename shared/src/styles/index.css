@@ -175,6 +175,19 @@
   --lh-snug: 1.45;
   --lh-normal: 1.7;
   --lh-relaxed: 1.85;
+
+  /* ===============================================
+     CHAT LAYOUT
+     =============================================== */
+  /* チャット画面の TopBar 高さ。半透明 TopBar が main にオーバーレイするため、
+     Thread / Landing 側でこの値ぶんの上余白を確保する */
+  --chat-topbar-h: 60px;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --chat-topbar-h: 80px;
+  }
 }
 
 body {

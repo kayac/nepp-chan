@@ -37,7 +37,7 @@ export const Landing = ({ onSubmit, disabled = false }: Props) => {
   };
 
   return (
-    <div className="relative z-[2] flex-1 flex flex-col items-center px-4 pt-6 pb-8 overflow-y-auto">
+    <div className="relative z-[2] flex-1 flex flex-col items-center px-4 pb-8 overflow-y-auto pt-[calc(var(--chat-topbar-h,0px)+1.5rem)]">
       <div className="w-full max-w-3xl flex-1 flex flex-col items-center justify-center gap-8 py-8">
         <div className="text-xs text-(--fg-3) tracking-[0.28em] uppercase flex items-center gap-2.5">
           <span aria-hidden="true">❄</span>
