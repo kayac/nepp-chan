@@ -8,6 +8,7 @@ import {
   generateBroadcastExplanation,
   handleBroadcastPostback,
 } from "~/services/broadcast-response";
+import { createLineClient } from "~/services/line-messaging";
 import {
   generatePollFollowUp,
   handlePollPostback,
@@ -112,12 +113,23 @@ const enqueueLineEvents = async (
     if (!event.source?.userId) continue;
 
     if (event.message.type === "text") {
+      const userId = event.source.userId;
       const message: LineEventMessage = {
         type: "message",
-        userId: event.source.userId,
+        userId,
         userMessage: event.message.text,
         replyToken: event.replyToken,
       };
+      const client = createLineClient(env.LINE_CHANNEL_ACCESS_TOKEN);
+      executionCtx.waitUntil(
+        client
+          .showLoadingAnimation({ chatId: userId, loadingSeconds: 60 })
+          .catch((error) =>
+            logger.warn("[LINE] early showLoadingAnimation failed", {
+              errorName: error instanceof Error ? error.name : "unknown",
+            }),
+          ),
+      );
       await env.LINE_QUEUE.send(message);
       continue;
     }
