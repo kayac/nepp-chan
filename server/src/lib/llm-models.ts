@@ -42,7 +42,7 @@ const MODEL_TIERS: Record<Intent, Record<"web" | "line", ModelTierConfig>> = {
   },
   thinking: {
     web: geminiModelWithThinking({ model: GEMINI_FLASH, level: "high" }),
-    line: geminiModelWithThinking({ model: GEMINI_FLASH, level: "high" }),
+    line: geminiModelWithThinking({ model: GEMINI_FLASH, level: "medium" }),
   },
 };
 

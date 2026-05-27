@@ -63,7 +63,7 @@ describe("resolveModelTier", () => {
       );
     });
 
-    it("thinking → FLASH + high", () => {
+    it("thinking → FLASH + medium", () => {
       const tier = resolveModelTier({
         intent: "thinking",
         platform: "line",
@@ -71,7 +71,7 @@ describe("resolveModelTier", () => {
       });
       expect(tier.model).toBe(GEMINI_FLASH);
       expect(tier.providerOptions.google.thinkingConfig.thinkingLevel).toBe(
-        "high",
+        "medium",
       );
     });
   });
