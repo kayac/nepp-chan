@@ -318,23 +318,37 @@ describe("personaRepository", () => {
   });
 
   describe("listForAdmin", () => {
-    it("createdAt + id の複合ソートとカーソル", async () => {
-      // 同じ createdAt で id が違う persona を作る
+    it("conversationEndedAt 優先 + id の複合ソートとカーソル", async () => {
+      // conversationEndedAt が null の場合は createdAt にフォールバックして比較する
       await personaRepository.create(
         fakeD1,
-        baseInput({ id: "p-a", createdAt: "2030-01-01T00:00:00Z" }),
+        baseInput({
+          id: "p-a",
+          createdAt: "2030-01-01T00:00:00Z",
+          conversationEndedAt: "2030-03-01T00:00:00Z",
+        }),
       );
       await personaRepository.create(
         fakeD1,
-        baseInput({ id: "p-b", createdAt: "2030-01-01T00:00:00Z" }),
+        baseInput({
+          id: "p-b",
+          createdAt: "2030-01-01T00:00:00Z",
+          conversationEndedAt: "2030-03-01T00:00:00Z",
+        }),
       );
       await personaRepository.create(
         fakeD1,
-        baseInput({ id: "p-c", createdAt: "2030-02-01T00:00:00Z" }),
+        baseInput({
+          id: "p-c",
+          createdAt: "2030-02-15T00:00:00Z",
+          conversationEndedAt: null,
+        }),
       );
 
       const first = await personaRepository.listForAdmin(fakeD1, { limit: 1 });
-      expect(first.personas[0].id).toBe("p-c");
+      // p-a / p-b は会話日時 2030-03-01、p-c は会話日時なし → createdAt フォールバック 2030-02-15
+      // 同日付なら id 降順なので先頭は p-b
+      expect(first.personas[0].id).toBe("p-b");
       expect(first.total).toBe(3);
       expect(first.hasMore).toBe(true);
 
@@ -342,8 +356,14 @@ describe("personaRepository", () => {
         limit: 1,
         cursor: first.nextCursor!,
       });
-      // 同 createdAt なら id 降順
-      expect(next.personas[0].id).toBe("p-b");
+      expect(next.personas[0].id).toBe("p-a");
+
+      const last = await personaRepository.listForAdmin(fakeD1, {
+        limit: 1,
+        cursor: next.nextCursor!,
+      });
+      expect(last.personas[0].id).toBe("p-c");
+      expect(last.hasMore).toBe(false);
     });
   });
 
