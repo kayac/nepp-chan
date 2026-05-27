@@ -15,6 +15,7 @@ export const createLineClient = (token: string) =>
   new messagingApi.MessagingApiClient({ channelAccessToken: token });
 
 export const generateReply = async (params: {
+  client: messagingApi.MessagingApiClient;
   userMessage: string;
   userId: string;
   hashedUserId: string;
@@ -29,6 +30,18 @@ export const generateReply = async (params: {
     db: params.env.DB,
     env: params.env,
   });
+
+  params.client
+    .showLoadingAnimation({
+      chatId: params.userId,
+      loadingSeconds: 60,
+    })
+    .catch((error) =>
+      logger.warn("[LINE] showLoadingAnimation failed", {
+        threadId: params.threadId,
+        errorName: error instanceof Error ? error.name : "unknown",
+      }),
+    );
 
   await Promise.all([
     injectBroadcastsToThread({

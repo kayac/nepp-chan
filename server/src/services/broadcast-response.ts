@@ -68,7 +68,9 @@ export const generateBroadcastExplanation = async (
 【おしらせ本文】
 ${bodyText}`;
 
+    const client = createLineClient(env.LINE_CHANNEL_ACCESS_TOKEN);
     const replyTexts = await generateReply({
+      client,
       userMessage,
       userId,
       hashedUserId,
@@ -79,7 +81,6 @@ ${bodyText}`;
 
     if (replyTexts.length === 0) return;
 
-    const client = createLineClient(env.LINE_CHANNEL_ACCESS_TOKEN);
     await sendLineMessages({
       client,
       replyToken,

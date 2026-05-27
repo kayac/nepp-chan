@@ -139,7 +139,9 @@ export const generatePollFollowUp = async (
 
     const userMessage = `（投票）「${poll.title}」で「${selectedChoice}」を選んだよ。`;
 
+    const client = createLineClient(env.LINE_CHANNEL_ACCESS_TOKEN);
     const replyTexts = await generateReply({
+      client,
       userMessage,
       userId,
       hashedUserId,
@@ -150,7 +152,6 @@ export const generatePollFollowUp = async (
 
     if (replyTexts.length === 0) return;
 
-    const client = createLineClient(env.LINE_CHANNEL_ACCESS_TOKEN);
     await client.pushMessage({
       to: userId,
       messages: replyTexts.map((text) => ({ type: "text" as const, text })),

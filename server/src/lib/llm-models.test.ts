@@ -51,19 +51,19 @@ describe("resolveModelTier", () => {
   });
 
   describe("LINE プラットフォーム（非 Admin）", () => {
-    it("casual → FLASH_LITE + low", () => {
+    it("casual → FLASH_LITE + thinking 無効 (thinkingBudget: 0)", () => {
       const tier = resolveModelTier({
         intent: "casual",
         platform: "line",
         isAdmin: false,
       });
       expect(tier.model).toBe(GEMINI_FLASH_LITE);
-      expect(tier.providerOptions.google.thinkingConfig.thinkingLevel).toBe(
-        "low",
-      );
+      expect(tier.providerOptions.google.thinkingConfig).toEqual({
+        thinkingBudget: 0,
+      });
     });
 
-    it("thinking → FLASH + high", () => {
+    it("thinking → FLASH + medium", () => {
       const tier = resolveModelTier({
         intent: "thinking",
         platform: "line",
@@ -71,7 +71,7 @@ describe("resolveModelTier", () => {
       });
       expect(tier.model).toBe(GEMINI_FLASH);
       expect(tier.providerOptions.google.thinkingConfig.thinkingLevel).toBe(
-        "high",
+        "medium",
       );
     });
   });
