@@ -31,7 +31,6 @@ export const generateReply = async (params: {
     env: params.env,
   });
 
-  // 並行で発火する。await すると D1 注入や classifyIntent と直列化してしまい意味がない
   params.client
     .showLoadingAnimation({
       chatId: params.userId,
