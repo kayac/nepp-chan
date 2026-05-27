@@ -152,13 +152,28 @@ describe("lineRoutes: POST /webhook", () => {
       expect(queueSend).not.toHaveBeenCalled();
     });
 
-    it("非テキスト message はキューに送らない", async () => {
+    it("sticker message は { type: 'sticker', userId, replyToken } を LINE_QUEUE に送る", async () => {
       const stickerEvent = {
         ...baseTextEvent,
         message: { type: "sticker", id: "s1" },
       };
 
       await sendWebhook([stickerEvent]);
+
+      expect(queueSend).toHaveBeenCalledWith({
+        type: "sticker",
+        userId: "U123",
+        replyToken: "reply-1",
+      });
+    });
+
+    it("text / sticker 以外の message はキューに送らない", async () => {
+      const imageEvent = {
+        ...baseTextEvent,
+        message: { type: "image", id: "i1" },
+      };
+
+      await sendWebhook([imageEvent]);
 
       expect(queueSend).not.toHaveBeenCalled();
     });

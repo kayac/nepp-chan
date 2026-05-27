@@ -30,7 +30,7 @@ const buildMessage = (body: {
   userId: string;
   userMessage?: string;
   replyToken?: string;
-  type?: "message" | "unfollow";
+  type?: "message" | "unfollow" | "sticker";
 }) => ({
   body: {
     type: body.type ?? "message",
@@ -131,6 +131,44 @@ describe("handleLineEvent", () => {
     expect(mockSendLineMessages).not.toHaveBeenCalled();
     expect(msg.ack).toHaveBeenCalled();
     expect(msg.retry).not.toHaveBeenCalled();
+  });
+
+  it("sticker はねっぷちゃんの定型文を sendLineMessages で送って ack（generateReply は呼ばない）", async () => {
+    mockSendLineMessages.mockResolvedValue(undefined);
+
+    const msg = buildMessage({
+      userId: "U-stk",
+      replyToken: "rt-stk",
+      type: "sticker",
+    });
+
+    await handleLineEvent(buildBatch([msg]), env);
+
+    expect(mockGenerateReply).not.toHaveBeenCalled();
+    expect(mockSendLineMessages).toHaveBeenCalledWith(
+      expect.objectContaining({
+        replyToken: "rt-stk",
+        userId: "U-stk",
+        texts: ["ごめんね、スタンプはわからないんだ〜🥲"],
+      }),
+    );
+    expect(msg.ack).toHaveBeenCalled();
+    expect(msg.retry).not.toHaveBeenCalled();
+  });
+
+  it("sticker の送信が失敗したら retry", async () => {
+    mockSendLineMessages.mockRejectedValue(new Error("LINE down"));
+
+    const msg = buildMessage({
+      userId: "U-stk",
+      replyToken: "rt-stk",
+      type: "sticker",
+    });
+
+    await handleLineEvent(buildBatch([msg]), env);
+
+    expect(msg.ack).not.toHaveBeenCalled();
+    expect(msg.retry).toHaveBeenCalled();
   });
 
   it("unfollow の削除が失敗したら retry", async () => {

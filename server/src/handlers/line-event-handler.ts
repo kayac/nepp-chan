@@ -11,6 +11,8 @@ import {
 } from "~/services/line-messaging";
 import { deleteAllByLineUserId } from "~/services/user-deletion";
 
+const STICKER_REPLY_TEXT = "ごめんね、スタンプはわからないんだ〜🥲";
+
 export const handleLineEvent = async (
   batch: MessageBatch<LineEventMessage>,
   env: CloudflareBindings,
@@ -28,6 +30,34 @@ export const handleLineEvent = async (
       } catch (error) {
         reportPrivacyCriticalError(error, "line-unfollow-handler");
         logger.error("LINE unfollow deletion failed", error);
+        message.retry();
+      }
+      continue;
+    }
+
+    if (body.type === "sticker") {
+      let threadId: string | undefined;
+      try {
+        const principal: LinePrincipal = { type: "line", id: body.userId };
+        const { threadId: t } = await toLineIds(principal, secret);
+        threadId = t;
+        await sendLineMessages({
+          client,
+          replyToken: body.replyToken,
+          userId: body.userId,
+          threadId,
+          texts: [STICKER_REPLY_TEXT],
+        });
+        message.ack();
+      } catch (error) {
+        Sentry.captureException(error, {
+          tags: { handler: "line-event", event: "sticker" },
+        });
+        logger.error(
+          "LINE sticker reply failed",
+          error,
+          threadId ? { threadId } : undefined,
+        );
         message.retry();
       }
       continue;
