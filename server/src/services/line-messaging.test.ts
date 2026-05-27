@@ -119,7 +119,13 @@ describe("sendLineMessages", () => {
 });
 
 describe("generateReply", () => {
+  const showLoadingAnimation = vi.fn();
+  const client = {
+    showLoadingAnimation,
+  } as unknown as messagingApi.MessagingApiClient;
+
   const baseParams = {
+    client,
     userMessage: "こんにちは",
     userId: "user-1",
     hashedUserId: "hashed-1",
@@ -141,6 +147,7 @@ describe("generateReply", () => {
         modelId: "fake-model",
       } as never);
     agentHolder.generate.mockReset();
+    showLoadingAnimation.mockReset().mockResolvedValue({});
   });
 
   it("通常系: step.text を返し stripMarkdown を通す", async () => {
@@ -217,5 +224,51 @@ describe("generateReply", () => {
       platform: "line",
       isAdmin: false,
     });
+  });
+
+  it("agent.generate 前に showLoadingAnimation を chatId=userId / loadingSeconds=60 で呼ぶ", async () => {
+    agentHolder.generate.mockResolvedValueOnce({
+      steps: [{ text: "x" }],
+      text: "x",
+    });
+
+    await generateReply(baseParams);
+
+    expect(showLoadingAnimation).toHaveBeenCalledWith({
+      chatId: "user-1",
+      loadingSeconds: 60,
+    });
+    const loadingCallOrder = showLoadingAnimation.mock.invocationCallOrder[0];
+    const generateCallOrder = agentHolder.generate.mock.invocationCallOrder[0];
+    expect(loadingCallOrder).toBeLessThan(generateCallOrder!);
+  });
+
+  it("showLoadingAnimation の失敗は warn ログのみで generateReply を止めない", async () => {
+    showLoadingAnimation.mockRejectedValueOnce(new Error("loading failed"));
+    agentHolder.generate.mockResolvedValueOnce({
+      steps: [{ text: "ok" }],
+      text: "ok",
+    });
+
+    await expect(generateReply(baseParams)).resolves.toEqual(["ok"]);
+  });
+
+  it("showLoadingAnimation の Promise が未解決でも agent.generate は開始する (fire-and-forget)", async () => {
+    let releaseLoading: () => void = () => undefined;
+    showLoadingAnimation.mockReturnValueOnce(
+      new Promise<void>((resolve) => {
+        releaseLoading = resolve;
+      }),
+    );
+    agentHolder.generate.mockResolvedValueOnce({
+      steps: [{ text: "ok" }],
+      text: "ok",
+    });
+
+    const result = await generateReply(baseParams);
+
+    expect(agentHolder.generate).toHaveBeenCalled();
+    expect(result).toEqual(["ok"]);
+    releaseLoading();
   });
 });

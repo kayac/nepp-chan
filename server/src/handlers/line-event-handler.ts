@@ -74,6 +74,7 @@ export const handleLineEvent = async (
       } = await toLineIds(principal, secret);
       threadId = t;
       const replyTexts = await generateReply({
+        client,
         userMessage,
         userId,
         hashedUserId,
