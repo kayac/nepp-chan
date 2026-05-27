@@ -1,6 +1,10 @@
 import crypto from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const { showLoadingAnimation } = vi.hoisted(() => ({
+  showLoadingAnimation: vi.fn(),
+}));
+
 vi.mock("~/services/broadcast-response", () => ({
   generateBroadcastExplanation: vi.fn(),
   handleBroadcastPostback: vi.fn(),
@@ -9,6 +13,10 @@ vi.mock("~/services/broadcast-response", () => ({
 vi.mock("~/services/poll-response", () => ({
   generatePollFollowUp: vi.fn(),
   handlePollPostback: vi.fn(),
+}));
+
+vi.mock("~/services/line-messaging", () => ({
+  createLineClient: vi.fn(() => ({ showLoadingAnimation })),
 }));
 
 const broadcastResponse = await import("~/services/broadcast-response");
@@ -59,6 +67,7 @@ const baseTextEvent = {
 describe("lineRoutes: POST /webhook", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    showLoadingAnimation.mockResolvedValue({});
   });
 
   describe("署名検証", () => {
@@ -126,6 +135,36 @@ describe("lineRoutes: POST /webhook", () => {
         userMessage: "こんにちは",
         replyToken: "reply-1",
       });
+    });
+
+    it("text message では showLoadingAnimation を waitUntil で先出しする", async () => {
+      await sendWebhook([baseTextEvent]);
+
+      expect(showLoadingAnimation).toHaveBeenCalledWith({
+        chatId: "U123",
+        loadingSeconds: 60,
+      });
+      expect(waitUntil).toHaveBeenCalled();
+    });
+
+    it("showLoadingAnimation が失敗しても webhook 自体は 200 を返す", async () => {
+      showLoadingAnimation.mockRejectedValueOnce(new Error("loading failed"));
+
+      const res = await sendWebhook([baseTextEvent]);
+
+      expect(res.status).toBe(200);
+      expect(queueSend).toHaveBeenCalled();
+    });
+
+    it("sticker message では showLoadingAnimation を呼ばない", async () => {
+      const stickerEvent = {
+        ...baseTextEvent,
+        message: { type: "sticker", id: "s1" },
+      };
+
+      await sendWebhook([stickerEvent]);
+
+      expect(showLoadingAnimation).not.toHaveBeenCalled();
     });
 
     it("unfollow event は { type: 'unfollow', userId } を LINE_QUEUE に送る", async () => {
