@@ -17,16 +17,18 @@ export const OPENAI_SCORER = "openai/gpt-4.1-nano";
 export const GEMINI_EMBEDDING = "gemini-embedding-001";
 
 /**
- * Gemini モデルと thinkingConfig を含む Agent 設定を返す
+ * Gemini モデルと thinkingConfig を含む Agent 設定を返す。
+ * "none" は AI SDK の thinkingLevel enum に存在しないため thinkingBudget: 0 で無効化する。
  */
 export const geminiModelWithThinking = ({
   model = GEMINI_FLASH_LITE,
-  level = "low" as "high" | "medium" | "low",
+  level = "low" as "high" | "medium" | "low" | "none",
 } = {}) => ({
   model,
   providerOptions: {
     google: {
-      thinkingConfig: { thinkingLevel: level },
+      thinkingConfig:
+        level === "none" ? { thinkingBudget: 0 } : { thinkingLevel: level },
     },
   },
 });
@@ -38,7 +40,7 @@ export type ModelTierConfig = ReturnType<typeof geminiModelWithThinking>;
 const MODEL_TIERS: Record<Intent, Record<"web" | "line", ModelTierConfig>> = {
   casual: {
     web: geminiModelWithThinking({ model: GEMINI_FLASH_LITE, level: "low" }),
-    line: geminiModelWithThinking({ model: GEMINI_FLASH_LITE, level: "low" }),
+    line: geminiModelWithThinking({ model: GEMINI_FLASH_LITE, level: "none" }),
   },
   thinking: {
     web: geminiModelWithThinking({ model: GEMINI_FLASH, level: "high" }),
