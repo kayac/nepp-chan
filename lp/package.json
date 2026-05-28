@@ -31,6 +31,6 @@
     "@types/react-dom": "^19.2.3",
     "tailwindcss": "^4.3.0",
     "typescript": "~6.0.3",
-    "wrangler": "^4.92.0"
+    "wrangler": "^4.95.0"
   }
 }
