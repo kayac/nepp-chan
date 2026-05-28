@@ -47,7 +47,7 @@ export const toLineIds = async (p: LinePrincipal, secret: string) => {
 export const requireAdminUser = (
   principal: Principal | undefined,
 ): AuthUser => {
-  if (!principal || principal.type !== "admin") {
+  if (principal?.type !== "admin") {
     throw new HTTPException(403, { message: "管理者権限が必要です" });
   }
   return principal.user;
