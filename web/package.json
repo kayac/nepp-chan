@@ -25,7 +25,7 @@
     "@nepp-chan/shared": "workspace:*",
     "@sentry/react": "^10.54.0",
     "@tanstack/react-query": "^5.100.14",
-    "ai": "^5.0.108",
+    "ai": "^6.0.191",
     "astro": "^6.3.8",
     "lucide-react": "^1.16.0",
     "openapi-fetch": "^0.17.0",
