@@ -11,8 +11,6 @@ export const TopBar = ({ onMenuClick, className }: Props) => (
   <div
     className={cn(
       "flex items-center justify-between px-4 py-3 sm:px-7 sm:py-3.5",
-      "bg-(--paper-0)/70 backdrop-blur-md backdrop-saturate-150",
-      "border-b border-(--paper-200)/60",
       className,
     )}
   >
