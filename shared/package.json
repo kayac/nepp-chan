@@ -31,12 +31,12 @@
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "@vitest/coverage-istanbul": "~4.1.7",
     "jsdom": "^29.1.1",
     "msw": "^2.14.6",
     "typescript": "~6.0.3",
-    "vitest": "~4.1.6"
+    "vitest": "~4.1.7"
   }
 }
