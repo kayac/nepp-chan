@@ -109,7 +109,7 @@ export const ChatStandingMascot = () => {
     <div
       className={cn(
         "pointer-events-none fixed z-[5]",
-        "-right-1 bottom-[calc(72px+env(safe-area-inset-bottom))] w-28 h-28",
+        "-right-[3px] bottom-[calc(72px+env(safe-area-inset-bottom))] w-28 h-28",
         "lg:left-[max(0px,calc(50%-520px))] lg:bottom-2 lg:w-[170px] lg:h-[220px]",
       )}
       style={{
