@@ -180,8 +180,16 @@ const AssistantMessage = () => (
     className="aui-assistant-message-root fade-in slide-in-from-bottom-1 relative mx-auto w-full max-w-(--thread-max-width) animate-in py-4 duration-200"
     data-role="assistant"
   >
-    <div className="text-xs text-(--fg-3) mb-2 font-(family-name:--font-display) tracking-wide pl-1">
-      ねっぷちゃん
+    <div className="flex items-center gap-1.5 mb-2 pl-1">
+      <img
+        src="/mascot/icon.png"
+        alt=""
+        aria-hidden="true"
+        className="size-6 rounded-full bg-(--teal-50) object-cover"
+      />
+      <span className="text-xs text-(--fg-3) font-(family-name:--font-display) tracking-wide">
+        ねっぷちゃん
+      </span>
     </div>
     <div className="flex justify-start">
       <SpeechBubble
