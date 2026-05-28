@@ -10,7 +10,7 @@ type Props = {
 export const TopBar = ({ onMenuClick, className }: Props) => (
   <div
     className={cn(
-      "relative z-[3] flex items-center justify-between px-4 py-3 sm:px-7 sm:py-3.5",
+      "flex items-center justify-between px-4 py-3 sm:px-7 sm:py-3.5",
       className,
     )}
   >

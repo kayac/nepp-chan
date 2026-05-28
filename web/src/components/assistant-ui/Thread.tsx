@@ -40,7 +40,9 @@ export const Thread = () => (
       className={cn(
         "aui-thread-viewport relative flex flex-1 flex-col scroll-smooth",
         "overflow-x-auto overflow-y-scroll",
-        "px-4 pt-6 md:px-6",
+        "px-4 md:px-6",
+        // 半透明 TopBar 下にメッセージが回り込めるよう、TopBar 高さ + 余白を確保
+        "pt-[calc(var(--chat-topbar-h,0px)+1.5rem)]",
       )}
     >
       <ThreadPrimitive.Messages
