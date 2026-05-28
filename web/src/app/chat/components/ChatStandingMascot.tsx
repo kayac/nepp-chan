@@ -95,9 +95,9 @@ const useMascotPresentation = (): Presentation => {
 };
 
 /**
- * 画面左下に固定配置するマスコット。Composer (中央配置) と被らないよう
- * 画面端寄りに張り付ける。lg 以上で表示。
+ * 画面左下に固定配置するマスコット。
  *
+ * 表情:
  * - idle (待機): expr-wave-smile
  * - thinking + ツール実行中: pose-thinking
  * - thinking + テキスト生成のみ: expr-content
@@ -108,11 +108,9 @@ export const ChatStandingMascot = () => {
   return (
     <div
       className={cn(
-        "pointer-events-none fixed z-[5] hidden lg:block",
-        // Composer (max-w 672px / 中央配置) の左外側に寄せる。
-        // 画面が狭い場合は左端 0 に張り付け。
-        "left-[max(0px,calc(50%-520px))] bottom-2",
-        "w-[170px] h-[220px]",
+        "pointer-events-none fixed z-[5]",
+        "-right-[3px] bottom-[calc(72px+env(safe-area-inset-bottom))] w-28 h-28",
+        "lg:left-[max(0px,calc(50%-520px))] lg:bottom-2 lg:w-[170px] lg:h-[220px]",
       )}
       style={{
         animation: "mascot-float-sm 4.5s ease-in-out infinite",
