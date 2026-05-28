@@ -23,7 +23,7 @@
     "@astrojs/react": "^5.0.4",
     "@heroicons/react": "^2.2.0",
     "@nepp-chan/shared": "workspace:*",
-    "@sentry/react": "^10.53.1",
+    "@sentry/react": "^10.54.0",
     "@tanstack/react-query": "^5.100.10",
     "ai": "^5.0.108",
     "astro": "^6.3.7",

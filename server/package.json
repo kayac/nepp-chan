@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.46",
-    "@ai-sdk/openai": "^3.0.63",
+    "@ai-sdk/openai": "^3.0.66",
     "@hono/swagger-ui": "^0.6.1",
     "@hono/zod-openapi": "^1.4.0",
     "@line/bot-sdk": "^11.0.0",
@@ -42,7 +42,7 @@
     "@mastra/observability": "1.4.0",
     "@mastra/rag": "2.2.1",
     "@nepp-chan/shared": "workspace:*",
-    "@sentry/cloudflare": "^10.53.1",
+    "@sentry/cloudflare": "^10.54.0",
     "ai": "^5.0.112",
     "drizzle-orm": "^0.45.2",
     "glob": "^13.0.6",
