@@ -4,9 +4,9 @@ const ROWS: ReadonlyArray<{ label: string; value: string }> = [
   { label: "名前", value: "ねっぷちゃん" },
   { label: "肩書き", value: "音威子府村 AI副村長" },
   { label: "住んでいる場所", value: "北海道音威子府村" },
-  { label: "種族", value: "白おこじょ（エゾオコジョ）" },
+  { label: "種族", value: "白おこじょ" },
   { label: "得意なこと", value: "村のことをなんでも教えること" },
-  { label: "好きなもの", value: "雪・絵を描くこと・村のみんな" },
+  { label: "好きなもの", value: "森のさんぽ・絵を描くこと・村のみんな" },
 ];
 
 export const ProfileSection = () => {
