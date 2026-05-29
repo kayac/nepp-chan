@@ -1,5 +1,8 @@
 # Changelog
 
+## [v1.0.3](https://github.com/kayac/nepp-chan/compare/v1.0.2...v1.0.3) - 2026-05-29
+- feat(server): LINE配信の参照を関連性ベースに広げる by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/683
+
 ## [v1.0.2](https://github.com/kayac/nepp-chan/compare/v1.0.1...v1.0.2) - 2026-05-29
 - chore: dev LP のドメインを dev.nepp-chan.ai に統一 + README 更新 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/649
 - feat(server): LINE スタンプ受信時にねっぷちゃんが返信 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/674
