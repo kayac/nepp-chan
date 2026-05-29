@@ -1,5 +1,21 @@
 # Changelog
 
+## [v1.0.2](https://github.com/kayac/nepp-chan/compare/v1.0.1...v1.0.2) - 2026-05-29
+- chore: dev LP のドメインを dev.nepp-chan.ai に統一 + README 更新 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/649
+- feat(server): LINE スタンプ受信時にねっぷちゃんが返信 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/674
+- fix(server): ペルソナ一覧を会話日時優先で並び替え by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/675
+- perf(server): LINE の体感レイテンシを改善する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/676
+- perf(server): webhook 受信時にローディングを先出しする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/677
+- feat(web/chat): モバイルでもチャット画面にマスコットを表示する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/678
+- build(deps): bump astro from 6.3.5 to 6.3.7 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/651
+- build(deps-dev): bump @vitest/coverage-istanbul from 4.1.6 to 4.1.7 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/658
+- build(deps-dev): bump tsx from 4.22.2 to 4.22.3 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/656
+- build(deps): bump hono from 4.12.19 to 4.12.23 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/673
+- fix(web): チャット TopBar を透明にしてスクロール時の見切れを解消 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/679
+- chore(deps): @mastra/core@1.10.0 互換範囲で依存を一斉アップデート by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/680
+- feat(server): ねっぷちゃんのペルソナを公式プロフィールに整合 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/681
+- fix(server): ペルソナ抽出を全件取得＋差分更新に修正 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/682
+
 ## [v1.0.1](https://github.com/kayac/nepp-chan/compare/v1.0.0...v1.0.1) - 2026-05-21
 - fix(server): 旧 admin JWT による /threads などの 500 を防ぐ by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/647
 
