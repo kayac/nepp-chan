@@ -369,4 +369,80 @@ describe("extractAllPendingThreads", () => {
     });
     expect(threadPersonaStatusRepository.upsert).toHaveBeenCalled();
   });
+
+  it("recall を全件・古い順（perPage:false / createdAt ASC）で呼ぶ", async () => {
+    vi.mocked(threadPersonaStatusRepository.findAll).mockResolvedValue([]);
+    mockAll
+      .mockResolvedValueOnce([{ id: "t1", resourceId: "r1" }])
+      .mockResolvedValueOnce([{ threadId: "t1", count: 2 }]);
+    mockMemoryRecall.mockResolvedValue({
+      messages: [
+        { role: "user", content: "u1", createdAt: new Date() },
+        { role: "assistant", content: "a1", createdAt: new Date() },
+      ],
+    });
+
+    await extractAllPendingThreads(mockEnv);
+
+    expect(mockMemoryRecall).toHaveBeenCalledWith({
+      threadId: "t1",
+      perPage: false,
+      orderBy: { field: "createdAt", direction: "ASC" },
+    });
+  });
+
+  it("差分更新: 前回処理位置以降の新規メッセージのみ分析し lastMessageCount を全件数まで前進", async () => {
+    vi.mocked(threadPersonaStatusRepository.findAll).mockResolvedValue([
+      {
+        threadId: "t1",
+        lastExtractedAt: "2024-01-01T00:00:00Z",
+        lastMessageCount: 2,
+      },
+    ]);
+    mockAll
+      .mockResolvedValueOnce([{ id: "t1", resourceId: "r1" }])
+      .mockResolvedValueOnce([{ threadId: "t1", count: 4 }]);
+    mockMemoryRecall.mockResolvedValue({
+      messages: [
+        { role: "user", content: "古い発言1", createdAt: new Date() },
+        { role: "assistant", content: "古い発言2", createdAt: new Date() },
+        { role: "user", content: "新規発言3", createdAt: new Date() },
+        { role: "assistant", content: "新規発言4", createdAt: new Date() },
+      ],
+    });
+
+    await extractAllPendingThreads(mockEnv);
+
+    const prompt = mockGenerate.mock.calls[0]?.[0] as string;
+    expect(prompt).toContain("新規発言3");
+    expect(prompt).toContain("新規発言4");
+    expect(prompt).not.toContain("古い発言1");
+    expect(prompt).not.toContain("古い発言2");
+    expect(threadPersonaStatusRepository.upsert).toHaveBeenCalledWith(
+      mockEnv.DB,
+      expect.objectContaining({ threadId: "t1", lastMessageCount: 4 }),
+    );
+  });
+
+  it("extraction_error 時は upsert せず次回再試行に回す", async () => {
+    vi.mocked(threadPersonaStatusRepository.findAll).mockResolvedValue([]);
+    mockAll
+      .mockResolvedValueOnce([{ id: "t1", resourceId: "r1" }])
+      .mockResolvedValueOnce([{ threadId: "t1", count: 2 }]);
+    mockMemoryRecall.mockResolvedValue({
+      messages: [
+        { role: "user", content: "u1", createdAt: new Date() },
+        { role: "assistant", content: "a1", createdAt: new Date() },
+      ],
+    });
+    mockGenerate.mockRejectedValueOnce(new Error("boom"));
+
+    const result = await extractAllPendingThreads(mockEnv);
+
+    expect(result[0].result).toMatchObject({
+      skipped: true,
+      reason: "extraction_error",
+    });
+    expect(threadPersonaStatusRepository.upsert).not.toHaveBeenCalled();
+  });
 });
