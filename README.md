@@ -62,6 +62,7 @@
 | lp/                         | ランディングページ（Cloudflare Pages）      |
 | shared/                     | web / lp / server 共通の TypeScript パッケージ |
 | knowledge/                  | RAG 用ナレッジファイル                      |
+| [identity/](identity/)      | キャラ・ロゴ等のビジュアルアセット（[CC BY 4.0](identity/README.md)） |
 
 ## セットアップ
 
