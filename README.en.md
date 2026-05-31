@@ -62,6 +62,7 @@ To ensure no one is left behind — including those unfamiliar with digital tech
 | lp/                         | Landing page (Cloudflare Pages)                   |
 | shared/                     | Shared TypeScript package for web / lp / server   |
 | knowledge/                  | Knowledge files for RAG                           |
+| [identity/](identity/)      | Visual assets: character & logos ([CC BY 4.0](identity/README.md)) |
 
 ## Getting Started
 
