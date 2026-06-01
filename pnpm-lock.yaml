@@ -243,8 +243,8 @@ importers:
         specifier: ^1.1.20
         version: 1.1.20(@assistant-ui/react@0.11.53(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(immer@11.1.8)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6)))(@types/react@19.2.15)(assistant-cloud@0.1.12)(react@19.2.6)
       '@assistant-ui/react-markdown':
-        specifier: ^0.12.1
-        version: 0.12.1(@assistant-ui/react@0.11.53(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(immer@11.1.8)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6)))(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        specifier: ^0.14.1
+        version: 0.14.1(@assistant-ui/react@0.11.53(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(immer@11.1.8)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6)))(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@astrojs/check':
         specifier: ^0.9.9
         version: 0.9.9(prettier@3.8.3)(typescript@6.0.3)
@@ -470,10 +470,10 @@ packages:
       assistant-cloud:
         optional: true
 
-  '@assistant-ui/react-markdown@0.12.1':
-    resolution: {integrity: sha512-pwEa/Lj0NEaFhkkj5stTitOSQDE599p9P0SNv2I3GbN+7ETFC4esoELJbEXtblSMY9kyduzoB1+yfIdowEgR8w==}
+  '@assistant-ui/react-markdown@0.14.1':
+    resolution: {integrity: sha512-Q1S66rLS0J+b7jUjKrPGryLZsdg8v9NX/QdSTRmOCi5H6smWHfgMYvDypQ4BHn+4Tc+m3ggLKFPCgBV6t6iLhQ==}
     peerDependencies:
-      '@assistant-ui/react': ^0.12.3
+      '@assistant-ui/react': ^0.14.8
       '@types/react': '*'
       react: ^18 || ^19
     peerDependenciesMeta:
@@ -7103,7 +7103,7 @@ snapshots:
       '@types/react': 19.2.15
       assistant-cloud: 0.1.12
 
-  '@assistant-ui/react-markdown@0.12.1(@assistant-ui/react@0.11.53(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(immer@11.1.8)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6)))(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
+  '@assistant-ui/react-markdown@0.14.1(@assistant-ui/react@0.11.53(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(immer@11.1.8)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6)))(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
     dependencies:
       '@assistant-ui/react': 0.11.53(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(immer@11.1.8)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))
       '@radix-ui/react-primitive': 2.1.4(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)

@@ -18,7 +18,7 @@
     "@ai-sdk/react": "^2.0.109",
     "@assistant-ui/react": "^0.11.53",
     "@assistant-ui/react-ai-sdk": "^1.1.20",
-    "@assistant-ui/react-markdown": "^0.12.1",
+    "@assistant-ui/react-markdown": "^0.14.1",
     "@astrojs/check": "^0.9.9",
     "@astrojs/react": "^5.0.5",
     "@heroicons/react": "^2.2.0",
