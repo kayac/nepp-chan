@@ -20,7 +20,7 @@
     "@assistant-ui/react-ai-sdk": "^1.1.20",
     "@assistant-ui/react-markdown": "^0.12.1",
     "@astrojs/check": "^0.9.9",
-    "@astrojs/react": "^5.0.5",
+    "@astrojs/react": "^5.0.6",
     "@heroicons/react": "^2.2.0",
     "@nepp-chan/shared": "workspace:*",
     "@sentry/react": "^10.54.0",
