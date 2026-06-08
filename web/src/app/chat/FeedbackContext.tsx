@@ -1,4 +1,3 @@
-import { useThreadRuntime } from "@assistant-ui/react";
 import {
   createContext,
   type ReactNode,
@@ -11,10 +10,10 @@ import { feedbackRepository } from "~/lib/api/repository";
 import type { FeedbackCategory, FeedbackRating } from "~/types";
 
 import {
-  convertToUIMessages,
   extractConversationContext,
   extractToolExecutions,
 } from "./feedback-helpers";
+import { useChatContext } from "./useChatContext";
 
 type FeedbackModalState = {
   isOpen: boolean;
@@ -49,7 +48,7 @@ interface Props {
 }
 
 export const FeedbackProvider = ({ children, threadId }: Props) => {
-  const threadRuntime = useThreadRuntime();
+  const { messages } = useChatContext();
 
   const [feedbackModal, setFeedbackModal] = useState<FeedbackModalState | null>(
     null,
@@ -66,9 +65,6 @@ export const FeedbackProvider = ({ children, threadId }: Props) => {
   const onFeedbackSubmit = useCallback(
     async (data: { category?: FeedbackCategory; comment?: string }) => {
       if (!feedbackModal || !threadId) return;
-
-      const threadMessages = threadRuntime.getState().messages;
-      const messages = convertToUIMessages(threadMessages);
 
       const targetMessage = messages.find(
         (m) => m.id === feedbackModal.messageId,
@@ -107,7 +103,7 @@ export const FeedbackProvider = ({ children, threadId }: Props) => {
         setIsSubmitting(false);
       }
     },
-    [feedbackModal, threadId, threadRuntime],
+    [feedbackModal, threadId, messages],
   );
 
   const onFeedbackModalClose = useCallback(() => {

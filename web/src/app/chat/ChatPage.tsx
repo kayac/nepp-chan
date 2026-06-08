@@ -9,9 +9,9 @@ import { Landing } from "~/app/chat/components/Landing";
 import { ThreadDeleteModal } from "~/app/chat/components/ThreadDeleteModal";
 import { ThreadSidebar } from "~/app/chat/components/ThreadSidebar";
 import { TopBar } from "~/app/chat/components/TopBar";
-import { Thread } from "~/components/assistant-ui/Thread";
+import { Thread } from "~/components/chat/Thread";
 
-import { AssistantProvider } from "./AssistantProvider";
+import { ChatProvider } from "./ChatProvider";
 import { FeedbackProvider } from "./FeedbackContext";
 import { useThreadManager } from "./useThreadManager";
 
@@ -69,7 +69,7 @@ export const ChatPage = () => {
     }
     if (currentThreadId && !messagesLoading) {
       return (
-        <AssistantProvider
+        <ChatProvider
           key={currentThreadId}
           threadId={currentThreadId}
           initialMessages={initialMessages}
@@ -80,7 +80,7 @@ export const ChatPage = () => {
             <ChatStandingMascot />
             <FeedbackModalWrapper />
           </FeedbackProvider>
-        </AssistantProvider>
+        </ChatProvider>
       );
     }
     return (

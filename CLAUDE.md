@@ -163,7 +163,7 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 
 - StrictMode / フォールバック UI ラッパー（Sentry / Error Boundary 初期化など）
 - Astro から `client:only` でマウントされる薄い page shell
-- 外部 SDK 連携が深く E2E 領域に該当するもの（assistant-ui まわりなど）
+- 外部 SDK 連携が深く E2E 領域に該当するもの（recharts 描画や副作用中心の表示など）
 - HOC で囲んだ登録 / barrel / registry
 - 責務分離が完了して orchestration だけになった Panel / Provider / context wrapper
 - 自動生成資源（Mastra の `mastra/public/**` 等）

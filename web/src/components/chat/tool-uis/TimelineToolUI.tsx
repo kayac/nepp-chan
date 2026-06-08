@@ -1,10 +1,10 @@
-import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
-import { makeAssistantToolUI } from "@assistant-ui/react";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 
 import { ToolEmptyState } from "@nepp-chan/shared/ui/EmptyState";
 import { ToolLoadingState } from "@nepp-chan/shared/ui/Loading";
 import { CalendarIcon } from "lucide-react";
+
+import type { ToolPartComponent } from "~/components/chat/types";
 
 type TimelineEvent = {
   date: string;
@@ -17,10 +17,6 @@ type TimelineEvent = {
 type TimelineArgs = {
   title?: string;
   events: TimelineEvent[];
-};
-
-type TimelineResult = {
-  displayed: boolean;
 };
 
 const getStatusColor = (status?: TimelineEvent["status"]) => {
@@ -145,16 +141,8 @@ const renderTimeline = (args: TimelineArgs, isRunning: boolean) => {
 /**
  * MessagePrimitive.Parts の tools.by_name で使用するコンポーネント
  */
-export const DisplayTimelineToolComponent: ToolCallMessagePartComponent = ({
+export const DisplayTimelineToolComponent: ToolPartComponent = ({
   args,
   status,
 }) =>
   renderTimeline(args as unknown as TimelineArgs, status?.type === "running");
-
-export const TimelineToolUI = makeAssistantToolUI<TimelineArgs, TimelineResult>(
-  {
-    toolName: "displayTimelineTool",
-    render: ({ args, status }) =>
-      renderTimeline(args, status.type === "running"),
-  },
-);

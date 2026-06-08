@@ -19,10 +19,6 @@ const renderFallback = (overrides: {
     result?: any;
     // biome-ignore lint/suspicious/noExplicitAny: テスト用
     status?: any;
-    toolCallId: string;
-    // biome-ignore lint/suspicious/noExplicitAny: テスト用
-    addResult: any;
-    type: string;
   }) => React.ReactElement;
   return render(
     <Comp
@@ -30,9 +26,6 @@ const renderFallback = (overrides: {
       argsText={overrides.argsText ?? "{}"}
       result={overrides.result}
       status={overrides.status}
-      toolCallId="t-1"
-      addResult={() => undefined}
-      type="tool-call"
     />,
   );
 };
@@ -57,13 +50,6 @@ describe("ToolFallback", () => {
       status: { type: "running" },
     });
     expect(screen.getByText("ねっぷちゃんが記憶中")).toBeDefined();
-  });
-
-  it("incomplete + cancelled で『キャンセル』表記とライン線", () => {
-    renderFallback({
-      status: { type: "incomplete", reason: "cancelled" },
-    });
-    expect(screen.getByText("ねっぷちゃんが調査しました")).toBeDefined();
   });
 
   it("展開ボタンで argsText / result を表示する", () => {

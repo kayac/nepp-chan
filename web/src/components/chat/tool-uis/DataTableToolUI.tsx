@@ -1,5 +1,3 @@
-import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
-import { makeAssistantToolUI } from "@assistant-ui/react";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { ToolLoadingState } from "@nepp-chan/shared/ui/Loading";
 import {
@@ -11,14 +9,12 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import type { ToolPartComponent } from "~/components/chat/types";
+
 type DataTableArgs = {
   title?: string;
   columns: { key: string; label: string; sortable?: boolean }[];
   data: Record<string, unknown>[];
-};
-
-type DataTableResult = {
-  displayed: boolean;
 };
 
 type SortConfig = {
@@ -161,17 +157,8 @@ const renderDataTable = (args: DataTableArgs, isRunning: boolean) => {
 /**
  * MessagePrimitive.Parts の tools.by_name で使用するコンポーネント
  */
-export const DisplayTableToolComponent: ToolCallMessagePartComponent = ({
+export const DisplayTableToolComponent: ToolPartComponent = ({
   args,
   status,
 }) =>
   renderDataTable(args as unknown as DataTableArgs, status?.type === "running");
-
-export const DataTableToolUI = makeAssistantToolUI<
-  DataTableArgs,
-  DataTableResult
->({
-  toolName: "displayTableTool",
-  render: ({ args, status }) =>
-    renderDataTable(args, status.type === "running"),
-});

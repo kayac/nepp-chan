@@ -56,37 +56,3 @@ export const extractToolExecutions = (message: UIMessage): ToolExecution[] =>
     output: "output" in part ? part.output : undefined,
     errorText: "errorText" in part ? (part.errorText as string) : undefined,
   }));
-
-/**
- * assistant-ui の ThreadMessage を UIMessage に変換する。
- * tool-call 以外の不明な part は安全側で text にフォールバックする。
- */
-export const convertToUIMessages = (
-  threadMessages: readonly {
-    id: string;
-    role: string;
-    content: readonly unknown[];
-  }[],
-): UIMessage[] =>
-  threadMessages
-    .filter((m) => m.role === "user" || m.role === "assistant")
-    .map((m) => ({
-      id: m.id,
-      role: m.role as "user" | "assistant",
-      parts: m.content.map((c) => {
-        if (typeof c === "object" && c !== null && "type" in c) {
-          const content = c as {
-            type: string;
-            text?: string;
-            [key: string]: unknown;
-          };
-          if (content.type === "text") {
-            return { type: "text" as const, text: content.text ?? "" };
-          }
-          if (content.type === "tool-call") {
-            return c as UIMessage["parts"][number];
-          }
-        }
-        return { type: "text" as const, text: String(c) };
-      }),
-    }));

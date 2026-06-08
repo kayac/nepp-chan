@@ -1,12 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import type { ComponentType } from "react";
 import { describe, expect, it } from "vitest";
 
 import { DisplayChartToolComponent } from "./ChartToolUI";
-
-const Comp = DisplayChartToolComponent as unknown as ComponentType<
-  Record<string, unknown>
->;
 
 const baseArgs = {
   title: "売上推移",
@@ -24,32 +19,24 @@ const renderChart = (
   running = false,
 ) =>
   render(
-    <Comp
+    <DisplayChartToolComponent
       args={{ ...baseArgs, ...overrides }}
       argsText=""
       result={undefined}
-      status={
-        running ? { type: "running" } : { type: "complete", reason: "stop" }
-      }
-      toolCallId="t-1"
+      status={running ? { type: "running" } : { type: "complete" }}
       toolName="displayChartTool"
-      addResult={() => undefined}
-      type="tool-call"
     />,
   );
 
 describe("DisplayChartToolComponent", () => {
   it("running + data 未到着ならローディングを表示する", () => {
     render(
-      <Comp
+      <DisplayChartToolComponent
         args={{ type: "line", xKey: "month", yKey: "sales" }}
         argsText=""
         result={undefined}
         status={{ type: "running" }}
-        toolCallId="t-1"
         toolName="displayChartTool"
-        addResult={() => undefined}
-        type="tool-call"
       />,
     );
     expect(screen.queryByText("売上推移")).toBeNull();

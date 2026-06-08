@@ -1,14 +1,10 @@
-import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
-import { makeAssistantToolUI } from "@assistant-ui/react";
 import { ToolEmptyState } from "@nepp-chan/shared/ui/EmptyState";
 import { ToolLoadingState } from "@nepp-chan/shared/ui/Loading";
 import { BarChartIcon } from "lucide-react";
 
-import { Chart, type ChartArgs } from "./Chart";
+import type { ToolPartComponent } from "~/components/chat/types";
 
-type ChartResult = {
-  displayed: boolean;
-};
+import { Chart, type ChartArgs } from "./Chart";
 
 const renderChart = (args: ChartArgs, isRunning: boolean) => {
   if (isRunning && !args.data) {
@@ -37,12 +33,7 @@ const renderChart = (args: ChartArgs, isRunning: boolean) => {
   );
 };
 
-export const DisplayChartToolComponent: ToolCallMessagePartComponent = ({
+export const DisplayChartToolComponent: ToolPartComponent = ({
   args,
   status,
 }) => renderChart(args as unknown as ChartArgs, status?.type === "running");
-
-export const ChartToolUI = makeAssistantToolUI<ChartArgs, ChartResult>({
-  toolName: "displayChartTool",
-  render: ({ args, status }) => renderChart(args, status.type === "running"),
-});

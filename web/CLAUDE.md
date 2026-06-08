@@ -11,8 +11,8 @@ LP（apex 配信の静的サイト）は別パッケージ `lp/` にある。
 | --------------------- | -------------------------------------- |
 | ページルーティング    | `pages/*.astro`                        |
 | チャット画面          | `app/chat/`                            |
-| チャット UI           | `components/assistant-ui/`             |
-| ツール表示 UI         | `components/assistant-ui/tool-uis/`    |
+| チャット UI           | `components/chat/`                     |
+| ツール表示 UI         | `components/chat/tool-uis/`            |
 | 共通 UI               | `components/ui/`                       |
 | 共通レイアウト        | `components/RootLayout.tsx`            |
 | マスコット表示        | `components/Mascot.tsx`                |
@@ -41,7 +41,8 @@ web/
 │   │   ├── chat/              # チャット画面
 │   │   │   ├── App.tsx              # エントリー（RootLayout + QueryProvider）
 │   │   │   ├── ChatPage.tsx         # メインページ（スレッド管理）
-│   │   │   ├── AssistantProvider.tsx # Runtime Provider
+│   │   │   ├── ChatProvider.tsx      # useChat を集約し context で配布
+│   │   │   ├── useChatContext.ts     # チャット状態の context / フック
 │   │   │   ├── FeedbackContext.tsx   # フィードバック状態管理
 │   │   │   └── hooks/                # chat 専用フック（useThreads / useAnonymousSession）
 │   │   ├── auth/              # 認証画面
@@ -59,10 +60,16 @@ web/
 │   │   ├── RootLayout.tsx     # 共通レイアウト（StrictMode + Sentry）
 │   │   ├── AmbientBG.tsx      # bg-winter + 雪 + 星座を統合した canvas 背景
 │   │   ├── Mascot.tsx         # マスコット表示
-│   │   ├── assistant-ui/      # assistant-ui ベースのチャット UI
-│   │   │   ├── Thread.tsx
-│   │   │   ├── MarkdownText.tsx
+│   │   ├── chat/             # チャット UI（useChat ベース）
+│   │   │   ├── Thread.tsx         # メッセージ一覧 + Composer の組み立て
+│   │   │   ├── Composer.tsx       # 入力欄（IME / タッチ / 送信・停止）
+│   │   │   ├── UserMessage.tsx
+│   │   │   ├── AssistantMessage.tsx
+│   │   │   ├── MarkdownText.tsx   # react-markdown ベース
+│   │   │   ├── ToolPart.tsx       # tool part → 表示コンポーネントのアダプタ
 │   │   │   ├── ToolFallback.tsx
+│   │   │   ├── types.ts           # ToolPartComponent 互換型
+│   │   │   ├── hooks/             # useStickToBottom
 │   │   │   └── tool-uis/
 │   │   └── ui/                # shadcn/ui ベース共通コンポーネント
 │   ├── hooks/                 # 複数 app から使う共有フック（useAdminUser / useCopyToClipboard）
@@ -90,10 +97,10 @@ web/
 - **React** 19 - `client:only="react"` でフル CSR
 - **TailwindCSS** 4
 - **TanStack Query** 5 - データフェッチング・キャッシング
-- **assistant-ui** - チャット UI フレームワーク
-  - `@assistant-ui/react` - コアコンポーネント
-  - `@assistant-ui/react-ai-sdk` - AI SDK 統合
-  - `@assistant-ui/react-markdown` - Markdown サポート
+- **チャット UI**（`components/chat/`）
+  - `@ai-sdk/react` の `useChat` - メッセージ状態・ストリーミング・ツール結果
+  - `react-markdown` + `remark-gfm` - Markdown レンダリング
+  - サーバーは AI SDK data stream protocol（`POST /threads/{threadId}/chat`）
 - **Radix UI** - ツールチップ等の基盤
 
 ## ページ追加方法
@@ -118,40 +125,49 @@ import { MyPage } from "~/app/my-feature/MyPage";
 
 ## チャット UI アーキテクチャ
 
-### assistant-ui 統合
+`@ai-sdk/react` の `useChat` を `ChatProvider` で 1 回呼び、`useChatContext` で
+配下に配る。
 
 ```text
 ChatPage
-  └── AssistantProvider (Runtime)
-      └── Thread
-          ├── ThreadWelcome (空の時)
-          ├── Messages
-          │   ├── UserMessage
-          │   └── AssistantMessage
-          │       ├── MarkdownText
-          │       └── ToolUI (各種ツール表示)
-          └── Composer (入力欄)
+  └── ChatProvider (useChat → ChatContext)
+      └── FeedbackProvider
+          ├── Thread
+          │   ├── messages.map
+          │   │   ├── UserMessage
+          │   │   └── AssistantMessage
+          │   │       ├── MarkdownText (text part)
+          │   │       └── ToolPart (tool part → toolsByName / ToolFallback)
+          │   └── Composer (入力欄)
+          └── ChatStandingMascot
 ```
+
+メッセージ末尾への自動追従は `useStickToBottom` フックが担う。
 
 ### ツール UI 実装
 
-```typescript
-// makeAssistantToolUI で定義
-export const WeatherToolUI = makeAssistantToolUI<Args, Result>({
-  toolName: "get-weather",
-  render: ({ args, result, status }) => {
-    if (status.type === "running") return <LoadingState />;
-    if (!result) return null;
-    return <WeatherCard result={result} />;
-  },
-});
+ツール表示は `ToolPartComponent`（`components/chat/types.ts`）型のコンポーネントとして
+作り、`toolsByName` に `toolName` で登録する。`ToolPart` が AI SDK の tool part
+（`state` / `input` / `output`）を props に変換して振り分ける。
 
-// index.tsx で登録
-export const toolsByName = {
-  "get-weather": WeatherToolUI,
+```typescript
+import type { ToolPartComponent } from "~/components/chat/types";
+
+export const WeatherToolComponent: ToolPartComponent = ({ args, result, status }) => {
+  if (status.type === "running") return <LoadingState />;
+  if (!result) return null;
+  return <WeatherCard result={result} />;
+};
+
+// tool-uis/index.ts で登録（toolName は agent の tools キーと一致させる）
+export const toolsByName: Record<string, ToolPartComponent> = {
+  "get-weather": WeatherToolComponent,
   // ...
 };
 ```
+
+ユーザー操作の結果をツールに返す場合は props の `addResult(output)` を呼ぶ
+（内部で useChat の `addToolOutput` に渡る）。
 
 ## CSS 変数（テーマ）
 

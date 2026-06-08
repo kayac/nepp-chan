@@ -1,12 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import type React from "react";
 import { describe, expect, it } from "vitest";
 
 import { DisplayTimelineToolComponent } from "./TimelineToolUI";
-
-const Comp = DisplayTimelineToolComponent as unknown as (
-  props: Record<string, unknown>,
-) => React.ReactElement;
 
 const baseArgs = {
   title: "イベント表",
@@ -33,15 +28,12 @@ const baseArgs = {
 
 const renderTimeline = (args: typeof baseArgs) =>
   render(
-    <Comp
+    <DisplayTimelineToolComponent
       args={args}
       argsText=""
       result={undefined}
-      status={{ type: "complete", reason: "stop" }}
-      toolCallId="t-1"
+      status={{ type: "complete" }}
       toolName="displayTimelineTool"
-      addResult={() => undefined}
-      type="tool-call"
     />,
   );
 
@@ -67,15 +59,12 @@ describe("DisplayTimelineToolComponent", () => {
 
   it("events が 0 件なら空状態を表示", () => {
     render(
-      <Comp
+      <DisplayTimelineToolComponent
         args={{ events: [] }}
         argsText=""
         result={undefined}
-        status={{ type: "complete", reason: "stop" }}
-        toolCallId="t-1"
+        status={{ type: "complete" }}
         toolName="displayTimelineTool"
-        addResult={() => undefined}
-        type="tool-call"
       />,
     );
     expect(screen.getByText("表示するイベントがありません")).toBeDefined();
@@ -83,15 +72,12 @@ describe("DisplayTimelineToolComponent", () => {
 
   it("running + events なし はローディングを出す", () => {
     render(
-      <Comp
+      <DisplayTimelineToolComponent
         args={{}}
         argsText=""
         result={undefined}
         status={{ type: "running" }}
-        toolCallId="t-1"
         toolName="displayTimelineTool"
-        addResult={() => undefined}
-        type="tool-call"
       />,
     );
     expect(screen.queryByText("イベント表")).toBeNull();
