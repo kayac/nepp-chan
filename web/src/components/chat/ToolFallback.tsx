@@ -10,7 +10,10 @@ import {
 import type { FC, ReactNode } from "react";
 import { useState } from "react";
 
-import type { ToolPartComponent, ToolPartStatus } from "~/components/chat/types";
+import type {
+  ToolPartComponent,
+  ToolPartStatus,
+} from "~/components/chat/types";
 
 const REPORT_TOOLS = ["emergencyReportTool", "emergencyUpdateTool"];
 const MEMORY_TOOLS = ["updateWorkingMemory"];

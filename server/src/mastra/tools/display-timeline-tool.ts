@@ -1,4 +1,5 @@
 import { createTool } from "@mastra/core/tools";
+import { displayTimelineSchema } from "@nepp-chan/shared/schemas/display-tools";
 import { z } from "zod";
 
 export const displayTimelineTool = createTool({
@@ -29,28 +30,7 @@ events: [
 ## よくある間違い
 - events が空配列 → 呼ばない
 - date を省略 → 必須フィールド`,
-  inputSchema: z.object({
-    title: z.string().optional().describe("タイムラインのタイトル"),
-    events: z
-      .array(
-        z.object({
-          date: z.string().describe("日付（例: 2024年1月, 1月15日, 10:00）"),
-          title: z.string().describe("イベントのタイトル"),
-          description: z.string().optional().describe("詳細説明"),
-          status: z
-            .enum(["completed", "current", "upcoming"])
-            .optional()
-            .describe("状態: completed=完了, current=進行中, upcoming=予定"),
-          type: z
-            .enum(["event", "milestone", "deadline"])
-            .optional()
-            .describe(
-              "種類: event=イベント, milestone=マイルストーン, deadline=締切",
-            ),
-        }),
-      )
-      .describe("タイムラインに表示するイベント"),
-  }),
+  inputSchema: displayTimelineSchema,
   outputSchema: z.object({
     displayed: z.boolean(),
   }),

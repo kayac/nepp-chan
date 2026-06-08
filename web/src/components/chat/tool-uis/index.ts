@@ -1,3 +1,5 @@
+import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
+
 import type { ToolPartComponent } from "~/components/chat/types";
 
 import { DisplayChartToolComponent } from "./ChartToolUI";
@@ -6,7 +8,7 @@ import { DisplayTimelineToolComponent } from "./TimelineToolUI";
 
 /** ToolPart の tools.by_name で使用する toolName → 表示コンポーネントのマッピング */
 export const toolsByName: Record<string, ToolPartComponent> = {
-  displayChartTool: DisplayChartToolComponent,
-  displayTableTool: DisplayTableToolComponent,
-  displayTimelineTool: DisplayTimelineToolComponent,
+  [DISPLAY_TOOL_NAMES.chart]: DisplayChartToolComponent,
+  [DISPLAY_TOOL_NAMES.table]: DisplayTableToolComponent,
+  [DISPLAY_TOOL_NAMES.timeline]: DisplayTimelineToolComponent,
 };

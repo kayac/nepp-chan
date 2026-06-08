@@ -1,4 +1,5 @@
 import { cn } from "@nepp-chan/shared/lib/class-merge";
+import type { DisplayTableArgs } from "@nepp-chan/shared/schemas/display-tools";
 import { ToolLoadingState } from "@nepp-chan/shared/ui/Loading";
 import {
   ArrowDownIcon,
@@ -11,11 +12,7 @@ import { useMemo, useState } from "react";
 
 import type { ToolPartComponent } from "~/components/chat/types";
 
-type DataTableArgs = {
-  title?: string;
-  columns: { key: string; label: string; sortable?: boolean }[];
-  data: Record<string, unknown>[];
-};
+type DataTableArgs = DisplayTableArgs;
 
 type SortConfig = {
   key: string;
@@ -160,5 +157,4 @@ const renderDataTable = (args: DataTableArgs, isRunning: boolean) => {
 export const DisplayTableToolComponent: ToolPartComponent = ({
   args,
   status,
-}) =>
-  renderDataTable(args as unknown as DataTableArgs, status?.type === "running");
+}) => renderDataTable(args as DataTableArgs, status?.type === "running");

@@ -1,23 +1,13 @@
 import { cn } from "@nepp-chan/shared/lib/class-merge";
-
+import type { DisplayTimelineArgs } from "@nepp-chan/shared/schemas/display-tools";
 import { ToolEmptyState } from "@nepp-chan/shared/ui/EmptyState";
 import { ToolLoadingState } from "@nepp-chan/shared/ui/Loading";
 import { CalendarIcon } from "lucide-react";
 
 import type { ToolPartComponent } from "~/components/chat/types";
 
-type TimelineEvent = {
-  date: string;
-  title: string;
-  description?: string;
-  status?: "completed" | "current" | "upcoming";
-  type?: "event" | "milestone" | "deadline";
-};
-
-type TimelineArgs = {
-  title?: string;
-  events: TimelineEvent[];
-};
+type TimelineArgs = DisplayTimelineArgs;
+type TimelineEvent = DisplayTimelineArgs["events"][number];
 
 const getStatusColor = (status?: TimelineEvent["status"]) => {
   switch (status) {
@@ -144,5 +134,4 @@ const renderTimeline = (args: TimelineArgs, isRunning: boolean) => {
 export const DisplayTimelineToolComponent: ToolPartComponent = ({
   args,
   status,
-}) =>
-  renderTimeline(args as unknown as TimelineArgs, status?.type === "running");
+}) => renderTimeline(args as TimelineArgs, status?.type === "running");

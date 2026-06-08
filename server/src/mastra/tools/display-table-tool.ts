@@ -1,4 +1,5 @@
 import { createTool } from "@mastra/core/tools";
+import { displayTableSchema } from "@nepp-chan/shared/schemas/display-tools";
 import { z } from "zod";
 
 export const displayTableTool = createTool({
@@ -32,21 +33,7 @@ data: [
 ## よくある間違い
 - columnsのkeyとdata内のキー名が一致していない → 列が空になる
 - columnsを省略 → 必須フィールド`,
-  inputSchema: z.object({
-    title: z.string().optional().describe("テーブルのタイトル"),
-    columns: z
-      .array(
-        z.object({
-          key: z.string().describe("データのキー名"),
-          label: z.string().describe("列のヘッダー表示名"),
-          sortable: z.boolean().optional().describe("ソート可能かどうか"),
-        }),
-      )
-      .describe("テーブルの列定義"),
-    data: z
-      .array(z.record(z.string(), z.unknown()))
-      .describe("テーブルに表示するデータ（各行のオブジェクト）"),
-  }),
+  inputSchema: displayTableSchema,
   outputSchema: z.object({
     displayed: z.boolean(),
   }),
