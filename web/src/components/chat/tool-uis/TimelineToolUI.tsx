@@ -1,27 +1,12 @@
-import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
-import { makeAssistantToolUI } from "@assistant-ui/react";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
-
+import type { DisplayTimelineArgs } from "@nepp-chan/shared/schemas/display-tools";
 import { ToolEmptyState } from "@nepp-chan/shared/ui/EmptyState";
 import { ToolLoadingState } from "@nepp-chan/shared/ui/Loading";
 import { CalendarIcon } from "lucide-react";
 
-type TimelineEvent = {
-  date: string;
-  title: string;
-  description?: string;
-  status?: "completed" | "current" | "upcoming";
-  type?: "event" | "milestone" | "deadline";
-};
+import type { ToolPartComponent } from "~/components/chat/types";
 
-type TimelineArgs = {
-  title?: string;
-  events: TimelineEvent[];
-};
-
-type TimelineResult = {
-  displayed: boolean;
-};
+type TimelineEvent = DisplayTimelineArgs["events"][number];
 
 const getStatusColor = (status?: TimelineEvent["status"]) => {
   switch (status) {
@@ -92,7 +77,7 @@ const TimelineItem = ({
   </div>
 );
 
-const Timeline = ({ args }: { args: TimelineArgs }) => (
+const Timeline = ({ args }: { args: DisplayTimelineArgs }) => (
   <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200">
     {args.title && (
       <div className="mb-4 flex items-center gap-2 border-b border-gray-100 pb-3">
@@ -113,7 +98,7 @@ const Timeline = ({ args }: { args: TimelineArgs }) => (
   </div>
 );
 
-const renderTimeline = (args: TimelineArgs, isRunning: boolean) => {
+const renderTimeline = (args: DisplayTimelineArgs, isRunning: boolean) => {
   if (isRunning && !args.events) {
     return (
       <div className="my-4">
@@ -142,19 +127,7 @@ const renderTimeline = (args: TimelineArgs, isRunning: boolean) => {
   );
 };
 
-/**
- * MessagePrimitive.Parts の tools.by_name で使用するコンポーネント
- */
-export const DisplayTimelineToolComponent: ToolCallMessagePartComponent = ({
+export const DisplayTimelineToolComponent: ToolPartComponent = ({
   args,
   status,
-}) =>
-  renderTimeline(args as unknown as TimelineArgs, status?.type === "running");
-
-export const TimelineToolUI = makeAssistantToolUI<TimelineArgs, TimelineResult>(
-  {
-    toolName: "displayTimelineTool",
-    render: ({ args, status }) =>
-      renderTimeline(args, status.type === "running"),
-  },
-);
+}) => renderTimeline(args as DisplayTimelineArgs, status.type === "running");

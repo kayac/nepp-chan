@@ -6,7 +6,8 @@ import { ToolFallback } from "./ToolFallback";
 
 const renderFallback = (overrides: {
   toolName?: string;
-  argsText?: string;
+  // biome-ignore lint/suspicious/noExplicitAny: テスト用
+  args?: any;
   // biome-ignore lint/suspicious/noExplicitAny: テスト用
   result?: any;
   // biome-ignore lint/suspicious/noExplicitAny: テスト用
@@ -14,25 +15,19 @@ const renderFallback = (overrides: {
 }) => {
   const Comp = ToolFallback as unknown as (props: {
     toolName: string;
-    argsText: string;
+    // biome-ignore lint/suspicious/noExplicitAny: テスト用
+    args?: any;
     // biome-ignore lint/suspicious/noExplicitAny: テスト用
     result?: any;
     // biome-ignore lint/suspicious/noExplicitAny: テスト用
     status?: any;
-    toolCallId: string;
-    // biome-ignore lint/suspicious/noExplicitAny: テスト用
-    addResult: any;
-    type: string;
   }) => React.ReactElement;
   return render(
     <Comp
       toolName={overrides.toolName ?? "knowledge-search"}
-      argsText={overrides.argsText ?? "{}"}
+      args={overrides.args ?? {}}
       result={overrides.result}
       status={overrides.status}
-      toolCallId="t-1"
-      addResult={() => undefined}
-      type="tool-call"
     />,
   );
 };
@@ -59,16 +54,9 @@ describe("ToolFallback", () => {
     expect(screen.getByText("ねっぷちゃんが記憶中")).toBeDefined();
   });
 
-  it("incomplete + cancelled で『キャンセル』表記とライン線", () => {
+  it("展開ボタンで入力パラメータ / result を表示する", () => {
     renderFallback({
-      status: { type: "incomplete", reason: "cancelled" },
-    });
-    expect(screen.getByText("ねっぷちゃんが調査しました")).toBeDefined();
-  });
-
-  it("展開ボタンで argsText / result を表示する", () => {
-    renderFallback({
-      argsText: '{"query":"x"}',
+      args: { query: "x" },
       result: { ok: true },
       status: { type: "complete" },
     });
@@ -76,7 +64,7 @@ describe("ToolFallback", () => {
     const toggle = screen.getByRole("button", { name: "詳細を表示" });
     fireEvent.click(toggle);
 
-    expect(screen.getByText('{"query":"x"}')).toBeDefined();
+    expect(screen.getByText(/"query": "x"/)).toBeDefined();
     expect(screen.getByText(/"ok": true/)).toBeDefined();
   });
 

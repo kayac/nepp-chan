@@ -1,6 +1,5 @@
-import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
-import { makeAssistantToolUI } from "@assistant-ui/react";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
+import type { DisplayTableArgs } from "@nepp-chan/shared/schemas/display-tools";
 import { ToolLoadingState } from "@nepp-chan/shared/ui/Loading";
 import {
   ArrowDownIcon,
@@ -11,22 +10,14 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-type DataTableArgs = {
-  title?: string;
-  columns: { key: string; label: string; sortable?: boolean }[];
-  data: Record<string, unknown>[];
-};
-
-type DataTableResult = {
-  displayed: boolean;
-};
+import type { ToolPartComponent } from "~/components/chat/types";
 
 type SortConfig = {
   key: string;
   direction: "asc" | "desc";
 } | null;
 
-const DataTable = ({ args }: { args: DataTableArgs }) => {
+const DataTable = ({ args }: { args: DisplayTableArgs }) => {
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
   const [isExpanded, setIsExpanded] = useState(args.data.length <= 5);
 
@@ -97,9 +88,10 @@ const DataTable = ({ args }: { args: DataTableArgs }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-(--border-1)">
-            {displayedData.map((row) => (
+            {displayedData.map((row, rowIndex) => (
               <tr
-                key={JSON.stringify(row)}
+                // biome-ignore lint/suspicious/noArrayIndexKey: 行は表示専用で内部状態を持たず、並びは sortedData 由来で安定
+                key={rowIndex}
                 className="transition-colors hover:bg-(--bg-sunken)"
               >
                 {args.columns.map((col) => (
@@ -139,8 +131,8 @@ const DataTable = ({ args }: { args: DataTableArgs }) => {
   );
 };
 
-const renderDataTable = (args: DataTableArgs, isRunning: boolean) => {
-  if ((isRunning && !args.columns) || !args.columns || !args.data) {
+const renderDataTable = (args: DisplayTableArgs) => {
+  if (!args.columns || !args.data) {
     return (
       <div className="my-4">
         <ToolLoadingState
@@ -158,20 +150,5 @@ const renderDataTable = (args: DataTableArgs, isRunning: boolean) => {
   );
 };
 
-/**
- * MessagePrimitive.Parts の tools.by_name で使用するコンポーネント
- */
-export const DisplayTableToolComponent: ToolCallMessagePartComponent = ({
-  args,
-  status,
-}) =>
-  renderDataTable(args as unknown as DataTableArgs, status?.type === "running");
-
-export const DataTableToolUI = makeAssistantToolUI<
-  DataTableArgs,
-  DataTableResult
->({
-  toolName: "displayTableTool",
-  render: ({ args, status }) =>
-    renderDataTable(args, status.type === "running"),
-});
+export const DisplayTableToolComponent: ToolPartComponent = ({ args }) =>
+  renderDataTable(args as DisplayTableArgs);

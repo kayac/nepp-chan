@@ -1,11 +1,14 @@
-import { useThreadRuntime } from "@assistant-ui/react";
 import {
   Mascot,
   type MascotExpression,
   type MascotState,
 } from "@nepp-chan/shared/components/Mascot";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
+import type { UIMessage } from "ai";
+import { isToolOrDynamicToolUIPart } from "ai";
 import { useEffect, useRef, useState } from "react";
+
+import { useChatContext } from "~/app/chat/contexts/ChatContext";
 
 // 応答完了直後にランダムで選ぶ表情。talking 多めで、たまに笑顔・驚きが混じる
 const POST_RESPONSE_STATES: readonly MascotState[] = [
@@ -25,22 +28,16 @@ type Presentation = {
   expression?: MascotExpression;
 };
 
-// content part の最小限の型 (assistant-ui の ThreadMessageContentPart 簡易版)
-type ContentPart = {
-  type: string;
-  result?: unknown;
-  status?: { type?: string };
-};
-
-const hasRunningToolCall = (parts: readonly ContentPart[]): boolean =>
+const hasRunningToolCall = (parts: UIMessage["parts"]): boolean =>
   parts.some(
     (p) =>
-      p.type === "tool-call" &&
-      (p.result === undefined || p.status?.type === "running"),
+      isToolOrDynamicToolUIPart(p) &&
+      p.state !== "output-available" &&
+      p.state !== "output-error",
   );
 
 const useMascotPresentation = (): Presentation => {
-  const runtime = useThreadRuntime();
+  const { messages, isRunning } = useChatContext();
   const [pres, setPres] = useState<Presentation>({ state: "idle" });
   const wasRunningRef = useRef(false);
   const timerRef = useRef<number | null>(null);
@@ -55,41 +52,37 @@ const useMascotPresentation = (): Presentation => {
       );
     };
 
-    const sync = () => {
-      const t = runtime.getState();
-      const isRunning = t.isRunning;
-
-      if (isRunning) {
-        if (timerRef.current !== null) {
-          window.clearTimeout(timerRef.current);
-          timerRef.current = null;
-        }
-        wasRunningRef.current = true;
-        const last = t.messages[t.messages.length - 1];
-        const parts = (last?.content ?? []) as readonly ContentPart[];
-        const expression: MascotExpression = hasRunningToolCall(parts)
-          ? "thinking"
-          : "content";
-        setPresIfChanged({ state: "thinking", expression });
-        return;
+    if (isRunning) {
+      if (timerRef.current !== null) {
+        window.clearTimeout(timerRef.current);
+        timerRef.current = null;
       }
+      wasRunningRef.current = true;
+      const last = messages[messages.length - 1];
+      const parts = last?.parts ?? [];
+      const expression: MascotExpression = hasRunningToolCall(parts)
+        ? "thinking"
+        : "content";
+      setPresIfChanged({ state: "thinking", expression });
+      return;
+    }
 
-      if (wasRunningRef.current) {
-        wasRunningRef.current = false;
-        setPresIfChanged({ state: pickRandom(POST_RESPONSE_STATES) });
-        timerRef.current = window.setTimeout(() => {
-          setPresIfChanged({ state: "idle" });
-          timerRef.current = null;
-        }, POST_RESPONSE_DURATION_MS);
-      }
-    };
-    sync();
-    const unsub = runtime.subscribe(sync);
-    return () => {
-      unsub();
+    if (wasRunningRef.current) {
+      wasRunningRef.current = false;
+      setPresIfChanged({ state: pickRandom(POST_RESPONSE_STATES) });
+      timerRef.current = window.setTimeout(() => {
+        setPresIfChanged({ state: "idle" });
+        timerRef.current = null;
+      }, POST_RESPONSE_DURATION_MS);
+    }
+  }, [messages, isRunning]);
+
+  useEffect(
+    () => () => {
       if (timerRef.current !== null) window.clearTimeout(timerRef.current);
-    };
-  }, [runtime]);
+    },
+    [],
+  );
 
   return pres;
 };

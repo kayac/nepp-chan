@@ -1,5 +1,7 @@
 import { type SubmitEvent, useState } from "react";
 
+import { Dialog } from "~/components/ui/Dialog";
+
 type Props = {
   file: File;
   onConvert: (filename: string) => void;
@@ -25,8 +27,8 @@ export const ConvertDialog = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+    <Dialog onClose={onCancel} className="w-full max-w-md">
+      <div className="bg-white rounded-xl p-6 mx-4">
         <h3 className="text-lg font-bold text-stone-800 mb-4">
           ファイルを変換
         </h3>
@@ -89,6 +91,6 @@ export const ConvertDialog = ({
           </div>
         </form>
       </div>
-    </div>
+    </Dialog>
   );
 };

@@ -6,6 +6,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { type SubmitEvent, useState } from "react";
 
+import { useSubmitFeedback } from "~/app/chat/hooks/useSubmitFeedback";
+import { Dialog } from "~/components/ui/Dialog";
 import type { FeedbackCategory, FeedbackRating } from "~/types";
 
 const FEEDBACK_CATEGORIES: { value: FeedbackCategory; label: string }[] = [
@@ -17,20 +19,13 @@ const FEEDBACK_CATEGORIES: { value: FeedbackCategory; label: string }[] = [
 ];
 
 type Props = {
-  isOpen: boolean;
-  onClose: () => void;
+  messageId: string;
   rating: FeedbackRating;
-  onSubmit: (data: { category?: FeedbackCategory; comment?: string }) => void;
-  isSubmitting: boolean;
+  onClose: () => void;
 };
 
-export const FeedbackModal = ({
-  isOpen,
-  onClose,
-  rating,
-  onSubmit,
-  isSubmitting,
-}: Props) => {
+export const FeedbackModal = ({ messageId, rating, onClose }: Props) => {
+  const { submit, isSubmitting } = useSubmitFeedback();
   const [category, setCategory] = useState<FeedbackCategory | undefined>(
     undefined,
   );
@@ -38,31 +33,22 @@ export const FeedbackModal = ({
 
   const isBadRating = rating === "bad";
 
-  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onSubmit({
-      category: isBadRating ? category : undefined,
-      comment: comment.trim() || undefined,
-    });
+    try {
+      await submit(messageId, rating, {
+        category: isBadRating ? category : undefined,
+        comment: comment.trim() || undefined,
+      });
+      onClose();
+    } catch (err) {
+      console.error("Failed to submit feedback:", err);
+    }
   };
-
-  const handleClose = () => {
-    setCategory(undefined);
-    setComment("");
-    onClose();
-  };
-
-  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <button
-        type="button"
-        className="absolute inset-0 bg-black/50 cursor-default"
-        onClick={handleClose}
-        aria-label="閉じる"
-      />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 animate-fade-in">
+    <Dialog onClose={onClose} className="w-full max-w-md">
+      <div className="relative bg-white rounded-xl shadow-xl mx-4 p-6 animate-fade-in">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-(--fg-1)">
             {rating === "good"
@@ -73,7 +59,7 @@ export const FeedbackModal = ({
           </h2>
           <button
             type="button"
-            onClick={handleClose}
+            onClick={onClose}
             className="p-1 text-(--fg-3) hover:text-(--fg-1) rounded-md"
             aria-label="閉じる"
           >
@@ -176,7 +162,7 @@ export const FeedbackModal = ({
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={handleClose}
+              onClick={onClose}
               disabled={isSubmitting}
               className="flex-1 py-2.5 px-4 border border-(--border-1) text-(--fg-1) rounded-lg text-sm font-medium hover:bg-(--bg-raised) transition-colors disabled:opacity-50"
             >
@@ -192,6 +178,6 @@ export const FeedbackModal = ({
           </div>
         </form>
       </div>
-    </div>
+    </Dialog>
   );
 };

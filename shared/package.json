@@ -12,7 +12,9 @@
     "./components/*": "./src/components/*.tsx",
     "./lib/*": "./src/lib/*.ts",
     "./api": "./src/api/index.ts",
-    "./api/repository/*": "./src/api/repository/*.ts"
+    "./api/repository/*": "./src/api/repository/*.ts",
+    "./schemas/*": "./src/schemas/*.ts",
+    "./constants/*": "./src/constants/*.ts"
   },
   "scripts": {
     "check": "tsc --noEmit",
@@ -24,7 +26,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "openapi-fetch": "^0.17.0",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
     "react": "^19.2.4",

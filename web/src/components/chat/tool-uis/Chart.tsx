@@ -1,3 +1,4 @@
+import type { DisplayChartArgs } from "@nepp-chan/shared/schemas/display-tools";
 import { BarChartIcon, LineChartIcon, PieChartIcon } from "lucide-react";
 import {
   Bar,
@@ -16,18 +17,9 @@ import {
 
 import { formatPiePercent, getColorAt } from "./chart-helpers";
 
-export type ChartType = "line" | "bar" | "pie";
+export type ChartType = DisplayChartArgs["type"];
 
-export type ChartData = Record<string, string | number>;
-
-export type ChartArgs = {
-  title?: string;
-  type: ChartType;
-  data: ChartData[];
-  xKey: string;
-  yKey: string;
-  colors?: string[];
-};
+export type ChartArgs = DisplayChartArgs;
 
 const TOOLTIP_STYLE = {
   backgroundColor: "#ffffff",
@@ -55,7 +47,7 @@ const ChartIcon = ({ type }: { type: ChartType }) => {
 
 const LineChartComponent = ({ args }: { args: ChartArgs }) => {
   const { xKey, yKey } = args;
-  const color = getColorAt(0, args.colors);
+  const color = getColorAt(0);
 
   return (
     <ResponsiveContainer width="100%" height={250}>
@@ -91,16 +83,9 @@ const BarChartComponent = ({ args }: { args: ChartArgs }) => {
         <XAxis dataKey={xKey} tick={AXIS_STYLE} stroke={AXIS_STYLE.stroke} />
         <YAxis tick={AXIS_STYLE} stroke={AXIS_STYLE.stroke} />
         <Tooltip contentStyle={TOOLTIP_STYLE} />
-        <Bar
-          dataKey={yKey}
-          fill={getColorAt(0, args.colors)}
-          radius={[8, 8, 0, 0]}
-        >
+        <Bar dataKey={yKey} fill={getColorAt(0)} radius={[8, 8, 0, 0]}>
           {args.data.map((item, index) => (
-            <Cell
-              key={String(item[xKey])}
-              fill={getColorAt(index, args.colors)}
-            />
+            <Cell key={String(item[xKey])} fill={getColorAt(index)} />
           ))}
         </Bar>
       </BarChart>
@@ -144,10 +129,7 @@ const PieChartComponent = ({ args }: { args: ChartArgs }) => {
           labelLine={false}
         >
           {args.data.map((item, index) => (
-            <Cell
-              key={String(item[xKey])}
-              fill={getColorAt(index, args.colors)}
-            />
+            <Cell key={String(item[xKey])} fill={getColorAt(index)} />
           ))}
         </Pie>
         <Tooltip contentStyle={TOOLTIP_STYLE} />

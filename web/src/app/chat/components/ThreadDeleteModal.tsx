@@ -1,3 +1,5 @@
+import { Dialog } from "~/components/ui/Dialog";
+
 type Props = {
   isDeleting: boolean;
   onConfirm: () => void;
@@ -10,15 +12,12 @@ export const ThreadDeleteModal = ({
   onCancel,
 }: Props) => {
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center">
-      <button
-        type="button"
-        className="absolute inset-0 bg-stone-900/30 backdrop-blur-[3px] cursor-default"
-        onClick={onCancel}
-        aria-label="キャンセル"
-      />
+    <Dialog
+      onClose={onCancel}
+      className="backdrop:bg-stone-900/30 backdrop:backdrop-blur-[3px]"
+    >
       <div
-        className="relative bg-(--paper-0) rounded-2xl p-6 w-80 border border-(--paper-200)"
+        className="bg-(--paper-0) rounded-2xl p-6 w-80 border border-(--paper-200)"
         style={{ boxShadow: "var(--shadow-float-lg)" }}
       >
         <h2 className="text-base font-semibold text-(--fg-1) mb-2 font-(family-name:--font-display)">
@@ -46,6 +45,6 @@ export const ThreadDeleteModal = ({
           </button>
         </div>
       </div>
-    </div>
+    </Dialog>
   );
 };

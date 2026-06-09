@@ -1,4 +1,5 @@
 import { createTool } from "@mastra/core/tools";
+import { displayChartSchema } from "@nepp-chan/shared/schemas/display-tools";
 import { z } from "zod";
 
 export const displayChartTool = createTool({
@@ -32,25 +33,7 @@ data: [{ "トピック": "交通", "件数": 5 }, { "トピック": "除雪", "�
 ## よくある間違い
 - xKey/yKeyとdata内のキー名が一致していない → グラフが空になる
 - yKeyの値が文字列になっている → 数値にすること`,
-  inputSchema: z.object({
-    title: z.string().describe("グラフのタイトル"),
-    type: z
-      .enum(["line", "bar", "pie"])
-      .describe("グラフの種類: line=折れ線, bar=棒, pie=円"),
-    data: z
-      .array(z.record(z.string(), z.union([z.string(), z.number()])))
-      .describe(
-        "グラフに表示するデータ。xKeyとyKeyで指定したキーを含むオブジェクトの配列",
-      ),
-    xKey: z
-      .string()
-      .describe("X軸に使用するキー（例: '年', '月', 'カテゴリ'）"),
-    yKey: z
-      .string()
-      .describe(
-        "Y軸に使用するキー。ツールチップに表示される名前になる（例: '人口', '件数', '売上'）",
-      ),
-  }),
+  inputSchema: displayChartSchema,
   outputSchema: z.object({
     displayed: z.boolean(),
   }),

@@ -2,7 +2,6 @@ import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
 
 import {
-  convertToUIMessages,
   extractConversationContext,
   extractToolExecutions,
   getMessageContent,
@@ -143,56 +142,5 @@ describe("extractToolExecutions", () => {
   it("tool part が無いなら空配列", () => {
     const message = assistantMessage("a-2", [textPart("text only")]);
     expect(extractToolExecutions(message)).toEqual([]);
-  });
-});
-
-describe("convertToUIMessages", () => {
-  it("user / assistant 以外の role を捨てる", () => {
-    const result = convertToUIMessages([
-      { id: "s-1", role: "system", content: [{ type: "text", text: "sys" }] },
-      { id: "u-1", role: "user", content: [{ type: "text", text: "hi" }] },
-    ]);
-    expect(result.map((m) => m.id)).toEqual(["u-1"]);
-  });
-
-  it("text content を text part に正規化する", () => {
-    const result = convertToUIMessages([
-      {
-        id: "u-1",
-        role: "user",
-        content: [{ type: "text", text: "こんにちは" }],
-      },
-    ]);
-    expect(result[0].parts).toEqual([{ type: "text", text: "こんにちは" }]);
-  });
-
-  it("text 中身が無ければ空文字にフォールバック", () => {
-    const result = convertToUIMessages([
-      { id: "u-1", role: "user", content: [{ type: "text" }] },
-    ]);
-    expect(result[0].parts).toEqual([{ type: "text", text: "" }]);
-  });
-
-  it("tool-call はそのまま素通し", () => {
-    const toolCall = {
-      type: "tool-call",
-      toolCallId: "t-1",
-      toolName: "search",
-      args: { q: "x" },
-    };
-    const result = convertToUIMessages([
-      { id: "a-1", role: "assistant", content: [toolCall] },
-    ]);
-    expect(result[0].parts).toEqual([toolCall]);
-  });
-
-  it("オブジェクト以外の content は String() で text に詰める", () => {
-    const result = convertToUIMessages([
-      { id: "u-1", role: "user", content: ["plain string", 42] },
-    ]);
-    expect(result[0].parts).toEqual([
-      { type: "text", text: "plain string" },
-      { type: "text", text: "42" },
-    ]);
   });
 });

@@ -12,7 +12,7 @@ import {
 import { useAdminUser } from "~/hooks/useAdminUser";
 import { threadRepository } from "~/lib/api/repository";
 import { getResourceId } from "~/lib/resource";
-import type { InitialMessage } from "./AssistantProvider";
+import type { InitialMessage } from "../contexts/ChatProvider";
 
 const storageKey = (resourceId: string) => `chat_threadId_${resourceId}`;
 

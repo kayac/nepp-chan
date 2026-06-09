@@ -4,16 +4,14 @@ import { LoadingDots } from "@nepp-chan/shared/ui/Loading";
 import { useState } from "react";
 
 import { ChatStandingMascot } from "~/app/chat/components/ChatStandingMascot";
-import { FeedbackModalWrapper } from "~/app/chat/components/FeedbackModalWrapper";
 import { Landing } from "~/app/chat/components/Landing";
 import { ThreadDeleteModal } from "~/app/chat/components/ThreadDeleteModal";
 import { ThreadSidebar } from "~/app/chat/components/ThreadSidebar";
 import { TopBar } from "~/app/chat/components/TopBar";
-import { Thread } from "~/components/assistant-ui/Thread";
+import { Thread } from "~/components/chat/Thread";
 
-import { AssistantProvider } from "./AssistantProvider";
-import { FeedbackProvider } from "./FeedbackContext";
-import { useThreadManager } from "./useThreadManager";
+import { ChatProvider } from "./contexts/ChatProvider";
+import { useThreadManager } from "./hooks/useThreadManager";
 
 export const ChatPage = () => {
   const {
@@ -69,18 +67,15 @@ export const ChatPage = () => {
     }
     if (currentThreadId && !messagesLoading) {
       return (
-        <AssistantProvider
+        <ChatProvider
           key={currentThreadId}
           threadId={currentThreadId}
           initialMessages={initialMessages}
           initialMessage={initialMessage}
         >
-          <FeedbackProvider threadId={currentThreadId}>
-            <Thread />
-            <ChatStandingMascot />
-            <FeedbackModalWrapper />
-          </FeedbackProvider>
-        </AssistantProvider>
+          <Thread />
+          <ChatStandingMascot />
+        </ChatProvider>
       );
     }
     return (

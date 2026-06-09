@@ -1,12 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import type React from "react";
 import { describe, expect, it } from "vitest";
 
 import { DisplayTableToolComponent } from "./DataTableToolUI";
-
-const Comp = DisplayTableToolComponent as unknown as (
-  props: Record<string, unknown>,
-) => React.ReactElement;
 
 const baseArgs = {
   title: "売上表",
@@ -24,15 +19,11 @@ const baseArgs = {
 
 const renderTable = (args: typeof baseArgs) =>
   render(
-    <Comp
+    <DisplayTableToolComponent
       args={args}
-      argsText=""
       result={undefined}
-      status={{ type: "complete", reason: "stop" }}
-      toolCallId="t-1"
+      status={{ type: "complete" }}
       toolName="displayTableTool"
-      addResult={() => undefined}
-      type="tool-call"
     />,
   );
 
@@ -68,15 +59,11 @@ describe("DisplayTableToolComponent", () => {
 
   it("loading 状態（columns 未到達 + running）はローディングを出す", () => {
     render(
-      <Comp
+      <DisplayTableToolComponent
         args={{}}
-        argsText=""
         result={undefined}
         status={{ type: "running" }}
-        toolCallId="t-1"
         toolName="displayTableTool"
-        addResult={() => undefined}
-        type="tool-call"
       />,
     );
     expect(screen.queryByText("売上表")).toBeNull();

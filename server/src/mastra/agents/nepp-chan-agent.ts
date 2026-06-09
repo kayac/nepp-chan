@@ -1,5 +1,6 @@
 import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
+import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { getCurrentDateInfo } from "~/lib/date";
 import { type ModelTierConfig, resolveModelTier } from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
@@ -10,6 +11,7 @@ import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
 import { broadcastGetTool } from "~/mastra/tools/broadcast-get-tool";
+
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
@@ -151,9 +153,9 @@ const defaultTools = {
 };
 
 const webTools = {
-  displayChartTool,
-  displayTableTool,
-  displayTimelineTool,
+  [DISPLAY_TOOL_NAMES.chart]: displayChartTool,
+  [DISPLAY_TOOL_NAMES.table]: displayTableTool,
+  [DISPLAY_TOOL_NAMES.timeline]: displayTimelineTool,
 };
 
 const widgetTools = {

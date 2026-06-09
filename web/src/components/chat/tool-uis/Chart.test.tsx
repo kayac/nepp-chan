@@ -21,8 +21,9 @@ describe("Chart", () => {
     expect(screen.getByText("週次推移")).toBeInTheDocument();
   });
 
-  it("title なしなら見出しを描画しない", () => {
+  it("title が空なら見出しを描画しない", () => {
     const args: ChartArgs = {
+      title: "",
       type: "bar",
       data,
       xKey: "name",
@@ -34,6 +35,7 @@ describe("Chart", () => {
 
   it("pie タイプでも render エラーにならない", () => {
     const args: ChartArgs = {
+      title: "円グラフ",
       type: "pie",
       data,
       xKey: "name",

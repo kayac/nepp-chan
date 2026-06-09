@@ -1,4 +1,3 @@
-import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { Spinner } from "@nepp-chan/shared/ui/Loading";
 import {
@@ -6,11 +5,15 @@ import {
   CheckCircle2Icon,
   ChevronDownIcon,
   ChevronUpIcon,
-  CircleSlashIcon,
   SearchIcon,
 } from "lucide-react";
 import type { FC, ReactNode } from "react";
 import { useState } from "react";
+
+import type {
+  ToolPartComponent,
+  ToolPartStatus,
+} from "~/components/chat/types";
 
 const REPORT_TOOLS = ["emergencyReportTool", "emergencyUpdateTool"];
 const MEMORY_TOOLS = ["updateWorkingMemory"];
@@ -53,10 +56,8 @@ type ToolStatusInfo = {
   icon: ReactNode;
 };
 
-const getToolStatus = (
-  status: { type: string; reason?: string } | undefined,
-): ToolStatusInfo => {
-  if (!status || status.type === "running") {
+const getToolStatus = (status: ToolPartStatus): ToolStatusInfo => {
+  if (status.type === "running") {
     return {
       label: "実行中",
       color: "text-(--warning)",
@@ -64,46 +65,20 @@ const getToolStatus = (
       icon: <Spinner size="sm" />,
     };
   }
-
-  switch (status.type) {
-    case "complete":
-      return {
-        label: "完了",
-        color: "text-(--success)",
-        bgColor: "bg-(--success-bg)",
-        icon: <CheckCircle2Icon className="size-3" />,
-      };
-    case "incomplete":
-      if (status.reason === "cancelled") {
-        return {
-          label: "キャンセル",
-          color: "text-(--fg-3)",
-          bgColor: "bg-stone-100",
-          icon: <CircleSlashIcon className="size-3" />,
-        };
-      }
-      if (status.reason === "error") {
-        return {
-          label: "エラー",
-          color: "text-(--danger)",
-          bgColor: "bg-(--danger-bg)",
-          icon: <AlertCircleIcon className="size-3" />,
-        };
-      }
-      return {
-        label: "未完了",
-        color: "text-(--fg-3)",
-        bgColor: "bg-stone-100",
-        icon: <AlertCircleIcon className="size-3" />,
-      };
-    default:
-      return {
-        label: "不明",
-        color: "text-(--fg-3)",
-        bgColor: "bg-stone-100",
-        icon: null,
-      };
+  if (status.type === "complete") {
+    return {
+      label: "完了",
+      color: "text-(--success)",
+      bgColor: "bg-(--success-bg)",
+      icon: <CheckCircle2Icon className="size-3" />,
+    };
   }
+  return {
+    label: "エラー",
+    color: "text-(--danger)",
+    bgColor: "bg-(--danger-bg)",
+    icon: <AlertCircleIcon className="size-3" />,
+  };
 };
 
 type StatusBadgeProps = {
@@ -123,20 +98,18 @@ const StatusBadge: FC<StatusBadgeProps> = ({ status }) => (
   </span>
 );
 
-export const ToolFallback: ToolCallMessagePartComponent = ({
+export const ToolFallback: ToolPartComponent = ({
   toolName,
-  argsText,
+  args,
   result,
   status,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
-  const isCancelled =
-    status?.type === "incomplete" && status.reason === "cancelled";
-  const isError = status?.type === "incomplete" && status.reason === "error";
-  const isRunning = !status || status.type === "running";
-  const cancelledReason =
-    (isCancelled || isError) && status.error
+  const isError = status.type === "incomplete";
+  const isRunning = status.type === "running";
+  const errorReason =
+    isError && status.error
       ? typeof status.error === "string"
         ? status.error
         : JSON.stringify(status.error)
@@ -149,13 +122,9 @@ export const ToolFallback: ToolCallMessagePartComponent = ({
     <div
       className={cn(
         "aui-tool-fallback-root my-1 flex w-full flex-col rounded-lg border transition-colors",
-        isCancelled && "border-(--paper-200) bg-(--paper-50) opacity-70",
         isError && "border-(--apricot-300) bg-(--apricot-50)/60",
         isRunning && "border-(--brand-soft) bg-(--brand-soft)/30",
-        !isCancelled &&
-          !isError &&
-          !isRunning &&
-          "border-(--border-1) bg-(--bg-raised)",
+        !isError && !isRunning && "border-(--border-1) bg-(--bg-raised)",
       )}
     >
       <div className="aui-tool-fallback-header flex items-center gap-1.5 px-2.5 py-1.5">
@@ -166,12 +135,7 @@ export const ToolFallback: ToolCallMessagePartComponent = ({
           )}
         />
 
-        <p
-          className={cn(
-            "flex-1 min-w-0 text-xs truncate",
-            isCancelled ? "text-(--fg-3) line-through" : "text-(--fg-2)",
-          )}
-        >
+        <p className="flex-1 min-w-0 text-xs truncate text-(--fg-2)">
           {displayName}
         </p>
 
@@ -193,39 +157,27 @@ export const ToolFallback: ToolCallMessagePartComponent = ({
 
       {!isCollapsed && (
         <div className="aui-tool-fallback-content flex flex-col gap-2 border-t border-(--border-1) px-3 py-2">
-          {cancelledReason && (
-            <div className="aui-tool-fallback-cancelled-root">
+          {errorReason && (
+            <div className="aui-tool-fallback-error-root">
               <p className="text-xs font-medium text-(--fg-3) mb-1.5">
-                {isError ? "エラー詳細" : "キャンセル理由"}
+                エラー詳細
               </p>
-              <p
-                className={cn(
-                  "text-sm p-2.5 rounded-lg",
-                  isError
-                    ? "bg-(--danger-bg) text-(--danger)"
-                    : "bg-(--paper-100) text-(--fg-3)",
-                )}
-              >
-                {cancelledReason}
+              <p className="text-sm p-2.5 rounded-lg bg-(--danger-bg) text-(--danger)">
+                {errorReason}
               </p>
             </div>
           )}
 
-          <div
-            className={cn(
-              "aui-tool-fallback-args-root",
-              isCancelled && "opacity-60",
-            )}
-          >
+          <div className="aui-tool-fallback-args-root">
             <p className="text-xs font-medium text-(--fg-3) mb-1.5">
               入力パラメータ
             </p>
             <pre className="aui-tool-fallback-args-value whitespace-pre-wrap text-xs bg-(--bg-sunken) text-(--fg-2) p-2.5 rounded-lg overflow-auto max-h-40">
-              {argsText}
+              {JSON.stringify(args, null, 2)}
             </pre>
           </div>
 
-          {!isCancelled && result !== undefined && (
+          {result !== undefined && (
             <div className="aui-tool-fallback-result-root">
               <p className="text-xs font-medium text-(--fg-3) mb-1.5">
                 実行結果
