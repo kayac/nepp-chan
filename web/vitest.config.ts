@@ -53,6 +53,9 @@ export default defineConfig({
         "src/app/dashboard/components/KnowledgePanel.tsx",
         "src/app/dashboard/components/PersonaPanel.tsx",
         "src/app/dashboard/components/PollPanel.tsx",
+        // フォームロジックは usePollForm に抽出済みで L/B/F 100% テスト済み。
+        // PollForm 自体は hook の値を JSX に流すだけの presentational shell
+        "src/app/dashboard/components/poll/PollForm.tsx",
         // ドラッグ&ドロップ + mutation の orchestration shell。type 判定は trivial で
         // ConvertDialog / useUploadFile / useConvertFile は別途テスト済み
         "src/app/dashboard/components/knowledge/FileUpload.tsx",
@@ -62,12 +65,16 @@ export default defineConfig({
         // useAnonymousSession の wiring と localStorage sync を行う orchestration
         // hook。依存 hook 側で個々のロジックはテスト済み
         "src/app/chat/hooks/useThreadManager.ts",
+        // 型定義のみ（ToolPart 系の type）
+        "src/components/chat/types.ts",
+        // barrel（knowledge 配下コンポーネントの re-export のみ）
+        "src/app/dashboard/components/knowledge/index.ts",
       ],
       thresholds: {
-        branches: 85,
-        lines: 92,
-        functions: 90,
-        statements: 92,
+        branches: 88,
+        lines: 96,
+        functions: 95,
+        statements: 95,
       },
     },
   },
