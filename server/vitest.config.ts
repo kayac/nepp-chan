@@ -24,12 +24,20 @@ export default defineConfig({
         "src/db/migrations/**",
         "src/index.ts",
         "src/env.d.ts",
+        // Mastra Agent / MCP の宣言ファイル。instructions 文字列 + new Agent()
+        // が中心でカバレッジ対象とするロジックを持たない
+        "src/mastra/agents/**",
+        "src/mastra/mcp/**",
+        // Mastra Playground 用インスタンス。getPlatformProxy の副作用が中心
+        "src/mastra/index.ts",
+        // drizzle ラッパー 1 行
+        "src/db/client.ts",
       ],
       thresholds: {
-        branches: 86,
-        lines: 95,
-        functions: 95,
-        statements: 95,
+        branches: 87,
+        lines: 97,
+        functions: 97,
+        statements: 96,
       },
     },
   },

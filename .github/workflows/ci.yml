@@ -45,6 +45,9 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
@@ -85,3 +88,27 @@ jobs:
           name: coverage-shared
           path: shared/coverage/
           retention-days: 14
+
+      - name: Report coverage (server)
+        if: always()
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          name: server
+          json-summary-path: server/coverage/coverage-summary.json
+          vite-config-path: server/vitest.config.ts
+
+      - name: Report coverage (web)
+        if: always()
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          name: web
+          json-summary-path: web/coverage/coverage-summary.json
+          vite-config-path: web/vitest.config.ts
+
+      - name: Report coverage (shared)
+        if: always()
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          name: shared
+          json-summary-path: shared/coverage/coverage-summary.json
+          vite-config-path: shared/vitest.config.ts

@@ -20,7 +20,9 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const renderForm = (props?: Parameters<typeof useBroadcastForm>[0]) => {
+const renderForm = (
+  props?: Partial<Parameters<typeof useBroadcastForm>[0]>,
+) => {
   const onClose = vi.fn();
   const r = renderHookWithQuery(() =>
     useBroadcastForm({
@@ -108,6 +110,43 @@ describe("バリデーション", () => {
     );
     expect(result.current.isValid).toBe(true);
   });
+
+  it("画像パートは imageR2Key があれば isValid=true", () => {
+    const { result } = renderForm();
+    act(() =>
+      result.current.handlePartChange(0, {
+        id: result.current.parts[0].id,
+        type: "image",
+        imageR2Key: "k.jpg",
+      }),
+    );
+    expect(result.current.isValid).toBe(true);
+  });
+
+  it("画像パートは file があれば imageR2Key 無しでも isValid=true", () => {
+    const { result } = renderForm();
+    act(() =>
+      result.current.handlePartChange(0, {
+        id: result.current.parts[0].id,
+        type: "image",
+        imageR2Key: "",
+        file: new File(["x"], "a.png", { type: "image/png" }),
+      }),
+    );
+    expect(result.current.isValid).toBe(true);
+  });
+
+  it("画像パートは imageR2Key も file も無いと isValid=false", () => {
+    const { result } = renderForm();
+    act(() =>
+      result.current.handlePartChange(0, {
+        id: result.current.parts[0].id,
+        type: "image",
+        imageR2Key: "",
+      }),
+    );
+    expect(result.current.isValid).toBe(false);
+  });
 });
 
 describe("parts 操作", () => {
@@ -134,6 +173,18 @@ describe("parts 操作", () => {
     const second = result.current.parts[1].id;
 
     act(() => result.current.handlePartMove(0, "down"));
+
+    expect(result.current.parts[0].id).toBe(second);
+    expect(result.current.parts[1].id).toBe(first);
+  });
+
+  it("handlePartMove up で位置入れ替え", () => {
+    const { result } = renderForm();
+    act(() => result.current.handleAddPart());
+    const first = result.current.parts[0].id;
+    const second = result.current.parts[1].id;
+
+    act(() => result.current.handlePartMove(1, "up"));
 
     expect(result.current.parts[0].id).toBe(second);
     expect(result.current.parts[1].id).toBe(first);
@@ -245,6 +296,180 @@ describe("handleSubmit", () => {
     expect((posted as { scheduledAt?: string } | null)?.scheduledAt).toBe(
       new Date("2030-01-01T10:00").toISOString(),
     );
+  });
+
+  it("file 付き画像パートは upload-image でアップロードしてから送信", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    let uploadCalled = 0;
+    let posted: { parts?: unknown } | null = null;
+    server.use(
+      http.post(`${API}/admin/broadcast/upload-image`, () => {
+        uploadCalled += 1;
+        return HttpResponse.json({
+          imageR2Key: "uploaded.jpg",
+          imageDescription: "猫",
+        });
+      }),
+      http.post(`${API}/admin/broadcast`, async ({ request }) => {
+        posted = (await request.json()) as { parts?: unknown };
+        return HttpResponse.json({ id: "b-1" }, { status: 201 });
+      }),
+    );
+
+    const { result, onClose } = renderForm();
+    act(() =>
+      result.current.handlePartChange(0, {
+        id: result.current.parts[0].id,
+        type: "image",
+        imageR2Key: "",
+        file: new File(["x"], "a.png", { type: "image/png" }),
+      }),
+    );
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    expect(uploadCalled).toBe(1);
+    expect(posted).toMatchObject({
+      parts: [
+        { type: "image", imageR2Key: "uploaded.jpg", imageDescription: "猫" },
+      ],
+    });
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("file の無い既存画像パートは upload せず imageR2Key をそのまま送信", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    let uploadCalled = 0;
+    let posted: { parts?: unknown } | null = null;
+    server.use(
+      http.post(`${API}/admin/broadcast/upload-image`, () => {
+        uploadCalled += 1;
+        return HttpResponse.json({ imageR2Key: "x.jpg" });
+      }),
+      http.post(`${API}/admin/broadcast`, async ({ request }) => {
+        posted = (await request.json()) as { parts?: unknown };
+        return HttpResponse.json({ id: "b-1" }, { status: 201 });
+      }),
+    );
+
+    const { result } = renderForm();
+    act(() =>
+      result.current.handlePartChange(0, {
+        id: result.current.parts[0].id,
+        type: "image",
+        imageR2Key: "existing.jpg",
+        imageDescription: "犬",
+      }),
+    );
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    expect(uploadCalled).toBe(0);
+    expect(posted).toMatchObject({
+      parts: [
+        { type: "image", imageR2Key: "existing.jpg", imageDescription: "犬" },
+      ],
+    });
+  });
+
+  it("now + edit で update してから send を呼ぶ", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    let updated: { parts?: unknown } | null = null;
+    let sentId: string | null = null;
+    server.use(
+      http.put(`${API}/admin/broadcast/:id`, async ({ request, params }) => {
+        updated = (await request.json()) as { parts?: unknown };
+        return HttpResponse.json({ id: params.id });
+      }),
+      http.post(`${API}/admin/broadcast/:id/send`, ({ params }) => {
+        sentId = params.id as string;
+        return HttpResponse.json({ id: params.id });
+      }),
+    );
+
+    const broadcast: BroadcastMessage = {
+      id: "b-9",
+      title: "x",
+      body: "old",
+      parts: null,
+      status: "draft",
+      scheduledAt: null,
+      sentAt: null,
+      errorMessage: null,
+      createdBy: "admin",
+      createdAt: "2030-01-01T00:00:00.000Z",
+      updatedAt: null,
+    };
+
+    const { result, onClose } = renderForm({ mode: "edit", broadcast });
+    act(() =>
+      result.current.handlePartChange(0, {
+        id: result.current.parts[0].id,
+        type: "text",
+        text: "new",
+      }),
+    );
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    expect(updated).toMatchObject({ parts: [{ type: "text", text: "new" }] });
+    expect(sentId).toBe("b-9");
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("schedule + edit は update のみで send は呼ばない", async () => {
+    let updated: { scheduledAt?: string } | null = null;
+    let sendCalled = 0;
+    server.use(
+      http.put(`${API}/admin/broadcast/:id`, async ({ request, params }) => {
+        updated = (await request.json()) as { scheduledAt?: string };
+        return HttpResponse.json({ id: params.id });
+      }),
+      http.post(`${API}/admin/broadcast/:id/send`, ({ params }) => {
+        sendCalled += 1;
+        return HttpResponse.json({ id: params.id });
+      }),
+    );
+
+    const broadcast: BroadcastMessage = {
+      id: "b-10",
+      title: "x",
+      body: "old",
+      parts: null,
+      status: "scheduled",
+      scheduledAt: "2030-01-01T10:00:00.000Z",
+      sentAt: null,
+      errorMessage: null,
+      createdBy: "admin",
+      createdAt: "2030-01-01T00:00:00.000Z",
+      updatedAt: null,
+    };
+
+    const { result, onClose } = renderForm({ mode: "edit", broadcast });
+    act(() => {
+      result.current.handlePartChange(0, {
+        id: result.current.parts[0].id,
+        type: "text",
+        text: "rescheduled",
+      });
+      result.current.setScheduledAt("2030-02-02T12:00");
+    });
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    expect((updated as { scheduledAt?: string } | null)?.scheduledAt).toBe(
+      new Date("2030-02-02T12:00").toISOString(),
+    );
+    expect(sendCalled).toBe(0);
+    expect(onClose).toHaveBeenCalled();
   });
 });
 
