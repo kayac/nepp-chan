@@ -1,10 +1,9 @@
 import { useCallback, useState } from "react";
-
+import { useChatContext } from "~/app/chat/contexts/ChatContext";
 import {
   extractConversationContext,
   extractToolExecutions,
 } from "~/app/chat/feedback-helpers";
-import { useChatContext } from "~/app/chat/useChatContext";
 import { feedbackRepository } from "~/lib/api/repository";
 import type { FeedbackCategory, FeedbackRating } from "~/types";
 

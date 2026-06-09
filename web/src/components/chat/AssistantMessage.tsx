@@ -6,7 +6,7 @@ import { useState } from "react";
 
 import { FeedbackModal } from "~/app/chat/components/FeedbackModal";
 import { SpeechBubble } from "~/app/chat/components/SpeechBubble";
-import { useChatContext } from "~/app/chat/useChatContext";
+import { useChatContext } from "~/app/chat/contexts/ChatContext";
 import type { FeedbackRating } from "~/types";
 
 import { MarkdownText } from "./MarkdownText";

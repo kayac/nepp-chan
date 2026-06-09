@@ -1,7 +1,6 @@
 import type { UIMessage } from "ai";
-
-import { GREETING_PROMPT } from "~/app/chat/ChatProvider";
 import { SpeechBubble } from "~/app/chat/components/SpeechBubble";
+import { GREETING_PROMPT } from "~/app/chat/contexts/ChatProvider";
 import { getMessageContent } from "~/app/chat/feedback-helpers";
 
 export const UserMessage = ({ message }: { message: UIMessage }) => {

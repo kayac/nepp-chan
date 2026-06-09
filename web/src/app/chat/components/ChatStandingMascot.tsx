@@ -8,7 +8,7 @@ import type { UIMessage } from "ai";
 import { isToolOrDynamicToolUIPart } from "ai";
 import { useEffect, useRef, useState } from "react";
 
-import { useChatContext } from "~/app/chat/useChatContext";
+import { useChatContext } from "~/app/chat/contexts/ChatContext";
 
 // 応答完了直後にランダムで選ぶ表情。talking 多めで、たまに笑顔・驚きが混じる
 const POST_RESPONSE_STATES: readonly MascotState[] = [

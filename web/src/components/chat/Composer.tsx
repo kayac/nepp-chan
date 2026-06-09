@@ -2,7 +2,7 @@ import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { SendIcon, SquareIcon } from "lucide-react";
 import { useState } from "react";
 
-import { useChatContext } from "~/app/chat/useChatContext";
+import { useChatContext } from "~/app/chat/contexts/ChatContext";
 
 const isTouchDevice = () =>
   typeof window !== "undefined" &&

@@ -10,8 +10,8 @@ import { ThreadSidebar } from "~/app/chat/components/ThreadSidebar";
 import { TopBar } from "~/app/chat/components/TopBar";
 import { Thread } from "~/components/chat/Thread";
 
-import { ChatProvider } from "./ChatProvider";
-import { useThreadManager } from "./useThreadManager";
+import { ChatProvider } from "./contexts/ChatProvider";
+import { useThreadManager } from "./hooks/useThreadManager";
 
 export const ChatPage = () => {
   const {

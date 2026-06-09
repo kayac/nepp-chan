@@ -3,7 +3,10 @@ import userEvent from "@testing-library/user-event";
 import type { UIMessage } from "ai";
 import { describe, expect, it, vi } from "vitest";
 
-import { ChatContext, type ChatContextValue } from "~/app/chat/useChatContext";
+import {
+  ChatContext,
+  type ChatContextValue,
+} from "~/app/chat/contexts/ChatContext";
 
 import { AssistantMessage, PendingAssistantMessage } from "./AssistantMessage";
 

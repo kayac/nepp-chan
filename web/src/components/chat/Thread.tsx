@@ -1,7 +1,7 @@
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { ArrowDownIcon } from "lucide-react";
 
-import { useChatContext } from "~/app/chat/useChatContext";
+import { useChatContext } from "~/app/chat/contexts/ChatContext";
 
 import { AssistantMessage, PendingAssistantMessage } from "./AssistantMessage";
 import { Composer } from "./Composer";

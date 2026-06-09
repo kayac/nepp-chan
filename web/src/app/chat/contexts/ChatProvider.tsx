@@ -5,8 +5,8 @@ import { type ReactNode, useEffect, useMemo, useRef } from "react";
 import { API_BASE } from "~/lib/api/client";
 import { getBearerToken } from "~/lib/auth-token";
 
-import { getMessageContent } from "./feedback-helpers";
-import { ChatContext, type ChatContextValue } from "./useChatContext";
+import { getMessageContent } from "../feedback-helpers";
+import { ChatContext, type ChatContextValue } from "./ChatContext";
 
 /** 既存スレッドの再開時に system 役で送る挨拶要求プロンプト */
 export const GREETING_PROMPT =

@@ -3,7 +3,10 @@ import type { UIMessage } from "ai";
 import { createElement, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ChatContext, type ChatContextValue } from "~/app/chat/useChatContext";
+import {
+  ChatContext,
+  type ChatContextValue,
+} from "~/app/chat/contexts/ChatContext";
 import { feedbackRepository } from "~/lib/api/repository";
 
 import { useSubmitFeedback } from "./useSubmitFeedback";

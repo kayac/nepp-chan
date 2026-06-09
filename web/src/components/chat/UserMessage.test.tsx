@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
 
-import { GREETING_PROMPT } from "~/app/chat/ChatProvider";
+import { GREETING_PROMPT } from "~/app/chat/contexts/ChatProvider";
 
 import { UserMessage } from "./UserMessage";
 

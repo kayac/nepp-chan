@@ -42,9 +42,9 @@ web/
 │   │   ├── chat/              # チャット画面
 │   │   │   ├── App.tsx              # エントリー（RootLayout + QueryProvider）
 │   │   │   ├── ChatPage.tsx         # メインページ（スレッド管理）
-│   │   │   ├── ChatProvider.tsx      # useChat を集約し context で配布
-│   │   │   ├── useChatContext.ts     # チャット状態の context / フック
-│   │   │   └── hooks/                # chat 専用フック（useThreads / useAnonymousSession / useSubmitFeedback）
+│   │   │   ├── feedback-helpers.ts  # メッセージ/フィードバック抽出ユーティリティ
+│   │   │   ├── contexts/            # ChatContext（ChatProvider + useChatContext）
+│   │   │   └── hooks/                # chat 専用フック（useThreadManager / useThreads / useAnonymousSession / useSubmitFeedback）
 │   │   ├── auth/              # 認証画面
 │   │   │   ├── LoginPage.tsx        # ログインページ
 │   │   │   └── RegisterPage.tsx     # 登録ページ

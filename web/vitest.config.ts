@@ -39,16 +39,13 @@ export default defineConfig({
         // 描画ロジックは MarkdownText / ToolPart / Composer / useStickToBottom に抽出済み
         "src/components/chat/Thread.tsx",
         // useChat の wiring と context 配布のみ
-        "src/app/chat/ChatProvider.tsx",
+        "src/app/chat/contexts/ChatProvider.tsx",
         // barrel / registry。toolName → コンポーネントのマッピングだけで分岐ロジックを持たない
         "src/components/chat/tool-uis/index.ts",
-        // context から取り出して FeedbackModal に渡すだけの 14 行 wrapper
-        "src/app/chat/components/FeedbackModalWrapper.tsx",
         // dashboard / chat のオーケストレーション shell。ロジックは hooks/dashboard・
         // helpers・子コンポーネント側に抽出済みで、Panel 自身は tab/filter state と
         // 子コンポーネントの mount を担うだけ。テストは抽出済みの helper / hook 側で行う
         "src/app/chat/ChatPage.tsx",
-        "src/app/chat/FeedbackContext.tsx",
         "src/app/dashboard/App.tsx",
         "src/app/dashboard/components/BroadcastPanel.tsx",
         "src/app/dashboard/components/FeedbackPanel.tsx",
@@ -64,7 +61,7 @@ export default defineConfig({
         // useThreads / useCreateThread / useDeleteThread / useAdminUser /
         // useAnonymousSession の wiring と localStorage sync を行う orchestration
         // hook。依存 hook 側で個々のロジックはテスト済み
-        "src/app/chat/useThreadManager.ts",
+        "src/app/chat/hooks/useThreadManager.ts",
       ],
       thresholds: {
         branches: 85,

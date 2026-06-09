@@ -2,7 +2,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ChatContext, type ChatContextValue } from "~/app/chat/useChatContext";
+import {
+  ChatContext,
+  type ChatContextValue,
+} from "~/app/chat/contexts/ChatContext";
 
 import { Composer } from "./Composer";
 
