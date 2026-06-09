@@ -54,12 +54,12 @@ export const PendingAssistantMessage = () => (
 
 export const AssistantMessage = ({ message, isLast }: Props) => {
   const { isRunning, error } = useChatContext();
-  const hideActionBar = isRunning && isLast;
+  const isActive = isLast && isRunning;
   const hasVisibleContent = message.parts.some(
     (p) =>
       (p.type === "text" && p.text.length > 0) || isToolOrDynamicToolUIPart(p),
   );
-  const showTypingDot = isLast && isRunning && !hasVisibleContent;
+  const showTypingDot = isActive && !hasVisibleContent;
 
   return (
     <div
@@ -92,7 +92,7 @@ export const AssistantMessage = ({ message, isLast }: Props) => {
         </SpeechBubble>
       </div>
 
-      {!hideActionBar && (
+      {!isActive && (
         <div className="aui-assistant-message-footer mt-4 flex pl-1">
           <AssistantActionBar messageId={message.id} />
         </div>

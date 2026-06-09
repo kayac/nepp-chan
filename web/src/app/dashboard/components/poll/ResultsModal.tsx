@@ -14,9 +14,9 @@ export const ResultsModal = ({ pollId, onClose }: Props) => {
   return (
     <Dialog
       onClose={onClose}
-      className="w-full max-w-lg max-h-[90dvh] overflow-y-auto backdrop:bg-stone-900/30 backdrop:backdrop-blur-[2px]"
+      className="w-full max-w-lg backdrop:bg-stone-900/30 backdrop:backdrop-blur-[2px]"
     >
-      <div className="bg-white rounded-xl shadow-xl mx-4">
+      <div className="bg-white rounded-xl shadow-xl mx-4 max-h-[90dvh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-stone-200">
           <h3 className="text-lg font-semibold text-stone-800">投票結果</h3>
           <button

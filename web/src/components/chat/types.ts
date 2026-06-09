@@ -12,7 +12,6 @@ export type ToolPartStatus =
 export type ToolPartProps<TArgs = unknown, TResult = unknown> = {
   readonly toolName: string;
   readonly args: TArgs;
-  readonly argsText: string;
   readonly result?: TResult | undefined;
   readonly status: ToolPartStatus;
 };

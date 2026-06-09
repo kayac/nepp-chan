@@ -30,7 +30,6 @@ const renderTimeline = (args: typeof baseArgs) =>
   render(
     <DisplayTimelineToolComponent
       args={args}
-      argsText=""
       result={undefined}
       status={{ type: "complete" }}
       toolName="displayTimelineTool"
@@ -61,7 +60,6 @@ describe("DisplayTimelineToolComponent", () => {
     render(
       <DisplayTimelineToolComponent
         args={{ events: [] }}
-        argsText=""
         result={undefined}
         status={{ type: "complete" }}
         toolName="displayTimelineTool"
@@ -74,7 +72,6 @@ describe("DisplayTimelineToolComponent", () => {
     render(
       <DisplayTimelineToolComponent
         args={{}}
-        argsText=""
         result={undefined}
         status={{ type: "running" }}
         toolName="displayTimelineTool"

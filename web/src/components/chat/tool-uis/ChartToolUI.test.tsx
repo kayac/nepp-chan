@@ -21,7 +21,6 @@ const renderChart = (
   render(
     <DisplayChartToolComponent
       args={{ ...baseArgs, ...overrides }}
-      argsText=""
       result={undefined}
       status={running ? { type: "running" } : { type: "complete" }}
       toolName="displayChartTool"
@@ -33,7 +32,6 @@ describe("DisplayChartToolComponent", () => {
     render(
       <DisplayChartToolComponent
         args={{ type: "line", xKey: "month", yKey: "sales" }}
-        argsText=""
         result={undefined}
         status={{ type: "running" }}
         toolName="displayChartTool"

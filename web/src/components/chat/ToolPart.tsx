@@ -26,7 +26,6 @@ export const ToolPart = ({ part }: { part: AnyToolPart }) => {
   const status = mapToolStateToStatus(part.state, part.errorText);
   const result = part.state === "output-available" ? part.output : undefined;
   const args = part.input ?? {};
-  const argsText = JSON.stringify(args, null, 2);
 
   const Component = toolsByName[toolName] ?? ToolFallback;
 
@@ -34,7 +33,6 @@ export const ToolPart = ({ part }: { part: AnyToolPart }) => {
     <Component
       toolName={toolName}
       args={args}
-      argsText={argsText}
       result={result}
       status={status}
     />

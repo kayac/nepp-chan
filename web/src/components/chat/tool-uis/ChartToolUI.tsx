@@ -36,4 +36,4 @@ const renderChart = (args: ChartArgs, isRunning: boolean) => {
 export const DisplayChartToolComponent: ToolPartComponent = ({
   args,
   status,
-}) => renderChart(args as ChartArgs, status?.type === "running");
+}) => renderChart(args as ChartArgs, status.type === "running");

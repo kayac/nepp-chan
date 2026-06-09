@@ -6,7 +6,7 @@ import { DisplayChartToolComponent } from "./ChartToolUI";
 import { DisplayTableToolComponent } from "./DataTableToolUI";
 import { DisplayTimelineToolComponent } from "./TimelineToolUI";
 
-/** ToolPart の tools.by_name で使用する toolName → 表示コンポーネントのマッピング */
+/** toolName → 表示コンポーネントのマッピング */
 export const toolsByName: Record<string, ToolPartComponent> = {
   [DISPLAY_TOOL_NAMES.chart]: DisplayChartToolComponent,
   [DISPLAY_TOOL_NAMES.table]: DisplayTableToolComponent,

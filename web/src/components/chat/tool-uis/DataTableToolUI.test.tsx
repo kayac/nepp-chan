@@ -21,7 +21,6 @@ const renderTable = (args: typeof baseArgs) =>
   render(
     <DisplayTableToolComponent
       args={args}
-      argsText=""
       result={undefined}
       status={{ type: "complete" }}
       toolName="displayTableTool"
@@ -62,7 +61,6 @@ describe("DisplayTableToolComponent", () => {
     render(
       <DisplayTableToolComponent
         args={{}}
-        argsText=""
         result={undefined}
         status={{ type: "running" }}
         toolName="displayTableTool"

@@ -17,9 +17,7 @@ import {
 
 import { formatPiePercent, getColorAt } from "./chart-helpers";
 
-export type ChartType = "line" | "bar" | "pie";
-
-export type ChartData = Record<string, string | number>;
+export type ChartType = DisplayChartArgs["type"];
 
 export type ChartArgs = DisplayChartArgs;
 

@@ -56,8 +56,8 @@ type ToolStatusInfo = {
   icon: ReactNode;
 };
 
-const getToolStatus = (status: ToolPartStatus | undefined): ToolStatusInfo => {
-  if (!status || status.type === "running") {
+const getToolStatus = (status: ToolPartStatus): ToolStatusInfo => {
+  if (status.type === "running") {
     return {
       label: "実行中",
       color: "text-(--warning)",
@@ -100,14 +100,14 @@ const StatusBadge: FC<StatusBadgeProps> = ({ status }) => (
 
 export const ToolFallback: ToolPartComponent = ({
   toolName,
-  argsText,
+  args,
   result,
   status,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
-  const isError = status?.type === "incomplete";
-  const isRunning = !status || status.type === "running";
+  const isError = status.type === "incomplete";
+  const isRunning = status.type === "running";
   const errorReason =
     isError && status.error
       ? typeof status.error === "string"
@@ -173,7 +173,7 @@ export const ToolFallback: ToolPartComponent = ({
               入力パラメータ
             </p>
             <pre className="aui-tool-fallback-args-value whitespace-pre-wrap text-xs bg-(--bg-sunken) text-(--fg-2) p-2.5 rounded-lg overflow-auto max-h-40">
-              {argsText}
+              {JSON.stringify(args, null, 2)}
             </pre>
           </div>
 

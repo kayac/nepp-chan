@@ -6,7 +6,8 @@ import { ToolFallback } from "./ToolFallback";
 
 const renderFallback = (overrides: {
   toolName?: string;
-  argsText?: string;
+  // biome-ignore lint/suspicious/noExplicitAny: テスト用
+  args?: any;
   // biome-ignore lint/suspicious/noExplicitAny: テスト用
   result?: any;
   // biome-ignore lint/suspicious/noExplicitAny: テスト用
@@ -14,7 +15,8 @@ const renderFallback = (overrides: {
 }) => {
   const Comp = ToolFallback as unknown as (props: {
     toolName: string;
-    argsText: string;
+    // biome-ignore lint/suspicious/noExplicitAny: テスト用
+    args?: any;
     // biome-ignore lint/suspicious/noExplicitAny: テスト用
     result?: any;
     // biome-ignore lint/suspicious/noExplicitAny: テスト用
@@ -23,7 +25,7 @@ const renderFallback = (overrides: {
   return render(
     <Comp
       toolName={overrides.toolName ?? "knowledge-search"}
-      argsText={overrides.argsText ?? "{}"}
+      args={overrides.args ?? {}}
       result={overrides.result}
       status={overrides.status}
     />,
@@ -52,9 +54,9 @@ describe("ToolFallback", () => {
     expect(screen.getByText("ねっぷちゃんが記憶中")).toBeDefined();
   });
 
-  it("展開ボタンで argsText / result を表示する", () => {
+  it("展開ボタンで入力パラメータ / result を表示する", () => {
     renderFallback({
-      argsText: '{"query":"x"}',
+      args: { query: "x" },
       result: { ok: true },
       status: { type: "complete" },
     });
@@ -62,7 +64,7 @@ describe("ToolFallback", () => {
     const toggle = screen.getByRole("button", { name: "詳細を表示" });
     fireEvent.click(toggle);
 
-    expect(screen.getByText('{"query":"x"}')).toBeDefined();
+    expect(screen.getByText(/"query": "x"/)).toBeDefined();
     expect(screen.getByText(/"ok": true/)).toBeDefined();
   });
 

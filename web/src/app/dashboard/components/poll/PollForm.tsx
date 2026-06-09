@@ -33,9 +33,9 @@ export const PollForm = ({ poll, onClose }: Props) => {
   return (
     <Dialog
       onClose={onClose}
-      className="w-full max-w-xl max-h-[90dvh] overflow-y-auto backdrop:bg-stone-900/30 backdrop:backdrop-blur-[2px]"
+      className="w-full max-w-xl backdrop:bg-stone-900/30 backdrop:backdrop-blur-[2px]"
     >
-      <div className="bg-stone-50 rounded-xl shadow-xl mx-4 overflow-hidden">
+      <div className="bg-stone-50 rounded-xl shadow-xl mx-4 max-h-[90dvh] overflow-y-auto">
         <div className="flex items-start justify-between px-8 pt-8 pb-4">
           <div>
             <h3 className="text-2xl font-semibold text-stone-800">

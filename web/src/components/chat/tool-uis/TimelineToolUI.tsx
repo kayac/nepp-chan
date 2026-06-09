@@ -6,7 +6,6 @@ import { CalendarIcon } from "lucide-react";
 
 import type { ToolPartComponent } from "~/components/chat/types";
 
-type TimelineArgs = DisplayTimelineArgs;
 type TimelineEvent = DisplayTimelineArgs["events"][number];
 
 const getStatusColor = (status?: TimelineEvent["status"]) => {
@@ -78,7 +77,7 @@ const TimelineItem = ({
   </div>
 );
 
-const Timeline = ({ args }: { args: TimelineArgs }) => (
+const Timeline = ({ args }: { args: DisplayTimelineArgs }) => (
   <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200">
     {args.title && (
       <div className="mb-4 flex items-center gap-2 border-b border-gray-100 pb-3">
@@ -99,7 +98,7 @@ const Timeline = ({ args }: { args: TimelineArgs }) => (
   </div>
 );
 
-const renderTimeline = (args: TimelineArgs, isRunning: boolean) => {
+const renderTimeline = (args: DisplayTimelineArgs, isRunning: boolean) => {
   if (isRunning && !args.events) {
     return (
       <div className="my-4">
@@ -128,10 +127,7 @@ const renderTimeline = (args: TimelineArgs, isRunning: boolean) => {
   );
 };
 
-/**
- * MessagePrimitive.Parts の tools.by_name で使用するコンポーネント
- */
 export const DisplayTimelineToolComponent: ToolPartComponent = ({
   args,
   status,
-}) => renderTimeline(args as TimelineArgs, status?.type === "running");
+}) => renderTimeline(args as DisplayTimelineArgs, status.type === "running");

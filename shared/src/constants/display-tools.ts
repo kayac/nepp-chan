@@ -1,8 +1,7 @@
 /**
  * display 系ツールの toolName。
- * agent の tools オブジェクトのキー（= AI SDK の toolName）と
- * フロントの toolsByName のキーをこの定数で揃える。
- * （createTool の id とは別物）
+ * server が agent に登録する toolName と web の toolsByName のキーを
+ * この定数で一致させる契約。
  */
 export const DISPLAY_TOOL_NAMES = {
   chart: "displayChartTool",
