@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import type { MessageFeedback } from "~/types";
+import { FEEDBACK_CATEGORY_LABELS, type MessageFeedback } from "~/types";
 import { FeedbackDetailModal } from "./FeedbackDetailModal";
 
 const baseFeedback: MessageFeedback = {
@@ -47,6 +47,106 @@ describe("FeedbackDetailModal", () => {
       />,
     );
     expect(screen.getByText("アイデア")).toBeInTheDocument();
+  });
+
+  it("category が既知ならラベルへ変換して表示", () => {
+    render(
+      <FeedbackDetailModal
+        feedback={{ ...baseFeedback, category: "incorrect_fact" }}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("事実と異なる")).toBeInTheDocument();
+  });
+
+  it("category が未知ラベルなら raw 値をそのまま表示", () => {
+    render(
+      <FeedbackDetailModal
+        feedback={{
+          ...baseFeedback,
+          // biome-ignore lint/suspicious/noExplicitAny: ラベル未定義 category のフォールバック検証
+          category: "unknown_category" as any,
+        }}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("unknown_category")).toBeInTheDocument();
+  });
+
+  it("category が null ならカテゴリバッジを表示しない", () => {
+    render(<FeedbackDetailModal feedback={baseFeedback} onClose={vi.fn()} />);
+    for (const label of Object.values(FEEDBACK_CATEGORY_LABELS)) {
+      expect(screen.queryByText(label)).not.toBeInTheDocument();
+    }
+  });
+
+  it("previousMessages の role で送信者ラベルを出し分ける", () => {
+    render(
+      <FeedbackDetailModal
+        feedback={{
+          ...baseFeedback,
+          conversationContext: {
+            ...baseFeedback.conversationContext,
+            previousMessages: [
+              { id: "p-user", role: "user", content: "前のユーザー発話" },
+              { id: "p-asst", role: "assistant", content: "前のAI発話" },
+            ],
+          },
+        }}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("前のユーザー発話")).toBeInTheDocument();
+    expect(screen.getByText("前のAI発話")).toBeInTheDocument();
+    expect(screen.getByText("ユーザー")).toBeInTheDocument();
+  });
+
+  it("targetMessage が user role なら『ユーザー（対象メッセージ）』を表示", () => {
+    render(
+      <FeedbackDetailModal
+        feedback={{
+          ...baseFeedback,
+          conversationContext: {
+            ...baseFeedback.conversationContext,
+            targetMessage: {
+              id: "m-1",
+              role: "user",
+              content: "ユーザーの質問",
+            },
+          },
+        }}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("ユーザー（対象メッセージ）")).toBeInTheDocument();
+    expect(screen.getByText("ユーザーの質問")).toBeInTheDocument();
+  });
+
+  it("targetMessage が assistant role なら『ねっぷちゃん（対象メッセージ）』を表示", () => {
+    render(<FeedbackDetailModal feedback={baseFeedback} onClose={vi.fn()} />);
+    expect(
+      screen.getByText("ねっぷちゃん（対象メッセージ）"),
+    ).toBeInTheDocument();
+  });
+
+  it("nextMessages の role で送信者ラベルを出し分ける", () => {
+    render(
+      <FeedbackDetailModal
+        feedback={{
+          ...baseFeedback,
+          conversationContext: {
+            ...baseFeedback.conversationContext,
+            nextMessages: [
+              { id: "n-user", role: "user", content: "次のユーザー発話" },
+              { id: "n-asst", role: "assistant", content: "次のAI発話" },
+            ],
+          },
+        }}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("次のユーザー発話")).toBeInTheDocument();
+    expect(screen.getByText("次のAI発話")).toBeInTheDocument();
   });
 
   it("comment があれば描画、無ければ表示しない", () => {

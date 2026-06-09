@@ -51,6 +51,26 @@ describe("MarkdownText", () => {
     expect(writeText).toHaveBeenCalledWith("const a = 1;\n");
   });
 
+  it("言語指定のないコードブロックもコピーできる", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+
+    render(<MarkdownText text={"```\nplain code\n```"} />);
+    await userEvent.click(screen.getByRole("button", { name: "Copy" }));
+
+    expect(writeText).toHaveBeenCalledWith("plain code\n");
+  });
+
+  it("空のコードブロックではコピーを実行しない", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+
+    render(<MarkdownText text={"```\n\n```"} />);
+    await userEvent.click(screen.getByRole("button", { name: "Copy" }));
+
+    expect(writeText).not.toHaveBeenCalled();
+  });
+
   it("見出し・引用・リスト・水平線・表・脚注を描画する", () => {
     const md = `## H2
 ### H3
