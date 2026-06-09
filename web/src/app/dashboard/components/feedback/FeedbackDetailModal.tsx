@@ -5,6 +5,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/solid";
 
+import { Dialog } from "~/components/ui/Dialog";
 import { formatDateTime } from "~/lib/format";
 import { FEEDBACK_CATEGORY_LABELS, type MessageFeedback } from "~/types";
 
@@ -23,14 +24,8 @@ export const FeedbackDetailModal = ({ feedback, onClose }: Props) => {
     : [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <button
-        type="button"
-        className="absolute inset-0 bg-black/50 cursor-default"
-        onClick={onClose}
-        aria-label="閉じる"
-      />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 p-6 max-h-[90dvh] overflow-auto">
+    <Dialog onClose={onClose} className="w-full max-w-3xl">
+      <div className="bg-white rounded-xl shadow-xl mx-4 p-6 max-h-[90dvh] overflow-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-stone-800">
             フィードバック詳細
@@ -210,6 +205,6 @@ export const FeedbackDetailModal = ({ feedback, onClose }: Props) => {
           )}
         </div>
       </div>
-    </div>
+    </Dialog>
   );
 };

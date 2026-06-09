@@ -1,6 +1,7 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
 import { usePollResults } from "~/app/dashboard/hooks/usePolls";
+import { Dialog } from "~/components/ui/Dialog";
 
 type Props = {
   pollId: string;
@@ -11,8 +12,11 @@ export const ResultsModal = ({ pollId, onClose }: Props) => {
   const { data: results, isLoading } = usePollResults(pollId);
 
   return (
-    <div className="fixed inset-0 bg-stone-900/30 backdrop-blur-[2px] z-50 flex items-start justify-center pt-8 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 mb-8">
+    <Dialog
+      onClose={onClose}
+      className="w-full max-w-lg max-h-[90dvh] overflow-y-auto backdrop:bg-stone-900/30 backdrop:backdrop-blur-[2px]"
+    >
+      <div className="bg-white rounded-xl shadow-xl mx-4">
         <div className="flex items-center justify-between p-5 border-b border-stone-200">
           <h3 className="text-lg font-semibold text-stone-800">投票結果</h3>
           <button
@@ -63,6 +67,6 @@ export const ResultsModal = ({ pollId, onClose }: Props) => {
           )}
         </div>
       </div>
-    </div>
+    </Dialog>
   );
 };

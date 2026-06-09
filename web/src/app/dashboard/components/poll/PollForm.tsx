@@ -6,6 +6,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 import { usePollForm } from "~/app/dashboard/hooks/usePollForm";
+import { Dialog } from "~/components/ui/Dialog";
 import type { Poll } from "~/types";
 
 type Props = {
@@ -30,8 +31,11 @@ export const PollForm = ({ poll, onClose }: Props) => {
   } = usePollForm({ poll, onClose });
 
   return (
-    <div className="fixed inset-0 bg-stone-900/30 backdrop-blur-[2px] z-50 flex items-start justify-center pt-8 overflow-y-auto">
-      <div className="bg-stone-50 rounded-xl shadow-xl w-full max-w-xl mx-4 mb-8 overflow-hidden">
+    <Dialog
+      onClose={onClose}
+      className="w-full max-w-xl max-h-[90dvh] overflow-y-auto backdrop:bg-stone-900/30 backdrop:backdrop-blur-[2px]"
+    >
+      <div className="bg-stone-50 rounded-xl shadow-xl mx-4 overflow-hidden">
         <div className="flex items-start justify-between px-8 pt-8 pb-4">
           <div>
             <h3 className="text-2xl font-semibold text-stone-800">
@@ -162,6 +166,6 @@ export const PollForm = ({ poll, onClose }: Props) => {
           </div>
         </div>
       </div>
-    </div>
+    </Dialog>
   );
 };

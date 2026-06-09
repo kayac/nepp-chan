@@ -4,9 +4,10 @@ import {
   LightBulbIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { type SubmitEvent, useEffect, useRef, useState } from "react";
+import { type SubmitEvent, useState } from "react";
 
 import { useSubmitFeedback } from "~/app/chat/hooks/useSubmitFeedback";
+import { Dialog } from "~/components/ui/Dialog";
 import type { FeedbackCategory, FeedbackRating } from "~/types";
 
 const FEEDBACK_CATEGORIES: { value: FeedbackCategory; label: string }[] = [
@@ -24,7 +25,6 @@ type Props = {
 };
 
 export const FeedbackModal = ({ messageId, rating, onClose }: Props) => {
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const { submit, isSubmitting } = useSubmitFeedback();
   const [category, setCategory] = useState<FeedbackCategory | undefined>(
     undefined,
@@ -32,12 +32,6 @@ export const FeedbackModal = ({ messageId, rating, onClose }: Props) => {
   const [comment, setComment] = useState("");
 
   const isBadRating = rating === "bad";
-
-  useEffect(() => {
-    // StrictMode の effect 二重実行で open 済みの dialog に showModal() すると
-    // InvalidStateError になるため、未 open のときだけ開く
-    if (!dialogRef.current?.open) dialogRef.current?.showModal();
-  }, []);
 
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -53,16 +47,7 @@ export const FeedbackModal = ({ messageId, rating, onClose }: Props) => {
   };
 
   return (
-    // backdrop クリックで閉じる。ESC（キーボード）は native の onClose が拾う
-    // biome-ignore lint/a11y/useKeyWithClickEvents: ESC は dialog の onClose で対応済み
-    <dialog
-      ref={dialogRef}
-      onClose={onClose}
-      onClick={(e) => {
-        if (e.target === dialogRef.current) onClose();
-      }}
-      className="m-auto w-full max-w-md bg-transparent p-0 backdrop:bg-black/50"
-    >
+    <Dialog onClose={onClose} className="w-full max-w-md">
       <div className="relative bg-white rounded-xl shadow-xl mx-4 p-6 animate-fade-in">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-(--fg-1)">
@@ -193,6 +178,6 @@ export const FeedbackModal = ({ messageId, rating, onClose }: Props) => {
           </div>
         </form>
       </div>
-    </dialog>
+    </Dialog>
   );
 };

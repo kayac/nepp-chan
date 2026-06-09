@@ -14,6 +14,7 @@ LP（apex 配信の静的サイト）は別パッケージ `lp/` にある。
 | チャット UI           | `components/chat/`                     |
 | ツール表示 UI         | `components/chat/tool-uis/`            |
 | 共通 UI               | `components/ui/`                       |
+| モーダル/ダイアログ    | `components/ui/Dialog.tsx`（native `<dialog>` ベース） |
 | 共通レイアウト        | `components/RootLayout.tsx`            |
 | マスコット表示        | `components/Mascot.tsx`                |
 | 背景アニメーション    | `components/AmbientBG.tsx`             |
