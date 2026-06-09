@@ -315,6 +315,13 @@ describe("runDataRetention", () => {
     ]);
   });
 
+  it("options を省略すると現在時刻を基準に実行する", async () => {
+    const results = await runDataRetention(env);
+
+    expect(results).toHaveLength(7);
+    expect(results.every((r) => r.deletedCount === 0)).toBe(true);
+  });
+
   it("DB エラー時は logger.error を呼んで throw する", async () => {
     testDbHolder.db = {
       select: () => {

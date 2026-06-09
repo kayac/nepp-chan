@@ -198,6 +198,21 @@ describe("chatRoutes: POST /:threadId/chat", () => {
     expect(mockClassifyIntent).toHaveBeenCalledWith("こんにちは");
   });
 
+  it("text パートが無いメッセージは空文字で classifyIntent を呼ぶ", async () => {
+    useAnonAuth();
+    mockGetThreadById.mockResolvedValue(ownThread);
+
+    await routes.request(
+      buildReq("/thread-1/chat", {
+        message: { id: "m-2", role: "user" as const, parts: [] },
+      }),
+      undefined,
+      mockEnv,
+    );
+
+    expect(mockClassifyIntent).toHaveBeenCalledWith("");
+  });
+
   it("バリデーション: message が enum 外の role なら 400", async () => {
     useAnonAuth();
     mockGetThreadById.mockResolvedValue(ownThread);
