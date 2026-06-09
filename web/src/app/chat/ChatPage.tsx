@@ -4,7 +4,6 @@ import { LoadingDots } from "@nepp-chan/shared/ui/Loading";
 import { useState } from "react";
 
 import { ChatStandingMascot } from "~/app/chat/components/ChatStandingMascot";
-import { FeedbackModalWrapper } from "~/app/chat/components/FeedbackModalWrapper";
 import { Landing } from "~/app/chat/components/Landing";
 import { ThreadDeleteModal } from "~/app/chat/components/ThreadDeleteModal";
 import { ThreadSidebar } from "~/app/chat/components/ThreadSidebar";
@@ -12,7 +11,6 @@ import { TopBar } from "~/app/chat/components/TopBar";
 import { Thread } from "~/components/chat/Thread";
 
 import { ChatProvider } from "./ChatProvider";
-import { FeedbackProvider } from "./FeedbackContext";
 import { useThreadManager } from "./useThreadManager";
 
 export const ChatPage = () => {
@@ -75,11 +73,8 @@ export const ChatPage = () => {
           initialMessages={initialMessages}
           initialMessage={initialMessage}
         >
-          <FeedbackProvider threadId={currentThreadId}>
-            <Thread />
-            <ChatStandingMascot />
-            <FeedbackModalWrapper />
-          </FeedbackProvider>
+          <Thread />
+          <ChatStandingMascot />
         </ChatProvider>
       );
     }

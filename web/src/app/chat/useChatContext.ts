@@ -2,6 +2,7 @@ import type { ChatStatus, UIMessage } from "ai";
 import { createContext, useContext } from "react";
 
 export type ChatContextValue = {
+  threadId: string;
   messages: UIMessage[];
   status: ChatStatus;
   error: Error | undefined;

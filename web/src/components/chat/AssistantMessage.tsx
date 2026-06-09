@@ -2,10 +2,12 @@ import { Button } from "@nepp-chan/shared/ui/Button";
 import type { UIMessage } from "ai";
 import { isToolOrDynamicToolUIPart } from "ai";
 import { LightbulbIcon, ThumbsDownIcon, ThumbsUpIcon } from "lucide-react";
+import { useState } from "react";
 
+import { FeedbackModal } from "~/app/chat/components/FeedbackModal";
 import { SpeechBubble } from "~/app/chat/components/SpeechBubble";
-import { useFeedback } from "~/app/chat/FeedbackContext";
 import { useChatContext } from "~/app/chat/useChatContext";
+import type { FeedbackRating } from "~/types";
 
 import { MarkdownText } from "./MarkdownText";
 import { ToolPart } from "./ToolPart";
@@ -105,45 +107,59 @@ const MessageError = ({ message }: { message: string }) => (
   </div>
 );
 
-const AssistantActionBar = ({ messageId }: { messageId: string }) => (
-  <div className="aui-assistant-action-bar-root flex items-center gap-1.5 text-(--fg-4)">
-    <span className="text-xs text-(--fg-3)">この回答は役に立ちましたか？</span>
-    <FeedbackButtons messageId={messageId} />
-  </div>
-);
-
-const FeedbackButtons = ({ messageId }: { messageId: string }) => {
-  const { onFeedbackClick } = useFeedback();
+const AssistantActionBar = ({ messageId }: { messageId: string }) => {
+  const [rating, setRating] = useState<FeedbackRating | null>(null);
 
   return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        aria-label="良い回答"
-        onClick={() => onFeedbackClick(messageId, "good")}
-        className="hover:text-(--success) transition-colors duration-150"
-      >
-        <ThumbsUpIcon className="size-3.5" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        aria-label="改善が必要"
-        onClick={() => onFeedbackClick(messageId, "bad")}
-        className="hover:text-(--danger) transition-colors duration-150"
-      >
-        <ThumbsDownIcon className="size-3.5" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        aria-label="アイディア"
-        onClick={() => onFeedbackClick(messageId, "idea")}
-        className="hover:text-(--warning) transition-colors duration-150"
-      >
-        <LightbulbIcon className="size-3.5" />
-      </Button>
-    </>
+    <div className="aui-assistant-action-bar-root flex items-center gap-1.5 text-(--fg-4)">
+      <span className="text-xs text-(--fg-3)">
+        この回答は役に立ちましたか？
+      </span>
+      <FeedbackButtons onSelect={setRating} />
+      {rating !== null && (
+        <FeedbackModal
+          key={rating}
+          messageId={messageId}
+          rating={rating}
+          onClose={() => setRating(null)}
+        />
+      )}
+    </div>
   );
 };
+
+const FeedbackButtons = ({
+  onSelect,
+}: {
+  onSelect: (rating: FeedbackRating) => void;
+}) => (
+  <>
+    <Button
+      variant="ghost"
+      size="icon-xs"
+      aria-label="良い回答"
+      onClick={() => onSelect("good")}
+      className="hover:text-(--success) transition-colors duration-150"
+    >
+      <ThumbsUpIcon className="size-3.5" />
+    </Button>
+    <Button
+      variant="ghost"
+      size="icon-xs"
+      aria-label="改善が必要"
+      onClick={() => onSelect("bad")}
+      className="hover:text-(--danger) transition-colors duration-150"
+    >
+      <ThumbsDownIcon className="size-3.5" />
+    </Button>
+    <Button
+      variant="ghost"
+      size="icon-xs"
+      aria-label="アイディア"
+      onClick={() => onSelect("idea")}
+      className="hover:text-(--warning) transition-colors duration-150"
+    >
+      <LightbulbIcon className="size-3.5" />
+    </Button>
+  </>
+);

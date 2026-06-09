@@ -74,6 +74,7 @@ export const ChatProvider = ({
 
   const value = useMemo<ChatContextValue>(
     () => ({
+      threadId,
       messages,
       status,
       error,
@@ -85,7 +86,7 @@ export const ChatProvider = ({
         void stop();
       },
     }),
-    [messages, status, error, sendMessage, stop],
+    [threadId, messages, status, error, sendMessage, stop],
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

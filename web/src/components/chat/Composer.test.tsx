@@ -8,6 +8,7 @@ import { Composer } from "./Composer";
 
 const renderComposer = (overrides: Partial<ChatContextValue> = {}) => {
   const value: ChatContextValue = {
+    threadId: "t-1",
     messages: [],
     status: "ready",
     error: undefined,

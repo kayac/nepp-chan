@@ -7,9 +7,9 @@ import { ChatContext, type ChatContextValue } from "~/app/chat/useChatContext";
 
 import { AssistantMessage, PendingAssistantMessage } from "./AssistantMessage";
 
-const onFeedbackClick = vi.fn();
-vi.mock("~/app/chat/FeedbackContext", () => ({
-  useFeedback: () => ({ onFeedbackClick }),
+const submit = vi.fn();
+vi.mock("~/app/chat/hooks/useSubmitFeedback", () => ({
+  useSubmitFeedback: () => ({ submit, isSubmitting: false }),
 }));
 
 const textMessage = (text: string): UIMessage => ({
@@ -24,6 +24,7 @@ const renderMessage = (
   ctx: Partial<ChatContextValue> = {},
 ) => {
   const value: ChatContextValue = {
+    threadId: "t-1",
     messages: [message],
     status: "ready",
     error: undefined,
@@ -52,10 +53,10 @@ describe("AssistantMessage", () => {
     ).toBeInTheDocument();
   });
 
-  it("フィードバックボタンで onFeedbackClick を呼ぶ", async () => {
+  it("フィードバックボタンでモーダルを開く", async () => {
     renderMessage(textMessage("回答"), true);
     await userEvent.click(screen.getByLabelText("良い回答"));
-    expect(onFeedbackClick).toHaveBeenCalledWith("a-1", "good");
+    expect(screen.getByText("フィードバック")).toBeInTheDocument();
   });
 
   it("最新メッセージの生成中はフィードバックバーを隠す", () => {
@@ -90,14 +91,18 @@ describe("AssistantMessage", () => {
     expect(screen.getByText("ねっぷちゃんが調査しました")).toBeInTheDocument();
   });
 
-  it("bad / idea のフィードバックも送る", async () => {
+  it("bad のフィードバックで改善点モーダルを開く", async () => {
     renderMessage(textMessage("回答"), true);
 
     await userEvent.click(screen.getByLabelText("改善が必要"));
-    expect(onFeedbackClick).toHaveBeenCalledWith("a-1", "bad");
+    expect(screen.getByText("改善点を教えてください")).toBeInTheDocument();
+  });
+
+  it("idea のフィードバックで改善要望モーダルを開く", async () => {
+    renderMessage(textMessage("回答"), true);
 
     await userEvent.click(screen.getByLabelText("アイディア"));
-    expect(onFeedbackClick).toHaveBeenCalledWith("a-1", "idea");
+    expect(screen.getByText("改善要望")).toBeInTheDocument();
   });
 
   it("生成中で内容が空のときタイピングドットを表示する", () => {

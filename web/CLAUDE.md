@@ -43,8 +43,7 @@ web/
 │   │   │   ├── ChatPage.tsx         # メインページ（スレッド管理）
 │   │   │   ├── ChatProvider.tsx      # useChat を集約し context で配布
 │   │   │   ├── useChatContext.ts     # チャット状態の context / フック
-│   │   │   ├── FeedbackContext.tsx   # フィードバック状態管理
-│   │   │   └── hooks/                # chat 専用フック（useThreads / useAnonymousSession）
+│   │   │   └── hooks/                # chat 専用フック（useThreads / useAnonymousSession / useSubmitFeedback）
 │   │   ├── auth/              # 認証画面
 │   │   │   ├── LoginPage.tsx        # ログインページ
 │   │   │   └── RegisterPage.tsx     # 登録ページ
@@ -131,18 +130,20 @@ import { MyPage } from "~/app/my-feature/MyPage";
 ```text
 ChatPage
   └── ChatProvider (useChat → ChatContext)
-      └── FeedbackProvider
-          ├── Thread
-          │   ├── messages.map
-          │   │   ├── UserMessage
-          │   │   └── AssistantMessage
-          │   │       ├── MarkdownText (text part)
-          │   │       └── ToolPart (tool part → toolsByName / ToolFallback)
-          │   └── Composer (入力欄)
-          └── ChatStandingMascot
+      ├── Thread
+      │   ├── messages.map
+      │   │   ├── UserMessage
+      │   │   └── AssistantMessage
+      │   │       ├── MarkdownText (text part)
+      │   │       ├── ToolPart (tool part → toolsByName / ToolFallback)
+      │   │       └── FeedbackModal (👍👎💡 押下で開く dialog)
+      │   └── Composer (入力欄)
+      └── ChatStandingMascot
 ```
 
 メッセージ末尾への自動追従は `useStickToBottom` フックが担う。
+フィードバックは `AssistantMessage` 内のローカル state で開閉し、送信ロジックは
+`useSubmitFeedback`（`threadId` / `messages` は `useChatContext` から取得）に集約する。
 
 ### ツール UI 実装
 
