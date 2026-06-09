@@ -26,12 +26,12 @@
     "api:quota": "tsx scripts/api-quota.ts"
   },
   "dependencies": {
-    "@ai-sdk/google": "^2.0.46",
+    "@ai-sdk/google": "^3.0.80",
     "@ai-sdk/openai": "^3.0.66",
     "@hono/swagger-ui": "^0.6.1",
     "@hono/zod-openapi": "^1.4.0",
     "@line/bot-sdk": "^11.0.1",
-    "@mastra/ai-sdk": "1.4.3",
+    "@mastra/ai-sdk": "^1.4.4",
     "@mastra/cloudflare-d1": "1.0.4",
     "@mastra/core": "1.10.0",
     "@mastra/evals": "1.2.3",
@@ -43,7 +43,7 @@
     "@mastra/rag": "2.2.1",
     "@nepp-chan/shared": "workspace:*",
     "@sentry/cloudflare": "^10.54.0",
-    "ai": "^5.0.112",
+    "ai": "^6.0.198",
     "drizzle-orm": "^0.45.2",
     "glob": "^13.0.6",
     "gray-matter": "^4.0.3",
