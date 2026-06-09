@@ -73,6 +73,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
 
   const isAdmin = principal.type === "admin";
   const adminUser = isAdmin ? principal.user : undefined;
+  const enableAdminAgents = isAdmin && adminUser?.role !== "staff";
 
   const storage = await getStorage(c.env.DB);
 
@@ -89,7 +90,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
   logger.info(`[Chat] intent: ${intent}`, { threadId });
 
   const neppChanAgent = createNeppChanAgent({
-    isAdmin,
+    isAdmin: enableAdminAgents,
     modelConfig,
   });
   const mastra = new Mastra({
