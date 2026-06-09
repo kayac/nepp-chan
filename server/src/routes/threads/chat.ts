@@ -1,7 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { handleChatStream } from "@mastra/ai-sdk";
 import { Mastra } from "@mastra/core/mastra";
-import { createUIMessageStreamResponse, type UIMessage } from "ai";
+import { respondWithChatStream } from "~/lib/chat-stream";
 import { classifyIntent } from "~/lib/classify-intent";
 import { resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
@@ -105,18 +104,14 @@ chatRoutes.openapi(chatRoute, async (c) => {
     adminUser,
   });
 
-  const stream = await handleChatStream({
+  return respondWithChatStream({
     mastra,
     agentId: "neppChanAgent",
-    params: {
-      messages: [message] as UIMessage[],
-      requestContext,
-      memory: {
-        resource: thread.resourceId,
-        thread: threadId,
-      },
+    message,
+    requestContext,
+    memory: {
+      resource: thread.resourceId,
+      thread: threadId,
     },
   });
-
-  return createUIMessageStreamResponse({ stream });
 });
