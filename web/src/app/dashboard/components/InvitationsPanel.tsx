@@ -1,18 +1,20 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { type SubmitEvent, useState } from "react";
+import {
+  buildInvitationUrl,
+  isExpired,
+} from "~/app/dashboard/components/invitation/helpers";
+import { useAuth } from "~/app/dashboard/contexts/AuthContext";
+import {
+  useCreateInvitation,
+  useDeleteInvitation,
+  useInvitations,
+} from "~/app/dashboard/hooks/useInvitations";
+import { ROLE_LABELS, useRole } from "~/app/dashboard/hooks/useRole";
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
-import { ROLE_LABELS, useRole } from "~/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
 import { formatDateTime } from "~/lib/format";
-import {
-  createInvitation,
-  deleteInvitation,
-  fetchInvitations,
-} from "~/repository/invitation-repository";
-import { useAuth } from "../contexts/AuthContext";
 
 export const InvitationsPanel = () => {
-  const queryClient = useQueryClient();
   const { user } = useAuth();
   const { isSuperAdmin } = useRole(user);
   const { copyToClipboard } = useCopyToClipboard();
@@ -21,48 +23,33 @@ export const InvitationsPanel = () => {
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["invitations"],
-    queryFn: fetchInvitations,
-  });
+  const { data, isLoading } = useInvitations();
 
-  const createMutation = useMutation({
-    mutationFn: ({
-      username,
-      role,
-    }: {
-      username: string;
-      role: AdminUser["role"];
-    }) => createInvitation(username, role),
-    onSuccess: (data) => {
-      const baseUrl = window.location.origin;
-      const url = `${baseUrl}/register?token=${data.invitation.token}`;
-      setCreatedUrl(url);
-      setUsername("");
-      setError(null);
-      queryClient.invalidateQueries({ queryKey: ["invitations"] });
-    },
-    onError: (err) => {
-      setError(err instanceof Error ? err.message : "エラーが発生しました");
-      setCreatedUrl(null);
-    },
-  });
+  const createMutation = useCreateInvitation();
+  const deleteMutation = useDeleteInvitation();
 
-  const deleteMutation = useMutation({
-    mutationFn: deleteInvitation,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["invitations"] });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!username.trim()) return;
-    createMutation.mutate({ username: username.trim(), role });
-  };
-
-  const isExpired = (expiresAt: string) => {
-    return new Date(expiresAt) < new Date();
+    setError(null);
+    createMutation.mutate(
+      { username: username.trim(), role },
+      {
+        onSuccess: (created) => {
+          setCreatedUrl(
+            buildInvitationUrl(
+              window.location.origin,
+              created.invitation.token,
+            ),
+          );
+          setUsername("");
+        },
+        onError: (err) => {
+          setError(err instanceof Error ? err.message : "エラーが発生しました");
+          setCreatedUrl(null);
+        },
+      },
+    );
   };
 
   return (

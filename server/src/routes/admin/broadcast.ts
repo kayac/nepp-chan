@@ -6,7 +6,6 @@ import { logger } from "~/lib/logger";
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
 import { requireAdminUser } from "~/lib/principal";
-import { requireAuth } from "~/middleware/auth";
 import { requireRole } from "~/middleware/require-role";
 import { broadcastRepository } from "~/repository/broadcast-repository";
 import {
@@ -26,7 +25,6 @@ export const broadcastAdminRoutes = new OpenAPIHono<{
   Variables: Partial<PrincipalVariables>;
 }>();
 
-broadcastAdminRoutes.use("*", requireAuth);
 broadcastAdminRoutes.use("*", requireRole("staff"));
 
 const listRoute = createRoute({
@@ -394,10 +392,7 @@ broadcastAdminRoutes.openapi(sendRoute, async (c) => {
 
   const result = await sendBroadcast(c.env, id);
   if (!result.success) {
-    logger.error("[Broadcast] Failed to send broadcast", {
-      id,
-      error: result.error,
-    });
+    logger.error("[Broadcast] Failed to send broadcast", result.error, { id });
     throw new HTTPException(500, {
       message: "配信の送信に失敗しました",
     });

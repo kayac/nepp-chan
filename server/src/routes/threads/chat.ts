@@ -1,16 +1,16 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { handleChatStream } from "@mastra/ai-sdk";
 import { Mastra } from "@mastra/core/mastra";
-import { createUIMessageStreamResponse, type UIMessage } from "ai";
+import { respondWithChatStream } from "~/lib/chat-stream";
 import { classifyIntent } from "~/lib/classify-intent";
 import { resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import type { PrincipalVariables } from "~/lib/principal";
-import { requireAdminUser } from "~/lib/principal";
 import { getStorage } from "~/lib/storage";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
+import { requireAuth } from "~/middleware/auth";
 import type { ThreadVariables } from "~/middleware/require-thread-access";
+import { requireThreadAccess } from "~/middleware/require-thread-access";
 
 export const chatRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -30,6 +30,7 @@ const ChatSendRequestSchema = z.object({
 const chatRoute = createRoute({
   method: "post",
   path: "/{threadId}/chat",
+  middleware: [requireAuth, requireThreadAccess] as const,
   summary: "ねっぷちゃんとおしゃべり",
   description:
     "ねっぷちゃん（音威子府村のAIキャラクター）にメッセージを送信し、ストリーミングレスポンスを受け取る",
@@ -62,8 +63,8 @@ const chatRoute = createRoute({
 chatRoutes.openapi(chatRoute, async (c) => {
   const { threadId } = c.req.valid("param");
   const { message, intent: fixedIntent } = c.req.valid("json");
-  const thread = c.get("thread")!;
-  const principal = c.get("principal")!;
+  const thread = c.get("thread");
+  const principal = c.get("principal");
 
   logger.info(`[Chat] request received`, {
     threadId,
@@ -71,7 +72,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
   });
 
   const isAdmin = principal.type === "admin";
-  const adminUser = isAdmin ? requireAdminUser(principal) : undefined;
+  const adminUser = isAdmin ? principal.user : undefined;
   const useAdminAgents = isAdmin && adminUser?.role !== "staff";
 
   const storage = await getStorage(c.env.DB);
@@ -104,18 +105,14 @@ chatRoutes.openapi(chatRoute, async (c) => {
     adminUser,
   });
 
-  const stream = await handleChatStream({
+  return respondWithChatStream({
     mastra,
     agentId: "neppChanAgent",
-    params: {
-      messages: [message] as UIMessage[],
-      requestContext,
-      memory: {
-        resource: thread.resourceId,
-        thread: threadId,
-      },
+    message,
+    requestContext,
+    memory: {
+      resource: thread.resourceId,
+      thread: threadId,
     },
   });
-
-  return createUIMessageStreamResponse({ stream });
 });

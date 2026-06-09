@@ -28,6 +28,9 @@ export default defineConfig({
         "~": "/src",
       },
     },
+    optimizeDeps: {
+      exclude: ["msw", "msw/node"],
+    },
     build: {
       sourcemap: "hidden",
     },

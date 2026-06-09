@@ -1,4 +1,4 @@
-import { and, count, desc, eq, like, lt, or, type SQL, sql } from "drizzle-orm";
+import { and, count, desc, eq, like, or, type SQL, sql } from "drizzle-orm";
 
 import { createDb, type NewPersona, type Persona, persona } from "~/db";
 
@@ -28,7 +28,6 @@ export const personaRepository = {
 
     await db.insert(persona).values({
       id: input.id,
-      resourceId: input.resourceId,
       category: input.category,
       tags: input.tags ?? null,
       content: input.content,
@@ -74,21 +73,8 @@ export const personaRepository = {
     return result ?? null;
   },
 
-  async findByResourceId(d1: D1Database, resourceId: string, limit = 100) {
-    const db = createDb(d1);
-
-    return db
-      .select()
-      .from(persona)
-      .where(eq(persona.resourceId, resourceId))
-      .orderBy(desc(persona.createdAt))
-      .limit(limit)
-      .all();
-  },
-
   async search(
     d1: D1Database,
-    resourceId: string,
     options: {
       category?: string;
       tags?: string[];
@@ -98,7 +84,7 @@ export const personaRepository = {
   ) {
     const db = createDb(d1);
 
-    const conditions = [eq(persona.resourceId, resourceId)];
+    const conditions: SQL[] = [];
 
     if (options.category) {
       conditions.push(eq(persona.category, options.category));
@@ -131,7 +117,7 @@ export const personaRepository = {
     return db
       .select()
       .from(persona)
-      .where(and(...conditions))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(desc(persona.createdAt))
       .limit(options.limit ?? 50)
       .all();
@@ -139,15 +125,11 @@ export const personaRepository = {
 
   async aggregateByTopic(
     d1: D1Database,
-    resourceId: string,
     options: { category?: string; limit?: number } = {},
   ): Promise<TopicAggregation[]> {
     const db = createDb(d1);
 
-    const conditions = [
-      eq(persona.resourceId, resourceId),
-      sql`${persona.topic} IS NOT NULL`,
-    ];
+    const conditions: SQL[] = [sql`${persona.topic} IS NOT NULL`];
 
     if (options.category) {
       conditions.push(eq(persona.category, options.category));
@@ -234,20 +216,19 @@ export const personaRepository = {
     const db = createDb(d1);
     const limit = options.limit ?? 30;
 
+    const sortDate = sql`COALESCE(${persona.conversationEndedAt}, ${persona.createdAt})`;
+
     let cursorCondition: SQL | undefined;
     if (options.cursor) {
-      const [cursorCreatedAt, cursorId] = options.cursor.split("_");
-      cursorCondition = or(
-        lt(persona.createdAt, cursorCreatedAt),
-        and(eq(persona.createdAt, cursorCreatedAt), lt(persona.id, cursorId)),
-      );
+      const [cursorDate, cursorId] = options.cursor.split("_");
+      cursorCondition = sql`(${sortDate} < ${cursorDate} OR (${sortDate} = ${cursorDate} AND ${persona.id} < ${cursorId}))`;
     }
 
     const results = await db
       .select()
       .from(persona)
       .where(cursorCondition)
-      .orderBy(desc(persona.createdAt), desc(persona.id))
+      .orderBy(sql`${sortDate} DESC`, desc(persona.id))
       .limit(limit + 1)
       .all();
 
@@ -257,7 +238,7 @@ export const personaRepository = {
     const lastPersona = personas[personas.length - 1];
     const nextCursor =
       hasMore && lastPersona
-        ? `${lastPersona.createdAt}_${lastPersona.id}`
+        ? `${lastPersona.conversationEndedAt ?? lastPersona.createdAt}_${lastPersona.id}`
         : null;
 
     const countResult = await db.select({ count: count() }).from(persona).get();

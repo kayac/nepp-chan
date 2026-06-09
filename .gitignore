@@ -15,6 +15,7 @@ dist/
 .agent/
 review/
 .claude/settings.local.json
+.claude/worktrees/
 
 # deps
 node_modules/
@@ -49,6 +50,10 @@ lerna-debug.log*
 # misc
 .DS_Store
 
+# coverage
+coverage/
+**/coverage/
+
 # mastra
 .mastra/
 server/todos/
@@ -64,3 +69,6 @@ dataset/eval/.gemini-usage-*.log
 
 # web build output
 server/public/
+
+# Design handoff bundle (Claude Design export, not committed)
+design-reference/

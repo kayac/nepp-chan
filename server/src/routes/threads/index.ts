@@ -52,13 +52,10 @@ const toThreadResponse = (t: {
   metadata: t.metadata ?? null,
 });
 
-threadsRoutes.use("*", requireAuth);
-threadsRoutes.use("/:threadId/*", requireThreadAccess);
-threadsRoutes.use("/:threadId", requireThreadAccess);
-
 const getThreadsRoute = createRoute({
   method: "get",
   path: "/",
+  middleware: [requireAuth] as const,
   summary: "スレッド一覧取得",
   description: "セッションに紐づくスレッド一覧を取得",
   tags: ["Threads"],
@@ -88,7 +85,7 @@ const getThreadsRoute = createRoute({
 
 threadsRoutes.openapi(getThreadsRoute, async (c) => {
   const { page, perPage } = c.req.valid("query");
-  const principal = c.get("principal")!;
+  const principal = c.get("principal");
   const memory = await getMemory(c.env.DB);
 
   const result = await memory.listThreads({
@@ -111,6 +108,7 @@ threadsRoutes.openapi(getThreadsRoute, async (c) => {
 const createThreadRoute = createRoute({
   method: "post",
   path: "/",
+  middleware: [requireAuth] as const,
   summary: "スレッド作成",
   description: "新規スレッドを作成",
   tags: ["Threads"],
@@ -141,7 +139,7 @@ const createThreadRoute = createRoute({
 
 threadsRoutes.openapi(createThreadRoute, async (c) => {
   const { title, metadata } = c.req.valid("json");
-  const principal = c.get("principal")!;
+  const principal = c.get("principal");
   const memory = await getMemory(c.env.DB);
 
   const thread = await memory.createThread({
@@ -156,6 +154,7 @@ threadsRoutes.openapi(createThreadRoute, async (c) => {
 const getThreadRoute = createRoute({
   method: "get",
   path: "/{threadId}",
+  middleware: [requireAuth, requireThreadAccess] as const,
   summary: "スレッド詳細取得",
   description: "スレッドの詳細情報を取得",
   tags: ["Threads"],
@@ -178,12 +177,14 @@ const getThreadRoute = createRoute({
 });
 
 threadsRoutes.openapi(getThreadRoute, async (c) => {
-  return c.json(toThreadResponse(c.get("thread")!), 200);
+  const thread = c.get("thread");
+  return c.json(toThreadResponse(thread), 200);
 });
 
 const getMessagesRoute = createRoute({
   method: "get",
   path: "/{threadId}/messages",
+  middleware: [requireAuth, requireThreadAccess] as const,
   summary: "メッセージ履歴取得",
   description: "スレッド内のメッセージ履歴を取得",
   tags: ["Threads"],
@@ -212,12 +213,7 @@ threadsRoutes.openapi(getMessagesRoute, async (c) => {
 
   const memory = await getMemory(c.env.DB);
 
-  const result = await memory.recall({
-    threadId,
-    threadConfig: {
-      lastMessages: false,
-    },
-  });
+  const result = await memory.recall({ threadId });
 
   const uiMessages = convertMessages(result.messages).to("AIV5.UI");
 
@@ -233,6 +229,7 @@ threadsRoutes.openapi(getMessagesRoute, async (c) => {
 const deleteThreadRoute = createRoute({
   method: "delete",
   path: "/{threadId}",
+  middleware: [requireAuth, requireThreadAccess] as const,
   summary: "スレッド削除",
   description: "スレッドと関連データを削除",
   tags: ["Threads"],

@@ -10,8 +10,10 @@ export const getSentryOptions = (
     enableLogs: true,
   },
   beforeSend(event) {
-    if (event.request?.data) {
-      event.request.data = "[Filtered]";
+    if (event.request) {
+      event.request.data = undefined;
+      event.request.cookies = undefined;
+      event.request.query_string = undefined;
     }
     return event;
   },

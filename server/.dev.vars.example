@@ -4,6 +4,9 @@ GOOGLE_SEARCH_ENGINE_ID=your-engine-id-here
 # JWT
 JWT_SECRET=local-dev-jwt-secret-must-be-at-least-32-chars-long
 
+# LINE userId のハッシュ化用シークレット（HMAC-SHA256 のキー）
+RESOURCE_ID_HASH_SECRET=local-dev-resource-id-hash-secret-change-me
+
 # Eval専用（省略時は GOOGLE_GENERATIVE_AI_API_KEY を使用）
 EVAL_GOOGLE_API_KEY=
 

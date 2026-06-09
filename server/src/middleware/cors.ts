@@ -2,12 +2,15 @@ import type { MiddlewareHandler } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "~/lib/logger";
 
+const LOCALHOST_PATTERN = /^http:\/\/localhost(?::\d+)?$/;
+
 const isAllowedOrigin = (
   origin: string,
   env: CloudflareBindings,
 ): string | undefined => {
-  const allowedOrigins = ["http://localhost:5173", env.WEB_URL].filter(Boolean);
+  if (LOCALHOST_PATTERN.test(origin)) return origin;
 
+  const allowedOrigins: string[] = [env.WEB_URL, env.LP_URL].filter(Boolean);
   return allowedOrigins.includes(origin) ? origin : undefined;
 };
 

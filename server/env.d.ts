@@ -6,4 +6,5 @@
 interface CloudflareBindings {
   SENTRY_DSN: string;
   JWT_SECRET: string;
+  RESOURCE_ID_HASH_SECRET: string;
 }

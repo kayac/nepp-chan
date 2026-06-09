@@ -43,6 +43,8 @@ type RecentSentResult = {
   summaries: { id: string; title: string; sentAt: string }[];
 };
 
+export type SentBroadcastMessage = BroadcastMessage & { sentAt: string };
+
 export const broadcastRepository = {
   async create(d1: D1Database, input: CreateInput) {
     const db = createDb(d1);
@@ -232,6 +234,28 @@ export const broadcastRepository = {
       .orderBy(desc(broadcastMessages.sentAt))
       .limit(limit)
       .all();
+  },
+
+  async findSentSince(
+    d1: D1Database,
+    since: string,
+    limit = 10,
+  ): Promise<SentBroadcastMessage[]> {
+    const db = createDb(d1);
+
+    const rows = await db
+      .select()
+      .from(broadcastMessages)
+      .where(
+        and(
+          eq(broadcastMessages.status, "sent"),
+          sql`${broadcastMessages.sentAt} > ${since}`,
+        ),
+      )
+      .orderBy(broadcastMessages.sentAt)
+      .limit(limit)
+      .all();
+    return rows as SentBroadcastMessage[];
   },
 
   async delete(d1: D1Database, id: string) {

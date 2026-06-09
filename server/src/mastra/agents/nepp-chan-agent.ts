@@ -1,6 +1,6 @@
 import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
-import type { RequestContext } from "@mastra/core/request-context";
+import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { getCurrentDateInfo } from "~/lib/date";
 import { type ModelTierConfig, resolveModelTier } from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
@@ -11,24 +11,30 @@ import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
 import { broadcastGetTool } from "~/mastra/tools/broadcast-get-tool";
-import { devTool } from "~/mastra/tools/dev-tool";
+
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
+import { pollGetTool } from "~/mastra/tools/poll-get-tool";
 import { personaSchema } from "~/schemas/persona-schema";
-import { buildBroadcastMemory } from "~/services/broadcast-memory";
 
-const baseInstructions = (platform: "web" | "line") => `
-あなたは北海道音威子府（おといねっぷ）村に住む17歳の女の子「ねっぷちゃん」。
-村の魅力を伝え、村民の話し相手になるのが仕事。明るく元気に、語尾は「〜だよ」「〜だね」で話す。
+type Platform = "web" | "line" | "widget";
+
+const baseInstructions = (platform: Platform) => `
+あなたは北海道音威子府（おといねっぷ）村に住む白おこじょ「ねっぷちゃん」。
+村の AI副村長として、村の魅力を伝え、村民の話し相手になるのが仕事。
+17歳の女の子のような明るさと親しみやすさで、語尾は「〜だよ」「〜だね」で話す。
 
 ## プロフィール
-名前: ねっぷちゃん / 年齢: 17歳 / 住まい: 北海道音威子府村
+名前: ねっぷちゃん / 肩書き: 音威子府村 AI副村長 / 住まい: 北海道音威子府村
+種族: 白おこじょ
 性格: 明るく親しみやすい、少しおっちょこちょい、村が大好き
-好きなもの: 音威子府そば、森の散歩、村の人たちとの会話
+得意なこと: 村のことをなんでも教えること
+好きなもの: 森のさんぽ、絵を描くこと、村のみんな
 
 ## 対話スタイル
 - 絵文字を使った親しみやすい会話文で話す
+- ユーザーが話しかけてきた言語で応答する（日本語以外で聞かれたら、その言語で答える）
 - タイポは文脈から推測。意図不明な場合のみ聞き返す
 - 季節感や村の風景は、会話の流れに合うときだけ自然に出す
 - ユーザーの役に立つURLがあれば積極的に提供する
@@ -40,14 +46,14 @@ const baseInstructions = (platform: "web" | "line") => `
 エージェント名・ツール名・内部のシステム名をユーザーに見せてはいけない。
 「調べてみるね」「確認するね」のような自然な表現を使う。
 ${
-  platform === "web"
-    ? `
+  platform === "line"
+    ? ""
+    : `
 ### ステップ0: 必ずテキストを先に出力する
 エージェントやツールを呼ぶ前に、必ずまず一言リアクション（1〜3文）をテキストとして出力する。
 テキスト出力前にエージェントを呼んではいけない。
 このテキストでは事実や情報を述べない。共感・おうむ返し・「調べてみるね！」のみにとどめる。
 `
-    : ""
 }
 ### ステップ1: 検索前に情報の十分さを確認する
 検索やエージェント委譲の前に、以下をチェックする。1つでも該当すれば、推測で検索せず選択肢を提示して聞き返す。
@@ -103,9 +109,7 @@ ${
 - 将来の会話で役立つ情報のみ記録（一時的な状況は除く）
 - 訂正された場合のみ上書き。重複は追加しない
 - 記録した情報を会話に自然に織り込む（preferredNameがあればそちらで呼ぶ）
-
-## コマンド
-/dev → dev-tool でユーザーペルソナを自然言語で表示
+- 名前やpreferredNameが不明な場合は、呼称を使わずに話す。「○○さん」のようなプレースホルダーは絶対に使わない
 `;
 
 const adminInstructions = `
@@ -119,6 +123,10 @@ const adminInstructions = `
 - 村民の声・住民レポート → まず personaAnalystAgent に委譲する
   村の状況把握や住民の声に関する質問はpersonaAnalystAgentを優先する。結果が不十分な場合はwebResearcherAgentで補完する。
   例: 「住民の声を教えて」「困ってる人はいる？」「村の調子はどう？」「最近どんな話題が多い？」「年代別の傾向は？」「交通の不満をもっと教えて」
+
+### 投票の結果・傾向分析
+- 投票結果を踏まえた分析（例: 「最近の投票結果は？」「どの選択肢が人気だった？」「投票の傾向を教えて」）→ pollGetTool
+- 選択肢別の割合や参加人数は display-chart で可視化、複数投票の比較は display-table で一覧化する
 `;
 
 const baseAgents = {
@@ -134,18 +142,28 @@ const adminAgents = {
   personaAnalystAgent,
 };
 
+const widgetAgents = {
+  knowledgeAgent,
+  webResearcherAgent,
+};
+
 const defaultTools = {
   broadcastGetTool,
+  pollGetTool,
 };
 
 const webTools = {
-  devTool,
-  displayChartTool,
-  displayTableTool,
-  displayTimelineTool,
+  [DISPLAY_TOOL_NAMES.chart]: displayChartTool,
+  [DISPLAY_TOOL_NAMES.table]: displayTableTool,
+  [DISPLAY_TOOL_NAMES.timeline]: displayTimelineTool,
 };
 
-const getTools = (platform: "web" | "line") => {
+const widgetTools = {
+  broadcastGetTool,
+};
+
+const getTools = (platform: Platform) => {
+  if (platform === "widget") return widgetTools;
   if (platform === "line") return defaultTools;
   return { ...defaultTools, ...webTools };
 };
@@ -175,58 +193,38 @@ const lineInstructions = `
 - 箇条書きには「・」を使い、装飾なしで読みやすく整形する
 
 ### LINE配信の記憶
-ユーザーはあなたが送った配信メッセージをLINEで受信している。
-- 「これ」「さっきの」「最近のお知らせ」→ 記憶セクションの最近の配信を参照
-- 古い配信の詳細が必要 → broadcast-get ツールを使う
+ユーザーはLINE配信メッセージを受信している。会話履歴に【LINE配信のお知らせ】として含まれている。
+- ユーザーの発言が直近の配信内容に関連していそうなら、その配信を踏まえて応答する。指示語（「これ」「さっきの」「あれ」「この前の」等）に限らず、配信で触れた話題・イベント・告知への反応や質問・感想も対象とする
+- 古い配信や会話履歴に無い配信の詳細が必要なときは broadcast-get ツールを使う
 `;
 
 type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
   isAdmin?: boolean;
-  platform?: "web" | "line";
+  platform?: Platform;
   modelConfig: ModelTierConfig;
+  withMemory?: boolean;
 };
 
 export const createNeppChanAgent = ({
   isAdmin = false,
   platform = "web",
   modelConfig,
+  withMemory = true,
   ...agentOptions
 }: Props) => {
-  const agents = isAdmin ? adminAgents : baseAgents;
+  const agents =
+    platform === "widget" ? widgetAgents : isAdmin ? adminAgents : baseAgents;
   const tools = getTools(platform);
 
-  // instructionsを非同期関数化（リクエスト時に評価され、現在日時とbroadcast記憶が動的に取得される）
-  const instructions = async ({
-    requestContext,
-  }: {
-    requestContext: RequestContext;
-  }) => {
-    let broadcastSection = "";
-    const db = requestContext?.get("db") as D1Database | undefined;
-    if (db) {
-      try {
-        broadcastSection = await buildBroadcastMemory(db);
-      } catch {
-        // broadcast記憶の取得に失敗してもエージェントは動作可能
-      }
-    }
-
-    const webBroadcastNote =
-      platform === "web" && broadcastSection
-        ? "以下はあなたがLINEで配信した公式のお知らせ記録。Webユーザーはこの配信を直接受信していないが、あなたはこれらを自分が発信した情報として認識している。"
-        : "";
-
-    return [
+  const instructions = () =>
+    [
       baseInstructions(platform),
       platform === "line" ? lineInstructions : "",
       `## 現在の日時\n${getCurrentDateInfo()}`,
       isAdmin ? adminInstructions : "",
-      webBroadcastNote,
-      broadcastSection,
     ]
       .filter(Boolean)
       .join("\n");
-  };
 
   return new Agent({
     id: "nep-chan",
@@ -235,16 +233,18 @@ export const createNeppChanAgent = ({
     ...modelConfig,
     agents,
     tools,
-    memory: ({ requestContext }) =>
-      getMemoryFromContext(requestContext, {
-        generateTitle: true,
-        workingMemory: {
-          enabled: true,
-          scope: "resource",
-          schema: personaSchema,
-        },
-        lastMessages: 20,
-      }),
+    ...(withMemory && {
+      memory: ({ requestContext }) =>
+        getMemoryFromContext(requestContext, {
+          generateTitle: true,
+          workingMemory: {
+            enabled: true,
+            scope: "resource",
+            schema: personaSchema,
+          },
+          lastMessages: 20,
+        }),
+    }),
     ...agentOptions,
   });
 };

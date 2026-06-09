@@ -5,9 +5,8 @@
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "types": ["./worker-configuration.d.ts", "./env.d.ts", "node"],
-    "baseUrl": ".",
     "paths": {
-      "~/*": ["src/*"]
+      "~/*": ["./src/*"]
     }
   },
   "include": ["src/**/*"]

@@ -10,8 +10,10 @@ export const initSentry = () => {
     tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
     ignoreErrors: ["NotAllowedError", "AbortError", "ResizeObserver loop"],
     beforeSend(event) {
-      if (event.request?.data) {
-        event.request.data = "[Filtered]";
+      if (event.request) {
+        event.request.data = undefined;
+        event.request.cookies = undefined;
+        event.request.query_string = undefined;
       }
       return event;
     },

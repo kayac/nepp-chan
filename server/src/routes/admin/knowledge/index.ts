@@ -1,6 +1,5 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import type { PrincipalVariables } from "~/lib/principal";
-import { requireAuth } from "~/middleware/auth";
 import { requireRole } from "~/middleware/require-role";
 import { knowledgeConvertRoutes } from "./convert";
 import { knowledgeFilesRoutes } from "./files";
@@ -11,7 +10,6 @@ export const knowledgeAdminRoutes = new OpenAPIHono<{
   Variables: Partial<PrincipalVariables>;
 }>();
 
-knowledgeAdminRoutes.use("*", requireAuth);
 knowledgeAdminRoutes.use("*", requireRole("super_admin"));
 
 knowledgeAdminRoutes.route("/", knowledgeSyncRoutes);

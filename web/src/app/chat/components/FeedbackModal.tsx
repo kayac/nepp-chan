@@ -4,8 +4,10 @@ import {
   LightBulbIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { type SubmitEvent, useState } from "react";
 
+import { useSubmitFeedback } from "~/app/chat/hooks/useSubmitFeedback";
+import { Dialog } from "~/components/ui/Dialog";
 import type { FeedbackCategory, FeedbackRating } from "~/types";
 
 const FEEDBACK_CATEGORIES: { value: FeedbackCategory; label: string }[] = [
@@ -17,20 +19,13 @@ const FEEDBACK_CATEGORIES: { value: FeedbackCategory; label: string }[] = [
 ];
 
 type Props = {
-  isOpen: boolean;
-  onClose: () => void;
+  messageId: string;
   rating: FeedbackRating;
-  onSubmit: (data: { category?: FeedbackCategory; comment?: string }) => void;
-  isSubmitting: boolean;
+  onClose: () => void;
 };
 
-export const FeedbackModal = ({
-  isOpen,
-  onClose,
-  rating,
-  onSubmit,
-  isSubmitting,
-}: Props) => {
+export const FeedbackModal = ({ messageId, rating, onClose }: Props) => {
+  const { submit, isSubmitting } = useSubmitFeedback();
   const [category, setCategory] = useState<FeedbackCategory | undefined>(
     undefined,
   );
@@ -38,33 +33,24 @@ export const FeedbackModal = ({
 
   const isBadRating = rating === "bad";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onSubmit({
-      category: isBadRating ? category : undefined,
-      comment: comment.trim() || undefined,
-    });
+    try {
+      await submit(messageId, rating, {
+        category: isBadRating ? category : undefined,
+        comment: comment.trim() || undefined,
+      });
+      onClose();
+    } catch (err) {
+      console.error("Failed to submit feedback:", err);
+    }
   };
-
-  const handleClose = () => {
-    setCategory(undefined);
-    setComment("");
-    onClose();
-  };
-
-  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <button
-        type="button"
-        className="absolute inset-0 bg-black/50 cursor-default"
-        onClick={handleClose}
-        aria-label="閉じる"
-      />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 animate-fade-in">
+    <Dialog onClose={onClose} className="w-full max-w-md">
+      <div className="relative bg-white rounded-xl shadow-xl mx-4 p-6 animate-fade-in">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-(--color-text)">
+          <h2 className="text-lg font-bold text-(--fg-1)">
             {rating === "good"
               ? "フィードバック"
               : rating === "idea"
@@ -73,8 +59,8 @@ export const FeedbackModal = ({
           </h2>
           <button
             type="button"
-            onClick={handleClose}
-            className="p-1 text-(--color-text-muted) hover:text-(--color-text) rounded-md"
+            onClick={onClose}
+            className="p-1 text-(--fg-3) hover:text-(--fg-1) rounded-md"
             aria-label="閉じる"
           >
             <XMarkIcon className="w-5 h-5" aria-hidden="true" />
@@ -111,7 +97,7 @@ export const FeedbackModal = ({
 
           {isBadRating && (
             <fieldset className="mb-4">
-              <legend className="block text-sm font-medium text-(--color-text) mb-2">
+              <legend className="block text-sm font-medium text-(--fg-1) mb-2">
                 どこが問題でしたか？
               </legend>
               <div className="space-y-2">
@@ -139,9 +125,7 @@ export const FeedbackModal = ({
                         <span className="w-1.5 h-1.5 bg-white rounded-full" />
                       )}
                     </span>
-                    <span className="text-sm text-(--color-text)">
-                      {cat.label}
-                    </span>
+                    <span className="text-sm text-(--fg-1)">{cat.label}</span>
                   </label>
                 ))}
               </div>
@@ -151,7 +135,7 @@ export const FeedbackModal = ({
           <div className="mb-6">
             <label
               htmlFor="feedback-comment"
-              className="block text-sm font-medium text-(--color-text) mb-2"
+              className="block text-sm font-medium text-(--fg-1) mb-2"
             >
               コメント（任意）
             </label>
@@ -168,9 +152,9 @@ export const FeedbackModal = ({
               }
               maxLength={1000}
               rows={3}
-              className="w-full px-3 py-2 border border-(--color-border) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-(--color-accent) focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-(--border-1) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-(--brand) focus:border-transparent resize-none"
             />
-            <div className="text-xs text-(--color-text-muted) mt-1 text-right">
+            <div className="text-xs text-(--fg-3) mt-1 text-right">
               {comment.length}/1000
             </div>
           </div>
@@ -178,22 +162,22 @@ export const FeedbackModal = ({
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={handleClose}
+              onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 py-2.5 px-4 border border-(--color-border) text-(--color-text) rounded-lg text-sm font-medium hover:bg-(--color-surface) transition-colors disabled:opacity-50"
+              className="flex-1 py-2.5 px-4 border border-(--border-1) text-(--fg-1) rounded-lg text-sm font-medium hover:bg-(--bg-raised) transition-colors disabled:opacity-50"
             >
               キャンセル
             </button>
             <button
               type="submit"
               disabled={isSubmitting || (isBadRating && !category)}
-              className="flex-1 py-2.5 px-4 bg-(--color-accent) text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-2.5 px-4 bg-(--brand) text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? "送信中..." : "送信"}
             </button>
           </div>
         </form>
       </div>
-    </div>
+    </Dialog>
   );
 };

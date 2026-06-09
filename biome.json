@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.6/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -11,10 +11,15 @@
       "**",
       "!**/node_modules",
       "!**/dist",
+      "!**/.astro",
       "!**/.mastra",
       "!**/.wrangler",
+      "!**/.claude",
+      "!**/coverage",
+      "!**/*.astro",
       "!**/*.d.ts",
-      "!**/server/public"
+      "!**/server/public",
+      "!design-reference"
     ]
   },
   "formatter": {
@@ -24,24 +29,23 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
-    }
-  },
-  "overrides": [
-    {
-      "includes": ["**/*.astro"],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noUnusedImports": "off"
-          }
+      "recommended": true,
+      "suspicious": {
+        "noConsole": {
+          "level": "warn",
+          "options": { "allow": ["warn", "error"] }
         }
       }
     }
-  ],
+  },
   "javascript": {
     "formatter": {
       "quoteStyle": "double"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   },
   "assist": {
@@ -51,5 +55,33 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.test.ts", "**/*.test.tsx"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "useArrowFunction": "off"
+          },
+          "style": {
+            "noNonNullAssertion": "off"
+          },
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/scripts/**", "server/src/lib/logger.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    }
+  ]
 }

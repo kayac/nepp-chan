@@ -2,7 +2,6 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
-import { requireAuth } from "~/middleware/auth";
 import { requireRole } from "~/middleware/require-role";
 import { personaRepository } from "~/repository/persona-repository";
 import {
@@ -16,12 +15,10 @@ export const personaAdminRoutes = new OpenAPIHono<{
   Variables: Partial<PrincipalVariables>;
 }>();
 
-personaAdminRoutes.use("*", requireAuth);
 personaAdminRoutes.use("*", requireRole("admin"));
 
 const PersonaSchema = z.object({
   id: z.string(),
-  resourceId: z.string(),
   category: z.string(),
   tags: z.string().nullable(),
   content: z.string(),

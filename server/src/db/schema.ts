@@ -13,7 +13,6 @@ export const emergencyReports = sqliteTable("emergency_reports", {
 // ペルソナ（村の集合知）
 export const persona = sqliteTable("persona", {
   id: text("id").primaryKey(),
-  resourceId: text("resource_id").notNull(),
   category: text("category").notNull(),
   tags: text("tags"),
   content: text("content").notNull(),
@@ -38,11 +37,18 @@ export const threadPersonaStatus = sqliteTable("thread_persona_status", {
 export const mastraThreads = sqliteTable("mastra_threads", {
   id: text("id").primaryKey(),
   resourceId: text("resourceId"),
+  createdAt: text("createdAt"),
 });
 
 export const mastraMessages = sqliteTable("mastra_messages", {
   id: text("id").primaryKey(),
   threadId: text("thread_id").notNull(),
+  createdAt: text("createdAt"),
+});
+
+export const mastraResources = sqliteTable("mastra_resources", {
+  id: text("id").primaryKey(),
+  updatedAt: text("updatedAt"),
 });
 
 // 型エクスポート
@@ -121,12 +127,12 @@ export const broadcastMessages = sqliteTable("broadcast_messages", {
 export type BroadcastMessage = typeof broadcastMessages.$inferSelect;
 export type NewBroadcastMessage = typeof broadcastMessages.$inferInsert;
 
-// アンケート
-export const questionnaires = sqliteTable("questionnaires", {
+// 投票
+export const polls = sqliteTable("polls", {
   id: text("id").primaryKey(),
-  title: text("title").notNull(),
-  description: text("description"),
-  isAnonymous: integer("is_anonymous").notNull().default(1), // 1=無記名, 0=記名
+  title: text("title").notNull(), // お題
+  choices: text("choices").notNull(), // JSON: string[]
+  followUpPrompt: text("follow_up_prompt"), // 回答後にねっぷちゃんが話題を広げるヒント
   status: text("status")
     .$type<"draft" | "scheduled" | "sent" | "closed">()
     .notNull()
@@ -139,65 +145,56 @@ export const questionnaires = sqliteTable("questionnaires", {
   closedAt: text("closed_at"),
 });
 
-export type Questionnaire = typeof questionnaires.$inferSelect;
-export type NewQuestionnaire = typeof questionnaires.$inferInsert;
+export type Poll = typeof polls.$inferSelect;
+export type NewPoll = typeof polls.$inferInsert;
 
-// アンケート設問
-export const questionnaireQuestions = sqliteTable("questionnaire_questions", {
+// 投票回答
+export const pollSubmissions = sqliteTable("poll_submissions", {
   id: text("id").primaryKey(),
-  questionnaireId: text("questionnaire_id").notNull(),
-  order: integer("order").notNull(),
-  text: text("text").notNull(),
-  type: text("type")
-    .$type<"single_choice" | "multiple_choice" | "free_text" | "rating">()
-    .notNull(),
-  required: integer("required").notNull().default(1), // 1=必須, 0=任意
-  choices: text("choices"), // JSON: string[] (選択式の場合)
+  pollId: text("poll_id").notNull(),
+  userId: text("user_id").notNull(),
+  selectedChoice: text("selected_choice").notNull(),
   createdAt: text("created_at").notNull(),
 });
 
-export type QuestionnaireQuestion = typeof questionnaireQuestions.$inferSelect;
-export type NewQuestionnaireQuestion =
-  typeof questionnaireQuestions.$inferInsert;
+export type PollSubmission = typeof pollSubmissions.$inferSelect;
+export type NewPollSubmission = typeof pollSubmissions.$inferInsert;
 
-// アンケート提出（ユーザーごとの重複防止）
-export const questionnaireSubmissions = sqliteTable(
-  "questionnaire_submissions",
-  {
-    id: text("id").primaryKey(),
-    questionnaireId: text("questionnaire_id").notNull(),
-    userId: text("user_id").notNull(),
-    currentQuestionOrder: integer("current_question_order")
-      .notNull()
-      .default(1),
-    completedAt: text("completed_at"),
-    createdAt: text("created_at").notNull(),
-  },
-);
+// 管理者セッション（opaque token）
+export const adminSessions = sqliteTable("admin_sessions", {
+  token: text("token").primaryKey(),
+  userId: text("user_id").notNull(),
+  expiresAt: text("expires_at").notNull(),
+  createdAt: text("created_at").notNull(),
+});
 
-export type QuestionnaireSubmission =
-  typeof questionnaireSubmissions.$inferSelect;
-export type NewQuestionnaireSubmission =
-  typeof questionnaireSubmissions.$inferInsert;
+export type AdminSession = typeof adminSessions.$inferSelect;
+export type NewAdminSession = typeof adminSessions.$inferInsert;
 
-// アンケート回答
-export const questionnaireAnswers = sqliteTable("questionnaire_answers", {
+// ユーザー別配信注入状態
+export const userBroadcastState = sqliteTable("user_broadcast_state", {
+  userId: text("user_id").primaryKey(),
+  lastInjectedAt: text("last_injected_at").notNull(),
+});
+
+export type UserBroadcastState = typeof userBroadcastState.$inferSelect;
+
+// ユーザー別投票注入状態
+export const userPollState = sqliteTable("user_poll_state", {
+  userId: text("user_id").primaryKey(),
+  lastInjectedAt: text("last_injected_at").notNull(),
+});
+
+export type UserPollState = typeof userPollState.$inferSelect;
+
+// 保管期間ポリシーによる削除実行ログ
+export const dataRetentionLogs = sqliteTable("data_retention_logs", {
   id: text("id").primaryKey(),
-  submissionId: text("submission_id").notNull(),
-  questionId: text("question_id").notNull(),
-  answerText: text("answer_text"), // free_text の回答
-  answerNumber: integer("answer_number"), // rating の回答
-  selectedChoices: text("selected_choices"), // JSON: string[] (選択式の回答)
+  executedAt: text("executed_at").notNull(),
+  targetTable: text("target_table").notNull(),
+  deletedCount: integer("deleted_count").notNull(),
   createdAt: text("created_at").notNull(),
 });
 
-export type QuestionnaireAnswer = typeof questionnaireAnswers.$inferSelect;
-export type NewQuestionnaireAnswer = typeof questionnaireAnswers.$inferInsert;
-
-// 匿名セッション（先着制限）
-export const anonymousSessions = sqliteTable("anonymous_sessions", {
-  resourceId: text("resource_id").primaryKey(),
-  createdAt: text("created_at").notNull(),
-});
-
-export type AnonymousSession = typeof anonymousSessions.$inferSelect;
+export type DataRetentionLog = typeof dataRetentionLogs.$inferSelect;
+export type NewDataRetentionLog = typeof dataRetentionLogs.$inferInsert;

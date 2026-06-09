@@ -195,4 +195,4 @@ export const feedbackRepository = {
   },
 };
 
-export type { MessageFeedback, FeedbackStats };
+export type { FeedbackStats, MessageFeedback };

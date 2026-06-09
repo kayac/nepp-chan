@@ -1,6 +1,6 @@
 {
   "name": "nepp-chan",
-  "version": "0.4.3",
+  "version": "1.0.3",
   "private": true,
   "type": "module",
   "engines": {
@@ -15,10 +15,14 @@
     "web:build": "pnpm --filter @nepp-chan/web build",
     "web:deploy:dev": "pnpm --filter @nepp-chan/web run deploy",
     "web:deploy:prd": "pnpm --filter @nepp-chan/web run deploy:prd",
+    "lp:dev": "pnpm --filter @nepp-chan/lp dev",
+    "lp:build": "pnpm --filter @nepp-chan/lp build",
+    "lp:deploy:dev": "pnpm --filter @nepp-chan/lp run deploy",
+    "lp:deploy:prd": "pnpm --filter @nepp-chan/lp run deploy:prd",
     "mastra:dev": "pnpm --filter @nepp-chan/server mastra:dev",
     "mastra:build": "pnpm --filter @nepp-chan/server mastra:build",
     "mastra:start": "pnpm --filter @nepp-chan/server mastra:start",
-    "lint": "biome check . && pnpm --filter @nepp-chan/web check && pnpm --filter @nepp-chan/server exec tsc --noEmit",
+    "lint": "biome check . && pnpm --filter @nepp-chan/web check && pnpm --filter @nepp-chan/lp check && pnpm --filter @nepp-chan/server exec tsc --noEmit",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "db:generate": "pnpm --filter @nepp-chan/server db:generate",
@@ -33,7 +37,12 @@
     "knowledge:upload:local": "tsx --env-file=.env.local scripts/upload-knowledge.ts",
     "knowledge:upload:dev": "tsx --env-file=.env.development scripts/upload-knowledge.ts",
     "knowledge:upload:prd": "tsx --env-file=.env.production scripts/upload-knowledge.ts",
-    "test": "pnpm --filter @nepp-chan/server test",
+    "test": "pnpm --filter @nepp-chan/server test && pnpm --filter @nepp-chan/shared test && pnpm --filter @nepp-chan/web test",
+    "test:cov": "pnpm --filter @nepp-chan/server test:cov && pnpm --filter @nepp-chan/shared test:cov && pnpm --filter @nepp-chan/web test:cov",
+    "shared:test": "pnpm --filter @nepp-chan/shared test",
+    "shared:test:cov": "pnpm --filter @nepp-chan/shared test:cov",
+    "web:test": "pnpm --filter @nepp-chan/web test",
+    "web:test:cov": "pnpm --filter @nepp-chan/web test:cov",
     "admin:invite:local": "tsx server/scripts/create-invitation.ts",
     "admin:invite:dev": "tsx server/scripts/create-invitation.ts --env=dev",
     "admin:invite:prd": "tsx server/scripts/create-invitation.ts --env=prd",
@@ -46,10 +55,10 @@
     "openapi:generate": "pnpm --filter @nepp-chan/web openapi:generate"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.6",
+    "@biomejs/biome": "^2.4.16",
     "glob": "^13.0.6",
     "gray-matter": "^4.0.3",
-    "tsx": "^4.21.0",
-    "wrangler": "^4.76.0"
+    "tsx": "^4.22.3",
+    "wrangler": "^4.95.0"
   }
 }

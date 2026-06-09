@@ -1,0 +1,45 @@
+{
+  "name": "@nepp-chan/shared",
+  "private": true,
+  "version": "0.4.3",
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    "./styles/*": "./src/styles/*",
+    "./ui/*": "./src/ui/*.tsx",
+    "./components/*": "./src/components/*.tsx",
+    "./lib/*": "./src/lib/*.ts",
+    "./api": "./src/api/index.ts",
+    "./api/repository/*": "./src/api/repository/*.ts",
+    "./schemas/*": "./src/schemas/*.ts",
+    "./constants/*": "./src/constants/*.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "vitest",
+    "test:cov": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.2.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "openapi-fetch": "^0.17.0",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.15",
+    "@types/react-dom": "^19.2.3",
+    "@vitest/coverage-istanbul": "~4.1.7",
+    "jsdom": "^29.1.1",
+    "msw": "^2.14.6",
+    "typescript": "~6.0.3",
+    "vitest": "~4.1.7"
+  }
+}

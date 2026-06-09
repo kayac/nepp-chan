@@ -49,9 +49,12 @@ export const extractPersonaFromThread = async (
 ): Promise<ExtractResult> => {
   const memory = await getMemory(env.DB);
 
+  // perPage: false で全件取得（暗黙のデフォルト lastMessages: 10 を回避）。
+  // createdAt 昇順に固定し、slice(lastMessageCount) が前回処理位置以降の差分になるようにする。
   const result = await memory.recall({
     threadId,
-    threadConfig: { lastMessages: false },
+    perPage: false,
+    orderBy: { field: "createdAt", direction: "ASC" },
   });
 
   const totalMessages = result.messages.length;
@@ -119,13 +122,10 @@ export const extractPersonaFromThread = async (
         messageCount: totalMessages,
       };
     }
-    // その他のエラーはログに出力してスキップ
+    // その他のエラーは一時的な失敗の可能性があるため処理位置を前進させない。
+    // messageCount を返さないことで status を更新せず、次回バッチで再試行する。
     logger.error(`Persona extraction failed for thread ${threadId}`, error);
-    return {
-      skipped: true,
-      reason: "extraction_error",
-      messageCount: totalMessages,
-    };
+    return { skipped: true, reason: "extraction_error" };
   }
 
   return { extracted: true, messageCount: totalMessages };
@@ -231,7 +231,7 @@ const findThreadById = async (
     .where(eq(mastraThreads.id, threadId))
     .get();
 
-  if (!thread || !thread.resourceId) {
+  if (!thread?.resourceId) {
     throw new HTTPException(404, { message: "スレッドが見つかりません" });
   }
 

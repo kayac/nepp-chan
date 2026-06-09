@@ -9,10 +9,11 @@ export const AdminUserSchema = z.object({
   role: adminRoleSchema,
 });
 
-// 内部用: JWT から来る role は string のため、ランタイムでは AdminUserSchema.parse() を通さない限り保証されない
+export type AdminRole = z.infer<typeof adminRoleSchema>;
+
 export type AuthUser = {
   id: string;
   username: string;
   name: string | null;
-  role: string;
+  role: AdminRole;
 };

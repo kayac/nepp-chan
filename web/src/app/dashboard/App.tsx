@@ -3,27 +3,25 @@ import {
   Bars3Icon,
   BookOpenIcon,
   ChatBubbleLeftIcon,
-  ClipboardDocumentListIcon,
   EnvelopeIcon,
   ExclamationTriangleIcon,
+  HandThumbUpIcon,
   MegaphoneIcon,
   UserGroupIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { useMemo, useState } from "react";
-
-import { useRole } from "~/hooks/useRole";
+import { BroadcastPanel } from "~/app/dashboard/components/BroadcastPanel";
+import { EmergencyPanel } from "~/app/dashboard/components/EmergencyPanel";
+import { FeedbackPanel } from "~/app/dashboard/components/FeedbackPanel";
+import { InvitationsPanel } from "~/app/dashboard/components/InvitationsPanel";
+import { KnowledgePanel } from "~/app/dashboard/components/KnowledgePanel";
+import { PersonaPanel } from "~/app/dashboard/components/PersonaPanel";
+import { PollPanel } from "~/app/dashboard/components/PollPanel";
+import { useAuth } from "~/app/dashboard/contexts/AuthContext";
+import { useRole } from "~/app/dashboard/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
-import { cn } from "~/lib/class-merge";
-
-import { BroadcastPanel } from "./components/BroadcastPanel";
-import { EmergencyPanel } from "./components/EmergencyPanel";
-import { FeedbackPanel } from "./components/FeedbackPanel";
-import { InvitationsPanel } from "./components/InvitationsPanel";
-import { KnowledgePanel } from "./components/KnowledgePanel";
-import { PersonaPanel } from "./components/PersonaPanel";
-import { QuestionnairePanel } from "./components/QuestionnairePanel";
-import { useAuth } from "./contexts/AuthContext";
 
 type Tab =
   | "knowledge"
@@ -31,7 +29,7 @@ type Tab =
   | "feedback"
   | "emergency"
   | "broadcast"
-  | "questionnaire"
+  | "poll"
   | "invitations";
 
 type AdminRole = AdminUser["role"];
@@ -71,9 +69,9 @@ const tabs: {
     icon: <MegaphoneIcon className="w-5 h-5" aria-hidden="true" />,
   },
   {
-    id: "questionnaire",
-    label: "アンケート",
-    icon: <ClipboardDocumentListIcon className="w-5 h-5" aria-hidden="true" />,
+    id: "poll",
+    label: "投票",
+    icon: <HandThumbUpIcon className="w-5 h-5" aria-hidden="true" />,
   },
   {
     id: "invitations",
@@ -233,7 +231,7 @@ export const App = () => {
             {activeTab === "feedback" && <FeedbackPanel />}
             {activeTab === "emergency" && <EmergencyPanel />}
             {activeTab === "broadcast" && <BroadcastPanel />}
-            {activeTab === "questionnaire" && <QuestionnairePanel />}
+            {activeTab === "poll" && <PollPanel />}
             {activeTab === "invitations" && <InvitationsPanel />}
           </div>
         </div>

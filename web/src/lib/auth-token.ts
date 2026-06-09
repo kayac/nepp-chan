@@ -25,7 +25,7 @@ export const removeSessionToken = () => {
   localStorage.removeItem(SESSION_TOKEN_KEY);
 };
 
-/** Authorization: Bearer に送るトークンを取得。admin JWT を優先。 */
+/** Authorization: Bearer に送るトークンを取得。admin token を優先。 */
 export const getBearerToken = () => {
   return getAuthToken() ?? getSessionToken();
 };

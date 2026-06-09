@@ -1,10 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { type AdminUser, fetchCurrentUser } from "~/lib/api/auth";
-
-export const adminUserKeys = {
-  current: ["adminUser", "current"] as const,
-};
+import { adminUserKeys } from "~/lib/api/keys";
 
 export const useAdminUser = () =>
   useQuery<AdminUser | null>({

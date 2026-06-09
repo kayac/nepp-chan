@@ -3,7 +3,6 @@ import { HTTPException } from "hono/http-exception";
 
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
-import { requireAuth } from "~/middleware/auth";
 import { requireRole } from "~/middleware/require-role";
 import { feedbackRepository } from "~/repository/feedback-repository";
 import {
@@ -17,7 +16,6 @@ export const feedbackAdminRoutes = new OpenAPIHono<{
   Variables: Partial<PrincipalVariables>;
 }>();
 
-feedbackAdminRoutes.use("*", requireAuth);
 feedbackAdminRoutes.use("*", requireRole("admin"));
 
 const listRoute = createRoute({

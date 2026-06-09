@@ -2,7 +2,6 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
-import { requireAuth } from "~/middleware/auth";
 import { requireRole } from "~/middleware/require-role";
 import { emergencyRepository } from "~/repository/emergency-repository";
 import { emergencyReportSchema } from "~/schemas/emergency-schema";
@@ -12,7 +11,6 @@ export const emergencyAdminRoutes = new OpenAPIHono<{
   Variables: Partial<PrincipalVariables>;
 }>();
 
-emergencyAdminRoutes.use("*", requireAuth);
 emergencyAdminRoutes.use("*", requireRole("staff"));
 
 const listRoute = createRoute({

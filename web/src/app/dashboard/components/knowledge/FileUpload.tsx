@@ -1,6 +1,9 @@
 import { ArrowUpTrayIcon } from "@heroicons/react/24/outline";
 import { useCallback, useState } from "react";
-import { useConvertFile, useUploadFile } from "~/hooks/useDashboard";
+import {
+  useConvertFile,
+  useUploadFile,
+} from "~/app/dashboard/hooks/useKnowledge";
 import { ConvertDialog } from "./ConvertDialog";
 
 type Props = {

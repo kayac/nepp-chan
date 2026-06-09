@@ -8,16 +8,21 @@ import { getStorage } from "~/lib/storage";
 import { stripMarkdown } from "~/lib/strip-markdown";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
+import { injectBroadcastsToThread } from "~/services/broadcast-thread-injector";
+import { injectPollsToThread } from "~/services/poll-thread-injector";
 
 export const createLineClient = (token: string) =>
   new messagingApi.MessagingApiClient({ channelAccessToken: token });
 
 export const generateReply = async (params: {
+  client: messagingApi.MessagingApiClient;
   userMessage: string;
+  userId: string;
+  hashedUserId: string;
   resourceId: string;
   threadId: string;
   env: CloudflareBindings;
-}): Promise<string[]> => {
+}) => {
   const storage = await getStorage(params.env.DB);
 
   const requestContext = createRequestContext({
@@ -25,6 +30,35 @@ export const generateReply = async (params: {
     db: params.env.DB,
     env: params.env,
   });
+
+  params.client
+    .showLoadingAnimation({
+      chatId: params.userId,
+      loadingSeconds: 60,
+    })
+    .catch((error) =>
+      logger.warn("[LINE] showLoadingAnimation failed", {
+        threadId: params.threadId,
+        errorName: error instanceof Error ? error.name : "unknown",
+      }),
+    );
+
+  await Promise.all([
+    injectBroadcastsToThread({
+      d1: params.env.DB,
+      storage,
+      threadId: params.threadId,
+      resourceId: params.resourceId,
+      userId: params.hashedUserId,
+    }),
+    injectPollsToThread({
+      d1: params.env.DB,
+      storage,
+      threadId: params.threadId,
+      resourceId: params.resourceId,
+      userId: params.hashedUserId,
+    }),
+  ]);
 
   // Intent 分類でモデルティアを決定（非テキストメッセージは casual 直行）
   const intent = params.userMessage
@@ -73,6 +107,7 @@ export const sendLineMessages = async (params: {
   client: messagingApi.MessagingApiClient;
   replyToken: string;
   userId: string;
+  threadId: string;
   texts: string[];
 }) => {
   const messages = params.texts.map((text) => ({
@@ -85,12 +120,13 @@ export const sendLineMessages = async (params: {
       replyToken: params.replyToken,
       messages,
     });
-    logger.info(`LINE replyMessage sent to ${params.userId}`);
-  } catch {
-    logger.warn(
-      `LINE replyMessage failed for ${params.userId}, falling back to pushMessage`,
-    );
+    logger.info("[LINE] replyMessage sent", { threadId: params.threadId });
+  } catch (error) {
+    logger.warn("[LINE] replyMessage failed, falling back to pushMessage", {
+      threadId: params.threadId,
+      errorName: error instanceof Error ? error.name : "unknown",
+    });
     await params.client.pushMessage({ to: params.userId, messages });
-    logger.info(`LINE pushMessage sent to ${params.userId}`);
+    logger.info("[LINE] pushMessage sent", { threadId: params.threadId });
   }
 };

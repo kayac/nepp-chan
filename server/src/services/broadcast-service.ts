@@ -4,6 +4,7 @@ import type { BroadcastMessage } from "~/db";
 import { logger } from "~/lib/logger";
 import { broadcastRepository } from "~/repository/broadcast-repository";
 import type { BroadcastPart } from "~/schemas/broadcast-schema";
+import { buildPanelBubble } from "~/services/line-flex";
 import { createLineClient } from "~/services/line-messaging";
 
 const generateTitle = (text: string) =>
@@ -22,11 +23,49 @@ const getPublicImageUrl = (env: CloudflareBindings, r2Key: string): string => {
   return `${apiBaseUrl}/broadcast/media/${r2Key}`;
 };
 
+const buildExplainButtonMessage = (
+  broadcastId: string,
+  webUrl: string,
+): messagingApi.FlexMessage => {
+  const bubble = buildPanelBubble(webUrl, [
+    {
+      type: "text",
+      text: "このおしらせ、ねっぷちゃんが解説するよ！",
+      size: "md",
+      color: "#292524",
+      wrap: true,
+      scaling: true,
+    },
+    {
+      type: "button",
+      action: {
+        type: "postback",
+        label: "解説してもらう",
+        data: `broadcast=${broadcastId}`,
+        displayText: "このおしらせ、ねっぷちゃんに解説してもらう！",
+      },
+      style: "primary",
+      height: "md",
+      margin: "xl",
+      color: "#5cb7bb",
+      adjustMode: "shrink-to-fit",
+      scaling: true,
+    },
+  ]);
+
+  return {
+    type: "flex",
+    altText: "このおしらせ、ねっぷちゃんが解説するよ！",
+    contents: bubble,
+  };
+};
+
 const buildLineMessages = (
   parts: BroadcastPart[],
   env: CloudflareBindings,
-): messagingApi.Message[] =>
-  parts.map((part) => {
+  broadcastId?: string,
+): messagingApi.Message[] => {
+  const contentMessages: messagingApi.Message[] = parts.map((part) => {
     if (part.type === "text") {
       return { type: "text" as const, text: part.text };
     }
@@ -37,6 +76,13 @@ const buildLineMessages = (
       previewImageUrl: imageUrl,
     };
   });
+
+  if (!broadcastId) return contentMessages;
+  return [
+    ...contentMessages,
+    buildExplainButtonMessage(broadcastId, env.WEB_URL),
+  ];
+};
 
 const parseParts = (broadcast: BroadcastMessage): BroadcastPart[] =>
   broadcast.parts
@@ -139,7 +185,7 @@ export const sendBroadcast = async (
     const client = createLineClient(env.LINE_CHANNEL_ACCESS_TOKEN);
     const retryKey = crypto.randomUUID();
     const parts = parseParts(broadcast);
-    const messages = buildLineMessages(parts, env);
+    const messages = buildLineMessages(parts, env, broadcast.id);
 
     await client.broadcast({ messages }, retryKey);
 

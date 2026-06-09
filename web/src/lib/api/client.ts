@@ -1,55 +1,40 @@
+import { createApiClient } from "@nepp-chan/shared/api";
 import * as Sentry from "@sentry/react";
-import createClient from "openapi-fetch";
-import { getBearerToken } from "~/lib/auth-token";
-import type { paths } from "~/types/api";
-
-class ApiError extends Error {
-  status: number;
-  constructor(message: string, status: number) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-  }
-}
+import {
+  getBearerToken,
+  getSessionToken,
+  removeAuthToken,
+} from "~/lib/auth-token";
+import { queryClient } from "~/lib/query-client";
+import { adminUserKeys } from "./keys";
 
 const API_BASE = import.meta.env.PUBLIC_API_URL || "";
 
-export const client = createClient<paths>({ baseUrl: API_BASE });
-
-client.use({
-  async onRequest({ request }) {
-    const token = getBearerToken();
-    if (token) {
-      request.headers.set("Authorization", `Bearer ${token}`);
-    }
-    return request;
-  },
-});
-
-client.use({
-  async onResponse({ response }) {
-    if (!response.ok) {
-      const message = await parseErrorResponse(response);
-      if (response.status >= 500) {
-        Sentry.captureException(new ApiError(message, response.status));
-      }
-      throw new ApiError(message, response.status);
-    }
-    return response;
-  },
-});
-
-export const parseErrorResponse = async (res: Response) => {
-  try {
-    const data = await res.json();
-    return (
-      data.error?.message ||
-      data.message ||
-      `リクエストに失敗しました (${res.status})`
-    );
-  } catch {
-    return `リクエストに失敗しました (${res.status})`;
+/**
+ * 401 を受けたら admin token を破棄して anonymous session に切替えて再試行するか判定する。
+ * 判定はリクエストが実際に送った Authorization ヘッダ (`sentAuth`) を起点にする。
+ * 並行 401 で他のリクエストが先に admin token を破棄済みでも、自分が admin で送っていたなら fallback retry する。
+ *
+ * - sentAuth が session token と一致する場合: 既に anonymous なので fallback 経路がない → false
+ * - それ以外（admin token を送っていた場合）: admin を破棄して fallback retry する → true
+ */
+const handleUnauthorized = (sentAuth: string): boolean => {
+  const sessionToken = getSessionToken();
+  if (sessionToken && sentAuth === `Bearer ${sessionToken}`) {
+    return false;
   }
+
+  removeAuthToken();
+  queryClient.invalidateQueries({ queryKey: adminUserKeys.current });
+  return true;
 };
 
-export { API_BASE, ApiError };
+export const client = createApiClient({
+  baseUrl: API_BASE,
+  getAuthToken: getBearerToken,
+  onUnauthorized: handleUnauthorized,
+  onServerError: (error) => Sentry.captureException(error),
+});
+
+export { ApiError, parseErrorResponse } from "@nepp-chan/shared/api";
+export { API_BASE };

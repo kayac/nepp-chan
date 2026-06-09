@@ -1,0 +1,8 @@
+---
+import { PollResultsPage } from "~/app/poll/PollResultsPage";
+import Layout from "~/layouts/Layout.astro";
+---
+
+<Layout title="投票結果 | ねっぷちゃん">
+	<PollResultsPage client:only="react" />
+</Layout>

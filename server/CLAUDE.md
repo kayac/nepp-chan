@@ -37,7 +37,9 @@ server/src/
 │   ├── schema.ts            # テーブルスキーマ
 │   ├── client.ts            # DB クライアント
 │   └── migrations/          # マイグレーションファイル
-└── __tests__/               # テスト
+├── __tests__/
+│   └── helpers/             # test-app / test-db / tool-context などの共通ヘルパ
+└── *.test.ts                # 単体テストは対象ファイルと co-located
 ```
 
 ## API エンドポイント
@@ -49,6 +51,7 @@ server/src/
 | `/threads/:threadId`               | GET/DELETE | スレッド詳細・削除           |
 | `/threads/:threadId/messages`      | GET      | メッセージ履歴                 |
 | `/threads/:threadId/chat`          | POST     | チャット（ストリーミング）     |
+| `/simple-chat`                     | POST     | シンプルなチャット（履歴保存なし・ストリーミング、LP/ウィジェット用） |
 | `/feedback`                        | POST     | フィードバック送信             |
 | `/admin/knowledge/sync`            | POST     | ナレッジ同期                   |
 | `/admin/knowledge`                 | DELETE   | ナレッジ削除                   |
@@ -65,14 +68,15 @@ server/src/
 | `/admin/broadcast/:id/send`        | POST     | 配信即時送信                   |
 | `/admin/broadcast/upload-image`    | POST     | 配信用画像アップロード         |
 | `/broadcast/media/:key`            | GET      | 配信画像取得                   |
-| `/admin/questionnaires`            | GET/POST | アンケート一覧・作成           |
-| `/admin/questionnaires/:id`        | GET/PUT/DELETE | アンケート詳細・更新・削除 |
-| `/admin/questionnaires/:id/send`   | POST     | アンケートLINE配信             |
-| `/admin/questionnaires/:id/results`| GET      | アンケート回答結果             |
-| `/admin/questionnaires/:id/close`  | POST     | アンケート締切                 |
+| `/admin/polls`                     | GET/POST | 投票一覧・作成                 |
+| `/admin/polls/:id`                 | GET/PUT/DELETE | 投票詳細・更新・削除     |
+| `/admin/polls/:id/send`            | POST     | 投票LINE配信                   |
+| `/admin/polls/:id/results`         | GET      | 投票結果                       |
+| `/admin/polls/:id/close`           | POST     | 投票締切                       |
+| `/polls/:id`                       | GET      | 投票結果（公開）               |
 | `/admin/invitations`               | GET/POST | 招待一覧・作成                 |
 | `/admin/invitations/:id`           | DELETE   | 招待削除                       |
-| `/auth/anonymous-session`          | POST     | 匿名セッショントークン取得（先着制限） |
+| `/auth/anonymous-session`          | POST     | 匿名セッショントークン取得（JWT発行） |
 | `/auth/register`                   | POST     | ユーザー登録（招待トークン+パスワード） |
 | `/auth/login`                      | POST     | ログイン（ユーザー名+パスワード）      |
 | `/auth/me`                         | GET      | 認証状態確認                   |
@@ -121,7 +125,6 @@ const agent = createNeppChanAgent({ modelConfig });
 | ツール名（変数名）       | ツール ID            | 説明                                   |
 | ------------------------ | -------------------- | -------------------------------------- |
 | `searchGoogleTool`       | `google-search`      | Google Custom Search                   |
-| `devTool`                | `dev-tool`           | Working Memory 表示（デバッグ）        |
 | `displayChartTool`       | `display-chart`      | グラフ表示（line/bar/pie）             |
 | `displayTableTool`       | `display-table`      | テーブル表示                           |
 | `displayTimelineTool`    | `display-timeline`   | タイムライン表示                       |
@@ -217,20 +220,31 @@ throw new HTTPException(404, { message: "Not found" });
 
 - エラー: `throw new HTTPException(code, { message })` でスロー（グローバルエラーハンドラーが `{ error: { code, message } }` 形式に変換）
 - OpenAPI エラーレスポンス: `lib/openapi-errors.ts` の `errorResponse(code)` を使用
-- 認証主体: `resolvePrincipal` がグローバルに適用（`Authorization: Bearer` → `principal`）
-- 管理者認証: `requireAuth` ミドルウェアで `principal` の存在を保証
-- ロール制限: `requireRole("admin")` 等を `requireAuth` の後に適用
+- 認証主体: `resolvePrincipal` がグローバルに適用（opaque session → anonymous JWT の順で `principal` を解決）
+- 管理者認可: `requireRole("admin")` 等で admin principal + ロールレベルをチェック（未認証は 401、権限不足は 403）
+- 一般認証: `requireAuth` で `principal` の存在を保証（anonymous + admin 共通ルート用）
 - スレッドアクセス: `requireThreadAccess` ミドルウェアで所有権検証（`principal` + `threadId` → `thread`）
 - 共通スキーマ: `schemas/` から import（インライン定義を避ける）
 
+### middleware の適用方法
+
+- route ごとに必要な middleware が異なる、または handler 内で `c.get(...)` を non-optional に narrow させたい場合
+  → `createRoute({ middleware: [requireAuth, ...] as const })` で route 定義に紐付ける
+  - 例: `routes/threads/{chat,index}.ts` の `requireAuth` のみ vs `requireAuth + requireThreadAccess`
+- sub-app の全 route に同じ middleware を blanket でかける場合
+  → `app.use("*", mw)` で sub-app 入口にまとめる
+  - 例: `routes/admin/*` の `requireRole("staff")`、`routes/line.ts` の署名検証
+
 ## データベーステーブル
 
-### anonymous_sessions
+### admin_sessions
 
-| カラム      | 型   | 説明                        |
-| ----------- | ---- | --------------------------- |
-| resource_id | TEXT | PRIMARY KEY（UUID v4）      |
-| created_at  | TEXT | 作成日時（NOT NULL）        |
+| カラム     | 型   | 説明                              |
+| ---------- | ---- | --------------------------------- |
+| token      | TEXT | PRIMARY KEY（opaque token）       |
+| user_id    | TEXT | 管理者ユーザー ID（NOT NULL）     |
+| expires_at | TEXT | 有効期限（NOT NULL）              |
+| created_at | TEXT | 作成日時（NOT NULL）              |
 
 ### emergency_reports
 
@@ -273,7 +287,6 @@ throw new HTTPException(404, { message: "Not found" });
 | カラム                | 型   | 説明                     |
 | --------------------- | ---- | ------------------------ |
 | id                    | TEXT | PRIMARY KEY              |
-| resource_id           | TEXT | リソース ID（NOT NULL）  |
 | category              | TEXT | カテゴリ（NOT NULL）     |
 | tags                  | TEXT | タグ（JSON 配列）        |
 | content               | TEXT | 内容（NOT NULL）         |
@@ -324,59 +337,59 @@ throw new HTTPException(404, { message: "Not found" });
 | created_at    | TEXT | 作成日時（NOT NULL）                        |
 | updated_at    | TEXT | 更新日時                                    |
 
-### questionnaires
+### user_broadcast_state
+
+| カラム           | 型   | 説明                          |
+| ---------------- | ---- | ----------------------------- |
+| user_id          | TEXT | PRIMARY KEY（LINE userId）    |
+| last_injected_at | TEXT | 最終配信注入日時（NOT NULL）  |
+
+### polls
+
+| カラム            | 型   | 説明                                                 |
+| ----------------- | ---- | ---------------------------------------------------- |
+| id                | TEXT | PRIMARY KEY                                          |
+| title             | TEXT | お題（NOT NULL）                                     |
+| choices           | TEXT | 選択肢（JSON配列、NOT NULL）                         |
+| follow_up_prompt  | TEXT | 回答後にねっぷちゃんが会話を広げるヒント（任意）     |
+| status            | TEXT | ステータス（draft/scheduled/sent/closed）            |
+| created_by        | TEXT | 作成者 admin ID（NOT NULL）                          |
+| created_at        | TEXT | 作成日時（NOT NULL）                                 |
+| updated_at        | TEXT | 更新日時                                             |
+| scheduled_at      | TEXT | 予約配信日時                                         |
+| sent_at           | TEXT | 配信日時                                             |
+| closed_at         | TEXT | 締切日時                                             |
+
+### poll_submissions
+
+| カラム          | 型   | 説明                        |
+| --------------- | ---- | --------------------------- |
+| id              | TEXT | PRIMARY KEY                 |
+| poll_id         | TEXT | 投票ID（NOT NULL）          |
+| user_id         | TEXT | LINE ユーザーID（NOT NULL） |
+| selected_choice | TEXT | 選んだ選択肢（NOT NULL）    |
+| created_at      | TEXT | 作成日時（NOT NULL）        |
+
+UNIQUE INDEX: `(poll_id, user_id)` で重複回答を防止
+
+### user_poll_state
+
+| カラム           | 型   | 説明                          |
+| ---------------- | ---- | ----------------------------- |
+| user_id          | TEXT | PRIMARY KEY（LINE userId）    |
+| last_injected_at | TEXT | 最終投票注入日時（NOT NULL）  |
+
+### data_retention_logs
+
+保管期間ポリシーによる自動削除の実行ログ。3年（1095日）経過した行は自身も削除対象。
 
 | カラム        | 型      | 説明                                          |
 | ------------- | ------- | --------------------------------------------- |
 | id            | TEXT    | PRIMARY KEY                                   |
-| title         | TEXT    | タイトル（NOT NULL）                          |
-| description   | TEXT    | 説明                                          |
-| is_anonymous  | INTEGER | 無記名フラグ（1=無記名, 0=記名、NOT NULL）    |
-| status        | TEXT    | ステータス（draft/scheduled/sent/closed）     |
-| created_by    | TEXT    | 作成者 admin ID（NOT NULL）                   |
-| created_at    | TEXT    | 作成日時（NOT NULL）                          |
-| updated_at    | TEXT    | 更新日時                                      |
-| scheduled_at  | TEXT    | 予約配信日時                                  |
-| sent_at       | TEXT    | 配信日時                                      |
-| closed_at     | TEXT    | 締切日時                                      |
-
-### questionnaire_questions
-
-| カラム           | 型      | 説明                                              |
-| ---------------- | ------- | ------------------------------------------------- |
-| id               | TEXT    | PRIMARY KEY                                       |
-| questionnaire_id | TEXT    | アンケートID（NOT NULL）                          |
-| order            | INTEGER | 表示順（NOT NULL）                                |
-| text             | TEXT    | 質問文（NOT NULL）                                |
-| type             | TEXT    | 種別（single_choice/multiple_choice/free_text/rating） |
-| required         | INTEGER | 必須フラグ（1=必須, 0=任意、NOT NULL）            |
-| choices          | TEXT    | 選択肢（JSON配列）                                |
-| created_at       | TEXT    | 作成日時（NOT NULL）                              |
-
-### questionnaire_submissions
-
-| カラム                 | 型      | 説明                        |
-| ---------------------- | ------- | --------------------------- |
-| id                     | TEXT    | PRIMARY KEY                 |
-| questionnaire_id       | TEXT    | アンケートID（NOT NULL）    |
-| user_id                | TEXT    | LINE ユーザーID（NOT NULL） |
-| current_question_order | INTEGER | 現在の設問番号（NOT NULL）  |
-| completed_at           | TEXT    | 回答完了日時                |
-| created_at             | TEXT    | 作成日時（NOT NULL）        |
-
-UNIQUE INDEX: `(questionnaire_id, user_id)` で重複回答を防止
-
-### questionnaire_answers
-
-| カラム           | 型      | 説明                     |
-| ---------------- | ------- | ------------------------ |
-| id               | TEXT    | PRIMARY KEY              |
-| submission_id    | TEXT    | 提出ID（NOT NULL）       |
-| question_id      | TEXT    | 設問ID（NOT NULL）       |
-| answer_text      | TEXT    | 自由記述の回答           |
-| answer_number    | INTEGER | 評価の回答（1-5）        |
-| selected_choices | TEXT    | 選択肢の回答（JSON配列） |
-| created_at       | TEXT    | 作成日時（NOT NULL）     |
+| executed_at   | TEXT    | 実行時刻（NOT NULL）                          |
+| target_table  | TEXT    | 削除対象テーブル名（NOT NULL）                |
+| deleted_count | INTEGER | 削除件数（NOT NULL）                          |
+| created_at    | TEXT    | 作成時刻（NOT NULL）                          |
 
 ## Drizzle ORM
 
@@ -387,7 +400,7 @@ import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const persona = sqliteTable("persona", {
   id: text("id").primaryKey(),
-  resourceId: text("resource_id").notNull(),
+  category: text("category").notNull(),
   // ...
 });
 
@@ -484,11 +497,27 @@ thread_persona_status 更新
 
 ### Cron Trigger
 
-| スケジュール   | ハンドラー           | 説明                          |
-| -------------- | -------------------- | ----------------------------- |
-| `*/5 * * * *`  | handleBroadcastCheck | 配信予約チェック（5分ごと）        |
-| `*/5 * * * *`  | handleQuestionnaireCheck | アンケート予約配信チェック（5分ごと） |
-| `0 18 * * *`   | handlePersonaExtract | ペルソナ抽出（毎日03:00 JST）      |
+| スケジュール   | ハンドラー                              | 説明                                                              |
+| -------------- | --------------------------------------- | ----------------------------------------------------------------- |
+| `*/5 * * * *`  | handleBroadcastCheck                    | 配信予約チェック（5分ごと）                                        |
+| `*/5 * * * *`  | handlePollCheck                         | 投票予約配信チェック（5分ごと）                                    |
+| `0 18 * * *`   | handlePersonaExtract → handleDataRetention | ペルソナ抽出 + 保管期間自動削除（毎日03:00 JST、順次実行。retention は Sentry Cron Monitor で不起動検知） |
+
+### 保管期間自動削除
+
+`handleDataRetention` は以下のテーブルを期限超過行で削除する。実行結果は `data_retention_logs` に記録される。
+
+| 対象テーブル              | 保管期間 | 判定キー                                                                  |
+| ------------------------- | -------- | ------------------------------------------------------------------------- |
+| `mastra_messages`         | 30日     | `createdAt`                                                               |
+| `mastra_threads`          | 30日     | 紐づくメッセージが無い AND `createdAt` 経過（空スレッドへの猶予）         |
+| `thread_persona_status`   | -        | 紐づく `mastra_threads` が無くなった孤立分                                |
+| `mastra_resources`        | 180日    | `updatedAt`（working memory の最終更新）                                  |
+| `message_feedback`        | 180日    | `created_at`                                                              |
+| `poll_submissions`        | 365日    | `created_at`                                                              |
+| `data_retention_logs`     | 1095日   | `executed_at`                                                             |
+
+`mastra_messages` 削除後は `thread_persona_status.last_message_count` を残メッセージ数に再計算する（persona-extractor が新規メッセージを取りこぼさないように）。
 
 ## デプロイ環境
 
@@ -502,7 +531,19 @@ thread_persona_status 更新
 
 ```bash
 pnpm dev               # 開発サーバー（http://localhost:8787）
-pnpm test              # テスト実行
+pnpm test              # vitest 実行（istanbul provider）
+pnpm test --coverage   # カバレッジ計測
 pnpm deploy            # dev 環境にデプロイ
 pnpm deploy:prd        # prd 環境にデプロイ
 ```
+
+## テスト
+
+- ランナー: vitest + libsql（テスト DB）+ msw
+- 配置: 対象ファイルの隣に `*.test.ts` を置く co-located 方式
+- 共通ヘルパ: `__tests__/helpers/`
+  - `test-db.ts`: in-memory libsql + DDL（`broadcast_messages` / `polls` 等を含む）
+  - `test-app.ts`: `resolvePrincipal` + `errorHandler` 込みの Hono アプリを返す
+  - `tool-context.ts`: Mastra tool の `execute` を実行するための `buildToolContext` / `callTool`
+- ルート/サービス/リポジトリ/Mastra tools/ハンドラーの単体・統合テストを揃える
+- カバレッジ閾値は `vitest.config.ts` で管理。`mastra/public/` 等は除外

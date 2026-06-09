@@ -1,5 +1,5 @@
-import { getAuthToken } from "~/lib/auth-token";
-import type { paths } from "~/types/api";
+import type { paths } from "@nepp-chan/shared/api";
+import { getAuthToken, removeAuthToken } from "~/lib/auth-token";
 import { API_BASE, parseErrorResponse } from "./client";
 
 type AdminUser = NonNullable<
@@ -60,7 +60,12 @@ export const fetchCurrentUser = async (): Promise<AdminUser | null> => {
     },
   });
 
-  if (!res.ok) return null;
+  if (!res.ok) {
+    if (res.status === 401) {
+      removeAuthToken();
+    }
+    return null;
+  }
 
   const data: AuthMeResponse = await res.json();
   return data.user;

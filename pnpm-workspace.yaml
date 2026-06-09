@@ -1,3 +1,5 @@
 packages:
   - "server"
   - "web"
+  - "lp"
+  - "shared"
