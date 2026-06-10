@@ -7,6 +7,7 @@ export {
   knowledgeAdminRoutes,
   personaAdminRoutes,
   pollAdminRoutes,
+  userAdminRoutes,
 } from "./admin";
 export { authRoutes } from "./auth";
 export { broadcastMediaRoutes } from "./broadcast-media";

@@ -28,6 +28,7 @@ import {
   pollRoutes,
   simpleChatRoutes,
   threadsRoutes,
+  userAdminRoutes,
 } from "~/routes";
 import type { LineEventMessage } from "~/schemas/line-schema";
 
@@ -51,6 +52,7 @@ app.route("/admin/knowledge", knowledgeAdminRoutes);
 app.route("/admin/persona", personaAdminRoutes);
 app.route("/admin/emergency", emergencyAdminRoutes);
 app.route("/admin/invitations", invitationRoutes);
+app.route("/admin/users", userAdminRoutes);
 app.route("/admin/polls", pollAdminRoutes);
 app.route("/polls", pollRoutes);
 app.route("/auth", authRoutes);
