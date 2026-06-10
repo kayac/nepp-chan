@@ -6,11 +6,13 @@ import { resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import type { PrincipalVariables } from "~/lib/principal";
 import { getStorage } from "~/lib/storage";
+import { waitUntilSafe } from "~/lib/wait-until";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { requireAuth } from "~/middleware/auth";
 import type { ThreadVariables } from "~/middleware/require-thread-access";
 import { requireThreadAccess } from "~/middleware/require-thread-access";
+import { recordLlmUsage } from "~/services/llm-usage";
 
 export const chatRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -114,5 +116,18 @@ chatRoutes.openapi(chatRoute, async (c) => {
       resource: thread.resourceId,
       thread: threadId,
     },
+    // onFinish はレスポンス返却後に発火するため waitUntil で記録を完了させる
+    onFinish: (event) =>
+      waitUntilSafe(
+        c,
+        recordLlmUsage(c.env.DB, {
+          model: event.model?.modelId ?? modelConfig.model,
+          usage: event.totalUsage,
+          platform: "web",
+          source: "chat",
+          intent,
+          threadId,
+        }),
+      ),
   });
 });

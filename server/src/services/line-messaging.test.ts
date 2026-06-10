@@ -54,12 +54,17 @@ vi.mock("~/lib/split-message", () => ({
   splitMessagesForLine: vi.fn((texts: string[]) => texts),
 }));
 
+vi.mock("~/services/llm-usage", () => ({
+  recordLlmUsage: vi.fn(async () => undefined),
+}));
+
 vi.mock("~/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
 const { classifyIntent } = await import("~/lib/classify-intent");
 const { resolveModelTier } = await import("~/lib/llm-models");
+const { recordLlmUsage } = await import("~/services/llm-usage");
 const { injectBroadcastsToThread } = await import(
   "~/services/broadcast-thread-injector"
 );
@@ -195,6 +200,28 @@ describe("generateReply", () => {
 
     const result = await generateReply(baseParams);
     expect(result).toEqual([]);
+  });
+
+  it("agent.generate 後に usage を platform=line で記録する", async () => {
+    vi.mocked(resolveModelTier).mockReturnValue({
+      model: "google/gemini-flash-lite-latest",
+    } as never);
+    agentHolder.generate.mockResolvedValueOnce({
+      steps: [{ text: "ok" }],
+      text: "",
+      totalUsage: { inputTokens: 20, outputTokens: 10 },
+    });
+
+    await generateReply(baseParams);
+
+    expect(recordLlmUsage).toHaveBeenCalledWith(baseParams.env.DB, {
+      model: "google/gemini-flash-lite-latest",
+      usage: { inputTokens: 20, outputTokens: 10 },
+      platform: "line",
+      source: "chat",
+      intent: "casual",
+      threadId: "thr-1",
+    });
   });
 
   it("agent.generate に resource / thread を渡す", async () => {

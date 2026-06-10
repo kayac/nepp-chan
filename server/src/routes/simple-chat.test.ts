@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockHandleChatStream } = vi.hoisted(() => ({
+const { mockHandleChatStream, mockRecordLlmUsage } = vi.hoisted(() => ({
   mockHandleChatStream: vi.fn(),
+  mockRecordLlmUsage: vi.fn(),
 }));
 
 vi.mock("@mastra/ai-sdk", () => ({
@@ -25,6 +26,10 @@ vi.mock("~/mastra/agents/nepp-chan-agent", () => ({
 
 vi.mock("~/mastra/request-context", () => ({
   createRequestContext: vi.fn(() => ({})),
+}));
+
+vi.mock("~/services/llm-usage", () => ({
+  recordLlmUsage: mockRecordLlmUsage,
 }));
 
 const { simpleChatRoutes: rawRoutes } = await import("./simple-chat");
@@ -72,6 +77,24 @@ describe("simpleChatRoutes: POST /", () => {
 
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toMatch(/event-stream/);
+  });
+
+  it("ストリーム完了時に usage を platform=lp で記録する", async () => {
+    await routes.request(postJson(validBody), undefined, mockEnv);
+
+    const { onFinish } = mockHandleChatStream.mock.calls[0][0].params;
+    onFinish({
+      totalUsage: { inputTokens: 10, outputTokens: 5 },
+      model: { modelId: "gemini-2.5-flash-lite" },
+    });
+
+    expect(mockRecordLlmUsage).toHaveBeenCalledWith(mockEnv.DB, {
+      model: "gemini-2.5-flash-lite",
+      usage: { inputTokens: 10, outputTokens: 5 },
+      platform: "lp",
+      source: "chat",
+      intent: "casual",
+    });
   });
 
   it("バリデーション: message なしは 400", async () => {
