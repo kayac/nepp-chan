@@ -9,6 +9,10 @@ export default defineConfig({
         "./src/__mocks__/@sentry/cloudflare.ts",
         import.meta.url,
       ).pathname,
+      "cloudflare:workers": new URL(
+        "./src/__mocks__/cloudflare-workers.ts",
+        import.meta.url,
+      ).pathname,
     },
   },
   test: {
