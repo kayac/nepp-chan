@@ -30,6 +30,8 @@ export default defineConfig({
         "src/mastra/mcp/**",
         // Mastra Playground 用インスタンス。getPlatformProxy の副作用が中心
         "src/mastra/index.ts",
+        // Mastra Playground が生成する自動生成資源（wrangler dev の一時バンドル等）
+        "src/mastra/public/**",
         // drizzle ラッパー 1 行
         "src/db/client.ts",
       ],
