@@ -87,11 +87,21 @@ describe("recordLlmUsage", () => {
       outputTokens: 0,
       reasoningTokens: 0,
       cachedInputTokens: 0,
-      totalTokens: 0,
       platform: null,
       intent: null,
       threadId: null,
     });
+  });
+
+  it("totalTokens が無ければ input/output/reasoning の合算で保存する", async () => {
+    await recordLlmUsage(d1, {
+      model: "gemini-2.5-flash",
+      usage: { inputTokens: 100, outputTokens: 50, reasoningTokens: 30 },
+      source: "chat",
+    });
+
+    const rows = await db.select().from(llmUsage).all();
+    expect(rows[0]?.totalTokens).toBe(180);
   });
 
   it("usage 未取得（undefined）でも 0 埋めで保存する", async () => {

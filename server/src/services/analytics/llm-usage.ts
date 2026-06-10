@@ -26,14 +26,20 @@ export const recordLlmUsage = async (
 ) => {
   try {
     const db = createDb(d1);
+    const inputTokens = params.usage?.inputTokens ?? 0;
+    const outputTokens = params.usage?.outputTokens ?? 0;
+    const reasoningTokens = params.usage?.reasoningTokens ?? 0;
     await db.insert(llmUsage).values({
       id: crypto.randomUUID(),
       model: params.model,
-      inputTokens: params.usage?.inputTokens ?? 0,
-      outputTokens: params.usage?.outputTokens ?? 0,
-      reasoningTokens: params.usage?.reasoningTokens ?? 0,
+      inputTokens,
+      outputTokens,
+      reasoningTokens,
       cachedInputTokens: params.usage?.cachedInputTokens ?? 0,
-      totalTokens: params.usage?.totalTokens ?? 0,
+      // プロバイダが totalTokens を返さない場合は内訳から合算する
+      totalTokens:
+        params.usage?.totalTokens ??
+        inputTokens + outputTokens + reasoningTokens,
       platform: params.platform,
       source: params.source,
       intent: params.intent,
