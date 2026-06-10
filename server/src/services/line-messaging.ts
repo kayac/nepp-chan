@@ -1,7 +1,7 @@
 import { messagingApi } from "@line/bot-sdk";
 import { Mastra } from "@mastra/core/mastra";
 import { classifyIntent } from "~/lib/classify-intent";
-import { resolveModelTier } from "~/lib/llm-models";
+import { primaryModelId, resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { splitMessagesForLine } from "~/lib/split-message";
 import { getStorage } from "~/lib/storage";
@@ -92,7 +92,7 @@ export const generateReply = async (params: {
   });
 
   await recordLlmUsage(params.env.DB, {
-    model: modelConfig.model,
+    model: primaryModelId(modelConfig),
     usage: response.totalUsage,
     platform: "line",
     source: "chat",
