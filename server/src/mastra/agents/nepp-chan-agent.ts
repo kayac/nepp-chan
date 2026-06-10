@@ -2,7 +2,11 @@ import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
 import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { getCurrentDateInfo } from "~/lib/date";
-import { type ModelTierConfig, resolveModelTier } from "~/lib/llm-models";
+import {
+  GEMINI_FLASH_LITE,
+  type ModelTierConfig,
+  resolveModelTier,
+} from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
 import { feedbackAgent } from "~/mastra/agents/feedback-agent";
@@ -198,6 +202,23 @@ const lineInstructions = `
 - 古い配信や会話履歴に無い配信の詳細が必要なときは broadcast-get ツールを使う
 `;
 
+export const neppChanMemoryOptions = {
+  // タイトル生成は会話本体と切り離して常に軽量モデルで行う
+  generateTitle: {
+    model: GEMINI_FLASH_LITE,
+    instructions:
+      "ユーザーの最初のメッセージから15文字以内の簡潔な日本語タイトルを生成する。",
+  },
+  // useStateSignals は schema モードで state signal パイプラインが文字列前提の
+  // zod 検証に落ちる上流バグがあり採用見送り（workerd 実機で確認）
+  workingMemory: {
+    enabled: true,
+    scope: "resource",
+    schema: personaSchema,
+  },
+  lastMessages: 20,
+} as const;
+
 type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
   isAdmin?: boolean;
   platform?: Platform;
@@ -235,15 +256,7 @@ export const createNeppChanAgent = ({
     tools,
     ...(withMemory && {
       memory: ({ requestContext }) =>
-        getMemoryFromContext(requestContext, {
-          generateTitle: true,
-          workingMemory: {
-            enabled: true,
-            scope: "resource",
-            schema: personaSchema,
-          },
-          lastMessages: 20,
-        }),
+        getMemoryFromContext(requestContext, neppChanMemoryOptions),
     }),
     ...agentOptions,
   });

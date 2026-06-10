@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { ModelTierConfig } from "~/lib/llm-models";
-import { createNeppChanAgent } from "./nepp-chan-agent";
+import { GEMINI_FLASH_LITE, type ModelTierConfig } from "~/lib/llm-models";
+import { createNeppChanAgent, neppChanMemoryOptions } from "./nepp-chan-agent";
 
 const modelConfig = { model: "dummy-model" } as unknown as ModelTierConfig;
 
@@ -55,6 +55,22 @@ describe("createNeppChanAgent", () => {
 
     it("withMemory=true でも生成できる（memory を wiring する分岐）", () => {
       expect(build({ withMemory: true })).toBeDefined();
+    });
+  });
+
+  describe("memory オプション", () => {
+    it("タイトル生成は FLASH_LITE + 日本語指示で行う", () => {
+      expect(neppChanMemoryOptions.generateTitle.model).toBe(GEMINI_FLASH_LITE);
+      expect(neppChanMemoryOptions.generateTitle.instructions).toContain(
+        "日本語",
+      );
+    });
+
+    it("working memory は resource スコープで有効", () => {
+      expect(neppChanMemoryOptions.workingMemory).toMatchObject({
+        enabled: true,
+        scope: "resource",
+      });
     });
   });
 });
