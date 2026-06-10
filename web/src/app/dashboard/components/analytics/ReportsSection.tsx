@@ -5,6 +5,7 @@ import {
   useWeeklyReports,
 } from "~/app/dashboard/hooks/useAnalytics";
 import { HourlyChart } from "./HourlyChart";
+import { formatCostUsd } from "./helpers";
 import {
   SectionCard,
   SectionEmpty,
@@ -12,7 +13,6 @@ import {
   SectionLoading,
 } from "./SectionCard";
 import { StatCards } from "./StatCards";
-import { formatCostUsd } from "./helpers";
 
 const ReportDetail = ({ id }: { id: string }) => {
   const { data, isLoading, error } = useWeeklyReportDetail(id);

@@ -9,13 +9,13 @@ import {
 } from "recharts";
 import { useUsageAnalytics } from "~/app/dashboard/hooks/useAnalytics";
 import { AXIS_STYLE, getColorAt, TOOLTIP_STYLE } from "~/lib/chart-helpers";
+import { formatCostUsd, pivotWeeklyUsage } from "./helpers";
 import {
   SectionCard,
   SectionEmpty,
   SectionError,
   SectionLoading,
 } from "./SectionCard";
-import { formatCostUsd, pivotWeeklyUsage } from "./helpers";
 
 export const UsageSection = () => {
   const { data, isLoading, error } = useUsageAnalytics(12);

@@ -12,8 +12,8 @@ import {
 } from "recharts";
 import { usePersonaAnalytics } from "~/app/dashboard/hooks/useAnalytics";
 import { AXIS_STYLE, getColorAt, TOOLTIP_STYLE } from "~/lib/chart-helpers";
-import { SectionCard, SectionError, SectionLoading } from "./SectionCard";
 import { SENTIMENT_SERIES } from "./helpers";
+import { SectionCard, SectionError, SectionLoading } from "./SectionCard";
 
 const SentimentBars = () =>
   SENTIMENT_SERIES.map((s) => (
