@@ -3317,6 +3317,7 @@ export interface paths {
                                 expiresAt: string;
                                 usedAt: string | null;
                                 createdAt: string;
+                                userId: string | null;
                             }[];
                         };
                     };
@@ -3463,6 +3464,105 @@ export interface paths {
                 };
                 /** @description 認証エラー */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * 管理ユーザー削除
+         * @description 管理ユーザーをセッション・招待ごと削除します。スーパー管理者のみ実行できます。
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description ユーザー削除成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description リクエストエラー */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };

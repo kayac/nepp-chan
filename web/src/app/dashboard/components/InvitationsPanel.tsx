@@ -1,17 +1,21 @@
 import { type SubmitEvent, useState } from "react";
 import {
   buildInvitationUrl,
+  type DeleteAction,
   isExpired,
+  resolveDeleteAction,
 } from "~/app/dashboard/components/invitation/helpers";
 import { useAuth } from "~/app/dashboard/contexts/AuthContext";
 import {
   useCreateInvitation,
+  useDeleteAdminUser,
   useDeleteInvitation,
   useInvitations,
 } from "~/app/dashboard/hooks/useInvitations";
 import { ROLE_LABELS, useRole } from "~/app/dashboard/hooks/useRole";
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
 import type { AdminUser } from "~/lib/api/auth";
+import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 
 export const InvitationsPanel = () => {
@@ -27,6 +31,24 @@ export const InvitationsPanel = () => {
 
   const createMutation = useCreateInvitation();
   const deleteMutation = useDeleteInvitation();
+  const deleteUserMutation = useDeleteAdminUser();
+
+  const isDeleting = deleteMutation.isPending || deleteUserMutation.isPending;
+
+  const handleDelete = (action: DeleteAction, username: string) => {
+    if (action.type === "invitation") {
+      deleteMutation.mutate(action.id);
+      return;
+    }
+    if (
+      !confirmDialog(
+        `${username} のアカウントを削除しますか？削除するとログインできなくなります。`,
+      )
+    ) {
+      return;
+    }
+    deleteUserMutation.mutate(action.userId);
+  };
 
   const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -158,90 +180,108 @@ export const InvitationsPanel = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-200">
-                  {data.invitations.map((inv) => (
-                    <tr key={inv.id} className="hover:bg-stone-50">
-                      <td className="px-4 py-3 text-stone-900">
-                        {inv.username}
-                      </td>
-                      <td className="px-4 py-3 text-stone-600">
-                        {ROLE_LABELS[inv.role] ?? inv.role}
-                      </td>
-                      <td className="px-4 py-3">
-                        {inv.usedAt ? (
-                          <span className="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded">
-                            登録済み
-                          </span>
-                        ) : isExpired(inv.expiresAt) ? (
-                          <span className="inline-flex px-2 py-1 text-xs font-medium bg-stone-100 text-stone-600 rounded">
-                            期限切れ
-                          </span>
-                        ) : (
-                          <span className="inline-flex px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded">
-                            未使用
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-stone-600 whitespace-nowrap">
-                        {formatDateTime(inv.expiresAt)}
-                      </td>
-                      <td className="px-4 py-3">
-                        {(!inv.usedAt || isSuperAdmin) && (
-                          <button
-                            type="button"
-                            onClick={() => deleteMutation.mutate(inv.id)}
-                            disabled={deleteMutation.isPending}
-                            className="text-red-600 hover:text-red-700 disabled:opacity-50"
-                          >
-                            削除
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                  {data.invitations.map((inv) => {
+                    const deleteAction = resolveDeleteAction(
+                      inv,
+                      isSuperAdmin,
+                      user?.username,
+                    );
+                    return (
+                      <tr key={inv.id} className="hover:bg-stone-50">
+                        <td className="px-4 py-3 text-stone-900">
+                          {inv.username}
+                        </td>
+                        <td className="px-4 py-3 text-stone-600">
+                          {ROLE_LABELS[inv.role] ?? inv.role}
+                        </td>
+                        <td className="px-4 py-3">
+                          {inv.usedAt ? (
+                            <span className="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded">
+                              登録済み
+                            </span>
+                          ) : isExpired(inv.expiresAt) ? (
+                            <span className="inline-flex px-2 py-1 text-xs font-medium bg-stone-100 text-stone-600 rounded">
+                              期限切れ
+                            </span>
+                          ) : (
+                            <span className="inline-flex px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded">
+                              未使用
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-stone-600 whitespace-nowrap">
+                          {formatDateTime(inv.expiresAt)}
+                        </td>
+                        <td className="px-4 py-3">
+                          {deleteAction && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleDelete(deleteAction, inv.username)
+                              }
+                              disabled={isDeleting}
+                              className="text-red-600 hover:text-red-700 disabled:opacity-50"
+                            >
+                              削除
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
             {/* Mobile: Card View */}
             <div className="md:hidden divide-y divide-stone-200">
-              {data.invitations.map((inv) => (
-                <div key={inv.id} className="p-4 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="text-sm text-stone-900 font-medium break-all">
-                      {inv.username}
+              {data.invitations.map((inv) => {
+                const deleteAction = resolveDeleteAction(
+                  inv,
+                  isSuperAdmin,
+                  user?.username,
+                );
+                return (
+                  <div key={inv.id} className="p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="text-sm text-stone-900 font-medium break-all">
+                        {inv.username}
+                      </div>
+                      {inv.usedAt ? (
+                        <span className="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded shrink-0">
+                          登録済み
+                        </span>
+                      ) : isExpired(inv.expiresAt) ? (
+                        <span className="inline-flex px-2 py-1 text-xs font-medium bg-stone-100 text-stone-600 rounded shrink-0">
+                          期限切れ
+                        </span>
+                      ) : (
+                        <span className="inline-flex px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded shrink-0">
+                          未使用
+                        </span>
+                      )}
                     </div>
-                    {inv.usedAt ? (
-                      <span className="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded shrink-0">
-                        登録済み
-                      </span>
-                    ) : isExpired(inv.expiresAt) ? (
-                      <span className="inline-flex px-2 py-1 text-xs font-medium bg-stone-100 text-stone-600 rounded shrink-0">
-                        期限切れ
-                      </span>
-                    ) : (
-                      <span className="inline-flex px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded shrink-0">
-                        未使用
-                      </span>
+                    <div className="flex items-center justify-between text-xs text-stone-500">
+                      <span>{ROLE_LABELS[inv.role] ?? inv.role}</span>
+                      <span>期限: {formatDateTime(inv.expiresAt)}</span>
+                    </div>
+                    {deleteAction && (
+                      <div className="pt-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleDelete(deleteAction, inv.username)
+                          }
+                          disabled={isDeleting}
+                          className="text-sm text-red-600 hover:text-red-700 disabled:opacity-50"
+                        >
+                          削除
+                        </button>
+                      </div>
                     )}
                   </div>
-                  <div className="flex items-center justify-between text-xs text-stone-500">
-                    <span>{ROLE_LABELS[inv.role] ?? inv.role}</span>
-                    <span>期限: {formatDateTime(inv.expiresAt)}</span>
-                  </div>
-                  {(!inv.usedAt || isSuperAdmin) && (
-                    <div className="pt-2">
-                      <button
-                        type="button"
-                        onClick={() => deleteMutation.mutate(inv.id)}
-                        disabled={deleteMutation.isPending}
-                        className="text-sm text-red-600 hover:text-red-700 disabled:opacity-50"
-                      >
-                        削除
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </>
         )}
