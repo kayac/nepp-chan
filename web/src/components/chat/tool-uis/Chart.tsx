@@ -20,7 +20,7 @@ import {
   formatPiePercent,
   getColorAt,
   TOOLTIP_STYLE,
-} from "./chart-helpers";
+} from "~/lib/chart-helpers";
 
 export type ChartType = DisplayChartArgs["type"];
 

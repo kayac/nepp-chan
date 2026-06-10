@@ -4,17 +4,13 @@ const PLATFORM_LABELS: Record<string, string> = {
   admin: "管理者",
 };
 
-interface StatCardsProps {
+interface Props {
   conversations: number;
   messages: number;
   platforms: { platform: string; count: number }[];
 }
 
-export const StatCards = ({
-  conversations,
-  messages,
-  platforms,
-}: StatCardsProps) => (
+export const StatCards = ({ conversations, messages, platforms }: Props) => (
   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
     <div className="bg-stone-50 rounded-lg p-3">
       <div className="text-xs text-stone-500">会話数</div>

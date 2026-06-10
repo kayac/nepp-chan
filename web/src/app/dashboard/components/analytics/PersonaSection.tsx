@@ -11,13 +11,9 @@ import {
   YAxis,
 } from "recharts";
 import { usePersonaAnalytics } from "~/app/dashboard/hooks/useAnalytics";
-import {
-  AXIS_STYLE,
-  getColorAt,
-  TOOLTIP_STYLE,
-} from "~/components/chat/tool-uis/chart-helpers";
+import { AXIS_STYLE, getColorAt, TOOLTIP_STYLE } from "~/lib/chart-helpers";
 import { SectionCard, SectionError, SectionLoading } from "./SectionCard";
-import { SENTIMENT_SERIES } from "./sentiments";
+import { SENTIMENT_SERIES } from "./helpers";
 
 const SentimentBars = () =>
   SENTIMENT_SERIES.map((s) => (

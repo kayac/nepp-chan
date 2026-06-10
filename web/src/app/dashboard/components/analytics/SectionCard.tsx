@@ -1,14 +1,10 @@
-interface SectionCardProps {
+interface Props {
   title: string;
   description?: string;
   children: React.ReactNode;
 }
 
-export const SectionCard = ({
-  title,
-  description,
-  children,
-}: SectionCardProps) => (
+export const SectionCard = ({ title, description, children }: Props) => (
   <section className="bg-white rounded-xl border border-stone-200 p-5">
     <div className="mb-4">
       <h3 className="text-base font-semibold text-stone-800">{title}</h3>

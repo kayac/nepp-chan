@@ -8,10 +8,7 @@ import {
   YAxis,
 } from "recharts";
 import { useConversationAnalytics } from "~/app/dashboard/hooks/useAnalytics";
-import {
-  AXIS_STYLE,
-  TOOLTIP_STYLE,
-} from "~/components/chat/tool-uis/chart-helpers";
+import { AXIS_STYLE, TOOLTIP_STYLE } from "~/lib/chart-helpers";
 import { HourlyChart } from "./HourlyChart";
 import { SectionCard, SectionError, SectionLoading } from "./SectionCard";
 import { StatCards } from "./StatCards";

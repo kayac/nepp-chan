@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCostUsd, pivotWeeklyUsage } from "./usage-helpers";
+import { formatCostUsd, pivotWeeklyUsage } from "./helpers";
 
 const row = (weekStart: string, model: string, totalTokens: number) => ({
   weekStart,

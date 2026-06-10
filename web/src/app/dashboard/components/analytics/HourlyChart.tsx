@@ -7,10 +7,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import {
-  AXIS_STYLE,
-  TOOLTIP_STYLE,
-} from "~/components/chat/tool-uis/chart-helpers";
+import { AXIS_STYLE, TOOLTIP_STYLE } from "~/lib/chart-helpers";
 
 const OPEN_COLOR = "#0d9488"; // teal-600
 const CLOSED_COLOR = "#d97706"; // amber-600
@@ -18,12 +15,12 @@ const CLOSED_COLOR = "#d97706"; // amber-600
 // 役場の開庁時間は 8〜17 時（JST）
 const isClosedHour = (hour: number) => hour < 8 || hour >= 17;
 
-interface HourlyChartProps {
+interface Props {
   hourly: { hour: number; count: number }[];
   height?: number;
 }
 
-export const HourlyChart = ({ hourly, height = 220 }: HourlyChartProps) => (
+export const HourlyChart = ({ hourly, height = 220 }: Props) => (
   <div>
     <ResponsiveContainer width="100%" height={height}>
       <BarChart

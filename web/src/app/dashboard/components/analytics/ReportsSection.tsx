@@ -12,7 +12,7 @@ import {
   SectionLoading,
 } from "./SectionCard";
 import { StatCards } from "./StatCards";
-import { formatCostUsd } from "./usage-helpers";
+import { formatCostUsd } from "./helpers";
 
 const ReportDetail = ({ id }: { id: string }) => {
   const { data, isLoading, error } = useWeeklyReportDetail(id);
