@@ -35,7 +35,7 @@
     "@mastra/cloudflare-d1": "1.0.4",
     "@mastra/core": "1.10.0",
     "@mastra/evals": "1.2.4",
-    "@mastra/libsql": "1.9.0",
+    "@mastra/libsql": "1.12.1",
     "@mastra/loggers": "1.1.2",
     "@mastra/mcp": "1.9.1",
     "@mastra/memory": "1.6.1",
