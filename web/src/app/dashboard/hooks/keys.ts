@@ -1,4 +1,13 @@
 export const dashboardKeys = {
+  analyticsPersona: (from?: string, to?: string) =>
+    ["dashboard", "analytics", "persona", from, to] as const,
+  analyticsConversations: (days: number) =>
+    ["dashboard", "analytics", "conversations", days] as const,
+  analyticsUsage: (weeks: number) =>
+    ["dashboard", "analytics", "usage", weeks] as const,
+  weeklyReports: ["dashboard", "analytics", "reports"] as const,
+  weeklyReportDetail: (id: string) =>
+    ["dashboard", "analytics", "report", id] as const,
   broadcasts: ["dashboard", "broadcasts"] as const,
   broadcastDetail: (id: string) => ["dashboard", "broadcast", id] as const,
   personas: ["dashboard", "personas"] as const,

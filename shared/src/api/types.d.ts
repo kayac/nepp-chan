@@ -505,6 +505,507 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/analytics/persona": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ペルソナ分析（年代×ネガポジ・トピック割合・ユーザー層） */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description JST の日付（YYYY-MM-DD） */
+                    from?: string;
+                    /** @description JST の日付（YYYY-MM-DD、この日を含む） */
+                    to?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description ペルソナ集計結果 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            totalCount: number;
+                            ageSentiment: {
+                                age: string;
+                                positive: number;
+                                negative: number;
+                                request: number;
+                                neutral: number;
+                            }[];
+                            topics: {
+                                topic: string;
+                                total: number;
+                                positive: number;
+                                negative: number;
+                                request: number;
+                                neutral: number;
+                            }[];
+                            segments: {
+                                residence: {
+                                    label: string;
+                                    count: number;
+                                }[];
+                                relationship: {
+                                    label: string;
+                                    count: number;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description リクエストエラー */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/analytics/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 会話量（日別・時間帯分布・プラットフォーム別）
+         * @description raw 会話の保持期間は 30 日のため、それ以前の状況は週次レポートを参照する。
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description 集計対象の直近日数（raw 会話の保持期間 30 日が上限） */
+                    days?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 会話量の集計結果（時刻は JST） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            daily: {
+                                date: string;
+                                conversations: number;
+                                messages: number;
+                            }[];
+                            hourly: {
+                                hour: number;
+                                count: number;
+                            }[];
+                            platforms: {
+                                platform: string;
+                                count: number;
+                            }[];
+                            totals: {
+                                conversations: number;
+                                messages: number;
+                            };
+                        };
+                    };
+                };
+                /** @description リクエストエラー */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/analytics/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 週×モデル別のトークン使用量とコスト */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description 集計対象の直近週数 */
+                    weeks?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 週次トークン使用量（週初めは JST 月曜） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            weekly: {
+                                weekStart: string;
+                                model: string;
+                                inputTokens: number;
+                                outputTokens: number;
+                                reasoningTokens: number;
+                                cachedInputTokens: number;
+                                totalTokens: number;
+                                costUsd: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description リクエストエラー */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/analytics/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 週次レポート一覧 */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 週次レポート一覧（period_start 降順） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            reports: {
+                                id: string;
+                                periodStart: string;
+                                periodEnd: string;
+                                summary: string;
+                                createdAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description リクエストエラー */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/analytics/reports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 週次レポート詳細 */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 週次レポート詳細（stats 含む） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            report: {
+                                id: string;
+                                periodStart: string;
+                                periodEnd: string;
+                                summary: string;
+                                createdAt: string;
+                                stats: {
+                                    conversationCount: number;
+                                    messageCount: number;
+                                    hourly: {
+                                        hour: number;
+                                        count: number;
+                                    }[];
+                                    platforms: {
+                                        platform: string;
+                                        count: number;
+                                    }[];
+                                    usageByModel: {
+                                        model: string;
+                                        inputTokens: number;
+                                        outputTokens: number;
+                                        reasoningTokens: number;
+                                        cachedInputTokens: number;
+                                        totalTokens: number;
+                                        costUsd: number;
+                                    }[];
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/broadcast": {
         parameters: {
             query?: never;
@@ -2446,7 +2947,6 @@ export interface paths {
                         "application/json": {
                             personas: {
                                 id: string;
-                                resourceId: string;
                                 category: string;
                                 tags: string | null;
                                 content: string;

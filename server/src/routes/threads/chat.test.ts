@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockHandleChatStream, mockClassifyIntent, mockGetThreadById } =
-  vi.hoisted(() => ({
-    mockHandleChatStream: vi.fn(),
-    mockClassifyIntent: vi.fn(),
-    mockGetThreadById: vi.fn(),
-  }));
+const {
+  mockHandleChatStream,
+  mockClassifyIntent,
+  mockGetThreadById,
+  mockRecordLlmUsage,
+} = vi.hoisted(() => ({
+  mockHandleChatStream: vi.fn(),
+  mockClassifyIntent: vi.fn(),
+  mockGetThreadById: vi.fn(),
+  mockRecordLlmUsage: vi.fn(),
+}));
 
 vi.mock("@mastra/ai-sdk", () => ({
   handleChatStream: mockHandleChatStream,
@@ -55,6 +60,10 @@ vi.mock("@mastra/core/agent", () => ({
 
 vi.mock("~/services/thread", () => ({
   deleteThreadWithRelatedData: vi.fn(),
+}));
+
+vi.mock("~/services/analytics/llm-usage", () => ({
+  recordLlmUsage: mockRecordLlmUsage,
 }));
 
 vi.mock("~/repository/admin-session-repository", () => ({
@@ -211,6 +220,51 @@ describe("chatRoutes: POST /:threadId/chat", () => {
     );
 
     expect(mockClassifyIntent).toHaveBeenCalledWith("");
+  });
+
+  it("ストリーム完了時に usage を platform=web で記録する", async () => {
+    useAnonAuth();
+    mockGetThreadById.mockResolvedValue(ownThread);
+
+    await routes.request(
+      buildReq("/thread-1/chat", validBody),
+      undefined,
+      mockEnv,
+    );
+
+    const { onFinish } = mockHandleChatStream.mock.calls[0][0].params;
+    onFinish({
+      totalUsage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
+      model: { modelId: "gemini-2.5-flash-lite" },
+    });
+
+    expect(mockRecordLlmUsage).toHaveBeenCalledWith(mockEnv.DB, {
+      model: "gemini-2.5-flash-lite",
+      usage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
+      platform: "web",
+      source: "chat",
+      intent: "casual",
+      threadId: "thread-1",
+    });
+  });
+
+  it("usage 記録は modelId 不在時にモデル設定値へフォールバックする", async () => {
+    useAnonAuth();
+    mockGetThreadById.mockResolvedValue(ownThread);
+
+    await routes.request(
+      buildReq("/thread-1/chat", validBody),
+      undefined,
+      mockEnv,
+    );
+
+    const { onFinish } = mockHandleChatStream.mock.calls[0][0].params;
+    onFinish({ totalUsage: { inputTokens: 1 } });
+
+    expect(mockRecordLlmUsage).toHaveBeenCalledWith(
+      mockEnv.DB,
+      expect.objectContaining({ model: "google/gemini-flash-lite-latest" }),
+    );
   });
 
   it("バリデーション: message が enum 外の role なら 400", async () => {

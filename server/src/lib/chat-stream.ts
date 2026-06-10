@@ -13,6 +13,7 @@ type RespondWithChatStreamArgs = {
   message: unknown;
   requestContext: ChatStreamParams["requestContext"];
   memory?: ChatStreamParams["memory"];
+  onFinish?: ChatStreamParams["onFinish"];
 };
 
 /**
@@ -29,6 +30,7 @@ export const respondWithChatStream = async ({
   message,
   requestContext,
   memory,
+  onFinish,
 }: RespondWithChatStreamArgs) => {
   const stream = await handleChatStream({
     mastra,
@@ -38,6 +40,7 @@ export const respondWithChatStream = async ({
       messages: [message] as ChatStreamParams["messages"],
       requestContext,
       memory,
+      onFinish,
     },
   });
 

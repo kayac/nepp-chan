@@ -15,24 +15,16 @@ import {
   YAxis,
 } from "recharts";
 
-import { formatPiePercent, getColorAt } from "./chart-helpers";
+import {
+  AXIS_STYLE,
+  formatPiePercent,
+  getColorAt,
+  TOOLTIP_STYLE,
+} from "~/lib/chart-helpers";
 
 export type ChartType = DisplayChartArgs["type"];
 
 export type ChartArgs = DisplayChartArgs;
-
-const TOOLTIP_STYLE = {
-  backgroundColor: "#ffffff",
-  border: "1px solid #e7e5e4",
-  borderRadius: "12px",
-  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-  padding: "8px 12px",
-};
-
-const AXIS_STYLE = {
-  stroke: "#a8a29e",
-  fontSize: 12,
-};
 
 const ChartIcon = ({ type }: { type: ChartType }) => {
   switch (type) {

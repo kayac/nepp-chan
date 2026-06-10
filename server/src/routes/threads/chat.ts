@@ -1,3 +1,4 @@
+import { waitUntil } from "cloudflare:workers";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { Mastra } from "@mastra/core/mastra";
 import { respondWithChatStream } from "~/lib/chat-stream";
@@ -11,6 +12,7 @@ import { createRequestContext } from "~/mastra/request-context";
 import { requireAuth } from "~/middleware/auth";
 import type { ThreadVariables } from "~/middleware/require-thread-access";
 import { requireThreadAccess } from "~/middleware/require-thread-access";
+import { recordLlmUsage } from "~/services/analytics/llm-usage";
 
 export const chatRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -114,5 +116,17 @@ chatRoutes.openapi(chatRoute, async (c) => {
       resource: thread.resourceId,
       thread: threadId,
     },
+    // onFinish はレスポンス返却後に発火するため waitUntil で記録を完了させる
+    onFinish: (event) =>
+      waitUntil(
+        recordLlmUsage(c.env.DB, {
+          model: event.model?.modelId ?? modelConfig.model,
+          usage: event.totalUsage,
+          platform: "web",
+          source: "chat",
+          intent,
+          threadId,
+        }),
+      ),
   });
 });

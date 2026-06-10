@@ -1,3 +1,4 @@
+import { waitUntil } from "cloudflare:workers";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { Mastra } from "@mastra/core/mastra";
 import { respondWithChatStream } from "~/lib/chat-stream";
@@ -5,6 +6,7 @@ import { resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
+import { recordLlmUsage } from "~/services/analytics/llm-usage";
 
 export const simpleChatRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -79,5 +81,16 @@ simpleChatRoutes.openapi(simpleChatRoute, async (c) => {
     agentId: "neppChanAgent",
     message,
     requestContext,
+    // onFinish はレスポンス返却後に発火するため waitUntil で記録を完了させる
+    onFinish: (event) =>
+      waitUntil(
+        recordLlmUsage(c.env.DB, {
+          model: event.model?.modelId ?? modelConfig.model,
+          usage: event.totalUsage,
+          platform: "lp",
+          source: "chat",
+          intent: "casual",
+        }),
+      ),
   });
 });

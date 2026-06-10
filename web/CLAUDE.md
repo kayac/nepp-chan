@@ -54,8 +54,8 @@ web/
 │   │       ├── DashboardPage.tsx    # エントリー（RootLayout + Providers）
 │   │       ├── App.tsx              # ダッシュボード本体（認証ガード含む）
 │   │       ├── contexts/            # AuthContext
-│   │       ├── hooks/               # dashboard 専用フック（useBroadcasts / useEmergencies / useFeedback / useInvitations / useKnowledge / usePersonas / usePolls / useInfiniteScroll / useRole / keys）
-│   │       └── components/          # パネル群
+│   │       ├── hooks/               # dashboard 専用フック（useAnalytics / useBroadcasts / useEmergencies / useFeedback / useInvitations / useKnowledge / usePersonas / usePolls / useInfiniteScroll / useRole / keys）
+│   │       └── components/          # パネル群（分析タブは components/analytics/ にセクション分割）
 │   ├── components/
 │   │   ├── RootLayout.tsx     # 共通レイアウト（StrictMode + Sentry）
 │   │   ├── AmbientBG.tsx      # bg-winter + 雪 + 星座を統合した canvas 背景

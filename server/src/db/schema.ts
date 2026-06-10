@@ -43,6 +43,7 @@ export const mastraThreads = sqliteTable("mastra_threads", {
 export const mastraMessages = sqliteTable("mastra_messages", {
   id: text("id").primaryKey(),
   threadId: text("thread_id").notNull(),
+  role: text("role"),
   createdAt: text("createdAt"),
 });
 
@@ -186,6 +187,38 @@ export const userPollState = sqliteTable("user_poll_state", {
 });
 
 export type UserPollState = typeof userPollState.$inferSelect;
+
+// LLM 呼び出しごとのトークン使用量記録
+export const llmUsage = sqliteTable("llm_usage", {
+  id: text("id").primaryKey(),
+  model: text("model").notNull(),
+  inputTokens: integer("input_tokens").notNull().default(0),
+  outputTokens: integer("output_tokens").notNull().default(0),
+  reasoningTokens: integer("reasoning_tokens").notNull().default(0),
+  cachedInputTokens: integer("cached_input_tokens").notNull().default(0),
+  totalTokens: integer("total_tokens").notNull().default(0),
+  platform: text("platform"), // "web" | "line" | "lp" | null（バッチ系）
+  source: text("source").notNull(), // "chat" | "persona-extract" | "weekly-report" | "intent-classify"
+  intent: text("intent"), // "casual" | "thinking"
+  threadId: text("thread_id"),
+  createdAt: text("created_at").notNull(),
+});
+
+export type LlmUsage = typeof llmUsage.$inferSelect;
+export type NewLlmUsage = typeof llmUsage.$inferInsert;
+
+// 週次レポート（数値集計 + LLM ハイライト要約の恒久記録）
+export const weeklyReports = sqliteTable("weekly_reports", {
+  id: text("id").primaryKey(),
+  periodStart: text("period_start").notNull(), // 週初め月曜の JST 日付（UNIQUE）
+  periodEnd: text("period_end").notNull(), // 週末日曜の JST 日付
+  stats: text("stats").notNull(), // JSON（WeeklyStats）
+  summary: text("summary").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
+export type WeeklyReport = typeof weeklyReports.$inferSelect;
+export type NewWeeklyReport = typeof weeklyReports.$inferInsert;
 
 // 保管期間ポリシーによる削除実行ログ
 export const dataRetentionLogs = sqliteTable("data_retention_logs", {

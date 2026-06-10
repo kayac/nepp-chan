@@ -6,6 +6,7 @@ import {
   createDb,
   type DbClient,
   dataRetentionLogs,
+  llmUsage,
   mastraMessages,
   mastraResources,
   mastraThreads,
@@ -21,6 +22,7 @@ const RETENTION_DAYS = {
   mastra_threads: 30, // 空スレッドへの猶予期間
   mastra_resources: 180,
   message_feedback: 180,
+  llm_usage: 180, // 週次レポートに集計が恒久保存されるため raw は短期で良い
   poll_submissions: 365,
   data_retention_logs: 1095,
 } as const;
@@ -123,6 +125,15 @@ export const runDataRetention = async (
         db,
         messageFeedback,
         sql`datetime(${messageFeedback.createdAt}) < datetime(${cutoff(now, RETENTION_DAYS.message_feedback)})`,
+      ),
+    });
+
+    results.push({
+      table: "llm_usage",
+      deletedCount: await countAndDelete(
+        db,
+        llmUsage,
+        sql`datetime(${llmUsage.createdAt}) < datetime(${cutoff(now, RETENTION_DAYS.llm_usage)})`,
       ),
     });
 

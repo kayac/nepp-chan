@@ -8,6 +8,7 @@ import { getStorage } from "~/lib/storage";
 import { stripMarkdown } from "~/lib/strip-markdown";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
+import { recordLlmUsage } from "~/services/analytics/llm-usage";
 import { injectBroadcastsToThread } from "~/services/broadcast-thread-injector";
 import { injectPollsToThread } from "~/services/poll-thread-injector";
 
@@ -88,6 +89,15 @@ export const generateReply = async (params: {
       resource: params.resourceId,
       thread: params.threadId,
     },
+  });
+
+  await recordLlmUsage(params.env.DB, {
+    model: modelConfig.model,
+    usage: response.totalUsage,
+    platform: "line",
+    source: "chat",
+    intent,
+    threadId: params.threadId,
   });
 
   const stepTexts = (response.steps ?? []).map((step) => step.text);

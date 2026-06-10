@@ -12,6 +12,7 @@ import {
   securityHeaders,
 } from "~/middleware";
 import {
+  analyticsAdminRoutes,
   authRoutes,
   broadcastAdminRoutes,
   broadcastMediaRoutes,
@@ -42,6 +43,7 @@ app.route("/health", healthRoutes);
 app.route("/feedback", feedbackRoutes);
 app.route("/simple-chat", simpleChatRoutes);
 app.route("/threads", threadsRoutes);
+app.route("/admin/analytics", analyticsAdminRoutes);
 app.route("/admin/broadcast", broadcastAdminRoutes);
 app.route("/broadcast/media", broadcastMediaRoutes);
 app.route("/admin/feedback", feedbackAdminRoutes);

@@ -2,6 +2,7 @@ import {
   ArrowLeftEndOnRectangleIcon,
   Bars3Icon,
   BookOpenIcon,
+  ChartBarIcon,
   ChatBubbleLeftIcon,
   EnvelopeIcon,
   ExclamationTriangleIcon,
@@ -12,6 +13,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { useMemo, useState } from "react";
+import { AnalyticsPanel } from "~/app/dashboard/components/AnalyticsPanel";
 import { BroadcastPanel } from "~/app/dashboard/components/BroadcastPanel";
 import { EmergencyPanel } from "~/app/dashboard/components/EmergencyPanel";
 import { FeedbackPanel } from "~/app/dashboard/components/FeedbackPanel";
@@ -24,6 +26,7 @@ import { useRole } from "~/app/dashboard/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
 
 type Tab =
+  | "analytics"
   | "knowledge"
   | "persona"
   | "feedback"
@@ -40,6 +43,12 @@ const tabs: {
   icon: React.ReactNode;
   minRole?: AdminRole;
 }[] = [
+  {
+    id: "analytics",
+    label: "分析",
+    icon: <ChartBarIcon className="w-5 h-5" aria-hidden="true" />,
+    minRole: "super_admin",
+  },
   {
     id: "knowledge",
     label: "ナレッジ",
@@ -226,6 +235,7 @@ export const App = () => {
 
         <div className="flex-1 overflow-auto p-4 sm:p-6">
           <div key={activeTab} className="animate-fade-in max-w-5xl">
+            {activeTab === "analytics" && <AnalyticsPanel />}
             {activeTab === "knowledge" && <KnowledgePanel />}
             {activeTab === "persona" && <PersonaPanel />}
             {activeTab === "feedback" && <FeedbackPanel />}

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestDb, type TestDb } from "~/__tests__/helpers/test-db";
 import {
   dataRetentionLogs,
+  llmUsage,
   mastraMessages,
   mastraResources,
   mastraThreads,
@@ -196,6 +197,29 @@ describe("runDataRetention", () => {
     expect(remaining.map((r) => r.id)).toEqual(["fresh"]);
   });
 
+  it("llm_usage のうち 180 日より前のものだけ削除する", async () => {
+    const db = testDbHolder.db as TestDb;
+    await db.insert(llmUsage).values([
+      {
+        id: "old",
+        model: "gemini-2.5-flash",
+        source: "chat",
+        createdAt: daysAgo(181),
+      },
+      {
+        id: "fresh",
+        model: "gemini-2.5-flash",
+        source: "chat",
+        createdAt: daysAgo(1),
+      },
+    ]);
+
+    await runDataRetention(env, { now: NOW });
+
+    const remaining = await db.select().from(llmUsage);
+    expect(remaining.map((r) => r.id)).toEqual(["fresh"]);
+  });
+
   it("poll_submissions のうち 365 日より前のものだけ削除する", async () => {
     const db = testDbHolder.db as TestDb;
     await db.insert(polls).values({
@@ -294,6 +318,7 @@ describe("runDataRetention", () => {
         "thread_persona_status",
         "mastra_resources",
         "message_feedback",
+        "llm_usage",
         "poll_submissions",
         "data_retention_logs",
       ]),
@@ -310,6 +335,7 @@ describe("runDataRetention", () => {
       { table: "thread_persona_status", deletedCount: 0 },
       { table: "mastra_resources", deletedCount: 0 },
       { table: "message_feedback", deletedCount: 0 },
+      { table: "llm_usage", deletedCount: 0 },
       { table: "poll_submissions", deletedCount: 0 },
       { table: "data_retention_logs", deletedCount: 0 },
     ]);
@@ -318,7 +344,7 @@ describe("runDataRetention", () => {
   it("options を省略すると現在時刻を基準に実行する", async () => {
     const results = await runDataRetention(env);
 
-    expect(results).toHaveLength(7);
+    expect(results).toHaveLength(8);
     expect(results.every((r) => r.deletedCount === 0)).toBe(true);
   });
 
