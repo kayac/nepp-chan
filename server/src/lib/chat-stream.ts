@@ -3,9 +3,6 @@ import { createUIMessageStreamResponse } from "ai";
 
 type HandleChatStreamArgs = Parameters<typeof handleChatStream>[0];
 type ChatStreamParams = HandleChatStreamArgs["params"];
-type ChatStreamResponseInit = Parameters<
-  typeof createUIMessageStreamResponse
->[0];
 
 type RespondWithChatStreamArgs = {
   mastra: HandleChatStreamArgs["mastra"];
@@ -19,10 +16,11 @@ type RespondWithChatStreamArgs = {
 /**
  * handleChatStream を AI SDK v6 で実行し、UI message stream の Response を返す。
  *
- * @mastra/core は #422(#14503) の Cloudflare Workers 制約で 1.10 系に固定しており、
- * @mastra/ai-sdk が vendor する ai v6 型とアプリの ai@6 型にスナップショット差がある。
- * messages / stream の境界を関数シグネチャ由来の型へキャストして吸収する
- * （実体は同一の v6 UIMessage / SSE ストリーム）。
+ * @mastra/ai-sdk は ai v6 型のスナップショットを vendor しており、アプリの ai@6 と
+ * 宣言が一部異なる（dynamic-tool パートの input の optionality 等）。さらにルートの
+ * zod スキーマ（looseObject）由来の message はどちらの UIMessage 宣言にも構造一致
+ * しないため、handleChatStream のシグネチャ由来の型へキャストして渡す
+ * （値は v6 UIMessage 形式の JSON）。このキャストを 1 箇所に集約するのがこの関数の役割。
  */
 export const respondWithChatStream = async ({
   mastra,
@@ -44,7 +42,5 @@ export const respondWithChatStream = async ({
     },
   });
 
-  return createUIMessageStreamResponse({
-    stream: stream as ChatStreamResponseInit["stream"],
-  });
+  return createUIMessageStreamResponse({ stream });
 };
