@@ -138,6 +138,34 @@ export const createTestDb = async () => {
       last_injected_at TEXT NOT NULL
     );
 
+    -- LLM 呼び出しごとのトークン使用量記録
+    CREATE TABLE IF NOT EXISTS llm_usage (
+      id TEXT PRIMARY KEY,
+      model TEXT NOT NULL,
+      input_tokens INTEGER NOT NULL DEFAULT 0,
+      output_tokens INTEGER NOT NULL DEFAULT 0,
+      reasoning_tokens INTEGER NOT NULL DEFAULT 0,
+      cached_input_tokens INTEGER NOT NULL DEFAULT 0,
+      total_tokens INTEGER NOT NULL DEFAULT 0,
+      platform TEXT,
+      source TEXT NOT NULL,
+      intent TEXT,
+      thread_id TEXT,
+      created_at TEXT NOT NULL
+    );
+
+    -- 週次レポート
+    CREATE TABLE IF NOT EXISTS weekly_reports (
+      id TEXT PRIMARY KEY,
+      period_start TEXT NOT NULL,
+      period_end TEXT NOT NULL,
+      stats TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_weekly_reports_period_start
+      ON weekly_reports (period_start);
+
     -- 保管期間ポリシー削除実行ログ
     CREATE TABLE IF NOT EXISTS data_retention_logs (
       id TEXT PRIMARY KEY,
@@ -157,6 +185,7 @@ export const createTestDb = async () => {
     CREATE TABLE IF NOT EXISTS mastra_messages (
       id TEXT PRIMARY KEY,
       thread_id TEXT NOT NULL,
+      role TEXT,
       createdAt TEXT
     );
 
