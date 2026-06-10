@@ -30,4 +30,11 @@ export const pivotWeeklyUsage = (weekly: WeeklyUsageRow[]) => {
   return { models, rows };
 };
 
-export const formatCostUsd = (value: number) => `$${value.toFixed(4)}`;
+const usdFormat = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 4,
+  maximumFractionDigits: 4,
+});
+
+export const formatCostUsd = (value: number) => usdFormat.format(value);
