@@ -1,3 +1,16 @@
+export const TOOLTIP_STYLE = {
+  backgroundColor: "#ffffff",
+  border: "1px solid #e7e5e4",
+  borderRadius: "12px",
+  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+  padding: "8px 12px",
+};
+
+export const AXIS_STYLE = {
+  stroke: "#a8a29e",
+  fontSize: 12,
+};
+
 export const DEFAULT_COLORS = [
   "#ea580c", // orange-600
   "#0284c7", // sky-600
