@@ -1,4 +1,5 @@
 export {
+  analyticsAdminRoutes,
   broadcastAdminRoutes,
   emergencyAdminRoutes,
   feedbackAdminRoutes,
