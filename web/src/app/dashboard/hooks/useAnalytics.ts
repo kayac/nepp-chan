@@ -32,6 +32,9 @@ export const useWeeklyReports = () =>
 export const useWeeklyReportDetail = (id: string | null) =>
   useQuery({
     queryKey: dashboardKeys.weeklyReportDetail(id ?? ""),
-    queryFn: () => analyticsRepository.fetchWeeklyReportById(id ?? ""),
-    enabled: id !== null,
+    queryFn: () => {
+      if (!id) throw new Error("ID is required");
+      return analyticsRepository.fetchWeeklyReportById(id);
+    },
+    enabled: !!id,
   });
