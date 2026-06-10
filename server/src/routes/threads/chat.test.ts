@@ -62,7 +62,7 @@ vi.mock("~/services/thread", () => ({
   deleteThreadWithRelatedData: vi.fn(),
 }));
 
-vi.mock("~/services/llm-usage", () => ({
+vi.mock("~/services/analytics/llm-usage", () => ({
   recordLlmUsage: mockRecordLlmUsage,
 }));
 

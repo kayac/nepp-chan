@@ -27,7 +27,7 @@ import {
   getConversationStats,
   getPersonaAnalytics,
   getWeeklyUsage,
-} from "~/services/analytics";
+} from "~/services/analytics/aggregate";
 
 export const analyticsAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;

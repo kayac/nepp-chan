@@ -12,7 +12,7 @@ import { createRequestContext } from "~/mastra/request-context";
 import { requireAuth } from "~/middleware/auth";
 import type { ThreadVariables } from "~/middleware/require-thread-access";
 import { requireThreadAccess } from "~/middleware/require-thread-access";
-import { recordLlmUsage } from "~/services/llm-usage";
+import { recordLlmUsage } from "~/services/analytics/llm-usage";
 
 export const chatRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;

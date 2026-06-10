@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("~/services/analytics", () => ({
+vi.mock("~/services/analytics/aggregate", () => ({
   getConversationStats: vi.fn(),
   getWeeklyUsage: vi.fn(),
   getPersonaAnalytics: vi.fn(),
@@ -26,7 +26,7 @@ vi.mock("~/services/auth/anonymous-session", () => ({
 }));
 
 const { getConversationStats, getWeeklyUsage, getPersonaAnalytics } =
-  await import("~/services/analytics");
+  await import("~/services/analytics/aggregate");
 const { weeklyReportRepository } = await import(
   "~/repository/weekly-report-repository"
 );

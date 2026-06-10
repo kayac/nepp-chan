@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/cloudflare";
 import { logger } from "~/lib/logger";
-import { runWeeklyReport } from "~/services/weekly-report";
+import { runWeeklyReport } from "~/services/analytics/weekly-report";
 
 export const handleWeeklyReport: ExportedHandlerScheduledHandler<
   CloudflareBindings

@@ -29,6 +29,8 @@ server/src/
 │   ├── workflows/           # ワークフロー
 │   └── mcp/                 # MCP 設定
 ├── services/                # ビジネスロジック
+│   ├── analytics/           # 分析（usage 記録・集計・週次レポート）
+│   ├── auth/                # 認証
 │   ├── knowledge/           # RAG ナレッジ処理
 │   └── persona-extractor.ts # ペルソナ抽出
 ├── repository/              # データアクセス層

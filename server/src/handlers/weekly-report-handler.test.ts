@@ -6,11 +6,11 @@ vi.mock("@sentry/cloudflare", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-vi.mock("~/services/weekly-report", () => ({
+vi.mock("~/services/analytics/weekly-report", () => ({
   runWeeklyReport: vi.fn(),
 }));
 
-const { runWeeklyReport } = await import("~/services/weekly-report");
+const { runWeeklyReport } = await import("~/services/analytics/weekly-report");
 const { handleWeeklyReport } = await import("./weekly-report-handler");
 
 const env = {} as CloudflareBindings;

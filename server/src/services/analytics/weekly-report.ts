@@ -9,8 +9,11 @@ import { weeklyReportAgent } from "~/mastra/agents/weekly-report-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { weeklyReportRepository } from "~/repository/weekly-report-repository";
 import type { WeeklyStats } from "~/schemas/analytics-schema";
-import { getConversationStats, getUsageByModel } from "~/services/analytics";
-import { recordLlmUsage } from "~/services/llm-usage";
+import {
+  getConversationStats,
+  getUsageByModel,
+} from "~/services/analytics/aggregate";
+import { recordLlmUsage } from "~/services/analytics/llm-usage";
 
 const NO_VOICE_SUMMARY = "この週に抽出された村の声はありませんでした。";
 

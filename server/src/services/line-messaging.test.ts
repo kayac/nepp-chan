@@ -54,7 +54,7 @@ vi.mock("~/lib/split-message", () => ({
   splitMessagesForLine: vi.fn((texts: string[]) => texts),
 }));
 
-vi.mock("~/services/llm-usage", () => ({
+vi.mock("~/services/analytics/llm-usage", () => ({
   recordLlmUsage: vi.fn(async () => undefined),
 }));
 
@@ -64,7 +64,7 @@ vi.mock("~/lib/logger", () => ({
 
 const { classifyIntent } = await import("~/lib/classify-intent");
 const { resolveModelTier } = await import("~/lib/llm-models");
-const { recordLlmUsage } = await import("~/services/llm-usage");
+const { recordLlmUsage } = await import("~/services/analytics/llm-usage");
 const { injectBroadcastsToThread } = await import(
   "~/services/broadcast-thread-injector"
 );

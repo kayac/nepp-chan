@@ -6,7 +6,7 @@ import { logger } from "~/lib/logger";
 import { waitUntilSafe } from "~/lib/wait-until";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
-import { recordLlmUsage } from "~/services/llm-usage";
+import { recordLlmUsage } from "~/services/analytics/llm-usage";
 
 export const simpleChatRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;

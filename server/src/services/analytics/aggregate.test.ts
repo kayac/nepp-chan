@@ -23,7 +23,7 @@ const {
   getWeeklyUsage,
   getUsageByModel,
   getPersonaAnalytics,
-} = await import("./analytics");
+} = await import("./aggregate");
 
 const d1 = {} as D1Database;
 

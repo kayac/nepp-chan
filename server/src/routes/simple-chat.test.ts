@@ -28,7 +28,7 @@ vi.mock("~/mastra/request-context", () => ({
   createRequestContext: vi.fn(() => ({})),
 }));
 
-vi.mock("~/services/llm-usage", () => ({
+vi.mock("~/services/analytics/llm-usage", () => ({
   recordLlmUsage: mockRecordLlmUsage,
 }));
 
