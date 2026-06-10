@@ -37,7 +37,7 @@
     "@mastra/evals": "1.2.3",
     "@mastra/libsql": "1.9.0",
     "@mastra/loggers": "1.1.1",
-    "@mastra/mcp": "1.8.1",
+    "@mastra/mcp": "1.9.1",
     "@mastra/memory": "1.6.1",
     "@mastra/observability": "1.4.0",
     "@mastra/rag": "2.2.1",
