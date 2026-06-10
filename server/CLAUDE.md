@@ -56,6 +56,11 @@ server/src/
 | `/admin/knowledge/sync`            | POST     | ナレッジ同期                   |
 | `/admin/knowledge`                 | DELETE   | ナレッジ削除                   |
 | `/admin/persona`                   | GET/DELETE | ペルソナ一覧・全削除         |
+| `/admin/analytics/persona`         | GET      | ペルソナ集計（super_admin）    |
+| `/admin/analytics/conversations`   | GET      | 会話量集計（super_admin）      |
+| `/admin/analytics/usage`           | GET      | 週×モデル別トークン・コスト（super_admin） |
+| `/admin/analytics/reports`         | GET      | 週次レポート一覧（super_admin） |
+| `/admin/analytics/reports/:id`     | GET      | 週次レポート詳細（super_admin） |
 | `/admin/persona/extract`           | POST     | ペルソナ抽出                   |
 | `/admin/persona/extract/:threadId` | POST     | 特定スレッドのペルソナ抽出     |
 | `/admin/emergency`                 | GET      | 緊急情報一覧（認証必須）       |
@@ -117,6 +122,7 @@ const agent = createNeppChanAgent({ modelConfig });
 | `feedback-agent`           | フィードバック分析（管理者専用）   |
 | `persona-agent`            | ペルソナ保存                       |
 | `persona-analyst-agent`    | ペルソナ分析（管理者専用）         |
+| `weekly-report-agent`      | 週次レポートのハイライト要約       |
 | `knowledge-agent`          | RAG ナレッジ検索                   |
 | `document-converter`       | 画像/PDF → Markdown 変換           |
 
@@ -379,6 +385,38 @@ UNIQUE INDEX: `(poll_id, user_id)` で重複回答を防止
 | user_id          | TEXT | PRIMARY KEY（LINE userId）    |
 | last_injected_at | TEXT | 最終投票注入日時（NOT NULL）  |
 
+### llm_usage
+
+LLM 呼び出しごとのトークン使用量記録。コストは保存せず表示時に `lib/llm-pricing.ts` の単価で計算する。
+
+| カラム              | 型      | 説明                                                  |
+| ------------------- | ------- | ----------------------------------------------------- |
+| id                  | TEXT    | PRIMARY KEY                                           |
+| model               | TEXT    | モデル ID（NOT NULL）                                 |
+| input_tokens        | INTEGER | 入力トークン（NOT NULL DEFAULT 0）                    |
+| output_tokens       | INTEGER | 出力トークン（NOT NULL DEFAULT 0）                    |
+| reasoning_tokens    | INTEGER | thinking トークン（NOT NULL DEFAULT 0）               |
+| cached_input_tokens | INTEGER | キャッシュ済み入力トークン（NOT NULL DEFAULT 0）      |
+| total_tokens        | INTEGER | 合計トークン（NOT NULL DEFAULT 0）                    |
+| platform            | TEXT    | web / line / lp（バッチ系は NULL）                    |
+| source              | TEXT    | chat / persona-extract / weekly-report / intent-classify（NOT NULL） |
+| intent              | TEXT    | casual / thinking                                     |
+| thread_id           | TEXT    | スレッド ID                                           |
+| created_at          | TEXT    | 作成日時（NOT NULL）                                  |
+
+### weekly_reports
+
+週次レポート（数値集計 + LLM ハイライト要約の恒久記録）。`period_start` UNIQUE で再実行時は上書き。
+
+| カラム       | 型   | 説明                                  |
+| ------------ | ---- | ------------------------------------- |
+| id           | TEXT | PRIMARY KEY                           |
+| period_start | TEXT | 週初め月曜の JST 日付（UNIQUE NOT NULL） |
+| period_end   | TEXT | 週末日曜の JST 日付（NOT NULL）       |
+| stats        | TEXT | 集計 JSON（schemas/analytics-schema.ts の WeeklyStats）（NOT NULL） |
+| summary      | TEXT | LLM 生成ハイライト（NOT NULL）        |
+| created_at   | TEXT | 作成日時（NOT NULL）                  |
+
 ### data_retention_logs
 
 保管期間ポリシーによる自動削除の実行ログ。3年（1095日）経過した行は自身も削除対象。
@@ -502,6 +540,7 @@ thread_persona_status 更新
 | `*/5 * * * *`  | handleBroadcastCheck                    | 配信予約チェック（5分ごと）                                        |
 | `*/5 * * * *`  | handlePollCheck                         | 投票予約配信チェック（5分ごと）                                    |
 | `0 18 * * *`   | handlePersonaExtract → handleDataRetention | ペルソナ抽出 + 保管期間自動削除（毎日03:00 JST、順次実行。retention は Sentry Cron Monitor で不起動検知） |
+| `0 20 * * 1`   | handleWeeklyReport                      | 週次レポート生成（毎週火曜05:00 JST、前週月〜日が対象。Sentry Cron Monitor で不起動検知） |
 
 ### 保管期間自動削除
 
@@ -514,6 +553,7 @@ thread_persona_status 更新
 | `thread_persona_status`   | -        | 紐づく `mastra_threads` が無くなった孤立分                                |
 | `mastra_resources`        | 180日    | `updatedAt`（working memory の最終更新）                                  |
 | `message_feedback`        | 180日    | `created_at`                                                              |
+| `llm_usage`               | 180日    | `created_at`（週次レポートに集計が恒久保存されるため raw は短期）         |
 | `poll_submissions`        | 365日    | `created_at`                                                              |
 | `data_retention_logs`     | 1095日   | `executed_at`                                                             |
 
