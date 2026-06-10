@@ -16,6 +16,10 @@ vi.mock("~/handlers/data-retention-handler", () => ({
   handleDataRetention: vi.fn(),
 }));
 
+vi.mock("~/handlers/weekly-report-handler", () => ({
+  handleWeeklyReport: vi.fn(),
+}));
+
 const { handleBroadcastCheck } = await import("~/handlers/broadcast-handler");
 const { handlePollCheck } = await import("~/handlers/poll-handler");
 const { handlePersonaExtract } = await import(
@@ -24,6 +28,7 @@ const { handlePersonaExtract } = await import(
 const { handleDataRetention } = await import(
   "~/handlers/data-retention-handler"
 );
+const { handleWeeklyReport } = await import("~/handlers/weekly-report-handler");
 const { handleScheduled } = await import("./scheduled-handler");
 
 const env = {} as CloudflareBindings;
@@ -76,6 +81,15 @@ describe("handleScheduled", () => {
     expect(handleDataRetention).not.toHaveBeenCalled();
   });
 
+  it("'0 20 * * 1' は weekly report のみ呼ぶ", async () => {
+    await handleScheduled(buildEvent("0 20 * * 1"), env, ctx);
+
+    expect(handleWeeklyReport).toHaveBeenCalled();
+    expect(handleBroadcastCheck).not.toHaveBeenCalled();
+    expect(handlePersonaExtract).not.toHaveBeenCalled();
+    expect(handleDataRetention).not.toHaveBeenCalled();
+  });
+
   it("未知の cron 表現は何も呼ばない", async () => {
     await handleScheduled(buildEvent("0 0 * * *"), env, ctx);
 
@@ -83,5 +97,6 @@ describe("handleScheduled", () => {
     expect(handlePollCheck).not.toHaveBeenCalled();
     expect(handlePersonaExtract).not.toHaveBeenCalled();
     expect(handleDataRetention).not.toHaveBeenCalled();
+    expect(handleWeeklyReport).not.toHaveBeenCalled();
   });
 });
