@@ -1,0 +1,476 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createTestDb, type TestDb } from "~/__tests__/helpers/test-db";
+import { llmUsage, mastraMessages, mastraThreads, persona } from "~/db";
+
+const { testDbHolder } = vi.hoisted(() => ({
+  testDbHolder: { db: null as TestDb | null },
+}));
+
+vi.mock("~/db", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("~/db")>();
+  return {
+    ...actual,
+    createDb: () => testDbHolder.db,
+  };
+});
+
+vi.mock("~/lib/logger", () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+}));
+
+const {
+  getConversationStats,
+  getWeeklyUsage,
+  getUsageByModel,
+  getPersonaAnalytics,
+} = await import("./analytics");
+
+const d1 = {} as D1Database;
+
+const WEB_RESOURCE = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+
+const insertThread = async (db: TestDb, id: string, resourceId: string) => {
+  await db.insert(mastraThreads).values({
+    id,
+    resourceId,
+    createdAt: "2026-06-01T00:00:00.000Z",
+  });
+};
+
+const insertMessage = async (
+  db: TestDb,
+  params: { id: string; threadId: string; role?: string; createdAt: string },
+) => {
+  await db.insert(mastraMessages).values({
+    id: params.id,
+    threadId: params.threadId,
+    role: params.role ?? "user",
+    createdAt: params.createdAt,
+  });
+};
+
+describe("getConversationStats", () => {
+  let db: TestDb;
+
+  beforeEach(async () => {
+    db = await createTestDb();
+    testDbHolder.db = db;
+  });
+
+  it("UTC 23:30 のメッセージは JST 翌日 8 時台として集計される", async () => {
+    await insertThread(db, "t1", WEB_RESOURCE);
+    await insertMessage(db, {
+      id: "m1",
+      threadId: "t1",
+      createdAt: "2026-06-08T23:30:00.000Z", // JST 2026-06-09 08:30
+    });
+
+    const stats = await getConversationStats(d1, {
+      from: "2026-06-01T00:00:00.000Z",
+      to: "2026-06-15T00:00:00.000Z",
+    });
+
+    expect(stats.hourly[8]).toEqual({ hour: 8, count: 1 });
+    expect(stats.daily).toEqual([
+      { date: "2026-06-09", conversations: 1, messages: 1 },
+    ]);
+  });
+
+  it("hourly は 0〜23 時の 24 要素を常に返す", async () => {
+    const stats = await getConversationStats(d1, {
+      from: "2026-06-01T00:00:00.000Z",
+      to: "2026-06-15T00:00:00.000Z",
+    });
+
+    expect(stats.hourly).toHaveLength(24);
+    expect(stats.hourly[0]).toEqual({ hour: 0, count: 0 });
+    expect(stats.hourly[23]).toEqual({ hour: 23, count: 0 });
+  });
+
+  it("UTC 15:00 直前/直後で JST の日付が分かれる", async () => {
+    await insertThread(db, "t1", WEB_RESOURCE);
+    await insertMessage(db, {
+      id: "m1",
+      threadId: "t1",
+      createdAt: "2026-06-09T14:59:59.000Z", // JST 06-09 23:59
+    });
+    await insertMessage(db, {
+      id: "m2",
+      threadId: "t1",
+      createdAt: "2026-06-09T15:00:00.000Z", // JST 06-10 00:00
+    });
+
+    const stats = await getConversationStats(d1, {
+      from: "2026-06-01T00:00:00.000Z",
+      to: "2026-06-15T00:00:00.000Z",
+    });
+
+    expect(stats.daily.map((d) => d.date)).toEqual([
+      "2026-06-09",
+      "2026-06-10",
+    ]);
+  });
+
+  it("assistant ロールのメッセージは集計に含めない", async () => {
+    await insertThread(db, "t1", WEB_RESOURCE);
+    await insertMessage(db, {
+      id: "m1",
+      threadId: "t1",
+      role: "assistant",
+      createdAt: "2026-06-09T01:00:00.000Z",
+    });
+
+    const stats = await getConversationStats(d1, {
+      from: "2026-06-01T00:00:00.000Z",
+      to: "2026-06-15T00:00:00.000Z",
+    });
+
+    expect(stats.totals.messages).toBe(0);
+  });
+
+  it("期間外のメッセージは集計に含めない", async () => {
+    await insertThread(db, "t1", WEB_RESOURCE);
+    await insertMessage(db, {
+      id: "m1",
+      threadId: "t1",
+      createdAt: "2026-05-31T23:59:59.000Z",
+    });
+
+    const stats = await getConversationStats(d1, {
+      from: "2026-06-01T00:00:00.000Z",
+      to: "2026-06-15T00:00:00.000Z",
+    });
+
+    expect(stats.totals.messages).toBe(0);
+  });
+
+  it("resourceId プレフィックスで line / admin / web に分類する", async () => {
+    await insertThread(db, "t-line", "line:hashed-abc");
+    await insertThread(db, "t-admin", "admin:user-1");
+    await insertThread(db, "t-web", WEB_RESOURCE);
+    await insertMessage(db, {
+      id: "m1",
+      threadId: "t-line",
+      createdAt: "2026-06-09T01:00:00.000Z",
+    });
+    await insertMessage(db, {
+      id: "m2",
+      threadId: "t-line",
+      createdAt: "2026-06-09T02:00:00.000Z",
+    });
+    await insertMessage(db, {
+      id: "m3",
+      threadId: "t-admin",
+      createdAt: "2026-06-09T03:00:00.000Z",
+    });
+    await insertMessage(db, {
+      id: "m4",
+      threadId: "t-web",
+      createdAt: "2026-06-09T04:00:00.000Z",
+    });
+
+    const stats = await getConversationStats(d1, {
+      from: "2026-06-01T00:00:00.000Z",
+      to: "2026-06-15T00:00:00.000Z",
+    });
+
+    expect(stats.platforms).toEqual(
+      expect.arrayContaining([
+        { platform: "line", count: 2 },
+        { platform: "admin", count: 1 },
+        { platform: "web", count: 1 },
+      ]),
+    );
+  });
+
+  it("totals は distinct スレッド数とメッセージ数を返す", async () => {
+    await insertThread(db, "t1", WEB_RESOURCE);
+    await insertThread(db, "t2", WEB_RESOURCE);
+    await insertMessage(db, {
+      id: "m1",
+      threadId: "t1",
+      createdAt: "2026-06-09T01:00:00.000Z",
+    });
+    await insertMessage(db, {
+      id: "m2",
+      threadId: "t1",
+      createdAt: "2026-06-09T02:00:00.000Z",
+    });
+    await insertMessage(db, {
+      id: "m3",
+      threadId: "t2",
+      createdAt: "2026-06-09T03:00:00.000Z",
+    });
+
+    const stats = await getConversationStats(d1, {
+      from: "2026-06-01T00:00:00.000Z",
+      to: "2026-06-15T00:00:00.000Z",
+    });
+
+    expect(stats.totals).toEqual({ conversations: 2, messages: 3 });
+  });
+});
+
+describe("getWeeklyUsage", () => {
+  let db: TestDb;
+
+  const insertUsage = async (params: {
+    id: string;
+    model?: string;
+    inputTokens?: number;
+    outputTokens?: number;
+    createdAt: string;
+  }) => {
+    await db.insert(llmUsage).values({
+      id: params.id,
+      model: params.model ?? "gemini-2.5-flash",
+      inputTokens: params.inputTokens ?? 0,
+      outputTokens: params.outputTokens ?? 0,
+      totalTokens: (params.inputTokens ?? 0) + (params.outputTokens ?? 0),
+      source: "chat",
+      createdAt: params.createdAt,
+    });
+  };
+
+  beforeEach(async () => {
+    db = await createTestDb();
+    testDbHolder.db = db;
+  });
+
+  it("JST 基準で「その週の月曜」に正規化して週次集計する", async () => {
+    // JST 2026-06-08(月) 00:00 ちょうど → 週初め 06-08
+    await insertUsage({
+      id: "u1",
+      inputTokens: 100,
+      createdAt: "2026-06-07T15:00:00.000Z",
+    });
+    // JST 2026-06-14(日) 23:59 → 同じ週
+    await insertUsage({
+      id: "u2",
+      inputTokens: 200,
+      createdAt: "2026-06-14T14:59:59.000Z",
+    });
+    // JST 2026-06-15(月) 00:00 → 翌週
+    await insertUsage({
+      id: "u3",
+      inputTokens: 400,
+      createdAt: "2026-06-14T15:00:00.000Z",
+    });
+
+    const weekly = await getWeeklyUsage(d1, {
+      from: "2026-06-01T00:00:00.000Z",
+    });
+
+    expect(weekly).toEqual([
+      expect.objectContaining({ weekStart: "2026-06-08", inputTokens: 300 }),
+      expect.objectContaining({ weekStart: "2026-06-15", inputTokens: 400 }),
+    ]);
+  });
+
+  it("モデルごとに分けて集計し costUsd を計算する", async () => {
+    await insertUsage({
+      id: "u1",
+      model: "gemini-2.5-flash",
+      inputTokens: 1_000_000,
+      outputTokens: 1_000_000,
+      createdAt: "2026-06-09T00:00:00.000Z",
+    });
+    await insertUsage({
+      id: "u2",
+      model: "gemini-2.5-flash-lite",
+      inputTokens: 1_000_000,
+      outputTokens: 0,
+      createdAt: "2026-06-09T01:00:00.000Z",
+    });
+
+    const weekly = await getWeeklyUsage(d1, {
+      from: "2026-06-01T00:00:00.000Z",
+    });
+
+    expect(weekly).toHaveLength(2);
+    const flash = weekly.find((w) => w.model === "gemini-2.5-flash");
+    const lite = weekly.find((w) => w.model === "gemini-2.5-flash-lite");
+    expect(flash?.costUsd).toBeCloseTo(2.8, 10);
+    expect(lite?.costUsd).toBeCloseTo(0.1, 10);
+  });
+});
+
+describe("getUsageByModel", () => {
+  let db: TestDb;
+
+  beforeEach(async () => {
+    db = await createTestDb();
+    testDbHolder.db = db;
+  });
+
+  it("期間内の usage をモデル別に合算する", async () => {
+    await db.insert(llmUsage).values([
+      {
+        id: "u1",
+        model: "gemini-2.5-flash",
+        inputTokens: 100,
+        outputTokens: 10,
+        totalTokens: 110,
+        source: "chat",
+        createdAt: "2026-06-09T00:00:00.000Z",
+      },
+      {
+        id: "u2",
+        model: "gemini-2.5-flash",
+        inputTokens: 200,
+        outputTokens: 20,
+        totalTokens: 220,
+        source: "chat",
+        createdAt: "2026-06-10T00:00:00.000Z",
+      },
+      {
+        id: "u3",
+        model: "gemini-2.5-flash",
+        inputTokens: 999,
+        outputTokens: 999,
+        totalTokens: 1998,
+        source: "chat",
+        createdAt: "2026-06-20T00:00:00.000Z", // 期間外
+      },
+    ]);
+
+    const rows = await getUsageByModel(d1, {
+      from: "2026-06-01T00:00:00.000Z",
+      to: "2026-06-15T00:00:00.000Z",
+    });
+
+    expect(rows).toEqual([
+      expect.objectContaining({
+        model: "gemini-2.5-flash",
+        inputTokens: 300,
+        outputTokens: 30,
+        totalTokens: 330,
+      }),
+    ]);
+  });
+});
+
+describe("getPersonaAnalytics", () => {
+  let db: TestDb;
+
+  const insertPersona = async (params: {
+    id: string;
+    tags?: string;
+    demographicSummary?: string;
+    topic?: string;
+    sentiment?: string;
+    createdAt?: string;
+  }) => {
+    await db.insert(persona).values({
+      id: params.id,
+      category: "意見",
+      content: "テスト",
+      tags: params.tags,
+      demographicSummary: params.demographicSummary,
+      topic: params.topic,
+      sentiment: params.sentiment ?? "neutral",
+      createdAt: params.createdAt ?? "2026-06-09T00:00:00.000Z",
+    });
+  };
+
+  beforeEach(async () => {
+    db = await createTestDb();
+    testDbHolder.db = db;
+  });
+
+  it("tags の年代 × sentiment を集計する", async () => {
+    await insertPersona({ id: "p1", tags: "60代,村内", sentiment: "negative" });
+    await insertPersona({ id: "p2", tags: "60代", sentiment: "positive" });
+    await insertPersona({
+      id: "p3",
+      tags: "80代以上,村内",
+      sentiment: "request",
+    });
+
+    const result = await getPersonaAnalytics(d1, {});
+
+    const age60 = result.ageSentiment.find((a) => a.age === "60代");
+    const age80 = result.ageSentiment.find((a) => a.age === "80代以上");
+    expect(age60).toEqual({
+      age: "60代",
+      positive: 1,
+      negative: 1,
+      request: 0,
+      neutral: 0,
+    });
+    expect(age80).toEqual({
+      age: "80代以上",
+      positive: 0,
+      negative: 0,
+      request: 1,
+      neutral: 0,
+    });
+  });
+
+  it("tags に年代が無ければ demographic_summary から抽出し、どちらにも無ければ「不明」", async () => {
+    await insertPersona({ id: "p1", demographicSummary: "30代,移住検討者" });
+    await insertPersona({ id: "p2", tags: "観光客" });
+
+    const result = await getPersonaAnalytics(d1, {});
+
+    expect(result.ageSentiment.find((a) => a.age === "30代")?.neutral).toBe(1);
+    expect(result.ageSentiment.find((a) => a.age === "不明")?.neutral).toBe(1);
+  });
+
+  it("topic 9 分類 × sentiment を集計し、topic 無しは「その他」に入る", async () => {
+    await insertPersona({ id: "p1", topic: "交通", sentiment: "negative" });
+    await insertPersona({ id: "p2", topic: "交通", sentiment: "request" });
+    await insertPersona({ id: "p3", sentiment: "positive" }); // topic なし
+
+    const result = await getPersonaAnalytics(d1, {});
+
+    const traffic = result.topics.find((t) => t.topic === "交通");
+    const other = result.topics.find((t) => t.topic === "その他");
+    expect(traffic).toEqual({
+      topic: "交通",
+      total: 2,
+      positive: 0,
+      negative: 1,
+      request: 1,
+      neutral: 0,
+    });
+    expect(other?.total).toBe(1);
+    expect(result.topics).toHaveLength(9);
+  });
+
+  it("居住地（村内/村外）と関係性（村人/観光客/移住検討者/帰省者）を集計する", async () => {
+    await insertPersona({ id: "p1", tags: "60代,村内" });
+    await insertPersona({ id: "p2", tags: "村外,観光客" });
+    await insertPersona({ id: "p3", demographicSummary: "30代,移住検討者" });
+    await insertPersona({ id: "p4", tags: "50代" }); // 居住地・関係性なし
+
+    const result = await getPersonaAnalytics(d1, {});
+
+    expect(result.segments.residence).toEqual(
+      expect.arrayContaining([
+        { label: "村内", count: 1 },
+        { label: "村外", count: 1 },
+        { label: "不明", count: 2 },
+      ]),
+    );
+    expect(result.segments.relationship).toEqual(
+      expect.arrayContaining([
+        { label: "観光客", count: 1 },
+        { label: "移住検討者", count: 1 },
+        { label: "不明", count: 2 },
+      ]),
+    );
+  });
+
+  it("from/to で期間を絞り込める", async () => {
+    await insertPersona({ id: "p1", createdAt: "2026-06-01T00:00:00.000Z" });
+    await insertPersona({ id: "p2", createdAt: "2026-06-09T00:00:00.000Z" });
+
+    const result = await getPersonaAnalytics(d1, {
+      from: "2026-06-08T00:00:00.000Z",
+      to: "2026-06-15T00:00:00.000Z",
+    });
+
+    expect(result.totalCount).toBe(1);
+  });
+});
