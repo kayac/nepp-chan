@@ -83,6 +83,7 @@ server/src/
 | `/polls/:id`                       | GET      | 投票結果（公開）               |
 | `/admin/invitations`               | GET/POST | 招待一覧・作成                 |
 | `/admin/invitations/:id`           | DELETE   | 招待削除                       |
+| `/admin/users/:id`                 | DELETE   | 管理ユーザー削除（super_admin、セッション・招待も削除） |
 | `/auth/anonymous-session`          | POST     | 匿名セッショントークン取得（JWT発行） |
 | `/auth/register`                   | POST     | ユーザー登録（招待トークン+パスワード） |
 | `/auth/login`                      | POST     | ログイン（ユーザー名+パスワード）      |

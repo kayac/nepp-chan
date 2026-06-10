@@ -17,6 +17,7 @@ vi.mock("~/db", async (importOriginal) => {
 const { adminInvitationRepository } = await import(
   "./admin-invitation-repository"
 );
+const { adminUserRepository } = await import("./admin-user-repository");
 
 const fakeD1 = {} as D1Database;
 
@@ -205,6 +206,22 @@ describe("adminInvitationRepository", () => {
       expect(result.map((r) => r.id)).toEqual(["new", "mid", "old"]);
     });
 
+    it("list: 登録済みユーザーがいる招待には userId、いなければ null", async () => {
+      await adminUserRepository.create(fakeD1, {
+        id: "user-mid",
+        username: "mid",
+        name: null,
+        role: "staff",
+        passwordHash: "hash",
+        createdAt: new Date().toISOString(),
+      });
+
+      const result = await adminInvitationRepository.list(fakeD1);
+
+      expect(result.find((r) => r.id === "mid")?.userId).toBe("user-mid");
+      expect(result.find((r) => r.id === "new")?.userId).toBeNull();
+    });
+
     it("listPending: 未使用 + 期限内のみ", async () => {
       // 1 件を使用済みに、1 件を期限切れに
       await adminInvitationRepository.markUsed(fakeD1, "mid");
@@ -264,6 +281,32 @@ describe("adminInvitationRepository", () => {
     it("存在しない id でもエラーにならない（冪等）", async () => {
       await expect(
         adminInvitationRepository.delete(fakeD1, "ghost"),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe("deleteByUsername", () => {
+    it("該当 username のレコードのみ削除", async () => {
+      await adminInvitationRepository.create(
+        fakeD1,
+        baseInput({ id: "a", token: "ta", username: "ua" }),
+      );
+      await adminInvitationRepository.create(
+        fakeD1,
+        baseInput({ id: "b", token: "tb", username: "ub" }),
+      );
+
+      await adminInvitationRepository.deleteByUsername(fakeD1, "ua");
+
+      expect(await adminInvitationRepository.findById(fakeD1, "a")).toBeNull();
+      expect(
+        await adminInvitationRepository.findById(fakeD1, "b"),
+      ).not.toBeNull();
+    });
+
+    it("存在しない username でもエラーにならない（冪等）", async () => {
+      await expect(
+        adminInvitationRepository.deleteByUsername(fakeD1, "ghost"),
       ).resolves.toBeUndefined();
     });
   });

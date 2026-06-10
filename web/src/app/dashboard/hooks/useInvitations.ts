@@ -1,7 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { AdminUser } from "~/lib/api/auth";
-import { invitationRepository } from "~/lib/api/repository";
+import {
+  adminUserRepository,
+  invitationRepository,
+} from "~/lib/api/repository";
 import { dashboardKeys } from "./keys";
 
 export const useInvitations = () =>
@@ -30,6 +33,16 @@ export const useDeleteInvitation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: invitationRepository.deleteInvitation,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.invitations });
+    },
+  });
+};
+
+export const useDeleteAdminUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: adminUserRepository.deleteAdminUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.invitations });
     },

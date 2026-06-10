@@ -1,8 +1,9 @@
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, isNull, sql } from "drizzle-orm";
 
 import {
   type AdminInvitation,
   adminInvitations,
+  adminUsers,
   createDb,
   type NewAdminInvitation,
 } from "~/db";
@@ -86,8 +87,12 @@ export const adminInvitationRepository = {
     const db = createDb(d1);
 
     const invitations = await db
-      .select()
+      .select({
+        ...getTableColumns(adminInvitations),
+        userId: adminUsers.id,
+      })
       .from(adminInvitations)
+      .leftJoin(adminUsers, eq(adminInvitations.username, adminUsers.username))
       .orderBy(desc(adminInvitations.createdAt))
       .all();
 
@@ -126,6 +131,14 @@ export const adminInvitationRepository = {
     const db = createDb(d1);
 
     await db.delete(adminInvitations).where(eq(adminInvitations.id, id));
+  },
+
+  async deleteByUsername(d1: D1Database, username: string) {
+    const db = createDb(d1);
+
+    await db
+      .delete(adminInvitations)
+      .where(eq(adminInvitations.username, username));
   },
 
   async deleteExpired(d1: D1Database) {

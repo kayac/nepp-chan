@@ -90,6 +90,7 @@ const sampleInvitation = {
   expiresAt: "2025-12-31T00:00:00Z",
   usedAt: null,
   createdAt: "2025-01-01T00:00:00Z",
+  userId: null,
 };
 
 describe("invitationRoutes", () => {
@@ -138,6 +139,30 @@ describe("invitationRoutes", () => {
       const body = (await res.json()) as { invitations: { id: string }[] };
       expect(body.invitations).toHaveLength(1);
       expect(body.invitations[0].id).toBe("inv-1");
+    });
+
+    it("登録済みユーザーの userId を含む", async () => {
+      useAuth();
+      vi.mocked(adminInvitationRepository.list).mockResolvedValue([
+        {
+          ...sampleInvitation,
+          usedAt: "2025-01-02T00:00:00Z",
+          userId: "u-registered",
+        },
+        sampleInvitation,
+      ]);
+
+      const res = await routes.request(
+        authedJson("GET", "/"),
+        undefined,
+        mockEnv,
+      );
+
+      const body = (await res.json()) as {
+        invitations: { userId: string | null }[];
+      };
+      expect(body.invitations[0].userId).toBe("u-registered");
+      expect(body.invitations[1].userId).toBeNull();
     });
   });
 
