@@ -129,6 +129,5 @@ export const resolveModelTier = ({
   return MODEL_TIERS[intent][platform];
 };
 
-/** 使用量記録などでフォールバック前提のモデル ID が必要なときに使う */
 export const primaryModelId = (config: ModelTierConfig) =>
   config.model[0].model;

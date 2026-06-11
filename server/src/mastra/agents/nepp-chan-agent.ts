@@ -203,14 +203,11 @@ const lineInstructions = `
 `;
 
 export const neppChanMemoryOptions = {
-  // タイトル生成は会話本体と切り離して常に軽量モデルで行う
   generateTitle: {
     model: GEMINI_FLASH_LITE,
     instructions:
       "ユーザーの最初のメッセージから15文字以内の簡潔な日本語タイトルを生成する。",
   },
-  // useStateSignals は schema モードで state signal パイプラインが文字列前提の
-  // zod 検証に落ちる上流バグがあり採用見送り（workerd 実機で確認）
   workingMemory: {
     enabled: true,
     scope: "resource",

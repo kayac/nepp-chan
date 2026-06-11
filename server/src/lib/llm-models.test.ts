@@ -126,9 +126,7 @@ describe("resolveModelTier", () => {
       }
     });
 
-    it("全エントリに id が明示されている", () => {
-      // id 未指定だと Agent 構築時に randomUUID() が呼ばれ、
-      // モジュールグローバルで生成する Playground 用 Agent が workerd の起動を壊す
+    it("全エントリに id が明示されている（未指定だと randomUUID が workerd の起動を壊す）", () => {
       const tier = resolveModelTier({
         intent: "casual",
         platform: "web",
