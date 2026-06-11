@@ -1,8 +1,8 @@
-import { createTool } from "@mastra/core/tools";
 import { displayTimelineSchema } from "@nepp-chan/shared/schemas/display-tools";
-import { z } from "zod";
 
-export const displayTimelineTool = createTool({
+import { createDisplayTool } from "./display-tool-factory";
+
+export const displayTimelineTool = createDisplayTool({
   id: "display-timeline",
   description: `出来事を時系列で表示するツール。
 日付付きのイベントや報告が複数ある場合、テキストで列挙するよりこのツールを使う。
@@ -31,10 +31,4 @@ events: [
 - events が空配列 → 呼ばない
 - date を省略 → 必須フィールド`,
   inputSchema: displayTimelineSchema,
-  outputSchema: z.object({
-    displayed: z.boolean(),
-  }),
-  execute: async () => {
-    return { displayed: true };
-  },
 });
