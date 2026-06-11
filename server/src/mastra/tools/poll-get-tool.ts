@@ -2,7 +2,7 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { logger } from "~/lib/logger";
 import { type Poll, pollRepository } from "~/repository/poll-repository";
-import { getPollResults } from "~/services/poll-response";
+import { getPollResults } from "~/services/poll-results";
 import { requireDb } from "./helpers";
 
 const pollWithResultsSchema = z.object({

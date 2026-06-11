@@ -20,7 +20,7 @@ vi.mock("~/services/poll-delivery", () => ({
   sendPoll: vi.fn(),
 }));
 
-vi.mock("~/services/poll-response", () => ({
+vi.mock("~/services/poll-results", () => ({
   getPollResults: vi.fn(),
 }));
 
@@ -39,7 +39,7 @@ vi.mock("~/services/auth/anonymous-session", () => ({
 const { pollRepository } = await import("~/repository/poll-repository");
 const pollService = await import("~/services/poll");
 const pollDelivery = await import("~/services/poll-delivery");
-const pollResponse = await import("~/services/poll-response");
+const pollResults = await import("~/services/poll-results");
 const { adminSessionRepository } = await import(
   "~/repository/admin-session-repository"
 );
@@ -433,7 +433,7 @@ describe("pollAdminRoutes", () => {
   describe("GET /:id/results", () => {
     it("正常系", async () => {
       useAuth();
-      vi.mocked(pollResponse.getPollResults).mockResolvedValue({
+      vi.mocked(pollResults.getPollResults).mockResolvedValue({
         pollId: "p-1",
         title: "テスト",
         totalSubmissions: 0,
@@ -451,7 +451,7 @@ describe("pollAdminRoutes", () => {
 
     it("存在しないなら 404", async () => {
       useAuth();
-      vi.mocked(pollResponse.getPollResults).mockResolvedValue(null);
+      vi.mocked(pollResults.getPollResults).mockResolvedValue(null);
 
       const res = await routes.request(
         authedJson("GET", "/missing/results"),
