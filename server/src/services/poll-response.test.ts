@@ -26,8 +26,9 @@ vi.mock("~/services/line-messaging", () => ({
 }));
 
 const { pollRepository } = await import("~/repository/poll-repository");
-const { handlePollPostback, getPollResults, generatePollFollowUp } =
-  await import("./poll-response");
+const { handlePollPostback, generatePollFollowUp } = await import(
+  "./poll-response"
+);
 
 const env = {
   DB: {} as D1Database,
@@ -171,81 +172,6 @@ describe("handlePollPostback", () => {
       env.DB,
       expect.objectContaining({ selectedChoice: "春 / 桜" }),
     );
-  });
-});
-
-describe("getPollResults", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("存在しなければ null", async () => {
-    vi.mocked(pollRepository.findById).mockResolvedValue(null);
-    expect(await getPollResults(env.DB, "p-1")).toBeNull();
-  });
-
-  it("各選択肢の件数 / パーセンテージを返す", async () => {
-    vi.mocked(pollRepository.findById).mockResolvedValue(dbRow);
-    vi.mocked(pollRepository.findSubmissionsByPoll).mockResolvedValue([
-      {
-        id: "1",
-        pollId: "p-1",
-        userId: "u1",
-        selectedChoice: "春",
-        createdAt: "x",
-      },
-      {
-        id: "2",
-        pollId: "p-1",
-        userId: "u2",
-        selectedChoice: "春",
-        createdAt: "x",
-      },
-      {
-        id: "3",
-        pollId: "p-1",
-        userId: "u3",
-        selectedChoice: "冬",
-        createdAt: "x",
-      },
-    ]);
-
-    const result = await getPollResults(env.DB, "p-1");
-
-    expect(result?.totalSubmissions).toBe(3);
-    expect(result?.choiceResults).toEqual([
-      { choice: "春", count: 2, percentage: 67 },
-      { choice: "夏", count: 0, percentage: 0 },
-      { choice: "秋", count: 0, percentage: 0 },
-      { choice: "冬", count: 1, percentage: 33 },
-    ]);
-  });
-
-  it("回答ゼロでも全選択肢を 0% で返す", async () => {
-    vi.mocked(pollRepository.findById).mockResolvedValue(dbRow);
-    vi.mocked(pollRepository.findSubmissionsByPoll).mockResolvedValue([]);
-
-    const result = await getPollResults(env.DB, "p-1");
-
-    expect(result?.totalSubmissions).toBe(0);
-    expect(result?.choiceResults.every((c) => c.percentage === 0)).toBe(true);
-  });
-
-  it("候補外の choice が submission に紛れていても無視される", async () => {
-    vi.mocked(pollRepository.findById).mockResolvedValue(dbRow);
-    vi.mocked(pollRepository.findSubmissionsByPoll).mockResolvedValue([
-      {
-        id: "1",
-        pollId: "p-1",
-        userId: "u1",
-        selectedChoice: "謎の選択肢",
-        createdAt: "x",
-      },
-    ]);
-
-    const result = await getPollResults(env.DB, "p-1");
-
-    expect(result?.choiceResults.every((c) => c.count === 0)).toBe(true);
   });
 });
 

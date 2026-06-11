@@ -22,7 +22,7 @@ import {
   updatePoll,
 } from "~/services/poll";
 import { sendPoll } from "~/services/poll-delivery";
-import { getPollResults } from "~/services/poll-response";
+import { getPollResults } from "~/services/poll-results";
 
 export const pollAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;

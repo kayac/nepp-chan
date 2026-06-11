@@ -7,12 +7,12 @@ vi.mock("~/repository/poll-repository", () => ({
   },
 }));
 
-vi.mock("~/services/poll-response", () => ({
+vi.mock("~/services/poll-results", () => ({
   getPollResults: vi.fn(),
 }));
 
 const { pollRepository } = await import("~/repository/poll-repository");
-const { getPollResults } = await import("~/services/poll-response");
+const { getPollResults } = await import("~/services/poll-results");
 const { pollGetTool } = await import("./poll-get-tool");
 
 import { callTool } from "~/__tests__/helpers/tool-context";

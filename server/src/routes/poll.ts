@@ -4,7 +4,7 @@ import { HTTPException } from "hono/http-exception";
 import { errorResponse } from "~/lib/openapi-errors";
 import { pollRepository } from "~/repository/poll-repository";
 import { pollResultsSchema } from "~/schemas/poll-schema";
-import { getPollResults } from "~/services/poll-response";
+import { getPollResults } from "~/services/poll-results";
 
 export const pollRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;

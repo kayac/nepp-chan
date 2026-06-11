@@ -2,7 +2,7 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { logger } from "~/lib/logger";
 import { type Poll, pollRepository } from "~/repository/poll-repository";
-import { getPollResults } from "~/services/poll-response";
+import { getPollResults } from "~/services/poll-results";
 import { requireDb } from "./helpers";
 
 const pollWithResultsSchema = z.object({
@@ -23,6 +23,9 @@ const pollWithResultsSchema = z.object({
 });
 
 type PollWithResults = z.infer<typeof pollWithResultsSchema>;
+
+/** エージェント登録キーと instructions 内の参照を一致させるための toolName */
+export const pollGetToolName = "pollGetTool";
 
 export const pollGetTool = createTool({
   id: "poll-get",

@@ -1,8 +1,8 @@
-import { createTool } from "@mastra/core/tools";
 import { displayChartSchema } from "@nepp-chan/shared/schemas/display-tools";
-import { z } from "zod";
 
-export const displayChartTool = createTool({
+import { createDisplayTool } from "./display-tool-factory";
+
+export const displayChartTool = createDisplayTool({
   id: "display-chart",
   description: `データをグラフで可視化するツール。
 サブエージェントの分析結果やツールの集計結果に件数・割合が含まれている場合、テキストで列挙するよりこのツールを使う。
@@ -34,11 +34,4 @@ data: [{ "トピック": "交通", "件数": 5 }, { "トピック": "除雪", "�
 - xKey/yKeyとdata内のキー名が一致していない → グラフが空になる
 - yKeyの値が文字列になっている → 数値にすること`,
   inputSchema: displayChartSchema,
-  outputSchema: z.object({
-    displayed: z.boolean(),
-  }),
-  execute: async () => {
-    // UI側で表示するため、サーバーでは何もしない
-    return { displayed: true };
-  },
 });

@@ -10,44 +10,11 @@ import {
 import type { FC, ReactNode } from "react";
 import { useState } from "react";
 
+import { getToolDisplayName } from "~/components/chat/tool-display-text";
 import type {
   ToolPartComponent,
   ToolPartStatus,
 } from "~/components/chat/types";
-
-const REPORT_TOOLS = ["emergencyReportTool", "emergencyUpdateTool"];
-const MEMORY_TOOLS = ["updateWorkingMemory"];
-
-type ToolDisplayText = {
-  running: string;
-  completed: string;
-};
-
-const TOOL_DISPLAY_MAP: Record<string, ToolDisplayText> = {
-  report: {
-    running: "ねっぷちゃんが報告中",
-    completed: "ねっぷちゃんが報告しました",
-  },
-  memory: {
-    running: "ねっぷちゃんが記憶中",
-    completed: "ねっぷちゃんが記憶しました",
-  },
-  default: {
-    running: "ねっぷちゃんが調査中",
-    completed: "ねっぷちゃんが調査しました",
-  },
-};
-
-const getToolDisplayName = (toolName: string, isRunning: boolean) => {
-  const getCategory = () => {
-    if (REPORT_TOOLS.includes(toolName)) return "report";
-    if (MEMORY_TOOLS.includes(toolName)) return "memory";
-    return "default";
-  };
-
-  const display = TOOL_DISPLAY_MAP[getCategory()];
-  return isRunning ? display.running : display.completed;
-};
 
 type ToolStatusInfo = {
   label: string;

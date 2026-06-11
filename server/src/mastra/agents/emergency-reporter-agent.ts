@@ -1,4 +1,5 @@
 import { Agent } from "@mastra/core/agent";
+import { AGENT_TOOL_NAMES } from "@nepp-chan/shared/constants/agent-tools";
 import { geminiModelWithThinking } from "~/lib/llm-models";
 import { emergencyReportTool } from "~/mastra/tools/emergency-report-tool";
 import { emergencyUpdateTool } from "~/mastra/tools/emergency-update-tool";
@@ -31,7 +32,7 @@ export const emergencyReporterAgent = new Agent({
 ## 対応フロー
 1. ユーザーの安全を確認「大丈夫？安全な場所にいる？」
 2. 会話履歴から得られていない情報のみ確認（何が・どこで）
-3. emergency-report ツールで記録
+3. ${AGENT_TOOL_NAMES.emergencyReport} ツールで記録
 4. 必要に応じて緊急連絡先を案内（110/119）
 
 ## 対話ルール
@@ -43,12 +44,12 @@ export const emergencyReporterAgent = new Agent({
 - 専門用語を使わず、一般住民にわかる言葉で対話する
 
 ## 利用可能なツール
-- emergency-report: 新規の緊急報告を記録
-- emergency-update: 既存の報告に情報を追加
+- ${AGENT_TOOL_NAMES.emergencyReport}: 新規の緊急報告を記録
+- ${AGENT_TOOL_NAMES.emergencyUpdate}: 既存の報告に情報を追加
 `,
   ...geminiModelWithThinking(),
   tools: {
-    emergencyReportTool,
-    emergencyUpdateTool,
+    [AGENT_TOOL_NAMES.emergencyReport]: emergencyReportTool,
+    [AGENT_TOOL_NAMES.emergencyUpdate]: emergencyUpdateTool,
   },
 });

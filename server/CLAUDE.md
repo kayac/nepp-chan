@@ -99,6 +99,9 @@ server/src/
 
 メインキャラクター「ねっぷちゃん」は `createNeppChanAgent({ isAdmin, platform, modelConfig })` で動的に生成される。
 `modelConfig` は `resolveModelTier()` で Intent（casual/thinking）× プラットフォーム × 管理者フラグから決定する。
+各ティアはモデルのフォールバック連鎖（プライマリ障害時に同じ thinking 設定で次のモデルを試行）と
+ツール実行ループ上限 `defaultOptions.maxSteps` を含む。フォールバックエントリの `id` は必ず明示する
+（省略すると Agent 構築時の randomUUID() が workerd のグローバルスコープ制約に抵触する）。
 
 - **一般ユーザー**: 基本機能のみ（天気、Web検索、ナレッジ、緊急報告）
 - **管理者**: 基本機能 + 管理者専用エージェント（emergency, feedback, persona-analyst）

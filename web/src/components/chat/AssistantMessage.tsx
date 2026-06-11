@@ -9,8 +9,7 @@ import { SpeechBubble } from "~/app/chat/components/SpeechBubble";
 import { useChatContext } from "~/app/chat/contexts/ChatContext";
 import type { FeedbackRating } from "~/types";
 
-import { MarkdownText } from "./MarkdownText";
-import { ToolPart } from "./ToolPart";
+import { MessageParts } from "./MessageParts";
 
 type Props = {
   message: UIMessage;
@@ -72,21 +71,7 @@ export const AssistantMessage = ({ message, isLast }: Props) => {
           variant="assistant"
           className="max-w-[92%] md:max-w-[88%] py-4"
         >
-          {message.parts.map((part, index) => {
-            if (part.type === "text") {
-              return (
-                <MarkdownText
-                  // biome-ignore lint/suspicious/noArrayIndexKey: テキストパートに安定 ID が無く、順序も不変なため位置で識別する
-                  key={`${message.id}-text-${index}`}
-                  text={part.text}
-                />
-              );
-            }
-            if (isToolOrDynamicToolUIPart(part)) {
-              return <ToolPart key={part.toolCallId} part={part} />;
-            }
-            return null;
-          })}
+          <MessageParts message={message} />
           {showTypingDot && <TypingDot />}
           {isLast && error && <MessageError message={error.message} />}
         </SpeechBubble>

@@ -1,39 +1,19 @@
-import { ToolEmptyState } from "@nepp-chan/shared/ui/EmptyState";
+import { displayChartSchema } from "@nepp-chan/shared/schemas/display-tools";
 import { ToolLoadingState } from "@nepp-chan/shared/ui/Loading";
 import { BarChartIcon } from "lucide-react";
 
-import type { ToolPartComponent } from "~/components/chat/types";
+import { Chart } from "./Chart";
+import { defineToolUI } from "./define-tool-ui";
 
-import { Chart, type ChartArgs } from "./Chart";
-
-const renderChart = (args: ChartArgs, isRunning: boolean) => {
-  if (isRunning && !args.data) {
-    return (
-      <div className="my-4">
-        <ToolLoadingState
-          variant="chart"
-          icon={<BarChartIcon className="size-5 animate-pulse text-teal-400" />}
-        />
-      </div>
-    );
-  }
-
-  if (!args.data || args.data.length === 0) {
-    return (
-      <div className="my-4">
-        <ToolEmptyState message="表示するデータがありません" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="my-4">
-      <Chart args={args} />
-    </div>
-  );
-};
-
-export const DisplayChartToolComponent: ToolPartComponent = ({
-  args,
-  status,
-}) => renderChart(args as ChartArgs, status.type === "running");
+export const DisplayChartToolComponent = defineToolUI({
+  schema: displayChartSchema,
+  loading: (
+    <ToolLoadingState
+      variant="chart"
+      icon={<BarChartIcon className="size-5 animate-pulse text-teal-400" />}
+    />
+  ),
+  emptyMessage: "表示するデータがありません",
+  isEmpty: (args) => args.data.length === 0,
+  Component: Chart,
+});

@@ -1,8 +1,8 @@
-import { createTool } from "@mastra/core/tools";
 import { displayTableSchema } from "@nepp-chan/shared/schemas/display-tools";
-import { z } from "zod";
 
-export const displayTableTool = createTool({
+import { createDisplayTool } from "./display-tool-factory";
+
+export const displayTableTool = createDisplayTool({
   id: "display-table",
   description: `データをテーブル形式で表示するツール。
 一覧データや複数フィールドの比較を見せたいときに使用する。
@@ -34,10 +34,4 @@ data: [
 - columnsのkeyとdata内のキー名が一致していない → 列が空になる
 - columnsを省略 → 必須フィールド`,
   inputSchema: displayTableSchema,
-  outputSchema: z.object({
-    displayed: z.boolean(),
-  }),
-  execute: async () => {
-    return { displayed: true };
-  },
 });

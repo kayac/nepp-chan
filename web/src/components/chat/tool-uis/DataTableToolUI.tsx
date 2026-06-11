@@ -1,5 +1,8 @@
 import { cn } from "@nepp-chan/shared/lib/class-merge";
-import type { DisplayTableArgs } from "@nepp-chan/shared/schemas/display-tools";
+import {
+  type DisplayTableArgs,
+  displayTableSchema,
+} from "@nepp-chan/shared/schemas/display-tools";
 import { ToolLoadingState } from "@nepp-chan/shared/ui/Loading";
 import {
   ArrowDownIcon,
@@ -10,7 +13,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import type { ToolPartComponent } from "~/components/chat/types";
+import { defineToolUI } from "./define-tool-ui";
 
 type SortConfig = {
   key: string;
@@ -131,24 +134,14 @@ const DataTable = ({ args }: { args: DisplayTableArgs }) => {
   );
 };
 
-const renderDataTable = (args: DisplayTableArgs) => {
-  if (!args.columns || !args.data) {
-    return (
-      <div className="my-4">
-        <ToolLoadingState
-          variant="table"
-          icon={<TableIcon className="size-5 animate-pulse text-(--fg-4)" />}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="my-4">
-      <DataTable args={args} />
-    </div>
-  );
-};
-
-export const DisplayTableToolComponent: ToolPartComponent = ({ args }) =>
-  renderDataTable(args as DisplayTableArgs);
+export const DisplayTableToolComponent = defineToolUI({
+  schema: displayTableSchema,
+  loading: (
+    <ToolLoadingState
+      variant="table"
+      icon={<TableIcon className="size-5 animate-pulse text-(--fg-4)" />}
+    />
+  ),
+  emptyMessage: "表示するデータがありません",
+  Component: DataTable,
+});

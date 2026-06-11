@@ -35,11 +35,11 @@ vi.mock("~/lib/classify-intent", () => ({
   classifyIntent: vi.fn(async () => "casual"),
 }));
 
-vi.mock("~/lib/llm-models", () => ({
-  resolveModelTier: vi.fn(() => ({ tier: "fast", modelId: "fake-model" })),
-  GEMINI_EMBEDDING: "gemini-embedding",
-  GEMINI_FLASH: "gemini-flash",
-  GEMINI_PRO: "gemini-pro",
+vi.mock("~/lib/llm-models", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("~/lib/llm-models")>()),
+  resolveModelTier: vi.fn(() => ({
+    model: [{ model: "fake-model" }],
+  })),
 }));
 
 vi.mock("~/mastra/agents/nepp-chan-agent", () => ({
@@ -148,8 +148,7 @@ describe("generateReply", () => {
     vi.mocked(resolveModelTier)
       .mockReset()
       .mockReturnValue({
-        tier: "fast",
-        modelId: "fake-model",
+        model: [{ model: "fake-model" }],
       } as never);
     agentHolder.generate.mockReset();
     showLoadingAnimation.mockReset().mockResolvedValue({});
@@ -204,7 +203,7 @@ describe("generateReply", () => {
 
   it("agent.generate 後に usage を platform=line で記録する", async () => {
     vi.mocked(resolveModelTier).mockReturnValue({
-      model: "google/gemini-flash-lite-latest",
+      model: [{ model: "google/gemini-flash-lite-latest" }],
     } as never);
     agentHolder.generate.mockResolvedValueOnce({
       steps: [{ text: "ok" }],

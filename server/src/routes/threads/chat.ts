@@ -3,7 +3,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { Mastra } from "@mastra/core/mastra";
 import { respondWithChatStream } from "~/lib/chat-stream";
 import { classifyIntent } from "~/lib/classify-intent";
-import { resolveModelTier } from "~/lib/llm-models";
+import { primaryModelId, resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import type { PrincipalVariables } from "~/lib/principal";
 import { getStorage } from "~/lib/storage";
@@ -120,7 +120,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
     onFinish: (event) =>
       waitUntil(
         recordLlmUsage(c.env.DB, {
-          model: event.model?.modelId ?? modelConfig.model,
+          model: event.model?.modelId ?? primaryModelId(modelConfig),
           usage: event.totalUsage,
           platform: "web",
           source: "chat",
