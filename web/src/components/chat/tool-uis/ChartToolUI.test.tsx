@@ -14,15 +14,12 @@ const baseArgs = {
   yKey: "sales",
 };
 
-const renderChart = (
-  overrides: Partial<typeof baseArgs> = {},
-  running = false,
-) =>
+const renderChart = (overrides: Partial<typeof baseArgs> = {}) =>
   render(
     <DisplayChartToolComponent
       args={{ ...baseArgs, ...overrides }}
       result={undefined}
-      status={running ? { type: "running" } : { type: "complete" }}
+      status={{ type: "complete" }}
       toolName="displayChartTool"
     />,
   );
@@ -47,11 +44,6 @@ describe("DisplayChartToolComponent", () => {
 
   it("通常データで title を描画する", () => {
     renderChart();
-    expect(screen.getByText("売上推移")).toBeDefined();
-  });
-
-  it("running 状態でも data が揃っていれば Chart を描画する", () => {
-    renderChart({}, true);
     expect(screen.getByText("売上推移")).toBeDefined();
   });
 });

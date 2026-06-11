@@ -1,10 +1,12 @@
 import { cn } from "@nepp-chan/shared/lib/class-merge";
-import type { DisplayTimelineArgs } from "@nepp-chan/shared/schemas/display-tools";
-import { ToolEmptyState } from "@nepp-chan/shared/ui/EmptyState";
+import {
+  type DisplayTimelineArgs,
+  displayTimelineSchema,
+} from "@nepp-chan/shared/schemas/display-tools";
 import { ToolLoadingState } from "@nepp-chan/shared/ui/Loading";
 import { CalendarIcon } from "lucide-react";
 
-import type { ToolPartComponent } from "~/components/chat/types";
+import { defineToolUI } from "./define-tool-ui";
 
 type TimelineEvent = DisplayTimelineArgs["events"][number];
 
@@ -98,36 +100,15 @@ const Timeline = ({ args }: { args: DisplayTimelineArgs }) => (
   </div>
 );
 
-const renderTimeline = (args: DisplayTimelineArgs, isRunning: boolean) => {
-  if (isRunning && !args.events) {
-    return (
-      <div className="my-4">
-        <ToolLoadingState
-          variant="timeline"
-          icon={
-            <CalendarIcon className="size-5 animate-pulse text-indigo-400" />
-          }
-        />
-      </div>
-    );
-  }
-
-  if (!args.events || args.events.length === 0) {
-    return (
-      <div className="my-4">
-        <ToolEmptyState message="表示するイベントがありません" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="my-4">
-      <Timeline args={args} />
-    </div>
-  );
-};
-
-export const DisplayTimelineToolComponent: ToolPartComponent = ({
-  args,
-  status,
-}) => renderTimeline(args as DisplayTimelineArgs, status.type === "running");
+export const DisplayTimelineToolComponent = defineToolUI({
+  schema: displayTimelineSchema,
+  loading: (
+    <ToolLoadingState
+      variant="timeline"
+      icon={<CalendarIcon className="size-5 animate-pulse text-indigo-400" />}
+    />
+  ),
+  emptyMessage: "表示するイベントがありません",
+  isEmpty: (args) => args.events.length === 0,
+  Component: Timeline,
+});
