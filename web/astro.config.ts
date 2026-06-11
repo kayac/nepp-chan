@@ -5,6 +5,7 @@ import { defineConfig } from "astro/config";
 
 export default defineConfig({
   output: "static",
+  site: "https://web.nepp-chan.ai",
   server: { port: 5173 },
   integrations: [react()],
   vite: {
