@@ -24,6 +24,9 @@ const pollWithResultsSchema = z.object({
 
 type PollWithResults = z.infer<typeof pollWithResultsSchema>;
 
+/** エージェント登録キーと instructions 内の参照を一致させるための toolName */
+export const pollGetToolName = "pollGetTool";
+
 export const pollGetTool = createTool({
   id: "poll-get",
   description:

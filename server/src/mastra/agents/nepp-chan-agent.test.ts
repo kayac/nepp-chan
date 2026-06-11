@@ -1,6 +1,9 @@
+import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { describe, expect, it } from "vitest";
 
 import { GEMINI_FLASH_LITE, type ModelTierConfig } from "~/lib/llm-models";
+import { broadcastGetToolName } from "~/mastra/tools/broadcast-get-tool";
+import { pollGetToolName } from "~/mastra/tools/poll-get-tool";
 import { createNeppChanAgent, neppChanMemoryOptions } from "./nepp-chan-agent";
 
 const modelConfig = { model: "dummy-model" } as unknown as ModelTierConfig;
@@ -40,6 +43,17 @@ describe("createNeppChanAgent", () => {
     it("常に現在の日時セクションを含む", async () => {
       const ins = await instructionsOf(build());
       expect(ins).toContain("現在の日時");
+    });
+
+    it("ツールはモデルに公開される toolName（登録キー）で参照する", async () => {
+      const ins = await instructionsOf(build({ isAdmin: true }));
+      expect(ins).toContain(DISPLAY_TOOL_NAMES.chart);
+      expect(ins).toContain(DISPLAY_TOOL_NAMES.table);
+      expect(ins).toContain(DISPLAY_TOOL_NAMES.timeline);
+      expect(ins).toContain(pollGetToolName);
+
+      const lineIns = await instructionsOf(build({ platform: "line" }));
+      expect(lineIns).toContain(broadcastGetToolName);
     });
   });
 

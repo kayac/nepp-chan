@@ -5,6 +5,9 @@ import { broadcastRepository } from "~/repository/broadcast-repository";
 import { broadcastMessageSchema } from "~/schemas/broadcast-schema";
 import { requireDb } from "./helpers";
 
+/** エージェント登録キーと instructions 内の参照を一致させるための toolName */
+export const broadcastGetToolName = "broadcastGetTool";
+
 export const broadcastGetTool = createTool({
   id: "broadcast-get",
   description:

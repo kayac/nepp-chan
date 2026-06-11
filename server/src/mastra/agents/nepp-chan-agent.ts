@@ -14,12 +14,15 @@ import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
-import { broadcastGetTool } from "~/mastra/tools/broadcast-get-tool";
+import {
+  broadcastGetTool,
+  broadcastGetToolName,
+} from "~/mastra/tools/broadcast-get-tool";
 
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
-import { pollGetTool } from "~/mastra/tools/poll-get-tool";
+import { pollGetTool, pollGetToolName } from "~/mastra/tools/poll-get-tool";
 import { personaSchema } from "~/schemas/persona-schema";
 
 type Platform = "web" | "line" | "widget";
@@ -104,9 +107,9 @@ ${
 
 ### サブエージェントの結果の可視化
 サブエージェントの分析結果に件数・割合・時系列が含まれている場合は、テキストで中継せず可視化ツールで表示する。
-- カテゴリ別の件数・割合 → display-chart
-- 日付付きの出来事が複数 → display-timeline
-- 多項目の一覧 → display-table
+- カテゴリ別の件数・割合 → ${DISPLAY_TOOL_NAMES.chart}
+- 日付付きの出来事が複数 → ${DISPLAY_TOOL_NAMES.timeline}
+- 多項目の一覧 → ${DISPLAY_TOOL_NAMES.table}
 
 ## Working Memory
 会話からユーザーの情報を記録し、次回以降の会話で活用する。
@@ -129,8 +132,8 @@ const adminInstructions = `
   例: 「住民の声を教えて」「困ってる人はいる？」「村の調子はどう？」「最近どんな話題が多い？」「年代別の傾向は？」「交通の不満をもっと教えて」
 
 ### 投票の結果・傾向分析
-- 投票結果を踏まえた分析（例: 「最近の投票結果は？」「どの選択肢が人気だった？」「投票の傾向を教えて」）→ pollGetTool
-- 選択肢別の割合や参加人数は display-chart で可視化、複数投票の比較は display-table で一覧化する
+- 投票結果を踏まえた分析（例: 「最近の投票結果は？」「どの選択肢が人気だった？」「投票の傾向を教えて」）→ ${pollGetToolName}
+- 選択肢別の割合や参加人数は ${DISPLAY_TOOL_NAMES.chart} で可視化、複数投票の比較は ${DISPLAY_TOOL_NAMES.table} で一覧化する
 `;
 
 const baseAgents = {
@@ -152,8 +155,8 @@ const widgetAgents = {
 };
 
 const defaultTools = {
-  broadcastGetTool,
-  pollGetTool,
+  [broadcastGetToolName]: broadcastGetTool,
+  [pollGetToolName]: pollGetTool,
 };
 
 const webTools = {
@@ -163,7 +166,7 @@ const webTools = {
 };
 
 const widgetTools = {
-  broadcastGetTool,
+  [broadcastGetToolName]: broadcastGetTool,
 };
 
 const getTools = (platform: Platform) => {
@@ -199,7 +202,7 @@ const lineInstructions = `
 ### LINE配信の記憶
 ユーザーはLINE配信メッセージを受信している。会話履歴に【LINE配信のお知らせ】として含まれている。
 - ユーザーの発言が直近の配信内容に関連していそうなら、その配信を踏まえて応答する。指示語（「これ」「さっきの」「あれ」「この前の」等）に限らず、配信で触れた話題・イベント・告知への反応や質問・感想も対象とする
-- 古い配信や会話履歴に無い配信の詳細が必要なときは broadcast-get ツールを使う
+- 古い配信や会話履歴に無い配信の詳細が必要なときは ${broadcastGetToolName} ツールを使う
 `;
 
 export const neppChanMemoryOptions = {
