@@ -139,7 +139,7 @@ export const OntologySection = () => {
   const simRef = useRef<Simulation<SimNode, SimLink> | null>(null);
   const simNodesRef = useRef<Map<string, SimNode>>(new Map());
 
-  // 力学シミュレーション（初期レポートと同じ「浮遊する」自動レイアウト）
+  // 力学シミュレーション（浮遊する自動レイアウト）
   useEffect(() => {
     const { width, height } = ONTOLOGY_VIEWBOX;
     const nodes: SimNode[] = ONTOLOGY_NODES.map((n) => ({ ...n }));
@@ -309,7 +309,7 @@ export const OntologySection = () => {
 
   return (
     <SectionCard
-      title="村の声オントロジー"
+      title="村の声グラフ"
       description={`誰が・何に・どんな感情でつながっているかのグラフ（${ONTOLOGY_GENERATED_AT}・ペルソナ ${ONTOLOGY_META.personaTotal.toLocaleString()} 件）`}
     >
       <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3">
@@ -332,7 +332,7 @@ export const OntologySection = () => {
             viewBox={`0 0 ${ONTOLOGY_VIEWBOX.width} ${ONTOLOGY_VIEWBOX.height}`}
             className="w-full h-auto touch-none select-none cursor-grab active:cursor-grabbing"
             role="img"
-            aria-label="村の声オントロジーグラフ"
+            aria-label="村の声グラフ"
             onPointerDown={handleSvgPointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={(e) => handlePointerUp(e)}

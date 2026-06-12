@@ -8,9 +8,9 @@ describe("OntologySection", () => {
   it("グラフと役割凡例を表示する", () => {
     render(<OntologySection />);
 
-    expect(screen.getByText("村の声オントロジー")).toBeInTheDocument();
+    expect(screen.getByText("村の声グラフ")).toBeInTheDocument();
     expect(
-      screen.getByRole("img", { name: "村の声オントロジーグラフ" }),
+      screen.getByRole("img", { name: "村の声グラフ" }),
     ).toBeInTheDocument();
     // 役割凡例
     expect(screen.getByText("村内と村外をつなぐ")).toBeInTheDocument();
