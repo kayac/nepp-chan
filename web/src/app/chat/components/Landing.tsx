@@ -73,12 +73,16 @@ export const Landing = ({ onSubmit, disabled = false }: Props) => {
                 onClick={() => handlePromptTap(p.text)}
                 disabled={disabled}
                 className={cn(
-                  "w-full text-left flex items-center gap-2.5",
-                  "rounded-full border border-(--paper-200) bg-(--paper-0)",
+                  "relative w-full text-left flex items-center gap-2.5",
+                  "rounded-2xl border border-(--paper-200) bg-(--paper-0)",
                   "px-4 py-2.5 text-sm text-(--snow-700) font-medium",
                   "transition-colors hover:border-(--teal-300) hover:text-(--teal-700)",
                   "shadow-(--shadow-float-sm)",
                   "disabled:opacity-60 disabled:cursor-not-allowed",
+                  // ねっぷちゃん側（右）へ向けた吹き出しのしっぽ
+                  "after:absolute after:top-1/2 after:-right-1.5 after:size-3 after:-translate-y-1/2 after:rotate-45",
+                  "after:bg-(--paper-0) after:border-t after:border-r after:border-(--paper-200)",
+                  "after:transition-colors hover:after:border-(--teal-300)",
                 )}
               >
                 <span aria-hidden="true">{p.icon}</span>
