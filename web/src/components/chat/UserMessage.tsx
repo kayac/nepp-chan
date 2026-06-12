@@ -1,12 +1,12 @@
 import type { UIMessage } from "ai";
 import { SpeechBubble } from "~/app/chat/components/SpeechBubble";
-import { GREETING_PROMPT } from "~/app/chat/contexts/ChatProvider";
 import { getMessageContent } from "~/app/chat/feedback-helpers";
+import { isGreetingPrompt } from "~/app/chat/greeting-prompt";
 
 export const UserMessage = ({ message }: { message: UIMessage }) => {
   const text = getMessageContent(message);
 
-  if (text === GREETING_PROMPT) return null;
+  if (isGreetingPrompt(text)) return null;
 
   return (
     <div

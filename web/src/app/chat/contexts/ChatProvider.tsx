@@ -4,13 +4,11 @@ import { type ReactNode, useEffect, useMemo, useRef } from "react";
 
 import { API_BASE } from "~/lib/api/client";
 import { getBearerToken } from "~/lib/auth-token";
+import { getLocationParam } from "~/lib/location-param";
 
 import { getMessageContent } from "../feedback-helpers";
+import { buildGreetingPrompt, isGreetingPrompt } from "../greeting-prompt";
 import { ChatContext, type ChatContextValue } from "./ChatContext";
-
-/** 既存スレッドの再開時に system 役で送る挨拶要求プロンプト */
-export const GREETING_PROMPT =
-  "新しい会話が始まりました。時間帯や季節に合った短い挨拶をしてください。";
 
 export type InitialMessage =
   | { type: "greeting" }
@@ -43,7 +41,7 @@ export const ChatProvider = ({
         prepareSendMessagesRequest({ messages }) {
           const lastMessage = messages[messages.length - 1];
           const lastText = lastMessage ? getMessageContent(lastMessage) : "";
-          const intent = lastText === GREETING_PROMPT ? "casual" : undefined;
+          const intent = isGreetingPrompt(lastText) ? "casual" : undefined;
           return {
             body: {
               message: lastMessage,
@@ -67,7 +65,7 @@ export const ChatProvider = ({
     sent.current = true;
     const text =
       initialMessage.type === "greeting"
-        ? GREETING_PROMPT
+        ? buildGreetingPrompt(getLocationParam())
         : initialMessage.text;
     void sendMessage({ text });
   }, [sendMessage, initialMessage]);
