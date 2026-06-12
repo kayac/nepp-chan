@@ -44,12 +44,17 @@ const sentimentCountsShape = {
 };
 
 const hourlyCountSchema = z.object({ hour: z.number(), count: z.number() });
+// dow は JST の曜日（0=日曜 〜 6=土曜）
+const weekdayCountSchema = z.object({ dow: z.number(), count: z.number() });
 
 export const personaAnalyticsResponseSchema = z.object({
   totalCount: z.number(),
-  // 会話終了時刻（conversation_ended_at）ベースの JST 時間帯分布。
+  // 会話終了時刻（conversation_ended_at）ベースの JST 時間帯・曜日分布。
   // 1会話から複数件抽出されるため件数は会話数とは一致しない近似値
   hourly: z.array(hourlyCountSchema),
+  weekday: z.array(weekdayCountSchema),
+  // 開庁 = 平日 8〜17 時 JST に会話が終了した声、閉庁 = それ以外
+  officeHours: z.object({ open: z.number(), closed: z.number() }),
   ageSentiment: z.array(z.object({ age: z.string(), ...sentimentCountsShape })),
   topics: z.array(
     z.object({ topic: z.string(), total: z.number(), ...sentimentCountsShape }),
@@ -73,6 +78,7 @@ export const conversationAnalyticsResponseSchema = z.object({
     }),
   ),
   hourly: z.array(hourlyCountSchema),
+  weekday: z.array(weekdayCountSchema),
   platforms: z.array(platformCountSchema),
   totals: z.object({ conversations: z.number(), messages: z.number() }),
 });

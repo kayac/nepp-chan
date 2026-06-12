@@ -539,6 +539,14 @@ export interface paths {
                                 hour: number;
                                 count: number;
                             }[];
+                            weekday: {
+                                dow: number;
+                                count: number;
+                            }[];
+                            officeHours: {
+                                open: number;
+                                closed: number;
+                            };
                             ageSentiment: {
                                 age: string;
                                 positive: number;
@@ -656,6 +664,10 @@ export interface paths {
                             }[];
                             hourly: {
                                 hour: number;
+                                count: number;
+                            }[];
+                            weekday: {
+                                dow: number;
                                 count: number;
                             }[];
                             platforms: {

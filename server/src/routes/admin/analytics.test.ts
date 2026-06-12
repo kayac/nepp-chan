@@ -79,6 +79,7 @@ const authedGet = (path: string) =>
 const emptyConversationStats = {
   daily: [],
   hourly: [],
+  weekday: [],
   platforms: [],
   totals: { conversations: 0, messages: 0 },
 };
@@ -86,6 +87,8 @@ const emptyConversationStats = {
 const emptyPersonaAnalytics = {
   totalCount: 0,
   hourly: [],
+  weekday: [],
+  officeHours: { open: 0, closed: 0 },
   ageSentiment: [],
   topics: [],
   segments: { residence: [], relationship: [] },

@@ -87,6 +87,30 @@ describe("getConversationStats", () => {
     expect(stats.hourly[23]).toEqual({ hour: 23, count: 0 });
   });
 
+  it("weekday は JST の曜日（0=日〜6=土）で集計し 7 要素を常に返す", async () => {
+    await insertThread(db, "t1", WEB_RESOURCE);
+    await insertMessage(db, {
+      id: "m1",
+      threadId: "t1",
+      createdAt: "2026-06-12T10:00:00.000Z", // JST 06-12（金）19:00 → dow 5
+    });
+    await insertMessage(db, {
+      id: "m2",
+      threadId: "t1",
+      createdAt: "2026-06-12T16:00:00.000Z", // JST 06-13（土）01:00 → dow 6
+    });
+
+    const stats = await getConversationStats(d1, {
+      from: "2026-06-01T00:00:00.000Z",
+      to: "2026-06-15T00:00:00.000Z",
+    });
+
+    expect(stats.weekday).toHaveLength(7);
+    expect(stats.weekday[5]).toEqual({ dow: 5, count: 1 });
+    expect(stats.weekday[6]).toEqual({ dow: 6, count: 1 });
+    expect(stats.weekday[0]).toEqual({ dow: 0, count: 0 });
+  });
+
   it("UTC 15:00 直前/直後で JST の日付が分かれる", async () => {
     await insertThread(db, "t1", WEB_RESOURCE);
     await insertMessage(db, {
@@ -517,6 +541,45 @@ describe("getPersonaAnalytics", () => {
     expect(result.hourly.find((h) => h.hour === 9)?.count).toBe(2);
     expect(result.hourly.find((h) => h.hour === 8)?.count).toBe(1);
     expect(result.hourly.reduce((sum, h) => sum + h.count, 0)).toBe(3);
+  });
+
+  it("conversation_ended_at を JST の曜日分布に集計し、NULL は除外する", async () => {
+    await insertPersona({
+      id: "p1",
+      conversationEndedAt: "2026-06-12T10:00:00.000Z", // JST 06-12（金）→ dow 5
+    });
+    await insertPersona({
+      id: "p2",
+      conversationEndedAt: "2026-06-12T16:00:00.000Z", // JST 06-13（土）→ dow 6
+    });
+    await insertPersona({ id: "p3" }); // conversation_ended_at なし
+
+    const result = await getPersonaAnalytics(d1, {});
+
+    expect(result.weekday).toHaveLength(7);
+    expect(result.weekday[5]).toEqual({ dow: 5, count: 1 });
+    expect(result.weekday[6]).toEqual({ dow: 6, count: 1 });
+    expect(result.weekday.reduce((sum, d) => sum + d.count, 0)).toBe(2);
+  });
+
+  it("開庁時間（平日 8〜17 時 JST）と閉庁時間の声を数える", async () => {
+    await insertPersona({
+      id: "p1",
+      conversationEndedAt: "2026-06-12T01:00:00.000Z", // JST 金 10:00 → 開庁
+    });
+    await insertPersona({
+      id: "p2",
+      conversationEndedAt: "2026-06-12T10:00:00.000Z", // JST 金 19:00 → 閉庁（夜間）
+    });
+    await insertPersona({
+      id: "p3",
+      conversationEndedAt: "2026-06-13T02:00:00.000Z", // JST 土 11:00 → 閉庁（土日）
+    });
+    await insertPersona({ id: "p4" }); // conversation_ended_at なし → 対象外
+
+    const result = await getPersonaAnalytics(d1, {});
+
+    expect(result.officeHours).toEqual({ open: 1, closed: 2 });
   });
 
   it("時間帯分布も from/to（conversation_ended_at 基準）で絞り込める", async () => {

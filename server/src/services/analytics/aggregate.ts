@@ -14,6 +14,13 @@ const fillHours = (rows: { hour: number; count: number }[]) =>
     count: Number(rows.find((r) => Number(r.hour) === hour)?.count ?? 0),
   }));
 
+// 0（日曜）〜6（土曜）の全曜日を 0 件で埋めた配列にする
+const fillWeekdays = (rows: { dow: number; count: number }[]) =>
+  Array.from({ length: 7 }, (_, dow) => ({
+    dow,
+    count: Number(rows.find((r) => Number(r.dow) === dow)?.count ?? 0),
+  }));
+
 const AGE_GROUPS = [
   "10代",
   "20代",
@@ -47,15 +54,23 @@ const RELATIONSHIPS = ["村人", "観光客", "移住検討者", "帰省者"] as
 export const getConversationStats = async (d1: D1Database, period: Period) => {
   const db = createDb(d1);
 
-  const [hourlyRows, daily, platforms, totalsRow] = await Promise.all([
-    db.all<{ hour: number; count: number }>(sql`
+  const [hourlyRows, weekdayRows, daily, platforms, totalsRow] =
+    await Promise.all([
+      db.all<{ hour: number; count: number }>(sql`
       SELECT CAST(strftime('%H', createdAt, '+9 hours') AS INTEGER) AS hour,
              COUNT(*) AS count
       FROM mastra_messages
       WHERE role = 'user' AND createdAt >= ${period.from} AND createdAt < ${period.to}
       GROUP BY hour
     `),
-    db.all<{ date: string; conversations: number; messages: number }>(sql`
+      db.all<{ dow: number; count: number }>(sql`
+      SELECT CAST(strftime('%w', createdAt, '+9 hours') AS INTEGER) AS dow,
+             COUNT(*) AS count
+      FROM mastra_messages
+      WHERE role = 'user' AND createdAt >= ${period.from} AND createdAt < ${period.to}
+      GROUP BY dow
+    `),
+      db.all<{ date: string; conversations: number; messages: number }>(sql`
       SELECT strftime('%Y-%m-%d', createdAt, '+9 hours') AS date,
              COUNT(DISTINCT thread_id) AS conversations,
              COUNT(*) AS messages
@@ -64,7 +79,7 @@ export const getConversationStats = async (d1: D1Database, period: Period) => {
       GROUP BY date
       ORDER BY date
     `),
-    db.all<{ platform: string; count: number }>(sql`
+      db.all<{ platform: string; count: number }>(sql`
       SELECT CASE WHEN t.resourceId LIKE 'line:%' THEN 'line'
                   WHEN t.resourceId LIKE 'admin:%' THEN 'admin'
                   ELSE 'web' END AS platform,
@@ -74,12 +89,12 @@ export const getConversationStats = async (d1: D1Database, period: Period) => {
       WHERE m.role = 'user' AND m.createdAt >= ${period.from} AND m.createdAt < ${period.to}
       GROUP BY platform
     `),
-    db.get<{ conversations: number; messages: number }>(sql`
+      db.get<{ conversations: number; messages: number }>(sql`
       SELECT COUNT(DISTINCT thread_id) AS conversations, COUNT(*) AS messages
       FROM mastra_messages
       WHERE role = 'user' AND createdAt >= ${period.from} AND createdAt < ${period.to}
     `),
-  ]);
+    ]);
 
   return {
     daily: daily.map((r) => ({
@@ -88,6 +103,7 @@ export const getConversationStats = async (d1: D1Database, period: Period) => {
       messages: Number(r.messages),
     })),
     hourly: fillHours(hourlyRows),
+    weekday: fillWeekdays(weekdayRows),
     platforms: platforms.map((r) => ({
       platform: r.platform,
       count: Number(r.count),
@@ -201,12 +217,15 @@ export const getPersonaAnalytics = async (
   ].filter((c) => c !== undefined);
 
   const hourExpr = sql<number>`CAST(strftime('%H', ${persona.conversationEndedAt}, '+9 hours') AS INTEGER)`;
+  const dowExpr = sql<number>`CAST(strftime('%w', ${persona.conversationEndedAt}, '+9 hours') AS INTEGER)`;
+  // 開庁 = 平日（月〜金）の 8〜17 時 JST。それ以外は閉庁
+  const isOpenExpr = sql<number>`CASE WHEN ${dowExpr} BETWEEN 1 AND 5 AND ${hourExpr} BETWEEN 8 AND 16 THEN 1 ELSE 0 END`;
   const hourlyConditions = [
     isNotNull(persona.conversationEndedAt),
     ...periodConditions,
   ];
 
-  const [rows, hourlyRows] = await Promise.all([
+  const [rows, hourlyRows, weekdayRows, officeRow] = await Promise.all([
     db
       .select({
         tags: persona.tags,
@@ -223,6 +242,20 @@ export const getPersonaAnalytics = async (
       .where(and(...hourlyConditions))
       .groupBy(hourExpr)
       .all(),
+    db
+      .select({ dow: dowExpr, count: sql<number>`COUNT(*)` })
+      .from(persona)
+      .where(and(...hourlyConditions))
+      .groupBy(dowExpr)
+      .all(),
+    db
+      .select({
+        open: sql<number>`SUM(${isOpenExpr})`,
+        total: sql<number>`COUNT(*)`,
+      })
+      .from(persona)
+      .where(and(...hourlyConditions))
+      .get(),
   ]);
 
   const ageSentiment = new Map(
@@ -269,9 +302,14 @@ export const getPersonaAnalytics = async (
     );
   }
 
+  const officeOpen = Number(officeRow?.open ?? 0);
+  const officeTotal = Number(officeRow?.total ?? 0);
+
   return {
     totalCount: rows.length,
     hourly: fillHours(hourlyRows),
+    weekday: fillWeekdays(weekdayRows),
+    officeHours: { open: officeOpen, closed: officeTotal - officeOpen },
     ageSentiment: AGE_GROUPS.map((age) => ({
       age,
       ...(ageSentiment.get(age) ?? emptySentimentCounts()),
