@@ -18,9 +18,14 @@ const isClosedHour = (hour: number) => hour < 8 || hour >= 17;
 interface Props {
   hourly: { hour: number; count: number }[];
   height?: number;
+  tooltipLabel?: string;
 }
 
-export const HourlyChart = ({ hourly, height = 220 }: Props) => (
+export const HourlyChart = ({
+  hourly,
+  height = 220,
+  tooltipLabel = "メッセージ数",
+}: Props) => (
   <div>
     <ResponsiveContainer width="100%" height={height}>
       <BarChart
@@ -42,7 +47,7 @@ export const HourlyChart = ({ hourly, height = 220 }: Props) => (
         <Tooltip
           contentStyle={TOOLTIP_STYLE}
           labelFormatter={(hour) => `${hour}時台`}
-          formatter={(value) => [value, "メッセージ数"]}
+          formatter={(value) => [value, tooltipLabel]}
         />
         <Bar dataKey="count" radius={[4, 4, 0, 0]}>
           {hourly.map((item) => (

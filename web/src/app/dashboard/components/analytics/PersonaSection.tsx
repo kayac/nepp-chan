@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { usePersonaAnalytics } from "~/app/dashboard/hooks/useAnalytics";
 import { AXIS_STYLE, getColorAt, TOOLTIP_STYLE } from "~/lib/chart-helpers";
+import { HourlyChart } from "./HourlyChart";
 import { SENTIMENT_SERIES } from "./helpers";
 import { SectionCard, SectionError, SectionLoading } from "./SectionCard";
 
@@ -68,6 +69,16 @@ export const PersonaSection = () => {
       {error != null && <SectionError error={error} />}
       {data && (
         <div className="space-y-8">
+          <div>
+            <h4 className="text-sm font-medium text-stone-700 mb-2">
+              時間帯分布（JST）
+            </h4>
+            <HourlyChart hourly={data.hourly} tooltipLabel="ペルソナ件数" />
+            <p className="text-xs text-stone-500 mt-1">
+              ※会話終了時刻ベースの近似値。1会話から複数件抽出されるため、件数は会話数とは一致しません。
+            </p>
+          </div>
+
           <div>
             <h4 className="text-sm font-medium text-stone-700 mb-2">
               年代別ネガポジ

@@ -19,6 +19,7 @@ const conversationAnalytics = {
 
 const personaAnalytics = {
   totalCount: 2,
+  hourly: Array.from({ length: 24 }, (_, hour) => ({ hour, count: 0 })),
   ageSentiment: [
     { age: "60代", positive: 1, negative: 1, request: 0, neutral: 0 },
   ],

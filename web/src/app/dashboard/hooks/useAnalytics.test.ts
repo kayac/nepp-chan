@@ -33,6 +33,7 @@ describe("usePersonaAnalytics", () => {
         received = { from: params.get("from"), to: params.get("to") };
         return HttpResponse.json({
           totalCount: 3,
+          hourly: [],
           ageSentiment: [],
           topics: [],
           segments: { residence: [], relationship: [] },
