@@ -2,7 +2,10 @@ import { render, screen } from "@testing-library/react";
 import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
 
-import { GREETING_PROMPT } from "~/app/chat/contexts/ChatProvider";
+import {
+  buildGreetingPrompt,
+  GREETING_PROMPT,
+} from "~/app/chat/greeting-prompt";
 
 import { UserMessage } from "./UserMessage";
 
@@ -21,6 +24,13 @@ describe("UserMessage", () => {
   it("挨拶要求プロンプトは表示しない", () => {
     const { container } = render(
       <UserMessage message={userMessage(GREETING_PROMPT)} />,
+    );
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("location 入りの挨拶要求プロンプトも表示しない", () => {
+    const { container } = render(
+      <UserMessage message={userMessage(buildGreetingPrompt("天塩川温泉"))} />,
     );
     expect(container).toBeEmptyDOMElement();
   });
