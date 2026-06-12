@@ -193,19 +193,18 @@ export const getPersonaAnalytics = async (
 ) => {
   const db = createDb(d1);
 
-  const conditions = [
-    params.from ? gte(persona.createdAt, params.from) : undefined,
-    params.to ? lt(persona.createdAt, params.to) : undefined,
-  ].filter((c) => c !== undefined);
-
-  // 時間帯分布は抽出バッチの実行時刻（createdAt）ではなく、
-  // 実際の会話時刻を表す conversationEndedAt で集計する
-  const hourExpr = sql<number>`CAST(strftime('%H', ${persona.conversationEndedAt}, '+9 hours') AS INTEGER)`;
-  const hourlyConditions = [
-    isNotNull(persona.conversationEndedAt),
+  // 期間はすべて会話終了時刻（conversationEndedAt）基準。
+  // createdAt は抽出バッチの実行時刻で、会話のあった期間を表さないため
+  const periodConditions = [
     params.from ? gte(persona.conversationEndedAt, params.from) : undefined,
     params.to ? lt(persona.conversationEndedAt, params.to) : undefined,
   ].filter((c) => c !== undefined);
+
+  const hourExpr = sql<number>`CAST(strftime('%H', ${persona.conversationEndedAt}, '+9 hours') AS INTEGER)`;
+  const hourlyConditions = [
+    isNotNull(persona.conversationEndedAt),
+    ...periodConditions,
+  ];
 
   const [rows, hourlyRows] = await Promise.all([
     db
@@ -216,7 +215,7 @@ export const getPersonaAnalytics = async (
         sentiment: persona.sentiment,
       })
       .from(persona)
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .where(periodConditions.length > 0 ? and(...periodConditions) : undefined)
       .all(),
     db
       .select({ hour: hourExpr, count: sql<number>`COUNT(*)` })

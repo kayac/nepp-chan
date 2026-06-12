@@ -5,6 +5,8 @@ const dateSchema = z
   .regex(/^\d{4}-\d{2}-\d{2}$/)
   .describe("JST の日付（YYYY-MM-DD）");
 
+// 期間は会話終了時刻（conversation_ended_at）基準。
+// 指定時は会話時刻が特定できない行（conversation_ended_at が NULL）を除外する
 export const personaAnalyticsQuerySchema = z.object({
   from: dateSchema.optional(),
   to: dateSchema.optional().describe("JST の日付（YYYY-MM-DD、この日を含む）"),

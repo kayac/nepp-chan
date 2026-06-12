@@ -464,9 +464,16 @@ describe("getPersonaAnalytics", () => {
     );
   });
 
-  it("from/to で期間を絞り込める", async () => {
-    await insertPersona({ id: "p1", createdAt: "2026-06-01T00:00:00.000Z" });
-    await insertPersona({ id: "p2", createdAt: "2026-06-09T00:00:00.000Z" });
+  it("from/to は会話終了時刻基準で絞り込み、会話時刻不明の行は除外する", async () => {
+    await insertPersona({
+      id: "p1",
+      conversationEndedAt: "2026-06-01T00:00:00.000Z",
+    });
+    await insertPersona({
+      id: "p2",
+      conversationEndedAt: "2026-06-09T00:00:00.000Z",
+    });
+    await insertPersona({ id: "p3" }); // conversation_ended_at なし
 
     const result = await getPersonaAnalytics(d1, {
       from: "2026-06-08T00:00:00.000Z",
@@ -474,6 +481,18 @@ describe("getPersonaAnalytics", () => {
     });
 
     expect(result.totalCount).toBe(1);
+  });
+
+  it("from/to なしは conversation_ended_at が NULL の行も含む全件を集計する", async () => {
+    await insertPersona({
+      id: "p1",
+      conversationEndedAt: "2026-06-09T00:00:00.000Z",
+    });
+    await insertPersona({ id: "p2" }); // conversation_ended_at なし
+
+    const result = await getPersonaAnalytics(d1, {});
+
+    expect(result.totalCount).toBe(2);
   });
 
   it("conversation_ended_at を JST の時間帯分布に集計し、NULL は除外する", async () => {
