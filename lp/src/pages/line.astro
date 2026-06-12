@@ -1,0 +1,23 @@
+---
+import { LINE_FRIEND_URL } from "~/constants/urls";
+import Layout from "~/layouts/Layout.astro";
+---
+
+<Layout
+  title="ねっぷちゃん｜音威子府村 AI副村長"
+  bodyClass="bg-(--paper-50) text-(--fg-1)"
+>
+  <meta
+    slot="head"
+    http-equiv="refresh"
+    content={`0;url=${LINE_FRIEND_URL}`}
+  />
+  <meta slot="head" name="robots" content="noindex" />
+  <main class="flex min-h-dvh flex-col items-center justify-center gap-4 p-6">
+    <p>LINEに移動しています…</p>
+    <p>
+      自動で移動しない場合は
+      <a href={LINE_FRIEND_URL} class="underline">こちら</a>
+    </p>
+  </main>
+</Layout>
