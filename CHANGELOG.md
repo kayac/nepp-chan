@@ -1,5 +1,40 @@
 # Changelog
 
+## [v1.0.4](https://github.com/kayac/nepp-chan/compare/v1.0.3...v1.0.4) - 2026-06-12
+
+- feat: ビジュアルアイデンティティを CC BY 4.0 で追加 by @vesperworks in https://github.com/kayac/nepp-chan/pull/685
+- refactor(web): チャットUIを assistant-ui から useChat ベースへ置き換え by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/730
+- chore(deps): AI SDK を v6 系へ更新（server/web/lp） by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/731
+- test: テストカバレッジの底上げと閾値引き上げ by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/732
+- fix(chat): staff ロールに管理者専用エージェントを割り当てない by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/435
+- build(deps-dev): bump @vitest/coverage-v8 from 4.1.7 to 4.1.8 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/690
+- build(deps): bump @ai-sdk/openai from 3.0.66 to 3.0.68 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/709
+- build(deps-dev): bump vitest from 4.1.7 to 4.1.8 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/698
+- build(deps): bump lucide-react from 1.16.0 to 1.17.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/701
+- build(deps-dev): bump @vitest/coverage-istanbul from 4.1.7 to 4.1.8 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/702
+- build(deps-dev): bump wrangler from 4.95.0 to 4.98.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/712
+- build(deps-dev): bump tsx from 4.22.3 to 4.22.4 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/704
+- build(deps): bump astro from 6.3.8 to 6.4.4 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/722
+- build(deps): bump react/react-dom を 19.2.7 に揃える by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/733
+- build(deps): bump the react group with 3 updates by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/734
+- build(deps): bump hono from 4.12.23 to 4.12.25 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/735
+- build(deps-dev): bump @types/node from 25.9.1 to 25.9.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/727
+- build(deps): bump @sentry/cloudflare from 10.54.0 to 10.56.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/724
+- build(deps): bump @tanstack/react-query from 5.100.14 to 5.101.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/723
+- build(deps): bump @radix-ui/react-slot from 1.2.4 to 1.2.5 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/719
+- build(deps): bump @sentry/react from 10.54.0 to 10.57.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/710
+- build(deps): bump @astrojs/react from 5.0.5 to 5.0.7 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/706
+- build(deps): bump @mastra/mcp from 1.8.1 to 1.9.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/729
+- build(deps): bump @mastra/loggers from 1.1.1 to 1.1.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/726
+- build(deps): bump @mastra/evals from 1.2.3 to 1.2.4 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/721
+- feat: スーパーアドミン向け分析ダッシュボードを追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/736
+- build(deps): mastra パッケージ群を最新版へ更新 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/737
+- 管理ユーザー削除 API を追加し、登録済みアカウントを削除できるようにする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/738
+- feat: mastra 1.41 の新機能採用とツール表示まわりの疎結合化 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/739
+- feat: lp / web に OGP・Twitter Card メタタグを追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/740
+- feat(web): location クエリパラメータで歓迎挨拶を開始する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/741
+- feat(lp): LINE 友だち追加用の OGP リダイレクトページを追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/742
+
 ## [v1.0.3](https://github.com/kayac/nepp-chan/compare/v1.0.2...v1.0.3) - 2026-05-29
 - feat(server): LINE配信の参照を関連性ベースに広げる by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/683
 
