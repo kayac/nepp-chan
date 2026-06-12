@@ -17,6 +17,7 @@ import { jstDateRange } from "./helpers";
 import { PersonaPeriodSummary } from "./PersonaPeriodSummary";
 import { SectionCard, SectionError, SectionLoading } from "./SectionCard";
 import { StatCards } from "./StatCards";
+import { WeekdayChart } from "./WeekdayChart";
 
 const DAYS = 30;
 
@@ -81,11 +82,19 @@ export const ConversationSection = () => {
             </ResponsiveContainer>
           </div>
 
-          <div>
-            <h4 className="text-sm font-medium text-stone-700 mb-2">
-              時間帯分布（JST）
-            </h4>
-            <HourlyChart hourly={data.hourly} />
+          <div className="grid lg:grid-cols-[3fr_2fr] gap-6">
+            <div>
+              <h4 className="text-sm font-medium text-stone-700 mb-2">
+                時間帯分布（JST）
+              </h4>
+              <HourlyChart hourly={data.hourly} />
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-stone-700 mb-2">
+                曜日分布（JST）
+              </h4>
+              <WeekdayChart weekday={data.weekday} />
+            </div>
           </div>
 
           {personaData && (

@@ -13,6 +13,7 @@ const API = "http://localhost:8787";
 const conversationAnalytics = {
   daily: [{ date: "2026-06-09", conversations: 4, messages: 10 }],
   hourly: Array.from({ length: 24 }, (_, hour) => ({ hour, count: 0 })),
+  weekday: Array.from({ length: 7 }, (_, dow) => ({ dow, count: 0 })),
   platforms: [{ platform: "line", count: 8 }],
   totals: { conversations: 4, messages: 10 },
 };
@@ -20,6 +21,8 @@ const conversationAnalytics = {
 const personaAnalytics = {
   totalCount: 2,
   hourly: Array.from({ length: 24 }, (_, hour) => ({ hour, count: 0 })),
+  weekday: Array.from({ length: 7 }, (_, dow) => ({ dow, count: 0 })),
+  officeHours: { open: 1, closed: 1 },
   ageSentiment: [
     { age: "60代", positive: 1, negative: 1, request: 0, neutral: 0 },
   ],

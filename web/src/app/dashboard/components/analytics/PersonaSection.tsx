@@ -20,6 +20,7 @@ import {
 import { HourlyChart } from "./HourlyChart";
 import { SENTIMENT_SERIES, sentimentTotal } from "./helpers";
 import { SectionCard, SectionError, SectionLoading } from "./SectionCard";
+import { WeekdayChart } from "./WeekdayChart";
 
 const SentimentBars = () =>
   SENTIMENT_SERIES.map((s) => (
@@ -68,7 +69,7 @@ const SegmentPie = ({
 export const PersonaSection = () => {
   const { data, isLoading, error } = usePersonaAnalytics();
 
-  // 不明が大半（判明率 ~5%）でチャートが潰れるため、判明分のみ描画して
+  // 不明が大半を占めるとチャートが潰れるため、判明分のみ描画して
   // 不明はキャプションで件数を示す
   const knownAges = data?.ageSentiment.filter((a) => a.age !== "不明") ?? [];
   const knownCount = knownAges.reduce((sum, a) => sum + sentimentTotal(a), 0);
@@ -88,12 +89,62 @@ export const PersonaSection = () => {
       {data && (
         <div className="space-y-8">
           <div>
-            <h4 className="text-sm font-medium text-stone-700 mb-2">
-              時間帯分布（JST）
-            </h4>
-            <HourlyChart hourly={data.hourly} tooltipLabel="ペルソナ件数" />
+            <div className="grid grid-cols-2 gap-3 sm:max-w-md mb-4">
+              <div
+                className="rounded-xl border px-4 py-3"
+                style={{
+                  borderColor: "#5cb7bb66",
+                  backgroundColor: "#5cb7bb14",
+                }}
+              >
+                <p className="text-xs text-stone-600">開庁時間に集まった声</p>
+                <p className="text-2xl font-bold text-stone-800 tabular-nums">
+                  {data.officeHours.open.toLocaleString()}
+                  <span className="text-xs font-normal text-stone-500 ml-1">
+                    件
+                  </span>
+                </p>
+                <p className="text-[11px] text-stone-500">
+                  平日 8〜17時（JST）
+                </p>
+              </div>
+              <div
+                className="rounded-xl border px-4 py-3"
+                style={{
+                  borderColor: "#f4a06a66",
+                  backgroundColor: "#f4a06a14",
+                }}
+              >
+                <p className="text-xs text-stone-600">閉庁時間に集まった声</p>
+                <p className="text-2xl font-bold text-stone-800 tabular-nums">
+                  {data.officeHours.closed.toLocaleString()}
+                  <span className="text-xs font-normal text-stone-500 ml-1">
+                    件
+                  </span>
+                </p>
+                <p className="text-[11px] text-stone-500">早朝・夜間・土日</p>
+              </div>
+            </div>
+
+            <div className="grid lg:grid-cols-[3fr_2fr] gap-6">
+              <div>
+                <h4 className="text-sm font-medium text-stone-700 mb-2">
+                  時間帯分布（JST）
+                </h4>
+                <HourlyChart hourly={data.hourly} tooltipLabel="ペルソナ件数" />
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-stone-700 mb-2">
+                  曜日分布（JST）
+                </h4>
+                <WeekdayChart
+                  weekday={data.weekday}
+                  tooltipLabel="ペルソナ件数"
+                />
+              </div>
+            </div>
             <p className="text-xs text-stone-500 mt-1">
-              ※会話終了時刻ベースの近似値。1会話から複数件抽出されるため、件数は会話数とは一致しません。
+              ※いずれも会話終了時刻ベースの近似値。1会話から複数件抽出されるため、件数は会話数とは一致しません。
             </p>
           </div>
 
