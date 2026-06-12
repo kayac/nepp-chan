@@ -13,7 +13,7 @@ import {
 import { usePersonaAnalytics } from "~/app/dashboard/hooks/useAnalytics";
 import { AXIS_STYLE, getColorAt, TOOLTIP_STYLE } from "~/lib/chart-helpers";
 import { HourlyChart } from "./HourlyChart";
-import { SENTIMENT_SERIES } from "./helpers";
+import { SENTIMENT_SERIES, sentimentTotal } from "./helpers";
 import { SectionCard, SectionError, SectionLoading } from "./SectionCard";
 
 const SentimentBars = () =>
@@ -60,6 +60,16 @@ const SegmentPie = ({
 export const PersonaSection = () => {
   const { data, isLoading, error } = usePersonaAnalytics();
 
+  // 不明が大半（判明率 ~5%）でチャートが潰れるため、判明分のみ描画して
+  // 不明はキャプションで件数を示す
+  const knownAges = data?.ageSentiment.filter((a) => a.age !== "不明") ?? [];
+  const knownCount = knownAges.reduce((sum, a) => sum + sentimentTotal(a), 0);
+  const unknownCount = (data?.totalCount ?? 0) - knownCount;
+  const knownRate =
+    data && data.totalCount > 0
+      ? Math.round((knownCount / data.totalCount) * 1000) / 10
+      : 0;
+
   return (
     <SectionCard
       title="ペルソナ分析"
@@ -85,7 +95,7 @@ export const PersonaSection = () => {
             </h4>
             <ResponsiveContainer width="100%" height={260}>
               <BarChart
-                data={data.ageSentiment}
+                data={knownAges}
                 margin={{ top: 10, right: 20, bottom: 0, left: 0 }}
               >
                 <XAxis
@@ -103,6 +113,11 @@ export const PersonaSection = () => {
                 {SentimentBars()}
               </BarChart>
             </ResponsiveContainer>
+            <p className="text-xs text-stone-500 mt-1">
+              ※年代が判明した {knownCount.toLocaleString()} 件のみ表示（判明率{" "}
+              {knownRate}%）。不明 {unknownCount.toLocaleString()}{" "}
+              件は除外しています。
+            </p>
           </div>
 
           <div>
