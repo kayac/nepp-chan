@@ -1,9 +1,11 @@
 // ペルソナ sentiment の表示順・ラベル・色（積み上げチャート共通）
+// 色はねっぷちゃんブランドパレット（shared/src/styles/index.css）から。
+// 中立が件数の大半を占めるため、淡く穏やかな雪の青で「引かせる」配色にする
 export const SENTIMENT_SERIES = [
-  { key: "positive", label: "ポジティブ", color: "#0d9488" }, // teal-600
-  { key: "negative", label: "ネガティブ", color: "#e11d48" }, // rose-600
-  { key: "request", label: "要望", color: "#d97706" }, // amber-600
-  { key: "neutral", label: "中立", color: "#a8a29e" }, // stone-400
+  { key: "positive", label: "ポジティブ", color: "#5cb7bb" }, // teal-500（ブランド）
+  { key: "negative", label: "ネガティブ", color: "#e76f7a" }, // berry
+  { key: "request", label: "要望", color: "#f4b860" }, // honey
+  { key: "neutral", label: "中立", color: "#c8d9e8" }, // sky-300（雪の青）
 ] as const;
 
 export type SentimentCounts = {

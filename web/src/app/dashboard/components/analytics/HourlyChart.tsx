@@ -9,8 +9,9 @@ import {
 } from "recharts";
 import { AXIS_STYLE, TOOLTIP_STYLE } from "~/lib/chart-helpers";
 
-const OPEN_COLOR = "#0d9488"; // teal-600
-const CLOSED_COLOR = "#d97706"; // amber-600
+// ねっぷちゃんブランドパレット（teal=ベレー帽 / apricot=頬）
+const OPEN_COLOR = "#5cb7bb"; // teal-500
+const CLOSED_COLOR = "#f4a06a"; // apricot-500
 
 // 役場の開庁時間は 8〜17 時（JST）
 const isClosedHour = (hour: number) => hour < 8 || hour >= 17;

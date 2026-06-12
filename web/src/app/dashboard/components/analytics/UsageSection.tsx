@@ -8,7 +8,12 @@ import {
   YAxis,
 } from "recharts";
 import { useUsageAnalytics } from "~/app/dashboard/hooks/useAnalytics";
-import { AXIS_STYLE, getColorAt, TOOLTIP_STYLE } from "~/lib/chart-helpers";
+import {
+  AXIS_STYLE,
+  getColorAt,
+  NEPP_CHART_COLORS,
+  TOOLTIP_STYLE,
+} from "~/lib/chart-helpers";
 import { formatCostUsd, pivotWeeklyUsage } from "./helpers";
 import {
   SectionCard,
@@ -66,7 +71,7 @@ export const UsageSection = () => {
                     key={model}
                     dataKey={model}
                     stackId="tokens"
-                    fill={getColorAt(index)}
+                    fill={getColorAt(index, NEPP_CHART_COLORS)}
                   />
                 ))}
               </BarChart>

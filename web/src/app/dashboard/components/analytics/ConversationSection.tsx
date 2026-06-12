@@ -65,7 +65,7 @@ export const ConversationSection = () => {
                   type="monotone"
                   dataKey="conversations"
                   name="会話数"
-                  stroke="#0d9488"
+                  stroke="#0d9296"
                   strokeWidth={2.5}
                   dot={false}
                 />
@@ -73,7 +73,7 @@ export const ConversationSection = () => {
                   type="monotone"
                   dataKey="messages"
                   name="メッセージ数"
-                  stroke="#0284c7"
+                  stroke="#89a8c0"
                   strokeWidth={2}
                   dot={false}
                 />

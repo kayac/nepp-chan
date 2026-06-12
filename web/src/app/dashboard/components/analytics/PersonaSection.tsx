@@ -11,7 +11,12 @@ import {
   YAxis,
 } from "recharts";
 import { usePersonaAnalytics } from "~/app/dashboard/hooks/useAnalytics";
-import { AXIS_STYLE, getColorAt, TOOLTIP_STYLE } from "~/lib/chart-helpers";
+import {
+  AXIS_STYLE,
+  getColorAt,
+  NEPP_CHART_COLORS,
+  TOOLTIP_STYLE,
+} from "~/lib/chart-helpers";
 import { HourlyChart } from "./HourlyChart";
 import { SENTIMENT_SERIES, sentimentTotal } from "./helpers";
 import { SectionCard, SectionError, SectionLoading } from "./SectionCard";
@@ -47,7 +52,10 @@ const SegmentPie = ({
           nameKey="label"
         >
           {data.map((item, index) => (
-            <Cell key={item.label} fill={getColorAt(index)} />
+            <Cell
+              key={item.label}
+              fill={getColorAt(index, NEPP_CHART_COLORS)}
+            />
           ))}
         </Pie>
         <Tooltip contentStyle={TOOLTIP_STYLE} />
