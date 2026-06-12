@@ -41,8 +41,13 @@ const sentimentCountsShape = {
   neutral: z.number(),
 };
 
+const hourlyCountSchema = z.object({ hour: z.number(), count: z.number() });
+
 export const personaAnalyticsResponseSchema = z.object({
   totalCount: z.number(),
+  // 会話終了時刻（conversation_ended_at）ベースの JST 時間帯分布。
+  // 1会話から複数件抽出されるため件数は会話数とは一致しない近似値
+  hourly: z.array(hourlyCountSchema),
   ageSentiment: z.array(z.object({ age: z.string(), ...sentimentCountsShape })),
   topics: z.array(
     z.object({ topic: z.string(), total: z.number(), ...sentimentCountsShape }),
@@ -52,8 +57,6 @@ export const personaAnalyticsResponseSchema = z.object({
     relationship: z.array(z.object({ label: z.string(), count: z.number() })),
   }),
 });
-
-const hourlyCountSchema = z.object({ hour: z.number(), count: z.number() });
 const platformCountSchema = z.object({
   platform: z.string(),
   count: z.number(),

@@ -85,6 +85,7 @@ const emptyConversationStats = {
 
 const emptyPersonaAnalytics = {
   totalCount: 0,
+  hourly: [],
   ageSentiment: [],
   topics: [],
   segments: { residence: [], relationship: [] },

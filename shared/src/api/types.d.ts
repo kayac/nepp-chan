@@ -535,6 +535,10 @@ export interface paths {
                     content: {
                         "application/json": {
                             totalCount: number;
+                            hourly: {
+                                hour: number;
+                                count: number;
+                            }[];
                             ageSentiment: {
                                 age: string;
                                 positive: number;

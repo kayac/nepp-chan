@@ -360,6 +360,7 @@ describe("getPersonaAnalytics", () => {
     topic?: string;
     sentiment?: string;
     createdAt?: string;
+    conversationEndedAt?: string;
   }) => {
     await db.insert(persona).values({
       id: params.id,
@@ -370,6 +371,7 @@ describe("getPersonaAnalytics", () => {
       topic: params.topic,
       sentiment: params.sentiment ?? "neutral",
       createdAt: params.createdAt ?? "2026-06-09T00:00:00.000Z",
+      conversationEndedAt: params.conversationEndedAt,
     });
   };
 
@@ -472,5 +474,48 @@ describe("getPersonaAnalytics", () => {
     });
 
     expect(result.totalCount).toBe(1);
+  });
+
+  it("conversation_ended_at を JST の時間帯分布に集計し、NULL は除外する", async () => {
+    // UTC 00:30 → JST 9時台、UTC 23:10 → JST 8時台
+    await insertPersona({
+      id: "p1",
+      conversationEndedAt: "2026-06-09T00:30:00.000Z",
+    });
+    await insertPersona({
+      id: "p2",
+      conversationEndedAt: "2026-06-09T00:45:00.000Z",
+    });
+    await insertPersona({
+      id: "p3",
+      conversationEndedAt: "2026-06-08T23:10:00.000Z",
+    });
+    await insertPersona({ id: "p4" }); // conversation_ended_at なし
+
+    const result = await getPersonaAnalytics(d1, {});
+
+    expect(result.hourly).toHaveLength(24);
+    expect(result.hourly.find((h) => h.hour === 9)?.count).toBe(2);
+    expect(result.hourly.find((h) => h.hour === 8)?.count).toBe(1);
+    expect(result.hourly.reduce((sum, h) => sum + h.count, 0)).toBe(3);
+  });
+
+  it("時間帯分布も from/to（conversation_ended_at 基準）で絞り込める", async () => {
+    await insertPersona({
+      id: "p1",
+      conversationEndedAt: "2026-06-01T00:30:00.000Z",
+    });
+    await insertPersona({
+      id: "p2",
+      conversationEndedAt: "2026-06-09T00:30:00.000Z",
+    });
+
+    const result = await getPersonaAnalytics(d1, {
+      from: "2026-06-08T00:00:00.000Z",
+      to: "2026-06-15T00:00:00.000Z",
+    });
+
+    expect(result.hourly.reduce((sum, h) => sum + h.count, 0)).toBe(1);
+    expect(result.hourly.find((h) => h.hour === 9)?.count).toBe(1);
   });
 });

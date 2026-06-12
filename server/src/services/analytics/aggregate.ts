@@ -1,4 +1,4 @@
-import { and, gte, lt, sql } from "drizzle-orm";
+import { and, gte, isNotNull, lt, sql } from "drizzle-orm";
 import { createDb, persona } from "~/db";
 import { calcCostUsd } from "~/lib/llm-pricing";
 
@@ -6,6 +6,13 @@ import { calcCostUsd } from "~/lib/llm-pricing";
 // API は JST ラベル済みのデータを返す（フロントでは変換しない）。
 
 type Period = { from: string; to: string };
+
+// 0〜23 時の全時間帯を 0 件で埋めた配列にする（欠けた時間帯はグラフに出ないため）
+const fillHours = (rows: { hour: number; count: number }[]) =>
+  Array.from({ length: 24 }, (_, hour) => ({
+    hour,
+    count: Number(rows.find((r) => Number(r.hour) === hour)?.count ?? 0),
+  }));
 
 const AGE_GROUPS = [
   "10代",
@@ -74,18 +81,13 @@ export const getConversationStats = async (d1: D1Database, period: Period) => {
     `),
   ]);
 
-  const hourly = Array.from({ length: 24 }, (_, hour) => ({
-    hour,
-    count: Number(hourlyRows.find((r) => Number(r.hour) === hour)?.count ?? 0),
-  }));
-
   return {
     daily: daily.map((r) => ({
       date: r.date,
       conversations: Number(r.conversations),
       messages: Number(r.messages),
     })),
-    hourly,
+    hourly: fillHours(hourlyRows),
     platforms: platforms.map((r) => ({
       platform: r.platform,
       count: Number(r.count),
@@ -196,16 +198,33 @@ export const getPersonaAnalytics = async (
     params.to ? lt(persona.createdAt, params.to) : undefined,
   ].filter((c) => c !== undefined);
 
-  const rows = await db
-    .select({
-      tags: persona.tags,
-      demographicSummary: persona.demographicSummary,
-      topic: persona.topic,
-      sentiment: persona.sentiment,
-    })
-    .from(persona)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .all();
+  // 時間帯分布は抽出バッチの実行時刻（createdAt）ではなく、
+  // 実際の会話時刻を表す conversationEndedAt で集計する
+  const hourExpr = sql<number>`CAST(strftime('%H', ${persona.conversationEndedAt}, '+9 hours') AS INTEGER)`;
+  const hourlyConditions = [
+    isNotNull(persona.conversationEndedAt),
+    params.from ? gte(persona.conversationEndedAt, params.from) : undefined,
+    params.to ? lt(persona.conversationEndedAt, params.to) : undefined,
+  ].filter((c) => c !== undefined);
+
+  const [rows, hourlyRows] = await Promise.all([
+    db
+      .select({
+        tags: persona.tags,
+        demographicSummary: persona.demographicSummary,
+        topic: persona.topic,
+        sentiment: persona.sentiment,
+      })
+      .from(persona)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .all(),
+    db
+      .select({ hour: hourExpr, count: sql<number>`COUNT(*)` })
+      .from(persona)
+      .where(and(...hourlyConditions))
+      .groupBy(hourExpr)
+      .all(),
+  ]);
 
   const ageSentiment = new Map(
     AGE_GROUPS.map((age) => [age as string, emptySentimentCounts()]),
@@ -253,6 +272,7 @@ export const getPersonaAnalytics = async (
 
   return {
     totalCount: rows.length,
+    hourly: fillHours(hourlyRows),
     ageSentiment: AGE_GROUPS.map((age) => ({
       age,
       ...(ageSentiment.get(age) ?? emptySentimentCounts()),
