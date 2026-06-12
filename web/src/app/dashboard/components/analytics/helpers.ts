@@ -6,6 +6,51 @@ export const SENTIMENT_SERIES = [
   { key: "neutral", label: "中立", color: "#a8a29e" }, // stone-400
 ] as const;
 
+export type SentimentCounts = {
+  positive: number;
+  negative: number;
+  request: number;
+  neutral: number;
+};
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+const toJstDate = (d: Date) =>
+  new Date(d.getTime() + JST_OFFSET_MS).toISOString().slice(0, 10);
+
+/** 直近 days 日の JST 日付範囲（from は days-1 日前、to は今日。両端を含む） */
+export const jstDateRange = (days: number, now: Date = new Date()) => ({
+  from: toJstDate(new Date(now.getTime() - (days - 1) * DAY_MS)),
+  to: toJstDate(now),
+});
+
+/** 1 行の sentiment 内訳の合計件数 */
+export const sentimentTotal = (row: SentimentCounts) =>
+  row.positive + row.negative + row.request + row.neutral;
+
+/** sentiment 内訳を持つ行の合計を出す */
+export const sumSentiments = (rows: SentimentCounts[]): SentimentCounts =>
+  rows.reduce(
+    (acc, row) => ({
+      positive: acc.positive + row.positive,
+      negative: acc.negative + row.negative,
+      request: acc.request + row.request,
+      neutral: acc.neutral + row.neutral,
+    }),
+    { positive: 0, negative: 0, request: 0, neutral: 0 },
+  );
+
+/** 件数の多い順に上位 n 件（0 件は除外） */
+export const topEntries = (
+  entries: { label: string; count: number }[],
+  n: number,
+) =>
+  entries
+    .filter((e) => e.count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, n);
+
 type WeeklyUsageRow = {
   weekStart: string;
   model: string;

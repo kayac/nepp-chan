@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { formatCostUsd, pivotWeeklyUsage } from "./helpers";
+import {
+  formatCostUsd,
+  jstDateRange,
+  pivotWeeklyUsage,
+  sumSentiments,
+  topEntries,
+} from "./helpers";
 
 const row = (weekStart: string, model: string, totalTokens: number) => ({
   weekStart,
@@ -36,5 +42,58 @@ describe("formatCostUsd", () => {
   it("小数 4 桁の USD 表記にする", () => {
     expect(formatCostUsd(0.01234)).toBe("$0.0123");
     expect(formatCostUsd(0)).toBe("$0.0000");
+  });
+});
+
+describe("jstDateRange", () => {
+  it("直近 days 日の JST 日付範囲を返す（両端を含む）", () => {
+    // UTC 2026-06-11 16:00 = JST 2026-06-12 01:00
+    const now = new Date("2026-06-11T16:00:00.000Z");
+
+    expect(jstDateRange(30, now)).toEqual({
+      from: "2026-05-14",
+      to: "2026-06-12",
+    });
+    expect(jstDateRange(1, now)).toEqual({
+      from: "2026-06-12",
+      to: "2026-06-12",
+    });
+  });
+});
+
+describe("sumSentiments", () => {
+  it("sentiment 内訳を合算する", () => {
+    expect(
+      sumSentiments([
+        { positive: 1, negative: 2, request: 0, neutral: 3 },
+        { positive: 4, negative: 0, request: 1, neutral: 0 },
+      ]),
+    ).toEqual({ positive: 5, negative: 2, request: 1, neutral: 3 });
+  });
+
+  it("空配列は全て 0", () => {
+    expect(sumSentiments([])).toEqual({
+      positive: 0,
+      negative: 0,
+      request: 0,
+      neutral: 0,
+    });
+  });
+});
+
+describe("topEntries", () => {
+  it("件数の多い順に上位 n 件を返し、0 件は除外する", () => {
+    const entries = [
+      { label: "a", count: 1 },
+      { label: "b", count: 5 },
+      { label: "c", count: 0 },
+      { label: "d", count: 3 },
+    ];
+
+    expect(topEntries(entries, 2)).toEqual([
+      { label: "b", count: 5 },
+      { label: "d", count: 3 },
+    ]);
+    expect(topEntries(entries, 10)).toHaveLength(3);
   });
 });
