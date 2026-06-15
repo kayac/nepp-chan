@@ -15,6 +15,7 @@
       "!**/.mastra",
       "!**/.wrangler",
       "!**/.claude",
+      "!**/.brain",
       "!**/coverage",
       "!**/*.astro",
       "!**/*.d.ts",
