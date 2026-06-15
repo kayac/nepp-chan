@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.0.5](https://github.com/kayac/nepp-chan/compare/v1.0.4...v1.0.5) - 2026-06-15
+
+- GA4 を lp / web に導入する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/744
+
 ## [v1.0.4](https://github.com/kayac/nepp-chan/compare/v1.0.3...v1.0.4) - 2026-06-12
 
 - feat: ビジュアルアイデンティティを CC BY 4.0 で追加 by @vesperworks in https://github.com/kayac/nepp-chan/pull/685
