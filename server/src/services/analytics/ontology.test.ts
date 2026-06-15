@@ -14,7 +14,7 @@ vi.mock("~/db", async (importOriginal) => {
   };
 });
 
-const { getOntology } = await import("./ontology");
+const { getOntology, mergeEntitySnapshot } = await import("./ontology");
 
 const d1 = {} as D1Database;
 
@@ -160,5 +160,75 @@ describe("getOntology", () => {
     });
 
     expect(result.meta.personaTotal).toBe(1);
+  });
+});
+
+describe("mergeEntitySnapshot", () => {
+  const base = {
+    nodes: [
+      {
+        id: "top:観光",
+        label: "観光",
+        kind: "topic" as const,
+        count: 5,
+        role: "関心点" as const,
+        roles: ["関心点" as const],
+      },
+    ],
+    links: [
+      {
+        source: "seg:観光客",
+        target: "top:観光",
+        n: 5,
+        kind: "seg-topic" as const,
+      },
+    ],
+    meta: {
+      personaTotal: 5,
+      generatedAt: "2026-06-15T00:00:00.000Z",
+      entityLayerStatus: "none" as const,
+      note: "",
+    },
+  };
+
+  it("スナップショットが無ければ base をそのまま返す", () => {
+    const result = mergeEntitySnapshot(base, undefined);
+    expect(result).toBe(base);
+    expect(result.meta.entityLayerStatus).toBe("none");
+  });
+
+  it("スナップショットの entity を合流し ready にする", () => {
+    const snapshot = {
+      id: "latest",
+      dataJson: JSON.stringify({
+        entities: [
+          {
+            id: "ent:音威子府駅",
+            label: "音威子府駅",
+            kind: "entity",
+            count: 3,
+            role: "関心点",
+            roles: ["関心点"],
+          },
+        ],
+        links: [
+          {
+            source: "ent:音威子府駅",
+            target: "top:観光",
+            n: 3,
+            kind: "topic-ent",
+          },
+        ],
+      }),
+      entityCount: 1,
+      generatedAt: "2026-06-15T01:00:00.000Z",
+      generatedBy: "admin-1",
+    };
+
+    const result = mergeEntitySnapshot(base, snapshot);
+
+    expect(result.meta.entityLayerStatus).toBe("ready");
+    expect(result.nodes.find((n) => n.id === "ent:音威子府駅")).toBeDefined();
+    expect(result.links.find((l) => l.kind === "topic-ent")).toBeDefined();
   });
 });

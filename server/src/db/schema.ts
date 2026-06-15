@@ -220,6 +220,17 @@ export const weeklyReports = sqliteTable("weekly_reports", {
 export type WeeklyReport = typeof weeklyReports.$inferSelect;
 export type NewWeeklyReport = typeof weeklyReports.$inferInsert;
 
+export const ontologySnapshots = sqliteTable("ontology_snapshots", {
+  id: text("id").primaryKey(),
+  dataJson: text("data_json").notNull(),
+  entityCount: integer("entity_count").notNull(),
+  generatedAt: text("generated_at").notNull(),
+  generatedBy: text("generated_by").notNull(),
+});
+
+export type OntologySnapshot = typeof ontologySnapshots.$inferSelect;
+export type NewOntologySnapshot = typeof ontologySnapshots.$inferInsert;
+
 // 保管期間ポリシーによる削除実行ログ
 export const dataRetentionLogs = sqliteTable("data_retention_logs", {
   id: text("id").primaryKey(),
