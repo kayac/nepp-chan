@@ -12,7 +12,7 @@
     "deploy:prd": "pnpm build && wrangler pages deploy --project-name nepp-chan-lp-prd --branch main"
   },
   "dependencies": {
-    "@ai-sdk/react": "^3.0.200",
+    "@ai-sdk/react": "^3.0.207",
     "@astrojs/check": "^0.9.9",
     "@astrojs/react": "^5.0.7",
     "@nepp-chan/shared": "workspace:*",
