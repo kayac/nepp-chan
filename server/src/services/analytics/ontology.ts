@@ -283,11 +283,11 @@ export const getOntology = async (
     }
   }
 
-  // entities 未処理の persona が残る間は部分的なので stale を返す
+  // 対象期間に entities 未処理の persona が残る間は部分的なので stale を返す
   const missingRow = await db
     .select({ value: count() })
     .from(persona)
-    .where(sql`${persona.entities} IS NULL`)
+    .where(and(sql`${persona.entities} IS NULL`, ...conditions))
     .get();
   const entitiesPending = (missingRow?.value ?? 0) > 0;
 

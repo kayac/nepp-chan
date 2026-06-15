@@ -45,7 +45,7 @@ export const personaSaveTool = createTool({
     entities: personaEntitiesSchema
       .optional()
       .describe(
-        "言及された固有エンティティ（施設・サービス・制度等）。canonicalName と type を抽出。個人名等は含めない",
+        "言及された固有エンティティ（施設・サービス・制度等）。name に正規名、type に種別を入れる。個人名等は含めない",
       ),
   }),
   outputSchema: z.object({
