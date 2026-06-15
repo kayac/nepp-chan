@@ -109,8 +109,8 @@ importers:
         specifier: 1.41.0
         version: 1.41.0(ai@6.0.198(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
       '@mastra/evals':
-        specifier: 1.2.4
-        version: 1.2.4(@mastra/core@1.41.0(ai@6.0.198(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
+        specifier: 1.3.0
+        version: 1.3.0(@mastra/core@1.41.0(ai@6.0.198(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
       '@mastra/libsql':
         specifier: 1.12.1
         version: 1.12.1(@mastra/core@1.41.0(ai@6.0.198(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
@@ -1938,8 +1938,8 @@ packages:
     peerDependencies:
       '@mastra/core': '>=1.34.0-0 <2.0.0-0'
 
-  '@mastra/evals@1.2.4':
-    resolution: {integrity: sha512-9V3Jw71RZeVziCJbNmevNkrADnUP1Ck6FcNQXXGnvgNZXnuB6/ecDkk6IptfG/6Os7GTrIAhnWWYw4A9XarY+Q==}
+  '@mastra/evals@1.3.0':
+    resolution: {integrity: sha512-UIUCwCOvn1K8njUeVrtyGQOTx3WiS8d0XeoUqg8OV6suy2bwRcxwhECw3o6PBy3xcgJavuWTpNCpQXOLM79c/A==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.0.0-0 <2.0.0-0'
@@ -7616,7 +7616,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@mastra/evals@1.2.4(@mastra/core@1.41.0(ai@6.0.198(zod@4.4.3))(express@5.2.1)(zod@4.4.3))':
+  '@mastra/evals@1.3.0(@mastra/core@1.41.0(ai@6.0.198(zod@4.4.3))(express@5.2.1)(zod@4.4.3))':
     dependencies:
       '@mastra/core': 1.41.0(ai@6.0.198(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
       compromise: 14.15.1
