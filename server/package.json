@@ -33,7 +33,7 @@
     "@line/bot-sdk": "^11.0.1",
     "@mastra/ai-sdk": "^1.4.4",
     "@mastra/cloudflare-d1": "1.0.6",
-    "@mastra/core": "1.41.0",
+    "@mastra/core": "1.42.0",
     "@mastra/evals": "1.2.4",
     "@mastra/libsql": "1.12.1",
     "@mastra/loggers": "1.1.2",
