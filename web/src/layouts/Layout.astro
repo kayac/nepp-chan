@@ -1,5 +1,6 @@
 ---
 import "~/index.css";
+import GoogleAnalytics from "~/components/GoogleAnalytics.astro";
 
 const SITE_NAME = "ねっぷちゃん";
 const DEFAULT_DESCRIPTION =
@@ -30,6 +31,7 @@ const ogImageUrl = new URL(ogImage, Astro.site);
 
 <html lang="ja" class={htmlClass}>
 	<head>
+		<GoogleAnalytics />
 		<meta charset="UTF-8" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
