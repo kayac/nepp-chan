@@ -1,4 +1,3 @@
-import { count, sql } from "drizzle-orm";
 import { createDb, persona } from "~/db";
 import { personaEntitiesSchema } from "~/schemas/persona-entity-schema";
 import { emptySentimentCounts, normalizeSentiment, TOPICS } from "./aggregate";
@@ -118,6 +117,20 @@ const dominantTopic = (topicCounts: Map<string, number>) =>
 const topSegments = (bySegment: Map<Segment, number>, n: number) =>
   [...bySegment.entries()].sort((a, b) => b[1] - a[1]).slice(0, n);
 
+// topic / entity ノード共通の役割・内訳プロパティを組み立てる
+const roleAndBreakdowns = (
+  bySentiment: SentimentCounts,
+  bySegment: Map<Segment, number>,
+) => {
+  const roles = classifyRoles(bySentiment, bySegment);
+  return {
+    role: roles[0],
+    roles,
+    bySegment: nonZeroRecord(bySegment),
+    bySentiment: nonZeroRecord(Object.entries(bySentiment)),
+  };
+};
+
 const parseEntities = (raw: string | null) => {
   if (!raw) return [];
   try {
@@ -162,8 +175,11 @@ export const getOntology = async (d1: D1Database): Promise<OntologyData> => {
   >();
   const linkCounts = new Map<string, number>();
   const entityAgg = new Map<string, EntityAgg>();
+  let entitiesPending = false;
 
   for (const row of rows) {
+    if (row.entities === null) entitiesPending = true;
+
     const attributes = [row.tags, row.demographicSummary]
       .filter(Boolean)
       .join(",");
@@ -219,19 +235,13 @@ export const getOntology = async (d1: D1Database): Promise<OntologyData> => {
   );
 
   const topicNodes: OntologyNode[] = [...topicAgg.entries()].map(
-    ([label, agg]) => {
-      const roles = classifyRoles(agg.bySentiment, agg.bySegment);
-      return {
-        id: `top:${label}`,
-        label,
-        kind: "topic" as const,
-        count: agg.total,
-        role: roles[0],
-        roles,
-        bySegment: nonZeroRecord(agg.bySegment),
-        bySentiment: nonZeroRecord(Object.entries(agg.bySentiment)),
-      };
-    },
+    ([label, agg]) => ({
+      id: `top:${label}`,
+      label,
+      kind: "topic",
+      count: agg.total,
+      ...roleAndBreakdowns(agg.bySentiment, agg.bySegment),
+    }),
   );
 
   const links: OntologyLink[] = [...linkCounts.entries()].map(([key, n]) => {
@@ -249,7 +259,6 @@ export const getOntology = async (d1: D1Database): Promise<OntologyData> => {
     if (ent.count < MIN_ENTITY_COUNT) continue;
 
     const topic = dominantTopic(ent.topicCounts);
-    const roles = classifyRoles(ent.bySentiment, ent.bySegment);
     const id = `ent:${ent.canonical}`;
     entityNodes.push({
       id,
@@ -258,10 +267,7 @@ export const getOntology = async (d1: D1Database): Promise<OntologyData> => {
       type: ent.type,
       topic,
       count: ent.count,
-      role: roles[0],
-      roles,
-      bySegment: nonZeroRecord(ent.bySegment),
-      bySentiment: nonZeroRecord(Object.entries(ent.bySentiment)),
+      ...roleAndBreakdowns(ent.bySentiment, ent.bySegment),
     });
     links.push({
       source: id,
@@ -273,14 +279,6 @@ export const getOntology = async (d1: D1Database): Promise<OntologyData> => {
       links.push({ source: `seg:${segment}`, target: id, n, kind: "seg-ent" });
     }
   }
-
-  // entities 未処理の persona が残る間は部分的なので stale を返す
-  const missingRow = await db
-    .select({ value: count() })
-    .from(persona)
-    .where(sql`${persona.entities} IS NULL`)
-    .get();
-  const entitiesPending = (missingRow?.value ?? 0) > 0;
 
   return {
     nodes: [...segmentNodes, ...topicNodes, ...entityNodes],
