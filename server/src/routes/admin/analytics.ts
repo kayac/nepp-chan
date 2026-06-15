@@ -29,7 +29,6 @@ import {
   getPersonaAnalytics,
   getWeeklyUsage,
 } from "~/services/analytics/aggregate";
-import { backfillPersonaEntities } from "~/services/analytics/backfill-persona-entities";
 import { getOntology } from "~/services/analytics/ontology";
 
 export const analyticsAdminRoutes = new OpenAPIHono<{
@@ -100,35 +99,6 @@ analyticsAdminRoutes.openapi(ontologyRoute, async (c) => {
       ? new Date(jstDateToUtc(to).getTime() + DAY_MS).toISOString()
       : undefined,
   });
-
-  return c.json(result, 200);
-});
-
-const ontologyBackfillRoute = createRoute({
-  method: "post",
-  path: "/ontology/backfill",
-  tags: ["Admin - Analytics"],
-  summary: "既存 persona に entities を差し込む（チャンク・冪等）",
-  responses: {
-    200: {
-      description: "処理件数と残数",
-      content: {
-        "application/json": {
-          schema: z.object({
-            processed: z.number(),
-            updated: z.number(),
-            remaining: z.number(),
-          }),
-        },
-      },
-    },
-    401: errorResponse(401),
-    403: errorResponse(403),
-  },
-});
-
-analyticsAdminRoutes.openapi(ontologyBackfillRoute, async (c) => {
-  const result = await backfillPersonaEntities(c.env);
 
   return c.json(result, 200);
 });

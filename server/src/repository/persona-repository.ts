@@ -64,30 +64,6 @@ export const personaRepository = {
     await db.update(persona).set(updates).where(eq(persona.id, id));
   },
 
-  // entities 未処理（NULL）の persona を content つきで取得する（バックフィル用）
-  async listMissingEntities(d1: D1Database, limit: number) {
-    const db = createDb(d1);
-
-    return db
-      .select({ id: persona.id, content: persona.content })
-      .from(persona)
-      .where(sql`${persona.entities} IS NULL`)
-      .limit(limit)
-      .all();
-  },
-
-  async countMissingEntities(d1: D1Database) {
-    const db = createDb(d1);
-
-    const row = await db
-      .select({ value: count() })
-      .from(persona)
-      .where(sql`${persona.entities} IS NULL`)
-      .get();
-
-    return row?.value ?? 0;
-  },
-
   async findById(d1: D1Database, id: string) {
     const db = createDb(d1);
 

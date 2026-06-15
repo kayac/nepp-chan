@@ -11,12 +11,7 @@ type LlmUsageParams = {
     totalTokens?: number;
   };
   platform?: "web" | "line" | "lp";
-  source:
-    | "chat"
-    | "persona-extract"
-    | "weekly-report"
-    | "intent-classify"
-    | "ontology";
+  source: "chat" | "persona-extract" | "weekly-report" | "intent-classify";
   intent?: "casual" | "thinking";
   threadId?: string;
 };

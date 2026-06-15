@@ -29,16 +29,9 @@ vi.mock("~/services/analytics/ontology", () => ({
   getOntology: vi.fn(),
 }));
 
-vi.mock("~/services/analytics/backfill-persona-entities", () => ({
-  backfillPersonaEntities: vi.fn(),
-}));
-
 const { getConversationStats, getWeeklyUsage, getPersonaAnalytics } =
   await import("~/services/analytics/aggregate");
 const { getOntology } = await import("~/services/analytics/ontology");
-const { backfillPersonaEntities } = await import(
-  "~/services/analytics/backfill-persona-entities"
-);
 const { weeklyReportRepository } = await import(
   "~/repository/weekly-report-repository"
 );
@@ -349,39 +342,5 @@ describe("GET /ontology", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as { meta: { entityLayerStatus: string } };
     expect(body.meta.entityLayerStatus).toBe("ready");
-  });
-});
-
-describe("POST /ontology/backfill", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  const post = () =>
-    new Request("http://localhost/ontology/backfill", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${TOKEN}` },
-    });
-
-  it("super_admin は処理件数と残数を返す", async () => {
-    useAuth("super_admin");
-    vi.mocked(backfillPersonaEntities).mockResolvedValue({
-      processed: 30,
-      updated: 12,
-      remaining: 70,
-    });
-
-    const res = await routes.request(post(), undefined, mockEnv);
-
-    expect(res.status).toBe(200);
-    const body = (await res.json()) as { remaining: number };
-    expect(body.remaining).toBe(70);
-    expect(backfillPersonaEntities).toHaveBeenCalled();
-  });
-
-  it("staff は 403", async () => {
-    useAuth("staff");
-    const res = await routes.request(post(), undefined, mockEnv);
-    expect(res.status).toBe(403);
   });
 });
