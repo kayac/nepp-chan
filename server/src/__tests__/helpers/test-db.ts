@@ -28,6 +28,7 @@ export const createTestDb = async () => {
       topic TEXT,
       sentiment TEXT DEFAULT 'neutral',
       demographic_summary TEXT,
+      entities TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT,
       conversation_ended_at TEXT
@@ -165,14 +166,6 @@ export const createTestDb = async () => {
     );
     CREATE UNIQUE INDEX IF NOT EXISTS idx_weekly_reports_period_start
       ON weekly_reports (period_start);
-
-    CREATE TABLE IF NOT EXISTS ontology_snapshots (
-      id TEXT PRIMARY KEY,
-      data_json TEXT NOT NULL,
-      entity_count INTEGER NOT NULL,
-      generated_at TEXT NOT NULL,
-      generated_by TEXT NOT NULL
-    );
 
     -- 保管期間ポリシー削除実行ログ
     CREATE TABLE IF NOT EXISTS data_retention_logs (

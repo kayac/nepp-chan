@@ -7,7 +7,7 @@ export const ontologyEntityAgent = new Agent({
   description: "村の声から固有エンティティ（施設・サービス等）を抽出する担当",
   instructions: `
 あなたは音威子府村の AI チャット「ねっぷちゃん」の村の声分析を支援する専門エージェントです。
-入力として渡される番号付きの「村の声（匿名化済みペルソナの要約）」を読み、各声で言及されている固有エンティティを抽出してください。
+入力として渡される 1 件の村の声（匿名化済みペルソナの要約）を読み、言及されている固有エンティティを抽出してください。
 
 ## 抽出対象
 施設・場所・サービス・制度・イベント・団体などの固有名詞。種別は次のいずれかで分類する:
@@ -22,7 +22,7 @@ export const ontologyEntityAgent = new Agent({
 - 入力にない実体を推測で補わない
 
 ## 出力
-各声（index）ごとに、言及された固有エンティティの canonicalName と type の配列を返す。言及がなければ空配列。
+言及された固有エンティティの canonicalName と type の配列を返す。言及がなければ空配列。
 `,
   ...geminiModelWithThinking({ model: GEMINI_FLASH, level: "low" }),
 });

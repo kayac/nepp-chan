@@ -14,7 +14,7 @@ vi.mock("~/db", async (importOriginal) => {
   };
 });
 
-const { getOntology, mergeEntitySnapshot } = await import("./ontology");
+const { getOntology } = await import("./ontology");
 
 const d1 = {} as D1Database;
 
@@ -27,6 +27,7 @@ const insertPersona = async (
     topic?: string;
     sentiment?: string;
     conversationEndedAt?: string;
+    entities?: { name: string; type: string }[];
   },
 ) => {
   await db.insert(persona).values({
@@ -37,6 +38,7 @@ const insertPersona = async (
     demographicSummary: params.demographicSummary,
     topic: params.topic,
     sentiment: params.sentiment ?? "neutral",
+    entities: params.entities ? JSON.stringify(params.entities) : null,
     createdAt: "2026-06-09T00:00:00.000Z",
     conversationEndedAt: params.conversationEndedAt,
   });
@@ -161,74 +163,59 @@ describe("getOntology", () => {
 
     expect(result.meta.personaTotal).toBe(1);
   });
-});
 
-describe("mergeEntitySnapshot", () => {
-  const base = {
-    nodes: [
-      {
-        id: "top:観光",
-        label: "観光",
-        kind: "topic" as const,
-        count: 5,
-        role: "関心点" as const,
-        roles: ["関心点" as const],
-      },
-    ],
-    links: [
-      {
-        source: "seg:観光客",
-        target: "top:観光",
-        n: 5,
-        kind: "seg-topic" as const,
-      },
-    ],
-    meta: {
-      personaTotal: 5,
-      generatedAt: "2026-06-15T00:00:00.000Z",
-      entityLayerStatus: "none" as const,
-      note: "",
-    },
-  };
+  it("persona.entities を集計してエンティティノード・リンクを作る", async () => {
+    const eki = [{ name: "音威子府駅", type: "facility" }];
+    await insertPersona(db, {
+      id: "p1",
+      tags: "観光客",
+      topic: "観光",
+      entities: eki,
+    });
+    await insertPersona(db, {
+      id: "p2",
+      tags: "村人",
+      topic: "交通",
+      entities: eki,
+    });
+    await insertPersona(db, {
+      id: "p3",
+      tags: "観光客",
+      topic: "観光",
+      entities: [{ name: " 音威子府駅", type: "facility" }],
+    });
 
-  it("スナップショットが無ければ base をそのまま返す", () => {
-    const result = mergeEntitySnapshot(base, undefined);
-    expect(result).toBe(base);
+    const result = await getOntology(d1, {});
+
+    expect(result.meta.entityLayerStatus).toBe("ready");
+    const ent = result.nodes.find((n) => n.id === "ent:音威子府駅");
+    expect(ent).toMatchObject({ kind: "entity", count: 3, type: "facility" });
+    expect(result.links.some((l) => l.kind === "topic-ent")).toBe(true);
+    expect(result.links.some((l) => l.kind === "seg-ent")).toBe(true);
+  });
+
+  it("出現回数が閾値未満のエンティティは除外する", async () => {
+    const michi = [{ name: "道の駅", type: "facility" }];
+    await insertPersona(db, { id: "p1", topic: "観光", entities: michi });
+    await insertPersona(db, { id: "p2", topic: "観光", entities: michi });
+
+    const result = await getOntology(d1, {});
+
+    expect(result.nodes.find((n) => n.id === "ent:道の駅")).toBeUndefined();
     expect(result.meta.entityLayerStatus).toBe("none");
   });
 
-  it("スナップショットの entity を合流し ready にする", () => {
-    const snapshot = {
-      id: "latest",
-      dataJson: JSON.stringify({
-        entities: [
-          {
-            id: "ent:音威子府駅",
-            label: "音威子府駅",
-            kind: "entity",
-            count: 3,
-            role: "関心点",
-            roles: ["関心点"],
-          },
-        ],
-        links: [
-          {
-            source: "ent:音威子府駅",
-            target: "top:観光",
-            n: 3,
-            kind: "topic-ent",
-          },
-        ],
-      }),
-      entityCount: 1,
-      generatedAt: "2026-06-15T01:00:00.000Z",
-      generatedBy: "admin-1",
-    };
+  it("entities 未処理の persona が残る間は stale を返す", async () => {
+    const eki = [{ name: "音威子府駅", type: "facility" }];
+    for (const id of ["p1", "p2", "p3"]) {
+      await insertPersona(db, { id, topic: "観光", entities: eki });
+    }
+    // entities 未処理（NULL）の persona を残す
+    await insertPersona(db, { id: "pending", topic: "観光" });
 
-    const result = mergeEntitySnapshot(base, snapshot);
+    const result = await getOntology(d1, {});
 
-    expect(result.meta.entityLayerStatus).toBe("ready");
     expect(result.nodes.find((n) => n.id === "ent:音威子府駅")).toBeDefined();
-    expect(result.links.find((l) => l.kind === "topic-ent")).toBeDefined();
+    expect(result.meta.entityLayerStatus).toBe("stale");
   });
 });

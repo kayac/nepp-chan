@@ -27,27 +27,17 @@ vi.mock("~/services/auth/anonymous-session", () => ({
 
 vi.mock("~/services/analytics/ontology", () => ({
   getOntology: vi.fn(),
-  mergeEntitySnapshot: vi.fn(),
 }));
 
-vi.mock("~/services/analytics/ontology-entities", () => ({
-  runOntologyEntities: vi.fn(),
-}));
-
-vi.mock("~/repository/ontology-snapshot-repository", () => ({
-  ontologySnapshotRepository: { getLatest: vi.fn() },
+vi.mock("~/services/analytics/backfill-persona-entities", () => ({
+  backfillPersonaEntities: vi.fn(),
 }));
 
 const { getConversationStats, getWeeklyUsage, getPersonaAnalytics } =
   await import("~/services/analytics/aggregate");
-const { getOntology, mergeEntitySnapshot } = await import(
-  "~/services/analytics/ontology"
-);
-const { runOntologyEntities } = await import(
-  "~/services/analytics/ontology-entities"
-);
-const { ontologySnapshotRepository } = await import(
-  "~/repository/ontology-snapshot-repository"
+const { getOntology } = await import("~/services/analytics/ontology");
+const { backfillPersonaEntities } = await import(
+  "~/services/analytics/backfill-persona-entities"
 );
 const { weeklyReportRepository } = await import(
   "~/repository/weekly-report-repository"
@@ -328,19 +318,9 @@ describe("GET /ontology", () => {
     vi.clearAllMocks();
   });
 
-  it("super_admin はマージ結果を返す", async () => {
+  it("super_admin はグラフを返す", async () => {
     useAuth("super_admin");
     vi.mocked(getOntology).mockResolvedValue({
-      nodes: [],
-      links: [],
-      meta: {
-        personaTotal: 0,
-        generatedAt: "2026-06-15T00:00:00.000Z",
-        entityLayerStatus: "none",
-        note: "",
-      },
-    });
-    vi.mocked(mergeEntitySnapshot).mockReturnValue({
       nodes: [
         {
           id: "ent:音威子府駅",
@@ -353,7 +333,7 @@ describe("GET /ontology", () => {
       ],
       links: [],
       meta: {
-        personaTotal: 0,
+        personaTotal: 3,
         generatedAt: "2026-06-15T00:00:00.000Z",
         entityLayerStatus: "ready",
         note: "",
@@ -369,60 +349,34 @@ describe("GET /ontology", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as { meta: { entityLayerStatus: string } };
     expect(body.meta.entityLayerStatus).toBe("ready");
-    expect(ontologySnapshotRepository.getLatest).toHaveBeenCalled();
-  });
-
-  it("期間指定時はスナップショットをマージしない", async () => {
-    useAuth("super_admin");
-    vi.mocked(getOntology).mockResolvedValue({
-      nodes: [],
-      links: [],
-      meta: {
-        personaTotal: 0,
-        generatedAt: "2026-06-15T00:00:00.000Z",
-        entityLayerStatus: "none",
-        note: "",
-      },
-    });
-    vi.mocked(mergeEntitySnapshot).mockImplementation((base) => base);
-
-    const res = await routes.request(
-      authedGet("/ontology?from=2026-06-01&to=2026-06-07"),
-      undefined,
-      mockEnv,
-    );
-
-    expect(res.status).toBe(200);
-    expect(ontologySnapshotRepository.getLatest).not.toHaveBeenCalled();
   });
 });
 
-describe("POST /ontology/generate", () => {
+describe("POST /ontology/backfill", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   const post = () =>
-    new Request("http://localhost/ontology/generate", {
+    new Request("http://localhost/ontology/backfill", {
       method: "POST",
       headers: { Authorization: `Bearer ${TOKEN}` },
     });
 
-  it("super_admin は生成して件数を返す", async () => {
+  it("super_admin は処理件数と残数を返す", async () => {
     useAuth("super_admin");
-    vi.mocked(runOntologyEntities).mockResolvedValue({
-      entityCount: 5,
-      personaProcessed: 10,
+    vi.mocked(backfillPersonaEntities).mockResolvedValue({
+      processed: 30,
+      updated: 12,
+      remaining: 70,
     });
 
     const res = await routes.request(post(), undefined, mockEnv);
 
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { entityCount: number };
-    expect(body.entityCount).toBe(5);
-    expect(runOntologyEntities).toHaveBeenCalledWith(expect.anything(), {
-      generatedBy: "u-1",
-    });
+    const body = (await res.json()) as { remaining: number };
+    expect(body.remaining).toBe(70);
+    expect(backfillPersonaEntities).toHaveBeenCalled();
   });
 
   it("staff は 403", async () => {

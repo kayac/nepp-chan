@@ -29,6 +29,7 @@ const samplePersona = {
   topic: null,
   sentiment: null,
   demographicSummary: null,
+  entities: null,
   createdAt: "2025-01-01T00:00:00Z",
   updatedAt: null,
   conversationEndedAt: null,

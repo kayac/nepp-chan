@@ -39,6 +39,21 @@ describe("personaSaveTool.execute", () => {
     );
   });
 
+  it("entities を JSON 文字列にして create に渡す", async () => {
+    vi.mocked(personaRepository.create).mockResolvedValue("mock-id");
+
+    await callTool(
+      personaSaveTool,
+      { ...validInput, entities: [{ name: "音威子府駅", type: "facility" }] },
+      { db: fakeDb },
+    );
+
+    const arg = vi.mocked(personaRepository.create).mock.calls[0]?.[1];
+    expect(arg?.entities).toBe(
+      JSON.stringify([{ name: "音威子府駅", type: "facility" }]),
+    );
+  });
+
   it("conversationEndedAt があれば create に渡す", async () => {
     vi.mocked(personaRepository.create).mockResolvedValue("mock-id");
 

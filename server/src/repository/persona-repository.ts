@@ -12,6 +12,7 @@ type UpdateInput = {
   topic?: string;
   sentiment?: string;
   demographicSummary?: string;
+  entities?: string;
 };
 
 export type TopicAggregation = {
@@ -35,6 +36,7 @@ export const personaRepository = {
       topic: input.topic ?? null,
       sentiment: input.sentiment ?? "neutral",
       demographicSummary: input.demographicSummary ?? null,
+      entities: input.entities ?? null,
       createdAt: input.createdAt,
       conversationEndedAt: input.conversationEndedAt ?? null,
     });
@@ -57,8 +59,33 @@ export const personaRepository = {
     if (input.sentiment !== undefined) updates.sentiment = input.sentiment;
     if (input.demographicSummary !== undefined)
       updates.demographicSummary = input.demographicSummary;
+    if (input.entities !== undefined) updates.entities = input.entities;
 
     await db.update(persona).set(updates).where(eq(persona.id, id));
+  },
+
+  // entities 未処理（NULL）の persona を content つきで取得する（バックフィル用）
+  async listMissingEntities(d1: D1Database, limit: number) {
+    const db = createDb(d1);
+
+    return db
+      .select({ id: persona.id, content: persona.content })
+      .from(persona)
+      .where(sql`${persona.entities} IS NULL`)
+      .limit(limit)
+      .all();
+  },
+
+  async countMissingEntities(d1: D1Database) {
+    const db = createDb(d1);
+
+    const row = await db
+      .select({ value: count() })
+      .from(persona)
+      .where(sql`${persona.entities} IS NULL`)
+      .get();
+
+    return row?.value ?? 0;
   },
 
   async findById(d1: D1Database, id: string) {

@@ -8,9 +8,8 @@ import {
   WEEK_MS,
 } from "~/lib/date";
 import { errorResponse } from "~/lib/openapi-errors";
-import { type PrincipalVariables, requireAdminUser } from "~/lib/principal";
+import type { PrincipalVariables } from "~/lib/principal";
 import { requireRole } from "~/middleware/require-role";
-import { ontologySnapshotRepository } from "~/repository/ontology-snapshot-repository";
 import { weeklyReportRepository } from "~/repository/weekly-report-repository";
 import {
   conversationAnalyticsQuerySchema,
@@ -30,11 +29,8 @@ import {
   getPersonaAnalytics,
   getWeeklyUsage,
 } from "~/services/analytics/aggregate";
-import {
-  getOntology,
-  mergeEntitySnapshot,
-} from "~/services/analytics/ontology";
-import { runOntologyEntities } from "~/services/analytics/ontology-entities";
+import { backfillPersonaEntities } from "~/services/analytics/backfill-persona-entities";
+import { getOntology } from "~/services/analytics/ontology";
 
 export const analyticsAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -98,35 +94,30 @@ const ontologyRoute = createRoute({
 analyticsAdminRoutes.openapi(ontologyRoute, async (c) => {
   const { from, to } = c.req.valid("query");
 
-  const base = await getOntology(c.env.DB, {
+  const result = await getOntology(c.env.DB, {
     from: from ? jstDateToUtc(from).toISOString() : undefined,
     to: to
       ? new Date(jstDateToUtc(to).getTime() + DAY_MS).toISOString()
       : undefined,
   });
 
-  // エンティティ層は全期間で生成するため、期間指定時はマージしない
-  const snapshot =
-    from || to
-      ? undefined
-      : await ontologySnapshotRepository.getLatest(c.env.DB);
-
-  return c.json(mergeEntitySnapshot(base, snapshot), 200);
+  return c.json(result, 200);
 });
 
-const ontologyGenerateRoute = createRoute({
+const ontologyBackfillRoute = createRoute({
   method: "post",
-  path: "/ontology/generate",
+  path: "/ontology/backfill",
   tags: ["Admin - Analytics"],
-  summary: "村の声グラフのエンティティ層を生成する",
+  summary: "既存 persona に entities を差し込む（チャンク・冪等）",
   responses: {
     200: {
-      description: "生成したエンティティ数",
+      description: "処理件数と残数",
       content: {
         "application/json": {
           schema: z.object({
-            entityCount: z.number(),
-            personaProcessed: z.number(),
+            processed: z.number(),
+            updated: z.number(),
+            remaining: z.number(),
           }),
         },
       },
@@ -136,11 +127,8 @@ const ontologyGenerateRoute = createRoute({
   },
 });
 
-analyticsAdminRoutes.openapi(ontologyGenerateRoute, async (c) => {
-  const adminUser = requireAdminUser(c.get("principal"));
-  const result = await runOntologyEntities(c.env, {
-    generatedBy: adminUser.id,
-  });
+analyticsAdminRoutes.openapi(ontologyBackfillRoute, async (c) => {
+  const result = await backfillPersonaEntities(c.env);
 
   return c.json(result, 200);
 });
