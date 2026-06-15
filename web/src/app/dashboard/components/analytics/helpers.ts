@@ -1,11 +1,9 @@
-// ペルソナ sentiment の表示順・ラベル・色（積み上げチャート共通）
-// 色はねっぷちゃんブランドパレット（shared/src/styles/index.css）から。
 // 中立が件数の大半を占めるため、淡く穏やかな雪の青で「引かせる」配色にする
 export const SENTIMENT_SERIES = [
-  { key: "positive", label: "ポジティブ", color: "#5cb7bb" }, // teal-500（ブランド）
+  { key: "positive", label: "ポジティブ", color: "#5cb7bb" }, // teal-500
   { key: "negative", label: "ネガティブ", color: "#e76f7a" }, // berry
   { key: "request", label: "要望", color: "#f4b860" }, // honey
-  { key: "neutral", label: "中立", color: "#c8d9e8" }, // sky-300（雪の青）
+  { key: "neutral", label: "中立", color: "#c8d9e8" }, // sky-300
 ] as const;
 
 export type SentimentCounts = {
@@ -27,11 +25,9 @@ export const jstDateRange = (days: number, now: Date = new Date()) => ({
   to: toJstDate(now),
 });
 
-/** 1 行の sentiment 内訳の合計件数 */
 export const sentimentTotal = (row: SentimentCounts) =>
   row.positive + row.negative + row.request + row.neutral;
 
-/** sentiment 内訳を持つ行の合計を出す */
 export const sumSentiments = (rows: SentimentCounts[]): SentimentCounts =>
   rows.reduce(
     (acc, row) => ({
@@ -43,7 +39,6 @@ export const sumSentiments = (rows: SentimentCounts[]): SentimentCounts =>
     { positive: 0, negative: 0, request: 0, neutral: 0 },
   );
 
-/** 件数の多い順に上位 n 件（0 件は除外） */
 export const topEntries = (
   entries: { label: string; count: number }[],
   n: number,

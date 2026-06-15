@@ -28,9 +28,7 @@ export interface OntologyNode {
   id: string;
   label: string;
   kind: "segment" | "topic" | "entity";
-  /** エンティティの種別（place / facility / service / institution / event / org） */
   type?: string;
-  /** エンティティの主トピック（topic-ent エッジの接続先） */
   topic?: string;
   count: number;
   role: OntologyRole;

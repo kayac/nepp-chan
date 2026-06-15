@@ -22,13 +22,11 @@ export const DEFAULT_COLORS = [
   "#2563eb", // blue-600
 ];
 
-// ねっぷちゃんブランドパレット（shared/src/styles/index.css の Companion v2 と同期）
-// ダッシュボードのカテゴリカルチャート用
 export const NEPP_CHART_COLORS = [
-  "#5cb7bb", // teal-500（ベレー帽 / ブランド）
-  "#f4a06a", // apricot-500（頬）
-  "#8faf6f", // moss-500（知床の森）
-  "#89a8c0", // sky-500（雪の青）
+  "#5cb7bb", // teal-500
+  "#f4a06a", // apricot-500
+  "#8faf6f", // moss-500
+  "#89a8c0", // sky-500
   "#e76f7a", // berry
   "#f4b860", // honey
   "#3f6e5a", // pine

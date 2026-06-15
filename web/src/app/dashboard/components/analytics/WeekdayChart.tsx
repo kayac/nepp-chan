@@ -9,13 +9,11 @@ import {
 } from "recharts";
 import { AXIS_STYLE, TOOLTIP_STYLE } from "~/lib/chart-helpers";
 
-// ねっぷちゃんブランドパレット（teal=ベレー帽 / apricot=頬）。HourlyChart と統一
 const OPEN_COLOR = "#5cb7bb"; // teal-500
 const CLOSED_COLOR = "#f4a06a"; // apricot-500
 
 const DOW_LABELS = ["日", "月", "火", "水", "木", "金", "土"];
 
-// 役場の閉庁日は土日
 const isClosedDay = (dow: number) => dow === 0 || dow === 6;
 
 interface Props {

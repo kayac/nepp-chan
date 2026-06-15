@@ -22,14 +22,13 @@ import {
 } from "./ontology-data";
 import { SectionCard } from "./SectionCard";
 
-// 役割の色はねっぷちゃんブランドパレット（shared/src/styles/index.css）
 const ROLE_COLORS: Record<OntologyRole, string> = {
-  接続点: "#5cb7bb", // teal-500（ブランド = 村をつなぐ）
+  接続点: "#5cb7bb", // teal-500
   争点: "#f4b860", // honey
   不満点: "#e76f7a", // berry
   満足点: "#8faf6f", // moss-500
   関心点: "#a8a29e", // snow-400
-  セグメント: "#f4a06a", // apricot-500（人 = マスコットの頬）
+  セグメント: "#f4a06a", // apricot-500
 };
 
 const ROLE_DESC: Record<OntologyRole, string> = {
@@ -41,7 +40,6 @@ const ROLE_DESC: Record<OntologyRole, string> = {
   セグメント: "誰が（属性）",
 };
 
-// セグメント（人）のアイコン
 const SEGMENT_ICONS: Record<string, string> = {
   村内住民: "🏠",
   観光客: "📷",
@@ -51,7 +49,6 @@ const SEGMENT_ICONS: Record<string, string> = {
   不明セグメント: "👤",
 };
 
-// 感情の表示メタ（色は SENTIMENT_SERIES = ブランドパレットと同一）
 const SENTIMENT_META: Record<string, { label: string; color: string }> = {
   positive: { label: "ポジティブ", color: "#5cb7bb" }, // teal-500
   negative: { label: "ネガティブ", color: "#e76f7a" }, // berry
@@ -139,7 +136,6 @@ export const OntologySection = () => {
   const simRef = useRef<Simulation<SimNode, SimLink> | null>(null);
   const simNodesRef = useRef<Map<string, SimNode>>(new Map());
 
-  // 力学シミュレーション（浮遊する自動レイアウト）
   useEffect(() => {
     const { width, height } = ONTOLOGY_VIEWBOX;
     const nodes: SimNode[] = ONTOLOGY_NODES.map((n) => ({ ...n }));
@@ -164,7 +160,6 @@ export const OntologySection = () => {
         "collide",
         forceCollide<SimNode>((d) => nodeRadius(d) + 16),
       )
-      // viewBox から流れ出ないよう弱い求心力をかける
       .force("x", forceX<SimNode>(width / 2).strength(0.035))
       .force("y", forceY<SimNode>(height / 2).strength(0.045))
       .on("tick", () => {
@@ -182,7 +177,6 @@ export const OntologySection = () => {
     };
   }, []);
 
-  /** クライアント座標 → グラフ座標（ズーム・パン逆変換） */
   const toGraphPoint = (clientX: number, clientY: number) => {
     const svg = svgRef.current;
     if (!svg) return { x: 0, y: 0 };
@@ -268,7 +262,6 @@ export const OntologySection = () => {
     dragRef.current = null;
     if (drag?.mode === "node") {
       releaseNode(drag.id);
-      // 動かさずに離した = クリック（選択）
       if (node && !drag.moved) setSelected(node);
     }
     if (drag?.mode === "pan" && node === undefined) {
@@ -278,7 +271,6 @@ export const OntologySection = () => {
     }
   };
 
-  // 選択ノードに接続しているノード集合（選択時のフォーカス表示用）
   const connectedIds = useMemo(() => {
     if (!selected) return null;
     const ids = new Set<string>([selected.id]);
@@ -398,7 +390,6 @@ export const OntologySection = () => {
                     >
                       {isSelected && (
                         <>
-                          {/* 選択ハロー（二重リング） */}
                           <circle
                             r={r + 10}
                             fill={color}
@@ -538,7 +529,7 @@ export const OntologySection = () => {
                     rows={selected.bySegment}
                     getMeta={(key) => ({
                       label: key === "不明セグメント" ? "不明" : key,
-                      color: "#f4a06a", // apricot-500（セグメント共通）
+                      color: "#f4a06a", // apricot-500
                       icon: SEGMENT_ICONS[key] ?? "👤",
                     })}
                   />
