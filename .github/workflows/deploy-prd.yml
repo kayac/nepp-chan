@@ -64,6 +64,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           PUBLIC_API_URL: https://api.nepp-chan.ai
           PUBLIC_LP_URL: https://nepp-chan.ai
+          PUBLIC_GA_MEASUREMENT_ID: G-FMW4FP326K
           PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN_WEB }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT_WEB: ${{ secrets.SENTRY_PROJECT_WEB }}
@@ -94,3 +95,4 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           PUBLIC_API_URL: https://api.nepp-chan.ai
           PUBLIC_WEB_URL: https://web.nepp-chan.ai
+          PUBLIC_GA_MEASUREMENT_ID: G-FMW4FP326K
