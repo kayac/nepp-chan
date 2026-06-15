@@ -76,7 +76,6 @@ const ontologyRoute = createRoute({
   path: "/ontology",
   tags: ["Admin - Analytics"],
   summary: "村の声グラフ（セグメント×トピックの関係グラフ）",
-  request: { query: personaAnalyticsQuerySchema },
   responses: {
     200: {
       description: "村の声グラフのノード・リンク",
@@ -84,21 +83,13 @@ const ontologyRoute = createRoute({
         "application/json": { schema: ontologyResponseSchema },
       },
     },
-    400: errorResponse(400),
     401: errorResponse(401),
     403: errorResponse(403),
   },
 });
 
 analyticsAdminRoutes.openapi(ontologyRoute, async (c) => {
-  const { from, to } = c.req.valid("query");
-
-  const result = await getOntology(c.env.DB, {
-    from: from ? jstDateToUtc(from).toISOString() : undefined,
-    to: to
-      ? new Date(jstDateToUtc(to).getTime() + DAY_MS).toISOString()
-      : undefined,
-  });
+  const result = await getOntology(c.env.DB);
 
   return c.json(result, 200);
 });

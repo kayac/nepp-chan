@@ -637,12 +637,7 @@ export interface paths {
         /** 村の声グラフ（セグメント×トピックの関係グラフ） */
         get: {
             parameters: {
-                query?: {
-                    /** @description JST の日付（YYYY-MM-DD） */
-                    from?: string;
-                    /** @description JST の日付（YYYY-MM-DD、この日を含む） */
-                    to?: string;
-                };
+                query?: never;
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -687,20 +682,6 @@ export interface paths {
                                 /** @enum {string} */
                                 entityLayerStatus: "none" | "ready" | "stale";
                                 note: string;
-                            };
-                        };
-                    };
-                };
-                /** @description リクエストエラー */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: {
-                                code: number;
-                                message: string;
                             };
                         };
                     };

@@ -57,7 +57,7 @@ describe("getOntology", () => {
     await insertPersona(db, { id: "p2", tags: "観光客", topic: "観光" });
     await insertPersona(db, { id: "p3", tags: "村人", topic: "生活" });
 
-    const result = await getOntology(d1, {});
+    const result = await getOntology(d1);
 
     expect(result.meta.personaTotal).toBe(3);
     expect(result.meta.entityLayerStatus).toBe("none");
@@ -82,7 +82,7 @@ describe("getOntology", () => {
   it("関係性を居住地より優先してセグメントを割り当てる", async () => {
     await insertPersona(db, { id: "p1", tags: "村外,観光客" });
 
-    const result = await getOntology(d1, {});
+    const result = await getOntology(d1);
 
     expect(result.nodes.find((n) => n.id === "seg:観光客")?.count).toBe(1);
     expect(result.nodes.find((n) => n.id === "seg:村外")).toBeUndefined();
@@ -91,7 +91,7 @@ describe("getOntology", () => {
   it("既知トピック以外は『その他』に集約する", async () => {
     await insertPersona(db, { id: "p1", topic: "未定義トピック" });
 
-    const result = await getOntology(d1, {});
+    const result = await getOntology(d1);
 
     expect(result.nodes.find((n) => n.id === "top:その他")?.count).toBe(1);
   });
@@ -112,7 +112,7 @@ describe("getOntology", () => {
       });
     }
 
-    const topic = (await getOntology(d1, {})).nodes.find(
+    const topic = (await getOntology(d1)).nodes.find(
       (n) => n.id === "top:買い物",
     );
     expect(topic?.roles).toContain("争点");
@@ -128,7 +128,7 @@ describe("getOntology", () => {
       });
     }
 
-    const topic = (await getOntology(d1, {})).nodes.find(
+    const topic = (await getOntology(d1)).nodes.find(
       (n) => n.id === "top:観光",
     );
     expect(topic?.roles).toEqual(["関心点"]);
@@ -138,30 +138,10 @@ describe("getOntology", () => {
     await insertPersona(db, { id: "p1", tags: "観光客", topic: "交通" });
     await insertPersona(db, { id: "p2", tags: "村人", topic: "交通" });
 
-    const topic = (await getOntology(d1, {})).nodes.find(
+    const topic = (await getOntology(d1)).nodes.find(
       (n) => n.id === "top:交通",
     );
     expect(topic?.roles).toContain("接続点");
-  });
-
-  it("conversationEndedAt で期間を絞り込む", async () => {
-    await insertPersona(db, {
-      id: "in",
-      topic: "観光",
-      conversationEndedAt: "2026-06-10T00:00:00.000Z",
-    });
-    await insertPersona(db, {
-      id: "out",
-      topic: "観光",
-      conversationEndedAt: "2026-05-01T00:00:00.000Z",
-    });
-
-    const result = await getOntology(d1, {
-      from: "2026-06-01T00:00:00.000Z",
-      to: "2026-07-01T00:00:00.000Z",
-    });
-
-    expect(result.meta.personaTotal).toBe(1);
   });
 
   it("persona.entities を集計してエンティティノード・リンクを作る", async () => {
@@ -185,7 +165,7 @@ describe("getOntology", () => {
       entities: [{ name: " 音威子府駅", type: "facility" }],
     });
 
-    const result = await getOntology(d1, {});
+    const result = await getOntology(d1);
 
     expect(result.meta.entityLayerStatus).toBe("ready");
     const ent = result.nodes.find((n) => n.id === "ent:音威子府駅");
@@ -199,7 +179,7 @@ describe("getOntology", () => {
     await insertPersona(db, { id: "p1", topic: "観光", entities: michi });
     await insertPersona(db, { id: "p2", topic: "観光", entities: michi });
 
-    const result = await getOntology(d1, {});
+    const result = await getOntology(d1);
 
     expect(result.nodes.find((n) => n.id === "ent:道の駅")).toBeUndefined();
     expect(result.meta.entityLayerStatus).toBe("none");
@@ -213,7 +193,7 @@ describe("getOntology", () => {
     // entities 未処理（NULL）の persona を残す
     await insertPersona(db, { id: "pending", topic: "観光" });
 
-    const result = await getOntology(d1, {});
+    const result = await getOntology(d1);
 
     expect(result.nodes.find((n) => n.id === "ent:音威子府駅")).toBeDefined();
     expect(result.meta.entityLayerStatus).toBe("stale");

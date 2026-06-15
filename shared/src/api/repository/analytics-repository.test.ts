@@ -67,24 +67,7 @@ describe("fetchOntology", () => {
     },
   };
 
-  it("from/to をクエリで渡す", async () => {
-    server.use(
-      http.get(`${API}/admin/analytics/ontology`, ({ request }) => {
-        const params = new URL(request.url).searchParams;
-        expect(params.get("from")).toBe("2026-06-01");
-        expect(params.get("to")).toBe("2026-06-07");
-        return HttpResponse.json(emptyOntology);
-      }),
-    );
-
-    const result = await repo.fetchOntology({
-      from: "2026-06-01",
-      to: "2026-06-07",
-    });
-    expect(result?.meta.entityLayerStatus).toBe("none");
-  });
-
-  it("期間未指定でも取得できる", async () => {
+  it("全ペルソナのグラフを取得する", async () => {
     server.use(
       http.get(`${API}/admin/analytics/ontology`, () =>
         HttpResponse.json(emptyOntology),

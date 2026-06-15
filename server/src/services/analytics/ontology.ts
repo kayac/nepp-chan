@@ -1,4 +1,4 @@
-import { and, count, gte, lt, sql } from "drizzle-orm";
+import { count, sql } from "drizzle-orm";
 import { createDb, persona } from "~/db";
 import { personaEntitiesSchema } from "~/schemas/persona-entity-schema";
 import { emptySentimentCounts, normalizeSentiment, TOPICS } from "./aggregate";
@@ -137,16 +137,8 @@ type EntityAgg = {
   bySentiment: SentimentCounts;
 };
 
-export const getOntology = async (
-  d1: D1Database,
-  params: { from?: string; to?: string },
-): Promise<OntologyData> => {
+export const getOntology = async (d1: D1Database): Promise<OntologyData> => {
   const db = createDb(d1);
-
-  const conditions = [
-    params.from ? gte(persona.conversationEndedAt, params.from) : undefined,
-    params.to ? lt(persona.conversationEndedAt, params.to) : undefined,
-  ].filter((c) => c !== undefined);
 
   const rows = await db
     .select({
@@ -157,7 +149,6 @@ export const getOntology = async (
       entities: persona.entities,
     })
     .from(persona)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
     .all();
 
   const segmentCounts = new Map<Segment, number>();
@@ -283,11 +274,11 @@ export const getOntology = async (
     }
   }
 
-  // 対象期間に entities 未処理の persona が残る間は部分的なので stale を返す
+  // entities 未処理の persona が残る間は部分的なので stale を返す
   const missingRow = await db
     .select({ value: count() })
     .from(persona)
-    .where(and(sql`${persona.entities} IS NULL`, ...conditions))
+    .where(sql`${persona.entities} IS NULL`)
     .get();
   const entitiesPending = (missingRow?.value ?? 0) > 0;
 
