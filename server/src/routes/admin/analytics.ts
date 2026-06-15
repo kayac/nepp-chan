@@ -14,6 +14,7 @@ import { weeklyReportRepository } from "~/repository/weekly-report-repository";
 import {
   conversationAnalyticsQuerySchema,
   conversationAnalyticsResponseSchema,
+  ontologyResponseSchema,
   personaAnalyticsQuerySchema,
   personaAnalyticsResponseSchema,
   usageAnalyticsQuerySchema,
@@ -28,6 +29,7 @@ import {
   getPersonaAnalytics,
   getWeeklyUsage,
 } from "~/services/analytics/aggregate";
+import { getOntology } from "~/services/analytics/ontology";
 
 export const analyticsAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -61,6 +63,38 @@ analyticsAdminRoutes.openapi(personaRoute, async (c) => {
   const result = await getPersonaAnalytics(c.env.DB, {
     from: from ? jstDateToUtc(from).toISOString() : undefined,
     // to はその日を含むため翌日 0:00 JST 未満で絞る
+    to: to
+      ? new Date(jstDateToUtc(to).getTime() + DAY_MS).toISOString()
+      : undefined,
+  });
+
+  return c.json(result, 200);
+});
+
+const ontologyRoute = createRoute({
+  method: "get",
+  path: "/ontology",
+  tags: ["Admin - Analytics"],
+  summary: "村の声グラフ（セグメント×トピックの関係グラフ）",
+  request: { query: personaAnalyticsQuerySchema },
+  responses: {
+    200: {
+      description: "村の声グラフのノード・リンク",
+      content: {
+        "application/json": { schema: ontologyResponseSchema },
+      },
+    },
+    400: errorResponse(400),
+    401: errorResponse(401),
+    403: errorResponse(403),
+  },
+});
+
+analyticsAdminRoutes.openapi(ontologyRoute, async (c) => {
+  const { from, to } = c.req.valid("query");
+
+  const result = await getOntology(c.env.DB, {
+    from: from ? jstDateToUtc(from).toISOString() : undefined,
     to: to
       ? new Date(jstDateToUtc(to).getTime() + DAY_MS).toISOString()
       : undefined,

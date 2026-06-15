@@ -33,7 +33,7 @@ const AGE_GROUPS = [
   "不明",
 ] as const;
 
-const TOPICS = [
+export const TOPICS = [
   "交通",
   "買い物",
   "医療",
@@ -191,12 +191,12 @@ const extractAgeGroup = (attributes: string) => {
   return decade >= 10 ? `${decade}代` : "不明";
 };
 
-const normalizeSentiment = (sentiment: string | null): Sentiment =>
+export const normalizeSentiment = (sentiment: string | null): Sentiment =>
   SENTIMENTS.includes(sentiment as Sentiment)
     ? (sentiment as Sentiment)
     : "neutral";
 
-const emptySentimentCounts = () => ({
+export const emptySentimentCounts = () => ({
   positive: 0,
   negative: 0,
   request: 0,

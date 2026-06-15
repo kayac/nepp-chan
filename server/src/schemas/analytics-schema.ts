@@ -64,6 +64,47 @@ export const personaAnalyticsResponseSchema = z.object({
     relationship: z.array(z.object({ label: z.string(), count: z.number() })),
   }),
 });
+const ontologyRoleSchema = z.enum([
+  "接続点",
+  "争点",
+  "不満点",
+  "満足点",
+  "関心点",
+  "セグメント",
+]);
+
+const ontologyNodeSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  kind: z.enum(["segment", "topic", "entity"]),
+  type: z.string().optional(),
+  topic: z.string().optional(),
+  count: z.number(),
+  role: ontologyRoleSchema,
+  roles: z.array(ontologyRoleSchema),
+  bySegment: z.record(z.string(), z.number()).optional(),
+  bySentiment: z.record(z.string(), z.number()).optional(),
+});
+
+const ontologyLinkSchema = z.object({
+  source: z.string(),
+  target: z.string(),
+  n: z.number(),
+  kind: z.enum(["seg-topic", "topic-ent", "seg-ent"]),
+});
+
+// entityLayerStatus: none=エンティティ層未生成 / ready=最新 / stale=要再生成
+export const ontologyResponseSchema = z.object({
+  nodes: z.array(ontologyNodeSchema),
+  links: z.array(ontologyLinkSchema),
+  meta: z.object({
+    personaTotal: z.number(),
+    generatedAt: z.string(),
+    entityLayerStatus: z.enum(["none", "ready", "stale"]),
+    note: z.string(),
+  }),
+});
+
 const platformCountSchema = z.object({
   platform: z.string(),
   count: z.number(),
