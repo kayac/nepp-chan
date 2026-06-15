@@ -134,7 +134,7 @@ type DragState =
   | { mode: "node"; id: string; moved: boolean }
   | { mode: "pan"; startX: number; startY: number; origin: Transform };
 
-const OntologyGraph = ({ nodes, links, meta }: OntologyData) => {
+const OntologyGraph = ({ nodes, links }: OntologyData) => {
   const [selected, setSelected] = useState<OntologyNode | null>(null);
   const [positions, setPositions] = useState<
     Record<string, { x: number; y: number }>
@@ -519,7 +519,7 @@ const OntologyGraph = ({ nodes, links, meta }: OntologyData) => {
                     ? "セグメント"
                     : selected.kind === "topic"
                       ? "トピック（全数集計）"
-                      : "エンティティ（サンプル抽出）"}
+                      : "エンティティ（LLM抽出）"}
                   ・{selected.count.toLocaleString()} 件
                 </p>
                 <div className="flex flex-wrap gap-1 mt-1.5">
@@ -567,9 +567,9 @@ const OntologyGraph = ({ nodes, links, meta }: OntologyData) => {
       </div>
 
       <p className="text-xs text-stone-500 mt-3">
-        ※アイコン = セグメント（誰が）、円 =
-        トピック（全数集計）。役割は感情構成とセグメント構成から機械的に判定しています。
-        {meta.note}
+        ※アイコン = セグメント（誰が）、大きい円 =
+        トピック（全数集計）、小さい円 =
+        具体エンティティ（LLM抽出）。役割は感情構成とセグメント構成から機械的に判定しています。
       </p>
     </>
   );
