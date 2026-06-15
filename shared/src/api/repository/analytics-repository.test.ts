@@ -55,6 +55,47 @@ describe("fetchPersonaAnalytics", () => {
   });
 });
 
+describe("fetchOntology", () => {
+  const emptyOntology = {
+    nodes: [],
+    links: [],
+    meta: {
+      personaTotal: 0,
+      generatedAt: "2026-06-15T00:00:00.000Z",
+      entityLayerStatus: "none",
+      note: "",
+    },
+  };
+
+  it("from/to をクエリで渡す", async () => {
+    server.use(
+      http.get(`${API}/admin/analytics/ontology`, ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        expect(params.get("from")).toBe("2026-06-01");
+        expect(params.get("to")).toBe("2026-06-07");
+        return HttpResponse.json(emptyOntology);
+      }),
+    );
+
+    const result = await repo.fetchOntology({
+      from: "2026-06-01",
+      to: "2026-06-07",
+    });
+    expect(result?.meta.entityLayerStatus).toBe("none");
+  });
+
+  it("期間未指定でも取得できる", async () => {
+    server.use(
+      http.get(`${API}/admin/analytics/ontology`, () =>
+        HttpResponse.json(emptyOntology),
+      ),
+    );
+
+    const result = await repo.fetchOntology();
+    expect(result?.nodes).toEqual([]);
+  });
+});
+
 describe("fetchConversationAnalytics", () => {
   it("デフォルト days=30", async () => {
     server.use(
