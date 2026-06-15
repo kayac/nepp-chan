@@ -5,6 +5,8 @@ export const dashboardKeys = {
     ["dashboard", "analytics", "conversations", days] as const,
   analyticsUsage: (weeks: number) =>
     ["dashboard", "analytics", "usage", weeks] as const,
+  analyticsOntology: (from?: string, to?: string) =>
+    ["dashboard", "analytics", "ontology", from, to] as const,
   weeklyReports: ["dashboard", "analytics", "reports"] as const,
   weeklyReportDetail: (id: string) =>
     ["dashboard", "analytics", "report", id] as const,

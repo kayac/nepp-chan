@@ -11,16 +11,14 @@ import {
   type SimulationNodeDatum,
 } from "d3-force";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useOntology } from "~/app/dashboard/hooks/useAnalytics";
 import {
-  ONTOLOGY_GENERATED_AT,
-  ONTOLOGY_LINKS,
-  ONTOLOGY_META,
-  ONTOLOGY_NODES,
   ONTOLOGY_VIEWBOX,
+  type OntologyData,
   type OntologyNode,
   type OntologyRole,
-} from "./ontology-data";
-import { SectionCard } from "./SectionCard";
+} from "./ontology-types";
+import { SectionCard, SectionError, SectionLoading } from "./SectionCard";
 
 const ROLE_COLORS: Record<OntologyRole, string> = {
   接続点: "#5cb7bb", // teal-500
@@ -71,8 +69,22 @@ const nodeRadius = (node: OntologyNode) => {
   return Math.max(7, Math.sqrt(node.count) * 2.4);
 };
 
-const initialPositions = () =>
-  Object.fromEntries(ONTOLOGY_NODES.map((n) => [n.id, { x: n.x, y: n.y }]));
+// 座標はサーバから来ないため、円環状の初期配置を d3-force のシードにする
+const seedPositions = (nodes: OntologyNode[]) => {
+  const { width, height } = ONTOLOGY_VIEWBOX;
+  const cx = width / 2;
+  const cy = height / 2;
+  const radius = Math.min(width, height) * 0.35;
+  return Object.fromEntries(
+    nodes.map((node, i) => {
+      const angle = (i / Math.max(1, nodes.length)) * Math.PI * 2;
+      return [
+        node.id,
+        { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) },
+      ];
+    }),
+  );
+};
 
 interface BlockMeta {
   label: string;
@@ -122,10 +134,11 @@ type DragState =
   | { mode: "node"; id: string; moved: boolean }
   | { mode: "pan"; startX: number; startY: number; origin: Transform };
 
-export const OntologySection = () => {
+const OntologyGraph = ({ nodes, links, meta }: OntologyData) => {
   const [selected, setSelected] = useState<OntologyNode | null>(null);
-  const [positions, setPositions] =
-    useState<Record<string, { x: number; y: number }>>(initialPositions);
+  const [positions, setPositions] = useState<
+    Record<string, { x: number; y: number }>
+  >(() => seedPositions(nodes));
   const [transform, setTransform] = useState<Transform>({
     k: 1,
     tx: 0,
@@ -138,13 +151,14 @@ export const OntologySection = () => {
 
   useEffect(() => {
     const { width, height } = ONTOLOGY_VIEWBOX;
-    const nodes: SimNode[] = ONTOLOGY_NODES.map((n) => ({ ...n }));
-    const links: SimLink[] = ONTOLOGY_LINKS.map((l) => ({ ...l }));
+    const seed = seedPositions(nodes);
+    const simNodes: SimNode[] = nodes.map((n) => ({ ...n, ...seed[n.id] }));
+    const simLinks: SimLink[] = links.map((l) => ({ ...l }));
 
-    const sim = forceSimulation<SimNode>(nodes)
+    const sim = forceSimulation<SimNode>(simNodes)
       .force(
         "link",
-        forceLink<SimNode, SimLink>(links)
+        forceLink<SimNode, SimLink>(simLinks)
           .id((d) => d.id)
           .distance((l) => (l.kind === "seg-topic" ? 210 : 110))
           .strength((l) => (l.kind === "seg-ent" ? 0.12 : 0.45)),
@@ -165,17 +179,17 @@ export const OntologySection = () => {
       .on("tick", () => {
         setPositions(
           Object.fromEntries(
-            nodes.map((n) => [n.id, { x: n.x ?? 0, y: n.y ?? 0 }]),
+            simNodes.map((n) => [n.id, { x: n.x ?? 0, y: n.y ?? 0 }]),
           ),
         );
       });
 
     simRef.current = sim;
-    simNodesRef.current = new Map(nodes.map((n) => [n.id, n]));
+    simNodesRef.current = new Map(simNodes.map((n) => [n.id, n]));
     return () => {
       sim.stop();
     };
-  }, []);
+  }, [nodes, links]);
 
   const toGraphPoint = (clientX: number, clientY: number) => {
     const svg = svgRef.current;
@@ -274,12 +288,12 @@ export const OntologySection = () => {
   const connectedIds = useMemo(() => {
     if (!selected) return null;
     const ids = new Set<string>([selected.id]);
-    for (const link of ONTOLOGY_LINKS) {
+    for (const link of links) {
       if (link.source === selected.id) ids.add(link.target);
       if (link.target === selected.id) ids.add(link.source);
     }
     return ids;
-  }, [selected]);
+  }, [selected, links]);
 
   const isLinkActive = (link: { source: string; target: string }) =>
     selected != null &&
@@ -287,8 +301,9 @@ export const OntologySection = () => {
 
   const reset = () => {
     setTransform({ k: 1, tx: 0, ty: 0 });
+    const seed = seedPositions(nodes);
     for (const node of simNodesRef.current.values()) {
-      const origin = ONTOLOGY_NODES.find((n) => n.id === node.id);
+      const origin = seed[node.id];
       if (origin) {
         node.x = origin.x;
         node.y = origin.y;
@@ -300,10 +315,7 @@ export const OntologySection = () => {
   };
 
   return (
-    <SectionCard
-      title="村の声グラフ"
-      description={`誰が・何に・どんな感情でつながっているかのグラフ（${ONTOLOGY_GENERATED_AT}・ペルソナ ${ONTOLOGY_META.personaTotal.toLocaleString()} 件）`}
-    >
+    <>
       <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3">
         {(Object.keys(ROLE_COLORS) as OntologyRole[]).map((role) => (
           <span key={role} className="flex items-center gap-1.5 text-xs">
@@ -339,7 +351,7 @@ export const OntologySection = () => {
               transform={`translate(${transform.tx},${transform.ty}) scale(${transform.k})`}
             >
               <g>
-                {ONTOLOGY_LINKS.map((link) => {
+                {links.map((link) => {
                   const source = positions[link.source];
                   const target = positions[link.target];
                   if (!source || !target) return null;
@@ -367,10 +379,11 @@ export const OntologySection = () => {
                 })}
               </g>
               <g>
-                {ONTOLOGY_NODES.map((node) => {
+                {nodes.map((node) => {
                   const color = ROLE_COLORS[node.role];
                   const r = nodeRadius(node);
                   const pos = positions[node.id];
+                  if (!pos) return null;
                   const isSelected = selected?.id === node.id;
                   const isDimmed =
                     connectedIds != null && !connectedIds.has(node.id);
@@ -554,10 +567,31 @@ export const OntologySection = () => {
       </div>
 
       <p className="text-xs text-stone-500 mt-3">
-        ※アイコン = セグメント（誰が）、大きい円 =
-        トピック（全数集計）、小さい円 = 具体エンティティ（{ONTOLOGY_META.note}
-        ）。役割は感情構成とセグメント構成から機械的に判定しています。
+        ※アイコン = セグメント（誰が）、円 =
+        トピック（全数集計）。役割は感情構成とセグメント構成から機械的に判定しています。
+        {meta.note}
       </p>
+    </>
+  );
+};
+
+export const OntologySection = () => {
+  const { data, isLoading, error } = useOntology();
+
+  return (
+    <SectionCard
+      title="村の声グラフ"
+      description={
+        data
+          ? `誰が・何に・どんな感情でつながっているかのグラフ（ペルソナ ${data.meta.personaTotal.toLocaleString()} 件）`
+          : undefined
+      }
+    >
+      {isLoading && <SectionLoading />}
+      {error != null && <SectionError error={error} />}
+      {data && (
+        <OntologyGraph nodes={data.nodes} links={data.links} meta={data.meta} />
+      )}
     </SectionCard>
   );
 };

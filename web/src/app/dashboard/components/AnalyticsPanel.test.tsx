@@ -92,6 +92,38 @@ const weeklyReportDetail = {
   },
 };
 
+const ontologyAnalytics = {
+  nodes: [
+    {
+      id: "seg:村内住民",
+      label: "村内住民",
+      kind: "segment",
+      count: 2,
+      role: "セグメント",
+      roles: [],
+    },
+    {
+      id: "top:交通",
+      label: "交通",
+      kind: "topic",
+      count: 2,
+      role: "関心点",
+      roles: ["関心点"],
+      bySegment: { 村内住民: 2 },
+      bySentiment: { neutral: 2 },
+    },
+  ],
+  links: [
+    { source: "seg:村内住民", target: "top:交通", n: 2, kind: "seg-topic" },
+  ],
+  meta: {
+    personaTotal: 2,
+    generatedAt: "2026-06-09T00:00:00.000Z",
+    entityLayerStatus: "none",
+    note: "",
+  },
+};
+
 const useSuccessHandlers = () => {
   server.use(
     http.get(`${API}/admin/analytics/conversations`, () =>
@@ -102,6 +134,9 @@ const useSuccessHandlers = () => {
     ),
     http.get(`${API}/admin/analytics/usage`, () =>
       HttpResponse.json(usageAnalytics),
+    ),
+    http.get(`${API}/admin/analytics/ontology`, () =>
+      HttpResponse.json(ontologyAnalytics),
     ),
     http.get(`${API}/admin/analytics/reports`, () =>
       HttpResponse.json(weeklyReports),
