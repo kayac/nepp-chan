@@ -39,6 +39,15 @@ describe("personaSaveTool.execute", () => {
     );
   });
 
+  it("entities 未指定でも空配列で create に渡す（未処理 NULL と区別）", async () => {
+    vi.mocked(personaRepository.create).mockResolvedValue("mock-id");
+
+    await callTool(personaSaveTool, validInput, { db: fakeDb });
+
+    const arg = vi.mocked(personaRepository.create).mock.calls[0]?.[1];
+    expect(arg?.entities).toBe("[]");
+  });
+
   it("entities を JSON 文字列にして create に渡す", async () => {
     vi.mocked(personaRepository.create).mockResolvedValue("mock-id");
 

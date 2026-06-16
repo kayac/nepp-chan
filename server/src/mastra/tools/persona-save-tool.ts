@@ -90,7 +90,8 @@ export const personaSaveTool = createTool({
         topic,
         sentiment,
         demographicSummary,
-        entities: entities ? JSON.stringify(entities) : undefined,
+        // 抽出時に該当なしでも [] を入れる（NULL=未処理の既存ぶんと区別する）
+        entities: JSON.stringify(entities ?? []),
         createdAt,
         conversationEndedAt,
       });
