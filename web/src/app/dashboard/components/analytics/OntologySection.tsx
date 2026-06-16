@@ -134,7 +134,10 @@ type DragState =
   | { mode: "node"; id: string; moved: boolean }
   | { mode: "pan"; startX: number; startY: number; origin: Transform };
 
-const OntologyGraph = ({ nodes, links }: OntologyData) => {
+const OntologyGraph = ({
+  nodes,
+  links,
+}: Pick<OntologyData, "nodes" | "links">) => {
   const [selected, setSelected] = useState<OntologyNode | null>(null);
   const [positions, setPositions] = useState<
     Record<string, { x: number; y: number }>
@@ -575,6 +578,15 @@ const OntologyGraph = ({ nodes, links }: OntologyData) => {
   );
 };
 
+const ENTITY_STATUS_NOTE: Record<
+  OntologyData["meta"]["entityLayerStatus"],
+  string
+> = {
+  ready: "",
+  stale: "・エンティティ層は生成中",
+  none: "・エンティティ層は未生成",
+};
+
 export const OntologySection = () => {
   const { data, isLoading, error } = useOntology();
 
@@ -583,15 +595,13 @@ export const OntologySection = () => {
       title="村の声グラフ"
       description={
         data
-          ? `誰が・何に・どんな感情でつながっているかのグラフ（ペルソナ ${data.meta.personaTotal.toLocaleString()} 件）`
+          ? `誰が・何に・どんな感情でつながっているかのグラフ（ペルソナ ${data.meta.personaTotal.toLocaleString()} 件${ENTITY_STATUS_NOTE[data.meta.entityLayerStatus]}）`
           : undefined
       }
     >
       {isLoading && <SectionLoading />}
       {error != null && <SectionError error={error} />}
-      {data && (
-        <OntologyGraph nodes={data.nodes} links={data.links} meta={data.meta} />
-      )}
+      {data && <OntologyGraph nodes={data.nodes} links={data.links} />}
     </SectionCard>
   );
 };
