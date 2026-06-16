@@ -131,5 +131,11 @@ export type PollChoiceResult = PollResultsResponse["choiceResults"][number];
 export type SimpleChatRequest = PostBody<"/simple-chat">;
 export type SimpleChatMessage = SimpleChatRequest["message"];
 
+// 村の声グラフ
+export type OntologyData = GetOk<"/admin/analytics/ontology">;
+export type OntologyNode = OntologyData["nodes"][number];
+export type OntologyLink = OntologyData["links"][number];
+export type OntologyRole = OntologyNode["role"];
+
 // OpenAPI paths 自体も再エクスポート
 export type { paths } from "./types.d";
