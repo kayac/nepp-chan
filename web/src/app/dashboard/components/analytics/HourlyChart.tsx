@@ -9,8 +9,8 @@ import {
 } from "recharts";
 import { AXIS_STYLE, TOOLTIP_STYLE } from "~/lib/chart-helpers";
 
-const OPEN_COLOR = "#5cb7bb"; // teal-500
-const CLOSED_COLOR = "#f4a06a"; // apricot-500
+const OPEN_COLOR = "#5cb7bb";
+const CLOSED_COLOR = "#f4a06a";
 
 const isClosedHour = (hour: number) => hour < 8 || hour >= 17;
 

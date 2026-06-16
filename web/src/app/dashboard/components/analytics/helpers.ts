@@ -1,9 +1,9 @@
 // 中立が件数の大半を占めるため、淡く穏やかな雪の青で「引かせる」配色にする
 export const SENTIMENT_SERIES = [
-  { key: "positive", label: "ポジティブ", color: "#5cb7bb" }, // teal-500
-  { key: "negative", label: "ネガティブ", color: "#e76f7a" }, // berry
-  { key: "request", label: "要望", color: "#f4b860" }, // honey
-  { key: "neutral", label: "中立", color: "#c8d9e8" }, // sky-300
+  { key: "positive", label: "ポジティブ", color: "#5cb7bb" },
+  { key: "negative", label: "ネガティブ", color: "#e76f7a" },
+  { key: "request", label: "要望", color: "#f4b860" },
+  { key: "neutral", label: "中立", color: "#c8d9e8" },
 ] as const;
 
 export type SentimentCounts = {
@@ -55,7 +55,6 @@ type WeeklyUsageRow = {
   costUsd: number;
 };
 
-/** 週×モデルのフラット行を積み上げバー用に { weekStart, [model]: totalTokens } へ変換する */
 export const pivotWeeklyUsage = (weekly: WeeklyUsageRow[]) => {
   const models = [...new Set(weekly.map((w) => w.model))];
   const weeks = [...new Set(weekly.map((w) => w.weekStart))];

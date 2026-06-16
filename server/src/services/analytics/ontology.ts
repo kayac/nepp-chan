@@ -61,7 +61,6 @@ const DISPUTE_SHARE = 0.08;
 const BIAS_SHARE = 0.12;
 const SEGMENT_SHARE = 0.15;
 
-// persona 1件を 1 セグメントに割り当てる。具体的な関係性を居住地より優先する
 export const extractSegment = (attributes: string): Segment => {
   if (attributes.includes("観光客")) return "観光客";
   if (attributes.includes("移住検討者")) return "移住検討者";
@@ -72,7 +71,6 @@ export const extractSegment = (attributes: string): Segment => {
   return "不明セグメント";
 };
 
-// 感情構成とセグメント構成から役割を判定する（しきい値は実データで調整）
 export const classifyRoles = (
   bySentiment: SentimentCounts,
   bySegment: Map<Segment, number>,
@@ -117,7 +115,6 @@ const dominantTopic = (topicCounts: Map<string, number>) =>
 const topSegments = (bySegment: Map<Segment, number>, n: number) =>
   [...bySegment.entries()].sort((a, b) => b[1] - a[1]).slice(0, n);
 
-// topic / entity ノード共通の役割・内訳プロパティを組み立てる
 const roleAndBreakdowns = (
   bySentiment: SentimentCounts,
   bySegment: Map<Segment, number>,

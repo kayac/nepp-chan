@@ -5,8 +5,6 @@ const dateSchema = z
   .regex(/^\d{4}-\d{2}-\d{2}$/)
   .describe("JST の日付（YYYY-MM-DD）");
 
-// 期間は会話終了時刻（conversation_ended_at）基準。
-// 指定時は会話時刻が特定できない行（conversation_ended_at が NULL）を除外する
 export const personaAnalyticsQuerySchema = z.object({
   from: dateSchema.optional(),
   to: dateSchema.optional().describe("JST の日付（YYYY-MM-DD、この日を含む）"),
@@ -49,11 +47,9 @@ const weekdayCountSchema = z.object({ dow: z.number(), count: z.number() });
 
 export const personaAnalyticsResponseSchema = z.object({
   totalCount: z.number(),
-  // 会話終了時刻（conversation_ended_at）ベースの JST 時間帯・曜日分布。
   // 1会話から複数件抽出されるため件数は会話数とは一致しない近似値
   hourly: z.array(hourlyCountSchema),
   weekday: z.array(weekdayCountSchema),
-  // 開庁 = 平日 8〜17 時 JST に会話が終了した声、閉庁 = それ以外
   officeHours: z.object({ open: z.number(), closed: z.number() }),
   ageSentiment: z.array(z.object({ age: z.string(), ...sentimentCountsShape })),
   topics: z.array(
@@ -93,7 +89,6 @@ const ontologyLinkSchema = z.object({
   kind: z.enum(["seg-topic", "topic-ent", "seg-ent"]),
 });
 
-// entityLayerStatus: none=エンティティ層未生成 / ready=最新 / stale=要再生成
 export const ontologyResponseSchema = z.object({
   nodes: z.array(ontologyNodeSchema),
   links: z.array(ontologyLinkSchema),

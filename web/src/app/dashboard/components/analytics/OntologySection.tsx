@@ -21,12 +21,12 @@ import {
 import { SectionCard, SectionError, SectionLoading } from "./SectionCard";
 
 const ROLE_COLORS: Record<OntologyRole, string> = {
-  接続点: "#5cb7bb", // teal-500
-  争点: "#f4b860", // honey
-  不満点: "#e76f7a", // berry
-  満足点: "#8faf6f", // moss-500
-  関心点: "#a8a29e", // snow-400
-  セグメント: "#f4a06a", // apricot-500
+  接続点: "#5cb7bb",
+  争点: "#f4b860",
+  不満点: "#e76f7a",
+  満足点: "#8faf6f",
+  関心点: "#a8a29e",
+  セグメント: "#f4a06a",
 };
 
 const ROLE_DESC: Record<OntologyRole, string> = {
@@ -48,10 +48,10 @@ const SEGMENT_ICONS: Record<string, string> = {
 };
 
 const SENTIMENT_META: Record<string, { label: string; color: string }> = {
-  positive: { label: "ポジティブ", color: "#5cb7bb" }, // teal-500
-  negative: { label: "ネガティブ", color: "#e76f7a" }, // berry
-  request: { label: "要望", color: "#f4b860" }, // honey
-  neutral: { label: "中立", color: "#89a8c0" }, // sky-500
+  positive: { label: "ポジティブ", color: "#5cb7bb" },
+  negative: { label: "ネガティブ", color: "#e76f7a" },
+  request: { label: "要望", color: "#f4b860" },
+  neutral: { label: "中立", color: "#89a8c0" },
 };
 
 const MIN_ZOOM = 0.6;
@@ -545,7 +545,7 @@ const OntologyGraph = ({
                     rows={selected.bySegment}
                     getMeta={(key) => ({
                       label: key === "不明セグメント" ? "不明" : key,
-                      color: "#f4a06a", // apricot-500
+                      color: "#f4a06a",
                       icon: SEGMENT_ICONS[key] ?? "👤",
                     })}
                   />
