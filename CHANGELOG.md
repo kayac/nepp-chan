@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.0.7](https://github.com/kayac/nepp-chan/compare/v1.0.6...v1.0.7) - 2026-06-17
+
+- security: @mastra/deployer マルウェア依存を除去 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/768
+
 ## [v1.0.6](https://github.com/kayac/nepp-chan/compare/v1.0.5...v1.0.6) - 2026-06-17
 
 - 分析ダッシュボードの整理 by @vesperworks in https://github.com/kayac/nepp-chan/pull/743
