@@ -4,14 +4,13 @@ import { type ReactNode, useEffect, useMemo, useRef } from "react";
 
 import { API_BASE } from "~/lib/api/client";
 import { getBearerToken } from "~/lib/auth-token";
-import { getLocationParam } from "~/lib/location-param";
 
 import { getMessageContent } from "../feedback-helpers";
 import { buildGreetingPrompt, isGreetingPrompt } from "../greeting-prompt";
 import { ChatContext, type ChatContextValue } from "./ChatContext";
 
 export type InitialMessage =
-  | { type: "greeting" }
+  | { type: "greeting"; location: string | null }
   | { type: "user"; text: string };
 
 interface Props {
@@ -65,7 +64,7 @@ export const ChatProvider = ({
     sent.current = true;
     const text =
       initialMessage.type === "greeting"
-        ? buildGreetingPrompt(getLocationParam())
+        ? buildGreetingPrompt(initialMessage.location)
         : initialMessage.text;
     void sendMessage({ text });
   }, [sendMessage, initialMessage]);

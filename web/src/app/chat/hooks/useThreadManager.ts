@@ -11,6 +11,7 @@ import {
 } from "~/app/chat/hooks/useThreads";
 import { useAdminUser } from "~/hooks/useAdminUser";
 import { threadRepository } from "~/lib/api/repository";
+import { getLocationParam } from "~/lib/location-param";
 import { getResourceId } from "~/lib/resource";
 import type { InitialMessage } from "../contexts/ChatProvider";
 
@@ -18,6 +19,9 @@ const storageKey = (resourceId: string) => `chat_threadId_${resourceId}`;
 
 export const useThreadManager = () => {
   const resourceId = useMemo(() => getResourceId() ?? "default", []);
+  // ?location= 付きアクセスは訪問履歴に関わらず歓迎挨拶の新規スレッドで始める
+  const location = useMemo(() => getLocationParam(), []);
+  const hasLocationGreeting = location !== null;
   const { data: adminUser, isLoading: isAdminLoading } = useAdminUser();
   const isAdmin = !!adminUser;
   const { isReady: isSessionReady, isFirstVisit } = useAnonymousSession();
@@ -50,8 +54,8 @@ export const useThreadManager = () => {
   );
 
   const handleNewThread = useCallback(
-    () => startThread({ type: "greeting" }),
-    [startThread],
+    () => startThread({ type: "greeting", location }),
+    [startThread, location],
   );
 
   const handleStartFromLanding = useCallback(
@@ -90,22 +94,21 @@ export const useThreadManager = () => {
   useEffect(() => {
     if (threadsLoaded && !hasInitialized.current) {
       hasInitialized.current = true;
-      if (threads.length > 0) {
+      if (!hasLocationGreeting && threads.length > 0) {
         const savedThreadId = localStorage.getItem(storageKey(resourceId));
         const thread =
           threads.find((t) => t.id === savedThreadId) ?? threads[0];
         setCurrentThreadId(thread.id);
       }
     }
-  }, [threadsLoaded, threads, resourceId]);
+  }, [threadsLoaded, threads, resourceId, hasLocationGreeting]);
 
   useEffect(() => {
     if (
       threadsLoaded &&
       hasInitialized.current &&
-      threads.length === 0 &&
       currentThreadId === null &&
-      !isFirstVisit
+      (hasLocationGreeting || (threads.length === 0 && !isFirstVisit))
     ) {
       handleNewThread();
     }
@@ -114,10 +117,12 @@ export const useThreadManager = () => {
     threads.length,
     currentThreadId,
     isFirstVisit,
+    hasLocationGreeting,
     handleNewThread,
   ]);
 
   const showLanding =
+    !hasLocationGreeting &&
     isFirstVisit &&
     threadsLoaded &&
     threads.length === 0 &&
