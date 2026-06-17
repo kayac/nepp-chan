@@ -11,6 +11,12 @@ export const usePersonaAnalytics = (
     queryFn: () => analyticsRepository.fetchPersonaAnalytics(params),
   });
 
+export const useOntology = () =>
+  useQuery({
+    queryKey: dashboardKeys.analyticsOntology,
+    queryFn: () => analyticsRepository.fetchOntology(),
+  });
+
 export const useConversationAnalytics = (days = 30) =>
   useQuery({
     queryKey: dashboardKeys.analyticsConversations(days),

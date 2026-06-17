@@ -20,6 +20,7 @@ export const persona = sqliteTable("persona", {
   topic: text("topic"),
   sentiment: text("sentiment").default("neutral"),
   demographicSummary: text("demographic_summary"),
+  entities: text("entities"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at"),
   conversationEndedAt: text("conversation_ended_at"),

@@ -1,4 +1,5 @@
 import { ConversationSection } from "./analytics/ConversationSection";
+import { OntologySection } from "./analytics/OntologySection";
 import { PersonaSection } from "./analytics/PersonaSection";
 import { ReportsSection } from "./analytics/ReportsSection";
 import { UsageSection } from "./analytics/UsageSection";
@@ -8,6 +9,7 @@ export const AnalyticsPanel = () => (
     <ConversationSection />
     <UsageSection />
     <PersonaSection />
+    <OntologySection />
     <ReportsSection />
   </div>
 );

@@ -2,6 +2,7 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { logger } from "~/lib/logger";
 import { personaRepository } from "~/repository/persona-repository";
+import { personaEntitiesSchema } from "~/schemas/persona-entity-schema";
 import { getConversationEndedAt, requireDb } from "./helpers";
 
 export const personaSaveTool = createTool({
@@ -41,6 +42,11 @@ export const personaSaveTool = createTool({
       .string()
       .optional()
       .describe("属性サマリー（例: 60代,村内）"),
+    entities: personaEntitiesSchema
+      .optional()
+      .describe(
+        "言及された固有エンティティ（施設・サービス・制度等）。name に正規名、type に種別を入れる。個人名等は含めない",
+      ),
   }),
   outputSchema: z.object({
     success: z.boolean(),
@@ -68,6 +74,7 @@ export const personaSaveTool = createTool({
       topic,
       sentiment,
       demographicSummary,
+      entities,
     } = inputData;
 
     const personaId = crypto.randomUUID();
@@ -83,6 +90,8 @@ export const personaSaveTool = createTool({
         topic,
         sentiment,
         demographicSummary,
+        // 抽出時に該当なしでも [] を入れる（NULL=未処理の既存ぶんと区別する）
+        entities: JSON.stringify(entities ?? []),
         createdAt,
         conversationEndedAt,
       });

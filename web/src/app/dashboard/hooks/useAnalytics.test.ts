@@ -33,6 +33,9 @@ describe("usePersonaAnalytics", () => {
         received = { from: params.get("from"), to: params.get("to") };
         return HttpResponse.json({
           totalCount: 3,
+          hourly: [],
+          weekday: [],
+          officeHours: { open: 0, closed: 0 },
           ageSentiment: [],
           topics: [],
           segments: { residence: [], relationship: [] },
@@ -59,6 +62,7 @@ describe("useConversationAnalytics", () => {
         return HttpResponse.json({
           daily: [],
           hourly: [],
+          weekday: [],
           platforms: [],
           totals: { conversations: 5, messages: 12 },
         });

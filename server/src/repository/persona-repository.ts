@@ -12,6 +12,7 @@ type UpdateInput = {
   topic?: string;
   sentiment?: string;
   demographicSummary?: string;
+  entities?: string;
 };
 
 export type TopicAggregation = {
@@ -35,6 +36,7 @@ export const personaRepository = {
       topic: input.topic ?? null,
       sentiment: input.sentiment ?? "neutral",
       demographicSummary: input.demographicSummary ?? null,
+      entities: input.entities ?? null,
       createdAt: input.createdAt,
       conversationEndedAt: input.conversationEndedAt ?? null,
     });
@@ -57,6 +59,7 @@ export const personaRepository = {
     if (input.sentiment !== undefined) updates.sentiment = input.sentiment;
     if (input.demographicSummary !== undefined)
       updates.demographicSummary = input.demographicSummary;
+    if (input.entities !== undefined) updates.entities = input.entities;
 
     await db.update(persona).set(updates).where(eq(persona.id, id));
   },

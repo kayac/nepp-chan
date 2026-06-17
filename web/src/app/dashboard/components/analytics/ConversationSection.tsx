@@ -7,14 +7,23 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useConversationAnalytics } from "~/app/dashboard/hooks/useAnalytics";
+import {
+  useConversationAnalytics,
+  usePersonaAnalytics,
+} from "~/app/dashboard/hooks/useAnalytics";
 import { AXIS_STYLE, TOOLTIP_STYLE } from "~/lib/chart-helpers";
 import { HourlyChart } from "./HourlyChart";
+import { jstDateRange } from "./helpers";
+import { PersonaPeriodSummary } from "./PersonaPeriodSummary";
 import { SectionCard, SectionError, SectionLoading } from "./SectionCard";
 import { StatCards } from "./StatCards";
+import { WeekdayChart } from "./WeekdayChart";
+
+const DAYS = 30;
 
 export const ConversationSection = () => {
-  const { data, isLoading, error } = useConversationAnalytics(30);
+  const { data, isLoading, error } = useConversationAnalytics(DAYS);
+  const { data: personaData } = usePersonaAnalytics(jstDateRange(DAYS));
 
   return (
     <SectionCard
@@ -57,7 +66,7 @@ export const ConversationSection = () => {
                   type="monotone"
                   dataKey="conversations"
                   name="会話数"
-                  stroke="#0d9488"
+                  stroke="#0d9296"
                   strokeWidth={2.5}
                   dot={false}
                 />
@@ -65,7 +74,7 @@ export const ConversationSection = () => {
                   type="monotone"
                   dataKey="messages"
                   name="メッセージ数"
-                  stroke="#0284c7"
+                  stroke="#89a8c0"
                   strokeWidth={2}
                   dot={false}
                 />
@@ -73,12 +82,29 @@ export const ConversationSection = () => {
             </ResponsiveContainer>
           </div>
 
-          <div>
-            <h4 className="text-sm font-medium text-stone-700 mb-2">
-              時間帯分布（JST）
-            </h4>
-            <HourlyChart hourly={data.hourly} />
+          <div className="grid lg:grid-cols-[3fr_2fr] gap-6">
+            <div>
+              <h4 className="text-sm font-medium text-stone-700 mb-2">
+                時間帯分布（JST）
+              </h4>
+              <HourlyChart hourly={data.hourly} />
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-stone-700 mb-2">
+                曜日分布（JST）
+              </h4>
+              <WeekdayChart weekday={data.weekday} />
+            </div>
           </div>
+
+          {personaData && (
+            <div>
+              <h4 className="text-sm font-medium text-stone-700 mb-2">
+                同期間の声の傾向（ペルソナ）
+              </h4>
+              <PersonaPeriodSummary data={personaData} />
+            </div>
+          )}
         </div>
       )}
     </SectionCard>

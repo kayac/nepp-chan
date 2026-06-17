@@ -11,6 +11,12 @@ export const createAnalyticsRepository = (client: ApiClient) => ({
     return data;
   },
 
+  fetchOntology: async () => {
+    const { data, error } = await client.GET("/admin/analytics/ontology");
+    if (error) throw error;
+    return data;
+  },
+
   fetchConversationAnalytics: async (days = 30) => {
     const { data, error } = await client.GET("/admin/analytics/conversations", {
       params: { query: { days } },

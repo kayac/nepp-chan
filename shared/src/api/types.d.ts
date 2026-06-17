@@ -535,6 +535,18 @@ export interface paths {
                     content: {
                         "application/json": {
                             totalCount: number;
+                            hourly: {
+                                hour: number;
+                                count: number;
+                            }[];
+                            weekday: {
+                                dow: number;
+                                count: number;
+                            }[];
+                            officeHours: {
+                                open: number;
+                                closed: number;
+                            };
                             ageSentiment: {
                                 age: string;
                                 positive: number;
@@ -615,6 +627,103 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/analytics/ontology": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 村の声グラフ（セグメント×トピックの関係グラフ） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 村の声グラフのノード・リンク */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            nodes: {
+                                id: string;
+                                label: string;
+                                /** @enum {string} */
+                                kind: "segment" | "topic" | "entity";
+                                type?: string;
+                                topic?: string;
+                                count: number;
+                                /** @enum {string} */
+                                role: "接続点" | "争点" | "不満点" | "満足点" | "関心点" | "セグメント";
+                                roles: ("接続点" | "争点" | "不満点" | "満足点" | "関心点" | "セグメント")[];
+                                bySegment?: {
+                                    [key: string]: number;
+                                };
+                                bySentiment?: {
+                                    [key: string]: number;
+                                };
+                            }[];
+                            links: {
+                                source: string;
+                                target: string;
+                                n: number;
+                                /** @enum {string} */
+                                kind: "seg-topic" | "topic-ent" | "seg-ent";
+                            }[];
+                            meta: {
+                                personaTotal: number;
+                                generatedAt: string;
+                                /** @enum {string} */
+                                entityLayerStatus: "none" | "ready" | "stale";
+                                note: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/analytics/conversations": {
         parameters: {
             query?: never;
@@ -652,6 +761,10 @@ export interface paths {
                             }[];
                             hourly: {
                                 hour: number;
+                                count: number;
+                            }[];
+                            weekday: {
+                                dow: number;
                                 count: number;
                             }[];
                             platforms: {

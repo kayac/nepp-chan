@@ -1,10 +1,52 @@
-// ペルソナ sentiment の表示順・ラベル・色（積み上げチャート共通）
+// 中立が件数の大半を占めるため、淡く穏やかな雪の青で「引かせる」配色にする
 export const SENTIMENT_SERIES = [
-  { key: "positive", label: "ポジティブ", color: "#0d9488" }, // teal-600
-  { key: "negative", label: "ネガティブ", color: "#e11d48" }, // rose-600
-  { key: "request", label: "要望", color: "#d97706" }, // amber-600
-  { key: "neutral", label: "中立", color: "#a8a29e" }, // stone-400
+  { key: "positive", label: "ポジティブ", color: "#5cb7bb" },
+  { key: "negative", label: "ネガティブ", color: "#e76f7a" },
+  { key: "request", label: "要望", color: "#f4b860" },
+  { key: "neutral", label: "中立", color: "#c8d9e8" },
 ] as const;
+
+export type SentimentCounts = {
+  positive: number;
+  negative: number;
+  request: number;
+  neutral: number;
+};
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+const toJstDate = (d: Date) =>
+  new Date(d.getTime() + JST_OFFSET_MS).toISOString().slice(0, 10);
+
+/** 直近 days 日の JST 日付範囲（from は days-1 日前、to は今日。両端を含む） */
+export const jstDateRange = (days: number, now: Date = new Date()) => ({
+  from: toJstDate(new Date(now.getTime() - (days - 1) * DAY_MS)),
+  to: toJstDate(now),
+});
+
+export const sentimentTotal = (row: SentimentCounts) =>
+  row.positive + row.negative + row.request + row.neutral;
+
+export const sumSentiments = (rows: SentimentCounts[]): SentimentCounts =>
+  rows.reduce(
+    (acc, row) => ({
+      positive: acc.positive + row.positive,
+      negative: acc.negative + row.negative,
+      request: acc.request + row.request,
+      neutral: acc.neutral + row.neutral,
+    }),
+    { positive: 0, negative: 0, request: 0, neutral: 0 },
+  );
+
+export const topEntries = (
+  entries: { label: string; count: number }[],
+  n: number,
+) =>
+  entries
+    .filter((e) => e.count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, n);
 
 type WeeklyUsageRow = {
   weekStart: string;
@@ -13,7 +55,6 @@ type WeeklyUsageRow = {
   costUsd: number;
 };
 
-/** 週×モデルのフラット行を積み上げバー用に { weekStart, [model]: totalTokens } へ変換する */
 export const pivotWeeklyUsage = (weekly: WeeklyUsageRow[]) => {
   const models = [...new Set(weekly.map((w) => w.model))];
   const weeks = [...new Set(weekly.map((w) => w.weekStart))];

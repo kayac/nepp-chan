@@ -25,8 +25,13 @@ vi.mock("~/services/auth/anonymous-session", () => ({
   verifyAnonymousToken: vi.fn(),
 }));
 
+vi.mock("~/services/analytics/ontology", () => ({
+  getOntology: vi.fn(),
+}));
+
 const { getConversationStats, getWeeklyUsage, getPersonaAnalytics } =
   await import("~/services/analytics/aggregate");
+const { getOntology } = await import("~/services/analytics/ontology");
 const { weeklyReportRepository } = await import(
   "~/repository/weekly-report-repository"
 );
@@ -79,12 +84,16 @@ const authedGet = (path: string) =>
 const emptyConversationStats = {
   daily: [],
   hourly: [],
+  weekday: [],
   platforms: [],
   totals: { conversations: 0, messages: 0 },
 };
 
 const emptyPersonaAnalytics = {
   totalCount: 0,
+  hourly: [],
+  weekday: [],
+  officeHours: { open: 0, closed: 0 },
   ageSentiment: [],
   topics: [],
   segments: { residence: [], relationship: [] },
@@ -294,5 +303,44 @@ describe("GET /reports", () => {
       mockEnv,
     );
     expect(res.status).toBe(404);
+  });
+});
+
+describe("GET /ontology", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("super_admin はグラフを返す", async () => {
+    useAuth("super_admin");
+    vi.mocked(getOntology).mockResolvedValue({
+      nodes: [
+        {
+          id: "ent:音威子府駅",
+          label: "音威子府駅",
+          kind: "entity",
+          count: 3,
+          role: "関心点",
+          roles: ["関心点"],
+        },
+      ],
+      links: [],
+      meta: {
+        personaTotal: 3,
+        generatedAt: "2026-06-15T00:00:00.000Z",
+        entityLayerStatus: "ready",
+        note: "",
+      },
+    });
+
+    const res = await routes.request(
+      authedGet("/ontology"),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { meta: { entityLayerStatus: string } };
+    expect(body.meta.entityLayerStatus).toBe("ready");
   });
 });

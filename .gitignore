@@ -16,6 +16,11 @@ dist/
 review/
 .claude/settings.local.json
 .claude/worktrees/
+.claude/scheduled_tasks.lock
+
+# ローカル作業ディレクトリ
+/tmp/
+/.tmp/
 
 # deps
 node_modules/

@@ -12,14 +12,28 @@ export const AXIS_STYLE = {
 };
 
 export const DEFAULT_COLORS = [
-  "#ea580c", // orange-600
-  "#0284c7", // sky-600
-  "#16a34a", // green-600
-  "#e11d48", // rose-600
-  "#ca8a04", // yellow-600
-  "#0891b2", // cyan-600
-  "#dc2626", // red-600
-  "#2563eb", // blue-600
+  "#ea580c",
+  "#0284c7",
+  "#16a34a",
+  "#e11d48",
+  "#ca8a04",
+  "#0891b2",
+  "#dc2626",
+  "#2563eb",
+];
+
+export const OPEN_COLOR = "#5cb7bb";
+export const CLOSED_COLOR = "#f4a06a";
+
+export const NEPP_CHART_COLORS = [
+  "#5cb7bb",
+  "#f4a06a",
+  "#8faf6f",
+  "#89a8c0",
+  "#e76f7a",
+  "#f4b860",
+  "#3f6e5a",
+  "#78716c",
 ];
 
 export const getColorAt = (

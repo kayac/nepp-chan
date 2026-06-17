@@ -14,31 +14,32 @@ import {
   TOOLTIP_STYLE,
 } from "~/lib/chart-helpers";
 
-const isClosedHour = (hour: number) => hour < 8 || hour >= 17;
+const DOW_LABELS = ["日", "月", "火", "水", "木", "金", "土"];
+
+const isClosedDay = (dow: number) => dow === 0 || dow === 6;
 
 interface Props {
-  hourly: { hour: number; count: number }[];
+  weekday: { dow: number; count: number }[];
   height?: number;
   tooltipLabel?: string;
 }
 
-export const HourlyChart = ({
-  hourly,
+export const WeekdayChart = ({
+  weekday,
   height = 220,
   tooltipLabel = "メッセージ数",
 }: Props) => (
   <div>
     <ResponsiveContainer width="100%" height={height}>
       <BarChart
-        data={hourly}
+        data={weekday}
         margin={{ top: 10, right: 20, bottom: 0, left: 0 }}
       >
         <XAxis
-          dataKey="hour"
+          dataKey="dow"
           tick={AXIS_STYLE}
           stroke={AXIS_STYLE.stroke}
-          tickFormatter={(hour: number) => `${hour}時`}
-          interval={2}
+          tickFormatter={(dow: number) => DOW_LABELS[dow] ?? String(dow)}
         />
         <YAxis
           tick={AXIS_STYLE}
@@ -47,14 +48,14 @@ export const HourlyChart = ({
         />
         <Tooltip
           contentStyle={TOOLTIP_STYLE}
-          labelFormatter={(hour) => `${hour}時台`}
+          labelFormatter={(dow) => `${DOW_LABELS[Number(dow)] ?? dow}曜日`}
           formatter={(value) => [value, tooltipLabel]}
         />
         <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-          {hourly.map((item) => (
+          {weekday.map((item) => (
             <Cell
-              key={item.hour}
-              fill={isClosedHour(item.hour) ? CLOSED_COLOR : OPEN_COLOR}
+              key={item.dow}
+              fill={isClosedDay(item.dow) ? CLOSED_COLOR : OPEN_COLOR}
             />
           ))}
         </Bar>
@@ -66,14 +67,14 @@ export const HourlyChart = ({
           className="w-3 h-3 rounded-sm"
           style={{ backgroundColor: OPEN_COLOR }}
         />
-        役場開庁時間（8〜17時）
+        開庁日（月〜金）
       </span>
       <span className="flex items-center gap-1.5">
         <span
           className="w-3 h-3 rounded-sm"
           style={{ backgroundColor: CLOSED_COLOR }}
         />
-        閉庁時間
+        閉庁日（土日）
       </span>
     </div>
   </div>

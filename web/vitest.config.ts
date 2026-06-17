@@ -69,6 +69,18 @@ export default defineConfig({
         "src/components/chat/types.ts",
         // barrel（knowledge 配下コンポーネントの re-export のみ）
         "src/app/dashboard/components/knowledge/index.ts",
+        // d3-force シミュレーション + SVG のドラッグ/パン/ズーム操作が中心で E2E 領域。
+        // 役割分類・集計・スナップショットのマージ等の本質ロジックは server 側
+        // （services/analytics/ontology*）に抽出済みで、描画・選択の振る舞いは
+        // OntologySection.test.tsx で担保している
+        "src/app/dashboard/components/analytics/OntologySection.tsx",
+        // 型定義 + viewBox 定数のみ
+        "src/app/dashboard/components/analytics/ontology-types.ts",
+        // recharts の描画ラッパー。tickFormatter / labelFormatter / Cell の
+        // 配色コールバックは jsdom では発火せず E2E 領域。集計データは
+        // server 側でテスト済み
+        "src/app/dashboard/components/analytics/HourlyChart.tsx",
+        "src/app/dashboard/components/analytics/WeekdayChart.tsx",
       ],
       thresholds: {
         branches: 88,

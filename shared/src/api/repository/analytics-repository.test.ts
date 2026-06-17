@@ -55,6 +55,30 @@ describe("fetchPersonaAnalytics", () => {
   });
 });
 
+describe("fetchOntology", () => {
+  const emptyOntology = {
+    nodes: [],
+    links: [],
+    meta: {
+      personaTotal: 0,
+      generatedAt: "2026-06-15T00:00:00.000Z",
+      entityLayerStatus: "none",
+      note: "",
+    },
+  };
+
+  it("全ペルソナのグラフを取得する", async () => {
+    server.use(
+      http.get(`${API}/admin/analytics/ontology`, () =>
+        HttpResponse.json(emptyOntology),
+      ),
+    );
+
+    const result = await repo.fetchOntology();
+    expect(result?.nodes).toEqual([]);
+  });
+});
+
 describe("fetchConversationAnalytics", () => {
   it("デフォルト days=30", async () => {
     server.use(

@@ -28,6 +28,7 @@ export const createTestDb = async () => {
       topic TEXT,
       sentiment TEXT DEFAULT 'neutral',
       demographic_summary TEXT,
+      entities TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT,
       conversation_ended_at TEXT

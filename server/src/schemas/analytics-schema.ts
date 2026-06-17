@@ -41,8 +41,16 @@ const sentimentCountsShape = {
   neutral: z.number(),
 };
 
+const hourlyCountSchema = z.object({ hour: z.number(), count: z.number() });
+// dow は JST の曜日（0=日曜 〜 6=土曜）
+const weekdayCountSchema = z.object({ dow: z.number(), count: z.number() });
+
 export const personaAnalyticsResponseSchema = z.object({
   totalCount: z.number(),
+  // 1会話から複数件抽出されるため件数は会話数とは一致しない近似値
+  hourly: z.array(hourlyCountSchema),
+  weekday: z.array(weekdayCountSchema),
+  officeHours: z.object({ open: z.number(), closed: z.number() }),
   ageSentiment: z.array(z.object({ age: z.string(), ...sentimentCountsShape })),
   topics: z.array(
     z.object({ topic: z.string(), total: z.number(), ...sentimentCountsShape }),
@@ -52,8 +60,46 @@ export const personaAnalyticsResponseSchema = z.object({
     relationship: z.array(z.object({ label: z.string(), count: z.number() })),
   }),
 });
+const ontologyRoleSchema = z.enum([
+  "接続点",
+  "争点",
+  "不満点",
+  "満足点",
+  "関心点",
+  "セグメント",
+]);
 
-const hourlyCountSchema = z.object({ hour: z.number(), count: z.number() });
+const ontologyNodeSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  kind: z.enum(["segment", "topic", "entity"]),
+  type: z.string().optional(),
+  topic: z.string().optional(),
+  count: z.number(),
+  role: ontologyRoleSchema,
+  roles: z.array(ontologyRoleSchema),
+  bySegment: z.record(z.string(), z.number()).optional(),
+  bySentiment: z.record(z.string(), z.number()).optional(),
+});
+
+const ontologyLinkSchema = z.object({
+  source: z.string(),
+  target: z.string(),
+  n: z.number(),
+  kind: z.enum(["seg-topic", "topic-ent", "seg-ent"]),
+});
+
+export const ontologyResponseSchema = z.object({
+  nodes: z.array(ontologyNodeSchema),
+  links: z.array(ontologyLinkSchema),
+  meta: z.object({
+    personaTotal: z.number(),
+    generatedAt: z.string(),
+    entityLayerStatus: z.enum(["none", "ready", "stale"]),
+    note: z.string(),
+  }),
+});
+
 const platformCountSchema = z.object({
   platform: z.string(),
   count: z.number(),
@@ -68,6 +114,7 @@ export const conversationAnalyticsResponseSchema = z.object({
     }),
   ),
   hourly: z.array(hourlyCountSchema),
+  weekday: z.array(weekdayCountSchema),
   platforms: z.array(platformCountSchema),
   totals: z.object({ conversations: z.number(), messages: z.number() }),
 });
