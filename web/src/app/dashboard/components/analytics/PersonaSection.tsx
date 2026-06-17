@@ -15,6 +15,7 @@ import {
   AXIS_STYLE,
   getColorAt,
   NEPP_CHART_COLORS,
+  OPEN_COLOR,
   TOOLTIP_STYLE,
 } from "~/lib/chart-helpers";
 import { HourlyChart } from "./HourlyChart";
@@ -39,8 +40,7 @@ const splitKnownUnknown = (data: { label: string; count: number }[]) => {
   const total = data.reduce((sum, s) => sum + s.count, 0);
   const knownTotal = total - unknown;
   const rate = total > 0 ? Math.round((knownTotal / total) * 1000) / 10 : 0;
-  const barWidth = Math.max(rate, 15);
-  return { known, unknown, knownTotal, total, rate, barWidth };
+  return { known, unknown, knownTotal, total, rate };
 };
 
 // 枠の全幅がゲージの判明部分に収束する漏斗で包含関係を表す
@@ -49,18 +49,19 @@ const DrillDownSection = ({
   knownTotal,
   unknownCount,
   rate,
-  barWidth,
   children,
 }: {
   knownLabel: string;
   knownTotal: number;
   unknownCount: number;
   rate: number;
-  barWidth: number;
   children: React.ReactNode;
 }) => (
   <div>
-    <div className="rounded-lg p-1" style={{ border: "2px solid #5cb7bb" }}>
+    <div
+      className="rounded-lg p-1"
+      style={{ border: `2px solid ${OPEN_COLOR}` }}
+    >
       {children}
     </div>
 
@@ -72,36 +73,37 @@ const DrillDownSection = ({
     >
       <defs>
         <linearGradient id="funnel-down" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#5cb7bb" stopOpacity="0.45" />
+          <stop offset="0%" stopColor={OPEN_COLOR} stopOpacity="0.45" />
           <stop offset="100%" stopColor="#4ea7ab" stopOpacity="0.10" />
         </linearGradient>
       </defs>
-      <polygon
-        points={`0,0 100,0 ${barWidth},28 0,28`}
-        fill="url(#funnel-down)"
-      />
+      <polygon points={`0,0 100,0 ${rate},28 0,28`} fill="url(#funnel-down)" />
     </svg>
 
-    <div className="flex h-[34px] rounded-lg overflow-hidden text-xs font-semibold">
+    {/* ゲージは判明率(rate%)そのままの比率。漏斗の頂点と判明幅が一致する */}
+    <div className="flex h-2.5 rounded-lg overflow-hidden" aria-hidden="true">
       <div
-        className="flex items-center px-3 text-white whitespace-nowrap"
         style={{
-          width: `${barWidth}%`,
-          minWidth: "fit-content",
+          width: `${rate}%`,
           background: "linear-gradient(180deg, #6cc3c7 0%, #4ea7ab 100%)",
         }}
-      >
-        {knownLabel} {knownTotal.toLocaleString()} 件（{rate}%）
-      </div>
+      />
       <div
-        className="flex flex-1 items-center justify-end px-3 text-stone-500 whitespace-nowrap"
+        className="flex-1"
         style={{
           background:
             "repeating-linear-gradient(45deg, #e7e5e4 0 6px, #f1efee 6px 12px)",
         }}
-      >
+      />
+    </div>
+
+    <div className="flex justify-between text-xs mt-1">
+      <span className="font-semibold" style={{ color: "#4ea7ab" }}>
+        {knownLabel} {knownTotal.toLocaleString()} 件（{rate}%）
+      </span>
+      <span className="text-stone-500">
         不明 {unknownCount.toLocaleString()} 件
-      </div>
+      </span>
     </div>
   </div>
 );
@@ -149,7 +151,6 @@ const SegmentPie = ({
           knownTotal={seg.knownTotal}
           unknownCount={seg.unknown}
           rate={seg.rate}
-          barWidth={seg.barWidth}
         >
           <SegmentPieChart data={pieData} />
         </DrillDownSection>
@@ -172,8 +173,6 @@ export const PersonaSection = () => {
     data && data.totalCount > 0
       ? Math.round((knownCount / data.totalCount) * 1000) / 10
       : 0;
-  // 親バーと漏斗の描画幅: 判明率が低い場合でもテキストが収まるよう最小15%を確保
-  const knownBarWidth = Math.max(knownRate, 15);
 
   return (
     <SectionCard
@@ -254,7 +253,6 @@ export const PersonaSection = () => {
               knownTotal={knownCount}
               unknownCount={unknownCount}
               rate={knownRate}
-              barWidth={knownBarWidth}
             >
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart
