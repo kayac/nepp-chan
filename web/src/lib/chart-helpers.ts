@@ -22,6 +22,9 @@ export const DEFAULT_COLORS = [
   "#2563eb",
 ];
 
+export const OPEN_COLOR = "#5cb7bb";
+export const CLOSED_COLOR = "#f4a06a";
+
 export const NEPP_CHART_COLORS = [
   "#5cb7bb",
   "#f4a06a",

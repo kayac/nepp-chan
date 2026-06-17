@@ -7,10 +7,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AXIS_STYLE, TOOLTIP_STYLE } from "~/lib/chart-helpers";
-
-const OPEN_COLOR = "#5cb7bb";
-const CLOSED_COLOR = "#f4a06a";
+import {
+  AXIS_STYLE,
+  CLOSED_COLOR,
+  OPEN_COLOR,
+  TOOLTIP_STYLE,
+} from "~/lib/chart-helpers";
 
 const isClosedHour = (hour: number) => hour < 8 || hour >= 17;
 
