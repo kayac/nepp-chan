@@ -33,7 +33,6 @@ const SentimentBars = () =>
     />
   ));
 
-/** 判明/不明を分離して件数・比率を返す */
 const splitKnownUnknown = (data: { label: string; count: number }[]) => {
   const unknown = data.find((s) => s.label === "不明")?.count ?? 0;
   const known = data.filter((s) => s.label !== "不明" && s.count > 0);
@@ -44,10 +43,7 @@ const splitKnownUnknown = (data: { label: string; count: number }[]) => {
   return { known, unknown, knownTotal, total, rate, barWidth };
 };
 
-/**
- * teal枠でグラフを囲み → グラデーション漏斗 → 判明/不明ゲージ（下）
- * 枠の全幅がゲージの判明部分に収束するグラデーションで包含関係を表現
- */
+// 枠の全幅がゲージの判明部分に収束する漏斗で包含関係を表す
 const DrillDownSection = ({
   knownLabel,
   knownTotal,
@@ -64,12 +60,10 @@ const DrillDownSection = ({
   children: React.ReactNode;
 }) => (
   <div>
-    {/* グラフ本体を teal 枠で囲む */}
     <div className="rounded-lg p-1" style={{ border: "2px solid #5cb7bb" }}>
       {children}
     </div>
 
-    {/* グラデーション逆漏斗: 枠全幅 → ゲージ判明幅 */}
     <svg
       viewBox="0 0 100 28"
       preserveAspectRatio="none"
@@ -88,7 +82,6 @@ const DrillDownSection = ({
       />
     </svg>
 
-    {/* 判明/不明ゲージ */}
     <div className="flex h-[34px] rounded-lg overflow-hidden text-xs font-semibold">
       <div
         className="flex items-center px-3 text-white whitespace-nowrap"
