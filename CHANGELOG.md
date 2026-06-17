@@ -1,5 +1,11 @@
 # Changelog
 
+## [v1.0.6](https://github.com/kayac/nepp-chan/compare/v1.0.5...v1.0.6) - 2026-06-17
+
+- 分析ダッシュボードの整理 by @vesperworks in https://github.com/kayac/nepp-chan/pull/743
+- feat(web): Landing を吹き出し化し location 初回訪問で歓迎挨拶を開始する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/765
+- build(deps): 依存パッケージを一括更新する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/767
+
 ## [v1.0.5](https://github.com/kayac/nepp-chan/compare/v1.0.4...v1.0.5) - 2026-06-15
 
 - GA4 を lp / web に導入する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/744
