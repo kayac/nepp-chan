@@ -54,6 +54,11 @@
     "frontmatter:apply": "tsx scripts/apply-date-contact.ts",
     "openapi:generate": "pnpm --filter @nepp-chan/web openapi:generate"
   },
+  "pnpm": {
+    "overrides": {
+      "@mastra/deployer": "1.42.0"
+    }
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.5.0",
     "glob": "^13.0.6",
