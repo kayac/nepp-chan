@@ -131,6 +131,60 @@ describe("processKnowledgeFile", () => {
     expect(upsertArg[1].metadata.subsection).toBe("Sub");
   });
 
+  it("strip されたヘッダー情報を embedding テキストの先頭にプレフィックスとして復元する", async () => {
+    const bodyA = "a".repeat(100);
+    const bodyB = "b".repeat(100);
+    setChunks(
+      [bodyA, bodyB],
+      [
+        { title: "広報おといねっぷ 2023年6月号", section: "診療所" },
+        {
+          title: "広報おといねっぷ 2023年6月号",
+          section: "診療所",
+          subsection: "整形外科",
+        },
+      ],
+    );
+    vi.mocked(embedMany).mockResolvedValueOnce({
+      embeddings: [fakeEmbedding(), fakeEmbedding()],
+    } as never);
+
+    const vectorize = buildVectorize();
+    await processKnowledgeFile("kouhou.md", "x", vectorize, "key");
+
+    const call = vi.mocked(embedMany).mock.calls[0]?.[0] as {
+      values: string[];
+    };
+    expect(call.values[0]).toBe(
+      `広報おといねっぷ 2023年6月号 > 診療所\n\n${bodyA}`,
+    );
+    expect(call.values[1]).toBe(
+      `広報おといねっぷ 2023年6月号 > 診療所 > 整形外科\n\n${bodyB}`,
+    );
+
+    const upsertArg = vi.mocked(vectorize.upsert).mock.calls[0]?.[0] as Array<{
+      metadata: Record<string, unknown>;
+    }>;
+    expect(upsertArg[0].metadata.content).toBe(call.values[0]);
+    expect(upsertArg[1].metadata.content).toBe(call.values[1]);
+  });
+
+  it("ヘッダーメタデータがないチャンクはプレフィックスなしで元テキストを使う", async () => {
+    const body = "c".repeat(100);
+    setChunks([body], [{}]);
+    vi.mocked(embedMany).mockResolvedValueOnce({
+      embeddings: [fakeEmbedding()],
+    } as never);
+
+    const vectorize = buildVectorize();
+    await processKnowledgeFile("plain.md", "x", vectorize, "key");
+
+    const call = vi.mocked(embedMany).mock.calls[0]?.[0] as {
+      values: string[];
+    };
+    expect(call.values[0]).toBe(body);
+  });
+
   it("metadata から undefined を除外して upsert する", async () => {
     setChunks(["a".repeat(100)], [{ title: undefined, section: "S1" }]);
     vi.mocked(embedMany).mockResolvedValueOnce({

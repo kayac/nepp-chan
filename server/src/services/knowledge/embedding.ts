@@ -75,8 +75,16 @@ const chunkDocument = async (
     .filter(({ text }) => text.length >= MIN_CHUNK_LENGTH)
     .map(({ i }) => i);
 
-  const texts = filteredIndices.map((i) => allTexts[i]);
-  const metadata: ChunkMetadata[] = filteredIndices.map((i) => {
+  const texts = filteredIndices.map((i) => {
+    const chunkMeta = chunkMetadataList[i] as
+      | Record<string, unknown>
+      | undefined;
+    const prefix = [chunkMeta?.title, chunkMeta?.section, chunkMeta?.subsection]
+      .filter((v): v is string => typeof v === "string")
+      .join(" > ");
+    return prefix ? `${prefix}\n\n${allTexts[i]}` : allTexts[i];
+  });
+  const metadata: ChunkMetadata[] = filteredIndices.map((i, idx) => {
     const chunkMeta = chunkMetadataList[i] as
       | Record<string, unknown>
       | undefined;
@@ -86,7 +94,7 @@ const chunkDocument = async (
       title: chunkMeta?.title as string | undefined,
       section: chunkMeta?.section as string | undefined,
       subsection: chunkMeta?.subsection as string | undefined,
-      content: allTexts[i],
+      content: texts[idx],
     };
   });
 
