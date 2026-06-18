@@ -5,20 +5,30 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/scripts/stop-lint-format.sh",
-            "timeout": 30000
+            "command": "zsh .claude/scripts/stop-check.sh",
+            "timeout": 60000
           }
         ]
       }
     ],
-    "PreToolUse": [
+    "PostToolUse": [
       {
-        "matcher": "Bash(git commit*)",
+        "matcher": "Edit",
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/scripts/pre-commit-check.sh",
-            "timeout": 120000
+            "command": "zsh .claude/scripts/post-edit-lint.sh",
+            "timeout": 10000
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "zsh .claude/scripts/post-edit-lint.sh",
+            "timeout": 10000
           }
         ]
       }
