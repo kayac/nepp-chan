@@ -26,83 +26,6 @@ LP（apex 配信の静的サイト）は別パッケージ `lp/` にある。
 | Basic 認証            | `functions/_middleware.ts`             |
 | LP への外部リンク     | `constants/urls.ts`                    |
 
-## ディレクトリ構成
-
-```text
-web/
-├── astro.config.ts      # Astro 設定（Vite プラグイン含む）
-├── src/
-│   ├── pages/                 # Astro ファイルベースルーティング
-│   │   ├── index.astro        # / → チャット画面
-│   │   ├── dashboard.astro    # /dashboard → ダッシュボード
-│   │   ├── login.astro        # /login → ログイン
-│   │   ├── register.astro     # /register → 登録
-│   │   └── poll.astro         # /poll → 投票結果
-│   ├── app/                   # React ページコンポーネント
-│   │   ├── chat/              # チャット画面
-│   │   │   ├── App.tsx              # エントリー（RootLayout + QueryProvider）
-│   │   │   ├── ChatPage.tsx         # メインページ（スレッド管理）
-│   │   │   ├── feedback-helpers.ts  # メッセージ/フィードバック抽出ユーティリティ
-│   │   │   ├── contexts/            # ChatContext（ChatProvider + useChatContext）
-│   │   │   └── hooks/                # chat 専用フック（useThreadManager / useThreads / useAnonymousSession / useSubmitFeedback）
-│   │   ├── auth/              # 認証画面
-│   │   │   ├── LoginPage.tsx        # ログインページ
-│   │   │   └── RegisterPage.tsx     # 登録ページ
-│   │   ├── poll/              # 投票結果画面
-│   │   │   └── PollResultsPage.tsx  # 投票結果ページ
-│   │   └── dashboard/         # ダッシュボード画面
-│   │       ├── DashboardPage.tsx    # エントリー（RootLayout + Providers）
-│   │       ├── App.tsx              # ダッシュボード本体（認証ガード含む）
-│   │       ├── contexts/            # AuthContext
-│   │       ├── hooks/               # dashboard 専用フック（useAnalytics / useBroadcasts / useEmergencies / useFeedback / useInvitations / useKnowledge / usePersonas / usePolls / useInfiniteScroll / useRole / keys）
-│   │       └── components/          # パネル群（分析タブは components/analytics/ にセクション分割）
-│   ├── components/
-│   │   ├── RootLayout.tsx     # 共通レイアウト（StrictMode + Sentry）
-│   │   ├── AmbientBG.tsx      # bg-winter + 雪 + 星座を統合した canvas 背景
-│   │   ├── Mascot.tsx         # マスコット表示
-│   │   ├── chat/             # チャット UI（useChat ベース）
-│   │   │   ├── Thread.tsx         # メッセージ一覧 + Composer の組み立て
-│   │   │   ├── Composer.tsx       # 入力欄（IME / タッチ / 送信・停止）
-│   │   │   ├── UserMessage.tsx
-│   │   │   ├── AssistantMessage.tsx
-│   │   │   ├── MarkdownText.tsx   # react-markdown ベース
-│   │   │   ├── ToolPart.tsx       # tool part → 表示コンポーネントのアダプタ
-│   │   │   ├── ToolFallback.tsx
-│   │   │   ├── types.ts           # ToolPartComponent 互換型
-│   │   │   ├── hooks/             # useStickToBottom
-│   │   │   └── tool-uis/
-│   │   └── ui/                # shadcn/ui ベース共通コンポーネント
-│   ├── hooks/                 # 複数 app から使う共有フック（useAdminUser / useCopyToClipboard）
-│   ├── lib/
-│   │   ├── api/
-│   │   │   ├── client.ts      # 共通 API クライアント（shared/api factory を web 依存で wiring）
-│   │   │   └── repository.ts  # 各 domain の repository 実体（shared/api/repository factory + client）
-│   │   ├── auth-token.ts      # 管理者トークン / セッショントークン（localStorage）
-│   │   ├── resource.ts        # resourceId 生成・取得
-│   │   ├── sentry.ts          # Sentry 初期化
-│   │   └── class-merge.ts     # cn ユーティリティ
-│   ├── constants/
-│   │   └── urls.ts            # 外部 URL 定数（PUBLIC_LP_URL 等）
-│   ├── providers/             # QueryProvider 等
-│   ├── types/                 # 共有型定義
-│   └── index.css              # グローバル CSS（CSS 変数定義含む）
-├── functions/
-│   └── _middleware.ts         # Basic 認証
-└── tsconfig.json
-```
-
-## 技術スタック
-
-- **Astro** 6 - ファイルベースルーティング（MPA）
-- **React** 19 - `client:only="react"` でフル CSR
-- **TailwindCSS** 4
-- **TanStack Query** 5 - データフェッチング・キャッシング
-- **チャット UI**（`components/chat/`）
-  - `@ai-sdk/react` の `useChat` - メッセージ状態・ストリーミング・ツール結果
-  - `react-markdown` + `remark-gfm` - Markdown レンダリング
-  - サーバーは AI SDK data stream protocol（`POST /threads/{threadId}/chat`）
-- **Radix UI** - ツールチップ等の基盤
-
 ## ページ追加方法
 
 1. `src/pages/` に `.astro` ファイルを作成
@@ -170,30 +93,6 @@ export const toolsByName: Record<string, ToolPartComponent> = {
 
 ユーザー操作の結果をツールに返す場合は props の `addResult(output)` を呼ぶ
 （内部で useChat の `addToolOutput` に渡る）。
-
-## CSS 変数（テーマ）
-
-`index.css` で定義。管理画面と統一された stone/teal ベースのカラースキーム。
-
-```css
-:root {
-  --color-bg: #fafaf9;           /* stone-50 */
-  --color-surface: white;
-  --color-accent: #0f766e;       /* teal-700 */
-  --color-text: #1c1917;         /* stone-900 */
-  /* ... */
-}
-```
-
-## MPA 構成
-
-| パス         | .astro ファイル        | React コンポーネント    |
-| ------------ | ---------------------- | ----------------------- |
-| `/`          | `pages/index.astro`    | `app/chat/App`          |
-| `/dashboard` | `pages/dashboard.astro`| `app/dashboard/DashboardPage` |
-| `/login`     | `pages/login.astro`    | `app/auth/LoginPage`    |
-| `/register`  | `pages/register.astro` | `app/auth/RegisterPage` |
-| `/poll`      | `pages/poll.astro`     | `app/poll/PollResultsPage` |
 
 ## コーディング規約
 
