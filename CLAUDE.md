@@ -126,38 +126,28 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 # Pages 環境変数は Cloudflare Dashboard で設定
 ```
 
-## 開発フロー
+## 品質ゲート
 
-### 標準ワークフロー
+コード変更を伴うタスクの完了時は `/quality-check` を実行する。
 
-```
-1. /branch-start でブランチ作成
-2. /plan で実装計画を作成（影響範囲が大きい変更の場合）
-3. TDD で実装（test-writing-rules スキル参照）
-4. PostToolUse が Edit/Write 直後に biome check、stop-check が毎ターン テスト不足検出 + Plan 進捗チェック
-5. /quality-check で品質チェック〜コミットまで一括実行
-6. /create-pr で PR 作成
-```
-
-### 計画ファースト
-
-影響範囲が大きい変更（新機能、DB スキーマ変更、複数モジュールにまたがる修正）は `/plan` で計画を先に作る。
-計画ファイルは `.brain/plans/` に置く（`.gitignore` 済み）。
-stop-check が未完了の要件チェックリスト項目を検出して毎ターン通知する。
-
-軽微な修正やリファクタリングでは Plan 不要。
-
-### Hooks による品質ゲート
+### 自動 Hooks
 
 | Hook | タイミング | 内容 |
 |------|-----------|------|
 | `post-edit-lint.sh` | PostToolUse（Edit / Write） | 変更ファイルに `biome check --write` を即時実行 |
 | `stop-check.sh` | Stop（毎ターン） | テストファイル不足検出 + Plan 進捗チェック |
 
+### 便利スキル
+
+| スキル | 用途 |
+|--------|------|
+| `/plan` | 影響範囲が大きい変更の計画作成（`.brain/plans/` に保存） |
+| `/tdd` | テスト駆動開発のサイクル |
+| `/test-writing-rules` | テスト設計の観点チェックリスト |
+
 ## ブランチ
 
 - メイン: `develop`
-- 作業: `{type}/{slug}`（type は feat / fix / refactor / docs / chore / test / perf）
 
 ## CI/CD
 
