@@ -129,6 +129,7 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 ## 品質ゲート
 
 コード変更を伴うタスクの完了時は `/quality-check` を実行する。
+`/quality-check` を通過するまでコミットしない。
 
 ### 自動 Hooks
 

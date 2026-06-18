@@ -1,6 +1,6 @@
 ---
 name: quality-check
-description: "コード変更の品質ゲート。lint・テスト・ビルド検証 → コード品質レビュー → コミットまで一括実行する。"
+description: "コード変更の品質ゲート。lint・テスト・ビルド検証 → コード品質レビューを実行する。"
 ---
 
 # Quality Check
@@ -38,7 +38,3 @@ codex プラグインが利用可能な場合は追加で実行する:
 - `/codex:adversarial-review`（`~/.claude/codex-review-ruleset.md` を focus で渡す）
 
 codex の指摘は `~/.claude/codex-review-ruleset.md` の基準で取捨選択する。取り込まない判断には理由を添え、結果をユーザーに伝える。
-
-### 4. コミット
-
-`commit` スキルで変更をコミットする。
