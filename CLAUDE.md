@@ -68,58 +68,9 @@ knowledge/ 配下 329 ファイルを clean アップロードした場合の正
 - Props 型名は `Props` で統一（`XxxProps` 禁止）
 - 戻り値型は型推論に任せる。`: Promise<string>` / `: void` 等の自明な注釈は書かない
 
-### スタイル
-
-TailwindCSS utility class のみ。BEM 不採用。CSS 変数は `bg-(--paper-50)` 形式。
-
-### ルート設計
-
-ハンドラーには「関数呼び出し + エラーハンドリング」を書く。Repository 呼び出しはルートに直接書いて処理の流れが見えるようにする。データ変換ロジックの Service 切り出しは OK だが、複数 Repository 呼び出しをまとめるだけのラッパーは作らない。
-
-### shared パッケージ
-
-web/lp で UI が必要になったら `@nepp-chan/shared` を最初に確認。新規 UI も両側で使える性質なら shared に置く。
-
-### web ディレクトリ規約
-
-- `app/dashboard/components/<feature>/` 内の helper は `helpers.ts` に集約
-- feature 間の越境 import 禁止。共有は `src/lib/` か `components/ui/` に昇格
-- 新しい配置前に同種の既存ファイルを grep で確認
-
 ### 機密情報
 
 `.gitignore` 等のコミット対象に実データ/PII の存在を示唆するテキストを書かない。ignore コメントは `# ローカル作業ディレクトリ` のような中立な表現に留める。
-
-## Mastra・インフラ規約
-
-### パス別名
-
-```typescript
-import { something } from "~/middleware"; // ~ = src/
-```
-
-### Mastra 配置ルール
-
-- `mastra/agents/` - Agent のみ
-- `mastra/tools/` - Tool のみ
-- `mastra/workflows/` - Workflow のみ
-- `services/` - ビジネスロジック（Mastra プリミティブ以外）
-
-### createTool シグネチャ
-
-```typescript
-execute: async (inputData, context) => {
-  const env = context?.requestContext?.get("env") as CloudflareBindings;
-  // inputData は inputSchema のフィールドを直接持つ
-};
-```
-
-### D1Store 初期化
-
-```typescript
-const storage = new D1Store({ id: "mastra-storage", binding: db });
-await storage.init(); // 必須
-```
 
 ## 環境変数
 
@@ -175,57 +126,6 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 # Pages 環境変数は Cloudflare Dashboard で設定
 ```
 
-## デプロイ環境
-
-| 環境 | LP | Web | API |
-| ---- | --- | --- | --- |
-| ローカル | http://localhost:5174 | http://localhost:5173 | http://localhost:8787 |
-| dev | https://dev.nepp-chan.ai | https://dev-web.nepp-chan.ai | https://dev-api.nepp-chan.ai |
-| prd | https://nepp-chan.ai | https://web.nepp-chan.ai | https://api.nepp-chan.ai |
-
-## テスト
-
-汎用的な書き方の観点・規則は `test-writing-rules` スキルを参照。
-ここではこのプロジェクト固有の決定だけを書く。
-
-### 道具
-
-- 配置: co-located（`foo.ts` の隣に `foo.test.ts`）
-- server: vitest + libsql（in-memory）+ msw / coverage-istanbul
-- web: vitest + jsdom + Testing Library + msw / coverage-v8
-- web は `TZ=Asia/Tokyo` 固定で実行（`package.json` の test スクリプトで指定）
-
-### 共通ヘルパ
-
-- server: `server/src/__tests__/helpers/`（`test-app` / `test-db` / `tool-context`）
-- web: `web/src/test/`（`msw-server` / `renderHookWithQuery` / `renderWithQuery` / `setup`）
-
-### カバレッジ集計の除外
-
-カバレッジは `include` 対象の未テストファイルも母数に含むため、「カバレッジを上げるためだけの薄いテストは書かない」方針に従い、本質的ロジックを持たないファイルは exclude する。
-
-判断軸（具体的なファイルは各 `vitest.config.ts` の `coverage.exclude` に理由コメント付きで列挙）:
-
-- StrictMode / フォールバック UI ラッパー（Sentry / Error Boundary 初期化など）
-- Astro から `client:only` でマウントされる薄い page shell
-- 外部 SDK 連携が深く E2E 領域に該当するもの（recharts 描画や副作用中心の表示など）
-- HOC で囲んだ登録 / barrel / registry
-- 責務分離が完了して orchestration だけになった Panel / Provider / context wrapper
-- 自動生成資源（Mastra の `mastra/public/**` 等）
-
-orchestration shell を exclude するときは「本質的ロジックが hooks / helpers / 子コンポーネントに抽出済みで、別途テストされている」ことを確認してから行う。
-
-### カバレッジ閾値
-
-- 実測値ベースで段階引き上げ（各 `vitest.config.ts` の `coverage.thresholds`）
-- ぎりぎりではなく実測 - 1〜2pt のマージンを付ける（CI のノイズ防止）
-
-### カバレッジのためにプロダクトコードを変更しない
-
-カバレッジ目的で error/guard 分岐を削除しない。runtime 上到達不能でも型ナローイング（discriminated union の絞り込み等）を担う分岐がある。カバレッジが上がらない箇所は exclude か閾値据え置きで対応する。
-
-テストしづらい巨大コンポーネントに smoke render を足してカバレッジを稼ぐのも禁止。テストしづらさは設計のフィードバックとして扱い、純関数・hook・子コンポーネントに分割してからテストする。
-
 ## 開発フロー
 
 ### 標準ワークフロー
@@ -253,7 +153,6 @@ stop-check が未完了の要件チェックリスト項目を検出して毎タ
 |------|-----------|------|
 | `post-edit-lint.sh` | PostToolUse（Edit / Write） | 変更ファイルに `biome check --write` を即時実行 |
 | `stop-check.sh` | Stop（毎ターン） | テストファイル不足検出 + Plan 進捗チェック |
-
 
 ## ブランチ
 
