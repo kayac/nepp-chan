@@ -142,7 +142,6 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 
 | スキル | 用途 |
 |--------|------|
-| `/plan` | 影響範囲が大きい変更の計画作成（`.brain/plans/` に保存） |
 | `/tdd` | テスト駆動開発のサイクル |
 | `/test-writing-rules` | テスト設計の観点チェックリスト |
 
