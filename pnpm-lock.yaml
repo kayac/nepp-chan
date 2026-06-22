@@ -115,8 +115,8 @@ importers:
         specifier: 1.3.0
         version: 1.3.0(@mastra/core@1.42.0(ai@6.0.207(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
       '@mastra/libsql':
-        specifier: 1.13.0
-        version: 1.13.0(@mastra/core@1.42.0(ai@6.0.207(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
+        specifier: 1.14.0
+        version: 1.14.0(@mastra/core@1.42.0(ai@6.0.207(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
       '@mastra/loggers':
         specifier: 1.1.2
         version: 1.1.2(@mastra/core@1.42.0(ai@6.0.207(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
@@ -1903,8 +1903,14 @@ packages:
   '@libsql/client@0.17.3':
     resolution: {integrity: sha512-HXk9wiAoJbKFbyBH4O+aEhN6ir5ERXuXvwE5OD2eR4/5RUa3Pw/8L9zrnVdU+iNJitRvisPWaIwmhkO3bH7giA==}
 
+  '@libsql/client@0.17.4':
+    resolution: {integrity: sha512-lYayFWasDV78A+TjlEhr6ubb3odBV6OHjb+wdp8VQcyWWAEIjuwbCHaraEUS4m4yWoo0BvZo96It4VdzZRmRWw==}
+
   '@libsql/core@0.17.3':
     resolution: {integrity: sha512-2UjK1i7JBkMduJo4WdvvBxMMvVJ31pArBZNONyz/GCJJAH+1UHat2X6vn10S/WpY5fKzIT98WqYFl2vzWRLOfg==}
+
+  '@libsql/core@0.17.4':
+    resolution: {integrity: sha512-LqF9gIvnJ38nmAH1y/ChizHqDO/MO1wLgA96XrraulEEbqXxLjleSH92YWTolbuJKgPUmGu4aJk9W3UnAcxLOQ==}
 
   '@libsql/darwin-arm64@0.5.29':
     resolution: {integrity: sha512-K+2RIB1OGFPYQbfay48GakLhqf3ArcbHqPFu7EZiaUcRgFcdw8RoltsMyvbj5ix2fY0HV3Q3Ioa/ByvQdaSM0A==}
@@ -2000,11 +2006,11 @@ packages:
     peerDependencies:
       '@mastra/core': '>=1.0.0-0 <2.0.0-0'
 
-  '@mastra/libsql@1.13.0':
-    resolution: {integrity: sha512-pmZND+vntUNVDJA4Vr47+QD96Bf+lMsjLOJUyyjIM7+xOYNIuarXJGiaOTkxbkhnRQpHUjlYPDm41O9oqScZjw==}
+  '@mastra/libsql@1.14.0':
+    resolution: {integrity: sha512-CnfnVY6EyTfZpFJIFhDXmVrnsJ4MSm81j2+t+xWTt8aJMawwots8sMCoxuNtd67C8lr/N9LX5QliKpIN9JPlDA==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
-      '@mastra/core': '>=1.34.0-0 <2.0.0-0'
+      '@mastra/core': '>=1.42.1-0 <2.0.0-0'
 
   '@mastra/loggers@1.1.2':
     resolution: {integrity: sha512-1YdWiUzBX14ULWI+5oDX4eIHt8AD1F5nbx98xevybjd/HqKBPmJni/chcngod2sJZfDcx4NyQE87c/s1Cj+ULQ==}
@@ -5891,6 +5897,7 @@ packages:
   tsconfck@3.1.6:
     resolution: {integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==}
     engines: {node: ^18 || >=20}
+    deprecated: unmaintained
     hasBin: true
     peerDependencies:
       typescript: ^5.0.0
@@ -7749,7 +7756,22 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
+  '@libsql/client@0.17.4':
+    dependencies:
+      '@libsql/core': 0.17.4
+      '@libsql/hrana-client': 0.10.0
+      js-base64: 3.7.8
+      libsql: 0.5.29
+      promise-limit: 2.7.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
   '@libsql/core@0.17.3':
+    dependencies:
+      js-base64: 3.7.8
+
+  '@libsql/core@0.17.4':
     dependencies:
       js-base64: 3.7.8
 
@@ -7906,9 +7928,9 @@ snapshots:
       sentiment: 5.0.2
       string-similarity: 4.0.4
 
-  '@mastra/libsql@1.13.0(@mastra/core@1.42.0(ai@6.0.207(zod@4.4.3))(express@5.2.1)(zod@4.4.3))':
+  '@mastra/libsql@1.14.0(@mastra/core@1.42.0(ai@6.0.207(zod@4.4.3))(express@5.2.1)(zod@4.4.3))':
     dependencies:
-      '@libsql/client': 0.17.3
+      '@libsql/client': 0.17.4
       '@mastra/core': 1.42.0(ai@6.0.207(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
     transitivePeerDependencies:
       - bufferutil
