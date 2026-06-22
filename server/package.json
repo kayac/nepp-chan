@@ -40,7 +40,7 @@
     "@mastra/mcp": "1.10.0",
     "@mastra/memory": "1.20.3",
     "@mastra/observability": "1.14.1",
-    "@mastra/rag": "2.2.1",
+    "@mastra/rag": "2.3.0",
     "@nepp-chan/shared": "workspace:*",
     "@sentry/cloudflare": "^10.57.0",
     "ai": "^6.0.207",
