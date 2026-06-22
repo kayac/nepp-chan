@@ -16,7 +16,7 @@
     "@astrojs/check": "^0.9.9",
     "@astrojs/react": "^5.0.7",
     "@nepp-chan/shared": "workspace:*",
-    "ai": "^6.0.198",
+    "ai": "^6.0.208",
     "astro": "^6.4.7",
     "lucide-react": "^1.20.0",
     "react": "^19.2.7",
