@@ -103,8 +103,8 @@ importers:
         specifier: ^11.0.1
         version: 11.0.1
       '@mastra/ai-sdk':
-        specifier: ^1.4.5
-        version: 1.4.5(@mastra/core@1.42.0(ai@6.0.207(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)
+        specifier: ^1.5.0
+        version: 1.5.0(@mastra/core@1.42.0(ai@6.0.207(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)
       '@mastra/cloudflare-d1':
         specifier: 1.0.6
         version: 1.0.6(@mastra/core@1.42.0(ai@6.0.207(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
@@ -1969,8 +1969,8 @@ packages:
     resolution: {integrity: sha512-qC72D4+CDdjGqJvkFMMEAtancHUQ7/d/tAiHf64z8MopFDmcrtbcJuerDtFceuAfQJ2pDSfCKCtbqoGBNnwg0w==}
     engines: {node: '>=8'}
 
-  '@mastra/ai-sdk@1.4.5':
-    resolution: {integrity: sha512-Oyy2/DV3Yra/8dYSNEOKg2KDTpqi+HDOjx+WC/yZzoTO2z+iZFN94N9FnlLYmsrc6lfd5E+Ht26sPxGPFfa+OQ==}
+  '@mastra/ai-sdk@1.5.0':
+    resolution: {integrity: sha512-jge4guj08j8VpMi+gQjTTpV/CEeREMI48PcB58B5QqguWELsuH7BUbphBc8VmMUAK/SZ1RpKp3z2K9d9gElhZw==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.5.0-0 <2.0.0-0'
@@ -5891,6 +5891,7 @@ packages:
   tsconfck@3.1.6:
     resolution: {integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==}
     engines: {node: ^18 || >=20}
+    deprecated: unmaintained
     hasBin: true
     peerDependencies:
       typescript: ^5.0.0
@@ -7806,7 +7807,7 @@ snapshots:
     dependencies:
       '@lukeed/csprng': 1.1.0
 
-  '@mastra/ai-sdk@1.4.5(@mastra/core@1.42.0(ai@6.0.207(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)':
+  '@mastra/ai-sdk@1.5.0(@mastra/core@1.42.0(ai@6.0.207(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)':
     dependencies:
       '@mastra/core': 1.42.0(ai@6.0.207(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
       zod: 4.4.3
