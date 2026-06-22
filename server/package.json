@@ -51,7 +51,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@libsql/client": "^0.17.3",
+    "@libsql/client": "^0.17.4",
     "@types/node": "^25.9.2",
     "@vitest/coverage-istanbul": "~4.1.8",
     "drizzle-kit": "^0.31.10",
