@@ -41,24 +41,4 @@ if [[ ${#missing_tests[@]} -gt 0 ]]; then
   done
 fi
 
-# ─── Plan Compliance ─────────────────────────────────────────
-current_branch=$(git branch --show-current 2>/dev/null || echo "")
-if [[ -n "$current_branch" && -d ".brain/plans" ]]; then
-  plan_slug=$(echo "$current_branch" | tr '/' '-')
-  plan_file=$(find .brain/plans -maxdepth 1 -name "*${plan_slug}*" -type f 2>/dev/null | head -1)
-
-  if [[ -n "$plan_file" ]]; then
-    total_reqs=$(grep -cE '^\s*-\s*\[[ x]\]' "$plan_file" 2>/dev/null || echo "0")
-    done_reqs=$(grep -cE '^\s*-\s*\[x\]' "$plan_file" 2>/dev/null || echo "0")
-
-    if [[ "$total_reqs" -gt 0 && "$done_reqs" -lt "$total_reqs" ]]; then
-      echo "" >&2
-      echo "📋 PLAN: $plan_file ($done_reqs/$total_reqs completed)" >&2
-      grep -E '^\s*-\s*\[ \]' "$plan_file" 2>/dev/null | head -5 | while IFS= read -r line; do
-        echo "  $line" >&2
-      done
-    fi
-  fi
-fi
-
 echo "$current_hash" > "$STAMP_FILE"

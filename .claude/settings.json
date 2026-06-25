@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "zsh .claude/scripts/stop-check.sh",
+            "command": "zsh \"$CLAUDE_PROJECT_DIR/.claude/scripts/stop-check.sh\"",
             "timeout": 60000
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "zsh .claude/scripts/post-edit-lint.sh",
+            "command": "zsh \"$CLAUDE_PROJECT_DIR/.claude/scripts/post-edit-lint.sh\"",
             "timeout": 10000
           }
         ]
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "zsh .claude/scripts/post-edit-lint.sh",
+            "command": "zsh \"$CLAUDE_PROJECT_DIR/.claude/scripts/post-edit-lint.sh\"",
             "timeout": 10000
           }
         ]
