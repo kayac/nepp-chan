@@ -108,6 +108,11 @@ cp web/.env.example web/.env
 | `LINE_CHANNEL_ACCESS_TOKEN`    | LINE API 認証                         |
 | `JWT_SECRET`                   | anonymous セッション JWT 署名         |
 | `RESOURCE_ID_HASH_SECRET`      | LINE userId のハッシュ化（HMAC-SHA256）|
+| `TWILIO_ACCOUNT_SID`           | Twilio アカウント識別                 |
+| `TWILIO_API_KEY_SID`           | AccessToken 署名鍵 SID                |
+| `TWILIO_API_KEY_SECRET`        | AccessToken 署名鍵 Secret             |
+| `TWILIO_TWIML_APP_SID`         | softphone の発信先 TwiML App          |
+| `CALL_TOKEN_SECRET`            | relay WS 短命トークン署名（HMAC）     |
 
 ### web 環境変数
 
