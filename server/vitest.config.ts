@@ -28,6 +28,10 @@ export default defineConfig({
         "src/db/migrations/**",
         "src/index.ts",
         "src/env.d.ts",
+        // Durable Object の WS 配線 shell。本質ロジックは runVoiceTurn /
+        // relay-protocol に抽出済みでそちらをテスト。WebSocketPair が node
+        // テスト環境に無く DO 単体は E2E 領域。
+        "src/services/voice/call-bridge.ts",
         // Mastra Agent / MCP の宣言ファイル。instructions 文字列 + new Agent()
         // が中心でカバレッジ対象とするロジックを持たない
         "src/mastra/agents/**",

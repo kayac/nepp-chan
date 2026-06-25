@@ -28,9 +28,11 @@ import {
   pollRoutes,
   simpleChatRoutes,
   threadsRoutes,
+  twilioVoiceRoutes,
   userAdminRoutes,
 } from "~/routes";
 import type { LineEventMessage } from "~/schemas/line-schema";
+import { CallBridge, handleRelayUpgrade } from "~/services/voice/call-bridge";
 
 const app = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
 
@@ -57,6 +59,7 @@ app.route("/admin/polls", pollAdminRoutes);
 app.route("/polls", pollRoutes);
 app.route("/auth", authRoutes);
 app.route("/line", lineRoutes);
+app.route("/twilio/voice", twilioVoiceRoutes);
 
 app.doc("/doc", {
   openapi: "3.1.0",
@@ -70,7 +73,16 @@ app.doc("/doc", {
 app.get("/swagger", swaggerUI({ url: "/doc" }));
 
 const handler: ExportedHandler<CloudflareBindings> = {
-  fetch: app.fetch,
+  fetch: (request, env, ctx) => {
+    const url = new URL(request.url);
+    if (
+      url.pathname === "/twilio/voice/relay" &&
+      request.headers.get("Upgrade")?.toLowerCase() === "websocket"
+    ) {
+      return handleRelayUpgrade(request, env);
+    }
+    return app.fetch(request, env, ctx);
+  },
   queue: async (batch, env) => {
     if (batch.queue.startsWith("nepp-chan-line-queue")) {
       return handleLineEvent(batch as MessageBatch<LineEventMessage>, env);
@@ -82,6 +94,8 @@ const handler: ExportedHandler<CloudflareBindings> = {
   },
   scheduled: handleScheduled,
 };
+
+export { CallBridge };
 
 export default Sentry.withSentry<CloudflareBindings>(
   (env) => getSentryOptions(env),
