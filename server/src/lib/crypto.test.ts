@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { generateId, generateToken, hmacSha256 } from "./crypto";
+import {
+  base64UrlFromString,
+  base64UrlToString,
+  generateId,
+  generateToken,
+  hmacSha256,
+} from "./crypto";
 
 describe("hmacSha256", () => {
   it("同じ value と secret から決定的に同じ値を返す", async () => {
@@ -37,6 +43,23 @@ describe("hmacSha256", () => {
 
   it("空 secret は許容しない", async () => {
     await expect(hmacSha256("value", "")).rejects.toThrow();
+  });
+});
+
+describe("base64Url エンコード/デコード", () => {
+  it("文字列を base64url（+ / = を含まない）にエンコードする", () => {
+    const out = base64UrlFromString('{"alg":"HS256"}');
+    expect(out).toMatch(/^[A-Za-z0-9_-]+$/);
+  });
+
+  it("エンコード→デコードで元の文字列に戻る（ASCII）", () => {
+    const input = '{"jti":"SK-123","exp":1700000000}';
+    expect(base64UrlToString(base64UrlFromString(input))).toBe(input);
+  });
+
+  it("マルチバイト（日本語）も往復できる", () => {
+    const input = "こんにちは、ねっぷちゃん";
+    expect(base64UrlToString(base64UrlFromString(input))).toBe(input);
   });
 });
 

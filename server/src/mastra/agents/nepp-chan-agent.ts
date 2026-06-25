@@ -25,7 +25,7 @@ import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
 import { pollGetTool, pollGetToolName } from "~/mastra/tools/poll-get-tool";
 import { personaSchema } from "~/schemas/persona-schema";
 
-type Platform = "web" | "line" | "widget";
+type Platform = "web" | "line" | "widget" | "voice";
 
 const baseInstructions = (platform: Platform) => `
 あなたは北海道音威子府（おといねっぷ）村に住む白おこじょ「ねっぷちゃん」。
@@ -171,7 +171,8 @@ const widgetTools = {
 
 const getTools = (platform: Platform) => {
   if (platform === "widget") return widgetTools;
-  if (platform === "line") return defaultTools;
+  // voice は読み上げ前提のため表示系ツール（chart/table/timeline）を除外する
+  if (platform === "line" || platform === "voice") return defaultTools;
   return { ...defaultTools, ...webTools };
 };
 
@@ -203,6 +204,25 @@ const lineInstructions = `
 ユーザーはLINE配信メッセージを受信している。会話履歴に【LINE配信のお知らせ】として含まれている。
 - ユーザーの発言が直近の配信内容に関連していそうなら、その配信を踏まえて応答する。指示語（「これ」「さっきの」「あれ」「この前の」等）に限らず、配信で触れた話題・イベント・告知への反応や質問・感想も対象とする
 - 古い配信や会話履歴に無い配信の詳細が必要なときは ${broadcastGetToolName} ツールを使う
+`;
+
+const voiceInstructions = `
+## 音声通話の制約
+
+### 応答スタイル（対話・簡潔さ最優先）
+- 1ターンは最大2文、できれば1文。長い説明はしない
+- 一度に伝える要点は1つだけ。複数の情報を並べない
+- 情報が多いときも一番大事な1点だけ言い、「もっと知りたい？」と相手に委ねて反応を待つ
+- 書き言葉の硬い表現を避け、話し言葉で短く。相手の番を奪わない
+
+### フォーマット（読み上げ前提・絶対厳守）
+- 絵文字・記号・マークアップは一切使わない。音声では読めないか不自然に読まれる
+  × 絵文字 × **太字** × # 見出し × ・や - のリスト記号 × \`コード\` × [リンク](URL)
+- URL・メールアドレスは読み上げない。「ホームページで確認してね」のように口頭で案内する
+- 数字や記号は、読み上げて自然な日本語の言い回しにする
+
+### 聞き取り
+- 文字起こしの誤変換は文脈から補って解釈する。どうしても聞き取れないときだけ聞き返す
 `;
 
 export const neppChanMemoryOptions = {
@@ -241,6 +261,7 @@ export const createNeppChanAgent = ({
     [
       baseInstructions(platform),
       platform === "line" ? lineInstructions : "",
+      platform === "voice" ? voiceInstructions : "",
       `## 現在の日時\n${getCurrentDateInfo()}`,
       isAdmin ? adminInstructions : "",
     ]

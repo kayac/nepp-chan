@@ -83,6 +83,25 @@ describe("resolveModelTier", () => {
     });
   });
 
+  describe("voice プラットフォーム（非 Admin）", () => {
+    const intents: Intent[] = ["casual", "thinking"];
+    for (const intent of intents) {
+      it(`intent=${intent} で line と同等の低遅延ティアを使う`, () => {
+        const voice = resolveModelTier({
+          intent,
+          platform: "voice",
+          isAdmin: false,
+        });
+        const line = resolveModelTier({
+          intent,
+          platform: "line",
+          isAdmin: false,
+        });
+        expect(voice).toEqual(line);
+      });
+    }
+  });
+
   describe("maxSteps", () => {
     it("casual はツール実行ループ上限 5", () => {
       const tier = resolveModelTier({

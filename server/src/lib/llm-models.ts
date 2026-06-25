@@ -120,13 +120,15 @@ export const resolveModelTier = ({
   isAdmin,
 }: {
   intent: Intent;
-  platform: "web" | "line";
+  platform: "web" | "line" | "voice";
   isAdmin: boolean;
 }): ModelTierConfig => {
   if (isAdmin) {
     return MODEL_TIERS.thinking.web;
   }
-  return MODEL_TIERS[intent][platform];
+  // voice は line と同じ低遅延ティアを使う
+  const tier = platform === "voice" ? "line" : platform;
+  return MODEL_TIERS[intent][tier];
 };
 
 export const primaryModelId = (config: ModelTierConfig) =>
