@@ -1,9 +1,10 @@
 ---
 const measurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
+const enabled = import.meta.env.PROD && measurementId;
 ---
 
 {
-	measurementId && (
+	enabled && (
 		<>
 			<script
 				is:inline
