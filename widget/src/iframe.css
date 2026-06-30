@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@import "@nepp-chan/shared/styles/index.css";
+@source "../../shared/src/**/*.{ts,tsx}";
+@source "./**/*.{ts,tsx}";
+
+body {
+  padding: 12px;
+}
