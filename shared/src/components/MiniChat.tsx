@@ -6,7 +6,12 @@ import { ArrowRightIcon, EllipsisIcon, SendIcon } from "lucide-react";
 import { type SubmitEvent, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { API_URL, WEB_URL } from "~/constants/urls";
+
+type Props = {
+  apiUrl: string;
+  webUrl: string;
+  iconSrc?: string;
+};
 
 const SAMPLE_QUESTIONS: ReadonlyArray<string> = [
   "移住の補助金はある？",
@@ -32,7 +37,11 @@ const messageText = (msg: UIMessage) =>
     .map((p) => p.text)
     .join("");
 
-export const MiniChat = () => {
+export const MiniChat = ({
+  apiUrl,
+  webUrl,
+  iconSrc = "/mascot/icon.png",
+}: Props) => {
   const [input, setInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(true);
   const streamRef = useRef<HTMLDivElement | null>(null);
@@ -40,7 +49,7 @@ export const MiniChat = () => {
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
-        api: `${API_URL}/simple-chat`,
+        api: `${apiUrl}/simple-chat`,
         prepareSendMessagesRequest({ messages: msgs }) {
           const last = msgs[msgs.length - 1];
           if (!last) throw new Error("送信するメッセージがありません");
@@ -50,7 +59,7 @@ export const MiniChat = () => {
           return { body };
         },
       }),
-    [],
+    [apiUrl],
   );
 
   const { messages, sendMessage, status, error } = useChat({
@@ -98,11 +107,7 @@ export const MiniChat = () => {
     <div className="flex flex-col rounded-[28px] border border-(--paper-200) bg-white p-5 shadow-(--shadow-float-md)">
       <div className="flex items-center gap-3 border-b border-(--paper-200) pb-3">
         <span className="grid size-9 place-items-center overflow-hidden rounded-full bg-(--teal-50)">
-          <img
-            src="/mascot/icon.png"
-            alt=""
-            className="size-[34px] object-contain"
-          />
+          <img src={iconSrc} alt="" className="size-[34px] object-contain" />
         </span>
         <div className="flex flex-col">
           <span className="font-(family-name:--font-display) text-sm font-bold text-(--snow-800)">
@@ -238,7 +243,9 @@ export const MiniChat = () => {
 
       {hasCompletedExchange ? (
         <a
-          href={WEB_URL}
+          href={webUrl}
+          target="_blank"
+          rel="noopener noreferrer"
           className={cn(
             "mt-3 flex items-center justify-center gap-2 rounded-(--r-pill)",
             "bg-(--brand) px-4 py-3 text-sm font-bold text-white shadow-(--shadow-brand)",
