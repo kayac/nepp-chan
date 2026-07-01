@@ -10,16 +10,38 @@ vi.mock("~/mastra/agents/intent-router-agent", () => ({
   },
 }));
 
-const { classifyIntent } = await import("./classify-intent");
+const { classifyIntent, heuristicIntent } = await import("./classify-intent");
 
 beforeEach(() => {
   generateMock.mockReset();
 });
 
+describe("heuristicIntent", () => {
+  it("挨拶・相槌だけのメッセージは casual と即断する", () => {
+    expect(heuristicIntent("こんにちは")).toBe("casual");
+    expect(heuristicIntent("もしもし")).toBe("casual");
+    expect(heuristicIntent("ありがとう！")).toBe("casual");
+    expect(heuristicIntent("うん、わかった")).toBe("casual");
+  });
+
+  it("疑問符・長文・挨拶以外は判断を保留して null を返す", () => {
+    expect(heuristicIntent("元気？")).toBeNull();
+    expect(heuristicIntent("音威子府そばってどこで食べられるの")).toBeNull();
+    expect(heuristicIntent("難しい質問")).toBeNull();
+    expect(heuristicIntent("")).toBeNull();
+  });
+});
+
 describe("classifyIntent", () => {
+  it("明らかな casual はヒューリスティックで即断し LLM を呼ばない", async () => {
+    expect(await classifyIntent("こんにちは")).toBe("casual");
+    expect(generateMock).not.toHaveBeenCalled();
+  });
+
   it("intent: casual が返ればそのまま返す", async () => {
     generateMock.mockResolvedValueOnce({ object: { intent: "casual" } });
-    expect(await classifyIntent("こんにちは")).toBe("casual");
+    expect(await classifyIntent("おなかすいたなあ")).toBe("casual");
+    expect(generateMock).toHaveBeenCalled();
   });
 
   it("intent: thinking が返ればそのまま返す", async () => {
