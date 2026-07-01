@@ -1,0 +1,30 @@
+import { describe, expect, it } from "vitest";
+import { BACKCHANNEL_FILLERS, pickFiller, THINKING_FILLERS } from "./filler";
+
+describe("pickFiller", () => {
+  it("質問には考えるリードを返す", () => {
+    expect(THINKING_FILLERS).toContain(pickFiller("今日の天気を教えて", 0));
+    expect(THINKING_FILLERS).toContain(pickFiller("そばって美味しいの？", 0));
+    expect(THINKING_FILLERS).toContain(pickFiller("駅はどこ", 0));
+  });
+
+  it("報告・雑談には相槌を返す", () => {
+    expect(BACKCHANNEL_FILLERS).toContain(pickFiller("今日は疲れたよ", 0));
+    expect(BACKCHANNEL_FILLERS).toContain(pickFiller("ラーメン食べたい", 0));
+  });
+
+  it("index で同カテゴリ内を巡回する", () => {
+    expect(pickFiller("おはよう", 0)).toBe(BACKCHANNEL_FILLERS[0]);
+    expect(pickFiller("おはよう", 1)).toBe(BACKCHANNEL_FILLERS[1]);
+    expect(pickFiller("おはよう", BACKCHANNEL_FILLERS.length)).toBe(
+      BACKCHANNEL_FILLERS[0],
+    );
+  });
+
+  it("読み上げ可能な短い日本語（装飾記号なし）", () => {
+    for (const f of [...THINKING_FILLERS, ...BACKCHANNEL_FILLERS]) {
+      expect(f.length).toBeGreaterThan(0);
+      expect(f).not.toMatch(/[*#`~]/);
+    }
+  });
+});

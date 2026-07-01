@@ -64,7 +64,7 @@ const geminiModelChain = ({
   },
 ];
 
-export type ModelTierConfig = {
+export type AgentModelConfig = {
   model: ReturnType<typeof geminiModelChain>;
   defaultOptions: { maxSteps: number };
 };
@@ -72,7 +72,7 @@ export type ModelTierConfig = {
 // ツール実行ループの上限（サブエージェント連鎖の暴走によるコスト事故の保険）
 const MAX_STEPS = { casual: 5, thinking: 10 } as const;
 
-const MODEL_TIERS: Record<Intent, Record<"web" | "line", ModelTierConfig>> = {
+const MODEL_TIERS: Record<Intent, Record<"web" | "line", AgentModelConfig>> = {
   casual: {
     web: {
       model: geminiModelChain({
@@ -111,6 +111,17 @@ const MODEL_TIERS: Record<Intent, Record<"web" | "line", ModelTierConfig>> = {
   },
 };
 
+const VOICE_MAX_STEPS = 10;
+
+export const voiceModelConfig: AgentModelConfig = {
+  model: geminiModelChain({
+    primary: GEMINI_FLASH_LITE,
+    fallback: GEMINI_FLASH,
+    level: "low",
+  }),
+  defaultOptions: { maxSteps: VOICE_MAX_STEPS },
+};
+
 /**
  * Intent・プラットフォーム・管理者フラグからモデル設定を解決する
  */
@@ -120,16 +131,14 @@ export const resolveModelTier = ({
   isAdmin,
 }: {
   intent: Intent;
-  platform: "web" | "line" | "voice";
+  platform: "web" | "line";
   isAdmin: boolean;
-}): ModelTierConfig => {
+}): AgentModelConfig => {
   if (isAdmin) {
     return MODEL_TIERS.thinking.web;
   }
-  // voice は line と同じ低遅延ティアを使う
-  const tier = platform === "voice" ? "line" : platform;
-  return MODEL_TIERS[intent][tier];
+  return MODEL_TIERS[intent][platform];
 };
 
-export const primaryModelId = (config: ModelTierConfig) =>
+export const primaryModelId = (config: AgentModelConfig) =>
   config.model[0].model;

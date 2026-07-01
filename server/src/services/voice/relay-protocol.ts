@@ -51,8 +51,7 @@ export type PromptMessage = z.infer<typeof promptMessageSchema>;
 export type InterruptMessage = z.infer<typeof interruptMessageSchema>;
 export type InboundRelayMessage = z.infer<typeof inboundRelayMessageSchema>;
 
-// 未知の type・不正な JSON は null を返す（ConversationRelay の将来追加メッセージを無視するため）。
-export const parseRelayMessage = (raw: string): InboundRelayMessage | null => {
+export const parseRelayMessage = (raw: string) => {
   let json: unknown;
   try {
     json = JSON.parse(raw);
@@ -64,12 +63,40 @@ export const parseRelayMessage = (raw: string): InboundRelayMessage | null => {
   return result.data;
 };
 
-export type TextTokenMessage = { type: "text"; token: string; last: boolean };
+export type TextTokenMessage = {
+  type: "text";
+  token: string;
+  last: boolean;
+  interruptible?: boolean;
+  preemptible?: boolean;
+  lang?: string;
+};
+
+export type TextTokenOptions = Pick<
+  TextTokenMessage,
+  "interruptible" | "preemptible" | "lang"
+>;
 
 export const textTokenMessage = (
   token: string,
   last = false,
-): TextTokenMessage => ({ type: "text", token, last });
+  options: TextTokenOptions = {},
+): TextTokenMessage => ({ type: "text", token, last, ...options });
 
-export const serializeRelayMessage = (msg: TextTokenMessage) =>
+export type PlayMessage = {
+  type: "play";
+  source: string;
+  loop?: number;
+  interruptible?: boolean;
+  preemptible?: boolean;
+};
+
+type PlayOptions = Pick<PlayMessage, "loop" | "interruptible" | "preemptible">;
+
+export const playMessage = (
+  source: string,
+  options: PlayOptions = {},
+): PlayMessage => ({ type: "play", source, ...options });
+
+export const serializeRelayMessage = (msg: TextTokenMessage | PlayMessage) =>
   JSON.stringify(msg);

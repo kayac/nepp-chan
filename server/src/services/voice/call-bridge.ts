@@ -1,19 +1,22 @@
 import { DurableObject } from "cloudflare:workers";
 import { logger } from "~/lib/logger";
 import { runVoiceTurn } from "./conversation";
+import { pickFiller } from "./filler";
 import {
   parseRelayMessage,
+  playMessage,
   serializeRelayMessage,
+  type TextTokenOptions,
   textTokenMessage,
 } from "./relay-protocol";
 import { verifyRelayToken } from "./twilio-token";
 
-// relay WS（ConversationRelay → サーバー）の Upgrade を受け、短命トークンを検証して
-// 新しい CallBridge インスタンスへ委譲する。1 接続 = 1 DO インスタンス。
+const HOLD_AUDIO_URL = "https://demo.twilio.com/docs/classic.mp3";
+
 export const handleRelayUpgrade = async (
   request: Request,
   env: CloudflareBindings,
-): Promise<Response> => {
+) => {
   const token = new URL(request.url).searchParams.get("token");
   if (!token) return new Response("missing token", { status: 401 });
 
@@ -26,12 +29,12 @@ export const handleRelayUpgrade = async (
   return env.CALL_BRIDGE.get(id).fetch(request);
 };
 
-// WS 配線のみ。応答生成は runVoiceTurn、メッセージ型は relay-protocol 側。
 export class CallBridge extends DurableObject<CloudflareBindings> {
   private from = "";
   private currentTurn: AbortController | null = null;
+  private fillerIndex = 0;
 
-  async fetch(): Promise<Response> {
+  async fetch() {
     const { 0: client, 1: server } = new WebSocketPair();
     server.accept();
     server.addEventListener("message", (event) => {
@@ -47,7 +50,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     return new Response(null, { status: 101, webSocket: client });
   }
 
-  private async onMessage(ws: WebSocket, event: MessageEvent): Promise<void> {
+  private async onMessage(ws: WebSocket, event: MessageEvent) {
     if (typeof event.data !== "string") return;
     const msg = parseRelayMessage(event.data);
     if (!msg) {
@@ -62,6 +65,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     if (msg.type === "setup") {
       this.from = msg.from;
     } else if (msg.type === "prompt") {
+      logger.info("[Voice] final prompt", { voicePrompt: msg.voicePrompt });
       await this.handlePrompt(ws, msg.voicePrompt);
     } else if (msg.type === "interrupt") {
       this.currentTurn?.abort();
@@ -72,13 +76,39 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     }
   }
 
-  private async handlePrompt(ws: WebSocket, text: string): Promise<void> {
+  private async handlePrompt(ws: WebSocket, text: string) {
     this.currentTurn?.abort();
     const controller = new AbortController();
     this.currentTurn = controller;
 
-    const send = (token: string, last = false) =>
-      ws.send(serializeRelayMessage(textTokenMessage(token, last)));
+    const t0 = Date.now();
+    let firstSendMs: number | null = null;
+    let tokenCount = 0;
+
+    const send = (token: string, last = false, options?: TextTokenOptions) =>
+      ws.send(serializeRelayMessage(textTokenMessage(token, last, options)));
+
+    send(pickFiller(text, this.fillerIndex++), true, {
+      preemptible: true,
+      interruptible: true,
+    });
+
+    let holdPlaying = false;
+    const startHold = () => {
+      if (holdPlaying) return;
+      holdPlaying = true;
+      // 開いたテキストターン中は play が無視されるため、last:true で閉じてから保留音を流す。
+      send("", true);
+      ws.send(
+        serializeRelayMessage(
+          playMessage(HOLD_AUDIO_URL, {
+            loop: 0,
+            preemptible: true,
+            interruptible: true,
+          }),
+        ),
+      );
+    };
 
     try {
       for await (const delta of runVoiceTurn({
@@ -86,9 +116,13 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         from: this.from,
         text,
         signal: controller.signal,
+        onToolCall: startHold,
       })) {
         if (controller.signal.aborted) break;
+        if (firstSendMs === null) firstSendMs = Date.now() - t0;
+        tokenCount++;
         send(delta);
+        holdPlaying = false;
       }
       if (!controller.signal.aborted) send("", true);
     } catch (e) {
@@ -100,6 +134,13 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       }
     } finally {
       if (this.currentTurn === controller) this.currentTurn = null;
+      const timing: Record<string, number | boolean> = {
+        turnEndMs: Date.now() - t0,
+        tokenCount,
+        aborted: controller.signal.aborted,
+      };
+      if (firstSendMs !== null) timing.firstSendMs = firstSendMs;
+      logger.info("[Voice] turn timing", timing);
     }
   }
 }

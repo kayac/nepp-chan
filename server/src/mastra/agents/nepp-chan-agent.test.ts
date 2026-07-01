@@ -1,12 +1,12 @@
 import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { describe, expect, it } from "vitest";
 
-import { GEMINI_FLASH_LITE, type ModelTierConfig } from "~/lib/llm-models";
+import { type AgentModelConfig, GEMINI_FLASH_LITE } from "~/lib/llm-models";
 import { broadcastGetToolName } from "~/mastra/tools/broadcast-get-tool";
 import { pollGetToolName } from "~/mastra/tools/poll-get-tool";
 import { createNeppChanAgent, neppChanMemoryOptions } from "./nepp-chan-agent";
 
-const modelConfig = { model: "dummy-model" } as unknown as ModelTierConfig;
+const modelConfig = { model: "dummy-model" } as unknown as AgentModelConfig;
 
 const build = (over: Partial<Parameters<typeof createNeppChanAgent>[0]> = {}) =>
   createNeppChanAgent({ modelConfig, withMemory: false, ...over });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   parseRelayMessage,
+  playMessage,
   serializeRelayMessage,
   textTokenMessage,
 } from "./relay-protocol";
@@ -90,11 +91,52 @@ describe("textTokenMessage", () => {
       last: true,
     });
   });
+
+  it("interruptible / preemptible / lang は渡したときだけ含む（フィラー用）", () => {
+    expect(
+      textTokenMessage("えーっとね", true, {
+        preemptible: true,
+        interruptible: true,
+      }),
+    ).toEqual({
+      type: "text",
+      token: "えーっとね",
+      last: true,
+      preemptible: true,
+      interruptible: true,
+    });
+  });
+
+  it("オプション省略時は type/token/last の3キーのみ", () => {
+    expect(Object.keys(textTokenMessage("やあ"))).toEqual([
+      "type",
+      "token",
+      "last",
+    ]);
+  });
 });
 
 describe("serializeRelayMessage", () => {
   it("送信メッセージを JSON 文字列化して往復できる", () => {
     const msg = textTokenMessage("やあ", true);
     expect(JSON.parse(serializeRelayMessage(msg))).toEqual(msg);
+  });
+});
+
+describe("playMessage", () => {
+  it("保留音用の play メッセージを options 付きで作る", () => {
+    expect(
+      playMessage("https://example.com/hold.mp3", {
+        loop: 0,
+        preemptible: true,
+        interruptible: true,
+      }),
+    ).toEqual({
+      type: "play",
+      source: "https://example.com/hold.mp3",
+      loop: 0,
+      preemptible: true,
+      interruptible: true,
+    });
   });
 });

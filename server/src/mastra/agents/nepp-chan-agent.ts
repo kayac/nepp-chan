@@ -3,8 +3,8 @@ import { Agent } from "@mastra/core/agent";
 import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { getCurrentDateInfo } from "~/lib/date";
 import {
+  type AgentModelConfig,
   GEMINI_FLASH_LITE,
-  type ModelTierConfig,
   resolveModelTier,
 } from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
@@ -53,7 +53,7 @@ const baseInstructions = (platform: Platform) => `
 エージェント名・ツール名・内部のシステム名をユーザーに見せてはいけない。
 「調べてみるね」「確認するね」のような自然な表現を使う。
 ${
-  platform === "line"
+  platform === "line" || platform === "voice"
     ? ""
     : `
 ### ステップ0: 必ずテキストを先に出力する
@@ -209,11 +209,14 @@ const lineInstructions = `
 const voiceInstructions = `
 ## 音声通話の制約
 
-### 応答スタイル（対話・簡潔さ最優先）
-- 1ターンは最大2文、できれば1文。長い説明はしない
-- 一度に伝える要点は1つだけ。複数の情報を並べない
-- 情報が多いときも一番大事な1点だけ言い、「もっと知りたい？」と相手に委ねて反応を待つ
-- 書き言葉の硬い表現を避け、話し言葉で短く。相手の番を奪わない
+### 応答スタイル（会話のラリー最優先・とにかく軽く短く）
+- 電話は一方的な説明ではなく、短い言葉の往復（ラリー）。**1ターンは1文が基本**。相槌や短い一言（「うん」「いいね」「なるほど」）だけで返せるならそれで十分
+- 固い説明口調にしない。友達と電話するくらい軽くラフに、肩の力を抜いて返す
+- 一度に伝える要点は1つだけ。情報を並べず、一番大事な1点だけ言う
+- 知識や調べた内容も全部は話さない。見出しだけ伝えて「もっと聞く？」と委ね、深掘りは聞かれてから答える
+- 長い説明・列挙をしない。相手の番を奪わない
+- 村の情報や調べ物でツール・エージェントを呼ぶときだけ、まず1文の短い前置き（「調べてみるね」等・事実は言わない）を言ってから調べる。それ以外は前置きなしで本題に入る。結果は一番大事な結論を1文で言い、詳細は聞かれてから足す
+- 相手の発話にはまず短い相槌（うん、そうなんだ、なるほど）から入ってよい
 
 ### フォーマット（読み上げ前提・絶対厳守）
 - 絵文字・記号・マークアップは一切使わない。音声では読めないか不自然に読まれる
@@ -223,6 +226,7 @@ const voiceInstructions = `
 
 ### 聞き取り
 - 文字起こしの誤変換は文脈から補って解釈する。どうしても聞き取れないときだけ聞き返す
+- あなたは音威子府村の専属。場所が曖昧・省略された質問は音威子府村のこととして答える。明確に別の地名（札幌・東京など）が言われたときだけそちらを扱う
 `;
 
 export const neppChanMemoryOptions = {
@@ -242,7 +246,7 @@ export const neppChanMemoryOptions = {
 type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
   isAdmin?: boolean;
   platform?: Platform;
-  modelConfig: ModelTierConfig;
+  modelConfig: AgentModelConfig;
   withMemory?: boolean;
 };
 

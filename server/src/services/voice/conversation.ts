@@ -1,6 +1,5 @@
 import { Mastra } from "@mastra/core/mastra";
-import { classifyIntent } from "~/lib/classify-intent";
-import { resolveModelTier } from "~/lib/llm-models";
+import { voiceModelConfig } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { toVoiceIds } from "~/lib/principal";
 import { getStorage } from "~/lib/storage";
@@ -8,27 +7,22 @@ import { sanitizeForSpeech } from "~/lib/voice-text";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 
-export async function* streamTextWithAbort(
-  textStream: AsyncIterable<string>,
-  signal?: AbortSignal,
-): AsyncGenerator<string> {
-  for await (const delta of textStream) {
-    if (signal?.aborted) return;
-    if (delta) yield delta;
-  }
-}
+const SEARCH_TOOL_RE = /knowledge|web|research/i;
 
 export async function* runVoiceTurn({
   env,
   from,
   text,
   signal,
+  onToolCall,
 }: {
   env: CloudflareBindings;
   from: string;
   text: string;
   signal?: AbortSignal;
-}): AsyncGenerator<string> {
+  onToolCall?: () => void;
+}) {
+  const start = Date.now();
   const { resourceId, threadId } = await toVoiceIds(
     from,
     env.RESOURCE_ID_HASH_SECRET,
@@ -36,15 +30,10 @@ export async function* runVoiceTurn({
   const storage = await getStorage(env.DB);
   const requestContext = createRequestContext({ storage, db: env.DB, env });
 
-  const intent = text ? await classifyIntent(text) : "casual";
-  logger.info("[Voice] intent", { intent });
-  const modelConfig = resolveModelTier({
-    intent,
+  const neppChanAgent = createNeppChanAgent({
     platform: "voice",
-    isAdmin: false,
+    modelConfig: voiceModelConfig,
   });
-
-  const neppChanAgent = createNeppChanAgent({ platform: "voice", modelConfig });
   const mastra = new Mastra({ agents: { neppChanAgent }, storage });
   const agent = mastra.getAgent("neppChanAgent");
 
@@ -53,9 +42,37 @@ export async function* runVoiceTurn({
     memory: { resource: resourceId, thread: threadId },
     abortSignal: signal,
   });
+  const streamReadyMs = Date.now() - start;
 
-  for await (const delta of streamTextWithAbort(result.textStream, signal)) {
-    const clean = sanitizeForSpeech(delta);
-    if (clean) yield clean;
+  let firstTokenMs: number | null = null;
+  try {
+    for await (const chunk of result.fullStream) {
+      if (signal?.aborted) return;
+      if (chunk.type === "tool-call") {
+        const toolName = chunk.payload.toolName;
+        logger.info("[Voice] tool event", {
+          atMs: Date.now() - start,
+          type: chunk.type,
+          tool: toolName,
+        });
+        if (SEARCH_TOOL_RE.test(toolName)) onToolCall?.();
+        continue;
+      }
+      if (chunk.type === "tool-result") {
+        logger.info("[Voice] tool event", {
+          atMs: Date.now() - start,
+          type: chunk.type,
+        });
+        continue;
+      }
+      if (chunk.type !== "text-delta") continue;
+      if (firstTokenMs === null) firstTokenMs = Date.now() - start;
+      const clean = sanitizeForSpeech(chunk.payload.text);
+      if (clean) yield clean;
+    }
+  } finally {
+    const timing: Record<string, number> = { streamReadyMs };
+    if (firstTokenMs !== null) timing.firstTokenMs = firstTokenMs;
+    logger.info("[Voice] llm timing", timing);
   }
 }
