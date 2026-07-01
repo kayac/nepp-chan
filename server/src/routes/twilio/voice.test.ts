@@ -10,8 +10,6 @@ const env = {
   TWILIO_API_KEY_SECRET: "api-secret",
   TWILIO_TWIML_APP_SID: "AP00000000000000000000000000000000",
   CALL_TOKEN_SECRET: "call-token-secret",
-  VOICE_TTS_PROVIDER: "Google",
-  VOICE_TTS_VOICE: "",
 } as unknown as CloudflareBindings;
 
 const buildApp = () => {
@@ -51,7 +49,9 @@ describe("POST /twilio/voice/incoming", () => {
     expect(xml).toContain("<Connect><ConversationRelay");
     expect(xml).toContain('language="ja-JP"');
     expect(xml).toContain('ttsProvider="Google"');
+    expect(xml).toContain('voice="ja-JP-Chirp3-HD-Leda"');
     expect(xml).toContain("もしもし、ねっぷちゃんだよ。");
+    expect(xml).toContain('hints="音威子府,おといねっぷ"');
   });
 
   it("リクエストの host から wss の relay URL を組み立てる", async () => {
@@ -83,13 +83,16 @@ describe("POST /twilio/voice/incoming", () => {
     expect(claims).not.toBeNull();
   });
 
-  it("VOICE_TTS_VOICE が空なら voice 属性を出力しない", async () => {
+  it("固定の STT/endpointing 設定を TwiML に出力する", async () => {
     const res = await buildApp().request(
       "http://api.example.com/twilio/voice/incoming",
       { method: "POST" },
       env,
     );
     const xml = await res.text();
-    expect(xml).not.toContain("voice=");
+    expect(xml).toContain('transcriptionProvider="Google"');
+    expect(xml).toContain('speechModel="long"');
+    expect(xml).toContain('speechTimeout="700"');
+    expect(xml).not.toContain("partialPrompts");
   });
 });

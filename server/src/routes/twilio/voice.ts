@@ -12,7 +12,17 @@ export const twilioVoiceRoutes = new OpenAPIHono<{
 
 const ACCESS_TOKEN_TTL_SECONDS = 3600;
 const RELAY_TOKEN_TTL_SECONDS = 300;
-const WELCOME_GREETING = "もしもし、ねっぷちゃんだよ。なんでも聞いてね。";
+// 通話モックの固定設定。STT の Google は既定 telephony が ja-JP 非対応で弾かれるため long を明示。
+const VOICE_CONFIG = {
+  welcomeGreeting: "もしもし、ねっぷちゃんだよ。なんでも聞いてね。",
+  ttsProvider: "Google",
+  voice: "ja-JP-Chirp3-HD-Leda",
+  transcriptionProvider: "Google",
+  speechModel: "long",
+  speechTimeout: "700",
+  hints: "音威子府,おといねっぷ",
+  interruptible: "speech",
+} as const;
 
 const nowSeconds = () => Math.floor(Date.now() / 1000);
 
@@ -55,13 +65,7 @@ twilioVoiceRoutes.post("/incoming", async (c) => {
   const host = new URL(c.req.url).host;
   const wsUrl = `wss://${host}/twilio/voice/relay?token=${relayToken}`;
 
-  const xml = buildConversationRelayTwiml({
-    wsUrl,
-    welcomeGreeting: WELCOME_GREETING,
-    ttsProvider: c.env.VOICE_TTS_PROVIDER || undefined,
-    voice: c.env.VOICE_TTS_VOICE || undefined,
-    interruptible: "speech",
-  });
+  const xml = buildConversationRelayTwiml({ wsUrl, ...VOICE_CONFIG });
 
   return c.body(xml, 200, { "Content-Type": "text/xml; charset=utf-8" });
 });

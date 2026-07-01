@@ -62,4 +62,29 @@ describe("buildConversationRelayTwiml", () => {
     expect(xml).toContain('interruptible="speech"');
     expect(xml).toContain('transcriptionProvider="Google"');
   });
+
+  it("speechModel / speechTimeout を含められる", () => {
+    const xml = buildConversationRelayTwiml({
+      wsUrl: "wss://x/relay",
+      speechModel: "telephony",
+      speechTimeout: "700",
+    });
+    expect(xml).toContain('speechModel="telephony"');
+    expect(xml).toContain('speechTimeout="700"');
+  });
+
+  it("hints を含められる（固有名詞の認識ブースト）", () => {
+    const xml = buildConversationRelayTwiml({
+      wsUrl: "wss://x/relay",
+      hints: "音威子府,おといねっぷ",
+    });
+    expect(xml).toContain('hints="音威子府,おといねっぷ"');
+  });
+
+  it("未指定なら endpointing 系の任意属性は出力しない", () => {
+    const xml = buildConversationRelayTwiml({ wsUrl: "wss://x/relay" });
+    expect(xml).not.toContain("speechModel");
+    expect(xml).not.toContain("speechTimeout");
+    expect(xml).not.toContain("hints");
+  });
 });

@@ -5,6 +5,9 @@ type ConversationRelayConfig = {
   ttsProvider?: string;
   voice?: string;
   transcriptionProvider?: string;
+  speechModel?: string;
+  speechTimeout?: string;
+  hints?: string;
   interruptible?: "none" | "dtmf" | "speech" | "any";
 };
 
@@ -26,6 +29,9 @@ export const buildConversationRelayTwiml = ({
   ttsProvider,
   voice,
   transcriptionProvider,
+  speechModel,
+  speechTimeout,
+  hints,
   interruptible,
 }: ConversationRelayConfig) => {
   const attrs = [
@@ -35,6 +41,9 @@ export const buildConversationRelayTwiml = ({
     attr("ttsProvider", ttsProvider),
     attr("voice", voice),
     attr("transcriptionProvider", transcriptionProvider),
+    attr("speechModel", speechModel),
+    attr("speechTimeout", speechTimeout),
+    attr("hints", hints),
     attr("interruptible", interruptible),
   ].join("");
 
