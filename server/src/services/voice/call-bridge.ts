@@ -3,6 +3,10 @@ import { logger } from "~/lib/logger";
 import { runVoiceTurn } from "./conversation";
 import { pickFiller } from "./filler";
 import {
+  createVoiceFindingsSlot,
+  type VoiceFindingsSlot,
+} from "./findings-slot";
+import {
   parseRelayMessage,
   playMessage,
   serializeRelayMessage,
@@ -33,6 +37,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
   private from = "";
   private currentTurn: AbortController | null = null;
   private fillerIndex = 0;
+  private findingsSlot: VoiceFindingsSlot = createVoiceFindingsSlot();
 
   async fetch() {
     const { 0: client, 1: server } = new WebSocketPair();
@@ -117,6 +122,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         text,
         signal: controller.signal,
         onToolCall: startHold,
+        findingsSlot: this.findingsSlot,
       })) {
         if (controller.signal.aborted) break;
         if (firstSendMs === null) firstSendMs = Date.now() - t0;

@@ -6,6 +6,7 @@ import { getStorage } from "~/lib/storage";
 import { sanitizeForSpeech } from "~/lib/voice-text";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
+import type { VoiceFindingsSlot } from "./findings-slot";
 
 const SEARCH_TOOL_RE = /knowledge|web|research/i;
 
@@ -15,12 +16,14 @@ export async function* runVoiceTurn({
   text,
   signal,
   onToolCall,
+  findingsSlot,
 }: {
   env: CloudflareBindings;
   from: string;
   text: string;
   signal?: AbortSignal;
   onToolCall?: () => void;
+  findingsSlot?: VoiceFindingsSlot;
 }) {
   const start = Date.now();
   const { resourceId, threadId } = await toVoiceIds(
@@ -28,7 +31,13 @@ export async function* runVoiceTurn({
     env.RESOURCE_ID_HASH_SECRET,
   );
   const storage = await getStorage(env.DB);
-  const requestContext = createRequestContext({ storage, db: env.DB, env });
+  const requestContext = createRequestContext({
+    storage,
+    db: env.DB,
+    env,
+    voiceFindings: findingsSlot,
+    voiceSearchStart: onToolCall,
+  });
 
   const neppChanAgent = createNeppChanAgent({
     platform: "voice",

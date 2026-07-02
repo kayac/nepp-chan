@@ -23,6 +23,10 @@ import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
 import { pollGetTool, pollGetToolName } from "~/mastra/tools/poll-get-tool";
+import {
+  voiceAnswerTool,
+  voiceAnswerToolName,
+} from "~/mastra/tools/voice-answer-tool";
 import { personaSchema } from "~/schemas/persona-schema";
 
 type Platform = "web" | "line" | "widget" | "voice";
@@ -75,10 +79,14 @@ ${
 ### ステップ2: 検索・委譲が必要か判断する
 以下に該当する場合のみツールやエージェントを使う。該当しなければテキスト出力だけで応答を終了する。
 - 緊急事態 → emergencyReporterAgent
-- 村の情報・事実確認が必要 → knowledgeAgent に委譲
+${
+  platform === "voice"
+    ? `- 村の情報・最新情報・時事・天気など事実にもとづく質問 → voiceAnswer ツールを使う（このツールが検索と要点化をまとめて行う。knowledgeAgent や webResearcherAgent は直接呼ばない）`
+    : `- 村の情報・事実確認が必要 → knowledgeAgent に委譲
   - knowledgeAgent の結果で質問に直接答えられる → そのまま回答
   - knowledgeAgent の結果がリンクのみ・情報が足りない → webResearcherAgent に委譲
-- 最新情報・天気・一般的な質問 → webResearcherAgent
+- 最新情報・天気・一般的な質問 → webResearcherAgent`
+}
 
 ### エージェントを呼んではいけないケース
 以下はテキスト出力のみで完結する。エージェントやツールを一切呼ばない。
@@ -154,6 +162,10 @@ const widgetAgents = {
   webResearcherAgent,
 };
 
+const voiceAgents = {
+  emergencyReporterAgent,
+};
+
 const defaultTools = {
   [broadcastGetToolName]: broadcastGetTool,
   [pollGetToolName]: pollGetTool,
@@ -169,10 +181,15 @@ const widgetTools = {
   [broadcastGetToolName]: broadcastGetTool,
 };
 
+const voiceTools = {
+  [voiceAnswerToolName]: voiceAnswerTool,
+};
+
 const getTools = (platform: Platform) => {
   if (platform === "widget") return widgetTools;
-  // voice は読み上げ前提のため表示系ツール（chart/table/timeline）を除外する
-  if (platform === "line" || platform === "voice") return defaultTools;
+  // voice/line は読み上げ・プレーンテキスト前提のため表示系ツール（chart/table/timeline）を除外する
+  if (platform === "voice") return { ...defaultTools, ...voiceTools };
+  if (platform === "line") return defaultTools;
   return { ...defaultTools, ...webTools };
 };
 
@@ -215,8 +232,12 @@ const voiceInstructions = `
 - 一度に伝える要点は1つだけ。情報を並べず、一番大事な1点だけ言う
 - 知識や調べた内容も全部は話さない。見出しだけ伝えて「もっと聞く？」と委ね、深掘りは聞かれてから答える
 - 長い説明・列挙をしない。相手の番を奪わない
-- 村の情報や調べ物でツール・エージェントを呼ぶときだけ、まず1文の短い前置き（「調べてみるね」等・事実は言わない）を言ってから調べる。それ以外は前置きなしで本題に入る。結果は一番大事な結論を1文で言い、詳細は聞かれてから足す
 - 相手の発話にはまず短い相槌（うん、そうなんだ、なるほど）から入ってよい
+
+### 調べ物（検索）
+- 村の情報・最新・時事・天気など事実の質問は voiceAnswer ツールを1つだけ使う（検索も要点化もこのツールがやる。knowledgeAgent 等は直接呼ばない）。呼ぶ前に1文だけ前置き（「調べてみるね」等・事実は言わない）。
+- voiceAnswer が返すのは素っ気ない事実の要点。それを**ねっぷちゃんらしく短い一文で言い直して**伝える（要点は変えず・長くしない・要点に無い事実は足さない・URLは読まず「ホームページで確認してね」等に）。
+- 深掘りは聞かれてから。全部を一度に話さない。
 
 ### フォーマット（読み上げ前提・絶対厳守）
 - 絵文字・記号・マークアップは一切使わない。音声では読めないか不自然に読まれる
@@ -258,7 +279,13 @@ export const createNeppChanAgent = ({
   ...agentOptions
 }: Props) => {
   const agents =
-    platform === "widget" ? widgetAgents : isAdmin ? adminAgents : baseAgents;
+    platform === "widget"
+      ? widgetAgents
+      : platform === "voice"
+        ? voiceAgents
+        : isAdmin
+          ? adminAgents
+          : baseAgents;
   const tools = getTools(platform);
 
   const instructions = () =>

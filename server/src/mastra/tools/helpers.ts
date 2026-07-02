@@ -1,6 +1,7 @@
 import type { ToolExecutionContext } from "@mastra/core/tools";
 import { ROLE_LEVEL } from "~/middleware/require-role";
 import type { AdminRole, AuthUser } from "~/schemas/auth-schema";
+import type { VoiceFindingsSlot } from "~/services/voice/findings-slot";
 
 type ToolContext = ToolExecutionContext | undefined;
 
@@ -17,6 +18,18 @@ export const getConversationEndedAt = (
   context: ToolContext,
 ): string | undefined =>
   context?.requestContext?.get("conversationEndedAt") as string | undefined;
+
+export const getVoiceFindings = (
+  context: ToolContext,
+): VoiceFindingsSlot | undefined =>
+  context?.requestContext?.get("voiceFindings") as
+    | VoiceFindingsSlot
+    | undefined;
+
+export const getVoiceSearchStart = (
+  context: ToolContext,
+): (() => void) | undefined =>
+  context?.requestContext?.get("voiceSearchStart") as (() => void) | undefined;
 
 type RequireDbResult = {
   db: D1Database;
