@@ -1,10 +1,10 @@
+import { messageText } from "@nepp-chan/shared/lib/message-text";
 import type { UIMessage } from "ai";
 import { SpeechBubble } from "~/app/chat/components/SpeechBubble";
-import { getMessageContent } from "~/app/chat/feedback-helpers";
 import { isGreetingPrompt } from "~/app/chat/greeting-prompt";
 
 export const UserMessage = ({ message }: { message: UIMessage }) => {
-  const text = getMessageContent(message);
+  const text = messageText(message);
 
   if (isGreetingPrompt(text)) return null;
 

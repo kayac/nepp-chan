@@ -1,8 +1,8 @@
-import { MiniChat } from "@nepp-chan/shared/components/MiniChat";
 import { MessageSquareIcon } from "lucide-react";
 import { API_URL, LINE_FRIEND_URL, WEB_URL } from "~/constants/urls";
 import { useScrollReveal } from "~/hooks/useScrollReveal";
 import { LineIcon } from "./LineIcon";
+import { MiniChat } from "./MiniChat";
 
 export const Hero = () => {
   const text = useScrollReveal<HTMLDivElement>();

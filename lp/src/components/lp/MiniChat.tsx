@@ -1,41 +1,21 @@
 import { useChat } from "@ai-sdk/react";
-import type { SimpleChatRequest } from "@nepp-chan/shared/api";
+import { ChatMarkdown } from "@nepp-chan/shared/components/ChatMarkdown";
+import {
+  INITIAL_MESSAGE,
+  SAMPLE_QUESTIONS,
+} from "@nepp-chan/shared/constants/simple-chat";
+import { useChatAutoScroll } from "@nepp-chan/shared/hooks/useChatAutoScroll";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
-import { DefaultChatTransport, type UIMessage } from "ai";
+import { messageText } from "@nepp-chan/shared/lib/message-text";
+import { createSimpleChatTransport } from "@nepp-chan/shared/lib/simple-chat-transport";
 import { ArrowRightIcon, EllipsisIcon, SendIcon } from "lucide-react";
-import { type SubmitEvent, useEffect, useMemo, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { type SubmitEvent, useMemo, useRef, useState } from "react";
 
 type Props = {
   apiUrl: string;
   webUrl: string;
   iconSrc?: string;
 };
-
-const SAMPLE_QUESTIONS: ReadonlyArray<string> = [
-  "移住の補助金はある？",
-  "音威子府駅ってどんなところ？",
-  "おすすめのお蕎麦屋さんは？",
-  "今日のゴミの日は？",
-];
-
-const INITIAL_MESSAGE: UIMessage = {
-  id: "initial-greeting",
-  role: "assistant",
-  parts: [
-    {
-      type: "text",
-      text: "こんにちは〜！ねっぷちゃんだよ 😊\n音威子府のことなら、なんでも聞いてみてね！",
-    },
-  ],
-};
-
-const messageText = (msg: UIMessage) =>
-  msg.parts
-    .filter((p) => p.type === "text")
-    .map((p) => p.text)
-    .join("");
 
 export const MiniChat = ({
   apiUrl,
@@ -47,18 +27,7 @@ export const MiniChat = ({
   const streamRef = useRef<HTMLDivElement | null>(null);
 
   const transport = useMemo(
-    () =>
-      new DefaultChatTransport({
-        api: `${apiUrl}/simple-chat`,
-        prepareSendMessagesRequest({ messages: msgs }) {
-          const last = msgs[msgs.length - 1];
-          if (!last) throw new Error("送信するメッセージがありません");
-          const body: SimpleChatRequest = {
-            message: last as SimpleChatRequest["message"],
-          };
-          return { body };
-        },
-      }),
+    () => createSimpleChatTransport({ apiUrl, historyLimit: 1 }),
     [apiUrl],
   );
 
@@ -72,23 +41,7 @@ export const MiniChat = ({
   const hasCompletedExchange =
     status === "ready" && messages.some((m) => m.role === "user");
 
-  useEffect(() => {
-    const el = streamRef.current;
-    if (!el) return;
-    const observer = new MutationObserver(() => {
-      const distanceFromBottom =
-        el.scrollHeight - el.scrollTop - el.clientHeight;
-      if (distanceFromBottom < 80) {
-        el.scrollTop = el.scrollHeight;
-      }
-    });
-    observer.observe(el, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-    return () => observer.disconnect();
-  }, []);
+  useChatAutoScroll(streamRef);
 
   const ask = (q: string) => {
     const trimmed = q.trim();
@@ -142,66 +95,10 @@ export const MiniChat = ({
                   : "self-start bg-(--paper-50) text-(--fg-1)",
               )}
             >
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  p: ({ children }) => (
-                    <p className="my-1 first:mt-0 last:mb-0">{children}</p>
-                  ),
-                  ul: ({ children }) => (
-                    <ul className="my-1 list-disc pl-5 first:mt-0 last:mb-0">
-                      {children}
-                    </ul>
-                  ),
-                  ol: ({ children }) => (
-                    <ol className="my-1 list-decimal pl-5 first:mt-0 last:mb-0">
-                      {children}
-                    </ol>
-                  ),
-                  li: ({ children }) => <li className="my-0.5">{children}</li>,
-                  a: ({ href, children }) => (
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn(
-                        "underline underline-offset-2",
-                        m.role === "user"
-                          ? "text-white/90 hover:text-white"
-                          : "text-(--brand) hover:text-(--brand-hover)",
-                      )}
-                    >
-                      {children}
-                    </a>
-                  ),
-                  code: ({ children }) => (
-                    <code
-                      className={cn(
-                        "rounded px-1 py-0.5 font-mono text-[0.85em]",
-                        m.role === "user"
-                          ? "bg-white/15"
-                          : "bg-(--paper-200) text-(--fg-1)",
-                      )}
-                    >
-                      {children}
-                    </code>
-                  ),
-                  pre: ({ children }) => (
-                    <pre
-                      className={cn(
-                        "my-1 overflow-x-auto rounded p-2 text-[0.8em] first:mt-0 last:mb-0",
-                        m.role === "user"
-                          ? "bg-white/10"
-                          : "bg-(--paper-200) text-(--fg-1)",
-                      )}
-                    >
-                      {children}
-                    </pre>
-                  ),
-                }}
-              >
-                {text}
-              </ReactMarkdown>
+              <ChatMarkdown
+                text={text}
+                variant={m.role === "user" ? "user" : "assistant"}
+              />
             </div>
           );
         })}
