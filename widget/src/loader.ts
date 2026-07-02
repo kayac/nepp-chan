@@ -7,6 +7,14 @@ export const resolveIframeSrc = (scriptSrc: string) =>
 export const resolveIconSrc = (scriptSrc: string) =>
   new URL("../mascot/icon.png", scriptSrc).href;
 
+export const onDocumentReady = (doc: Document, callback: () => void) => {
+  if (doc.readyState === "loading") {
+    doc.addEventListener("DOMContentLoaded", callback, { once: true });
+    return;
+  }
+  callback();
+};
+
 type MountOptions = {
   iframeSrc: string;
   iconSrc: string;

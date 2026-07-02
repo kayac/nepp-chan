@@ -1,5 +1,10 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { mountWidget, resolveIconSrc, resolveIframeSrc } from "./loader";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  mountWidget,
+  onDocumentReady,
+  resolveIconSrc,
+  resolveIframeSrc,
+} from "./loader";
 
 const WIDGET_FLAG = "__neppChatWidgetLoaded";
 const SCRIPT_SRC = "https://nepp-chan.ai/widget/widget.js";
@@ -15,6 +20,35 @@ describe("resolveIconSrc", () => {
     expect(resolveIconSrc(SCRIPT_SRC)).toBe(
       "https://nepp-chan.ai/mascot/icon.png",
     );
+  });
+});
+
+describe("onDocumentReady", () => {
+  afterEach(() => {
+    Reflect.deleteProperty(document, "readyState");
+  });
+
+  it("DOM 構築完了後なら即座に実行する", () => {
+    let called = 0;
+    onDocumentReady(document, () => {
+      called += 1;
+    });
+    expect(called).toBe(1);
+  });
+
+  it("DOM 構築中なら DOMContentLoaded まで遅らせて 1 回だけ実行する", () => {
+    Object.defineProperty(document, "readyState", {
+      configurable: true,
+      get: () => "loading",
+    });
+    let called = 0;
+    onDocumentReady(document, () => {
+      called += 1;
+    });
+    expect(called).toBe(0);
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    expect(called).toBe(1);
   });
 });
 

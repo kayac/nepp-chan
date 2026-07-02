@@ -1,9 +1,17 @@
-import { mountWidget, resolveIconSrc, resolveIframeSrc } from "./loader";
+import {
+  mountWidget,
+  onDocumentReady,
+  resolveIconSrc,
+  resolveIframeSrc,
+} from "./loader";
 
 const currentScript = document.currentScript as HTMLScriptElement | null;
-if (currentScript?.src) {
-  mountWidget({
-    iframeSrc: resolveIframeSrc(currentScript.src),
-    iconSrc: resolveIconSrc(currentScript.src),
+const scriptSrc = currentScript?.src;
+if (scriptSrc) {
+  onDocumentReady(document, () => {
+    mountWidget({
+      iframeSrc: resolveIframeSrc(scriptSrc),
+      iconSrc: resolveIconSrc(scriptSrc),
+    });
   });
 }
