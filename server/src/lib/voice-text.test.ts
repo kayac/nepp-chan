@@ -13,7 +13,7 @@ describe("sanitizeForSpeech", () => {
     expect(sanitizeForSpeech("# 見どころ")).toBe(" 見どころ");
   });
 
-  it("バッククォート・チルダを除去する", () => {
+  it("バッククォート・取り消し線（~~）を除去する", () => {
     expect(sanitizeForSpeech("`コード` ~~取り消し~~")).toBe("コード 取り消し");
   });
 
