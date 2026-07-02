@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { type AgentModelConfig, GEMINI_FLASH_LITE } from "~/lib/llm-models";
 import { broadcastGetToolName } from "~/mastra/tools/broadcast-get-tool";
 import { pollGetToolName } from "~/mastra/tools/poll-get-tool";
+import { voiceAnswerToolName } from "~/mastra/tools/voice-answer-tool";
 import { createNeppChanAgent, neppChanMemoryOptions } from "./nepp-chan-agent";
 
 const modelConfig = { model: "dummy-model" } as unknown as AgentModelConfig;
@@ -55,6 +56,12 @@ describe("createNeppChanAgent", () => {
       const lineIns = await instructionsOf(build({ platform: "line" }));
       expect(lineIns).toContain(broadcastGetToolName);
     });
+
+    it("platform=voice は voiceAnswerTool を登録キーで参照する", async () => {
+      const ins = await instructionsOf(build({ platform: "voice" }));
+      expect(ins).toContain(voiceAnswerToolName);
+      expect(ins).not.toMatch(/voiceAnswer(?!Tool)/);
+    });
   });
 
   describe("platform / isAdmin による Agent 構築", () => {
@@ -63,6 +70,7 @@ describe("createNeppChanAgent", () => {
       ["web 管理者", { platform: "web" as const, isAdmin: true }],
       ["line", { platform: "line" as const, isAdmin: false }],
       ["widget", { platform: "widget" as const, isAdmin: false }],
+      ["voice", { platform: "voice" as const, isAdmin: false }],
     ])("%s で Agent を生成できる", (_label, over) => {
       expect(build(over)).toBeDefined();
     });
