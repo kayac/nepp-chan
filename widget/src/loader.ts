@@ -71,7 +71,7 @@ export const mountWidget = ({
         right: 20px;
         bottom: 92px;
         width: min(384px, calc(100vw - 32px));
-        height: min(600px, calc(100vh - 132px));
+        height: min(600px, calc(100dvh - 132px));
         border: none;
         border-radius: 20px;
         box-shadow: 0 12px 48px rgba(0, 0, 0, 0.18);
