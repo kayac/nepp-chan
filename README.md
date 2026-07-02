@@ -60,6 +60,7 @@
 | [server/](server/README.md) | バックエンド API（Cloudflare Workers）      |
 | [web/](web/README.md)       | チャット Web アプリ（Cloudflare Pages）     |
 | lp/                         | ランディングページ（Cloudflare Pages）      |
+| [widget/](widget/CLAUDE.md) | 外部サイト埋め込みチャットウィジェット      |
 | shared/                     | web / lp / server 共通の TypeScript パッケージ |
 | knowledge/                  | RAG 用ナレッジファイル                      |
 | [identity/](identity/)      | キャラ・ロゴ等のビジュアルアセット（[CC BY 4.0](identity/README.md)） |
@@ -95,6 +96,9 @@ cp web/.env.example web/.env
 
 # lp
 cp lp/.env.example lp/.env
+
+# widget
+cp widget/.env.example widget/.env
 ```
 
 各 `.env` ファイルに適切な値を設定してください。
