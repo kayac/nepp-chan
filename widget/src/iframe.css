@@ -4,5 +4,5 @@
 @source "./**/*.{ts,tsx}";
 
 body {
-  padding: 12px;
+  margin: 0;
 }
