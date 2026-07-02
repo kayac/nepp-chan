@@ -1,6 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 import { logger } from "~/lib/logger";
-import { runVoiceTurn } from "./conversation";
+import { createVoiceTurnRunner } from "./conversation";
 import { pickFiller } from "./filler";
 import {
   createVoiceFindingsSlot,
@@ -13,34 +13,34 @@ import {
   type TextTokenOptions,
   textTokenMessage,
 } from "./relay-protocol";
-import { verifyRelayToken } from "./twilio-token";
+import { verifySetupToken } from "./twilio-token";
 
 const HOLD_AUDIO_URL = "https://demo.twilio.com/docs/classic.mp3";
+// 有効な setup が届かない接続を無期限に張らせないための待受上限。
+const SETUP_TIMEOUT_MS = 10_000;
 
-export const handleRelayUpgrade = async (
+// token は setup メッセージの customParameters で届くため、検証は onMessage 側で行う。
+export const handleRelayUpgrade = (
   request: Request,
   env: CloudflareBindings,
 ) => {
-  const token = new URL(request.url).searchParams.get("token");
-  if (!token) return new Response("missing token", { status: 401 });
-
-  const claims = await verifyRelayToken(token, env.CALL_TOKEN_SECRET, {
-    nowSeconds: Math.floor(Date.now() / 1000),
-  });
-  if (!claims) return new Response("invalid token", { status: 401 });
-
   const id = env.CALL_BRIDGE.newUniqueId();
   return env.CALL_BRIDGE.get(id).fetch(request);
 };
 
 export class CallBridge extends DurableObject<CloudflareBindings> {
   private from = "";
+  private verified = false;
+  private socket: WebSocket | null = null;
   private currentTurn: AbortController | null = null;
   private fillerIndex = 0;
   private findingsSlot: VoiceFindingsSlot = createVoiceFindingsSlot();
+  private turnRunnerPromise: ReturnType<typeof createVoiceTurnRunner> | null =
+    null;
 
   async fetch() {
     const { 0: client, 1: server } = new WebSocketPair();
+    this.socket = server;
     server.accept();
     server.addEventListener("message", (event) => {
       this.onMessage(server, event).catch((e) =>
@@ -52,7 +52,15 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     server.addEventListener("close", () => {
       this.currentTurn?.abort();
     });
+    await this.ctx.storage.setAlarm(Date.now() + SETUP_TIMEOUT_MS);
     return new Response(null, { status: 101, webSocket: client });
+  }
+
+  async alarm() {
+    if (!this.verified) {
+      logger.warn("[CallBridge] no valid setup within timeout, closing");
+      this.socket?.close(1008, "setup timeout");
+    }
   }
 
   private async onMessage(ws: WebSocket, event: MessageEvent) {
@@ -68,8 +76,19 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     logger.info("[CallBridge] message", { type: msg.type });
 
     if (msg.type === "setup") {
+      const claims = await verifySetupToken(
+        msg.customParameters,
+        this.env.CALL_TOKEN_SECRET,
+      );
+      if (!claims) {
+        logger.warn("[CallBridge] invalid relay token on setup, closing");
+        ws.close(1008, "invalid token");
+        return;
+      }
+      this.verified = true;
       this.from = msg.from;
     } else if (msg.type === "prompt") {
+      if (!this.verified) return;
       logger.info("[Voice] final prompt", { voicePrompt: msg.voicePrompt });
       await this.handlePrompt(ws, msg.voicePrompt);
     } else if (msg.type === "interrupt") {
@@ -87,6 +106,12 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     this.currentTurn = controller;
 
     const t0 = Date.now();
+    this.turnRunnerPromise ??= createVoiceTurnRunner({
+      env: this.env,
+      from: this.from,
+    });
+    const turnRunner = await this.turnRunnerPromise;
+
     let firstSendMs: number | null = null;
     let tokenCount = 0;
 
@@ -116,9 +141,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     };
 
     try {
-      for await (const delta of runVoiceTurn({
-        env: this.env,
-        from: this.from,
+      for await (const delta of turnRunner({
         text,
         signal: controller.signal,
         onToolCall: startHold,

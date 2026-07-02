@@ -9,6 +9,9 @@ type ConversationRelayConfig = {
   speechTimeout?: string;
   hints?: string;
   interruptible?: "none" | "dtmf" | "speech" | "any";
+  // WS の url はクエリ文字列を保持しない可能性があるため、認証トークン等は
+  // <Parameter> 経由で setup メッセージの customParameters に渡す。
+  parameters?: Record<string, string>;
 };
 
 const escapeXmlAttr = (value: string) =>
@@ -33,6 +36,7 @@ export const buildConversationRelayTwiml = ({
   speechTimeout,
   hints,
   interruptible,
+  parameters,
 }: ConversationRelayConfig) => {
   const attrs = [
     attr("url", wsUrl),
@@ -47,5 +51,16 @@ export const buildConversationRelayTwiml = ({
     attr("interruptible", interruptible),
   ].join("");
 
-  return `<?xml version="1.0" encoding="UTF-8"?><Response><Connect><ConversationRelay${attrs}/></Connect></Response>`;
+  const params = Object.entries(parameters ?? {})
+    .map(
+      ([name, value]) =>
+        `<Parameter name="${escapeXmlAttr(name)}" value="${escapeXmlAttr(value)}"/>`,
+    )
+    .join("");
+
+  const relay = params
+    ? `<ConversationRelay${attrs}>${params}</ConversationRelay>`
+    : `<ConversationRelay${attrs}/>`;
+
+  return `<?xml version="1.0" encoding="UTF-8"?><Response><Connect>${relay}</Connect></Response>`;
 };

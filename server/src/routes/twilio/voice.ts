@@ -63,9 +63,13 @@ twilioVoiceRoutes.post("/incoming", async (c) => {
     ttlSeconds: RELAY_TOKEN_TTL_SECONDS,
   });
   const host = new URL(c.req.url).host;
-  const wsUrl = `wss://${host}/twilio/voice/relay?token=${relayToken}`;
+  const wsUrl = `wss://${host}/twilio/voice/relay`;
 
-  const xml = buildConversationRelayTwiml({ wsUrl, ...VOICE_CONFIG });
+  const xml = buildConversationRelayTwiml({
+    wsUrl,
+    ...VOICE_CONFIG,
+    parameters: { token: relayToken },
+  });
 
   return c.body(xml, 200, { "Content-Type": "text/xml; charset=utf-8" });
 });

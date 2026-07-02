@@ -1,8 +1,6 @@
-import {
-  base64UrlFromString,
-  base64UrlToString,
-  hmacSha256,
-} from "~/lib/crypto";
+import { sign, verify } from "hono/jwt";
+import type { JWTPayload } from "hono/utils/jwt/types";
+import { base64UrlFromString, hmacSha256 } from "~/lib/crypto";
 
 // softphone（@twilio/voice-sdk）認証用の Twilio AccessToken を WebCrypto だけで発行する。
 // twilio npm は Workers 非互換のため使わない。JWT は API Key Secret による HS256 署名。
@@ -46,47 +44,28 @@ export const createVoiceAccessToken = async ({
   return `${signingInput}.${signature}`;
 };
 
-// relay WS（wss://.../voice/relay?token=…）の入場を認可する短命トークン。
+// relay WS（wss://.../voice/relay）の入場を認可する短命トークン。
 // TwiML を発行した本人であることの証明。発信者同定は setup メッセージ側で行う。
-type RelayTokenPayload = { iat: number; exp: number };
+type RelayTokenPayload = JWTPayload & { iat: number; exp: number };
 
-const timingSafeEqual = (a: string, b: string) => {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-};
-
-export const createRelayToken = async (
+export const createRelayToken = (
   secret: string,
   { nowSeconds, ttlSeconds }: { nowSeconds: number; ttlSeconds: number },
-) => {
-  const payload: RelayTokenPayload = {
-    iat: nowSeconds,
-    exp: nowSeconds + ttlSeconds,
-  };
-  const encoded = base64UrlFromString(JSON.stringify(payload));
-  const signature = await hmacSha256(encoded, secret);
-  return `${encoded}.${signature}`;
-};
+) => sign({ iat: nowSeconds, exp: nowSeconds + ttlSeconds }, secret);
 
-export const verifyRelayToken = async (
-  token: string,
-  secret: string,
-  { nowSeconds }: { nowSeconds: number },
-) => {
-  const [encoded, signature] = token.split(".");
-  if (!encoded || !signature) return null;
-
-  const expected = await hmacSha256(encoded, secret);
-  if (!timingSafeEqual(signature, expected)) return null;
-
-  let payload: RelayTokenPayload;
+export const verifyRelayToken = async (token: string, secret: string) => {
   try {
-    payload = JSON.parse(base64UrlToString(encoded));
+    return (await verify(token, secret, "HS256")) as RelayTokenPayload;
   } catch {
     return null;
   }
-  if (typeof payload.exp !== "number" || payload.exp < nowSeconds) return null;
-  return payload;
+};
+
+// setup メッセージの customParameters から relay token を取り出して検証する。
+export const verifySetupToken = (
+  customParameters: Record<string, string> | undefined,
+  secret: string,
+) => {
+  const token = customParameters?.token;
+  return token ? verifyRelayToken(token, secret) : Promise.resolve(null);
 };

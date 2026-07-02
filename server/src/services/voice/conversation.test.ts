@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { logger } from "~/lib/logger";
 import { toVoiceIds } from "~/lib/principal";
-import { runVoiceTurn } from "./conversation";
+import { createVoiceTurnRunner } from "./conversation";
 
 type FakeChunk =
   | { type: "text-delta"; payload: { text: string } }
@@ -37,7 +37,7 @@ vi.mock("@mastra/core/mastra", () => ({
   },
 }));
 
-describe("runVoiceTurn", () => {
+describe("createVoiceTurnRunner / runTurn", () => {
   const env = {
     DB: {},
     RESOURCE_ID_HASH_SECRET: "test-secret",
@@ -52,12 +52,12 @@ describe("runVoiceTurn", () => {
       fullStream: fakeFullStream([textDelta("こん"), textDelta("にちは")]),
     });
 
-    const out: string[] = [];
-    for await (const d of runVoiceTurn({
+    const runTurn = await createVoiceTurnRunner({
       env,
       from: "client:tester",
-      text: "やあ",
-    })) {
+    });
+    const out: string[] = [];
+    for await (const d of runTurn({ text: "やあ" })) {
       out.push(d);
     }
 
@@ -80,61 +80,32 @@ describe("runVoiceTurn", () => {
       ]),
     });
 
+    const runTurn = await createVoiceTurnRunner({ env, from: "client:tester" });
     const out: string[] = [];
-    for await (const d of runVoiceTurn({
-      env,
-      from: "client:tester",
-      text: "おはよう",
-    })) {
+    for await (const d of runTurn({ text: "おはよう" })) {
       out.push(d);
     }
 
     expect(out).toEqual(["おはよう", "いい天気だね"]);
   });
 
-  it("knowledge/web のサブエージェント tool-call で onToolCall を呼ぶ（保留音）", async () => {
+  it("tool-call/tool-result イベントはテキストに含めず記録のみ行う", async () => {
     streamMock.mockResolvedValue({
       fullStream: fakeFullStream([
         textDelta("調べてみるね"),
-        toolCall("agent-knowledgeAgent"),
+        toolCall("voiceAnswerTool"),
+        { type: "tool-result", payload: {} },
         textDelta("音威子府そばだよ"),
       ]),
     });
-    const onToolCall = vi.fn();
 
+    const runTurn = await createVoiceTurnRunner({ env, from: "client:x" });
     const out: string[] = [];
-    for await (const d of runVoiceTurn({
-      env,
-      from: "client:x",
-      text: "観光スポット教えて",
-      onToolCall,
-    })) {
+    for await (const d of runTurn({ text: "観光スポット教えて" })) {
       out.push(d);
     }
 
     expect(out).toEqual(["調べてみるね", "音威子府そばだよ"]);
-    expect(onToolCall).toHaveBeenCalledTimes(1);
-  });
-
-  it("検索以外の tool-call（updateWorkingMemory）では onToolCall を呼ばない", async () => {
-    streamMock.mockResolvedValue({
-      fullStream: fakeFullStream([
-        toolCall("updateWorkingMemory"),
-        textDelta("はーい"),
-      ]),
-    });
-    const onToolCall = vi.fn();
-
-    for await (const _ of runVoiceTurn({
-      env,
-      from: "client:x",
-      text: "やあ",
-      onToolCall,
-    })) {
-      // drain
-    }
-
-    expect(onToolCall).not.toHaveBeenCalled();
   });
 
   it("ターン完了時に llm timing を1回記録する（intent 分類なし）", async () => {
@@ -143,11 +114,11 @@ describe("runVoiceTurn", () => {
     });
     const infoSpy = vi.spyOn(logger, "info");
 
-    for await (const _ of runVoiceTurn({
+    const runTurn = await createVoiceTurnRunner({
       env,
       from: "client:tester",
-      text: "やあ",
-    })) {
+    });
+    for await (const _ of runTurn({ text: "やあ" })) {
       // drain
     }
 
@@ -172,13 +143,9 @@ describe("runVoiceTurn", () => {
     });
     const controller = new AbortController();
 
+    const runTurn = await createVoiceTurnRunner({ env, from: "client:x" });
     const out: string[] = [];
-    for await (const d of runVoiceTurn({
-      env,
-      from: "client:x",
-      text: "hi",
-      signal: controller.signal,
-    })) {
+    for await (const d of runTurn({ text: "hi", signal: controller.signal })) {
       out.push(d);
       if (d === "a") controller.abort();
     }

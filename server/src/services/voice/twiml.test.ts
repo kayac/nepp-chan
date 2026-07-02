@@ -87,4 +87,29 @@ describe("buildConversationRelayTwiml", () => {
     expect(xml).not.toContain("speechTimeout");
     expect(xml).not.toContain("hints");
   });
+
+  it("parameters を指定すると <Parameter> 子要素として出力する", () => {
+    const xml = buildConversationRelayTwiml({
+      wsUrl: "wss://x/relay",
+      parameters: { token: "abc123" },
+    });
+    expect(xml).toContain(
+      '<ConversationRelay url="wss://x/relay" language="ja-JP"><Parameter name="token" value="abc123"/></ConversationRelay>',
+    );
+  });
+
+  it("parameters の値の特殊文字を XML エスケープする", () => {
+    const xml = buildConversationRelayTwiml({
+      wsUrl: "wss://x/relay",
+      parameters: { token: 'a"b&c' },
+    });
+    expect(xml).toContain('value="a&quot;b&amp;c"');
+  });
+
+  it("parameters 未指定なら ConversationRelay は自己終了タグのまま", () => {
+    const xml = buildConversationRelayTwiml({ wsUrl: "wss://x/relay" });
+    expect(xml).toContain("<ConversationRelay");
+    expect(xml).toContain("/></Connect></Response>");
+    expect(xml).not.toContain("<Parameter");
+  });
 });

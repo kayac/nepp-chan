@@ -61,24 +61,21 @@ describe("POST /twilio/voice/incoming", () => {
       env,
     );
     const xml = await res.text();
-    expect(xml).toContain("wss://api.example.com/twilio/voice/relay?token=");
+    expect(xml).toContain('url="wss://api.example.com/twilio/voice/relay"');
   });
 
-  it("relay URL のトークンは CALL_TOKEN_SECRET で検証できる", async () => {
+  it("relay トークンは CALL_TOKEN_SECRET で検証できる", async () => {
     const res = await buildApp().request(
       "http://api.example.com/twilio/voice/incoming",
       { method: "POST" },
       env,
     );
     const xml = await res.text();
-    const token = xml.match(/relay\?token=([^"]+)"/)?.[1];
+    const token = xml.match(/<Parameter name="token" value="([^"]+)"/)?.[1];
     expect(token).toBeTruthy();
     const claims = await verifyRelayToken(
       token as string,
       env.CALL_TOKEN_SECRET,
-      {
-        nowSeconds: Math.floor(Date.now() / 1000),
-      },
     );
     expect(claims).not.toBeNull();
   });
