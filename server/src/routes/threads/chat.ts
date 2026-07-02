@@ -110,7 +110,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
   return respondWithChatStream({
     mastra,
     agentId: "neppChanAgent",
-    message,
+    messages: [message],
     requestContext,
     memory: {
       resource: thread.resourceId,
