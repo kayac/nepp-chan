@@ -6,9 +6,9 @@ const routerModelConfig = {
   providerOptions: {
     google: {
       thinkingConfig: { thinkingLevel: "none" as const },
-      generationConfig: { temperature: 0 },
     },
   },
+  defaultOptions: { modelSettings: { temperature: 0 } },
 };
 
 export const intentRouterAgent = new Agent({

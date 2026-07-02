@@ -9,9 +9,9 @@ const summarizerModelConfig = {
   providerOptions: {
     google: {
       thinkingConfig: { thinkingBudget: 0 },
-      generationConfig: { temperature: 0 },
     },
   },
+  defaultOptions: { modelSettings: { temperature: 0 } },
 };
 
 export const voiceSummarizerAgent = new Agent({
