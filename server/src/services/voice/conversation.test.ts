@@ -188,5 +188,7 @@ describe("runVoiceTurn", () => {
       "hi",
       expect.objectContaining({ abortSignal: controller.signal }),
     );
+    const { requestContext } = streamMock.mock.calls[0][1];
+    expect(requestContext.get("voiceTurnSignal")).toBe(controller.signal);
   });
 });

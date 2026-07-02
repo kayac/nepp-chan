@@ -5,10 +5,11 @@ import {
   type VoiceFindingsSlot,
 } from "~/services/voice/findings-slot";
 
-const { knowledgeGen, webGen, summarizerGen } = vi.hoisted(() => ({
+const { knowledgeGen, webGen, summarizerGen, loggerError } = vi.hoisted(() => ({
   knowledgeGen: vi.fn(),
   webGen: vi.fn(),
   summarizerGen: vi.fn(),
+  loggerError: vi.fn(),
 }));
 
 vi.mock("~/mastra/agents/knowledge-agent", () => ({
@@ -22,17 +23,25 @@ vi.mock("~/mastra/agents/voice-summarizer-agent", () => ({
   NEED_KNOWLEDGE: "NEED_KNOWLEDGE",
   NEED_WEB: "NEED_WEB",
 }));
+vi.mock("~/lib/logger", () => ({
+  logger: { error: loggerError, info: vi.fn(), warn: vi.fn() },
+}));
 
 const { voiceAnswerTool } = await import("./voice-answer-tool");
 
 const holdFn = vi.fn();
 
-const call = (question: string, slot?: VoiceFindingsSlot) =>
+const call = (
+  question: string,
+  slot?: VoiceFindingsSlot,
+  signal?: AbortSignal,
+) =>
   callTool(
     voiceAnswerTool,
     { question },
     {
       ...(slot ? { voiceFindings: slot } : {}),
+      ...(signal ? { voiceTurnSignal: signal } : {}),
       voiceSearchStart: holdFn,
     },
   );
@@ -41,6 +50,7 @@ beforeEach(() => {
   knowledgeGen.mockReset();
   webGen.mockReset();
   summarizerGen.mockReset();
+  loggerError.mockReset();
   holdFn.mockReset();
 });
 
@@ -140,5 +150,124 @@ describe("voiceAnswerTool", () => {
     const result = await call("そば食べられる？");
 
     expect(result.answer).toBe("あるよ");
+  });
+
+  it("要点化が空文字なら空の answer を返さず検索に進み、保留音を鳴らす", async () => {
+    summarizerGen
+      .mockResolvedValueOnce({ text: "" })
+      .mockResolvedValueOnce({ text: "答えだよ" });
+    knowledgeGen.mockResolvedValueOnce({ text: "資料" });
+    const slot: VoiceFindingsSlot = {
+      current: { query: "前の質問", source: "knowledge", text: "前の資料" },
+    };
+
+    const result = await call("そばの話", slot);
+
+    expect(result.answer).toBe("答えだよ");
+    expect(knowledgeGen).toHaveBeenCalledTimes(1);
+    expect(holdFn).toHaveBeenCalled();
+  });
+
+  it("要点化の text が undefined でも検索に進む", async () => {
+    summarizerGen
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({ text: "答えだよ" });
+    knowledgeGen.mockResolvedValueOnce({ text: "資料" });
+
+    const result = await call("そばの話", createVoiceFindingsSlot());
+
+    expect(result.answer).toBe("答えだよ");
+  });
+
+  it("検索後も要点化が空のままなら「わからなかった」と伝える", async () => {
+    summarizerGen.mockResolvedValue({ text: "" });
+    knowledgeGen.mockResolvedValueOnce({ text: "資料" });
+    webGen.mockResolvedValueOnce({ text: "web 資料" });
+
+    const result = await call("答えのない質問", createVoiceFindingsSlot());
+
+    expect(result.answer).toContain("わからなかった");
+  });
+
+  it("「NEED_KNOWLEDGE。」のような装飾付きセンチネルでも knowledge に route する", async () => {
+    summarizerGen
+      .mockResolvedValueOnce({ text: "NEED_KNOWLEDGE。" })
+      .mockResolvedValueOnce({ text: "あるよ" });
+    knowledgeGen.mockResolvedValueOnce({ text: "資料" });
+
+    const result = await call("そば食べられる？", createVoiceFindingsSlot());
+
+    expect(result.answer).toBe("あるよ");
+    expect(knowledgeGen).toHaveBeenCalledTimes(1);
+  });
+
+  it("装飾付きの NEED_WEB でも web に route する", async () => {
+    summarizerGen
+      .mockResolvedValueOnce({ text: "NEED_WEB です" })
+      .mockResolvedValueOnce({ text: "晴れだよ" });
+    webGen.mockResolvedValueOnce({ text: "天気資料" });
+
+    const result = await call("今日の天気は？", createVoiceFindingsSlot());
+
+    expect(result.answer).toBe("晴れだよ");
+    expect(webGen).toHaveBeenCalledTimes(1);
+    expect(knowledgeGen).not.toHaveBeenCalled();
+  });
+
+  it("中断後に完走した検索の findings は slot に書き込まず、次の検索にも進まない", async () => {
+    const controller = new AbortController();
+    summarizerGen.mockResolvedValueOnce({ text: "NEED_KNOWLEDGE" });
+    knowledgeGen.mockImplementationOnce(async () => {
+      controller.abort();
+      return { text: "古い質問の資料" };
+    });
+    const slot: VoiceFindingsSlot = {
+      current: { query: "前の質問", source: "knowledge", text: "前の資料" },
+    };
+
+    const result = await call("古い質問", slot, controller.signal);
+
+    expect(slot.current).toEqual({
+      query: "前の質問",
+      source: "knowledge",
+      text: "前の資料",
+    });
+    expect(result.answer).toContain("調べられなかった");
+    expect(webGen).not.toHaveBeenCalled();
+    expect(summarizerGen).toHaveBeenCalledTimes(1);
+  });
+
+  it("voiceTurnSignal を要点化・検索の generate に渡す", async () => {
+    const controller = new AbortController();
+    summarizerGen
+      .mockResolvedValueOnce({ text: "NEED_KNOWLEDGE" })
+      .mockResolvedValueOnce({ text: "あるよ" });
+    knowledgeGen.mockResolvedValueOnce({ text: "資料" });
+
+    await call("そば", createVoiceFindingsSlot(), controller.signal);
+
+    expect(summarizerGen).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ abortSignal: controller.signal }),
+    );
+    expect(knowledgeGen).toHaveBeenCalledWith(
+      "そば",
+      expect.objectContaining({ abortSignal: controller.signal }),
+    );
+  });
+
+  it("中断による例外はエラーログを出さず fallback を返す", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    summarizerGen.mockRejectedValueOnce(new Error("aborted"));
+
+    const result = await call(
+      "そば",
+      createVoiceFindingsSlot(),
+      controller.signal,
+    );
+
+    expect(result.answer).toContain("調べられなかった");
+    expect(loggerError).not.toHaveBeenCalled();
   });
 });

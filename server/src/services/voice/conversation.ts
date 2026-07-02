@@ -37,6 +37,7 @@ export async function* runVoiceTurn({
     env,
     voiceFindings: findingsSlot,
     voiceSearchStart: onToolCall,
+    voiceTurnSignal: signal,
   });
 
   const neppChanAgent = createNeppChanAgent({

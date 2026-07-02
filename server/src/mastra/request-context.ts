@@ -12,6 +12,7 @@ export type MastraRequestContextType = {
   adminUser?: AuthUser;
   voiceFindings?: VoiceFindingsSlot;
   voiceSearchStart?: () => void;
+  voiceTurnSignal?: AbortSignal;
 };
 
 export const createRequestContext = (values: MastraRequestContextType) => {
@@ -32,6 +33,9 @@ export const createRequestContext = (values: MastraRequestContextType) => {
   }
   if (values.voiceSearchStart) {
     requestContext.set("voiceSearchStart", values.voiceSearchStart);
+  }
+  if (values.voiceTurnSignal) {
+    requestContext.set("voiceTurnSignal", values.voiceTurnSignal);
   }
   return requestContext;
 };

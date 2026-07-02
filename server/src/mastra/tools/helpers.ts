@@ -31,6 +31,11 @@ export const getVoiceSearchStart = (
 ): (() => void) | undefined =>
   context?.requestContext?.get("voiceSearchStart") as (() => void) | undefined;
 
+export const getVoiceTurnSignal = (
+  context: ToolContext,
+): AbortSignal | undefined =>
+  context?.requestContext?.get("voiceTurnSignal") as AbortSignal | undefined;
+
 type RequireDbResult = {
   db: D1Database;
 };
