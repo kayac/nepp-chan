@@ -65,7 +65,7 @@ export const mountWidget = ({
   icon.src = iconSrc;
   icon.alt = "";
   icon.style.cssText =
-    "width: 70%; height: 70%; object-fit: contain; pointer-events: none;";
+    "width: 100%; height: 100%; object-fit: cover; pointer-events: none;";
   button.appendChild(icon);
 
   let iframe: HTMLIFrameElement | null = null;
