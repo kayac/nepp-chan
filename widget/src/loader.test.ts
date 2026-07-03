@@ -1,3 +1,5 @@
+import { INITIAL_MESSAGE } from "@nepp-chan/shared/constants/simple-chat";
+import { messageText } from "@nepp-chan/shared/lib/message-text";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   mountWidget,
@@ -10,6 +12,9 @@ import { CLOSE_MESSAGE_TYPE } from "./messages";
 const WIDGET_FLAG = "__neppChatWidgetLoaded";
 const SCRIPT_SRC = "https://nepp-chan.ai/widget/widget.js";
 const IFRAME_SRC = "https://nepp-chan.ai/widget/";
+const TEASER_DELAY_MS = 2500;
+const TEASER_REVIVE_MS = 7 * 24 * 60 * 60 * 1000;
+const TEASER_DISMISSED_KEY = "nepp-chan-widget:teaser-dismissed-at";
 
 const nextFrame = () =>
   new Promise<number>((resolve) => requestAnimationFrame(resolve));
@@ -239,6 +244,142 @@ describe("mountWidget", () => {
 
       expect(iframe?.style.visibility).toBe("visible");
       expect(button?.getAttribute("aria-expanded")).toBe("true");
+    });
+  });
+
+  describe("吹き出しティーザー", () => {
+    const teaserText = messageText(INITIAL_MESSAGE);
+
+    const findPanelButton = () =>
+      document.body.querySelector<HTMLButtonElement>(
+        'button[aria-label="ねっぷちゃんとチャット"]',
+      );
+
+    const findTeaser = () =>
+      document.body.querySelector<HTMLButtonElement>(
+        'button[aria-label="ねっぷちゃんに質問する"]',
+      );
+
+    const findTeaserCloseButton = () =>
+      document.body.querySelector<HTMLButtonElement>(
+        'button[aria-label="案内を閉じる"]',
+      );
+
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+      localStorage.clear();
+    });
+
+    it("遅延前は吹き出しが存在しない", () => {
+      mount();
+      expect(findTeaser()).toBeNull();
+    });
+
+    it("2500ms 後に挨拶テキストを含む吹き出しが表示される", async () => {
+      mount();
+      vi.advanceTimersByTime(TEASER_DELAY_MS);
+      await nextFrame();
+
+      const teaser = findTeaser();
+      expect(teaser?.textContent).toContain(teaserText);
+    });
+
+    it("× クリックで吹き出しが消え、パネルは開かず、localStorage に記録される", async () => {
+      mount();
+      vi.advanceTimersByTime(TEASER_DELAY_MS);
+      await nextFrame();
+
+      findTeaserCloseButton()?.click();
+
+      expect(findTeaser()).toBeNull();
+      expect(findPanelButton()?.getAttribute("aria-expanded")).toBe("false");
+      expect(localStorage.getItem(TEASER_DISMISSED_KEY)).not.toBeNull();
+    });
+
+    it("吹き出し本体クリックでパネルが開き、吹き出しが消える", async () => {
+      mount();
+      vi.advanceTimersByTime(TEASER_DELAY_MS);
+      await nextFrame();
+
+      findTeaser()?.click();
+
+      expect(findPanelButton()?.getAttribute("aria-expanded")).toBe("true");
+      expect(findTeaser()).toBeNull();
+    });
+
+    it("表示前にフローティングボタンでパネルを開くと以後表示されない", () => {
+      mount();
+      findPanelButton()?.click();
+      vi.advanceTimersByTime(TEASER_DELAY_MS);
+
+      expect(findTeaser()).toBeNull();
+    });
+
+    it("表示後にフローティングボタンでパネルを開くと吹き出しが消える", async () => {
+      mount();
+      vi.advanceTimersByTime(TEASER_DELAY_MS);
+      await nextFrame();
+      expect(findTeaser()).not.toBeNull();
+
+      findPanelButton()?.click();
+
+      expect(findTeaser()).toBeNull();
+    });
+
+    it("dismissed 記録が 7 日以内なら表示されない", () => {
+      localStorage.setItem(
+        TEASER_DISMISSED_KEY,
+        String(Date.now() - (TEASER_REVIVE_MS - 1000)),
+      );
+      mount();
+      vi.advanceTimersByTime(TEASER_DELAY_MS);
+
+      expect(findTeaser()).toBeNull();
+    });
+
+    it("dismissed 記録が数値でなければ表示される", async () => {
+      localStorage.setItem(TEASER_DISMISSED_KEY, "invalid");
+      mount();
+      vi.advanceTimersByTime(TEASER_DELAY_MS);
+      await nextFrame();
+
+      expect(findTeaser()).not.toBeNull();
+    });
+
+    it("dismissed 記録が 7 日を超えていれば表示される", async () => {
+      localStorage.setItem(
+        TEASER_DISMISSED_KEY,
+        String(Date.now() - (TEASER_REVIVE_MS + 1000)),
+      );
+      mount();
+      vi.advanceTimersByTime(TEASER_DELAY_MS);
+      await nextFrame();
+
+      expect(findTeaser()).not.toBeNull();
+    });
+
+    it("localStorage が throw しても mountWidget は例外を投げない", () => {
+      const getSpy = vi
+        .spyOn(Storage.prototype, "getItem")
+        .mockImplementation(() => {
+          throw new Error("blocked");
+        });
+      const setSpy = vi
+        .spyOn(Storage.prototype, "setItem")
+        .mockImplementation(() => {
+          throw new Error("blocked");
+        });
+
+      expect(() => mount()).not.toThrow();
+      expect(() => vi.advanceTimersByTime(TEASER_DELAY_MS)).not.toThrow();
+      expect(() => findTeaserCloseButton()?.click()).not.toThrow();
+
+      getSpy.mockRestore();
+      setSpy.mockRestore();
     });
   });
 });

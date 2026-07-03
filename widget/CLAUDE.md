@@ -8,6 +8,7 @@
 - チャット本体は iframe 内ページの `WidgetChat`（フローティングウィジェット専用 UI。LP のティーザー `MiniChat` とは別コンポーネント）。`/simple-chat`（認証なし、直近最大 10 件の bounded history を送信、サーバー側の永続化なし）に接続する。
 - iframe は lp と同一 origin（`nepp-chan.ai/widget/`）配信。fetch の Origin は配信元になるため、ローダーを貼る host サイトのオリジンは API の CORS 許可リストに無関係。
 - iframe → loader の「閉じる」連携は `postMessage`。loader 側で `event.origin`（iframeSrc のオリジン）と `event.source`（iframe の contentWindow）を検証してから閉じる。
+- ボタン設置 2500ms 後、`INITIAL_MESSAGE` の挨拶文を吹き出しティーザーとして表示する。localStorage（`nepp-chan-widget:teaser-dismissed-at`）に閉じた時刻を記録し、7 日以内は再表示しない。
 
 ## host への導入
 
