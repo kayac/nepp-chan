@@ -133,5 +133,5 @@ eval 実行後は `dataset/eval/eval-test-history.md` に結果を追記する�
 4. np:frontmatter review   ← 要レビューを人間確認
 5. np:frontmatter apply    ← 結果を frontmatter に書き込み
 6. np:uploadKnowledge      ← R2/Vectorize にアップロード
-7. np:eval                 ← 品質テスト → .brain/eval-reports/ に記録
+7. np:eval                 ← 品質テスト → dataset/eval/eval-test-history.md に追記
 ```

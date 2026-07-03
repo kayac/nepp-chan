@@ -4,7 +4,7 @@ argument-hint: [version]
 ---
 
 Use Skill tool to reference `np-knowledge` for the full knowledge management pipeline.
-For detailed sync workflow, rsync options, and itemize format, see @references/SYNC.md in the np-knowledge skill.
+For detailed sync workflow, rsync options, and itemize format, read `.claude/skills/np-knowledge/references/SYNC.md`.
 
 ## Quick Reference
 
