@@ -1,7 +1,14 @@
 #!/bin/zsh
-# stop-check.sh - Stop hook: warnings only (lint/format is handled per-edit by PostToolUse)
+# stop-check.sh - Stop hook: テスト不足・Plan 未完了を検出し、diff 状態ごとに1回だけ停止をブロックして指摘する
+# 同一の diff 状態への再指摘はスタンプファイルで抑制する（対応不要と判断した場合は再停止でそのまま通る）
 
 set -euo pipefail
+
+input=$(cat)
+
+# stop hook による継続中の再発火では何もしない（無限ループ防止）
+stop_hook_active=$(echo "$input" | python3 -c "import sys,json; print(json.load(sys.stdin).get('stop_hook_active', False))" 2>/dev/null || echo "False")
+[[ "$stop_hook_active" == "True" ]] && exit 0
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$PROJECT_ROOT"
@@ -16,6 +23,8 @@ fi
 
 changed_files=$(git diff --name-only HEAD -- 2>/dev/null || true)
 
+warnings=""
+
 # ─── Test File Reminder ──────────────────────────────────────
 missing_tests=()
 while IFS= read -r file; do
@@ -23,7 +32,7 @@ while IFS= read -r file; do
   case "$file" in
     *.test.ts|*.test.tsx|*.spec.ts|*.spec.tsx) continue ;;
     *.d.ts) continue ;;
-    */__tests__/*|*/test/*) continue ;;
+    */__tests__/*|*/__mocks__/*|*/test/*) continue ;;
   esac
   case "$file" in
     server/src/*.ts|web/src/*.ts|web/src/*.tsx)
@@ -34,11 +43,11 @@ while IFS= read -r file; do
 done <<< "$changed_files"
 
 if [[ ${#missing_tests[@]} -gt 0 ]]; then
-  echo "" >&2
-  echo "⚠ TEST REMINDER: The following changed files have no co-located test:" >&2
+  warnings+="TEST REMINDER: 以下の変更ファイルに co-located テストがありません:"$'\n'
   for f in "${missing_tests[@]}"; do
-    echo "  - $f" >&2
+    warnings+="  - $f"$'\n'
   done
+  warnings+="テストを追加するか、不要な理由（型定義のみ・coverage exclude 対象等）をユーザーに報告してください。"$'\n'
 fi
 
 # ─── Plan Compliance ─────────────────────────────────────────
@@ -52,13 +61,16 @@ if [[ -n "$current_branch" && -d ".brain/plans" ]]; then
     done_reqs=$(grep -cE '^\s*-\s*\[x\]' "$plan_file" 2>/dev/null || echo "0")
 
     if [[ "$total_reqs" -gt 0 && "$done_reqs" -lt "$total_reqs" ]]; then
-      echo "" >&2
-      echo "📋 PLAN: $plan_file ($done_reqs/$total_reqs completed)" >&2
-      grep -E '^\s*-\s*\[ \]' "$plan_file" 2>/dev/null | head -5 | while IFS= read -r line; do
-        echo "  $line" >&2
-      done
+      warnings+="PLAN: $plan_file ($done_reqs/$total_reqs completed) 未完了項目:"$'\n'
+      warnings+="$(grep -E '^\s*-\s*\[ \]' "$plan_file" 2>/dev/null | head -5)"$'\n'
+      warnings+="進捗があればチェックを更新し、残項目は継続するかユーザーに報告してください。"$'\n'
     fi
   fi
 fi
 
 echo "$current_hash" > "$STAMP_FILE"
+
+if [[ -n "$warnings" ]]; then
+  printf '%s' "$warnings" >&2
+  exit 2
+fi
