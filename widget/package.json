@@ -1,0 +1,38 @@
+{
+  "name": "@nepp-chan/widget",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config vite.iframe.config.ts",
+    "build": "pnpm build:iframe && pnpm build:loader",
+    "build:iframe": "vite build --config vite.iframe.config.ts",
+    "build:loader": "vite build --config vite.loader.config.ts",
+    "check": "tsc --noEmit",
+    "test": "vitest",
+    "test:cov": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@ai-sdk/react": "^3.0.210",
+    "@nepp-chan/shared": "workspace:*",
+    "ai": "^6.0.208",
+    "lucide-react": "^1.21.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.1",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.2.0",
+    "@vitest/coverage-istanbul": "~4.1.9",
+    "jsdom": "^29.1.1",
+    "msw": "^2.14.6",
+    "tailwindcss": "^4.3.1",
+    "typescript": "~6.0.3",
+    "vite": "^7.3.5",
+    "vitest": "~4.1.9"
+  }
+}

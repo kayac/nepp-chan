@@ -20,6 +20,7 @@
       "!**/*.astro",
       "!**/*.d.ts",
       "!**/server/public",
+      "!**/lp/public/widget",
       "!design-reference"
     ]
   },

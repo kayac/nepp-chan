@@ -3,13 +3,15 @@ import { ChatMarkdown } from "@nepp-chan/shared/components/ChatMarkdown";
 import {
   INITIAL_MESSAGE,
   SAMPLE_QUESTIONS,
+  SIMPLE_CHAT_MAX_MESSAGES,
 } from "@nepp-chan/shared/constants/simple-chat";
 import { useChatAutoScroll } from "@nepp-chan/shared/hooks/useChatAutoScroll";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { messageText } from "@nepp-chan/shared/lib/message-text";
 import { createSimpleChatTransport } from "@nepp-chan/shared/lib/simple-chat-transport";
-import { ArrowRightIcon, EllipsisIcon, SendIcon } from "lucide-react";
-import { type SubmitEvent, useMemo, useRef, useState } from "react";
+import { SendIcon, XIcon } from "lucide-react";
+import { type SubmitEvent, useEffect, useMemo, useRef, useState } from "react";
+import { CLOSE_MESSAGE_TYPE } from "./messages";
 
 type Props = {
   apiUrl: string;
@@ -17,7 +19,11 @@ type Props = {
   iconSrc?: string;
 };
 
-export const MiniChat = ({
+const closeWidget = () => {
+  window.parent.postMessage({ type: CLOSE_MESSAGE_TYPE }, "*");
+};
+
+export const WidgetChat = ({
   apiUrl,
   webUrl,
   iconSrc = "/mascot/icon.png",
@@ -27,7 +33,11 @@ export const MiniChat = ({
   const streamRef = useRef<HTMLDivElement | null>(null);
 
   const transport = useMemo(
-    () => createSimpleChatTransport({ apiUrl, historyLimit: 1 }),
+    () =>
+      createSimpleChatTransport({
+        apiUrl,
+        historyLimit: SIMPLE_CHAT_MAX_MESSAGES,
+      }),
     [apiUrl],
   );
 
@@ -38,10 +48,16 @@ export const MiniChat = ({
   });
 
   const isBusy = status === "submitted" || status === "streaming";
-  const hasCompletedExchange =
-    status === "ready" && messages.some((m) => m.role === "user");
 
   useChatAutoScroll(streamRef);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !e.isComposing) closeWidget();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const ask = (q: string) => {
     const trimmed = q.trim();
@@ -57,8 +73,8 @@ export const MiniChat = ({
   };
 
   return (
-    <div className="flex flex-col rounded-[28px] border border-(--paper-200) bg-white p-5 shadow-(--shadow-float-md)">
-      <div className="flex items-center gap-3 border-b border-(--paper-200) pb-3">
+    <div className="flex h-dvh flex-col overflow-hidden rounded-[20px] bg-white">
+      <div className="flex items-center gap-3 border-b border-(--paper-200) px-4 py-3">
         <span className="grid size-9 place-items-center overflow-hidden rounded-full bg-(--teal-50)">
           <img src={iconSrc} alt="" className="size-[34px] object-contain" />
         </span>
@@ -71,15 +87,19 @@ export const MiniChat = ({
             オンライン
           </span>
         </div>
-        <EllipsisIcon
-          className="ml-auto size-3.5 text-(--fg-4)"
-          aria-hidden="true"
-        />
+        <button
+          type="button"
+          onClick={closeWidget}
+          aria-label="チャットを閉じる"
+          className="ml-auto grid size-8 place-items-center rounded-full text-(--fg-3) transition-colors hover:bg-(--paper-100) hover:text-(--fg-1)"
+        >
+          <XIcon className="size-[18px]" aria-hidden="true" />
+        </button>
       </div>
 
       <div
         ref={streamRef}
-        className="flex max-h-[280px] flex-col gap-2 overflow-y-auto py-4"
+        className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4"
       >
         {messages.map((m) => {
           const text = messageText(m);
@@ -88,7 +108,7 @@ export const MiniChat = ({
             <div
               key={m.id}
               className={cn(
-                "w-fit max-w-[78%] break-words rounded-(--r-bubble) px-[18px] py-3 text-sm leading-[1.7]",
+                "w-fit max-w-[85%] break-words rounded-(--r-bubble) px-[18px] py-3 text-sm leading-[1.7]",
                 "animate-[lp-bubble-in_400ms_cubic-bezier(0.22,1,0.36,1)] shadow-(--shadow-float-sm)",
                 m.role === "user"
                   ? "self-end bg-(--brand-hover) text-white"
@@ -102,8 +122,8 @@ export const MiniChat = ({
             </div>
           );
         })}
-        {isBusy && (
-          <div className="flex w-fit max-w-[78%] items-center gap-2 self-start rounded-(--r-bubble) bg-(--paper-50) px-[18px] py-3">
+        {status === "submitted" && (
+          <div className="flex w-fit max-w-[85%] items-center gap-2 self-start rounded-(--r-bubble) bg-(--paper-50) px-[18px] py-3">
             <span className="size-2 rounded-full bg-orange-500 animate-pulse" />
             <span className="text-xs font-medium text-(--fg-2)">
               ちょっと待ってね…
@@ -111,14 +131,14 @@ export const MiniChat = ({
           </div>
         )}
         {error && (
-          <div className="w-fit max-w-[78%] self-start rounded-(--r-bubble) bg-red-50 px-[18px] py-3 text-sm text-red-700">
+          <div className="w-fit max-w-[85%] self-start rounded-(--r-bubble) bg-red-50 px-[18px] py-3 text-sm text-red-700">
             通信エラーが発生したよ。もう一度試してみてね。
           </div>
         )}
       </div>
 
       {showSuggestions && (
-        <div className="mt-1 flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5 px-4 pb-2">
           {SAMPLE_QUESTIONS.map((q) => (
             <button
               key={q}
@@ -138,51 +158,44 @@ export const MiniChat = ({
         </div>
       )}
 
-      {hasCompletedExchange ? (
+      <form
+        onSubmit={handleSubmit}
+        className={cn(
+          "mx-4 flex items-center gap-2 rounded-(--r-pill)",
+          "border border-(--paper-200) bg-(--paper-50) px-3 py-2",
+          "transition-shadow duration-200 focus-within:border-(--teal-400) focus-within:shadow-(--ring-brand)",
+        )}
+      >
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="ねっぷちゃんに話しかける…"
+          className="flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-(--fg-4)"
+        />
+        <button
+          type="submit"
+          disabled={isBusy || !input.trim()}
+          aria-label="送信"
+          className={cn(
+            "grid size-8 place-items-center rounded-full bg-(--teal-700) text-white",
+            "transition-colors hover:bg-(--teal-800)",
+            "disabled:cursor-not-allowed disabled:opacity-55",
+          )}
+        >
+          <SendIcon className="size-[18px]" aria-hidden="true" />
+        </button>
+      </form>
+
+      <div className="px-4 pb-3 pt-2 text-center">
         <a
           href={webUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className={cn(
-            "mt-3 flex items-center justify-center gap-2 rounded-(--r-pill)",
-            "bg-(--brand) px-4 py-3 text-sm font-bold text-white shadow-(--shadow-brand)",
-            "transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
-            "hover:-translate-y-0.5 hover:bg-(--brand-hover)",
-          )}
+          className="text-[11px] text-(--fg-4) underline underline-offset-2 hover:text-(--fg-3)"
         >
-          続きはチャットでお話しよう
-          <ArrowRightIcon className="size-4" aria-hidden="true" />
+          つづきは Web チャットで
         </a>
-      ) : (
-        <form
-          onSubmit={handleSubmit}
-          className={cn(
-            "mt-3 flex items-center gap-2 rounded-(--r-pill)",
-            "border border-(--paper-200) bg-(--paper-50) px-3 py-2",
-            "transition-shadow duration-200 focus-within:border-(--teal-400) focus-within:shadow-(--ring-brand)",
-          )}
-        >
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="ねっぷちゃんに話しかける…"
-            disabled={isBusy}
-            className="flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-(--fg-4)"
-          />
-          <button
-            type="submit"
-            disabled={isBusy || !input.trim()}
-            aria-label="送信"
-            className={cn(
-              "grid size-8 place-items-center rounded-full bg-(--teal-700) text-white",
-              "transition-colors hover:bg-(--teal-800)",
-              "disabled:cursor-not-allowed disabled:opacity-55",
-            )}
-          >
-            <SendIcon className="size-[18px]" aria-hidden="true" />
-          </button>
-        </form>
-      )}
+      </div>
     </div>
   );
 };

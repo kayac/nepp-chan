@@ -33,6 +33,7 @@ pnpm knowledge:upload:prd    # prd 環境
 server/              → API（詳細: server/CLAUDE.md）
 web/                 → アプリ（チャット・ダッシュボード等）（詳細: web/CLAUDE.md）
 lp/                  → LP（apex 配信の静的サイト）
+widget/              → 外部サイト埋め込みチャットウィジェット（詳細: widget/CLAUDE.md）
 knowledge/           → RAG 用 Markdown ファイル
 ```
 

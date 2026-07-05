@@ -91,3 +91,5 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           PUBLIC_API_URL: https://dev-api.nepp-chan.ai
           PUBLIC_WEB_URL: https://dev-web.nepp-chan.ai
+          VITE_API_URL: https://dev-api.nepp-chan.ai
+          VITE_WEB_URL: https://dev-web.nepp-chan.ai
