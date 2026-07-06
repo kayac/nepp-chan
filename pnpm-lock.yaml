@@ -115,8 +115,8 @@ importers:
         specifier: 1.4.0
         version: 1.4.0(@mastra/core@1.45.0(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
       '@mastra/libsql':
-        specifier: 1.14.0
-        version: 1.14.0(@mastra/core@1.45.0(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
+        specifier: 1.15.0
+        version: 1.15.0(@mastra/core@1.45.0(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
       '@mastra/loggers':
         specifier: 1.2.0
         version: 1.2.0(@mastra/core@1.45.0(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
@@ -2017,11 +2017,11 @@ packages:
     peerDependencies:
       '@mastra/core': '>=1.0.0-0 <2.0.0-0'
 
-  '@mastra/libsql@1.14.0':
-    resolution: {integrity: sha512-CnfnVY6EyTfZpFJIFhDXmVrnsJ4MSm81j2+t+xWTt8aJMawwots8sMCoxuNtd67C8lr/N9LX5QliKpIN9JPlDA==}
+  '@mastra/libsql@1.15.0':
+    resolution: {integrity: sha512-VlJtvv3X2wUEi3mqVXCMdbbIEisRgNYIOe7jVqFhFlptV7gTXke97QfY+U3Jbx3pprwUkJoYpBIikLV2M9lWuA==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
-      '@mastra/core': '>=1.42.1-0 <2.0.0-0'
+      '@mastra/core': '>=1.49.0-0 <2.0.0-0'
 
   '@mastra/loggers@1.2.0':
     resolution: {integrity: sha512-1RJO8XsMgVsTC+NviJ0jGMK01Y5zCqSzFNnOH9D1swOUfX8DMviyAJzxJUmkWbhSrDxmeo/KKmFzRK8zzk4XYA==}
@@ -7623,7 +7623,7 @@ snapshots:
       sentiment: 5.0.2
       string-similarity: 4.0.4
 
-  '@mastra/libsql@1.14.0(@mastra/core@1.45.0(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))':
+  '@mastra/libsql@1.15.0(@mastra/core@1.45.0(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))':
     dependencies:
       '@libsql/client': 0.17.4
       '@mastra/core': 1.45.0(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
