@@ -136,8 +136,8 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@sentry/cloudflare':
-        specifier: ^10.59.0
-        version: 10.59.0(@cloudflare/workers-types@4.20260621.1)
+        specifier: ^10.63.0
+        version: 10.63.0(@cloudflare/workers-types@4.20260621.1)
       ai:
         specifier: ^6.0.208
         version: 6.0.208(zod@4.4.3)
@@ -2463,8 +2463,8 @@ packages:
     engines: {node: '>= 10'}
     hasBin: true
 
-  '@sentry/cloudflare@10.59.0':
-    resolution: {integrity: sha512-461Vl/CZ8r/ZtX8UlfX+VzjMNJ9NdcD0FHL+INCjGmA4bz1UfJ2+hUyIL11DpimfZlguOtMsw3p23Sk9DAIi5g==}
+  '@sentry/cloudflare@10.63.0':
+    resolution: {integrity: sha512-no7bfrBqO3Niy+3vEqktYrNoTtBJtlJxpnTutmpSz55x+ytpNj+1YUUUbJRFctttDuPe38/+c6m1FwXGQg074A==}
     engines: {node: '>=18'}
     peerDependencies:
       '@cloudflare/workers-types': ^4.x
@@ -2474,6 +2474,10 @@ packages:
 
   '@sentry/core@10.59.0':
     resolution: {integrity: sha512-QeG7XZL5j6CkToYCE7OwCerb/r742Tjj9p1BBohBKcypYTPRuqfD+A3FeUj7pk5CGO6Vj1/gOAmdbuuNbR51dQ==}
+    engines: {node: '>=18'}
+
+  '@sentry/core@10.63.0':
+    resolution: {integrity: sha512-OtUbsrnbEHffOF2S2+M5zXa3HIM0U2b4CDVLKMY1dgS0J3ivRF8XvkjvyIcEG/y8JXnwXbnprLyjhG+AqMdUZQ==}
     engines: {node: '>=18'}
 
   '@sentry/feedback@10.59.0':
@@ -8049,14 +8053,16 @@ snapshots:
       - encoding
       - supports-color
 
-  '@sentry/cloudflare@10.59.0(@cloudflare/workers-types@4.20260621.1)':
+  '@sentry/cloudflare@10.63.0(@cloudflare/workers-types@4.20260621.1)':
     dependencies:
       '@opentelemetry/api': 1.9.1
-      '@sentry/core': 10.59.0
+      '@sentry/core': 10.63.0
     optionalDependencies:
       '@cloudflare/workers-types': 4.20260621.1
 
   '@sentry/core@10.59.0': {}
+
+  '@sentry/core@10.63.0': {}
 
   '@sentry/feedback@10.59.0':
     dependencies:
