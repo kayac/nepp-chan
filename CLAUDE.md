@@ -136,7 +136,7 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 | Hook | タイミング | 内容 |
 |------|-----------|------|
 | `post-edit-lint.sh` | PostToolUse（Edit / Write） | 変更ファイルに `biome check --write` を即時実行 |
-| `stop-check.sh` | Stop（毎ターン） | テスト不足・Plan 未完了を検出し、diff 状態ごとに1回だけ停止をブロックして指摘 |
+| `stop-check.sh` | Stop（毎ターン） | 変更ファイルの co-located テスト不足を検出し、diff 状態ごとに1回だけ停止をブロックして指摘 |
 
 ### 便利スキル
 
