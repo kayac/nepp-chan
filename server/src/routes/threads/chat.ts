@@ -76,6 +76,9 @@ chatRoutes.openapi(chatRoute, async (c) => {
   const isAdmin = principal.type === "admin";
   const adminUser = isAdmin ? principal.user : undefined;
   const enableAdminAgents = isAdmin && adminUser?.role !== "staff";
+  // widget 由来の resourceId は widget- prefix を持つ（server/src/lib/principal.ts の
+  // line:/admin: と同じ、resourceId prefix でチャネルを区別する規約）
+  const platform = thread.resourceId.startsWith("widget-") ? "widget" : "web";
 
   const storage = await getStorage(c.env.DB);
 
@@ -94,6 +97,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
   const neppChanAgent = createNeppChanAgent({
     isAdmin: enableAdminAgents,
     modelConfig,
+    platform,
   });
   const mastra = new Mastra({
     agents: { neppChanAgent },
@@ -122,7 +126,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
         recordLlmUsage(c.env.DB, {
           model: event.model?.modelId ?? primaryModelId(modelConfig),
           usage: event.totalUsage,
-          platform: "web",
+          platform,
           source: "chat",
           intent,
           threadId,
