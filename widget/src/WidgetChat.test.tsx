@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CLOSE_MESSAGE_TYPE } from "./messages";
 import {
   buildChatStreamResponse,
@@ -11,9 +11,40 @@ import { WidgetChat } from "./WidgetChat";
 
 const API_URL = "http://localhost:8787";
 const WEB_URL = "http://localhost:5173";
+const THREAD_ID = "thread-1";
+const CHAT_URL = `${API_URL}/threads/${THREAD_ID}/chat`;
+
+const threadResponse = {
+  id: THREAD_ID,
+  resourceId: "widget-abc",
+  title: null,
+  createdAt: "2026-01-01T00:00:00.000Z",
+  updatedAt: "2026-01-01T00:00:00.000Z",
+  metadata: null,
+};
 
 const renderWidgetChat = () =>
   render(<WidgetChat apiUrl={API_URL} webUrl={WEB_URL} />);
+
+const waitForReady = () =>
+  waitFor(() => {
+    expect(
+      screen
+        .getByRole("button", { name: "移住の補助金はある？" })
+        .hasAttribute("disabled"),
+    ).toBe(false);
+  });
+
+beforeEach(() => {
+  server.use(
+    http.post(`${API_URL}/auth/anonymous-session`, () =>
+      HttpResponse.json({ token: "test-token", resourceId: "widget-abc" }),
+    ),
+    http.post(`${API_URL}/threads`, () =>
+      HttpResponse.json(threadResponse, { status: 201 }),
+    ),
+  );
+});
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -25,13 +56,22 @@ describe("WidgetChat", () => {
     expect(screen.getByText(/こんにちは〜！ねっぷちゃんだよ/)).toBeTruthy();
   });
 
-  it("サンプル質問チップを送信すると非表示になる", async () => {
-    server.use(
-      http.post(`${API_URL}/simple-chat`, () =>
-        buildChatStreamResponse("答えだよ"),
-      ),
-    );
+  it("匿名セッション取得〜スレッド作成が終わるまでサンプル質問チップは disabled", async () => {
     renderWidgetChat();
+
+    expect(
+      screen
+        .getByRole("button", { name: "移住の補助金はある？" })
+        .hasAttribute("disabled"),
+    ).toBe(true);
+
+    await waitForReady();
+  });
+
+  it("サンプル質問チップを送信すると非表示になる", async () => {
+    server.use(http.post(CHAT_URL, () => buildChatStreamResponse("答えだよ")));
+    renderWidgetChat();
+    await waitForReady();
 
     const chip = screen.getByRole("button", { name: "移住の補助金はある？" });
     fireEvent.click(chip);
@@ -44,12 +84,9 @@ describe("WidgetChat", () => {
   });
 
   it("1 往復完了後も入力欄が残り続ける", async () => {
-    server.use(
-      http.post(`${API_URL}/simple-chat`, () =>
-        buildChatStreamResponse("答えだよ"),
-      ),
-    );
+    server.use(http.post(CHAT_URL, () => buildChatStreamResponse("答えだよ")));
     renderWidgetChat();
+    await waitForReady();
 
     fireEvent.click(
       screen.getByRole("button", { name: "移住の補助金はある？" }),
@@ -65,12 +102,9 @@ describe("WidgetChat", () => {
   });
 
   it("送信中も入力欄は disabled にせず入力し続けられる", async () => {
-    server.use(
-      http.post(`${API_URL}/simple-chat`, () =>
-        buildChatStreamResponse("答えだよ"),
-      ),
-    );
+    server.use(http.post(CHAT_URL, () => buildChatStreamResponse("答えだよ")));
     renderWidgetChat();
+    await waitForReady();
 
     const input = screen.getByPlaceholderText(
       "ねっぷちゃんに話しかける…",
@@ -95,12 +129,13 @@ describe("WidgetChat", () => {
     let requestCount = 0;
     const deferred = buildDeferredChatStreamResponse();
     server.use(
-      http.post(`${API_URL}/simple-chat`, () => {
+      http.post(CHAT_URL, () => {
         requestCount += 1;
         return deferred.response;
       }),
     );
     renderWidgetChat();
+    await waitForReady();
 
     const input = screen.getByPlaceholderText(
       "ねっぷちゃんに話しかける…",
@@ -131,8 +166,9 @@ describe("WidgetChat", () => {
 
   it("回答ストリーミングが始まったら待機インジケータを消す", async () => {
     const deferred = buildDeferredChatStreamResponse();
-    server.use(http.post(`${API_URL}/simple-chat`, () => deferred.response));
+    server.use(http.post(CHAT_URL, () => deferred.response));
     renderWidgetChat();
+    await waitForReady();
 
     fireEvent.click(
       screen.getByRole("button", { name: "移住の補助金はある？" }),
@@ -158,16 +194,30 @@ describe("WidgetChat", () => {
 
   it("通信エラー時はエラーバブルを表示する", async () => {
     server.use(
-      http.post(
-        `${API_URL}/simple-chat`,
-        () => new HttpResponse("boom", { status: 500 }),
-      ),
+      http.post(CHAT_URL, () => new HttpResponse("boom", { status: 500 })),
     );
     renderWidgetChat();
+    await waitForReady();
 
     fireEvent.click(
       screen.getByRole("button", { name: "音威子府駅ってどんなところ？" }),
     );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("通信エラーが発生したよ。もう一度試してみてね。"),
+      ).toBeTruthy();
+    });
+  });
+
+  it("匿名セッション取得に失敗したらエラーバブルを表示する", async () => {
+    server.use(
+      http.post(
+        `${API_URL}/auth/anonymous-session`,
+        () => new HttpResponse("boom", { status: 500 }),
+      ),
+    );
+    renderWidgetChat();
 
     await waitFor(() => {
       expect(
