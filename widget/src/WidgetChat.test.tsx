@@ -175,20 +175,56 @@ describe("WidgetChat", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("ちょっと待ってね…")).toBeTruthy();
+      expect(screen.getByRole("status", { name: "回答を生成中" })).toBeTruthy();
     });
 
     deferred.sendStart();
     deferred.sendTextStart();
 
     await waitFor(() => {
-      expect(screen.queryByText("ちょっと待ってね…")).toBeNull();
+      expect(screen.queryByRole("status", { name: "回答を生成中" })).toBeNull();
     });
 
     deferred.finish("答えだよ");
 
     await waitFor(() => {
       expect(screen.getByText("答えだよ")).toBeTruthy();
+    });
+  });
+
+  it("最初のリアクション文とツール実行後の本回答の間（テキストが途切れる間）も待機インジケータを再表示する", async () => {
+    const deferred = buildDeferredChatStreamResponse();
+    server.use(http.post(CHAT_URL, () => deferred.response));
+    renderWidgetChat();
+    await waitForReady();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "移住の補助金はある？" }),
+    );
+
+    deferred.sendStart();
+    deferred.sendTextStart();
+    await waitFor(() => {
+      expect(screen.queryByRole("status", { name: "回答を生成中" })).toBeNull();
+    });
+
+    // リアクション文が終わり、ツール呼び出しが始まった状態（テキストパートが無い）
+    deferred.sendTextEnd();
+    deferred.sendToolCallStart();
+    await waitFor(() => {
+      expect(screen.getByRole("status", { name: "回答を生成中" })).toBeTruthy();
+    });
+
+    // ツール実行後、本回答のテキストが始まったら再度消える
+    deferred.sendTextStart("1");
+    await waitFor(() => {
+      expect(screen.queryByRole("status", { name: "回答を生成中" })).toBeNull();
+    });
+
+    deferred.finish("本回答だよ", "1");
+
+    await waitFor(() => {
+      expect(screen.getByText("本回答だよ")).toBeTruthy();
     });
   });
 

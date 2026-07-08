@@ -24,6 +24,17 @@ const closeWidget = () => {
   window.parent.postMessage({ type: CLOSE_MESSAGE_TYPE }, "*");
 };
 
+const WaitingIndicator = ({ className }: { className?: string }) => (
+  <span
+    role="status"
+    aria-label="回答を生成中"
+    className={cn(
+      "inline-block size-2 rounded-full bg-orange-500 animate-pulse",
+      className,
+    )}
+  />
+);
+
 export const WidgetChat = ({
   apiUrl,
   webUrl,
@@ -77,6 +88,15 @@ export const WidgetChat = ({
   });
 
   const isBusy = status === "submitted" || status === "streaming";
+  // ツール呼び出し中はテキストパートが途切れるので、最後のパートが text 以外なら
+  // （ツール実行中のステップ境界等）待機インジケータを再表示する
+  const lastMessage = messages[messages.length - 1];
+  const lastPart = lastMessage?.parts[lastMessage.parts.length - 1];
+  const isWaitingForText =
+    status === "submitted" ||
+    (status === "streaming" &&
+      lastPart !== undefined &&
+      lastPart.type !== "text");
 
   useChatAutoScroll(streamRef);
 
@@ -130,9 +150,13 @@ export const WidgetChat = ({
         ref={streamRef}
         className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4"
       >
-        {messages.map((m) => {
+        {messages.map((m, index) => {
           const text = messageText(m);
-          if (!text) return null;
+          const showIndicatorHere =
+            index === messages.length - 1 &&
+            m.role === "assistant" &&
+            isWaitingForText;
+          if (!text && !showIndicatorHere) return null;
           return (
             <div
               key={m.id}
@@ -144,19 +168,22 @@ export const WidgetChat = ({
                   : "self-start bg-(--paper-50) text-(--fg-1)",
               )}
             >
-              <ChatMarkdown
-                text={text}
-                variant={m.role === "user" ? "user" : "assistant"}
-              />
+              {text && (
+                <ChatMarkdown
+                  text={text}
+                  variant={m.role === "user" ? "user" : "assistant"}
+                />
+              )}
+              {showIndicatorHere && (
+                <WaitingIndicator className="mt-1 first:mt-0" />
+              )}
             </div>
           );
         })}
-        {status === "submitted" && (
-          <div className="flex w-fit max-w-[85%] items-center gap-2 self-start rounded-(--r-bubble) bg-(--paper-50) px-[18px] py-3">
-            <span className="size-2 rounded-full bg-orange-500 animate-pulse" />
-            <span className="text-xs font-medium text-(--fg-2)">
-              ちょっと待ってね…
-            </span>
+        {/* 送信直後でまだアシスタントのメッセージが無い間は独立した吹き出しで出す */}
+        {isWaitingForText && messages.at(-1)?.role !== "assistant" && (
+          <div className="flex w-fit max-w-[85%] self-start rounded-(--r-bubble) bg-(--paper-50) px-[18px] py-3">
+            <WaitingIndicator />
           </div>
         )}
         {(error || bootstrapError) && (

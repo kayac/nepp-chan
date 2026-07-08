@@ -38,10 +38,18 @@ export const buildDeferredChatStreamResponse = () => {
       send({ type: "start" });
       send({ type: "start-step" });
     },
-    sendTextStart: () => send({ type: "text-start", id: "0" }),
-    finish: (text: string) => {
-      send({ type: "text-delta", id: "0", delta: text });
-      send({ type: "text-end", id: "0" });
+    sendTextStart: (id = "0") => send({ type: "text-start", id }),
+    sendTextEnd: (id = "0") => {
+      send({ type: "text-end", id });
+      send({ type: "finish-step" });
+    },
+    sendToolCallStart: (
+      toolCallId = "tool-1",
+      toolName = "agent-knowledgeAgent",
+    ) => send({ type: "tool-input-start", toolCallId, toolName }),
+    finish: (text: string, id = "0") => {
+      send({ type: "text-delta", id, delta: text });
+      send({ type: "text-end", id });
       send({ type: "finish-step" });
       send({ type: "finish" });
       controller?.enqueue(encoder.encode("data: [DONE]\n\n"));
