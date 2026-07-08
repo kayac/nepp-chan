@@ -14,35 +14,40 @@ export const useCallDevice = () => {
     deviceRef.current = null;
   }, []);
 
-  const startCall = useCallback(async () => {
-    setError(null);
-    setStatus("connecting");
-    destroyDevice();
-    try {
-      const { token } = await fetchCallToken();
-      const device = new Device(token, { logLevel: "error" });
-      // トークン期限切れ等は Call ではなく Device が 'error' を emit する。
-      device.on("error", (e: { message?: string }) => {
-        setError(e.message ?? "通話中にエラーが発生しました");
-        setStatus("error");
-      });
-      deviceRef.current = device;
+  const startCall = useCallback(
+    async (voicePreset?: string) => {
+      setError(null);
+      setStatus("connecting");
+      destroyDevice();
+      try {
+        const { token } = await fetchCallToken();
+        const device = new Device(token, { logLevel: "error" });
+        // トークン期限切れ等は Call ではなく Device が 'error' を emit する。
+        device.on("error", (e: { message?: string }) => {
+          setError(e.message ?? "通話中にエラーが発生しました");
+          setStatus("error");
+        });
+        deviceRef.current = device;
 
-      const call: Call = await device.connect();
-      call.on("accept", () => setStatus("connected"));
-      call.on("disconnect", () => {
-        setStatus("idle");
-        destroyDevice();
-      });
-      call.on("error", (e: { message?: string }) => {
-        setError(e.message ?? "通話中にエラーが発生しました");
+        const call: Call = await device.connect(
+          voicePreset ? { params: { voicePreset } } : {},
+        );
+        call.on("accept", () => setStatus("connected"));
+        call.on("disconnect", () => {
+          setStatus("idle");
+          destroyDevice();
+        });
+        call.on("error", (e: { message?: string }) => {
+          setError(e.message ?? "通話中にエラーが発生しました");
+          setStatus("error");
+        });
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "通話を開始できませんでした");
         setStatus("error");
-      });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "通話を開始できませんでした");
-      setStatus("error");
-    }
-  }, [destroyDevice]);
+      }
+    },
+    [destroyDevice],
+  );
 
   const endCall = useCallback(() => {
     deviceRef.current?.disconnectAll();

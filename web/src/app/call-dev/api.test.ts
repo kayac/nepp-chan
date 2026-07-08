@@ -1,7 +1,7 @@
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { server } from "~/test/msw-server";
-import { fetchCallToken } from "./api";
+import { fetchCallToken, fetchVoicePresets } from "./api";
 
 const API = "http://localhost:8787";
 
@@ -23,5 +23,28 @@ describe("fetchCallToken", () => {
       ),
     );
     await expect(fetchCallToken()).rejects.toThrow();
+  });
+});
+
+describe("fetchVoicePresets", () => {
+  it("プリセット一覧と既定 ID を返す", async () => {
+    const body = {
+      defaultId: "morioki",
+      presets: [{ id: "morioki", label: "Morioki" }],
+    };
+    server.use(
+      http.get(`${API}/twilio/voice/presets`, () => HttpResponse.json(body)),
+    );
+    const result = await fetchVoicePresets();
+    expect(result).toEqual(body);
+  });
+
+  it("非 200 なら throw する", async () => {
+    server.use(
+      http.get(`${API}/twilio/voice/presets`, () =>
+        HttpResponse.json({ error: "boom" }, { status: 500 }),
+      ),
+    );
+    await expect(fetchVoicePresets()).rejects.toThrow();
   });
 });

@@ -33,7 +33,7 @@ export default defineConfig({
         "src/app/chat/App.tsx",
         "src/app/dashboard/DashboardPage.tsx",
         // 通話 dev 検証ページ。@twilio/voice-sdk Device（WebRTC）と browser audio が
-        // 中心で E2E 領域。トークン取得（api.ts）は単体テスト済み、ページは presentational shell
+        // 中心で E2E 領域。API 取得（api.ts）は単体テスト済み、ページはその wiring と rendering のみ
         "src/app/call-dev/CallDevPage.tsx",
         "src/app/call-dev/useCallDevice.ts",
         // 完全に form の rendering のみ。ロジックは useLoginForm / useRegisterForm 側でテスト済み

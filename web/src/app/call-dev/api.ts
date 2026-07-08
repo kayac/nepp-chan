@@ -7,3 +7,11 @@ export const fetchCallToken = async () => {
   }
   return data;
 };
+
+export const fetchVoicePresets = async () => {
+  const { data, error } = await client.GET("/twilio/voice/presets");
+  if (error || !data) {
+    throw new Error("ボイスプリセットの取得に失敗しました");
+  }
+  return data;
+};
