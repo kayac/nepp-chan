@@ -1,5 +1,5 @@
 import { ChatMarkdown } from "@nepp-chan/shared/components/ChatMarkdown";
-import { INITIAL_MESSAGE } from "@nepp-chan/shared/constants/simple-chat";
+import { INITIAL_MESSAGE } from "@nepp-chan/shared/constants/chat-defaults";
 import { useChatAutoScroll } from "@nepp-chan/shared/hooks/useChatAutoScroll";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { messageText } from "@nepp-chan/shared/lib/message-text";

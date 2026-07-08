@@ -1,4 +1,4 @@
-import { INITIAL_MESSAGE } from "@nepp-chan/shared/constants/simple-chat";
+import { INITIAL_MESSAGE } from "@nepp-chan/shared/constants/chat-defaults";
 import { messageText } from "@nepp-chan/shared/lib/message-text";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
