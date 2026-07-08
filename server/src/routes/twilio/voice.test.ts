@@ -48,8 +48,8 @@ describe("POST /twilio/voice/incoming", () => {
     const xml = await res.text();
     expect(xml).toContain("<Connect><ConversationRelay");
     expect(xml).toContain('language="ja-JP"');
-    expect(xml).toContain('ttsProvider="Google"');
-    expect(xml).toContain('voice="ja-JP-Chirp3-HD-Leda"');
+    expect(xml).toContain('ttsProvider="ElevenLabs"');
+    expect(xml).toContain('voice="8EkOjt4xTPGMclNlh1pk-flash_v2_5"');
     expect(xml).toContain("もしもし、ねっぷちゃんだよ。");
     expect(xml).toContain('hints="音威子府,おといねっぷ"');
   });
@@ -80,6 +80,36 @@ describe("POST /twilio/voice/incoming", () => {
     expect(claims).not.toBeNull();
   });
 
+  it("voicePreset パラメータで TTS プリセットを切り替える", async () => {
+    const res = await buildApp().request(
+      "http://api.example.com/twilio/voice/incoming",
+      {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ voicePreset: "leda" }),
+      },
+      env,
+    );
+    const xml = await res.text();
+    expect(xml).toContain('ttsProvider="Google"');
+    expect(xml).toContain('voice="ja-JP-Chirp3-HD-Leda"');
+  });
+
+  it("未知の voicePreset は既定プリセットにフォールバックする", async () => {
+    const res = await buildApp().request(
+      "http://api.example.com/twilio/voice/incoming",
+      {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ voicePreset: "unknown-voice" }),
+      },
+      env,
+    );
+    const xml = await res.text();
+    expect(xml).toContain('ttsProvider="ElevenLabs"');
+    expect(xml).toContain('voice="8EkOjt4xTPGMclNlh1pk-flash_v2_5"');
+  });
+
   it("固定の STT/endpointing 設定を TwiML に出力する", async () => {
     const res = await buildApp().request(
       "http://api.example.com/twilio/voice/incoming",
@@ -91,5 +121,23 @@ describe("POST /twilio/voice/incoming", () => {
     expect(xml).toContain('speechModel="long"');
     expect(xml).toContain('speechTimeout="700"');
     expect(xml).not.toContain("partialPrompts");
+  });
+});
+
+describe("GET /twilio/voice/presets", () => {
+  it("プリセット一覧と既定 ID を返す", async () => {
+    const res = await buildApp().request(
+      "http://api.example.com/twilio/voice/presets",
+      { method: "GET" },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as {
+      defaultId: string;
+      presets: { id: string; label: string }[];
+    };
+    expect(json.defaultId).toBe("morioki");
+    expect(json.presets.map((p) => p.id)).toContain("leda");
+    expect(json.presets.every((p) => p.label.length > 0)).toBe(true);
   });
 });
