@@ -11,7 +11,7 @@ import { CLOSE_MESSAGE_TYPE } from "./messages";
 
 const WIDGET_FLAG = "__neppChatWidgetLoaded";
 const SCRIPT_SRC = "https://nepp-chan.ai/widget/widget.js";
-const IFRAME_SRC = "https://nepp-chan.ai/widget/";
+const IFRAME_SRC = "https://nepp-chan.ai/widget/index.html";
 const TEASER_DELAY_MS = 2500;
 const TEASER_REVIVE_MS = 7 * 24 * 60 * 60 * 1000;
 const TEASER_DISMISSED_KEY = "nepp-chan-widget:teaser-dismissed-at";
@@ -20,8 +20,10 @@ const nextFrame = () =>
   new Promise<number>((resolve) => requestAnimationFrame(resolve));
 
 describe("resolveIframeSrc", () => {
-  it("widget.js のディレクトリを iframe の src にする", () => {
-    expect(resolveIframeSrc(SCRIPT_SRC)).toBe("https://nepp-chan.ai/widget/");
+  it("widget.js と同じディレクトリの index.html を iframe の src にする", () => {
+    expect(resolveIframeSrc(SCRIPT_SRC)).toBe(
+      "https://nepp-chan.ai/widget/index.html",
+    );
   });
 });
 

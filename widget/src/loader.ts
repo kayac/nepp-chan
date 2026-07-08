@@ -11,7 +11,7 @@ const TEASER_DISMISSED_KEY = "nepp-chan-widget:teaser-dismissed-at";
 const TEASER_TEXT = messageText(INITIAL_MESSAGE);
 
 export const resolveIframeSrc = (scriptSrc: string) =>
-  new URL("./", scriptSrc).href;
+  new URL("index.html", scriptSrc).href;
 
 export const resolveIconSrc = (scriptSrc: string) =>
   new URL("../mascot/icon.png", scriptSrc).href;
