@@ -129,7 +129,6 @@ export type PollChoiceResult = PollResultsResponse["choiceResults"][number];
 
 // シンプルチャット（lp / ウィジェット用ストリーミング）
 export type SimpleChatRequest = PostBody<"/simple-chat">;
-export type SimpleChatMessage = SimpleChatRequest["message"];
 
 // 村の声グラフ
 export type OntologyData = GetOk<"/admin/analytics/ontology">;

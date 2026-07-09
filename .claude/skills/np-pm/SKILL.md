@@ -251,12 +251,29 @@ Script references (use `${CLAUDE_SKILL_DIR}/scripts/` prefix):
 - `${CLAUDE_SKILL_DIR}/scripts/pm-setup-labels.sh` - ラベル作成
 - `${CLAUDE_SKILL_DIR}/GRAPHQL.md` - GraphQL API リファレンス
 
-## Phase 3B/3C/4: Other Operations
+## Phase 3B: Projects 初期セットアップ
 
-For setup, analysis, or Kanban status operations, read the corresponding file:
-- **初期セットアップ**: `${CLAUDE_SKILL_DIR}/SETUP.md`
-- **Issue 分析**: `${CLAUDE_SKILL_DIR}/ANALYSIS.md`
-- **Kanban Status 更新**: `${CLAUDE_SKILL_DIR}/STATUS.md`
+1. `gh project list --owner <owner>` でプロジェクト有無を確認（なければ作成を提案）
+2. カスタムフィールド作成（Status / Priority / Estimate / Iteration）— GraphQL ミューテーションは `${CLAUDE_SKILL_DIR}/GRAPHQL.md` 参照
+3. 個人リポジトリの場合は `pm-setup-labels.sh` で type:* ラベルを作成
+4. デフォルト設定・レート制限・トラブルシューティングは `${CLAUDE_SKILL_DIR}/SETUP.md` 参照
+
+## Phase 3C: 既存 Issue 整理
+
+1. `gh issue list --state open --json number,title,labels,milestone` で棚卸し
+2. 分析観点:
+   - 4層構造（Epic/Feature/Story/Task）への分類漏れ・階層リンク欠落
+   - 3時間超と思われる Task の分割候補
+   - type / priority / Status フィールド未設定
+   - 長期停滞している Issue
+3. 改善提案を提示し、承認後に `pm-project-fields.sh --bulk` / `pm-link-hierarchy.sh` で一括適用
+
+## Phase 4: Kanban Status / Iteration 更新
+
+- Status 更新: `pm-project-fields.sh <issue_number> --status "In Progress"`（一括は `--bulk <json_file>`）
+- 親 Issue の Iteration を子へ継承: `pm-cascade-iteration.sh <parent_issue_number> [--recursive]`
+- 子 Issue を複数 Iteration に分散配置: `pm-distribute-iterations.sh <parent_issue_number>`
+- Issue State（Open/Closed）と Kanban Status を混同しない（`<role>` の CRITICAL DISTINCTION 参照）
 
 </workflow>
 

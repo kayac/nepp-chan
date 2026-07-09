@@ -20,6 +20,8 @@ esac
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$PROJECT_ROOT"
 
+[[ "$file_path" != "$PROJECT_ROOT"/* ]] && exit 0
+
 rel_path="${file_path#$PROJECT_ROOT/}"
 [[ ! -f "$rel_path" ]] && exit 0
 

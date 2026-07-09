@@ -1,13 +1,8 @@
+import { messageText } from "@nepp-chan/shared/lib/message-text";
 import type { UIMessage } from "ai";
 import { isToolOrDynamicToolUIPart } from "ai";
 
 import type { ConversationContext, ToolExecution } from "~/types";
-
-export const getMessageContent = (message: UIMessage) =>
-  message.parts
-    .filter((part) => part.type === "text")
-    .map((part) => part.text)
-    .join("");
 
 export const getToolNameFromPart = (part: {
   type: string;
@@ -33,14 +28,14 @@ export const extractConversationContext = (
     targetMessage: {
       id: targetMessage.id,
       role: targetMessage.role,
-      content: getMessageContent(targetMessage),
+      content: messageText(targetMessage),
     },
     previousMessages: previousMessage
       ? [
           {
             id: previousMessage.id,
             role: previousMessage.role,
-            content: getMessageContent(previousMessage),
+            content: messageText(previousMessage),
           },
         ]
       : [],

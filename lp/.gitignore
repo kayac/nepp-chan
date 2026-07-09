@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# widget ビルド生成物
+public/widget
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

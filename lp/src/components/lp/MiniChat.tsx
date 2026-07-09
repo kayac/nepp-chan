@@ -1,56 +1,34 @@
 import { useChat } from "@ai-sdk/react";
-import type { SimpleChatRequest } from "@nepp-chan/shared/api";
+import { ChatMarkdown } from "@nepp-chan/shared/components/ChatMarkdown";
+import {
+  INITIAL_MESSAGE,
+  SAMPLE_QUESTIONS,
+} from "@nepp-chan/shared/constants/simple-chat";
+import { useChatAutoScroll } from "@nepp-chan/shared/hooks/useChatAutoScroll";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
-import { DefaultChatTransport, type UIMessage } from "ai";
+import { messageText } from "@nepp-chan/shared/lib/message-text";
+import { createSimpleChatTransport } from "@nepp-chan/shared/lib/simple-chat-transport";
 import { ArrowRightIcon, EllipsisIcon, SendIcon } from "lucide-react";
-import { type SubmitEvent, useEffect, useMemo, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { API_URL, WEB_URL } from "~/constants/urls";
+import { type SubmitEvent, useMemo, useRef, useState } from "react";
 
-const SAMPLE_QUESTIONS: ReadonlyArray<string> = [
-  "移住の補助金はある？",
-  "音威子府駅ってどんなところ？",
-  "おすすめのお蕎麦屋さんは？",
-  "今日のゴミの日は？",
-];
-
-const INITIAL_MESSAGE: UIMessage = {
-  id: "initial-greeting",
-  role: "assistant",
-  parts: [
-    {
-      type: "text",
-      text: "こんにちは〜！ねっぷちゃんだよ 😊\n音威子府のことなら、なんでも聞いてみてね！",
-    },
-  ],
+type Props = {
+  apiUrl: string;
+  webUrl: string;
+  iconSrc?: string;
 };
 
-const messageText = (msg: UIMessage) =>
-  msg.parts
-    .filter((p) => p.type === "text")
-    .map((p) => p.text)
-    .join("");
-
-export const MiniChat = () => {
+export const MiniChat = ({
+  apiUrl,
+  webUrl,
+  iconSrc = "/mascot/icon.png",
+}: Props) => {
   const [input, setInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(true);
   const streamRef = useRef<HTMLDivElement | null>(null);
 
   const transport = useMemo(
-    () =>
-      new DefaultChatTransport({
-        api: `${API_URL}/simple-chat`,
-        prepareSendMessagesRequest({ messages: msgs }) {
-          const last = msgs[msgs.length - 1];
-          if (!last) throw new Error("送信するメッセージがありません");
-          const body: SimpleChatRequest = {
-            message: last as SimpleChatRequest["message"],
-          };
-          return { body };
-        },
-      }),
-    [],
+    () => createSimpleChatTransport({ apiUrl, historyLimit: 1 }),
+    [apiUrl],
   );
 
   const { messages, sendMessage, status, error } = useChat({
@@ -63,23 +41,7 @@ export const MiniChat = () => {
   const hasCompletedExchange =
     status === "ready" && messages.some((m) => m.role === "user");
 
-  useEffect(() => {
-    const el = streamRef.current;
-    if (!el) return;
-    const observer = new MutationObserver(() => {
-      const distanceFromBottom =
-        el.scrollHeight - el.scrollTop - el.clientHeight;
-      if (distanceFromBottom < 80) {
-        el.scrollTop = el.scrollHeight;
-      }
-    });
-    observer.observe(el, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-    return () => observer.disconnect();
-  }, []);
+  useChatAutoScroll(streamRef);
 
   const ask = (q: string) => {
     const trimmed = q.trim();
@@ -98,11 +60,7 @@ export const MiniChat = () => {
     <div className="flex flex-col rounded-[28px] border border-(--paper-200) bg-white p-5 shadow-(--shadow-float-md)">
       <div className="flex items-center gap-3 border-b border-(--paper-200) pb-3">
         <span className="grid size-9 place-items-center overflow-hidden rounded-full bg-(--teal-50)">
-          <img
-            src="/mascot/icon.png"
-            alt=""
-            className="size-[34px] object-contain"
-          />
+          <img src={iconSrc} alt="" className="size-[34px] object-contain" />
         </span>
         <div className="flex flex-col">
           <span className="font-(family-name:--font-display) text-sm font-bold text-(--snow-800)">
@@ -137,66 +95,10 @@ export const MiniChat = () => {
                   : "self-start bg-(--paper-50) text-(--fg-1)",
               )}
             >
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  p: ({ children }) => (
-                    <p className="my-1 first:mt-0 last:mb-0">{children}</p>
-                  ),
-                  ul: ({ children }) => (
-                    <ul className="my-1 list-disc pl-5 first:mt-0 last:mb-0">
-                      {children}
-                    </ul>
-                  ),
-                  ol: ({ children }) => (
-                    <ol className="my-1 list-decimal pl-5 first:mt-0 last:mb-0">
-                      {children}
-                    </ol>
-                  ),
-                  li: ({ children }) => <li className="my-0.5">{children}</li>,
-                  a: ({ href, children }) => (
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn(
-                        "underline underline-offset-2",
-                        m.role === "user"
-                          ? "text-white/90 hover:text-white"
-                          : "text-(--brand) hover:text-(--brand-hover)",
-                      )}
-                    >
-                      {children}
-                    </a>
-                  ),
-                  code: ({ children }) => (
-                    <code
-                      className={cn(
-                        "rounded px-1 py-0.5 font-mono text-[0.85em]",
-                        m.role === "user"
-                          ? "bg-white/15"
-                          : "bg-(--paper-200) text-(--fg-1)",
-                      )}
-                    >
-                      {children}
-                    </code>
-                  ),
-                  pre: ({ children }) => (
-                    <pre
-                      className={cn(
-                        "my-1 overflow-x-auto rounded p-2 text-[0.8em] first:mt-0 last:mb-0",
-                        m.role === "user"
-                          ? "bg-white/10"
-                          : "bg-(--paper-200) text-(--fg-1)",
-                      )}
-                    >
-                      {children}
-                    </pre>
-                  ),
-                }}
-              >
-                {text}
-              </ReactMarkdown>
+              <ChatMarkdown
+                text={text}
+                variant={m.role === "user" ? "user" : "assistant"}
+              />
             </div>
           );
         })}
@@ -238,7 +140,9 @@ export const MiniChat = () => {
 
       {hasCompletedExchange ? (
         <a
-          href={WEB_URL}
+          href={webUrl}
+          target="_blank"
+          rel="noopener noreferrer"
           className={cn(
             "mt-3 flex items-center justify-center gap-2 rounded-(--r-pill)",
             "bg-(--brand) px-4 py-3 text-sm font-bold text-white shadow-(--shadow-brand)",

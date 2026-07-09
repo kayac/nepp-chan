@@ -1,3 +1,8 @@
+---
+name: np-chunk-context-check
+description: "stripHeaders 文脈欠落チェックの検知ロジック・重症度判定・出力フォーマットのリファレンス。エントリポイントは /np:chunk-context-check コマンド。"
+---
+
 # np:chunk-context-check - stripHeaders 文脈欠落チェック
 
 ## 概要

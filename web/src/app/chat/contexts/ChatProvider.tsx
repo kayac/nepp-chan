@@ -1,11 +1,11 @@
 import { useChat } from "@ai-sdk/react";
+import { messageText } from "@nepp-chan/shared/lib/message-text";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { type ReactNode, useEffect, useMemo, useRef } from "react";
 
 import { API_BASE } from "~/lib/api/client";
 import { getBearerToken } from "~/lib/auth-token";
 
-import { getMessageContent } from "../feedback-helpers";
 import { buildGreetingPrompt, isGreetingPrompt } from "../greeting-prompt";
 import { ChatContext, type ChatContextValue } from "./ChatContext";
 
@@ -39,7 +39,7 @@ export const ChatProvider = ({
         },
         prepareSendMessagesRequest({ messages }) {
           const lastMessage = messages[messages.length - 1];
-          const lastText = lastMessage ? getMessageContent(lastMessage) : "";
+          const lastText = lastMessage ? messageText(lastMessage) : "";
           const intent = isGreetingPrompt(lastText) ? "casual" : undefined;
           return {
             body: {

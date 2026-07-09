@@ -7,7 +7,7 @@ type ChatStreamParams = HandleChatStreamArgs["params"];
 type RespondWithChatStreamArgs = {
   mastra: HandleChatStreamArgs["mastra"];
   agentId: string;
-  message: unknown;
+  messages: unknown[];
   requestContext: ChatStreamParams["requestContext"];
   memory?: ChatStreamParams["memory"];
   onFinish?: ChatStreamParams["onFinish"];
@@ -24,7 +24,7 @@ type RespondWithChatStreamArgs = {
 export const respondWithChatStream = async ({
   mastra,
   agentId,
-  message,
+  messages,
   requestContext,
   memory,
   onFinish,
@@ -34,7 +34,7 @@ export const respondWithChatStream = async ({
     agentId,
     version: "v6",
     params: {
-      messages: [message] as ChatStreamParams["messages"],
+      messages: messages as ChatStreamParams["messages"],
       requestContext,
       memory,
       onFinish,

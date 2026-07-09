@@ -60,6 +60,7 @@ To ensure no one is left behind — including those unfamiliar with digital tech
 | [server/](server/README.md) | Backend API (Cloudflare Workers)                  |
 | [web/](web/README.md)       | Chat web app (Cloudflare Pages)                   |
 | lp/                         | Landing page (Cloudflare Pages)                   |
+| [widget/](widget/CLAUDE.md) | Embeddable chat widget for external sites         |
 | shared/                     | Shared TypeScript package for web / lp / server   |
 | knowledge/                  | Knowledge files for RAG                           |
 | [identity/](identity/)      | Visual assets: character & logos ([CC BY 4.0](identity/README.md)) |
@@ -95,6 +96,9 @@ cp web/.env.example web/.env
 
 # lp
 cp lp/.env.example lp/.env
+
+# widget
+cp widget/.env.example widget/.env
 ```
 
 Set appropriate values in each `.env` file.

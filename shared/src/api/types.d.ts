@@ -133,7 +133,7 @@ export interface paths {
         put?: never;
         /**
          * シンプルなチャット (履歴保存なし)
-         * @description 履歴を保持しない 1 往復のシンプルなチャットエンドポイント。LP の MiniChat やウィジェット埋め込みなど、その場限りの応答用途を想定する。
+         * @description 履歴を保持しない、その場限りの応答用のチャットエンドポイント。LP のティーザーやウィジェット埋め込みを想定する。サーバー側での履歴保存は行わないため、文脈を維持したい場合はリクエストの `messages`（直近最大 10 件、最後は user）に含める。合計 8000 字を超える分は古い履歴から自動的に切り捨てられる（最後の user メッセージ単体が 8000 字を超える場合はエラー）。後方互換のため単発メッセージの `message` も受け付ける。
          */
         post: {
             parameters: {
@@ -145,18 +145,22 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        message: {
+                        message?: {
                             id: string;
                             /** @enum {string} */
-                            role: "user" | "assistant" | "system";
-                            parts: ({
-                                type: string;
-                            } & {
-                                [key: string]: unknown;
-                            })[];
+                            role: "user" | "assistant";
+                            parts: unknown[];
                             /** Format: date-time */
                             createdAt?: string | null;
                         };
+                        messages?: {
+                            id: string;
+                            /** @enum {string} */
+                            role: "user" | "assistant";
+                            parts: unknown[];
+                            /** Format: date-time */
+                            createdAt?: string | null;
+                        }[];
                     };
                 };
             };

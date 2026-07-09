@@ -10,8 +10,7 @@ description: |
 
   NOT for:
   - Creating new markdown files from scratch
-  - PDF-only verification (use pdf_ocr_yomitoku skill instead)
-allowed-tools: Read,Write,Edit,Glob,Grep,WebFetch,mcp__playwright-server__*,mcp__chrome-devtools__*
+  - PDF-only verification (PDF の扱いは references/pdf-handling.md を参照)
 ---
 
 # Markdown Web Sync & Verification

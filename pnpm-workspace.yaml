@@ -3,3 +3,4 @@ packages:
   - "web"
   - "lp"
   - "shared"
+  - "widget"

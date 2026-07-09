@@ -33,6 +33,7 @@ pnpm knowledge:upload:prd    # prd 環境
 server/              → API（詳細: server/CLAUDE.md）
 web/                 → アプリ（チャット・ダッシュボード等）（詳細: web/CLAUDE.md）
 lp/                  → LP（apex 配信の静的サイト）
+widget/              → 外部サイト埋め込みチャットウィジェット（詳細: widget/CLAUDE.md）
 knowledge/           → RAG 用 Markdown ファイル
 ```
 
@@ -141,7 +142,7 @@ wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 | Hook | タイミング | 内容 |
 |------|-----------|------|
 | `post-edit-lint.sh` | PostToolUse（Edit / Write） | 変更ファイルに `biome check --write` を即時実行 |
-| `stop-check.sh` | Stop（毎ターン） | テストファイル不足検出 + Plan 進捗チェック |
+| `stop-check.sh` | Stop（毎ターン） | 変更ファイルの co-located テスト不足を検出し、diff 状態ごとに1回だけ停止をブロックして指摘 |
 
 ### 便利スキル
 

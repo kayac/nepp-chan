@@ -239,7 +239,11 @@ prd      3/3     47.5s     37,800
    - hallucination 高い → instructions に「検索結果のみに基づいて回答」を強化
 5. **壁打ち**: ユーザーに改善の方向性を提案し、対話で深掘り
 
-### Step 6: 壁打ち（任意）
+### Step 6: 履歴追記
+
+結果サマリー（日時・質問/カテゴリ・環境・回数・各スコア平均・特記事項）を `dataset/eval/eval-test-history.md` に追記する。
+
+### Step 7: 壁打ち（任意）
 
 ```yaml
 AskUserQuestion:

@@ -4,7 +4,7 @@ argument-hint: [upload|clean|progress|status]
 ---
 
 Use Skill tool to reference `np-knowledge` for the full knowledge management pipeline.
-For detailed upload commands, environment config, progress tracking, and server-side files, see @references/UPLOAD.md in the np-knowledge skill.
+For detailed upload commands, environment config, progress tracking, and server-side files, read `.claude/skills/np-knowledge/references/UPLOAD.md`.
 
 ## Quick Reference
 

@@ -42,6 +42,9 @@ jobs:
       - name: TypeScript (lp)
         run: pnpm --filter @nepp-chan/lp exec tsc --noEmit
 
+      - name: TypeScript (widget)
+        run: pnpm --filter @nepp-chan/widget exec tsc --noEmit
+
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -89,6 +92,14 @@ jobs:
           path: shared/coverage/
           retention-days: 14
 
+      - name: Upload widget coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-widget
+          path: widget/coverage/
+          retention-days: 14
+
       - name: Report coverage (server)
         if: always()
         uses: davelosert/vitest-coverage-report-action@v2
@@ -112,3 +123,11 @@ jobs:
           name: shared
           json-summary-path: shared/coverage/coverage-summary.json
           vite-config-path: shared/vitest.config.ts
+
+      - name: Report coverage (widget)
+        if: always()
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          name: widget
+          json-summary-path: widget/coverage/coverage-summary.json
+          vite-config-path: widget/vitest.config.ts

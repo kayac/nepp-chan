@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "pnpm --filter @nepp-chan/widget build && astro build",
     "check": "astro check",
     "preview": "astro preview",
     "deploy": "pnpm build && wrangler pages deploy --project-name nepp-chan-lp-dev --branch develop",
