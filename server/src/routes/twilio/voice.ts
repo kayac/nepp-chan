@@ -17,9 +17,11 @@ const VOICE_CONFIG = {
   welcomeGreeting: "もしもし、ねっぷちゃんだよ。なんでも聞いてね。",
   transcriptionProvider: "Google",
   speechModel: "long",
-  speechTimeout: "700",
+  // Twilio 側の制約: "auto" または 600〜5000 の範囲でなければならない（600未満はエラー64101）。
+  speechTimeout: "600",
   hints: "音威子府,おといねっぷ",
   interruptible: "speech",
+  partialPrompts: true,
 } as const;
 
 // voice の書式: voiceId[-model][-speed_stability_similarity]

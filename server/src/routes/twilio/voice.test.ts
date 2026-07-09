@@ -119,8 +119,8 @@ describe("POST /twilio/voice/incoming", () => {
     const xml = await res.text();
     expect(xml).toContain('transcriptionProvider="Google"');
     expect(xml).toContain('speechModel="long"');
-    expect(xml).toContain('speechTimeout="700"');
-    expect(xml).not.toContain("partialPrompts");
+    expect(xml).toContain('speechTimeout="600"');
+    expect(xml).toContain('partialPrompts="true"');
   });
 });
 

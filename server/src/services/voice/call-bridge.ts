@@ -1,5 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 import { logger } from "~/lib/logger";
+import { pickAizuchi, shouldSendAizuchi } from "./aizuchi";
 import { createVoiceTurnRunner } from "./conversation";
 import { pickFiller } from "./filler";
 import {
@@ -19,6 +20,9 @@ const HOLD_AUDIO_URL = "https://demo.twilio.com/docs/classic.mp3";
 // 有効な setup が届かない接続を無期限に張らせないための待受上限。
 const SETUP_TIMEOUT_MS = 10_000;
 
+// 相槌の連呼を防ぐための最短間隔。
+const AIZUCHI_COOLDOWN_MS = 2_000;
+
 // token は setup メッセージの customParameters で届くため、検証は onMessage 側で行う。
 export const handleRelayUpgrade = (
   request: Request,
@@ -34,6 +38,10 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
   private socket: WebSocket | null = null;
   private currentTurn: AbortController | null = null;
   private fillerIndex = 0;
+  private lastAizuchiAt: number | null = null;
+  private aizuchiIndex = 0;
+  // 直前の中間認識からの経過時間の観測用（endpointing がどれだけ確定を保留するか）。
+  private lastInterimAt: number | null = null;
   private findingsSlot: VoiceFindingsSlot = createVoiceFindingsSlot();
   private turnRunnerPromise: ReturnType<typeof createVoiceTurnRunner> | null =
     null;
@@ -89,7 +97,18 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       this.from = msg.from;
     } else if (msg.type === "prompt") {
       if (!this.verified) return;
-      logger.info("[Voice] final prompt", { voicePrompt: msg.voicePrompt });
+      if (msg.last === false) {
+        this.lastInterimAt = Date.now();
+        this.maybeSendAizuchi(ws);
+        return;
+      }
+      logger.info("[Voice] final prompt", {
+        voicePrompt: msg.voicePrompt,
+        sinceLastInterimMs: this.lastInterimAt
+          ? Date.now() - this.lastInterimAt
+          : -1,
+      });
+      this.lastInterimAt = null;
       await this.handlePrompt(ws, msg.voicePrompt);
     } else if (msg.type === "interrupt") {
       this.currentTurn?.abort();
@@ -98,6 +117,35 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         description: msg.description ?? "",
       });
     }
+  }
+
+  // 中間認識を受けるたびに、クールダウン明けなら即座に相槌を挟む。
+  // 区切りを待たず、話している最中も相槌を続けて構わないという前提に立った実装。
+  private maybeSendAizuchi(ws: WebSocket) {
+    const now = Date.now();
+    if (
+      !shouldSendAizuchi({
+        hasActiveTurn: this.currentTurn !== null,
+        lastAizuchiAt: this.lastAizuchiAt,
+        now,
+        cooldownMs: AIZUCHI_COOLDOWN_MS,
+      })
+    ) {
+      return;
+    }
+    this.lastAizuchiAt = now;
+    const phrase = pickAizuchi(this.aizuchiIndex++);
+    logger.info("[Voice] aizuchi sent", { phrase });
+    ws.send(
+      serializeRelayMessage(
+        textTokenMessage(phrase, true, {
+          preemptible: true,
+          // ユーザーは話し続けている最中なので interruptible:true だと即座に
+          // interrupt が飛んできて相槌がほぼ聞こえない。ここは中断させない。
+          interruptible: false,
+        }),
+      ),
+    );
   }
 
   private async handlePrompt(ws: WebSocket, text: string) {

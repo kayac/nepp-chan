@@ -9,6 +9,7 @@ type ConversationRelayConfig = {
   speechTimeout?: string;
   hints?: string;
   interruptible?: "none" | "dtmf" | "speech" | "any";
+  partialPrompts?: boolean;
   // WS の url はクエリ文字列を保持しない可能性があるため、認証トークン等は
   // <Parameter> 経由で setup メッセージの customParameters に渡す。
   parameters?: Record<string, string>;
@@ -36,6 +37,7 @@ export const buildConversationRelayTwiml = ({
   speechTimeout,
   hints,
   interruptible,
+  partialPrompts,
   parameters,
 }: ConversationRelayConfig) => {
   const attrs = [
@@ -49,6 +51,7 @@ export const buildConversationRelayTwiml = ({
     attr("speechTimeout", speechTimeout),
     attr("hints", hints),
     attr("interruptible", interruptible),
+    attr("partialPrompts", partialPrompts ? "true" : undefined),
   ].join("");
 
   const params = Object.entries(parameters ?? {})
