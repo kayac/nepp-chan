@@ -43,7 +43,7 @@ import {
   resolveModelTier,
 } from "../src/lib/llm-models";
 import {
-  createKnowledgeAgentWithModel,
+  createKnowledgeAgent,
   knowledgeAgent,
 } from "../src/mastra/agents/knowledge-agent";
 import { createNeppChanAgent } from "../src/mastra/agents/nepp-chan-agent";
@@ -1696,7 +1696,7 @@ const main = async () => {
     knowledge:
       args.model === "production"
         ? knowledgeAgent
-        : createKnowledgeAgentWithModel(evalModelId),
+        : createKnowledgeAgent(evalModelId),
     "nepp-chan": createNeppChanAgent({
       isAdmin: false,
       modelConfig: resolveModelTier({

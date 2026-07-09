@@ -13,10 +13,10 @@ const { knowledgeGen, webGen, summarizerGen, loggerError } = vi.hoisted(() => ({
 }));
 
 vi.mock("~/mastra/agents/knowledge-agent", () => ({
-  knowledgeAgent: { generate: knowledgeGen },
+  createKnowledgeAgent: () => ({ generate: knowledgeGen }),
 }));
 vi.mock("~/mastra/agents/web-researcher-agent", () => ({
-  webResearcherAgent: { generate: webGen },
+  createWebResearcherAgent: () => ({ generate: webGen }),
 }));
 vi.mock("~/mastra/agents/voice-summarizer-agent", () => ({
   voiceSummarizerAgent: { generate: summarizerGen },

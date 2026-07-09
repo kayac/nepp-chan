@@ -2,13 +2,13 @@ import type { RequestContext } from "@mastra/core/request-context";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { logger } from "~/lib/logger";
-import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
+import { createKnowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import {
   NEED_KNOWLEDGE,
   NEED_WEB,
   voiceSummarizerAgent,
 } from "~/mastra/agents/voice-summarizer-agent";
-import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
+import { createWebResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import type { VoiceFindings } from "~/services/voice/findings-slot";
 import {
   getVoiceFindings,
@@ -19,6 +19,9 @@ import {
 export const voiceAnswerToolName = "voiceAnswerTool";
 
 const ABORTED_ANSWER = "ごめんね、うまく調べられなかったみたい。";
+
+const voiceKnowledgeAgent = createKnowledgeAgent();
+const voiceWebResearcherAgent = createWebResearcherAgent();
 
 type Decision =
   | { kind: "answer"; text: string }
@@ -53,7 +56,8 @@ const runSearch = async (
   requestContext: RequestContext | undefined,
   signal: AbortSignal | undefined,
 ): Promise<string> => {
-  const agent = source === "web" ? webResearcherAgent : knowledgeAgent;
+  const agent =
+    source === "web" ? voiceWebResearcherAgent : voiceKnowledgeAgent;
   const res = await agent.generate(question, {
     requestContext,
     abortSignal: signal,
