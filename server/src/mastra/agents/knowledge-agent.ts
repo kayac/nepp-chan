@@ -1,6 +1,6 @@
 import { Agent } from "@mastra/core/agent";
 import { getCurrentDateInfo } from "~/lib/date";
-import { GEMINI_FLASH, geminiModelWithThinking } from "~/lib/llm-models";
+import { geminiModelWithThinking } from "~/lib/llm-models";
 import {
   broadcastGetTool,
   broadcastGetToolName,
@@ -130,7 +130,7 @@ export const knowledgeAgent = new Agent({
   description:
     "音威子府村の情報を検索・回答する担当。村に関する情報（歴史、施設、観光、村長、行政、行事）を検索して回答する。",
   instructions: knowledgeAgentInstructions,
-  ...geminiModelWithThinking({ model: GEMINI_FLASH, level: "high" }),
+  ...geminiModelWithThinking(),
   tools: {
     knowledgeSearchTool,
     [broadcastGetToolName]: broadcastGetTool,
@@ -144,7 +144,7 @@ export const createKnowledgeAgentWithModel = (model: string) =>
     name: "Knowledge Agent",
     description: knowledgeAgent.getDescription(),
     instructions: knowledgeAgentInstructions,
-    ...geminiModelWithThinking({ model, level: "high" }),
+    ...geminiModelWithThinking({ model }),
     tools: {
       knowledgeSearchTool,
       [broadcastGetToolName]: broadcastGetTool,
