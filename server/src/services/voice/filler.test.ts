@@ -14,10 +14,10 @@ describe("pickFiller", () => {
   });
 
   it("index で同カテゴリ内を巡回する", () => {
-    expect(pickFiller("おはよう", 0)).toBe(BACKCHANNEL_FILLERS[0]);
-    expect(pickFiller("おはよう", 1)).toBe(BACKCHANNEL_FILLERS[1]);
-    expect(pickFiller("おはよう", BACKCHANNEL_FILLERS.length)).toBe(
-      BACKCHANNEL_FILLERS[0],
+    expect(pickFiller("駅はどこ", 0)).toBe(THINKING_FILLERS[0]);
+    expect(pickFiller("駅はどこ", 1)).toBe(THINKING_FILLERS[1]);
+    expect(pickFiller("駅はどこ", THINKING_FILLERS.length)).toBe(
+      THINKING_FILLERS[0],
     );
   });
 
