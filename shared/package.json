@@ -27,7 +27,7 @@
     "ai": "^6.0.208",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^1.21.0",
+    "lucide-react": "^1.23.0",
     "openapi-fetch": "^0.17.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",

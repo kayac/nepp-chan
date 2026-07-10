@@ -18,19 +18,19 @@
     "@nepp-chan/shared": "workspace:*",
     "ai": "^6.0.208",
     "astro": "^6.4.8",
-    "lucide-react": "^1.21.0",
+    "lucide-react": "^1.23.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.1",
-    "@types/node": "^26.0.0",
+    "@tailwindcss/vite": "^4.3.2",
+    "@types/node": "^26.1.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.3.1",
+    "tailwindcss": "^4.3.2",
     "typescript": "~6.0.3",
-    "wrangler": "^4.103.0"
+    "wrangler": "^4.107.0"
   }
 }
