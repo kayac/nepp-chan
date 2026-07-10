@@ -5,7 +5,10 @@
 ## 仕組み
 
 - ローダー `widget.js`（vanilla JS）が host ページに右下のフローティングボタンを注入し、クリックで iframe パネルを開閉する（visibility/opacity/transform でトランジション）。
-- チャット本体は iframe 内ページの `WidgetChat`（フローティングウィジェット専用 UI。LP のティーザー `MiniChat` とは別コンポーネント）。`/simple-chat`（認証なし、直近最大 10 件の bounded history を送信、サーバー側の永続化なし）に接続する。
+- チャット本体は iframe 内ページの `WidgetChat`（フローティングウィジェット専用 UI。LP のティーザー `MiniChat` とは別コンポーネント）。web / LINE と同じ `/threads` 系エンドポイント（Mastra memory・スレッド永続化あり）に接続する。widget は「お試し」ではなく村民が実際に使う正規チャンネルという位置づけのため、web と同様の会話継続性を持たせている。
+- マウント時に匿名 JWT セッションを取得し（`POST /auth/anonymous-session` に `platform: "widget"` を渡す）、resourceId は `widget-` prefix 付きで発行される（`line:` / `admin:` と同じ、resourceId prefix でチャネルを区別する規約）。この prefix により `/threads/{threadId}/chat` 側でエージェントの利用可能ツール・エージェント（`platform: "widget"`、`emergencyReporterAgent` 等を除外する安全上のスコープ制限）と `llm_usage.platform` が正しく "widget" として扱われる。
+- スレッドはパネルを開く（`WidgetChat` がマウントする）たびに新規作成する。widget はアクセスごとに違う質問をするユースケースが中心のため、cross-visit の会話継続は行わない（localStorage に threadId は保存しない）。開いている間の複数往復は Mastra memory の恩恵を受ける。
+- 匿名セッションのトークン/resourceId は localStorage（`nepp-chan-widget:session-token` / `nepp-chan-widget:resource-id`）に保存し、同じブラウザでの再訪問時は再利用する（90日有効）。
 - iframe は lp と同一 origin（`nepp-chan.ai/widget/`）配信。fetch の Origin は配信元になるため、ローダーを貼る host サイトのオリジンは API の CORS 許可リストに無関係。
 - iframe → loader の「閉じる」連携は `postMessage`。loader 側で `event.origin`（iframeSrc のオリジン）と `event.source`（iframe の contentWindow）を検証してから閉じる。
 - ボタン設置 2500ms 後、`INITIAL_MESSAGE` の挨拶文を吹き出しティーザーとして表示する。localStorage（`nepp-chan-widget:teaser-dismissed-at`）に閉じた時刻を記録し、7 日以内は再表示しない。
@@ -39,7 +42,9 @@ pnpm --filter @nepp-chan/widget test   # WidgetChat / loader の単体テスト
 
 ## 構成
 
-- `src/WidgetChat.tsx` — フローティングウィジェット専用のチャット UI（フルハイト・連続会話・ヘッダーに閉じるボタン）。`@nepp-chan/shared` の `ChatMarkdown` / `createSimpleChatTransport` を利用
+- `src/WidgetChat.tsx` — フローティングウィジェット専用のチャット UI（フルハイト・連続会話・ヘッダーに閉じるボタン）。マウント時に匿名セッション取得 → スレッド作成の順で bootstrap し、`@ai-sdk/react` の `DefaultChatTransport` で `/threads/{threadId}/chat` を叩く
+- `src/anonymous-session.ts` — `acquireAnonymousSession`。匿名 JWT の取得・localStorage 読み書き
+- `src/thread.ts` — `createThread`。`POST /threads` で新規スレッドを作成
 - `src/iframe-entry.tsx` — iframe 中身。`WidgetChat` をマウント
 - `src/iframe.css` — Tailwind + shared スタイルを iframe に読み込む
 - `src/messages.ts` — `CLOSE_MESSAGE_TYPE`（loader と iframe で共有する postMessage の type）

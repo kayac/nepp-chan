@@ -3,15 +3,16 @@ import { ChatMarkdown } from "@nepp-chan/shared/components/ChatMarkdown";
 import {
   INITIAL_MESSAGE,
   SAMPLE_QUESTIONS,
-  SIMPLE_CHAT_MAX_MESSAGES,
-} from "@nepp-chan/shared/constants/simple-chat";
+} from "@nepp-chan/shared/constants/chat-defaults";
 import { useChatAutoScroll } from "@nepp-chan/shared/hooks/useChatAutoScroll";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { messageText } from "@nepp-chan/shared/lib/message-text";
-import { createSimpleChatTransport } from "@nepp-chan/shared/lib/simple-chat-transport";
+import { DefaultChatTransport } from "ai";
 import { SendIcon, XIcon } from "lucide-react";
 import { type SubmitEvent, useEffect, useMemo, useRef, useState } from "react";
+import { acquireAnonymousSession } from "./anonymous-session";
 import { CLOSE_MESSAGE_TYPE } from "./messages";
+import { createThread } from "./thread";
 
 type Props = {
   apiUrl: string;
@@ -23,31 +24,79 @@ const closeWidget = () => {
   window.parent.postMessage({ type: CLOSE_MESSAGE_TYPE }, "*");
 };
 
+const WaitingIndicator = ({ className }: { className?: string }) => (
+  <span
+    role="status"
+    aria-label="回答を生成中"
+    className={cn(
+      "inline-block size-2 rounded-full bg-orange-500 animate-pulse",
+      className,
+    )}
+  />
+);
+
 export const WidgetChat = ({
   apiUrl,
   webUrl,
   iconSrc = "/mascot/icon.png",
 }: Props) => {
+  const [token, setToken] = useState<string | null>(null);
+  const [threadId, setThreadId] = useState<string | null>(null);
+  const [bootstrapError, setBootstrapError] = useState(false);
   const [input, setInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(true);
   const streamRef = useRef<HTMLDivElement | null>(null);
 
+  useEffect(() => {
+    acquireAnonymousSession(apiUrl)
+      .then((session) =>
+        createThread(apiUrl, session.token).then((id) => {
+          setToken(session.token);
+          setThreadId(id);
+        }),
+      )
+      .catch(() => setBootstrapError(true));
+  }, [apiUrl]);
+
+  const isReady = token !== null && threadId !== null;
+
   const transport = useMemo(
     () =>
-      createSimpleChatTransport({
-        apiUrl,
-        historyLimit: SIMPLE_CHAT_MAX_MESSAGES,
+      new DefaultChatTransport({
+        api: `${apiUrl}/threads/${threadId}/chat`,
+        headers: (): Record<string, string> =>
+          token ? { Authorization: `Bearer ${token}` } : {},
+        prepareSendMessagesRequest({ messages }) {
+          return {
+            body: {
+              message: messages[messages.length - 1],
+              intent: "casual",
+            },
+          };
+        },
       }),
-    [apiUrl],
+    [apiUrl, threadId, token],
   );
 
   const { messages, sendMessage, status, error } = useChat({
+    // threadId 確定時に id を変えて transport の再生成を強制する
+    // （useChat は id が変わらない限り transport の更新を反映しない）
+    id: threadId ?? "pending",
     messages: [INITIAL_MESSAGE],
     transport,
     experimental_throttle: 50,
   });
 
   const isBusy = status === "submitted" || status === "streaming";
+  // ツール呼び出し中はテキストパートが途切れるので、最後のパートが text 以外なら
+  // （ツール実行中のステップ境界等）待機インジケータを再表示する
+  const lastMessage = messages[messages.length - 1];
+  const lastPart = lastMessage?.parts[lastMessage.parts.length - 1];
+  const isWaitingForText =
+    status === "submitted" ||
+    (status === "streaming" &&
+      lastPart !== undefined &&
+      lastPart.type !== "text");
 
   useChatAutoScroll(streamRef);
 
@@ -61,7 +110,7 @@ export const WidgetChat = ({
 
   const ask = (q: string) => {
     const trimmed = q.trim();
-    if (!trimmed || isBusy) return;
+    if (!trimmed || isBusy || !isReady) return;
     sendMessage({ text: trimmed });
     setInput("");
     setShowSuggestions(false);
@@ -101,9 +150,13 @@ export const WidgetChat = ({
         ref={streamRef}
         className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4"
       >
-        {messages.map((m) => {
+        {messages.map((m, index) => {
           const text = messageText(m);
-          if (!text) return null;
+          const showIndicatorHere =
+            index === messages.length - 1 &&
+            m.role === "assistant" &&
+            isWaitingForText;
+          if (!text && !showIndicatorHere) return null;
           return (
             <div
               key={m.id}
@@ -115,22 +168,25 @@ export const WidgetChat = ({
                   : "self-start bg-(--paper-50) text-(--fg-1)",
               )}
             >
-              <ChatMarkdown
-                text={text}
-                variant={m.role === "user" ? "user" : "assistant"}
-              />
+              {text && (
+                <ChatMarkdown
+                  text={text}
+                  variant={m.role === "user" ? "user" : "assistant"}
+                />
+              )}
+              {showIndicatorHere && (
+                <WaitingIndicator className="mt-1 first:mt-0" />
+              )}
             </div>
           );
         })}
-        {status === "submitted" && (
-          <div className="flex w-fit max-w-[85%] items-center gap-2 self-start rounded-(--r-bubble) bg-(--paper-50) px-[18px] py-3">
-            <span className="size-2 rounded-full bg-orange-500 animate-pulse" />
-            <span className="text-xs font-medium text-(--fg-2)">
-              ちょっと待ってね…
-            </span>
+        {/* 送信直後でまだアシスタントのメッセージが無い間は独立した吹き出しで出す */}
+        {isWaitingForText && messages.at(-1)?.role !== "assistant" && (
+          <div className="flex w-fit max-w-[85%] self-start rounded-(--r-bubble) bg-(--paper-50) px-[18px] py-3">
+            <WaitingIndicator />
           </div>
         )}
-        {error && (
+        {(error || bootstrapError) && (
           <div className="w-fit max-w-[85%] self-start rounded-(--r-bubble) bg-red-50 px-[18px] py-3 text-sm text-red-700">
             通信エラーが発生したよ。もう一度試してみてね。
           </div>
@@ -144,7 +200,7 @@ export const WidgetChat = ({
               key={q}
               type="button"
               onClick={() => ask(q)}
-              disabled={isBusy}
+              disabled={isBusy || !isReady}
               className={cn(
                 "rounded-(--r-pill) border border-(--paper-200) bg-white px-3 py-1.5 text-xs text-(--fg-2)",
                 "transition-colors duration-150",
@@ -174,7 +230,7 @@ export const WidgetChat = ({
         />
         <button
           type="submit"
-          disabled={isBusy || !input.trim()}
+          disabled={isBusy || !isReady || !input.trim()}
           aria-label="送信"
           className={cn(
             "grid size-8 place-items-center rounded-full bg-(--teal-700) text-white",

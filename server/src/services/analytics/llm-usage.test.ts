@@ -104,6 +104,18 @@ describe("recordLlmUsage", () => {
     expect(rows[0]?.totalTokens).toBe(180);
   });
 
+  it("platform: widget を保存できる", async () => {
+    await recordLlmUsage(d1, {
+      model: "gemini-2.5-flash",
+      usage: { inputTokens: 1 },
+      platform: "widget",
+      source: "chat",
+    });
+
+    const rows = await db.select().from(llmUsage).all();
+    expect(rows[0]).toMatchObject({ platform: "widget" });
+  });
+
   it("usage 未取得（undefined）でも 0 埋めで保存する", async () => {
     await recordLlmUsage(d1, {
       model: "gemini-2.5-flash",

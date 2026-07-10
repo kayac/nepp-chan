@@ -142,6 +142,19 @@ throw new HTTPException(404, { message: "Not found" });
 | dev | https://dev-api.nepp-chan.ai | nepp-chan-server-dev |
 | prd | https://api.nepp-chan.ai | nepp-chan-server-prd |
 
+## Cloudflare 側のレート制限
+
+`/threads/{threadId}/chat`（web・widget 共通、LLM 呼び出しが発生する唯一のエンドポイント）に対して、
+`nepp-chan.ai` zone の WAF Rate limiting rules（`api-chat-rate-limit`）で IP ベースの制限をかけている。
+コードには残らない設定のためここに記録する。
+
+| 項目 | 値 |
+| ---- | -- |
+| マッチ条件 | `http.request.uri.path wildcard r"*/threads/*/chat"` |
+| 特性 | IP |
+| しきい値 | 10 秒に 20 リクエスト超 |
+| アクション | Block（10 秒） |
+
 ## 開発コマンド
 
 ```bash

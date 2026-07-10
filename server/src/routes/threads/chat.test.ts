@@ -35,8 +35,12 @@ vi.mock("~/lib/storage", () => ({
   getStorage: vi.fn().mockResolvedValue({}),
 }));
 
+const { mockCreateNeppChanAgent } = vi.hoisted(() => ({
+  mockCreateNeppChanAgent: vi.fn(),
+}));
+
 vi.mock("~/mastra/agents/nepp-chan-agent", () => ({
-  createNeppChanAgent: vi.fn(),
+  createNeppChanAgent: mockCreateNeppChanAgent,
 }));
 
 vi.mock("~/mastra/request-context", () => ({
@@ -91,9 +95,10 @@ const mockEnv = {
 } as unknown as CloudflareBindings;
 
 const RES_ID = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+const WIDGET_RES_ID = "widget-a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
 
-const useAnonAuth = () => {
-  vi.mocked(sessionService.verifyAnonymousToken).mockResolvedValue(RES_ID);
+const useAnonAuth = (resourceId: string = RES_ID) => {
+  vi.mocked(sessionService.verifyAnonymousToken).mockResolvedValue(resourceId);
 };
 
 const ownThread = {
@@ -246,6 +251,64 @@ describe("chatRoutes: POST /:threadId/chat", () => {
       intent: "casual",
       threadId: "thread-1",
     });
+  });
+
+  it("widget- prefix の resourceId では usage を platform=widget で記録する", async () => {
+    useAnonAuth(WIDGET_RES_ID);
+    mockGetThreadById.mockResolvedValue({
+      ...ownThread,
+      resourceId: WIDGET_RES_ID,
+    });
+
+    await routes.request(
+      buildReq("/thread-1/chat", validBody),
+      undefined,
+      mockEnv,
+    );
+
+    const { onFinish } = mockHandleChatStream.mock.calls[0][0].params;
+    onFinish({
+      totalUsage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
+      model: { modelId: "gemini-2.5-flash-lite" },
+    });
+
+    expect(mockRecordLlmUsage).toHaveBeenCalledWith(
+      mockEnv.DB,
+      expect.objectContaining({ platform: "widget" }),
+    );
+  });
+
+  it("web の resourceId ではエージェントに platform: web を渡す", async () => {
+    useAnonAuth();
+    mockGetThreadById.mockResolvedValue(ownThread);
+
+    await routes.request(
+      buildReq("/thread-1/chat", validBody),
+      undefined,
+      mockEnv,
+    );
+
+    expect(mockCreateNeppChanAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ platform: "web" }),
+    );
+  });
+
+  it("widget- prefix の resourceId ではエージェントに platform: widget を渡す", async () => {
+    useAnonAuth(WIDGET_RES_ID);
+    mockGetThreadById.mockResolvedValue({
+      ...ownThread,
+      resourceId: WIDGET_RES_ID,
+    });
+
+    await routes.request(
+      buildReq("/thread-1/chat", validBody),
+      undefined,
+      mockEnv,
+    );
+
+    expect(mockCreateNeppChanAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ platform: "widget" }),
+    );
   });
 
   it("usage 記録は modelId 不在時にモデル設定値へフォールバックする", async () => {
