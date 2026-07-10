@@ -103,8 +103,8 @@ importers:
         specifier: ^11.1.0
         version: 11.1.0
       '@mastra/ai-sdk':
-        specifier: ^1.5.0
-        version: 1.5.0(@mastra/core@1.45.0(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)
+        specifier: ^1.6.1
+        version: 1.6.1(@mastra/core@1.45.0(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)
       '@mastra/cloudflare-d1':
         specifier: 1.1.0
         version: 1.1.0(@cloudflare/workers-types@4.20260621.1)(@mastra/core@1.45.0(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
@@ -1829,8 +1829,8 @@ packages:
     resolution: {integrity: sha512-qC72D4+CDdjGqJvkFMMEAtancHUQ7/d/tAiHf64z8MopFDmcrtbcJuerDtFceuAfQJ2pDSfCKCtbqoGBNnwg0w==}
     engines: {node: '>=8'}
 
-  '@mastra/ai-sdk@1.5.0':
-    resolution: {integrity: sha512-jge4guj08j8VpMi+gQjTTpV/CEeREMI48PcB58B5QqguWELsuH7BUbphBc8VmMUAK/SZ1RpKp3z2K9d9gElhZw==}
+  '@mastra/ai-sdk@1.6.1':
+    resolution: {integrity: sha512-sAq4aXOE0YgVvuNsRO4F1L9zNsEumgQ13nfNIcRUc+X9HWvka8xNCGYHNYP5BLe4sfOspMLTAD9RCatZNhP5CQ==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.5.0-0 <2.0.0-0'
@@ -7306,7 +7306,7 @@ snapshots:
     dependencies:
       '@lukeed/csprng': 1.1.0
 
-  '@mastra/ai-sdk@1.5.0(@mastra/core@1.45.0(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)':
+  '@mastra/ai-sdk@1.6.1(@mastra/core@1.45.0(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)':
     dependencies:
       '@mastra/core': 1.45.0(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
       zod: 4.4.3
