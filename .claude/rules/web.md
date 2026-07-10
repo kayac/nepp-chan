@@ -6,6 +6,11 @@ paths:
 
 # Web / LP 規約
 
+## デザイン
+
+体験の哲学・デザイン原則・文言の話者基準はルート `DESIGN.md` を参照。
+体験設計の壁打ちとデザイン案の作成は `/np-design` スキルを使う。
+
 ## スタイル
 
 TailwindCSS utility class のみ。BEM 不採用。CSS 変数は `bg-(--paper-50)` 形式。
