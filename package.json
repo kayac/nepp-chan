@@ -56,7 +56,7 @@
   },
   "pnpm": {
     "overrides": {
-      "@mastra/deployer": "1.42.0"
+      "@mastra/deployer": "1.49.0"
     }
   },
   "devDependencies": {
