@@ -23,7 +23,7 @@
     "@sentry/react": "^10.63.0",
     "@tanstack/react-query": "^5.101.2",
     "ai": "^6.0.208",
-    "astro": "^6.4.8",
+    "astro": "^7.0.7",
     "d3-force": "^3.0.0",
     "lucide-react": "^1.23.0",
     "openapi-fetch": "^0.17.0",
