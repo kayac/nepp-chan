@@ -15,7 +15,7 @@ export const useCallDevice = () => {
   }, []);
 
   const startCall = useCallback(
-    async (voicePreset?: string) => {
+    async (params?: Record<string, string>) => {
       setError(null);
       setStatus("connecting");
       destroyDevice();
@@ -30,7 +30,7 @@ export const useCallDevice = () => {
         deviceRef.current = device;
 
         const call: Call = await device.connect(
-          voicePreset ? { params: { voicePreset } } : {},
+          params && Object.keys(params).length > 0 ? { params } : {},
         );
         call.on("accept", () => setStatus("connected"));
         call.on("disconnect", () => {
