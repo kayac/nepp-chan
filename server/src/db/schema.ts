@@ -198,7 +198,7 @@ export const llmUsage = sqliteTable("llm_usage", {
   reasoningTokens: integer("reasoning_tokens").notNull().default(0),
   cachedInputTokens: integer("cached_input_tokens").notNull().default(0),
   totalTokens: integer("total_tokens").notNull().default(0),
-  platform: text("platform"), // "web" | "line" | "lp" | null（バッチ系）
+  platform: text("platform"), // "web" | "line" | "lp" | "widget" | null（バッチ系）
   source: text("source").notNull(), // "chat" | "persona-extract" | "weekly-report" | "intent-classify"
   intent: text("intent"), // "casual" | "thinking"
   threadId: text("thread_id"),

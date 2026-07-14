@@ -235,7 +235,8 @@ const anonymousSessionRoute = createRoute({
   tags: ["Auth"],
   summary: "匿名セッショントークン取得",
   description:
-    "一般ユーザー向けの匿名セッショントークンを発行する。resourceId はサーバーで生成する。",
+    "一般ユーザー向けの匿名セッショントークンを発行する。resourceId はサーバーで生成する。" +
+    "platform に widget を指定すると、resourceId に widget- prefix を付与する。",
   responses: {
     200: {
       description: "トークン発行成功",
@@ -252,7 +253,15 @@ const anonymousSessionRoute = createRoute({
 });
 
 authRoutes.openapi(anonymousSessionRoute, async (c) => {
-  const resourceId = crypto.randomUUID();
+  const platform = await c.req
+    .json()
+    .then((body) => (body as { platform?: unknown })?.platform)
+    .catch(() => undefined);
+
+  const resourceId =
+    platform === "widget"
+      ? `widget-${crypto.randomUUID()}`
+      : crypto.randomUUID();
   const token = await generateAnonymousToken(resourceId, c.env.JWT_SECRET);
 
   return c.json({ token, resourceId }, 200);

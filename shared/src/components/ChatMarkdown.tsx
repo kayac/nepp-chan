@@ -20,6 +20,29 @@ const buildComponents = (variant: Variant): Components => ({
     <ol className="my-1 list-decimal pl-5 first:mt-0 last:mb-0">{children}</ol>
   ),
   li: ({ children }) => <li className="my-0.5">{children}</li>,
+  h1: ({ children }) => (
+    <h1 className="my-1 text-base font-bold first:mt-0 last:mb-0">
+      {children}
+    </h1>
+  ),
+  h2: ({ children }) => (
+    <h2 className="my-1 text-[0.95em] font-bold first:mt-0 last:mb-0">
+      {children}
+    </h2>
+  ),
+  h3: ({ children }) => (
+    <h3 className="my-1 text-[0.9em] font-bold first:mt-0 last:mb-0">
+      {children}
+    </h3>
+  ),
+  hr: () => (
+    <hr
+      className={cn(
+        "my-2",
+        variant === "user" ? "border-white/20" : "border-(--paper-200)",
+      )}
+    />
+  ),
   a: ({ href, children }) => (
     <a
       href={href}

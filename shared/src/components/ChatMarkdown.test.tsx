@@ -55,4 +55,29 @@ describe("ChatMarkdown", () => {
     expect(container.querySelector("code")).not.toBeNull();
     expect(container.querySelector("pre")).not.toBeNull();
   });
+
+  it("見出しを h1〜h3 として描画する", () => {
+    const { container } = render(
+      <ChatMarkdown text={"# 一\n## 二\n### 三"} variant="assistant" />,
+    );
+    expect(container.querySelector("h1")).not.toBeNull();
+    expect(container.querySelector("h2")).not.toBeNull();
+    expect(container.querySelector("h3")).not.toBeNull();
+  });
+
+  it("水平線を hr として描画する", () => {
+    const { container } = render(
+      <ChatMarkdown text={"一つ目\n\n---\n\n二つ目"} variant="assistant" />,
+    );
+    expect(container.querySelector("hr")).not.toBeNull();
+  });
+
+  it("user variant の水平線は白系クラスを持つ", () => {
+    const { container } = render(
+      <ChatMarkdown text={"一つ目\n\n---\n\n二つ目"} variant="user" />,
+    );
+    expect(container.querySelector("hr")?.className).toContain(
+      "border-white/20",
+    );
+  });
 });

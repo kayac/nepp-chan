@@ -10,7 +10,7 @@ type LlmUsageParams = {
     cachedInputTokens?: number;
     totalTokens?: number;
   };
-  platform?: "web" | "line" | "lp";
+  platform?: "web" | "line" | "lp" | "widget";
   source: "chat" | "persona-extract" | "weekly-report" | "intent-classify";
   intent?: "casual" | "thinking";
   threadId?: string;

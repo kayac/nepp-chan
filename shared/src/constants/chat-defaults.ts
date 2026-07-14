@@ -1,7 +1,5 @@
 import type { UIMessage } from "ai";
 
-export const SIMPLE_CHAT_MAX_MESSAGES = 10;
-
 export const SAMPLE_QUESTIONS: ReadonlyArray<string> = [
   "移住の補助金はある？",
   "音威子府駅ってどんなところ？",

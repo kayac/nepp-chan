@@ -26,7 +26,6 @@ import {
   personaAdminRoutes,
   pollAdminRoutes,
   pollRoutes,
-  simpleChatRoutes,
   threadsRoutes,
   twilioVoiceRoutes,
   userAdminRoutes,
@@ -44,7 +43,6 @@ app.onError(errorHandler);
 
 app.route("/health", healthRoutes);
 app.route("/feedback", feedbackRoutes);
-app.route("/simple-chat", simpleChatRoutes);
 app.route("/threads", threadsRoutes);
 app.route("/admin/analytics", analyticsAdminRoutes);
 app.route("/admin/broadcast", broadcastAdminRoutes);

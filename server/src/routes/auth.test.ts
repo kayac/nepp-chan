@@ -34,6 +34,9 @@ vi.mock("~/repository/admin-session-repository", () => ({
 
 vi.mock("~/services/auth/anonymous-session", () => ({
   verifyAnonymousToken: vi.fn(),
+  generateAnonymousToken: vi.fn(
+    async (resourceId: string) => `token-for-${resourceId}`,
+  ),
 }));
 
 const { hashPassword, verifyPassword } = await import("~/lib/password");
@@ -532,6 +535,39 @@ describe("auth routes", () => {
       );
 
       expect(adminSessionRepository.deleteByToken).not.toHaveBeenCalled();
+    });
+  });
+
+  // --- Anonymous Session ---
+
+  describe("POST /anonymous-session", () => {
+    const UUID_V4_REGEX =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+    it("body なしでは widget- prefix の無い UUID の resourceId を発行する", async () => {
+      const res = await authRoutes.request(
+        new Request("http://localhost/anonymous-session", { method: "POST" }),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { token: string; resourceId: string };
+      expect(body.resourceId).toMatch(UUID_V4_REGEX);
+      expect(typeof body.token).toBe("string");
+    });
+
+    it("platform: widget を指定すると widget- prefix 付きの resourceId を発行する", async () => {
+      const res = await authRoutes.request(
+        postJson("/anonymous-session", { platform: "widget" }),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { token: string; resourceId: string };
+      expect(body.resourceId.startsWith("widget-")).toBe(true);
+      expect(body.resourceId.slice("widget-".length)).toMatch(UUID_V4_REGEX);
     });
   });
 });
