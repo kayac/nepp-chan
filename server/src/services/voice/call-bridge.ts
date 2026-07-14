@@ -1,27 +1,29 @@
 import { DurableObject } from "cloudflare:workers";
 import { logger } from "~/lib/logger";
 import { pickAizuchi, shouldSendAizuchi } from "./aizuchi";
+import {
+  BRIDGE_CONFIG_DEFAULTS,
+  type BridgeConfig,
+  parseBridgeConfig,
+} from "./bridge-config";
 import { createVoiceTurnRunner } from "./conversation";
-import { pickFiller } from "./filler";
 import {
   createVoiceFindingsSlot,
   type VoiceFindingsSlot,
 } from "./findings-slot";
 import {
+  endMessage,
   parseRelayMessage,
   playMessage,
   serializeRelayMessage,
   type TextTokenOptions,
   textTokenMessage,
 } from "./relay-protocol";
+import { createSilenceCover } from "./silence-cover";
 import { verifySetupToken } from "./twilio-token";
 
-const HOLD_AUDIO_URL = "https://demo.twilio.com/docs/classic.mp3";
 // 有効な setup が届かない接続を無期限に張らせないための待受上限。
 const SETUP_TIMEOUT_MS = 10_000;
-
-// 相槌の連呼を防ぐための最短間隔。
-const AIZUCHI_COOLDOWN_MS = 2_000;
 
 // token は setup メッセージの customParameters で届くため、検証は onMessage 側で行う。
 export const handleRelayUpgrade = (
@@ -43,6 +45,8 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
   // 直前の中間認識からの経過時間の観測用（endpointing がどれだけ確定を保留するか）。
   private lastInterimAt: number | null = null;
   private findingsSlot: VoiceFindingsSlot = createVoiceFindingsSlot();
+  private config: BridgeConfig = BRIDGE_CONFIG_DEFAULTS;
+  private pendingEndTimer: ReturnType<typeof setTimeout> | null = null;
   private turnRunnerPromise: ReturnType<typeof createVoiceTurnRunner> | null =
     null;
 
@@ -95,8 +99,11 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       }
       this.verified = true;
       this.from = msg.from;
+      this.config = parseBridgeConfig(msg.customParameters);
     } else if (msg.type === "prompt") {
       if (!this.verified) return;
+      // 切断待ちの間にユーザーが話し始めたら会話継続の意思とみなし切断を取り消す。
+      this.cancelPendingEnd();
       if (msg.last === false) {
         this.lastInterimAt = Date.now();
         this.maybeSendAizuchi(ws);
@@ -111,6 +118,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       this.lastInterimAt = null;
       await this.handlePrompt(ws, msg.voicePrompt);
     } else if (msg.type === "interrupt") {
+      this.cancelPendingEnd();
       this.currentTurn?.abort();
     } else if (msg.type === "error") {
       logger.warn("[CallBridge] relay error", {
@@ -122,19 +130,20 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
   // 中間認識を受けるたびに、クールダウン明けなら即座に相槌を挟む。
   // 区切りを待たず、話している最中も相槌を続けて構わないという前提に立った実装。
   private maybeSendAizuchi(ws: WebSocket) {
+    if (!this.config.aizuchiEnabled) return;
     const now = Date.now();
     if (
       !shouldSendAizuchi({
         hasActiveTurn: this.currentTurn !== null,
         lastAizuchiAt: this.lastAizuchiAt,
         now,
-        cooldownMs: AIZUCHI_COOLDOWN_MS,
+        cooldownMs: this.config.aizuchiCooldownMs,
       })
     ) {
       return;
     }
     this.lastAizuchiAt = now;
-    const phrase = pickAizuchi(this.aizuchiIndex++);
+    const phrase = pickAizuchi(this.aizuchiIndex++, this.config.aizuchiPhrases);
     logger.info("[Voice] aizuchi sent", { phrase });
     ws.send(
       serializeRelayMessage(
@@ -162,46 +171,46 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
 
     let firstSendMs: number | null = null;
     let tokenCount = 0;
+    let assistantChars = 0;
+    let endRequested = false;
 
     const send = (token: string, last = false, options?: TextTokenOptions) =>
       ws.send(serializeRelayMessage(textTokenMessage(token, last, options)));
 
-    send(pickFiller(text, this.fillerIndex++), true, {
-      preemptible: true,
-      interruptible: true,
+    const cover = createSilenceCover({
+      config: this.config,
+      promptText: text,
+      signal: controller.signal,
+      nextFillerIndex: () => this.fillerIndex++,
+      sendText: send,
+      sendPlay: (source, options) =>
+        ws.send(serializeRelayMessage(playMessage(source, options))),
     });
-
-    let holdPlaying = false;
-    const startHold = () => {
-      if (holdPlaying) return;
-      holdPlaying = true;
-      // 開いたテキストターン中は play が無視されるため、last:true で閉じてから保留音を流す。
-      send("", true);
-      ws.send(
-        serializeRelayMessage(
-          playMessage(HOLD_AUDIO_URL, {
-            loop: 0,
-            preemptible: true,
-            interruptible: true,
-          }),
-        ),
-      );
-    };
+    cover.start();
 
     try {
       for await (const delta of turnRunner({
         text,
         signal: controller.signal,
-        onToolCall: startHold,
+        onToolCall: cover.onToolCall,
+        onEndCall: () => {
+          endRequested = true;
+        },
         findingsSlot: this.findingsSlot,
       })) {
         if (controller.signal.aborted) break;
         if (firstSendMs === null) firstSendMs = Date.now() - t0;
         tokenCount++;
+        assistantChars += delta.length;
+        cover.onToken();
         send(delta);
-        holdPlaying = false;
       }
-      if (!controller.signal.aborted) send("", true);
+      if (!controller.signal.aborted) {
+        send("", true);
+        if (endRequested && this.config.endCallEnabled) {
+          this.scheduleEndCall(ws, assistantChars);
+        }
+      }
     } catch (e) {
       logger.error("[CallBridge] handlePrompt failed", {
         error: e instanceof Error ? e.message : String(e),
@@ -210,6 +219,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         send("ごめんね、うまく聞き取れなかったみたい。", true);
       }
     } finally {
+      cover.dispose();
       if (this.currentTurn === controller) this.currentTurn = null;
       const timing: Record<string, number | boolean> = {
         turnEndMs: Date.now() - t0,
@@ -219,5 +229,25 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       if (firstSendMs !== null) timing.firstSendMs = firstSendMs;
       logger.info("[Voice] turn timing", timing);
     }
+  }
+
+  // Twilio の end がキュー済み TTS の再生完了を待つかは未文書のため、
+  // お別れの発話を読み終わる想定時間（約150ms/文字 + 余白1秒）だけ待ってから切る。
+  private scheduleEndCall(ws: WebSocket, assistantChars: number) {
+    this.cancelPendingEnd();
+    const waitMs = Math.min(1_000 + assistantChars * 150, 15_000);
+    logger.info("[Voice] end call scheduled", { waitMs });
+    this.pendingEndTimer = setTimeout(() => {
+      this.pendingEndTimer = null;
+      logger.info("[Voice] ending call");
+      ws.send(serializeRelayMessage(endMessage()));
+    }, waitMs);
+  }
+
+  private cancelPendingEnd() {
+    if (!this.pendingEndTimer) return;
+    clearTimeout(this.pendingEndTimer);
+    this.pendingEndTimer = null;
+    logger.info("[Voice] end call cancelled");
   }
 }
