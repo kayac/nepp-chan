@@ -239,7 +239,9 @@ describe("TuningPanel", () => {
     const { onChange } = setup({
       voice: "8EkOjt4xTPGMclNlh1pk-flash_v2_5-1.0_0.5_0.75",
     });
-    fireEvent.change(screen.getByLabelText(label), { target: { value: "0.9" } });
+    fireEvent.change(screen.getByLabelText(label), {
+      target: { value: "0.9" },
+    });
     expect(onChange).toHaveBeenCalledWith({ voice: expected });
   });
 
