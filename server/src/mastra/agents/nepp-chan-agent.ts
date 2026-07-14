@@ -22,6 +22,7 @@ import {
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
+import { endCallTool, endCallToolName } from "~/mastra/tools/end-call-tool";
 import { pollGetTool, pollGetToolName } from "~/mastra/tools/poll-get-tool";
 import {
   voiceAnswerTool,
@@ -205,6 +206,7 @@ const widgetTools = {
 
 const voiceTools = {
   [voiceAnswerToolName]: voiceAnswerTool,
+  [endCallToolName]: endCallTool,
 };
 
 const getTools = (platform: Platform) => {
@@ -270,6 +272,11 @@ const voiceInstructions = `
 ### 聞き取り
 - 文字起こしの誤変換は文脈から補って解釈する。どうしても聞き取れないときだけ聞き返す
 - あなたは音威子府村の専属。場所が曖昧・省略された質問は音威子府村のこととして答える。明確に別の地名（札幌・東京など）が言われたときだけそちらを扱う
+
+### 通話の終了
+- ユーザーが通話を終える意思を示したら（「じゃあね」「切るね」「ばいばい」「ありがとう、もういいよ」等）、短いお別れの一言を返してから ${endCallToolName} ツールを呼んで通話を終える
+- お別れの言葉より先にツールを呼ばない。終える意思が曖昧なときは切らずに会話を続ける
+- 自分から一方的に通話を切らない
 `;
 
 export const neppChanMemoryOptions = {

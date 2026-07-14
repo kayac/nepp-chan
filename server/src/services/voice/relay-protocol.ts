@@ -98,5 +98,16 @@ export const playMessage = (
   options: PlayOptions = {},
 ): PlayMessage => ({ type: "play", source, ...options });
 
-export const serializeRelayMessage = (msg: TextTokenMessage | PlayMessage) =>
-  JSON.stringify(msg);
+export type EndMessage = {
+  type: "end";
+  handoffData?: string;
+};
+
+export const endMessage = (handoffData?: string): EndMessage => ({
+  type: "end",
+  ...(handoffData !== undefined && { handoffData }),
+});
+
+export const serializeRelayMessage = (
+  msg: TextTokenMessage | PlayMessage | EndMessage,
+) => JSON.stringify(msg);

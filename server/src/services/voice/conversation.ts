@@ -12,6 +12,7 @@ type RunTurnParams = {
   text: string;
   signal?: AbortSignal;
   onToolCall?: () => void;
+  onEndCall?: () => void;
   findingsSlot?: VoiceFindingsSlot;
 };
 
@@ -40,6 +41,7 @@ export const createVoiceTurnRunner = async ({
     text,
     signal,
     onToolCall,
+    onEndCall,
     findingsSlot,
   }: RunTurnParams) {
     const start = Date.now();
@@ -50,6 +52,7 @@ export const createVoiceTurnRunner = async ({
       voiceFindings: findingsSlot,
       voiceSearchStart: onToolCall,
       voiceTurnSignal: signal,
+      voiceEndCall: onEndCall,
     });
 
     const result = await agent.stream(text, {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  endMessage,
   parseRelayMessage,
   playMessage,
   serializeRelayMessage,
@@ -137,6 +138,25 @@ describe("playMessage", () => {
       loop: 0,
       preemptible: true,
       interruptible: true,
+    });
+  });
+});
+
+describe("endMessage", () => {
+  it("セッション終了の end メッセージを作る", () => {
+    expect(endMessage()).toEqual({ type: "end" });
+  });
+
+  it("handoffData を渡したときだけ含む", () => {
+    expect(endMessage('{"reasonCode":"agent-hangup"}')).toEqual({
+      type: "end",
+      handoffData: '{"reasonCode":"agent-hangup"}',
+    });
+  });
+
+  it("serializeRelayMessage で JSON 化できる", () => {
+    expect(JSON.parse(serializeRelayMessage(endMessage()))).toEqual({
+      type: "end",
     });
   });
 });
