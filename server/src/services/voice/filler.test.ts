@@ -21,6 +21,12 @@ describe("pickFiller", () => {
     );
   });
 
+  it("カスタムのフレーズプールを使える", () => {
+    const pools = { thinking: ["どれどれ"], backchannel: ["ふむ", "ほう"] };
+    expect(pickFiller("駅はどこ", 0, pools)).toBe("どれどれ");
+    expect(pickFiller("今日は疲れたよ", 1, pools)).toBe("ほう");
+  });
+
   it("読み上げ可能な短い日本語（装飾記号なし）", () => {
     for (const f of [...THINKING_FILLERS, ...BACKCHANNEL_FILLERS]) {
       expect(f.length).toBeGreaterThan(0);

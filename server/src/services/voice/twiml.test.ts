@@ -88,6 +88,55 @@ describe("buildConversationRelayTwiml", () => {
     expect(xml).not.toContain("hints");
   });
 
+  it("割り込み・入力検知系の属性を含められる", () => {
+    const xml = buildConversationRelayTwiml({
+      wsUrl: "wss://x/relay",
+      welcomeGreetingInterruptible: "none",
+      interruptSensitivity: "low",
+      reportInputDuringAgentSpeech: "dtmf",
+    });
+    expect(xml).toContain('welcomeGreetingInterruptible="none"');
+    expect(xml).toContain('interruptSensitivity="low"');
+    expect(xml).toContain('reportInputDuringAgentSpeech="dtmf"');
+  });
+
+  it("言語オーバーライドと Deepgram/ElevenLabs 固有属性を含められる", () => {
+    const xml = buildConversationRelayTwiml({
+      wsUrl: "wss://x/relay",
+      ttsLanguage: "ja-JP",
+      transcriptionLanguage: "en-US",
+      eotThreshold: "0.7",
+      elevenlabsTextNormalization: "auto",
+      debug: "debugging",
+    });
+    expect(xml).toContain('ttsLanguage="ja-JP"');
+    expect(xml).toContain('transcriptionLanguage="en-US"');
+    expect(xml).toContain('eotThreshold="0.7"');
+    expect(xml).toContain('elevenlabsTextNormalization="auto"');
+    expect(xml).toContain('debug="debugging"');
+  });
+
+  it("bool 属性は true/false を明示出力し、未指定なら出力しない", () => {
+    const xml = buildConversationRelayTwiml({
+      wsUrl: "wss://x/relay",
+      partialPrompts: false,
+      deepgramSmartFormat: false,
+      dtmfDetection: true,
+      ignoreBackchannel: true,
+      preemptible: false,
+    });
+    expect(xml).toContain('partialPrompts="false"');
+    expect(xml).toContain('deepgramSmartFormat="false"');
+    expect(xml).toContain('dtmfDetection="true"');
+    expect(xml).toContain('ignoreBackchannel="true"');
+    expect(xml).toContain('preemptible="false"');
+
+    const bare = buildConversationRelayTwiml({ wsUrl: "wss://x/relay" });
+    expect(bare).not.toContain("partialPrompts");
+    expect(bare).not.toContain("deepgramSmartFormat");
+    expect(bare).not.toContain("dtmfDetection");
+  });
+
   it("parameters を指定すると <Parameter> 子要素として出力する", () => {
     const xml = buildConversationRelayTwiml({
       wsUrl: "wss://x/relay",

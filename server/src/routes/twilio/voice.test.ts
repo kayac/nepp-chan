@@ -122,10 +122,74 @@ describe("POST /twilio/voice/incoming", () => {
     expect(xml).toContain('speechTimeout="600"');
     expect(xml).toContain('partialPrompts="true"');
   });
+  it("チューニングパラメータを TwiML 属性に反映する", async () => {
+    const res = await buildApp().request(
+      "http://api.example.com/twilio/voice/incoming",
+      {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          transcriptionProvider: "Deepgram",
+          speechModel: "nova-2-general",
+          eotThreshold: "0.7",
+          interruptSensitivity: "low",
+          welcomeGreeting: "やあ",
+          deepgramSmartFormat: "false",
+        }),
+      },
+      env,
+    );
+    const xml = await res.text();
+    expect(xml).toContain('transcriptionProvider="Deepgram"');
+    expect(xml).toContain('speechModel="nova-2-general"');
+    expect(xml).toContain('eotThreshold="0.7"');
+    expect(xml).toContain('interruptSensitivity="low"');
+    expect(xml).toContain('welcomeGreeting="やあ"');
+    expect(xml).toContain('deepgramSmartFormat="false"');
+  });
+
+  it("不正なチューニング値は既定値へフォールバックし通話を落とさない", async () => {
+    const res = await buildApp().request(
+      "http://api.example.com/twilio/voice/incoming",
+      {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          speechTimeout: "100",
+          voice: '"><Say>hacked</Say>',
+        }),
+      },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const xml = await res.text();
+    expect(xml).toContain('speechTimeout="600"');
+    expect(xml).toContain('voice="8EkOjt4xTPGMclNlh1pk-flash_v2_5"');
+    expect(xml).not.toContain("<Say>");
+  });
+
+  it("サーバ側ノブを <Parameter> として出力し token と共存させる", async () => {
+    const res = await buildApp().request(
+      "http://api.example.com/twilio/voice/incoming",
+      {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          fillerEnabled: "false",
+          aizuchiCooldownMs: "4000",
+        }),
+      },
+      env,
+    );
+    const xml = await res.text();
+    expect(xml).toMatch(/<Parameter name="token" value="[^"]+"\/>/);
+    expect(xml).toContain('<Parameter name="fillerEnabled" value="false"/>');
+    expect(xml).toContain('<Parameter name="aizuchiCooldownMs" value="4000"/>');
+  });
 });
 
 describe("GET /twilio/voice/presets", () => {
-  it("プリセット一覧と既定 ID を返す", async () => {
+  it("プリセット一覧を返す", async () => {
     const res = await buildApp().request(
       "http://api.example.com/twilio/voice/presets",
       { method: "GET" },
@@ -133,11 +197,28 @@ describe("GET /twilio/voice/presets", () => {
     );
     expect(res.status).toBe(200);
     const json = (await res.json()) as {
-      defaultId: string;
       presets: { id: string; label: string }[];
     };
-    expect(json.defaultId).toBe("morioki");
     expect(json.presets.map((p) => p.id)).toContain("leda");
     expect(json.presets.every((p) => p.label.length > 0)).toBe(true);
+  });
+
+  it("プリセットの ttsProvider/voice と全チューニング既定値を返す", async () => {
+    const res = await buildApp().request(
+      "http://api.example.com/twilio/voice/presets",
+      { method: "GET" },
+      env,
+    );
+    const json = (await res.json()) as {
+      presets: { id: string; ttsProvider: string; voice: string }[];
+      defaults: Record<string, string>;
+    };
+    const leda = json.presets.find((p) => p.id === "leda");
+    expect(leda?.ttsProvider).toBe("Google");
+    expect(leda?.voice).toBe("ja-JP-Chirp3-HD-Leda");
+    expect(json.defaults.speechTimeout).toBe("600");
+    expect(json.defaults.interruptible).toBe("speech");
+    expect(json.defaults.fillerEnabled).toBe("true");
+    expect(json.defaults.aizuchiCooldownMs).toBe("2000");
   });
 });

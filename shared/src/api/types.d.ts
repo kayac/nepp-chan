@@ -4717,7 +4717,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 通話ボイスプリセット一覧 */
+        /** 通話ボイスプリセットとチューニング既定値 */
         get: {
             parameters: {
                 query?: never;
@@ -4727,18 +4727,22 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description /call-dev の切り替え UI 用のボイスプリセット */
+                /** @description /call-dev のチューニング UI 用のプリセットと既定値 */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
                         "application/json": {
-                            defaultId: string;
                             presets: {
                                 id: string;
                                 label: string;
+                                ttsProvider: string;
+                                voice: string;
                             }[];
+                            defaults: {
+                                [key: string]: string;
+                            };
                         };
                     };
                 };

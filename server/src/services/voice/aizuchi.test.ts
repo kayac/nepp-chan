@@ -7,6 +7,10 @@ describe("pickAizuchi", () => {
     expect(pickAizuchi(1)).toBe(AIZUCHI_PHRASES[1]);
     expect(pickAizuchi(AIZUCHI_PHRASES.length)).toBe(AIZUCHI_PHRASES[0]);
   });
+
+  it("カスタムのフレーズを使える", () => {
+    expect(pickAizuchi(1, ["はい", "ええ"])).toBe("ええ");
+  });
 });
 
 describe("shouldSendAizuchi", () => {

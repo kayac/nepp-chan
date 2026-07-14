@@ -1,7 +1,9 @@
 export const AIZUCHI_PHRASES = ["うん", "うんうん"] as const;
 
-export const pickAizuchi = (index: number) =>
-  AIZUCHI_PHRASES[index % AIZUCHI_PHRASES.length];
+export const pickAizuchi = (
+  index: number,
+  phrases: readonly string[] = AIZUCHI_PHRASES,
+) => phrases[index % phrases.length];
 
 export const shouldSendAizuchi = ({
   hasActiveTurn,

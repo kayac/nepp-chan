@@ -5,9 +5,16 @@ export const THINKING_FILLERS = ["えーっとね", "うーんとね"] as const;
 // 断片的な発話に対しても不自然にならないよう、特定の理解を装う表現は避ける。
 export const BACKCHANNEL_FILLERS = ["うんうん"] as const;
 
-export const pickFiller = (voicePrompt: string, index: number) => {
+export const pickFiller = (
+  voicePrompt: string,
+  index: number,
+  pools: {
+    thinking: readonly string[];
+    backchannel: readonly string[];
+  } = { thinking: THINKING_FILLERS, backchannel: BACKCHANNEL_FILLERS },
+) => {
   const pool = QUESTION_RE.test(voicePrompt)
-    ? THINKING_FILLERS
-    : BACKCHANNEL_FILLERS;
+    ? pools.thinking
+    : pools.backchannel;
   return pool[index % pool.length];
 };
