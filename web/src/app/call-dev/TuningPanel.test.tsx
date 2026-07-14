@@ -169,4 +169,111 @@ describe("TuningPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "既定値に戻す" }));
     expect(onReset).toHaveBeenCalled();
   });
+
+  it.each([
+    ["language", "language", "en-US"],
+    ["ttsLanguage", "ttsLanguage", "ja-JP"],
+    ["speechModel", "speechModel", "telephony"],
+    ["transcriptionLanguage", "transcriptionLanguage", "en-US"],
+    ["hints", "hints", "砂澤ビッキ"],
+    ["開始の挨拶", "welcomeGreeting", "やあ"],
+    ["debug", "debug", "debugging"],
+    ["考え中フィラー", "thinkingFillers", "どれどれ"],
+    ["相槌フィラー", "backchannelFillers", "ふむふむ"],
+    ["保留音 URL", "holdAudioUrl", "https://example.com/bgm.mp3"],
+    ["speechTimeout(ms)", "speechTimeout", "800"],
+    ["あいづち最短間隔(ms)", "aizuchiCooldownMs", "4000"],
+    ["フィラー遅延(ms)", "fillerDelayMs", "500"],
+    ["保留音遅延(ms)", "holdDelayMs", "1000"],
+  ])("%s の入力は %s を onChange する", (label, key, value) => {
+    const { onChange } = setup();
+    fireEvent.change(screen.getByLabelText(label), { target: { value } });
+    expect(onChange).toHaveBeenCalledWith({ [key]: value });
+  });
+
+  it.each([
+    ["transcriptionProvider", "transcriptionProvider", "Deepgram"],
+    ["interruptible", "interruptible", "any"],
+    ["割り込み感度", "interruptSensitivity", "low"],
+    ["発話中の入力通知", "reportInputDuringAgentSpeech", "speech"],
+    ["挨拶の割り込み", "welcomeGreetingInterruptible", "none"],
+    ["テキスト正規化", "elevenlabsTextNormalization", "auto"],
+  ])("%s の選択は %s を onChange する", (label, key, value) => {
+    const { onChange } = setup();
+    fireEvent.change(screen.getByLabelText(label), { target: { value } });
+    expect(onChange).toHaveBeenCalledWith({ [key]: value });
+  });
+
+  it.each([
+    ["相槌を無視（backchannel）", "ignoreBackchannel", "true"],
+    ["preemptible", "preemptible", "true"],
+    ["DTMF 検出", "dtmfDetection", "true"],
+    ["partialPrompts", "partialPrompts", "false"],
+    ["あいづち", "aizuchiEnabled", "false"],
+    ["保留音", "holdAudioEnabled", "false"],
+  ])("%s のトグルは %s を onChange する", (label, key, value) => {
+    const { onChange } = setup();
+    fireEvent.click(screen.getByLabelText(label));
+    expect(onChange).toHaveBeenCalledWith({ [key]: value });
+  });
+
+  it("voiceId・TTS モデルの編集は voice を合成し直して onChange する", () => {
+    const { onChange } = setup();
+    fireEvent.change(screen.getByLabelText("voiceId"), {
+      target: { value: "newId123" },
+    });
+    expect(onChange).toHaveBeenCalledWith({ voice: "newId123-flash_v2_5" });
+    fireEvent.change(screen.getByLabelText("TTS モデル"), {
+      target: { value: "turbo_v2_5" },
+    });
+    expect(onChange).toHaveBeenCalledWith({
+      voice: "8EkOjt4xTPGMclNlh1pk-turbo_v2_5",
+    });
+  });
+
+  it.each([
+    ["速度", "8EkOjt4xTPGMclNlh1pk-flash_v2_5-0.9_0.5_0.75"],
+    ["安定性", "8EkOjt4xTPGMclNlh1pk-flash_v2_5-1.0_0.9_0.75"],
+    ["類似度", "8EkOjt4xTPGMclNlh1pk-flash_v2_5-1.0_0.5_0.9"],
+  ])("%s スライダーは音声設定部を差し替えて onChange する", (label, expected) => {
+    const { onChange } = setup({
+      voice: "8EkOjt4xTPGMclNlh1pk-flash_v2_5-1.0_0.5_0.75",
+    });
+    fireEvent.change(screen.getByLabelText(label), { target: { value: "0.9" } });
+    expect(onChange).toHaveBeenCalledWith({ voice: expected });
+  });
+
+  it("音声詳細のチェックを外すと設定部なしの voice に戻す", () => {
+    const { onChange } = setup({
+      voice: "8EkOjt4xTPGMclNlh1pk-flash_v2_5-1.0_0.5_0.75",
+    });
+    fireEvent.click(screen.getByLabelText("速度・安定性・類似度を指定"));
+    expect(onChange).toHaveBeenCalledWith({
+      voice: "8EkOjt4xTPGMclNlh1pk-flash_v2_5",
+    });
+  });
+
+  it("Deepgram のとき eotThreshold とスマートフォーマットを変更できる", () => {
+    const { onChange } = setup({ transcriptionProvider: "Deepgram" });
+    fireEvent.change(screen.getByLabelText("eotThreshold"), {
+      target: { value: "0.7" },
+    });
+    expect(onChange).toHaveBeenCalledWith({ eotThreshold: "0.7" });
+    fireEvent.click(screen.getByLabelText("スマートフォーマット"));
+    expect(onChange).toHaveBeenCalledWith({ deepgramSmartFormat: "false" });
+  });
+
+  it("speechTimeout の auto を外すと 600 に戻す", () => {
+    const { onChange } = setup({ speechTimeout: "auto" });
+    fireEvent.click(screen.getByLabelText("auto"));
+    expect(onChange).toHaveBeenCalledWith({ speechTimeout: "600" });
+  });
+
+  it("ElevenLabs から Google への切り替えは voice を維持する", () => {
+    const { onChange } = setup();
+    fireEvent.change(screen.getByLabelText("ttsProvider"), {
+      target: { value: "Google" },
+    });
+    expect(onChange).toHaveBeenCalledWith({ ttsProvider: "Google" });
+  });
 });
