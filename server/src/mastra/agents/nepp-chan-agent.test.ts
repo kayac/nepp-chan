@@ -62,6 +62,12 @@ describe("createNeppChanAgent", () => {
       expect(ins).toContain(voiceAnswerToolName);
       expect(ins).not.toMatch(/voiceAnswer(?!Tool)/);
     });
+
+    it("platform=voice は事実の質問で前置きせず直ちにツールを呼ぶ", async () => {
+      const ins = await instructionsOf(build({ platform: "voice" }));
+      expect(ins).toContain("前置きせず直ちに");
+      expect(ins).not.toContain("呼ぶ前に1文だけ前置き");
+    });
   });
 
   describe("platform / isAdmin による Agent 構築", () => {
