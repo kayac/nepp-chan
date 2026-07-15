@@ -35,7 +35,7 @@ const baseValues = {
   interruptible: "speech",
   interruptSensitivity: "high",
   dtmfDetection: "false",
-  reportInputDuringAgentSpeech: "none",
+  reportInputDuringAgentSpeech: "any",
   ignoreBackchannel: "false",
   preemptible: "false",
   hints: "音威子府",

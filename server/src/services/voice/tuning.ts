@@ -82,6 +82,8 @@ export const relayFieldSchemas = {
 
 // Twilio 既定の telephony が ja-JP 非対応で弾かれるため speechModel は long を明示。
 // speechTimeout は "auto" または 600〜5000 の範囲でなければならない（600未満はエラー64101）。
+// reportInputDuringAgentSpeech は Twilio 既定 none だと非中断の相槌再生中に
+// 重なったユーザー発話が報告されず転写から欠落するため any を既定にする。
 const RELAY_TUNING_DEFAULTS = {
   welcomeGreeting: "もしもし、ねっぷちゃんだよ。なんでも聞いてね。",
   language: "ja-JP",
@@ -90,6 +92,7 @@ const RELAY_TUNING_DEFAULTS = {
   speechTimeout: "600",
   hints: "音威子府,おといねっぷ",
   interruptible: "speech",
+  reportInputDuringAgentSpeech: "any",
   partialPrompts: true,
 } as const;
 
@@ -134,7 +137,6 @@ const TWILIO_DEFAULTS = {
   deepgramSmartFormat: "true",
   interruptSensitivity: "high",
   dtmfDetection: "false",
-  reportInputDuringAgentSpeech: "none",
   ignoreBackchannel: "false",
   preemptible: "false",
   elevenlabsTextNormalization: "off",
@@ -152,6 +154,8 @@ export const VOICE_TUNING_DEFAULTS: Record<string, string> = {
   speechTimeout: RELAY_TUNING_DEFAULTS.speechTimeout,
   hints: RELAY_TUNING_DEFAULTS.hints,
   interruptible: RELAY_TUNING_DEFAULTS.interruptible,
+  reportInputDuringAgentSpeech:
+    RELAY_TUNING_DEFAULTS.reportInputDuringAgentSpeech,
   partialPrompts: String(RELAY_TUNING_DEFAULTS.partialPrompts),
   ...TWILIO_DEFAULTS,
   ...serializeBridgeConfig(BRIDGE_CONFIG_DEFAULTS),
