@@ -51,7 +51,7 @@ const runSearch = async (
   question: string,
   requestContext: RequestContext | undefined,
   signal: AbortSignal | undefined,
-): Promise<string> => {
+) => {
   const agent = getCoreMastra().getAgent(
     source === "web" ? "voiceWebResearcherAgent" : "voiceKnowledgeAgent",
   );
