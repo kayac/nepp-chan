@@ -82,6 +82,12 @@ export const voiceAnswerTool = createTool({
     const signal = getVoiceTurnSignal(context);
 
     try {
+      logger.info("[Voice] answer start", {
+        question,
+        slotQuery: slot?.current?.query ?? "",
+        slotSource: slot?.current?.source ?? "",
+        slotChars: slot?.current?.text.length ?? 0,
+      });
       if (!slot?.current) startHold?.();
 
       const first = await decide(
@@ -92,6 +98,7 @@ export const voiceAnswerTool = createTool({
       );
       if (signal?.aborted) return { answer: ABORTED_ANSWER };
       if (first.kind === "answer") {
+        logger.info("[Voice] answered from slot", { answer: first.text });
         return { answer: first.text };
       }
 
@@ -106,14 +113,26 @@ export const voiceAnswerTool = createTool({
         if (signal?.aborted) return { answer: ABORTED_ANSWER };
         const findings: VoiceFindings = { query: question, source, text };
         if (slot) slot.current = findings;
+        logger.info("[Voice] search done", {
+          source,
+          query: question,
+          resultChars: text.length,
+          resultHead: text.slice(0, 120),
+          savedToSlot: slot !== undefined,
+        });
 
         const answer = await decide(question, text, requestContext, signal);
         if (signal?.aborted) return { answer: ABORTED_ANSWER };
         if (answer.kind === "answer") {
+          logger.info("[Voice] answered from search", {
+            source,
+            answer: answer.text,
+          });
           return { answer: answer.text };
         }
       }
 
+      logger.info("[Voice] no answer found", { question });
       return { answer: "ごめんね、それは今わからなかったな。" };
     } catch (error) {
       if (signal?.aborted) return { answer: ABORTED_ANSWER };
