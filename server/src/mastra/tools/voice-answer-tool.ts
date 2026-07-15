@@ -2,13 +2,11 @@ import type { RequestContext } from "@mastra/core/request-context";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { logger } from "~/lib/logger";
-import { createKnowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import {
   NEED_KNOWLEDGE,
   NEED_WEB,
-  voiceSummarizerAgent,
 } from "~/mastra/agents/voice-summarizer-agent";
-import { createWebResearcherAgent } from "~/mastra/agents/web-researcher-agent";
+import { getCoreMastra } from "~/mastra/core-mastra";
 import type { VoiceFindings } from "~/services/voice/findings-slot";
 import {
   getVoiceFindings,
@@ -19,9 +17,6 @@ import {
 export const voiceAnswerToolName = "voiceAnswerTool";
 
 const ABORTED_ANSWER = "ごめんね、うまく調べられなかったみたい。";
-
-const voiceKnowledgeAgent = createKnowledgeAgent();
-const voiceWebResearcherAgent = createWebResearcherAgent();
 
 type Decision =
   | { kind: "answer"; text: string }
@@ -37,7 +32,8 @@ const decide = async (
   const prompt = findings
     ? `質問:「${question}」\n\n手元の資料:\n${findings}`
     : `質問:「${question}」\n\n手元の資料: なし`;
-  const res = await voiceSummarizerAgent.generate(prompt, {
+  const agent = getCoreMastra().getAgent("voiceSummarizerAgent");
+  const res = await agent.generate(prompt, {
     requestContext,
     abortSignal: signal,
   });
@@ -56,8 +52,9 @@ const runSearch = async (
   requestContext: RequestContext | undefined,
   signal: AbortSignal | undefined,
 ): Promise<string> => {
-  const agent =
-    source === "web" ? voiceWebResearcherAgent : voiceKnowledgeAgent;
+  const agent = getCoreMastra().getAgent(
+    source === "web" ? "voiceWebResearcherAgent" : "voiceKnowledgeAgent",
+  );
   const res = await agent.generate(question, {
     requestContext,
     abortSignal: signal,

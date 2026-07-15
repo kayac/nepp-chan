@@ -10,6 +10,9 @@ describe("getCoreMastra", () => {
       mastra.getAgent("intentRouterAgent"),
       mastra.getAgent("converterAgent"),
       mastra.getAgent("knowledgeRerankerAgent"),
+      mastra.getAgent("voiceSummarizerAgent"),
+      mastra.getAgent("voiceKnowledgeAgent"),
+      mastra.getAgent("voiceWebResearcherAgent"),
     ];
     for (const agent of agents) {
       expect(agent.getMastraInstance()).toBe(mastra);
