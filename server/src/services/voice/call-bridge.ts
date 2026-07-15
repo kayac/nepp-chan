@@ -119,6 +119,10 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       this.lastInterimAt = null;
       await this.handlePrompt(ws, msg.voicePrompt);
     } else if (msg.type === "interrupt") {
+      logger.info("[Voice] interrupt", {
+        utteranceUntilInterrupt: msg.utteranceUntilInterrupt ?? "",
+        durationUntilInterruptMs: msg.durationUntilInterruptMs ?? -1,
+      });
       this.cancelPendingEnd();
       this.currentTurn?.abort();
     } else if (msg.type === "error") {
