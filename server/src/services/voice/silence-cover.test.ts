@@ -86,23 +86,36 @@ describe("createSilenceCover", () => {
   });
 
   describe("保留音", () => {
-    it("遅延 0 なら onToolCall でテキストターンを閉じてから流す", () => {
+    it("遅延 0 でも待機を伝え終わってから流す", () => {
       const { cover, sendText, sendPlay } = setup({
         fillerEnabled: false,
         holdDelayMs: 0,
       });
       cover.onToolCall();
-      expect(sendText).toHaveBeenCalledWith("", true);
+      expect(sendText).toHaveBeenCalledWith("ちょっと待ってね", true, {
+        preemptible: true,
+        interruptible: true,
+      });
+      expect(sendPlay).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(2_999);
+      expect(sendPlay).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
       expect(sendPlay).toHaveBeenCalledWith(
         BRIDGE_CONFIG_DEFAULTS.holdAudioUrl,
         { loop: 0, preemptible: true, interruptible: true },
       );
     });
 
-    it("holdAudioEnabled が false なら流さない", () => {
-      const { cover, sendPlay } = setup({ holdAudioEnabled: false });
+    it("holdAudioEnabled が false でも待機を伝え、保留音だけ流さない", () => {
+      const { cover, sendText, sendPlay } = setup({
+        holdAudioEnabled: false,
+      });
       cover.onToolCall();
       vi.advanceTimersByTime(10_000);
+      expect(sendText).toHaveBeenCalledWith("ちょっと待ってね", true, {
+        preemptible: true,
+        interruptible: true,
+      });
       expect(sendPlay).not.toHaveBeenCalled();
     });
 
@@ -115,9 +128,11 @@ describe("createSilenceCover", () => {
     });
 
     it("再生中の二重 onToolCall では重ねて流さない", () => {
-      const { cover, sendPlay } = setup({ holdDelayMs: 0 });
+      const { cover, sendText, sendPlay } = setup({ holdDelayMs: 0 });
       cover.onToolCall();
       cover.onToolCall();
+      vi.advanceTimersByTime(3_000);
+      expect(sendText).toHaveBeenCalledTimes(1);
       expect(sendPlay).toHaveBeenCalledTimes(1);
     });
 
@@ -127,8 +142,10 @@ describe("createSilenceCover", () => {
         fillerEnabled: false,
       });
       cover.onToolCall();
+      vi.advanceTimersByTime(3_000);
       cover.onToken();
       cover.onToolCall();
+      vi.advanceTimersByTime(3_000);
       expect(sendPlay).toHaveBeenCalledTimes(2);
     });
 
@@ -140,8 +157,11 @@ describe("createSilenceCover", () => {
       cover.start();
       cover.onToolCall();
       vi.advanceTimersByTime(10_000);
-      const fillerCalls = sendText.mock.calls.filter(([token]) => token !== "");
-      expect(fillerCalls).toEqual([]);
+      expect(sendText).toHaveBeenCalledTimes(1);
+      expect(sendText).toHaveBeenCalledWith("ちょっと待ってね", true, {
+        preemptible: true,
+        interruptible: true,
+      });
     });
   });
 
@@ -154,7 +174,11 @@ describe("createSilenceCover", () => {
     cover.onToolCall();
     cover.dispose();
     vi.advanceTimersByTime(10_000);
-    expect(sendText).not.toHaveBeenCalled();
+    expect(sendText).toHaveBeenCalledTimes(1);
+    expect(sendText).toHaveBeenCalledWith("ちょっと待ってね", true, {
+      preemptible: true,
+      interruptible: true,
+    });
     expect(sendPlay).not.toHaveBeenCalled();
   });
 });

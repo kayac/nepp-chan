@@ -3,6 +3,8 @@ import { pickFiller } from "./filler";
 
 type Timer = ReturnType<typeof setTimeout>;
 
+const WAITING_PHRASE_DURATION_MS = 3_000;
+
 type Params = {
   config: BridgeConfig;
   promptText: string;
@@ -32,6 +34,7 @@ export const createSilenceCover = ({
   let fillerTimer: Timer | null = null;
   let holdTimer: Timer | null = null;
   let holdPlaying = false;
+  let waitingSpoken = false;
 
   const clearFillerTimer = () => {
     if (!fillerTimer) return;
@@ -61,8 +64,6 @@ export const createSilenceCover = ({
     holdPlaying = true;
     // 保留音が流れるならフィラーはもう不要。
     clearFillerTimer();
-    // 開いたテキストターン中は play が無視されるため、last:true で閉じてから保留音を流す。
-    sendText("", true);
     sendPlay(config.holdAudioUrl, {
       loop: 0,
       preemptible: true,
@@ -84,15 +85,23 @@ export const createSilenceCover = ({
       }
     },
     onToolCall: () => {
-      if (!config.holdAudioEnabled || holdPlaying || holdTimer) return;
-      if (config.holdDelayMs > 0) {
-        holdTimer = setTimeout(playHold, config.holdDelayMs);
-      } else {
-        playHold();
+      if (!waitingSpoken) {
+        waitingSpoken = true;
+        clearFillerTimer();
+        sendText("ちょっと待ってね", true, {
+          preemptible: true,
+          interruptible: true,
+        });
       }
+      if (!config.holdAudioEnabled || holdPlaying || holdTimer) return;
+      holdTimer = setTimeout(
+        playHold,
+        Math.max(config.holdDelayMs, WAITING_PHRASE_DURATION_MS),
+      );
     },
     onToken: () => {
       holdPlaying = false;
+      waitingSpoken = false;
       clearFillerTimer();
       clearHoldTimer();
     },
