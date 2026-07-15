@@ -6,16 +6,7 @@ vi.mock("@ai-sdk/google", () => ({
   })),
 }));
 
-vi.mock("@mastra/core/llm", () => ({
-  ModelRouterLanguageModel: vi.fn(function (modelId: string) {
-    return { modelId };
-  }),
-}));
-
 vi.mock("@mastra/rag", () => ({
-  MastraAgentRelevanceScorer: vi.fn(function (id: string, model: unknown) {
-    return { id, model };
-  }),
   rerankWithScorer: vi.fn(),
 }));
 
@@ -27,10 +18,20 @@ vi.mock("~/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
+const { rerankerGenerateMock } = vi.hoisted(() => ({
+  rerankerGenerateMock: vi.fn(),
+}));
+
+vi.mock("~/mastra/core-mastra", () => ({
+  getCoreMastra: () => ({
+    getAgent: () => ({ generate: rerankerGenerateMock }),
+  }),
+}));
+
 const { embed } = await import("ai");
 const { rerankWithScorer } = await import("@mastra/rag");
 const { logger } = await import("~/lib/logger");
-const { searchKnowledge } = await import("./search");
+const { knowledgeRerankScorer, searchKnowledge } = await import("./search");
 
 const buildVectorize = () =>
   ({
@@ -43,6 +44,23 @@ beforeEach(() => {
   vi.mocked(embed).mockReset();
   vi.mocked(rerankWithScorer).mockReset();
   vi.mocked(logger.error).mockReset();
+  rerankerGenerateMock.mockReset();
+});
+
+describe("knowledgeRerankScorer", () => {
+  it("query と text をプロンプトに含めて generate し、数値スコアを返す", async () => {
+    rerankerGenerateMock.mockResolvedValueOnce({ text: "0.85" });
+
+    const score = await knowledgeRerankScorer.getRelevanceScore(
+      "観光名所",
+      "音威子府村の観光スポット一覧",
+    );
+
+    expect(score).toBe(0.85);
+    const prompt = rerankerGenerateMock.mock.calls[0]?.[0] as string;
+    expect(prompt).toContain("観光名所");
+    expect(prompt).toContain("音威子府村の観光スポット一覧");
+  });
 });
 
 describe("searchKnowledge", () => {
