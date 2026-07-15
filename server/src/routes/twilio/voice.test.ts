@@ -197,6 +197,7 @@ describe("POST /twilio/voice/incoming", () => {
     expect(xml).toContain('speechTimeout="600"');
     expect(xml).toContain('partialPrompts="true"');
     expect(xml).toContain('reportInputDuringAgentSpeech="any"');
+    expect(xml).toContain('ignoreBackchannel="true"');
   });
   it("チューニングパラメータを TwiML 属性に反映する", async () => {
     const res = await buildApp().request(

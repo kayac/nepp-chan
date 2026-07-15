@@ -21,6 +21,7 @@ describe("parseVoiceTuning", () => {
     expect(relay.speechTimeout).toBe("600");
     expect(relay.interruptible).toBe("speech");
     expect(relay.reportInputDuringAgentSpeech).toBe("any");
+    expect(relay.ignoreBackchannel).toBe(true);
     expect(relay.partialPrompts).toBe(true);
     expect(relay.eotThreshold).toBeUndefined();
     expect(bridge).toEqual(BRIDGE_CONFIG_DEFAULTS);
@@ -153,6 +154,7 @@ describe("VOICE_TUNING_DEFAULTS", () => {
     expect(VOICE_TUNING_DEFAULTS.speechTimeout).toBe("600");
     expect(VOICE_TUNING_DEFAULTS.partialPrompts).toBe("true");
     expect(VOICE_TUNING_DEFAULTS.reportInputDuringAgentSpeech).toBe("any");
+    expect(VOICE_TUNING_DEFAULTS.ignoreBackchannel).toBe("true");
     expect(VOICE_TUNING_DEFAULTS.aizuchiCooldownMs).toBe("2000");
     expect(
       Object.values(VOICE_TUNING_DEFAULTS).every((v) => typeof v === "string"),
