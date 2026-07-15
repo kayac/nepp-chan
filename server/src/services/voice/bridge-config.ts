@@ -67,7 +67,7 @@ export const BRIDGE_CONFIG_DEFAULTS: BridgeConfig = {
   aizuchiCooldownMs: 2_000,
   aizuchiPhrases: [...AIZUCHI_PHRASES],
   holdAudioEnabled: true,
-  holdAudioUrl: "https://demo.twilio.com/docs/classic.mp3",
+  holdAudioUrl: "https://amachamusic.chagasi.com/mp3/tsukinokobune.mp3",
   holdDelayMs: 0,
   endCallEnabled: true,
 };
