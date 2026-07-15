@@ -1,10 +1,37 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { describe, expect, it } from "vitest";
-import { base64UrlToString } from "~/lib/crypto";
-import { verifyRelayToken } from "~/services/voice/twilio-token";
-import { twilioVoiceRoutes } from "./voice";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("~/repository/admin-session-repository", () => ({
+  adminSessionRepository: { findValid: vi.fn() },
+}));
+vi.mock("~/repository/admin-user-repository", () => ({
+  adminUserRepository: { findById: vi.fn() },
+}));
+vi.mock("~/services/auth/anonymous-session", () => ({
+  verifyAnonymousToken: vi.fn(),
+}));
+
+const { adminSessionRepository } = await import(
+  "~/repository/admin-session-repository"
+);
+const { adminUserRepository } = await import(
+  "~/repository/admin-user-repository"
+);
+const { verifyAnonymousToken } = await import(
+  "~/services/auth/anonymous-session"
+);
+const { base64UrlToString } = await import("~/lib/crypto");
+const { verifyRelayToken } = await import("~/services/voice/twilio-token");
+const { twilioVoiceRoutes } = await import("./voice");
+const { withResolvePrincipal } = await import("~/__tests__/helpers/test-app");
+
+const parent = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
+parent.route("/twilio/voice", twilioVoiceRoutes);
+const app = await withResolvePrincipal(parent);
 
 const env = {
+  DB: {} as D1Database,
+  JWT_SECRET: "test-secret-32-chars-long-enough",
   TWILIO_ACCOUNT_SID: "AC00000000000000000000000000000000",
   TWILIO_API_KEY_SID: "SK00000000000000000000000000000000",
   TWILIO_API_KEY_SECRET: "api-secret",
@@ -12,17 +39,65 @@ const env = {
   CALL_TOKEN_SECRET: "call-token-secret",
 } as unknown as CloudflareBindings;
 
-const buildApp = () => {
-  const app = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
-  app.route("/twilio/voice", twilioVoiceRoutes);
-  return app;
+const buildApp = () => app;
+
+const ADMIN_TOKEN = "a".repeat(64);
+
+const useAdminAuth = (role: "staff" | "admin" | "super_admin" = "staff") => {
+  vi.mocked(adminSessionRepository.findValid).mockResolvedValue({
+    token: ADMIN_TOKEN,
+    userId: "u-1",
+    expiresAt: new Date(Date.now() + 86400000).toISOString(),
+    createdAt: "2025-01-01T00:00:00Z",
+  });
+  vi.mocked(adminUserRepository.findById).mockResolvedValue({
+    id: "u-1",
+    username: "staff01",
+    name: "スタッフ",
+    role,
+    passwordHash: "hash",
+    createdAt: "2025-01-01T00:00:00Z",
+    updatedAt: null,
+  });
 };
 
+beforeEach(() => {
+  vi.mocked(adminSessionRepository.findValid).mockReset();
+  vi.mocked(adminUserRepository.findById).mockReset();
+  vi.mocked(verifyAnonymousToken).mockReset();
+});
+
 describe("POST /twilio/voice/token", () => {
-  it("softphone 用 AccessToken（JWT）と identity を返す", async () => {
+  it("未認証は 401 でトークンを発行しない", async () => {
     const res = await buildApp().request(
       "http://api.example.com/twilio/voice/token",
       { method: "POST" },
+      env,
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it("anonymous JWT は 403 でトークンを発行しない", async () => {
+    vi.mocked(verifyAnonymousToken).mockResolvedValue("anon-resource");
+    const res = await buildApp().request(
+      "http://api.example.com/twilio/voice/token",
+      {
+        method: "POST",
+        headers: { Authorization: "Bearer anon-jwt" },
+      },
+      env,
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it("staff 管理者に softphone 用 AccessToken（JWT）と identity を返す", async () => {
+    useAdminAuth("staff");
+    const res = await buildApp().request(
+      "http://api.example.com/twilio/voice/token",
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${ADMIN_TOKEN}` },
+      },
       env,
     );
     expect(res.status).toBe(200);

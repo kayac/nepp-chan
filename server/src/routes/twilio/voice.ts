@@ -1,6 +1,8 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { generateId } from "~/lib/crypto";
 import { logger } from "~/lib/logger";
+import { errorResponse } from "~/lib/openapi-errors";
+import { requireRole } from "~/middleware/require-role";
 import { serializeBridgeConfig } from "~/services/voice/bridge-config";
 import {
   parseVoiceTuning,
@@ -25,8 +27,9 @@ const nowSeconds = () => Math.floor(Date.now() / 1000);
 const tokenRoute = createRoute({
   method: "post",
   path: "/token",
-  summary: "通話用 AccessToken 発行",
+  summary: "【管理者専用】通話用 AccessToken 発行",
   tags: ["Twilio"],
+  middleware: [requireRole("staff")] as const,
   responses: {
     200: {
       description: "softphone（@twilio/voice-sdk）用の Twilio AccessToken",
@@ -36,6 +39,8 @@ const tokenRoute = createRoute({
         },
       },
     },
+    401: errorResponse(401),
+    403: errorResponse(403),
   },
 });
 

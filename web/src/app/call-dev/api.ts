@@ -1,11 +1,20 @@
-import { client } from "~/lib/api/client";
+import { ApiError, client } from "~/lib/api/client";
 
 export const fetchCallToken = async () => {
-  const { data, error } = await client.POST("/twilio/voice/token");
-  if (error || !data) {
-    throw new Error("通話トークンの取得に失敗しました");
+  try {
+    const { data, error } = await client.POST("/twilio/voice/token");
+    if (error || !data) {
+      throw new Error("通話トークンの取得に失敗しました");
+    }
+    return data;
+  } catch (e) {
+    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
+      throw new Error(
+        "管理者ログインが必要です。ダッシュボードでログインしてから使ってください。",
+      );
+    }
+    throw e;
   }
-  return data;
 };
 
 export const fetchVoicePresets = async () => {

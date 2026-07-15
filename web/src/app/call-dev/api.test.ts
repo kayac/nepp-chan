@@ -24,6 +24,20 @@ describe("fetchCallToken", () => {
     );
     await expect(fetchCallToken()).rejects.toThrow();
   });
+
+  it.each([
+    401, 403,
+  ])("%i なら管理者ログインを促すメッセージで throw する", async (status) => {
+    server.use(
+      http.post(`${API}/twilio/voice/token`, () =>
+        HttpResponse.json(
+          { error: { code: status, message: "認証が必要です" } },
+          { status },
+        ),
+      ),
+    );
+    await expect(fetchCallToken()).rejects.toThrow("管理者ログインが必要です");
+  });
 });
 
 describe("fetchVoicePresets", () => {
