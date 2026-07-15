@@ -38,7 +38,7 @@ const escapeXmlAttr = (value: string) =>
     .replace(/'/g, "&apos;");
 
 const attr = (name: string, value: string | undefined) =>
-  value ? ` ${name}="${escapeXmlAttr(value)}"` : "";
+  value === undefined ? "" : ` ${name}="${escapeXmlAttr(value)}"`;
 
 const boolAttr = (name: string, value: boolean | undefined) =>
   value === undefined ? "" : ` ${name}="${value}"`;

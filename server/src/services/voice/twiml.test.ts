@@ -43,6 +43,14 @@ describe("buildConversationRelayTwiml", () => {
     expect(xml).not.toContain("welcomeGreeting");
   });
 
+  it("welcomeGreeting 空文字は挨拶なしとして属性を明示出力する", () => {
+    const xml = buildConversationRelayTwiml({
+      wsUrl: "wss://x/relay",
+      welcomeGreeting: "",
+    });
+    expect(xml).toContain('welcomeGreeting=""');
+  });
+
   it("welcomeGreeting の特殊文字をエスケープする", () => {
     const xml = buildConversationRelayTwiml({
       wsUrl: "wss://x/relay",
