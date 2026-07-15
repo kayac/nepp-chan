@@ -1,15 +1,28 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { ModelRouterLanguageModel } from "@mastra/core/llm";
-import { MastraAgentRelevanceScorer, rerankWithScorer } from "@mastra/rag";
+import type { RelevanceScoreProvider } from "@mastra/core/relevance";
+import { createSimilarityPrompt } from "@mastra/core/relevance";
+import { rerankWithScorer } from "@mastra/rag";
 import { embed } from "ai";
-import { GEMINI_EMBEDDING, GEMINI_FLASH } from "~/lib/llm-models";
+import { GEMINI_EMBEDDING } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
+import { getCoreMastra } from "~/mastra/core-mastra";
 
 const EMBEDDING_DIMENSIONS = 1536;
 
 const SEARCH_TOP_K = 10;
 
 const RERANK_TOP_K = 5;
+
+// FIXME: mastra-ai/mastra#19462 の回避。MastraAgentRelevanceScorer は内部で未登録 Agent を
+// 生成し workerd でクラッシュするため公開インターフェースを自前実装している。
+// upstream 修正後は MastraAgentRelevanceScorer（シングルトン化）に戻す。
+export const knowledgeRerankScorer: RelevanceScoreProvider = {
+  getRelevanceScore: async (query, text) => {
+    const agent = getCoreMastra().getAgent("knowledgeRerankerAgent");
+    const result = await agent.generate(createSimilarityPrompt(query, text));
+    return Number.parseFloat(result.text);
+  },
+};
 
 export type KnowledgeResult = {
   content: string;
@@ -78,15 +91,10 @@ export const searchKnowledge = async (
       };
     });
 
-    const rerankModel = new ModelRouterLanguageModel(GEMINI_FLASH);
-    const scorer = new MastraAgentRelevanceScorer(
-      "knowledge-reranker",
-      rerankModel,
-    );
     const rerankedResults = await rerankWithScorer({
       results: queryResults,
       query,
-      scorer,
+      scorer: knowledgeRerankScorer,
       options: {
         topK: RERANK_TOP_K,
         weights: {
