@@ -63,6 +63,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     });
     server.addEventListener("close", () => {
       this.currentTurn?.abort();
+      this.cancelPendingEnd();
     });
     await this.ctx.storage.setAlarm(Date.now() + SETUP_TIMEOUT_MS);
     return new Response(null, { status: 101, webSocket: client });
