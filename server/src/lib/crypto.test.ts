@@ -1,9 +1,11 @@
+import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
   base64UrlFromString,
   base64UrlToString,
   generateId,
   generateToken,
+  hmacSha1Base64,
   hmacSha256,
 } from "./crypto";
 
@@ -43,6 +45,27 @@ describe("hmacSha256", () => {
 
   it("空 secret は許容しない", async () => {
     await expect(hmacSha256("value", "")).rejects.toThrow();
+  });
+});
+
+describe("hmacSha1Base64", () => {
+  it("node:crypto の HMAC-SHA1 + 標準 base64 と一致する", async () => {
+    const expected = createHmac("sha1", "secret")
+      .update("https://example.com/hook")
+      .digest("base64");
+    expect(await hmacSha1Base64("https://example.com/hook", "secret")).toBe(
+      expected,
+    );
+  });
+
+  it("secret が異なれば異なる値を返す", async () => {
+    const a = await hmacSha1Base64("value", "secret-a");
+    const b = await hmacSha1Base64("value", "secret-b");
+    expect(a).not.toBe(b);
+  });
+
+  it("空 secret は許容しない", async () => {
+    await expect(hmacSha1Base64("value", "")).rejects.toThrow();
   });
 });
 

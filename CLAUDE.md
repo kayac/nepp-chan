@@ -113,6 +113,7 @@ cp web/.env.example web/.env
 | `TWILIO_API_KEY_SID`           | AccessToken 署名鍵 SID                |
 | `TWILIO_API_KEY_SECRET`        | AccessToken 署名鍵 Secret             |
 | `TWILIO_TWIML_APP_SID`         | softphone の発信先 TwiML App          |
+| `TWILIO_AUTH_TOKEN`            | webhook 署名検証（X-Twilio-Signature）|
 | `CALL_TOKEN_SECRET`            | relay WS 短命トークン署名（HMAC）     |
 
 ### web 環境変数

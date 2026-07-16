@@ -41,6 +41,26 @@ export const hmacSha256 = async (value: string, secret: string) => {
   return toBase64Url(signature);
 };
 
+// Twilio X-Twilio-Signature 互換（HMAC-SHA1 + 標準 base64、パディングあり）
+export const hmacSha1Base64 = async (value: string, secret: string) => {
+  if (!secret) {
+    throw new Error("hmacSha1Base64: secret は空にできません");
+  }
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-1" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(value),
+  );
+  return btoa(String.fromCharCode(...new Uint8Array(signature)));
+};
+
 export const generateId = () => {
   const array = new Uint8Array(16);
   crypto.getRandomValues(array);

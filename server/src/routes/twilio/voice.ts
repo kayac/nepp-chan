@@ -3,6 +3,7 @@ import { generateId } from "~/lib/crypto";
 import { logger } from "~/lib/logger";
 import { errorResponse } from "~/lib/openapi-errors";
 import { requireRole } from "~/middleware/require-role";
+import { twilioSignatureVerify } from "~/middleware/twilio-signature";
 import { serializeBridgeConfig } from "~/services/voice/bridge-config";
 import {
   parseVoiceTuning,
@@ -17,6 +18,7 @@ import { buildConversationRelayTwiml } from "~/services/voice/twiml";
 
 export const twilioVoiceRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
+  Variables: { twilioParams: Record<string, string> };
 }>();
 
 const ACCESS_TOKEN_TTL_SECONDS = 3600;
@@ -102,19 +104,17 @@ twilioVoiceRoutes.openapi(presetsRoute, (c) =>
   ),
 );
 
-twilioVoiceRoutes.post("/incoming", async (c) => {
-  const [relayToken, body] = await Promise.all([
-    createRelayToken(c.env.CALL_TOKEN_SECRET, {
-      nowSeconds: nowSeconds(),
-      ttlSeconds: RELAY_TOKEN_TTL_SECONDS,
-    }),
-    // body なし（form-encoded 以外）でも既定設定で TwiML を返す。
-    c.req.parseBody().catch(() => ({}) as Record<string, unknown>),
-  ]);
+twilioVoiceRoutes.post("/incoming", twilioSignatureVerify, async (c) => {
+  const relayToken = await createRelayToken(c.env.CALL_TOKEN_SECRET, {
+    nowSeconds: nowSeconds(),
+    ttlSeconds: RELAY_TOKEN_TTL_SECONDS,
+  });
   const host = new URL(c.req.url).host;
   const wsUrl = `wss://${host}/twilio/voice/relay`;
 
-  const { relay, bridge, invalidKeys } = parseVoiceTuning(body);
+  const { relay, bridge, invalidKeys } = parseVoiceTuning(
+    c.get("twilioParams"),
+  );
   if (invalidKeys.length > 0) {
     logger.warn("[Voice] invalid tuning params, fell back to defaults", {
       keys: invalidKeys.join(","),

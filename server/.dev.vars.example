@@ -25,6 +25,8 @@ TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_API_KEY_SID=SKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_API_KEY_SECRET=your-twilio-api-key-secret
 TWILIO_TWIML_APP_SID=APxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# webhook 署名検証（X-Twilio-Signature）用 Auth Token
+TWILIO_AUTH_TOKEN=your-twilio-auth-token
 
 # relay WS 入場用の短命トークン署名鍵（HMAC-SHA256）
 CALL_TOKEN_SECRET=local-dev-call-token-secret-change-me

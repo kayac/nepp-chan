@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -36,10 +37,35 @@ const env = {
   TWILIO_API_KEY_SID: "SK00000000000000000000000000000000",
   TWILIO_API_KEY_SECRET: "api-secret",
   TWILIO_TWIML_APP_SID: "AP00000000000000000000000000000000",
+  TWILIO_AUTH_TOKEN: "twilio-auth-token",
   CALL_TOKEN_SECRET: "call-token-secret",
 } as unknown as CloudflareBindings;
 
 const buildApp = () => app;
+
+const INCOMING_URL = "http://api.example.com/twilio/voice/incoming";
+
+const signTwilio = (url: string, params: Record<string, string> = {}) =>
+  createHmac("sha1", "twilio-auth-token")
+    .update(
+      url +
+        Object.keys(params)
+          .sort()
+          .map((name) => name + params[name])
+          .join(""),
+    )
+    .digest("base64");
+
+const postIncoming = (params?: Record<string, string>) =>
+  buildApp().request(
+    INCOMING_URL,
+    {
+      method: "POST",
+      headers: { "x-twilio-signature": signTwilio(INCOMING_URL, params) },
+      ...(params ? { body: new URLSearchParams(params) } : {}),
+    },
+    env,
+  );
 
 const ADMIN_TOKEN = "a".repeat(64);
 
@@ -111,12 +137,25 @@ describe("POST /twilio/voice/token", () => {
 });
 
 describe("POST /twilio/voice/incoming", () => {
-  it("ConversationRelay の TwiML（text/xml）を返す", async () => {
+  it("X-Twilio-Signature ヘッダーがないリクエストは 401 で TwiML を返さない", async () => {
+    const res = await buildApp().request(INCOMING_URL, { method: "POST" }, env);
+    expect(res.status).toBe(401);
+  });
+
+  it("不正な署名のリクエストは 401 で TwiML を返さない", async () => {
     const res = await buildApp().request(
-      "http://api.example.com/twilio/voice/incoming",
-      { method: "POST" },
+      INCOMING_URL,
+      {
+        method: "POST",
+        headers: { "x-twilio-signature": "invalid-signature" },
+      },
       env,
     );
+    expect(res.status).toBe(401);
+  });
+
+  it("ConversationRelay の TwiML（text/xml）を返す", async () => {
+    const res = await postIncoming();
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toContain("xml");
 
@@ -130,21 +169,13 @@ describe("POST /twilio/voice/incoming", () => {
   });
 
   it("リクエストの host から wss の relay URL を組み立てる", async () => {
-    const res = await buildApp().request(
-      "http://api.example.com/twilio/voice/incoming",
-      { method: "POST" },
-      env,
-    );
+    const res = await postIncoming();
     const xml = await res.text();
     expect(xml).toContain('url="wss://api.example.com/twilio/voice/relay"');
   });
 
   it("relay トークンは CALL_TOKEN_SECRET で検証できる", async () => {
-    const res = await buildApp().request(
-      "http://api.example.com/twilio/voice/incoming",
-      { method: "POST" },
-      env,
-    );
+    const res = await postIncoming();
     const xml = await res.text();
     const token = xml.match(/<Parameter name="token" value="([^"]+)"/)?.[1];
     expect(token).toBeTruthy();
@@ -156,41 +187,21 @@ describe("POST /twilio/voice/incoming", () => {
   });
 
   it("voicePreset パラメータで TTS プリセットを切り替える", async () => {
-    const res = await buildApp().request(
-      "http://api.example.com/twilio/voice/incoming",
-      {
-        method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ voicePreset: "leda" }),
-      },
-      env,
-    );
+    const res = await postIncoming({ voicePreset: "leda" });
     const xml = await res.text();
     expect(xml).toContain('ttsProvider="Google"');
     expect(xml).toContain('voice="ja-JP-Chirp3-HD-Leda"');
   });
 
   it("未知の voicePreset は既定プリセットにフォールバックする", async () => {
-    const res = await buildApp().request(
-      "http://api.example.com/twilio/voice/incoming",
-      {
-        method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ voicePreset: "unknown-voice" }),
-      },
-      env,
-    );
+    const res = await postIncoming({ voicePreset: "unknown-voice" });
     const xml = await res.text();
     expect(xml).toContain('ttsProvider="ElevenLabs"');
     expect(xml).toContain('voice="8EkOjt4xTPGMclNlh1pk-flash_v2_5"');
   });
 
   it("固定の STT/endpointing 設定を TwiML に出力する", async () => {
-    const res = await buildApp().request(
-      "http://api.example.com/twilio/voice/incoming",
-      { method: "POST" },
-      env,
-    );
+    const res = await postIncoming();
     const xml = await res.text();
     expect(xml).toContain('transcriptionProvider="Google"');
     expect(xml).toContain('speechModel="long"');
@@ -200,22 +211,14 @@ describe("POST /twilio/voice/incoming", () => {
     expect(xml).toContain('ignoreBackchannel="true"');
   });
   it("チューニングパラメータを TwiML 属性に反映する", async () => {
-    const res = await buildApp().request(
-      "http://api.example.com/twilio/voice/incoming",
-      {
-        method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          transcriptionProvider: "Deepgram",
-          speechModel: "nova-2-general",
-          eotThreshold: "0.7",
-          interruptSensitivity: "low",
-          welcomeGreeting: "やあ",
-          deepgramSmartFormat: "false",
-        }),
-      },
-      env,
-    );
+    const res = await postIncoming({
+      transcriptionProvider: "Deepgram",
+      speechModel: "nova-2-general",
+      eotThreshold: "0.7",
+      interruptSensitivity: "low",
+      welcomeGreeting: "やあ",
+      deepgramSmartFormat: "false",
+    });
     const xml = await res.text();
     expect(xml).toContain('transcriptionProvider="Deepgram"');
     expect(xml).toContain('speechModel="nova-2-general"');
@@ -226,18 +229,10 @@ describe("POST /twilio/voice/incoming", () => {
   });
 
   it("不正なチューニング値は既定値へフォールバックし通話を落とさない", async () => {
-    const res = await buildApp().request(
-      "http://api.example.com/twilio/voice/incoming",
-      {
-        method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          speechTimeout: "100",
-          voice: '"><Say>hacked</Say>',
-        }),
-      },
-      env,
-    );
+    const res = await postIncoming({
+      speechTimeout: "100",
+      voice: '"><Say>hacked</Say>',
+    });
     expect(res.status).toBe(200);
     const xml = await res.text();
     expect(xml).toContain('speechTimeout="600"');
@@ -246,18 +241,10 @@ describe("POST /twilio/voice/incoming", () => {
   });
 
   it("サーバ側ノブを <Parameter> として出力し token と共存させる", async () => {
-    const res = await buildApp().request(
-      "http://api.example.com/twilio/voice/incoming",
-      {
-        method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          fillerEnabled: "false",
-          aizuchiCooldownMs: "4000",
-        }),
-      },
-      env,
-    );
+    const res = await postIncoming({
+      fillerEnabled: "false",
+      aizuchiCooldownMs: "4000",
+    });
     const xml = await res.text();
     expect(xml).toMatch(/<Parameter name="token" value="[^"]+"\/>/);
     expect(xml).toContain('<Parameter name="fillerEnabled" value="false"/>');
