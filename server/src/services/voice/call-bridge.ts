@@ -173,6 +173,10 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       from: this.from,
     });
     const turnRunner = await this.turnRunnerPromise;
+    if (controller.signal.aborted || this.currentTurn !== controller) {
+      if (this.currentTurn === controller) this.currentTurn = null;
+      return;
+    }
 
     let firstSendMs: number | null = null;
     let tokenCount = 0;
