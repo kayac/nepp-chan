@@ -569,7 +569,7 @@ export const TuningPanel = ({
         )}
         <NumberRow
           label="保留音遅延(ms)"
-          hint="検索開始からこの時間待ってから流す。0 で即時"
+          hint="検索開始から指定時間待つ。最短3秒後に開始"
           value={v("holdDelayMs")}
           min={0}
           max={5000}

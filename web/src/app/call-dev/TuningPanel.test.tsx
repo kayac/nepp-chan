@@ -170,6 +170,11 @@ describe("TuningPanel", () => {
     expect(onReset).toHaveBeenCalled();
   });
 
+  it("保留音は最短3秒後に流れることを表示する", () => {
+    setup();
+    expect(screen.getByText(/最短3秒後に開始/)).toBeInTheDocument();
+  });
+
   it.each([
     ["language", "language", "en-US"],
     ["ttsLanguage", "ttsLanguage", "ja-JP"],
