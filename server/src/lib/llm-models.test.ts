@@ -5,6 +5,7 @@ import {
   type Intent,
   primaryModelId,
   resolveModelTier,
+  voiceModelConfig,
 } from "./llm-models";
 
 describe("resolveModelTier", () => {
@@ -80,6 +81,27 @@ describe("resolveModelTier", () => {
       expect(
         tier.model[0].providerOptions.google.thinkingConfig.thinkingLevel,
       ).toBe("medium");
+    });
+  });
+
+  describe("voiceModelConfig（通話用の固定モデル）", () => {
+    it("プライマリ FLASH_LITE + low、フォールバック FLASH", () => {
+      expect(voiceModelConfig.model.map((m) => m.model)).toEqual([
+        GEMINI_FLASH_LITE,
+        GEMINI_FLASH,
+      ]);
+      expect(
+        voiceModelConfig.model[0].providerOptions.google.thinkingConfig
+          .thinkingLevel,
+      ).toBe("low");
+    });
+
+    it("重い FLASH/medium は使わない（軽量ゲート）", () => {
+      expect(voiceModelConfig.model[0].model).not.toBe(GEMINI_FLASH);
+    });
+
+    it("tool 委譲のため maxSteps は 10 を維持", () => {
+      expect(voiceModelConfig.defaultOptions.maxSteps).toBe(10);
     });
   });
 

@@ -16,3 +16,4 @@ export { healthRoutes } from "./health";
 export { lineRoutes } from "./line";
 export { pollRoutes } from "./poll";
 export { threadsRoutes } from "./threads";
+export { twilioVoiceRoutes } from "./twilio/voice";

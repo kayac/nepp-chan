@@ -1,0 +1,8 @@
+---
+import { CallDevPage } from "~/app/call-dev/CallDevPage";
+import Layout from "~/layouts/Layout.astro";
+---
+
+<Layout title="通話（dev）">
+  <CallDevPage client:only="react" />
+</Layout>

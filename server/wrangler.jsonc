@@ -66,6 +66,10 @@
           }
         ]
       },
+      "durable_objects": {
+        "bindings": [{ "name": "CALL_BRIDGE", "class_name": "CallBridge" }]
+      },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["CallBridge"] }],
       "vars": {
         "ENVIRONMENT": "local",
         "WEB_URL": "http://localhost:5173",
@@ -116,6 +120,10 @@
           }
         ]
       },
+      "durable_objects": {
+        "bindings": [{ "name": "CALL_BRIDGE", "class_name": "CallBridge" }]
+      },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["CallBridge"] }],
       "vars": {
         "ENVIRONMENT": "development",
         "WEB_URL": "https://dev-web.nepp-chan.ai",
@@ -165,6 +173,10 @@
           }
         ]
       },
+      "durable_objects": {
+        "bindings": [{ "name": "CALL_BRIDGE", "class_name": "CallBridge" }]
+      },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["CallBridge"] }],
       "vars": {
         "ENVIRONMENT": "production",
         "WEB_URL": "https://web.nepp-chan.ai",

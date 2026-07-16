@@ -21,7 +21,8 @@ server/src/
 ├── middleware/              # Hono ミドルウェア
 ├── routes/                  # API ルート定義
 │   ├── threads/             # スレッド・チャット API
-│   └── admin/               # 管理 API
+│   ├── admin/               # 管理 API
+│   └── twilio/              # Twilio 通話 webhook（token / incoming）
 ├── schemas/                 # 共有 Zod スキーマ（ツール・ルート共通）
 ├── mastra/                  # Mastra プリミティブ
 │   ├── agents/              # AI エージェント
@@ -32,6 +33,7 @@ server/src/
 │   ├── analytics/           # 分析（usage 記録・集計・週次レポート）
 │   ├── auth/                # 認証
 │   ├── knowledge/           # RAG ナレッジ処理
+│   ├── voice/               # 通話（Twilio ConversationRelay・CallBridge DO）
 │   └── persona-extractor.ts # ペルソナ抽出
 ├── repository/              # データアクセス層
 ├── handlers/                # Cron/Queue ハンドラー

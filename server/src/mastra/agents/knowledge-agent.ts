@@ -1,6 +1,6 @@
 import { Agent } from "@mastra/core/agent";
 import { getCurrentDateInfo } from "~/lib/date";
-import { GEMINI_FLASH, geminiModelWithThinking } from "~/lib/llm-models";
+import { geminiModelWithThinking } from "~/lib/llm-models";
 import {
   broadcastGetTool,
   broadcastGetToolName,
@@ -124,29 +124,18 @@ ${getCurrentDateInfo()}
 - 過去を明示する表現（「去年の」「以前の」「○年の」）がある場合のみ、該当時期で検索する
 `;
 
-export const knowledgeAgent = new Agent({
-  id: "knowledge-agent",
-  name: "Knowledge Agent",
-  description:
-    "音威子府村の情報を検索・回答する担当。村に関する情報（歴史、施設、観光、村長、行政、行事）を検索して回答する。",
-  instructions: knowledgeAgentInstructions,
-  ...geminiModelWithThinking({ model: GEMINI_FLASH, level: "high" }),
-  tools: {
-    knowledgeSearchTool,
-    [broadcastGetToolName]: broadcastGetTool,
-  },
-});
-
-/** eval 用: モデルを指定して knowledge agent を生成 */
-export const createKnowledgeAgentWithModel = (model: string) =>
+export const createKnowledgeAgent = (model?: string) =>
   new Agent({
     id: "knowledge-agent",
     name: "Knowledge Agent",
-    description: knowledgeAgent.getDescription(),
+    description:
+      "音威子府村の情報を検索・回答する担当。村に関する情報（歴史、施設、観光、村長、行政、行事）を検索して回答する。",
     instructions: knowledgeAgentInstructions,
-    ...geminiModelWithThinking({ model, level: "high" }),
+    ...geminiModelWithThinking({ model }),
     tools: {
       knowledgeSearchTool,
       [broadcastGetToolName]: broadcastGetTool,
     },
   });
+
+export const knowledgeAgent = createKnowledgeAgent();

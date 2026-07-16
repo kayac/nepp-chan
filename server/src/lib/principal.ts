@@ -44,6 +44,18 @@ export const toLineIds = async (p: LinePrincipal, secret: string) => {
   };
 };
 
+// 音声通話の発信元（softphone の client:… / PSTN の +81…）から
+// resourceId / threadId / hashedFrom をまとめて生成する。LINE と同様に
+// 平文の発信元が永続化されないよう HMAC でハッシュ化し、voice 名前空間を分ける。
+export const toVoiceIds = async (from: string, secret: string) => {
+  const hashedFrom = await hmacSha256(from, secret);
+  return {
+    hashedFrom,
+    resourceId: `voice:${hashedFrom}`,
+    threadId: `voice-thread:${hashedFrom}`,
+  };
+};
+
 export const requireAdminUser = (
   principal: Principal | undefined,
 ): AuthUser => {

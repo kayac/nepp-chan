@@ -1,12 +1,13 @@
 import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { describe, expect, it } from "vitest";
 
-import { GEMINI_FLASH_LITE, type ModelTierConfig } from "~/lib/llm-models";
+import { type AgentModelConfig, GEMINI_FLASH_LITE } from "~/lib/llm-models";
 import { broadcastGetToolName } from "~/mastra/tools/broadcast-get-tool";
 import { pollGetToolName } from "~/mastra/tools/poll-get-tool";
+import { voiceAnswerToolName } from "~/mastra/tools/voice-answer-tool";
 import { createNeppChanAgent, neppChanMemoryOptions } from "./nepp-chan-agent";
 
-const modelConfig = { model: "dummy-model" } as unknown as ModelTierConfig;
+const modelConfig = { model: "dummy-model" } as unknown as AgentModelConfig;
 
 const build = (over: Partial<Parameters<typeof createNeppChanAgent>[0]> = {}) =>
   createNeppChanAgent({ modelConfig, withMemory: false, ...over });
@@ -55,6 +56,23 @@ describe("createNeppChanAgent", () => {
       const lineIns = await instructionsOf(build({ platform: "line" }));
       expect(lineIns).toContain(broadcastGetToolName);
     });
+
+    it("platform=voice は voiceAnswerTool を登録キーで参照する", async () => {
+      const ins = await instructionsOf(build({ platform: "voice" }));
+      expect(ins).toContain(voiceAnswerToolName);
+      expect(ins).not.toMatch(/voiceAnswer(?!Tool)/);
+    });
+
+    it("platform=voice は事実の質問で前置きせず直ちにツールを呼ぶ", async () => {
+      const ins = await instructionsOf(build({ platform: "voice" }));
+      expect(ins).toContain("前置きせず直ちに");
+      expect(ins).not.toContain("呼ぶ前に1文だけ前置き");
+    });
+
+    it("platform=voice の例文に絵文字を含めない", async () => {
+      const ins = await instructionsOf(build({ platform: "voice" }));
+      expect(ins).not.toMatch(/[🌸😊]/u);
+    });
   });
 
   describe("platform / isAdmin による Agent 構築", () => {
@@ -63,6 +81,7 @@ describe("createNeppChanAgent", () => {
       ["web 管理者", { platform: "web" as const, isAdmin: true }],
       ["line", { platform: "line" as const, isAdmin: false }],
       ["widget", { platform: "widget" as const, isAdmin: false }],
+      ["voice", { platform: "voice" as const, isAdmin: false }],
     ])("%s で Agent を生成できる", (_label, over) => {
       expect(build(over)).toBeDefined();
     });

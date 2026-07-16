@@ -7,4 +7,9 @@ interface CloudflareBindings {
   SENTRY_DSN: string;
   JWT_SECRET: string;
   RESOURCE_ID_HASH_SECRET: string;
+  TWILIO_ACCOUNT_SID: string;
+  TWILIO_API_KEY_SID: string;
+  TWILIO_API_KEY_SECRET: string;
+  TWILIO_TWIML_APP_SID: string;
+  CALL_TOKEN_SECRET: string;
 }

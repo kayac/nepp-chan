@@ -2,6 +2,7 @@ import type { D1Store } from "@mastra/cloudflare-d1";
 import { RequestContext } from "@mastra/core/request-context";
 
 import type { AuthUser } from "~/schemas/auth-schema";
+import type { VoiceFindingsSlot } from "~/services/voice/findings-slot";
 
 export type MastraRequestContextType = {
   storage?: D1Store;
@@ -9,6 +10,10 @@ export type MastraRequestContextType = {
   env: CloudflareBindings;
   conversationEndedAt?: string;
   adminUser?: AuthUser;
+  voiceFindings?: VoiceFindingsSlot;
+  voiceSearchStart?: () => void;
+  voiceTurnSignal?: AbortSignal;
+  voiceEndCall?: () => void;
 };
 
 export const createRequestContext = (values: MastraRequestContextType) => {
@@ -23,6 +28,18 @@ export const createRequestContext = (values: MastraRequestContextType) => {
   }
   if (values.adminUser) {
     requestContext.set("adminUser", values.adminUser);
+  }
+  if (values.voiceFindings) {
+    requestContext.set("voiceFindings", values.voiceFindings);
+  }
+  if (values.voiceSearchStart) {
+    requestContext.set("voiceSearchStart", values.voiceSearchStart);
+  }
+  if (values.voiceTurnSignal) {
+    requestContext.set("voiceTurnSignal", values.voiceTurnSignal);
+  }
+  if (values.voiceEndCall) {
+    requestContext.set("voiceEndCall", values.voiceEndCall);
   }
   return requestContext;
 };
