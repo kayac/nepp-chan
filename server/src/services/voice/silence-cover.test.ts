@@ -93,7 +93,7 @@ describe("createSilenceCover", () => {
       });
       cover.onToolCall();
       expect(sendText).toHaveBeenCalledWith("ちょっと待ってね", true, {
-        preemptible: true,
+        preemptible: false,
         interruptible: true,
       });
       expect(sendPlay).not.toHaveBeenCalled();
@@ -113,7 +113,7 @@ describe("createSilenceCover", () => {
       cover.onToolCall();
       vi.advanceTimersByTime(10_000);
       expect(sendText).toHaveBeenCalledWith("ちょっと待ってね", true, {
-        preemptible: true,
+        preemptible: false,
         interruptible: true,
       });
       expect(sendPlay).not.toHaveBeenCalled();
@@ -159,7 +159,7 @@ describe("createSilenceCover", () => {
       vi.advanceTimersByTime(10_000);
       expect(sendText).toHaveBeenCalledTimes(1);
       expect(sendText).toHaveBeenCalledWith("ちょっと待ってね", true, {
-        preemptible: true,
+        preemptible: false,
         interruptible: true,
       });
     });
@@ -176,7 +176,7 @@ describe("createSilenceCover", () => {
     vi.advanceTimersByTime(10_000);
     expect(sendText).toHaveBeenCalledTimes(1);
     expect(sendText).toHaveBeenCalledWith("ちょっと待ってね", true, {
-      preemptible: true,
+      preemptible: false,
       interruptible: true,
     });
     expect(sendPlay).not.toHaveBeenCalled();
