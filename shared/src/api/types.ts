@@ -127,9 +127,6 @@ export type UpdatePollRequest = PutBody<"/admin/polls/{id}">;
 export type PollResultsResponse = GetOk<"/polls/{id}">;
 export type PollChoiceResult = PollResultsResponse["choiceResults"][number];
 
-// シンプルチャット（lp / ウィジェット用ストリーミング）
-export type SimpleChatRequest = PostBody<"/simple-chat">;
-
 // 村の声グラフ
 export type OntologyData = GetOk<"/admin/analytics/ontology">;
 export type OntologyNode = OntologyData["nodes"][number];
