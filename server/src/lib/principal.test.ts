@@ -126,41 +126,41 @@ describe("toLineIds", () => {
 
 describe("toVoiceIds", () => {
   it("resourceId / threadId / hashedFrom をまとめて返す", async () => {
-    const ids = await toVoiceIds("client:abc123", SECRET);
+    const ids = await toVoiceIds("client:abc123", "CA123", SECRET);
     expect(ids.hashedFrom).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(ids.resourceId).toBe(`voice:${ids.hashedFrom}`);
-    expect(ids.threadId).toBe(`voice-thread:${ids.hashedFrom}`);
+    expect(ids.threadId).toMatch(/^voice-thread:[A-Za-z0-9_-]{43}$/);
   });
 
-  it("同じ発信元 / secret から同じ ID が再現される（会話継続性）", async () => {
-    const a = await toVoiceIds("+81901234567", SECRET);
-    const b = await toVoiceIds("+81901234567", SECRET);
+  it("同じ発信元 / callSid / secret から同じ ID が再現される", async () => {
+    const a = await toVoiceIds("+81901234567", "CA123", SECRET);
+    const b = await toVoiceIds("+81901234567", "CA123", SECRET);
     expect(a.resourceId).toBe(b.resourceId);
     expect(a.threadId).toBe(b.threadId);
   });
 
   it("異なる発信元は異なる resourceId になる", async () => {
-    const a = await toVoiceIds("client:aaa", SECRET);
-    const b = await toVoiceIds("client:bbb", SECRET);
+    const a = await toVoiceIds("client:aaa", "CA123", SECRET);
+    const b = await toVoiceIds("client:bbb", "CA123", SECRET);
     expect(a.resourceId).not.toBe(b.resourceId);
   });
 
-  it("resourceId と threadId は同じハッシュを共有する", async () => {
-    const ids = await toVoiceIds("client:abc123", SECRET);
-    expect(ids.resourceId.replace("voice:", "")).toBe(
-      ids.threadId.replace("voice-thread:", ""),
-    );
+  it("同じ発信元でも通話が異なれば threadId を分ける", async () => {
+    const a = await toVoiceIds("client:abc123", "CA123", SECRET);
+    const b = await toVoiceIds("client:abc123", "CA456", SECRET);
+    expect(a.resourceId).toBe(b.resourceId);
+    expect(a.threadId).not.toBe(b.threadId);
   });
 
   it("出力に平文の発信元を含まない", async () => {
-    const ids = await toVoiceIds("client:secret-caller", SECRET);
+    const ids = await toVoiceIds("client:secret-caller", "CA123", SECRET);
     expect(ids.hashedFrom).not.toContain("secret-caller");
     expect(ids.resourceId).not.toContain("secret-caller");
     expect(ids.threadId).not.toContain("secret-caller");
   });
 
   it("LINE と voice は同じ生入力でも名前空間が分かれる", async () => {
-    const voice = await toVoiceIds("U1234567890", SECRET);
+    const voice = await toVoiceIds("U1234567890", "CA123", SECRET);
     const line = await toLineIds({ type: "line", id: "U1234567890" }, SECRET);
     expect(voice.resourceId).not.toBe(line.resourceId);
   });

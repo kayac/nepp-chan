@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { logger } from "~/lib/logger";
-import { toVoiceIds } from "~/lib/principal";
-import { createVoiceTurnRunner } from "./conversation";
+import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
+import { createVoiceConversation } from "./conversation";
 
 type FakeChunk =
   | { type: "text-delta"; payload: { text: string } }
@@ -21,10 +21,16 @@ async function* fakeFullStream(chunks: FakeChunk[]) {
   for (const chunk of chunks) yield chunk;
 }
 
-const { streamMock } = vi.hoisted(() => ({ streamMock: vi.fn() }));
+const { getMemoryStoreMock, saveMessagesMock, saveThreadMock, streamMock } =
+  vi.hoisted(() => ({
+    getMemoryStoreMock: vi.fn(),
+    saveMessagesMock: vi.fn(),
+    saveThreadMock: vi.fn(),
+    streamMock: vi.fn(),
+  }));
 
 vi.mock("~/lib/storage", () => ({
-  getStorage: vi.fn().mockResolvedValue({}),
+  getStorage: vi.fn().mockResolvedValue({ getStore: getMemoryStoreMock }),
 }));
 vi.mock("~/mastra/agents/nepp-chan-agent", () => ({
   createNeppChanAgent: vi.fn(() => ({})),
@@ -37,7 +43,7 @@ vi.mock("@mastra/core/mastra", () => ({
   },
 }));
 
-describe("createVoiceTurnRunner / runTurn", () => {
+describe("createVoiceConversation", () => {
   const env = {
     DB: {},
     RESOURCE_ID_HASH_SECRET: "test-secret",
@@ -45,29 +51,113 @@ describe("createVoiceTurnRunner / runTurn", () => {
 
   beforeEach(() => {
     streamMock.mockReset();
+    getMemoryStoreMock.mockReset();
+    getMemoryStoreMock.mockResolvedValue({
+      saveMessages: saveMessagesMock,
+      saveThread: saveThreadMock,
+    });
+    saveMessagesMock.mockReset();
+    saveThreadMock.mockReset();
   });
 
-  it("toVoiceIds 由来の memory を渡して text-delta を順に yield する", async () => {
+  it("Mastra Memory を使わず、通話内の履歴を明示して text-delta を返す", async () => {
     streamMock.mockResolvedValue({
       fullStream: fakeFullStream([textDelta("こん"), textDelta("にちは")]),
     });
 
-    const runTurn = await createVoiceTurnRunner({
+    const conversation = await createVoiceConversation({
       env,
       from: "client:tester",
+      callSid: "CA123",
     });
     const out: string[] = [];
-    for await (const d of runTurn({ text: "やあ" })) {
+    for await (const d of conversation.runTurn({ text: "やあ" })) {
       out.push(d);
     }
 
     expect(out).toEqual(["こん", "にちは"]);
-    const ids = await toVoiceIds("client:tester", "test-secret");
     expect(streamMock).toHaveBeenCalledWith(
-      "やあ",
-      expect.objectContaining({
-        memory: { resource: ids.resourceId, thread: ids.threadId },
+      [{ role: "user", content: "やあ" }],
+      expect.not.objectContaining({ memory: expect.anything() }),
+    );
+    expect(createNeppChanAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ withMemory: false }),
+    );
+
+    streamMock.mockResolvedValue({
+      fullStream: fakeFullStream([textDelta("元気だよ")]),
+    });
+    for await (const _ of conversation.runTurn({ text: "元気？" })) {
+      // drain
+    }
+    expect(streamMock).toHaveBeenLastCalledWith(
+      [
+        { role: "user", content: "やあ" },
+        { role: "assistant", content: "こんにちは" },
+        { role: "user", content: "元気？" },
+      ],
+      expect.anything(),
+    );
+  });
+
+  it("応答完了後に同じ ID でスレッドと1ターンを upsert する", async () => {
+    const conversation = await createVoiceConversation({
+      env,
+      from: "client:tester",
+      callSid: "CA123",
+    });
+
+    await conversation.persistTurn({
+      turnIndex: 0,
+      userText: "やあ",
+      assistantText: "こんにちは",
+    });
+
+    expect(saveThreadMock).toHaveBeenCalledWith({
+      thread: expect.objectContaining({
+        id: expect.stringMatching(/^voice-thread:/),
+        resourceId: expect.stringMatching(/^voice:/),
       }),
+    });
+    expect(saveMessagesMock).toHaveBeenCalledWith({
+      messages: [
+        expect.objectContaining({
+          id: expect.stringContaining(":turn:0:user"),
+          role: "user",
+        }),
+        expect.objectContaining({
+          id: expect.stringContaining(":turn:0:assistant"),
+          role: "assistant",
+        }),
+      ],
+    });
+    const [userMessage, assistantMessage] =
+      saveMessagesMock.mock.calls[0][0].messages;
+    expect(userMessage.createdAt.getTime()).toBeLessThan(
+      assistantMessage.createdAt.getTime(),
+    );
+  });
+
+  it("D1 保存が一度失敗した場合は同じ ID で一度だけ再試行する", async () => {
+    saveMessagesMock
+      .mockRejectedValueOnce(new Error("temporary failure"))
+      .mockResolvedValueOnce({ messages: [] });
+    const conversation = await createVoiceConversation({
+      env,
+      from: "client:tester",
+      callSid: "CA123",
+    });
+
+    await conversation.persistTurn({
+      turnIndex: 0,
+      userText: "やあ",
+      assistantText: "こんにちは",
+    });
+
+    expect(saveThreadMock).toHaveBeenCalledTimes(2);
+    expect(saveMessagesMock).toHaveBeenCalledTimes(2);
+    expect(saveMessagesMock.mock.calls[0]).toEqual(
+      saveMessagesMock.mock.calls[1],
     );
   });
 
@@ -80,7 +170,11 @@ describe("createVoiceTurnRunner / runTurn", () => {
       ]),
     });
 
-    const runTurn = await createVoiceTurnRunner({ env, from: "client:tester" });
+    const { runTurn } = await createVoiceConversation({
+      env,
+      from: "client:tester",
+      callSid: "CA123",
+    });
     const out: string[] = [];
     for await (const d of runTurn({ text: "おはよう" })) {
       out.push(d);
@@ -99,7 +193,11 @@ describe("createVoiceTurnRunner / runTurn", () => {
       ]),
     });
 
-    const runTurn = await createVoiceTurnRunner({ env, from: "client:x" });
+    const { runTurn } = await createVoiceConversation({
+      env,
+      from: "client:x",
+      callSid: "CA123",
+    });
     const out: string[] = [];
     for await (const d of runTurn({ text: "観光スポット教えて" })) {
       out.push(d);
@@ -114,9 +212,10 @@ describe("createVoiceTurnRunner / runTurn", () => {
     });
     const infoSpy = vi.spyOn(logger, "info");
 
-    const runTurn = await createVoiceTurnRunner({
+    const { runTurn } = await createVoiceConversation({
       env,
       from: "client:tester",
+      callSid: "CA123",
     });
     for await (const _ of runTurn({ text: "やあ" })) {
       // drain
@@ -143,7 +242,11 @@ describe("createVoiceTurnRunner / runTurn", () => {
     });
     const controller = new AbortController();
 
-    const runTurn = await createVoiceTurnRunner({ env, from: "client:x" });
+    const { runTurn } = await createVoiceConversation({
+      env,
+      from: "client:x",
+      callSid: "CA123",
+    });
     const out: string[] = [];
     for await (const d of runTurn({ text: "hi", signal: controller.signal })) {
       out.push(d);
@@ -152,7 +255,7 @@ describe("createVoiceTurnRunner / runTurn", () => {
 
     expect(out).toEqual(["a"]);
     expect(streamMock).toHaveBeenCalledWith(
-      "hi",
+      [{ role: "user", content: "hi" }],
       expect.objectContaining({ abortSignal: controller.signal }),
     );
     const { requestContext } = streamMock.mock.calls[0][1];
