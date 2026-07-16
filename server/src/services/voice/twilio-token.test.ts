@@ -103,7 +103,10 @@ describe("createRelayToken / verifyRelayToken（hono/jwt ベース）", () => {
       nowSeconds: Math.floor(Date.now() / 1000),
       ttlSeconds: 300,
     });
-    const tampered = `${token.slice(0, -1)}${token.endsWith("a") ? "b" : "a"}`;
+    const [header, payload, sig] = token.split(".");
+    const tampered = `${header}.${payload}.${
+      sig.startsWith("a") ? "b" : "a"
+    }${sig.slice(1)}`;
     expect(await verifyRelayToken(tampered, SECRET)).toBeNull();
   });
 
