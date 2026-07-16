@@ -89,7 +89,7 @@ export const createSilenceCover = ({
         waitingSpoken = true;
         clearFillerTimer();
         sendText("ちょっと待ってね", true, {
-          preemptible: true,
+          preemptible: false,
           interruptible: true,
         });
       }
