@@ -122,66 +122,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/simple-chat": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * シンプルなチャット (履歴保存なし)
-         * @description 履歴を保持しない、その場限りの応答用のチャットエンドポイント。LP のティーザーやウィジェット埋め込みを想定する。サーバー側での履歴保存は行わないため、文脈を維持したい場合はリクエストの `messages`（直近最大 10 件、最後は user）に含める。合計 8000 字を超える分は古い履歴から自動的に切り捨てられる（最後の user メッセージ単体が 8000 字を超える場合はエラー）。後方互換のため単発メッセージの `message` も受け付ける。
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        message?: {
-                            id: string;
-                            /** @enum {string} */
-                            role: "user" | "assistant";
-                            parts: unknown[];
-                            /** Format: date-time */
-                            createdAt?: string | null;
-                        };
-                        messages?: {
-                            id: string;
-                            /** @enum {string} */
-                            role: "user" | "assistant";
-                            parts: unknown[];
-                            /** Format: date-time */
-                            createdAt?: string | null;
-                        }[];
-                    };
-                };
-            };
-            responses: {
-                /** @description ストリーミングレスポンス */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/event-stream": string;
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/threads": {
         parameters: {
             query?: never;
@@ -4640,7 +4580,7 @@ export interface paths {
         put?: never;
         /**
          * 匿名セッショントークン取得
-         * @description 一般ユーザー向けの匿名セッショントークンを発行する。resourceId はサーバーで生成する。
+         * @description 一般ユーザー向けの匿名セッショントークンを発行する。resourceId はサーバーで生成する。platform に widget を指定すると、resourceId に widget- prefix を付与する。
          */
         post: {
             parameters: {
@@ -4680,7 +4620,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 通話用 AccessToken 発行 */
+        /** 【管理者専用】通話用 AccessToken 発行 */
         post: {
             parameters: {
                 query?: never;
@@ -4699,6 +4639,34 @@ export interface paths {
                         "application/json": {
                             token: string;
                             identity: string;
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
                         };
                     };
                 };

@@ -41,10 +41,17 @@ describe("fetchCallToken", () => {
 });
 
 describe("fetchVoicePresets", () => {
-  it("プリセット一覧と既定 ID を返す", async () => {
+  it("プリセット一覧と既定値を返す", async () => {
     const body = {
-      defaultId: "morioki",
-      presets: [{ id: "morioki", label: "Morioki" }],
+      presets: [
+        {
+          id: "morioki",
+          label: "Morioki",
+          ttsProvider: "ElevenLabs",
+          voice: "8EkOjt4xTPGMclNlh1pk-flash_v2_5",
+        },
+      ],
+      defaults: { voicePreset: "morioki" },
     };
     server.use(
       http.get(`${API}/twilio/voice/presets`, () => HttpResponse.json(body)),
