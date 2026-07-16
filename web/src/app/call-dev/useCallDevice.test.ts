@@ -2,15 +2,23 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useCallDevice } from "./useCallDevice";
 
-const { connect, destroy, disconnectAll, deviceOn, callOn, fetchCallToken } =
-  vi.hoisted(() => ({
-    connect: vi.fn(),
-    destroy: vi.fn(),
-    disconnectAll: vi.fn(),
-    deviceOn: vi.fn(),
-    callOn: vi.fn(),
-    fetchCallToken: vi.fn(),
-  }));
+const {
+  connect,
+  destroy,
+  disconnectAll,
+  deviceOn,
+  callOn,
+  audioOutgoing,
+  fetchCallToken,
+} = vi.hoisted(() => ({
+  connect: vi.fn(),
+  destroy: vi.fn(),
+  disconnectAll: vi.fn(),
+  deviceOn: vi.fn(),
+  callOn: vi.fn(),
+  audioOutgoing: vi.fn(),
+  fetchCallToken: vi.fn(),
+}));
 
 vi.mock("./api", () => ({ fetchCallToken }));
 vi.mock("@twilio/voice-sdk", () => ({
@@ -19,6 +27,7 @@ vi.mock("@twilio/voice-sdk", () => ({
     destroy = destroy;
     disconnectAll = disconnectAll;
     on = deviceOn;
+    audio = { outgoing: audioOutgoing };
   },
 }));
 
@@ -50,6 +59,18 @@ describe("useCallDevice", () => {
 
     expect(connect).not.toHaveBeenCalled();
     expect(result.current.status).toBe("idle");
+  });
+
+  it("発信音を無効化してから発信する", async () => {
+    fetchCallToken.mockResolvedValue({ token: "token", identity: "dev-1" });
+    const { result } = renderHook(() => useCallDevice());
+
+    await act(() => result.current.startCall());
+
+    expect(audioOutgoing).toHaveBeenCalledWith(false);
+    expect(audioOutgoing.mock.invocationCallOrder[0]).toBeLessThan(
+      connect.mock.invocationCallOrder[0],
+    );
   });
 
   it("アンマウント時に Device を破棄する", async () => {

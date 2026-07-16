@@ -26,6 +26,8 @@ export const useCallDevice = () => {
         const { token } = await fetchCallToken();
         if (!isCurrentAttempt()) return;
         const device = new Device(token, { logLevel: "error" });
+        // ローカルの発信音が welcomeGreeting の頭とかぶるため鳴らさない
+        device.audio?.outgoing(false);
         // トークン期限切れ等は Call ではなく Device が 'error' を emit する。
         device.on("error", (e: { message?: string }) => {
           if (!isCurrentAttempt()) return;
