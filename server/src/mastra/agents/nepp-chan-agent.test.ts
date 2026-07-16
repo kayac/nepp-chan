@@ -68,6 +68,11 @@ describe("createNeppChanAgent", () => {
       expect(ins).toContain("前置きせず直ちに");
       expect(ins).not.toContain("呼ぶ前に1文だけ前置き");
     });
+
+    it("platform=voice の例文に絵文字を含めない", async () => {
+      const ins = await instructionsOf(build({ platform: "voice" }));
+      expect(ins).not.toMatch(/[🌸😊]/u);
+    });
   });
 
   describe("platform / isAdmin による Agent 構築", () => {
