@@ -50,7 +50,7 @@
     "jsdom": "^29.1.1",
     "msw": "^2.14.6",
     "openapi-typescript": "^7.13.0",
-    "postcss": "^8.5.16",
+    "postcss": "^8.5.20",
     "tailwindcss": "^4.3.2",
     "typescript": "~6.0.3",
     "vitest": "~4.1.9",
