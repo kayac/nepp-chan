@@ -18,7 +18,7 @@
     "@nepp-chan/shared": "workspace:*",
     "ai": "^6.0.208",
     "astro": "^7.0.7",
-    "lucide-react": "^1.23.0",
+    "lucide-react": "^1.25.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-markdown": "^10.1.0",
