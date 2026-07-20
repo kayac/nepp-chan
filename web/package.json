@@ -20,7 +20,7 @@
     "@astrojs/react": "^6.0.1",
     "@heroicons/react": "^2.2.0",
     "@nepp-chan/shared": "workspace:*",
-    "@sentry/react": "^10.63.0",
+    "@sentry/react": "^10.66.0",
     "@tanstack/react-query": "^5.101.2",
     "@twilio/voice-sdk": "^2.18.3",
     "ai": "^6.0.208",
