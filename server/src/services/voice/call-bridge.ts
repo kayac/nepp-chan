@@ -193,6 +193,8 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     let assistantChars = 0;
     let assistantText = "";
     let endRequested = false;
+    let responseEndMs: number | null = null;
+    let persistenceMs: number | null = null;
 
     const send = (token: string, last = false, options?: TextTokenOptions) =>
       ws.send(serializeRelayMessage(textTokenMessage(token, last, options)));
@@ -228,22 +230,27 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       }
       if (!controller.signal.aborted) {
         send("", true);
+        responseEndMs = Date.now() - t0;
         if (this.currentTurn === controller) this.currentTurn = null;
         if (endRequested && this.config.endCallEnabled) {
           this.scheduleEndCall(ws, assistantChars);
         }
-        const turnIndex = this.turnIndex++;
-        try {
-          await conversation.persistTurn({
-            turnIndex,
-            userText: text,
-            assistantText,
-          });
-        } catch (e) {
-          logger.error("[Voice] turn persistence failed", {
-            error: e instanceof Error ? e.message : String(e),
-            turnIndex,
-          });
+        if (assistantText) {
+          const turnIndex = this.turnIndex++;
+          const persistStart = Date.now();
+          try {
+            await conversation.persistTurn({
+              turnIndex,
+              userText: text,
+              assistantText,
+            });
+          } catch (e) {
+            logger.error("[Voice] turn persistence failed", {
+              error: e instanceof Error ? e.message : String(e),
+              turnIndex,
+            });
+          }
+          persistenceMs = Date.now() - persistStart;
         }
       }
     } catch (e) {
@@ -257,11 +264,12 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       cover.dispose();
       if (this.currentTurn === controller) this.currentTurn = null;
       const timing: Record<string, number | boolean> = {
-        turnEndMs: Date.now() - t0,
+        turnEndMs: responseEndMs ?? Date.now() - t0,
         tokenCount,
         aborted: controller.signal.aborted,
       };
       if (firstSendMs !== null) timing.firstSendMs = firstSendMs;
+      if (persistenceMs !== null) timing.persistenceMs = persistenceMs;
       logger.info("[Voice] turn timing", timing);
     }
   }

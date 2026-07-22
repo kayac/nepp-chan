@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { logger } from "~/lib/logger";
 import { CallBridge } from "./call-bridge";
 
 const { createVoiceConversationMock } = vi.hoisted(() => ({
@@ -10,6 +11,10 @@ vi.mock("./conversation", () => ({
 }));
 
 describe("CallBridge", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("WebSocket のメッセージ処理を waitUntil に登録する", async () => {
     const waitUntil = vi.fn();
     const bridge = new CallBridge(
@@ -157,5 +162,70 @@ describe("CallBridge", () => {
 
     resolvePersistence?.();
     await prompt;
+  });
+
+  it("assistantText が空のターンは D1 へ保存しない", async () => {
+    const runTurn = vi.fn(async function* () {
+      // ツール呼び出しのみで終わり、text-delta を1つも yield しないケース
+    });
+    const persistTurn = vi.fn();
+    createVoiceConversationMock.mockResolvedValue({ runTurn, persistTurn });
+
+    const bridge = new CallBridge(
+      {} as DurableObjectState,
+      {} as CloudflareBindings,
+    );
+    Reflect.set(bridge, "from", "client:tester");
+    Reflect.set(bridge, "callSid", "CA123");
+    const handlePrompt = Reflect.get(bridge, "handlePrompt") as (
+      ws: WebSocket,
+      text: string,
+    ) => Promise<void>;
+
+    await handlePrompt.call(
+      bridge,
+      { send: vi.fn() } as unknown as WebSocket,
+      "質問",
+    );
+
+    expect(persistTurn).not.toHaveBeenCalled();
+  });
+
+  it("turnEndMs は D1 保存待ち時間を含まず、persistenceMs に分離して計測する", async () => {
+    vi.useFakeTimers();
+    const runTurn = vi.fn(async function* () {
+      yield "回答";
+    });
+    const persistTurn = vi.fn(
+      () => new Promise<void>((resolve) => setTimeout(resolve, 500)),
+    );
+    createVoiceConversationMock.mockResolvedValue({ runTurn, persistTurn });
+    const infoSpy = vi.spyOn(logger, "info");
+
+    const bridge = new CallBridge(
+      {} as DurableObjectState,
+      {} as CloudflareBindings,
+    );
+    Reflect.set(bridge, "from", "client:tester");
+    Reflect.set(bridge, "callSid", "CA123");
+    const handlePrompt = Reflect.get(bridge, "handlePrompt") as (
+      ws: WebSocket,
+      text: string,
+    ) => Promise<void>;
+
+    const prompt = handlePrompt.call(
+      bridge,
+      { send: vi.fn() } as unknown as WebSocket,
+      "質問",
+    );
+    await vi.advanceTimersByTimeAsync(500);
+    await prompt;
+
+    const timingCall = infoSpy.mock.calls.find(
+      ([message]) => message === "[Voice] turn timing",
+    );
+    const timing = timingCall?.[1] as Record<string, number>;
+    expect(timing.turnEndMs).toBeLessThan(500);
+    expect(timing.persistenceMs).toBeGreaterThanOrEqual(500);
   });
 });
