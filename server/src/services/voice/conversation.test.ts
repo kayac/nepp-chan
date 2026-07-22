@@ -117,6 +117,7 @@ describe("createVoiceConversation", () => {
       thread: expect.objectContaining({
         id: expect.stringMatching(/^voice-thread:/),
         resourceId: expect.stringMatching(/^voice:/),
+        title: "音声通話",
       }),
     });
     expect(saveMessagesMock).toHaveBeenCalledWith({
@@ -135,6 +136,32 @@ describe("createVoiceConversation", () => {
       saveMessagesMock.mock.calls[0][0].messages;
     expect(userMessage.createdAt.getTime()).toBeLessThan(
       assistantMessage.createdAt.getTime(),
+    );
+  });
+
+  it("読み上げ可能な応答が空なら、そのターンを履歴へ追加しない", async () => {
+    streamMock.mockResolvedValueOnce({
+      fullStream: fakeFullStream([textDelta("🌸")]),
+    });
+    const conversation = await createVoiceConversation({
+      env,
+      from: "client:tester",
+      callSid: "CA123",
+    });
+    for await (const _ of conversation.runTurn({ text: "最初の質問" })) {
+      // drain
+    }
+
+    streamMock.mockResolvedValueOnce({
+      fullStream: fakeFullStream([textDelta("回答")]),
+    });
+    for await (const _ of conversation.runTurn({ text: "次の質問" })) {
+      // drain
+    }
+
+    expect(streamMock).toHaveBeenLastCalledWith(
+      [{ role: "user", content: "次の質問" }],
+      expect.anything(),
     );
   });
 

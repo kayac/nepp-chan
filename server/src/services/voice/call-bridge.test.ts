@@ -121,4 +121,41 @@ describe("CallBridge", () => {
       assistantText: "回答",
     });
   });
+
+  it("完了トークン送信後は D1 保存中でも active turn を解除する", async () => {
+    let resolvePersistence: (() => void) | undefined;
+    const runTurn = vi.fn(async function* () {
+      yield "回答";
+    });
+    const persistTurn = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolvePersistence = resolve;
+        }),
+    );
+    createVoiceConversationMock.mockResolvedValue({ runTurn, persistTurn });
+
+    const bridge = new CallBridge(
+      {} as DurableObjectState,
+      {} as CloudflareBindings,
+    );
+    Reflect.set(bridge, "from", "client:tester");
+    Reflect.set(bridge, "callSid", "CA123");
+    const handlePrompt = Reflect.get(bridge, "handlePrompt") as (
+      ws: WebSocket,
+      text: string,
+    ) => Promise<void>;
+
+    const prompt = handlePrompt.call(
+      bridge,
+      { send: vi.fn() } as unknown as WebSocket,
+      "質問",
+    );
+    await vi.waitFor(() => expect(persistTurn).toHaveBeenCalledOnce());
+
+    expect(Reflect.get(bridge, "currentTurn")).toBeNull();
+
+    resolvePersistence?.();
+    await prompt;
+  });
 });
