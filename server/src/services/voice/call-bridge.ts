@@ -228,6 +228,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       }
       if (!controller.signal.aborted) {
         send("", true);
+        if (this.currentTurn === controller) this.currentTurn = null;
         if (endRequested && this.config.endCallEnabled) {
           this.scheduleEndCall(ws, assistantChars);
         }

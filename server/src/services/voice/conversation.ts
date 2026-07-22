@@ -24,6 +24,7 @@ type PersistTurnParams = {
 };
 
 const MAX_HISTORY_MESSAGES = 20;
+const VOICE_THREAD_TITLE = "音声通話";
 
 const textContent = (text: string) => ({
   format: 2 as const,
@@ -108,7 +109,7 @@ export const createVoiceConversation = async ({
           yield clean;
         }
       }
-      if (!signal?.aborted) {
+      if (!signal?.aborted && assistantText) {
         const assistantMessage: ModelMessage = {
           role: "assistant",
           content: assistantText,
@@ -136,6 +137,7 @@ export const createVoiceConversation = async ({
     const thread = {
       id: threadId,
       resourceId,
+      title: VOICE_THREAD_TITLE,
       createdAt,
       updatedAt: now,
     };
