@@ -1,8 +1,8 @@
-import { XMarkIcon } from "@heroicons/react/24/outline";
 import { LoadingText } from "@nepp-chan/shared/ui/Loading";
 
 import { usePollResults } from "~/app/dashboard/hooks/usePolls";
 import { Dialog } from "~/components/ui/Dialog";
+import { ModalHeader } from "~/components/ui/ModalHeader";
 
 type Props = {
   pollId: string;
@@ -18,17 +18,12 @@ export const ResultsModal = ({ pollId, onClose }: Props) => {
       className="w-full max-w-lg backdrop:bg-stone-900/30 backdrop:backdrop-blur-[2px]"
     >
       <div className="bg-white rounded-xl shadow-xl mx-4 max-h-[90dvh] overflow-y-auto">
-        <div className="flex items-center justify-between p-5 border-b border-stone-200">
-          <h3 className="text-lg font-semibold text-stone-800">投票結果</h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 hover:bg-stone-100 rounded-lg"
-            aria-label="閉じる"
-          >
-            <XMarkIcon className="w-5 h-5 text-stone-500" />
-          </button>
-        </div>
+        <ModalHeader
+          className="p-5 border-b border-(--border-1)"
+          titleClassName="text-lg font-semibold"
+          onClose={onClose}
+          title="投票結果"
+        />
         <div className="p-5 space-y-5">
           {isLoading && (
             <div className="flex justify-center py-8">

@@ -2,13 +2,13 @@ import {
   HandThumbDownIcon,
   HandThumbUpIcon,
   LightBulbIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Button } from "@nepp-chan/shared/ui/Button";
 import { type SubmitEvent, useState } from "react";
 
 import { useSubmitFeedback } from "~/app/chat/hooks/useSubmitFeedback";
 import { Dialog } from "~/components/ui/Dialog";
+import { ModalHeader } from "~/components/ui/ModalHeader";
 import type { FeedbackCategory, FeedbackRating } from "~/types";
 
 const FEEDBACK_CATEGORIES: { value: FeedbackCategory; label: string }[] = [
@@ -50,23 +50,18 @@ export const FeedbackModal = ({ messageId, rating, onClose }: Props) => {
   return (
     <Dialog onClose={onClose} className="w-full max-w-md">
       <div className="relative bg-(--bg-raised) rounded-xl shadow-xl mx-4 p-6 animate-fade-in">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-(--fg-1)">
-            {rating === "good"
+        <ModalHeader
+          className="mb-4"
+          titleClassName="text-lg"
+          onClose={onClose}
+          title={
+            rating === "good"
               ? "フィードバック"
               : rating === "idea"
                 ? "改善要望"
-                : "改善点を教えてください"}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 text-(--fg-3) hover:text-(--fg-1) rounded-md"
-            aria-label="閉じる"
-          >
-            <XMarkIcon className="w-5 h-5" aria-hidden="true" />
-          </button>
-        </div>
+                : "改善点を教えてください"
+          }
+        />
 
         <form onSubmit={handleSubmit}>
           <div

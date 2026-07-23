@@ -2,7 +2,6 @@ import {
   ClockIcon,
   PaperAirplaneIcon,
   PlusIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 import {
@@ -11,6 +10,7 @@ import {
   useBroadcastForm,
 } from "~/app/dashboard/hooks/useBroadcastForm";
 import { Dialog } from "~/components/ui/Dialog";
+import { ModalHeader } from "~/components/ui/ModalHeader";
 import type { BroadcastMessage } from "~/types";
 import { PartEditor } from "./PartEditor";
 
@@ -41,19 +41,12 @@ export const BroadcastFormModal = ({ mode, broadcast, onClose }: Props) => {
   return (
     <Dialog onClose={onClose} className="w-full max-w-2xl">
       <div className="bg-white rounded-xl shadow-xl mx-4 p-6 max-h-[90dvh] overflow-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-stone-800">
-            {mode === "create" ? "新規配信作成" : "配信を編集"}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 text-stone-400 hover:text-stone-600 rounded-md"
-            aria-label="閉じる"
-          >
-            <XMarkIcon className="w-5 h-5" aria-hidden="true" />
-          </button>
-        </div>
+        <ModalHeader
+          className="mb-4"
+          titleClassName="text-lg"
+          onClose={onClose}
+          title={mode === "create" ? "新規配信作成" : "配信を編集"}
+        />
 
         <div className="space-y-3">
           {parts.map((part, index) => (

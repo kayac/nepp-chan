@@ -2,10 +2,10 @@ import {
   HandThumbDownIcon,
   HandThumbUpIcon,
   LightBulbIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/solid";
 
 import { Dialog } from "~/components/ui/Dialog";
+import { ModalHeader } from "~/components/ui/ModalHeader";
 import { formatDateTime } from "~/lib/format";
 import { FEEDBACK_CATEGORY_LABELS, type MessageFeedback } from "~/types";
 
@@ -26,19 +26,12 @@ export const FeedbackDetailModal = ({ feedback, onClose }: Props) => {
   return (
     <Dialog onClose={onClose} className="w-full max-w-3xl">
       <div className="bg-white rounded-xl shadow-xl mx-4 p-6 max-h-[90dvh] overflow-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-stone-800">
-            フィードバック詳細
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 text-stone-400 hover:text-stone-600 rounded-md"
-            aria-label="閉じる"
-          >
-            <XMarkIcon className="w-5 h-5" aria-hidden="true" />
-          </button>
-        </div>
+        <ModalHeader
+          className="mb-4"
+          titleClassName="text-lg"
+          onClose={onClose}
+          title="フィードバック詳細"
+        />
 
         <div className="space-y-6">
           <div className="flex items-center gap-4">

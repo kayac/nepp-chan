@@ -8,6 +8,7 @@ import { Button } from "@nepp-chan/shared/ui/Button";
 
 import { usePollForm } from "~/app/dashboard/hooks/usePollForm";
 import { Dialog } from "~/components/ui/Dialog";
+import { ModalHeader } from "~/components/ui/ModalHeader";
 import type { Poll } from "~/types";
 
 type Props = {
@@ -37,22 +38,13 @@ export const PollForm = ({ poll, onClose }: Props) => {
       className="w-full max-w-xl backdrop:bg-stone-900/30 backdrop:backdrop-blur-[2px]"
     >
       <div className="bg-stone-50 rounded-xl shadow-xl mx-4 max-h-[90dvh] overflow-y-auto">
-        <div className="flex items-start justify-between px-8 pt-8 pb-4">
-          <div>
-            <h3 className="text-2xl font-semibold text-stone-800">
-              {isEditMode ? "投票を編集" : "新規作成"}
-            </h3>
-            <p className="text-sm text-stone-500 mt-1">何を聞きますか？</p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 hover:bg-stone-100 rounded-lg -mr-2"
-            aria-label="閉じる"
-          >
-            <XMarkIcon className="w-5 h-5 text-stone-500" />
-          </button>
-        </div>
+        <ModalHeader
+          className="px-8 pt-8 pb-4"
+          titleClassName="text-2xl font-semibold"
+          onClose={onClose}
+          title={isEditMode ? "投票を編集" : "新規作成"}
+          description="何を聞きますか？"
+        />
 
         <div className="px-8 pb-4">
           <div className="bg-white border border-stone-200 rounded-lg p-5 space-y-6">
