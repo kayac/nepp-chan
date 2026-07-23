@@ -3,13 +3,12 @@ import {
   HandThumbUpIcon,
   LightBulbIcon,
 } from "@heroicons/react/24/outline";
+import { SpeechBubble } from "@nepp-chan/shared/components/SpeechBubble";
 import { Button } from "@nepp-chan/shared/ui/Button";
 import type { UIMessage } from "ai";
 import { isToolOrDynamicToolUIPart } from "ai";
 import { useState } from "react";
-
 import { FeedbackModal } from "~/app/chat/components/FeedbackModal";
-import { SpeechBubble } from "~/app/chat/components/SpeechBubble";
 import { useChatContext } from "~/app/chat/contexts/ChatContext";
 import { ErrorBanner } from "~/components/ui/ErrorBanner";
 import type { FeedbackRating } from "~/types";

@@ -1,8 +1,8 @@
 import { useChat } from "@ai-sdk/react";
 import { PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ChatMarkdown } from "@nepp-chan/shared/components/ChatMarkdown";
-import { MiniChatBubble } from "@nepp-chan/shared/components/MiniChatBubble";
 import { MiniChatHeader } from "@nepp-chan/shared/components/MiniChatHeader";
+import { SpeechBubble } from "@nepp-chan/shared/components/SpeechBubble";
 import {
   INITIAL_MESSAGE,
   SAMPLE_QUESTIONS,
@@ -153,23 +153,26 @@ export const WidgetChat = ({
           if (!text && !showIndicatorHere) return null;
           const bubbleVariant = m.role === "user" ? "user" : "assistant";
           return (
-            <MiniChatBubble
+            <SpeechBubble
               key={m.id}
               variant={bubbleVariant}
-              className="animate-[lp-bubble-in_400ms_cubic-bezier(0.22,1,0.36,1)] shadow-(--shadow-float-sm)"
+              className={cn(
+                "animate-[lp-bubble-in_400ms_cubic-bezier(0.22,1,0.36,1)]",
+                bubbleVariant === "user" ? "self-end" : "self-start",
+              )}
             >
               {text && <ChatMarkdown text={text} variant={bubbleVariant} />}
               {showIndicatorHere && (
                 <WaitingIndicator className="mt-1 first:mt-0" />
               )}
-            </MiniChatBubble>
+            </SpeechBubble>
           );
         })}
         {/* 送信直後でまだアシスタントのメッセージが無い間は独立した吹き出しで出す */}
         {isWaitingForText && messages.at(-1)?.role !== "assistant" && (
-          <MiniChatBubble variant="assistant" className="flex">
+          <SpeechBubble variant="assistant" className="flex self-start">
             <WaitingIndicator />
-          </MiniChatBubble>
+          </SpeechBubble>
         )}
         {(error || bootstrapError) && (
           <div className="w-fit max-w-[85%] self-start rounded-(--r-bubble) bg-red-50 px-[18px] py-3 text-sm text-red-700">

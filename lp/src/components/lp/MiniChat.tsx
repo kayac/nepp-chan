@@ -3,8 +3,8 @@ import {
   EllipsisHorizontalIcon,
 } from "@heroicons/react/24/outline";
 import { ChatMarkdown } from "@nepp-chan/shared/components/ChatMarkdown";
-import { MiniChatBubble } from "@nepp-chan/shared/components/MiniChatBubble";
 import { MiniChatHeader } from "@nepp-chan/shared/components/MiniChatHeader";
+import { SpeechBubble } from "@nepp-chan/shared/components/SpeechBubble";
 import { INITIAL_MESSAGE } from "@nepp-chan/shared/constants/chat-defaults";
 import { useChatAutoScroll } from "@nepp-chan/shared/hooks/useChatAutoScroll";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
@@ -40,20 +40,20 @@ export const MiniChat = ({ webUrl, iconSrc = "/mascot/icon.png" }: Props) => {
         ref={streamRef}
         className="flex max-h-[280px] flex-col gap-2 overflow-y-auto py-4"
       >
-        <MiniChatBubble variant="assistant" className="max-w-[78%]">
+        <SpeechBubble variant="assistant" className="self-start">
           <ChatMarkdown
             text={messageText(INITIAL_MESSAGE)}
             variant="assistant"
           />
-        </MiniChatBubble>
+        </SpeechBubble>
         {answered && (
           <>
-            <MiniChatBubble variant="user" className="max-w-[78%]">
+            <SpeechBubble variant="user" className="self-end">
               <ChatMarkdown text={answered.question} variant="user" />
-            </MiniChatBubble>
-            <MiniChatBubble variant="assistant" className="max-w-[78%]">
+            </SpeechBubble>
+            <SpeechBubble variant="assistant" className="self-start">
               <ChatMarkdown text={answered.answer} variant="assistant" />
-            </MiniChatBubble>
+            </SpeechBubble>
           </>
         )}
       </div>
