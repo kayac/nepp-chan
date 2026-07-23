@@ -7,6 +7,7 @@ import { useState } from "react";
 import { FeedbackModal } from "~/app/chat/components/FeedbackModal";
 import { SpeechBubble } from "~/app/chat/components/SpeechBubble";
 import { useChatContext } from "~/app/chat/contexts/ChatContext";
+import { ErrorBanner } from "~/components/ui/ErrorBanner";
 import type { FeedbackRating } from "~/types";
 
 import { MessageParts } from "./MessageParts";
@@ -87,9 +88,9 @@ export const AssistantMessage = ({ message, isLast }: Props) => {
 };
 
 const MessageError = ({ message }: { message: string }) => (
-  <div className="aui-message-error-root mt-2 rounded-lg bg-(--danger-bg) p-3 text-(--danger) text-sm">
+  <ErrorBanner className="aui-message-error-root mt-2 p-3">
     <p className="aui-message-error-message line-clamp-2">{message}</p>
-  </div>
+  </ErrorBanner>
 );
 
 const AssistantActionBar = ({ messageId }: { messageId: string }) => {

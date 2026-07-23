@@ -9,6 +9,12 @@ describe("ErrorBanner", () => {
 
     expect(screen.getByText("エラー: 何かがおかしい")).toBeInTheDocument();
   });
+
+  it("className を追加できる", () => {
+    render(<ErrorBanner className="aui-message-error-root">内容</ErrorBanner>);
+
+    expect(screen.getByText("内容")).toHaveClass("aui-message-error-root");
+  });
 });
 
 describe("formatError", () => {

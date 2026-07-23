@@ -15,6 +15,7 @@ import type {
   ToolPartComponent,
   ToolPartStatus,
 } from "~/components/chat/types";
+import { ErrorBanner } from "~/components/ui/ErrorBanner";
 
 type ToolStatusInfo = {
   label: string;
@@ -129,9 +130,7 @@ export const ToolFallback: ToolPartComponent = ({
               <p className="text-xs font-medium text-(--fg-3) mb-1.5">
                 エラー詳細
               </p>
-              <p className="text-sm p-2.5 rounded-lg bg-(--danger-bg) text-(--danger)">
-                {errorReason}
-              </p>
+              <ErrorBanner className="p-2.5">{errorReason}</ErrorBanner>
             </div>
           )}
 
