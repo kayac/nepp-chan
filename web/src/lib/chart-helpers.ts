@@ -11,17 +11,6 @@ export const AXIS_STYLE = {
   fontSize: 12,
 };
 
-export const DEFAULT_COLORS = [
-  "#ea580c",
-  "#0284c7",
-  "#16a34a",
-  "#e11d48",
-  "#ca8a04",
-  "#0891b2",
-  "#dc2626",
-  "#2563eb",
-];
-
 export const OPEN_COLOR = "#5cb7bb";
 export const CLOSED_COLOR = "#f4a06a";
 
@@ -38,9 +27,9 @@ export const NEPP_CHART_COLORS = [
 
 export const getColorAt = (
   index: number,
-  colors: readonly string[] = DEFAULT_COLORS,
+  colors: readonly string[] = NEPP_CHART_COLORS,
 ): string => {
-  const safe = colors.length > 0 ? colors : DEFAULT_COLORS;
+  const safe = colors.length > 0 ? colors : NEPP_CHART_COLORS;
   return safe[index % safe.length];
 };
 

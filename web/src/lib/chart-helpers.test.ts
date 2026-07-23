@@ -1,16 +1,20 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_COLORS, formatPiePercent, getColorAt } from "./chart-helpers";
+import {
+  formatPiePercent,
+  getColorAt,
+  NEPP_CHART_COLORS,
+} from "./chart-helpers";
 
 describe("getColorAt", () => {
-  it("デフォルト配列の index 位置を返す", () => {
-    expect(getColorAt(0)).toBe(DEFAULT_COLORS[0]);
-    expect(getColorAt(1)).toBe(DEFAULT_COLORS[1]);
+  it("デフォルトはねっぷちゃんのブランドパレット", () => {
+    expect(getColorAt(0)).toBe(NEPP_CHART_COLORS[0]);
+    expect(getColorAt(1)).toBe(NEPP_CHART_COLORS[1]);
   });
 
   it("配列長を超えると先頭から循環", () => {
-    expect(getColorAt(DEFAULT_COLORS.length)).toBe(DEFAULT_COLORS[0]);
-    expect(getColorAt(DEFAULT_COLORS.length + 2)).toBe(DEFAULT_COLORS[2]);
+    expect(getColorAt(NEPP_CHART_COLORS.length)).toBe(NEPP_CHART_COLORS[0]);
+    expect(getColorAt(NEPP_CHART_COLORS.length + 2)).toBe(NEPP_CHART_COLORS[2]);
   });
 
   it("カスタム配列を使える", () => {
@@ -20,7 +24,7 @@ describe("getColorAt", () => {
   });
 
   it("空配列ならデフォルトにフォールバック", () => {
-    expect(getColorAt(0, [])).toBe(DEFAULT_COLORS[0]);
+    expect(getColorAt(0, [])).toBe(NEPP_CHART_COLORS[0]);
   });
 });
 

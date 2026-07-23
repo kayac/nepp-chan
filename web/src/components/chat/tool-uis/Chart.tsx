@@ -96,7 +96,7 @@ const PieChartComponent = ({ args }: { args: ChartArgs }) => {
           cx="50%"
           cy="45%"
           outerRadius={120}
-          fill="#ea580c"
+          fill={getColorAt(0)}
           dataKey={yKey}
           nameKey={xKey}
           label={({ cx, cy, midAngle = 0, outerRadius, percent }) => {
