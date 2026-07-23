@@ -1,16 +1,17 @@
 import {
   CloudIcon,
   HomeIcon,
-  LeafIcon,
-  type LucideIcon,
-  TrainFrontIcon,
-} from "lucide-react";
+  MapPinIcon,
+  UserGroupIcon,
+} from "@heroicons/react/24/outline";
 import { useScrollReveal } from "~/hooks/useScrollReveal";
+
+type IconComponent = React.ComponentType<React.SVGProps<SVGSVGElement>>;
 
 type Row = {
   label: string;
   ex: string;
-  icon: LucideIcon;
+  icon: IconComponent;
   iconBg: string;
 };
 
@@ -24,7 +25,7 @@ const ROWS: ReadonlyArray<Row> = [
   {
     label: "観光のお客さん",
     ex: "「おすすめのお蕎麦屋さんは？」",
-    icon: TrainFrontIcon,
+    icon: MapPinIcon,
     iconBg: "bg-(--apricot-50) text-(--honey)",
   },
   {
@@ -36,7 +37,7 @@ const ROWS: ReadonlyArray<Row> = [
   {
     label: "村に住んでいる方",
     ex: "「今日のゴミ、何の日だっけ？」",
-    icon: LeafIcon,
+    icon: UserGroupIcon,
     iconBg: "bg-[#fdf2f3] text-(--berry)",
   },
 ];

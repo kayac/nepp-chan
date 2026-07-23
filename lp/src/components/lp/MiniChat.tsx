@@ -1,9 +1,12 @@
+import {
+  ArrowRightIcon,
+  EllipsisHorizontalIcon,
+} from "@heroicons/react/24/outline";
 import { ChatMarkdown } from "@nepp-chan/shared/components/ChatMarkdown";
 import { INITIAL_MESSAGE } from "@nepp-chan/shared/constants/chat-defaults";
 import { useChatAutoScroll } from "@nepp-chan/shared/hooks/useChatAutoScroll";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { messageText } from "@nepp-chan/shared/lib/message-text";
-import { ArrowRightIcon, EllipsisIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import { MINI_CHAT_QA, type MiniChatQa } from "~/constants/mini-chat-qa";
 
@@ -33,7 +36,7 @@ export const MiniChat = ({ webUrl, iconSrc = "/mascot/icon.png" }: Props) => {
             オンライン
           </span>
         </div>
-        <EllipsisIcon
+        <EllipsisHorizontalIcon
           className="ml-auto size-3.5 text-(--fg-4)"
           aria-hidden="true"
         />

@@ -1,4 +1,5 @@
 import { useChat } from "@ai-sdk/react";
+import { PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ChatMarkdown } from "@nepp-chan/shared/components/ChatMarkdown";
 import {
   INITIAL_MESSAGE,
@@ -8,7 +9,6 @@ import { useChatAutoScroll } from "@nepp-chan/shared/hooks/useChatAutoScroll";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { messageText } from "@nepp-chan/shared/lib/message-text";
 import { DefaultChatTransport } from "ai";
-import { SendIcon, XIcon } from "lucide-react";
 import { type SubmitEvent, useEffect, useMemo, useRef, useState } from "react";
 import { acquireAnonymousSession } from "./anonymous-session";
 import { CLOSE_MESSAGE_TYPE } from "./messages";
@@ -142,7 +142,7 @@ export const WidgetChat = ({
           aria-label="チャットを閉じる"
           className="ml-auto grid size-8 place-items-center rounded-full text-(--fg-3) transition-colors hover:bg-(--paper-100) hover:text-(--fg-1)"
         >
-          <XIcon className="size-[18px]" aria-hidden="true" />
+          <XMarkIcon className="size-[18px]" aria-hidden="true" />
         </button>
       </div>
 
@@ -238,7 +238,7 @@ export const WidgetChat = ({
             "disabled:cursor-not-allowed disabled:opacity-55",
           )}
         >
-          <SendIcon className="size-[18px]" aria-hidden="true" />
+          <PaperAirplaneIcon className="size-[18px]" aria-hidden="true" />
         </button>
       </form>
 

@@ -1,4 +1,4 @@
-import { MailIcon } from "lucide-react";
+import { EnvelopeIcon } from "@heroicons/react/24/outline";
 import { LINE_FRIEND_URL, WEB_URL } from "~/constants/urls";
 
 export const FooterSection = () => (
@@ -72,7 +72,7 @@ export const FooterSection = () => (
               href="mailto:nepp-chan@kayac.com"
               className="inline-flex items-center gap-1.5 text-(--fg-2) transition-colors hover:text-(--brand)"
             >
-              <MailIcon className="size-3" aria-hidden="true" />{" "}
+              <EnvelopeIcon className="size-3" aria-hidden="true" />{" "}
               nepp-chan@kayac.com
             </a>
           </li>

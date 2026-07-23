@@ -1,4 +1,4 @@
-import { MessageCircleIcon } from "lucide-react";
+import { ChatBubbleOvalLeftIcon } from "@heroicons/react/24/outline";
 import { LINE_FRIEND_URL, WEB_URL } from "~/constants/urls";
 import { useScrollReveal } from "~/hooks/useScrollReveal";
 import { LineIcon } from "./LineIcon";
@@ -26,7 +26,7 @@ export const FinalCTA = () => {
             href={WEB_URL}
             className="inline-flex items-center gap-2 rounded-(--r-pill) bg-(--brand) px-6 py-3.5 text-sm font-bold text-white shadow-(--shadow-brand) transition-all duration-200 hover:-translate-y-0.5 hover:bg-(--brand-hover)"
           >
-            <MessageCircleIcon className="size-4" aria-hidden="true" />
+            <ChatBubbleOvalLeftIcon className="size-4" aria-hidden="true" />
             Web版でいますぐ話しかける
           </a>
           <a
