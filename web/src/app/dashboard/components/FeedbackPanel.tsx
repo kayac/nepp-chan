@@ -18,6 +18,9 @@ import {
   useUnresolveFeedback,
 } from "~/app/dashboard/hooks/useFeedback";
 import { useInfiniteScroll } from "~/app/dashboard/hooks/useInfiniteScroll";
+import { EmptyStateCard } from "~/components/ui/EmptyStateCard";
+import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
+import { PanelLoading } from "~/components/ui/PanelLoading";
 import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 import {
@@ -62,19 +65,11 @@ export const FeedbackPanel = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-stone-500">読み込み中...</div>
-      </div>
-    );
+    return <PanelLoading />;
   }
 
   if (error) {
-    return (
-      <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm">
-        エラー: {error instanceof Error ? error.message : "Unknown error"}
-      </div>
-    );
+    return <ErrorBanner>{formatError(error)}</ErrorBanner>;
   }
 
   const allFeedbacks = data?.pages.flatMap((page) => page.feedbacks) ?? [];
@@ -232,15 +227,13 @@ export const FeedbackPanel = () => {
       </div>
 
       {deleteMutation.isError && (
-        <div className="px-4 py-3 rounded-lg text-sm bg-red-50 text-red-700">
+        <ErrorBanner>
           {deleteMutation.error?.message || "フィードバック削除に失敗しました"}
-        </div>
+        </ErrorBanner>
       )}
 
       {feedbacks.length === 0 ? (
-        <div className="bg-white rounded-xl border border-stone-200 p-6 text-center text-stone-500">
-          フィードバックデータがありません
-        </div>
+        <EmptyStateCard>フィードバックデータがありません</EmptyStateCard>
       ) : (
         <div className="bg-white rounded-xl border border-stone-200 overflow-auto max-h-[70dvh]">
           <div

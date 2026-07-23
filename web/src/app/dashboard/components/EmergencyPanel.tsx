@@ -1,33 +1,24 @@
 import { useEmergencies } from "~/app/dashboard/hooks/useEmergencies";
+import { EmptyStateCard } from "~/components/ui/EmptyStateCard";
+import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
+import { PanelLoading } from "~/components/ui/PanelLoading";
 import { formatDateTime } from "~/lib/format";
 
 export const EmergencyPanel = () => {
   const { data, isLoading, error } = useEmergencies();
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-stone-500">読み込み中...</div>
-      </div>
-    );
+    return <PanelLoading />;
   }
 
   if (error) {
-    return (
-      <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm">
-        エラー: {error instanceof Error ? error.message : "Unknown error"}
-      </div>
-    );
+    return <ErrorBanner>{formatError(error)}</ErrorBanner>;
   }
 
   const emergencies = data?.emergencies ?? [];
 
   if (emergencies.length === 0) {
-    return (
-      <div className="bg-white rounded-xl border border-stone-200 p-6 text-center text-stone-500">
-        緊急情報がありません
-      </div>
-    );
+    return <EmptyStateCard>緊急情報がありません</EmptyStateCard>;
   }
 
   return (

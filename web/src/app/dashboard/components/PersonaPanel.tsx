@@ -7,6 +7,9 @@ import {
   useExtractPersonas,
   usePersonas,
 } from "~/app/dashboard/hooks/usePersonas";
+import { EmptyStateCard } from "~/components/ui/EmptyStateCard";
+import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
+import { PanelLoading } from "~/components/ui/PanelLoading";
 import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 
@@ -41,19 +44,11 @@ export const PersonaPanel = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-stone-500">読み込み中...</div>
-      </div>
-    );
+    return <PanelLoading />;
   }
 
   if (error) {
-    return (
-      <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm">
-        エラー: {error instanceof Error ? error.message : "Unknown error"}
-      </div>
-    );
+    return <ErrorBanner>{formatError(error)}</ErrorBanner>;
   }
 
   const personas = data?.pages.flatMap((page) => page.personas) ?? [];
@@ -91,17 +86,15 @@ export const PersonaPanel = () => {
       </div>
 
       {(extractMutation.isError || deleteMutation.isError) && (
-        <div className="px-4 py-3 rounded-lg text-sm bg-red-50 text-red-700">
+        <ErrorBanner>
           {extractMutation.error?.message ||
             deleteMutation.error?.message ||
             "エラーが発生しました"}
-        </div>
+        </ErrorBanner>
       )}
 
       {personas.length === 0 ? (
-        <div className="bg-white rounded-xl border border-stone-200 p-6 text-center text-stone-500">
-          ペルソナデータがありません
-        </div>
+        <EmptyStateCard>ペルソナデータがありません</EmptyStateCard>
       ) : (
         <div className="bg-white rounded-xl border border-stone-200 overflow-auto max-h-[70dvh]">
           <div
