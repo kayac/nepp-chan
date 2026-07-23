@@ -1,3 +1,4 @@
+import { LoadingText } from "@nepp-chan/shared/ui/Loading";
 import { useEffect, useState } from "react";
 import {
   useKnowledgeFile,
@@ -35,7 +36,9 @@ export const FileEditor = ({ fileKey, onClose }: Props) => {
     return (
       <Dialog onClose={onClose} className="w-full max-w-4xl">
         <div className="bg-white rounded-xl p-6 mx-4">
-          <div className="text-center py-8 text-stone-500">読み込み中...</div>
+          <div className="flex justify-center py-8">
+            <LoadingText>読み込み中...</LoadingText>
+          </div>
         </div>
       </Dialog>
     );

@@ -1,4 +1,5 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { LoadingText } from "@nepp-chan/shared/ui/Loading";
 import { useKnowledgeFile } from "~/app/dashboard/hooks/useKnowledge";
 import { Dialog } from "~/components/ui/Dialog";
 
@@ -18,7 +19,9 @@ export const FileViewer = ({ fileKey, onClose }: Props) => {
     return (
       <Dialog onClose={onClose} className="w-full max-w-4xl">
         <div className="bg-white rounded-xl p-6 mx-4">
-          <div className="text-center py-8 text-stone-500">読み込み中...</div>
+          <div className="flex justify-center py-8">
+            <LoadingText>読み込み中...</LoadingText>
+          </div>
         </div>
       </Dialog>
     );

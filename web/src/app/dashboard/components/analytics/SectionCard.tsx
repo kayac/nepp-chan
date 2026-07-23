@@ -1,3 +1,5 @@
+import { LoadingText } from "@nepp-chan/shared/ui/Loading";
+
 interface Props {
   title: string;
   description?: string;
@@ -17,7 +19,9 @@ export const SectionCard = ({ title, description, children }: Props) => (
 );
 
 export const SectionLoading = () => (
-  <div className="py-8 text-center text-stone-500 text-sm">読み込み中...</div>
+  <div className="py-8 flex justify-center">
+    <LoadingText>読み込み中...</LoadingText>
+  </div>
 );
 
 export const SectionEmpty = ({ children }: { children: React.ReactNode }) => (

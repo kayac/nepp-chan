@@ -1,4 +1,5 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { LoadingText } from "@nepp-chan/shared/ui/Loading";
 
 import { usePollResults } from "~/app/dashboard/hooks/usePolls";
 import { Dialog } from "~/components/ui/Dialog";
@@ -30,9 +31,9 @@ export const ResultsModal = ({ pollId, onClose }: Props) => {
         </div>
         <div className="p-5 space-y-5">
           {isLoading && (
-            <p className="text-sm text-stone-500 text-center py-8">
-              読み込み中...
-            </p>
+            <div className="flex justify-center py-8">
+              <LoadingText>読み込み中...</LoadingText>
+            </div>
           )}
 
           {results && (
