@@ -1,11 +1,6 @@
-import {
-  HandThumbDownIcon,
-  HandThumbUpIcon,
-  LightBulbIcon,
-} from "@heroicons/react/24/solid";
-
 import { Dialog } from "~/components/ui/Dialog";
 import { ModalHeader } from "~/components/ui/ModalHeader";
+import { RatingBadge } from "~/components/ui/RatingBadge";
 import { formatDateTime } from "~/lib/format";
 import { FEEDBACK_CATEGORY_LABELS, type MessageFeedback } from "~/types";
 
@@ -35,32 +30,7 @@ export const FeedbackDetailModal = ({ feedback, onClose }: Props) => {
 
         <div className="space-y-6">
           <div className="flex items-center gap-4">
-            <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${
-                feedback.rating === "good"
-                  ? "bg-green-100 text-green-700"
-                  : feedback.rating === "idea"
-                    ? "bg-amber-100 text-amber-700"
-                    : "bg-red-100 text-red-700"
-              }`}
-            >
-              {feedback.rating === "good" ? (
-                <>
-                  <HandThumbUpIcon className="w-4 h-4" />
-                  良い回答
-                </>
-              ) : feedback.rating === "idea" ? (
-                <>
-                  <LightBulbIcon className="w-4 h-4" />
-                  アイデア
-                </>
-              ) : (
-                <>
-                  <HandThumbDownIcon className="w-4 h-4" />
-                  改善が必要
-                </>
-              )}
-            </span>
+            <RatingBadge rating={feedback.rating} />
             {feedback.category && (
               <span className="inline-flex px-2 py-1 text-xs font-medium bg-stone-100 text-stone-600 rounded">
                 {FEEDBACK_CATEGORY_LABELS[feedback.category] ||

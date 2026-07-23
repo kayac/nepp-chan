@@ -1,14 +1,10 @@
-import {
-  HandThumbDownIcon,
-  HandThumbUpIcon,
-  LightBulbIcon,
-} from "@heroicons/react/24/outline";
 import { Button } from "@nepp-chan/shared/ui/Button";
 import { type SubmitEvent, useState } from "react";
 
 import { useSubmitFeedback } from "~/app/chat/hooks/useSubmitFeedback";
 import { Dialog } from "~/components/ui/Dialog";
 import { ModalHeader } from "~/components/ui/ModalHeader";
+import { RatingBadge } from "~/components/ui/RatingBadge";
 import type { FeedbackCategory, FeedbackRating } from "~/types";
 
 const FEEDBACK_CATEGORIES: { value: FeedbackCategory; label: string }[] = [
@@ -64,31 +60,8 @@ export const FeedbackModal = ({ messageId, rating, onClose }: Props) => {
         />
 
         <form onSubmit={handleSubmit}>
-          <div
-            className={`mb-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${
-              rating === "good"
-                ? "bg-(--success-bg) text-(--success)"
-                : rating === "idea"
-                  ? "bg-(--warning-bg) text-(--warning)"
-                  : "bg-(--danger-bg) text-(--danger)"
-            }`}
-          >
-            {rating === "good" ? (
-              <>
-                <HandThumbUpIcon className="w-4 h-4" aria-hidden="true" />
-                良い回答
-              </>
-            ) : rating === "idea" ? (
-              <>
-                <LightBulbIcon className="w-4 h-4" aria-hidden="true" />
-                アイデア
-              </>
-            ) : (
-              <>
-                <HandThumbDownIcon className="w-4 h-4" aria-hidden="true" />
-                改善が必要
-              </>
-            )}
+          <div className="mb-4">
+            <RatingBadge rating={rating} />
           </div>
 
           {isBadRating && (
