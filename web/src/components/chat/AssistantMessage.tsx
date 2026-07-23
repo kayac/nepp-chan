@@ -87,7 +87,7 @@ export const AssistantMessage = ({ message, isLast }: Props) => {
 };
 
 const MessageError = ({ message }: { message: string }) => (
-  <div className="aui-message-error-root mt-2 rounded-lg border border-red-200 bg-(--danger-bg) p-3 text-(--danger) text-sm">
+  <div className="aui-message-error-root mt-2 rounded-lg bg-(--danger-bg) p-3 text-(--danger) text-sm">
     <p className="aui-message-error-message line-clamp-2">{message}</p>
   </div>
 );

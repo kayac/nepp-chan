@@ -48,7 +48,7 @@ export const FeedbackModal = ({ messageId, rating, onClose }: Props) => {
 
   return (
     <Dialog onClose={onClose} className="w-full max-w-md">
-      <div className="relative bg-white rounded-xl shadow-xl mx-4 p-6 animate-fade-in">
+      <div className="relative bg-(--bg-raised) rounded-xl shadow-xl mx-4 p-6 animate-fade-in">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-(--fg-1)">
             {rating === "good"
@@ -71,10 +71,10 @@ export const FeedbackModal = ({ messageId, rating, onClose }: Props) => {
           <div
             className={`mb-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${
               rating === "good"
-                ? "bg-green-100 text-green-700"
+                ? "bg-(--success-bg) text-(--success)"
                 : rating === "idea"
-                  ? "bg-amber-100 text-amber-700"
-                  : "bg-red-100 text-red-700"
+                  ? "bg-(--warning-bg) text-(--warning)"
+                  : "bg-(--danger-bg) text-(--danger)"
             }`}
           >
             {rating === "good" ? (
@@ -117,12 +117,12 @@ export const FeedbackModal = ({ messageId, rating, onClose }: Props) => {
                     <span
                       className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                         category === cat.value
-                          ? "border-stone-700 bg-stone-700"
-                          : "border-stone-400 bg-white"
+                          ? "border-(--fg-1) bg-(--fg-1)"
+                          : "border-(--border-2) bg-(--bg-raised)"
                       }`}
                     >
                       {category === cat.value && (
-                        <span className="w-1.5 h-1.5 bg-white rounded-full" />
+                        <span className="w-1.5 h-1.5 bg-(--paper-0) rounded-full" />
                       )}
                     </span>
                     <span className="text-sm text-(--fg-1)">{cat.label}</span>
@@ -164,7 +164,7 @@ export const FeedbackModal = ({ messageId, rating, onClose }: Props) => {
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 py-2.5 px-4 border border-(--border-1) text-(--fg-1) rounded-lg text-sm font-medium hover:bg-(--bg-raised) transition-colors disabled:opacity-50"
+              className="flex-1 py-2.5 px-4 border border-(--border-1) text-(--fg-1) rounded-lg text-sm font-medium hover:bg-(--bg-sunken) transition-colors disabled:opacity-50"
             >
               キャンセル
             </button>

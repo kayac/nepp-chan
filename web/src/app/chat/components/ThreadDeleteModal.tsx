@@ -14,7 +14,7 @@ export const ThreadDeleteModal = ({
   return (
     <Dialog
       onClose={onCancel}
-      className="backdrop:bg-stone-900/30 backdrop:backdrop-blur-[3px]"
+      className="backdrop:bg-(--bg-overlay) backdrop:backdrop-blur-[3px]"
     >
       <div
         className="bg-(--paper-0) rounded-2xl p-6 w-80 border border-(--paper-200)"
@@ -39,7 +39,7 @@ export const ThreadDeleteModal = ({
             type="button"
             onClick={onConfirm}
             disabled={isDeleting}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-60"
+            className="px-4 py-2 text-sm font-medium text-white bg-(--danger) hover:opacity-90 rounded-lg transition-colors disabled:opacity-60"
           >
             {isDeleting ? "削除中..." : "削除"}
           </button>

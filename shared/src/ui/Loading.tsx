@@ -64,27 +64,22 @@ type ToolLoadingStateProps = {
   icon?: React.ReactNode;
 };
 
+const NEUTRAL_STYLE = {
+  container: "rounded-xl bg-(--bg-sunken) p-4",
+  bar: "bg-(--border-2)",
+  skeleton: "bg-(--border-1)",
+} as const;
+
 const variantStyles = {
   chart: {
-    container: "rounded-2xl bg-linear-to-r from-teal-50 to-cyan-50 p-5",
-    bar: "bg-teal-200",
-    skeleton: "bg-teal-100",
+    container:
+      "rounded-2xl bg-linear-to-r from-(--teal-50) to-(--teal-100) p-5",
+    bar: "bg-(--teal-200)",
+    skeleton: "bg-(--teal-100)",
   },
-  table: {
-    container: "rounded-xl bg-gradient-to-r from-slate-50 to-gray-50 p-4",
-    bar: "bg-slate-200",
-    skeleton: "bg-slate-100",
-  },
-  timeline: {
-    container: "rounded-xl bg-gradient-to-r from-indigo-50 to-blue-50 p-4",
-    bar: "bg-indigo-200",
-    skeleton: "bg-indigo-100",
-  },
-  choice: {
-    container: "rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 p-4",
-    bar: "bg-amber-200",
-    skeleton: "bg-amber-100",
-  },
+  table: NEUTRAL_STYLE,
+  timeline: NEUTRAL_STYLE,
+  choice: NEUTRAL_STYLE,
 } as const;
 
 export const ToolLoadingState = ({ variant, icon }: ToolLoadingStateProps) => {
