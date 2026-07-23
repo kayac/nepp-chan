@@ -1,6 +1,6 @@
+import { CheckIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { Button } from "@nepp-chan/shared/ui/Button";
-import { CheckIcon, CopyIcon } from "lucide-react";
 import {
   createContext,
   isValidElement,
@@ -49,7 +49,7 @@ const CodeHeader = ({ language, code }: { language: string; code: string }) => {
         {language}
       </span>
       <Button variant="ghost" size="icon-xs" aria-label="Copy" onClick={onCopy}>
-        {!isCopied && <CopyIcon />}
+        {!isCopied && <DocumentDuplicateIcon />}
         {isCopied && <CheckIcon />}
       </Button>
     </div>

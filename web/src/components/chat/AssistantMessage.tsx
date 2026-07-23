@@ -1,7 +1,11 @@
+import {
+  HandThumbDownIcon,
+  HandThumbUpIcon,
+  LightBulbIcon,
+} from "@heroicons/react/24/outline";
 import { Button } from "@nepp-chan/shared/ui/Button";
 import type { UIMessage } from "ai";
 import { isToolOrDynamicToolUIPart } from "ai";
-import { LightbulbIcon, ThumbsDownIcon, ThumbsUpIcon } from "lucide-react";
 import { useState } from "react";
 
 import { FeedbackModal } from "~/app/chat/components/FeedbackModal";
@@ -127,7 +131,7 @@ const FeedbackButtons = ({
       onClick={() => onSelect("good")}
       className="hover:text-(--success) transition-colors duration-150"
     >
-      <ThumbsUpIcon className="size-3.5" />
+      <HandThumbUpIcon className="size-3.5" />
     </Button>
     <Button
       variant="ghost"
@@ -136,7 +140,7 @@ const FeedbackButtons = ({
       onClick={() => onSelect("bad")}
       className="hover:text-(--danger) transition-colors duration-150"
     >
-      <ThumbsDownIcon className="size-3.5" />
+      <HandThumbDownIcon className="size-3.5" />
     </Button>
     <Button
       variant="ghost"
@@ -145,7 +149,7 @@ const FeedbackButtons = ({
       onClick={() => onSelect("idea")}
       className="hover:text-(--warning) transition-colors duration-150"
     >
-      <LightbulbIcon className="size-3.5" />
+      <LightBulbIcon className="size-3.5" />
     </Button>
   </>
 );

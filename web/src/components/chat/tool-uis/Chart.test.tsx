@@ -54,7 +54,6 @@ describe("Chart", () => {
       yKey: "value",
     };
     const { container } = render(<Chart args={args} />);
-    // lucide-react は svg を返す。アイコン自体の存在をヘッダーから確認する
     expect(container.querySelector("h3")?.textContent).toBe("棒");
     expect(container.querySelector("h3")?.previousElementSibling?.tagName).toBe(
       "svg",

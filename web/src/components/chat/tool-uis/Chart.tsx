@@ -1,5 +1,9 @@
+import {
+  ChartBarIcon,
+  ChartPieIcon,
+  PresentationChartLineIcon,
+} from "@heroicons/react/24/outline";
 import type { DisplayChartArgs } from "@nepp-chan/shared/schemas/display-tools";
-import { BarChartIcon, LineChartIcon, PieChartIcon } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -29,11 +33,11 @@ export type ChartArgs = DisplayChartArgs;
 const ChartIcon = ({ type }: { type: ChartType }) => {
   switch (type) {
     case "line":
-      return <LineChartIcon className="size-5 text-(--teal-600)" />;
+      return <PresentationChartLineIcon className="size-5 text-(--teal-600)" />;
     case "bar":
-      return <BarChartIcon className="size-5 text-(--teal-600)" />;
+      return <ChartBarIcon className="size-5 text-(--teal-600)" />;
     case "pie":
-      return <PieChartIcon className="size-5 text-(--teal-600)" />;
+      return <ChartPieIcon className="size-5 text-(--teal-600)" />;
   }
 };
 

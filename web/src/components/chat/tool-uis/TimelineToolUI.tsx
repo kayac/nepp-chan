@@ -1,10 +1,10 @@
+import { CalendarIcon } from "@heroicons/react/24/outline";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import {
   type DisplayTimelineArgs,
   displayTimelineSchema,
 } from "@nepp-chan/shared/schemas/display-tools";
 import { ToolLoadingState } from "@nepp-chan/shared/ui/Loading";
-import { CalendarIcon } from "lucide-react";
 
 import { defineToolUI } from "./define-tool-ui";
 

@@ -1,5 +1,6 @@
+import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
+import { StopIcon } from "@heroicons/react/24/solid";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
-import { SendIcon, SquareIcon } from "lucide-react";
 import { useState } from "react";
 
 import { useChatContext } from "~/app/chat/contexts/ChatContext";
@@ -97,7 +98,7 @@ const ComposerAction = ({
           "bg-(--paper-100) text-(--fg-2) transition-colors hover:bg-(--paper-200)",
         )}
       >
-        <SquareIcon className="aui-composer-cancel-icon size-3 fill-current" />
+        <StopIcon className="aui-composer-cancel-icon size-3" />
       </button>
     ) : (
       <button
@@ -112,7 +113,7 @@ const ComposerAction = ({
         )}
         style={{ boxShadow: "0 4px 12px rgba(15, 118, 110, 0.35)" }}
       >
-        <SendIcon className="aui-composer-send-icon size-4" />
+        <PaperAirplaneIcon className="aui-composer-send-icon size-4" />
       </button>
     )}
   </div>
