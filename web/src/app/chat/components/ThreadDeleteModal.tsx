@@ -1,3 +1,5 @@
+import { Button } from "@nepp-chan/shared/ui/Button";
+
 import { Dialog } from "~/components/ui/Dialog";
 
 type Props = {
@@ -27,22 +29,22 @@ export const ThreadDeleteModal = ({
           このスレッドを削除しますか？会話履歴は復元できません。
         </p>
         <div className="flex gap-3 justify-end">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={onCancel}
             disabled={isDeleting}
-            className="px-4 py-2 text-sm font-medium text-(--fg-2) hover:bg-(--paper-100) rounded-lg transition-colors disabled:opacity-60"
           >
             キャンセル
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="destructive"
             onClick={onConfirm}
             disabled={isDeleting}
-            className="px-4 py-2 text-sm font-medium text-white bg-(--danger) hover:opacity-90 rounded-lg transition-colors disabled:opacity-60"
           >
             {isDeleting ? "削除中..." : "削除"}
-          </button>
+          </Button>
         </div>
       </div>
     </Dialog>

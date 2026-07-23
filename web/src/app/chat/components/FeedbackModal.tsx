@@ -4,6 +4,7 @@ import {
   LightBulbIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { Button } from "@nepp-chan/shared/ui/Button";
 import { type SubmitEvent, useState } from "react";
 
 import { useSubmitFeedback } from "~/app/chat/hooks/useSubmitFeedback";
@@ -160,21 +161,22 @@ export const FeedbackModal = ({ messageId, rating, onClose }: Props) => {
           </div>
 
           <div className="flex gap-3">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 py-2.5 px-4 border border-(--border-1) text-(--fg-1) rounded-lg text-sm font-medium hover:bg-(--bg-sunken) transition-colors disabled:opacity-50"
+              className="flex-1 py-2.5"
             >
               キャンセル
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={isSubmitting || (isBadRating && !category)}
-              className="flex-1 py-2.5 px-4 bg-(--brand) text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-2.5"
             >
               {isSubmitting ? "送信中..." : "送信"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

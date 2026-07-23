@@ -6,6 +6,7 @@ import {
   PencilSquareIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import { Button } from "@nepp-chan/shared/ui/Button";
 import { useState } from "react";
 import { BroadcastFormModal } from "~/app/dashboard/components/broadcast/BroadcastFormModal";
 import { BroadcastPartPreview } from "~/app/dashboard/components/broadcast/BroadcastPartPreview";
@@ -111,14 +112,13 @@ export const BroadcastPanel = () => {
           <div className="text-sm text-stone-500">
             {broadcasts.length} / {total}件の配信メッセージ
           </div>
-          <button
+          <Button
             type="button"
             onClick={() => setModalState({ open: true, mode: "create" })}
-            className="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-1.5"
           >
             <PaperAirplaneIcon className="w-4 h-4" />
             新規作成
-          </button>
+          </Button>
         </div>
 
         <div className="flex flex-wrap gap-1">

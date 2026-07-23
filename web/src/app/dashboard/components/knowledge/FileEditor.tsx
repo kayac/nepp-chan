@@ -1,3 +1,4 @@
+import { Button } from "@nepp-chan/shared/ui/Button";
 import { LoadingText } from "@nepp-chan/shared/ui/Loading";
 import { useEffect, useState } from "react";
 import {
@@ -118,21 +119,16 @@ export const FileEditor = ({ fileKey, onClose }: Props) => {
           )}
           {!saveMutation.isError && !saveMutation.isSuccess && <span />}
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-stone-600 hover:text-stone-800"
-            >
+            <Button type="button" variant="ghost" onClick={onClose}>
               キャンセル
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={handleSave}
               disabled={saveMutation.isPending}
-              className="px-4 py-2 bg-teal-700 text-white text-sm font-medium rounded-lg hover:bg-teal-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saveMutation.isPending ? "保存中..." : "保存"}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

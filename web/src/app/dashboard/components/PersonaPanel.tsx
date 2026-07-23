@@ -1,3 +1,5 @@
+import { Button } from "@nepp-chan/shared/ui/Button";
+
 import { getSentimentStyle } from "~/app/dashboard/components/persona/helpers";
 import { useInfiniteScroll } from "~/app/dashboard/hooks/useInfiniteScroll";
 import {
@@ -64,26 +66,27 @@ export const PersonaPanel = () => {
           {personas.length} / {total}件のペルソナ
         </div>
         <div className="flex gap-2">
-          <button
+          <Button
             type="button"
             onClick={handleExtract}
             disabled={extractMutation.isPending || deleteMutation.isPending}
-            className="flex-1 sm:flex-none px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 sm:flex-none"
           >
             {extractMutation.isPending ? "抽出中..." : "会話から抽出"}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="destructive"
             onClick={handleDelete}
             disabled={
               extractMutation.isPending ||
               deleteMutation.isPending ||
               personas.length === 0
             }
-            className="flex-1 sm:flex-none px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 sm:flex-none"
           >
             {deleteMutation.isPending ? "削除中..." : "全て削除"}
-          </button>
+          </Button>
         </div>
       </div>
 
