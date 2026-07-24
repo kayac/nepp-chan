@@ -17,7 +17,7 @@
 
 ## 既知の警告（正当としてトリアージ済み）
 
-- `[EXPORT_COLLISION] ds-entry-web.tsx exports 16 name(s)...` — synth モードが componentSrcMap の全名を main package の export 集合に加算することによる誤検知。main entry（shared の 6 ファイル）は web の名前を実際には export しておらず、render check で全カードの描画を確認済み
+- `[EXPORT_COLLISION] ds-entry-web.tsx exports N name(s)...` — synth モードが componentSrcMap の全名を main package の export 集合に加算することによる誤検知。main entry（shared の src ファイル群）は web の名前を実際には export しておらず、render check で全カードの描画を確認済み。N はコンポーネント追加・移動のたびに変動する（無害）
 - `[NO_DIST] --entry ... doesn't exist` — 意図的（PKG_DIR 解決トリック）
 
 ## 検証環境
@@ -79,3 +79,14 @@ web 側のコンポーネント共通化作業で新設した `web/src/component
 
 - Thread / Composer / AssistantMessage / ChatStandingMascot / FeedbackModal は ChatContext 必須 → `cfg.provider` の `ChatPreviewProvider`（ds-entry-web.tsx 内、モック会話 2 メッセージ・isRunning: false）が全プレビューを包む
 - モック会話を変えたいときは ds-entry-web.tsx の mockMessages を編集
+
+## SpeechBubble の shared 移動 + MiniChatHeader 新規登録(2026-07-24)
+
+web/lp/widget で3実装に分かれていたチャット吹き出しを `web/src/app/chat/components/SpeechBubble.tsx` → `shared/src/components/SpeechBubble.tsx` に一本化。あわせて `MiniChatHeader`（lp/widget のミニチャットヘッダー）を新規のshared内蔵コンポーネントとして追加登録した。
+
+- **componentSrcMap のパスは shared 内蔵なら `src/components/<Name>.tsx`**（`ChatMarkdown`/`AmbientBG`/`Mascot` と同じ規約）。`../shared/src/...` のような `../` prefix は不要（PKG_DIR が既に shared/ のため）
+- **落とし穴**: componentSrcMap のパスから `chat`/`web`/`poll` のようなパスセグメントが消えると、非 general グループへの自動分類が外れて `general` バケットに落ちる。SpeechBubble が web → shared 移動で `chat` グループを失い `general` に落ちたため、`ChatMarkdown`/`MiniChatHeader` と同じ `minichat` カテゴリに docsMap で明示的に再分類した(`.design-sync/groups/SpeechBubble.md`)。**コンポーネントを shared 側に移動するときは、旧グループを docsMap で引き継ぐ必要がないか必ず確認すること**
+- `ds-entry-web.tsx` から SpeechBubble の re-export は削除(shared 内蔵になったため web からの持ち出しが不要に)
+- sourceKey は移動前後で変化しない(ファイル内容が同じなら unchanged 判定・再グレード不要)。ただし出力パスが変わるため upload 対象には含まれる(旧 `components/chat/SpeechBubble/*` の delete + 新 `components/minichat/SpeechBubble/*` の write)
+- `MiniChatHeader` の dtsPropsFor: `iconSrc?: string; action?: React.ReactNode; className?: string;`。overrides で `cardMode: "column"`（横長ヘッダーのため ModalHeader と同じ理由）
+- re-sync 実施済み。projectId: 1615d9dd-b30a-4c91-8bd4-d4aa6a0f0c63、28コンポーネント、MiniChatHeader は Default/WithAction 2ストーリーとも good

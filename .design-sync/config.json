@@ -19,7 +19,8 @@
     "ToolLoadingState": "../.design-sync/groups/ToolLoadingState.md",
     "ToolEmptyState": "../.design-sync/groups/ToolEmptyState.md",
     "ChatMarkdown": "../.design-sync/groups/ChatMarkdown.md",
-    "MiniChatHeader": "../.design-sync/groups/MiniChatHeader.md"
+    "MiniChatHeader": "../.design-sync/groups/MiniChatHeader.md",
+    "SpeechBubble": "../.design-sync/groups/SpeechBubble.md"
   },
   "dtsPropsFor": {
     "Button": "variant?: \"default\" | \"destructive\" | \"outline\" | \"secondary\" | \"ghost\" | \"link\"; size?: \"default\" | \"sm\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\"; asChild?: boolean; disabled?: boolean; className?: string; children?: React.ReactNode; onClick?: () => void;",
