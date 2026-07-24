@@ -6,7 +6,7 @@ import {
   type BridgeConfig,
   parseBridgeConfig,
 } from "./bridge-config";
-import { createVoiceTurnRunner } from "./conversation";
+import { createVoiceConversation } from "./conversation";
 import {
   createVoiceFindingsSlot,
   type VoiceFindingsSlot,
@@ -36,6 +36,7 @@ export const handleRelayUpgrade = (
 
 export class CallBridge extends DurableObject<CloudflareBindings> {
   private from = "";
+  private callSid = "";
   private verified = false;
   private socket: WebSocket | null = null;
   private currentTurn: AbortController | null = null;
@@ -47,19 +48,17 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
   private findingsSlot: VoiceFindingsSlot = createVoiceFindingsSlot();
   private config: BridgeConfig = BRIDGE_CONFIG_DEFAULTS;
   private pendingEndTimer: ReturnType<typeof setTimeout> | null = null;
-  private turnRunnerPromise: ReturnType<typeof createVoiceTurnRunner> | null =
-    null;
+  private conversationPromise: ReturnType<
+    typeof createVoiceConversation
+  > | null = null;
+  private turnIndex = 0;
 
   async fetch() {
     const { 0: client, 1: server } = new WebSocketPair();
     this.socket = server;
     server.accept();
     server.addEventListener("message", (event) => {
-      this.onMessage(server, event).catch((e) =>
-        logger.error("[CallBridge] onMessage failed", {
-          error: e instanceof Error ? e.message : String(e),
-        }),
-      );
+      this.handleMessageEvent(server, event);
     });
     server.addEventListener("close", () => {
       this.currentTurn?.abort();
@@ -67,6 +66,15 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     });
     await this.ctx.storage.setAlarm(Date.now() + SETUP_TIMEOUT_MS);
     return new Response(null, { status: 101, webSocket: client });
+  }
+
+  private handleMessageEvent(ws: WebSocket, event: MessageEvent) {
+    const task = this.onMessage(ws, event).catch((e) =>
+      logger.error("[CallBridge] onMessage failed", {
+        error: e instanceof Error ? e.message : String(e),
+      }),
+    );
+    this.ctx.waitUntil(task);
   }
 
   async alarm() {
@@ -100,6 +108,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       }
       this.verified = true;
       this.from = msg.from;
+      this.callSid = msg.callSid;
       this.config = parseBridgeConfig(msg.customParameters);
     } else if (msg.type === "prompt") {
       if (!this.verified) return;
@@ -168,11 +177,12 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     this.currentTurn = controller;
 
     const t0 = Date.now();
-    this.turnRunnerPromise ??= createVoiceTurnRunner({
+    this.conversationPromise ??= createVoiceConversation({
       env: this.env,
       from: this.from,
+      callSid: this.callSid,
     });
-    const turnRunner = await this.turnRunnerPromise;
+    const conversation = await this.conversationPromise;
     if (controller.signal.aborted || this.currentTurn !== controller) {
       if (this.currentTurn === controller) this.currentTurn = null;
       return;
@@ -181,7 +191,10 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     let firstSendMs: number | null = null;
     let tokenCount = 0;
     let assistantChars = 0;
+    let assistantText = "";
     let endRequested = false;
+    let responseEndMs: number | null = null;
+    let persistenceMs: number | null = null;
 
     const send = (token: string, last = false, options?: TextTokenOptions) =>
       ws.send(serializeRelayMessage(textTokenMessage(token, last, options)));
@@ -198,7 +211,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     cover.start();
 
     try {
-      for await (const delta of turnRunner({
+      for await (const delta of conversation.runTurn({
         text,
         signal: controller.signal,
         onToolCall: cover.onToolCall,
@@ -211,13 +224,33 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         if (firstSendMs === null) firstSendMs = Date.now() - t0;
         tokenCount++;
         assistantChars += delta.length;
+        assistantText += delta;
         cover.onToken();
         send(delta);
       }
       if (!controller.signal.aborted) {
         send("", true);
+        responseEndMs = Date.now() - t0;
+        if (this.currentTurn === controller) this.currentTurn = null;
         if (endRequested && this.config.endCallEnabled) {
           this.scheduleEndCall(ws, assistantChars);
+        }
+        if (assistantText) {
+          const turnIndex = this.turnIndex++;
+          const persistStart = Date.now();
+          try {
+            await conversation.persistTurn({
+              turnIndex,
+              userText: text,
+              assistantText,
+            });
+          } catch (e) {
+            logger.error("[Voice] turn persistence failed", {
+              error: e instanceof Error ? e.message : String(e),
+              turnIndex,
+            });
+          }
+          persistenceMs = Date.now() - persistStart;
         }
       }
     } catch (e) {
@@ -231,11 +264,12 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       cover.dispose();
       if (this.currentTurn === controller) this.currentTurn = null;
       const timing: Record<string, number | boolean> = {
-        turnEndMs: Date.now() - t0,
+        turnEndMs: responseEndMs ?? Date.now() - t0,
         tokenCount,
         aborted: controller.signal.aborted,
       };
       if (firstSendMs !== null) timing.firstSendMs = firstSendMs;
+      if (persistenceMs !== null) timing.persistenceMs = persistenceMs;
       logger.info("[Voice] turn timing", timing);
     }
   }

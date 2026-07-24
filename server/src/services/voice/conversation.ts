@@ -1,4 +1,5 @@
 import { Mastra } from "@mastra/core/mastra";
+import type { ModelMessage } from "ai";
 import { voiceModelConfig } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { toVoiceIds } from "~/lib/principal";
@@ -16,28 +17,47 @@ type RunTurnParams = {
   findingsSlot?: VoiceFindingsSlot;
 };
 
-// 通話（DO インスタンス）ごとに1回だけ生成する。agent/Mastra 構築と
-// toVoiceIds の HMAC はターンごとに変わらないため、通話中は使い回す。
-export const createVoiceTurnRunner = async ({
+type PersistTurnParams = {
+  turnIndex: number;
+  userText: string;
+  assistantText: string;
+};
+
+const MAX_HISTORY_MESSAGES = 20;
+const VOICE_THREAD_TITLE = "音声通話";
+
+const textContent = (text: string) => ({
+  format: 2 as const,
+  parts: [{ type: "text" as const, text }],
+});
+
+// 通話（DO インスタンス）ごとに1回だけ生成し、会話履歴をメモリ上で保持する。
+// D1 は応答完了後の persistTurn でのみ触る。
+export const createVoiceConversation = async ({
   env,
   from,
+  callSid,
 }: {
   env: CloudflareBindings;
   from: string;
+  callSid: string;
 }) => {
   const { resourceId, threadId } = await toVoiceIds(
     from,
+    callSid,
     env.RESOURCE_ID_HASH_SECRET,
   );
-  const storage = await getStorage(env.DB);
+  const createdAt = new Date();
+  let history: ModelMessage[] = [];
   const neppChanAgent = createNeppChanAgent({
     platform: "voice",
     modelConfig: voiceModelConfig,
+    withMemory: false,
   });
-  const mastra = new Mastra({ agents: { neppChanAgent }, storage });
+  const mastra = new Mastra({ agents: { neppChanAgent } });
   const agent = mastra.getAgent("neppChanAgent");
 
-  return async function* runTurn({
+  const runTurn = async function* ({
     text,
     signal,
     onToolCall,
@@ -46,7 +66,6 @@ export const createVoiceTurnRunner = async ({
   }: RunTurnParams) {
     const start = Date.now();
     const requestContext = createRequestContext({
-      storage,
       db: env.DB,
       env,
       voiceFindings: findingsSlot,
@@ -54,15 +73,16 @@ export const createVoiceTurnRunner = async ({
       voiceTurnSignal: signal,
       voiceEndCall: onEndCall,
     });
+    const input: ModelMessage[] = [...history, { role: "user", content: text }];
 
-    const result = await agent.stream(text, {
+    const result = await agent.stream(input, {
       requestContext,
-      memory: { resource: resourceId, thread: threadId },
       abortSignal: signal,
     });
     const streamReadyMs = Date.now() - start;
 
     let firstTokenMs: number | null = null;
+    let assistantText = "";
     try {
       for await (const chunk of result.fullStream) {
         if (signal?.aborted) return;
@@ -84,7 +104,17 @@ export const createVoiceTurnRunner = async ({
         if (chunk.type !== "text-delta") continue;
         if (firstTokenMs === null) firstTokenMs = Date.now() - start;
         const clean = sanitizeForSpeech(chunk.payload.text);
-        if (clean) yield clean;
+        if (clean) {
+          assistantText += clean;
+          yield clean;
+        }
+      }
+      if (!signal?.aborted && assistantText) {
+        const assistantMessage: ModelMessage = {
+          role: "assistant",
+          content: assistantText,
+        };
+        history = [...input, assistantMessage].slice(-MAX_HISTORY_MESSAGES);
       }
     } finally {
       const timing: Record<string, number> = { streamReadyMs };
@@ -92,4 +122,58 @@ export const createVoiceTurnRunner = async ({
       logger.info("[Voice] llm timing", timing);
     }
   };
+
+  const persistTurn = async ({
+    turnIndex,
+    userText,
+    assistantText,
+  }: PersistTurnParams) => {
+    const storage = await getStorage(env.DB);
+    const memoryStore = await storage.getStore("memory");
+    if (!memoryStore) throw new Error("Memory storage is unavailable");
+
+    const now = new Date();
+    const assistantCreatedAt = new Date(now.getTime() + 1);
+    const thread = {
+      id: threadId,
+      resourceId,
+      title: VOICE_THREAD_TITLE,
+      createdAt,
+      updatedAt: now,
+    };
+    const messages = [
+      {
+        id: `${threadId}:turn:${turnIndex}:user`,
+        role: "user" as const,
+        createdAt: now,
+        threadId,
+        resourceId,
+        content: textContent(userText),
+      },
+      {
+        id: `${threadId}:turn:${turnIndex}:assistant`,
+        role: "assistant" as const,
+        createdAt: assistantCreatedAt,
+        threadId,
+        resourceId,
+        content: textContent(assistantText),
+      },
+    ];
+    const save = async () => {
+      await memoryStore.saveThread({ thread });
+      await memoryStore.saveMessages({ messages });
+    };
+
+    try {
+      await save();
+    } catch (error) {
+      logger.warn("[Voice] retrying turn persistence", {
+        error: error instanceof Error ? error.message : String(error),
+        turnIndex,
+      });
+      await save();
+    }
+  };
+
+  return { runTurn, persistTurn };
 };

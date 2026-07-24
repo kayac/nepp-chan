@@ -44,15 +44,21 @@ export const toLineIds = async (p: LinePrincipal, secret: string) => {
   };
 };
 
-// 音声通話の発信元（softphone の client:… / PSTN の +81…）から
-// resourceId / threadId / hashedFrom をまとめて生成する。LINE と同様に
-// 平文の発信元が永続化されないよう HMAC でハッシュ化し、voice 名前空間を分ける。
-export const toVoiceIds = async (from: string, secret: string) => {
-  const hashedFrom = await hmacSha256(from, secret);
+// 発信元は resourceId、通話は threadId に対応させる。どちらも平文を
+// 永続化しないよう HMAC でハッシュ化し、voice 名前空間を分ける。
+export const toVoiceIds = async (
+  from: string,
+  callSid: string,
+  secret: string,
+) => {
+  const [hashedFrom, hashedCallSid] = await Promise.all([
+    hmacSha256(from, secret),
+    hmacSha256(callSid, secret),
+  ]);
   return {
     hashedFrom,
     resourceId: `voice:${hashedFrom}`,
-    threadId: `voice-thread:${hashedFrom}`,
+    threadId: `voice-thread:${hashedCallSid}`,
   };
 };
 
