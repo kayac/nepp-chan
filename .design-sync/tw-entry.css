@@ -1,0 +1,13 @@
+/* design-sync 用 Tailwind エントリ。web/src/index.css と同じ構成で、
+   スコープ対象ファイル + 作成済みプレビューだけを @source に含める */
+@import url("https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap");
+@import "tailwindcss" source(none);
+@import "../shared/src/styles/index.css";
+@import "./.cache/asset-shim.css";
+
+@source "../shared/src/**/*.{ts,tsx}";
+@source "../web/src/components/**/*.{ts,tsx}";
+@source "../web/src/app/chat/**/*.{ts,tsx}";
+@source "../web/src/app/poll/**/*.{ts,tsx}";
+@source "./previews/**/*.tsx";
+@source "./ds-entry-web.tsx";
