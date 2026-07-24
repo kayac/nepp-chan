@@ -1,6 +1,6 @@
+import { SpeechBubble } from "@nepp-chan/shared/components/SpeechBubble";
 import { messageText } from "@nepp-chan/shared/lib/message-text";
 import type { UIMessage } from "ai";
-import { SpeechBubble } from "~/app/chat/components/SpeechBubble";
 import { isGreetingPrompt } from "~/app/chat/greeting-prompt";
 
 export const UserMessage = ({ message }: { message: UIMessage }) => {

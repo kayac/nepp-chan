@@ -1,5 +1,9 @@
+import {
+  ChartBarIcon,
+  ChartPieIcon,
+  PresentationChartLineIcon,
+} from "@heroicons/react/24/outline";
 import type { DisplayChartArgs } from "@nepp-chan/shared/schemas/display-tools";
-import { BarChartIcon, LineChartIcon, PieChartIcon } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -29,11 +33,11 @@ export type ChartArgs = DisplayChartArgs;
 const ChartIcon = ({ type }: { type: ChartType }) => {
   switch (type) {
     case "line":
-      return <LineChartIcon className="size-5 text-teal-600" />;
+      return <PresentationChartLineIcon className="size-5 text-(--teal-600)" />;
     case "bar":
-      return <BarChartIcon className="size-5 text-teal-600" />;
+      return <ChartBarIcon className="size-5 text-(--teal-600)" />;
     case "pie":
-      return <PieChartIcon className="size-5 text-teal-600" />;
+      return <ChartPieIcon className="size-5 text-(--teal-600)" />;
   }
 };
 
@@ -96,7 +100,7 @@ const PieChartComponent = ({ args }: { args: ChartArgs }) => {
           cx="50%"
           cy="45%"
           outerRadius={120}
-          fill="#ea580c"
+          fill={getColorAt(0)}
           dataKey={yKey}
           nameKey={xKey}
           label={({ cx, cy, midAngle = 0, outerRadius, percent }) => {
@@ -137,11 +141,11 @@ const PieChartComponent = ({ args }: { args: ChartArgs }) => {
 };
 
 export const Chart = ({ args }: { args: ChartArgs }) => (
-  <div className="rounded-2xl bg-white p-5 shadow-md ring-1 ring-stone-200">
+  <div className="rounded-2xl bg-(--bg-raised) p-5 shadow-md ring-1 ring-(--border-1)">
     {args.title && (
-      <div className="mb-4 flex items-center gap-2 border-b border-stone-100 pb-3">
+      <div className="mb-4 flex items-center gap-2 border-b border-(--border-1) pb-3">
         <ChartIcon type={args.type} />
-        <h3 className="font-medium text-stone-700">{args.title}</h3>
+        <h3 className="font-medium text-(--fg-2)">{args.title}</h3>
       </div>
     )}
 

@@ -6,6 +6,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import { Button } from "@nepp-chan/shared/ui/Button";
 import { useCallback, useState } from "react";
 import { PollForm } from "~/app/dashboard/components/poll/PollForm";
 import { ResultsModal } from "~/app/dashboard/components/poll/ResultsModal";
@@ -109,14 +110,10 @@ export const PollPanel = () => {
             </button>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={() => setModal({ type: "create" })}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm text-white bg-teal-700 hover:bg-teal-800 rounded-lg"
-        >
+        <Button type="button" onClick={() => setModal({ type: "create" })}>
           <PlusIcon className="w-4 h-4" />
           新規作成
-        </button>
+        </Button>
       </div>
 
       {isLoading && (

@@ -77,3 +77,10 @@ server/public/
 
 # Design handoff bundle (Claude Design export, not committed)
 design-reference/
+
+# design-sync 作業ディレクトリ
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules

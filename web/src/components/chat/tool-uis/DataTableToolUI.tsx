@@ -1,16 +1,16 @@
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  TableCellsIcon,
+} from "@heroicons/react/24/outline";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import {
   type DisplayTableArgs,
   displayTableSchema,
 } from "@nepp-chan/shared/schemas/display-tools";
 import { ToolLoadingState } from "@nepp-chan/shared/ui/Loading";
-import {
-  ArrowDownIcon,
-  ArrowUpIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-  TableIcon,
-} from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { defineToolUI } from "./define-tool-ui";
@@ -54,7 +54,7 @@ const DataTable = ({ args }: { args: DisplayTableArgs }) => {
     <div className="overflow-hidden rounded-xl border border-(--border-1) bg-(--bg-raised)">
       {args.title && (
         <div className="flex items-center gap-2 border-b border-(--border-1) px-4 py-3">
-          <TableIcon className="size-5 text-(--fg-3)" />
+          <TableCellsIcon className="size-5 text-(--fg-3)" />
           <h3 className="font-medium text-(--fg-2)">{args.title}</h3>
           <span className="ml-auto text-sm text-(--fg-4)">
             {args.data.length}件
@@ -139,7 +139,7 @@ export const DisplayTableToolComponent = defineToolUI({
   loading: (
     <ToolLoadingState
       variant="table"
-      icon={<TableIcon className="size-5 animate-pulse text-(--fg-4)" />}
+      icon={<TableCellsIcon className="size-5 animate-pulse text-(--fg-4)" />}
     />
   ),
   emptyMessage: "表示するデータがありません",

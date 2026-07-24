@@ -1,3 +1,5 @@
+import { Button } from "@nepp-chan/shared/ui/Button";
+
 import { getSentimentStyle } from "~/app/dashboard/components/persona/helpers";
 import { useInfiniteScroll } from "~/app/dashboard/hooks/useInfiniteScroll";
 import {
@@ -5,6 +7,9 @@ import {
   useExtractPersonas,
   usePersonas,
 } from "~/app/dashboard/hooks/usePersonas";
+import { EmptyStateCard } from "~/components/ui/EmptyStateCard";
+import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
+import { PanelLoading } from "~/components/ui/PanelLoading";
 import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 
@@ -39,19 +44,11 @@ export const PersonaPanel = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-stone-500">読み込み中...</div>
-      </div>
-    );
+    return <PanelLoading />;
   }
 
   if (error) {
-    return (
-      <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm">
-        エラー: {error instanceof Error ? error.message : "Unknown error"}
-      </div>
-    );
+    return <ErrorBanner>{formatError(error)}</ErrorBanner>;
   }
 
   const personas = data?.pages.flatMap((page) => page.personas) ?? [];
@@ -64,41 +61,40 @@ export const PersonaPanel = () => {
           {personas.length} / {total}件のペルソナ
         </div>
         <div className="flex gap-2">
-          <button
+          <Button
             type="button"
             onClick={handleExtract}
             disabled={extractMutation.isPending || deleteMutation.isPending}
-            className="flex-1 sm:flex-none px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 sm:flex-none"
           >
             {extractMutation.isPending ? "抽出中..." : "会話から抽出"}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="destructive"
             onClick={handleDelete}
             disabled={
               extractMutation.isPending ||
               deleteMutation.isPending ||
               personas.length === 0
             }
-            className="flex-1 sm:flex-none px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 sm:flex-none"
           >
             {deleteMutation.isPending ? "削除中..." : "全て削除"}
-          </button>
+          </Button>
         </div>
       </div>
 
       {(extractMutation.isError || deleteMutation.isError) && (
-        <div className="px-4 py-3 rounded-lg text-sm bg-red-50 text-red-700">
+        <ErrorBanner>
           {extractMutation.error?.message ||
             deleteMutation.error?.message ||
             "エラーが発生しました"}
-        </div>
+        </ErrorBanner>
       )}
 
       {personas.length === 0 ? (
-        <div className="bg-white rounded-xl border border-stone-200 p-6 text-center text-stone-500">
-          ペルソナデータがありません
-        </div>
+        <EmptyStateCard>ペルソナデータがありません</EmptyStateCard>
       ) : (
         <div className="bg-white rounded-xl border border-stone-200 overflow-auto max-h-[70dvh]">
           <div

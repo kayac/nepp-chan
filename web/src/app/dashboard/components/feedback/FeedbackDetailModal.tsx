@@ -1,11 +1,6 @@
-import {
-  HandThumbDownIcon,
-  HandThumbUpIcon,
-  LightBulbIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/solid";
-
 import { Dialog } from "~/components/ui/Dialog";
+import { ModalHeader } from "~/components/ui/ModalHeader";
+import { RatingBadge } from "~/components/ui/RatingBadge";
 import { formatDateTime } from "~/lib/format";
 import { FEEDBACK_CATEGORY_LABELS, type MessageFeedback } from "~/types";
 
@@ -26,48 +21,16 @@ export const FeedbackDetailModal = ({ feedback, onClose }: Props) => {
   return (
     <Dialog onClose={onClose} className="w-full max-w-3xl">
       <div className="bg-white rounded-xl shadow-xl mx-4 p-6 max-h-[90dvh] overflow-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-stone-800">
-            フィードバック詳細
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 text-stone-400 hover:text-stone-600 rounded-md"
-            aria-label="閉じる"
-          >
-            <XMarkIcon className="w-5 h-5" aria-hidden="true" />
-          </button>
-        </div>
+        <ModalHeader
+          className="mb-4"
+          titleClassName="text-lg"
+          onClose={onClose}
+          title="フィードバック詳細"
+        />
 
         <div className="space-y-6">
           <div className="flex items-center gap-4">
-            <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${
-                feedback.rating === "good"
-                  ? "bg-green-100 text-green-700"
-                  : feedback.rating === "idea"
-                    ? "bg-amber-100 text-amber-700"
-                    : "bg-red-100 text-red-700"
-              }`}
-            >
-              {feedback.rating === "good" ? (
-                <>
-                  <HandThumbUpIcon className="w-4 h-4" />
-                  良い回答
-                </>
-              ) : feedback.rating === "idea" ? (
-                <>
-                  <LightBulbIcon className="w-4 h-4" />
-                  アイデア
-                </>
-              ) : (
-                <>
-                  <HandThumbDownIcon className="w-4 h-4" />
-                  改善が必要
-                </>
-              )}
-            </span>
+            <RatingBadge rating={feedback.rating} />
             {feedback.category && (
               <span className="inline-flex px-2 py-1 text-xs font-medium bg-stone-100 text-stone-600 rounded">
                 {FEEDBACK_CATEGORY_LABELS[feedback.category] ||

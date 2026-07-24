@@ -1,6 +1,7 @@
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { LoadingText } from "@nepp-chan/shared/ui/Loading";
 import { useKnowledgeFile } from "~/app/dashboard/hooks/useKnowledge";
 import { Dialog } from "~/components/ui/Dialog";
+import { ModalHeader } from "~/components/ui/ModalHeader";
 
 type Props = {
   fileKey: string;
@@ -18,7 +19,9 @@ export const FileViewer = ({ fileKey, onClose }: Props) => {
     return (
       <Dialog onClose={onClose} className="w-full max-w-4xl">
         <div className="bg-white rounded-xl p-6 mx-4">
-          <div className="text-center py-8 text-stone-500">読み込み中...</div>
+          <div className="flex justify-center py-8">
+            <LoadingText>読み込み中...</LoadingText>
+          </div>
         </div>
       </Dialog>
     );
@@ -50,17 +53,12 @@ export const FileViewer = ({ fileKey, onClose }: Props) => {
     <Dialog onClose={onClose} className="w-full max-w-4xl">
       <div className="bg-white rounded-xl mx-4 max-h-[90dvh] flex flex-col">
         {/* ヘッダー */}
-        <div className="flex items-center justify-between p-4 border-b border-stone-200">
-          <h3 className="text-lg font-bold text-stone-800">{fileKey}</h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 text-stone-400 hover:text-stone-600 rounded-lg hover:bg-stone-100"
-            aria-label="閉じる"
-          >
-            <XMarkIcon className="w-5 h-5" aria-hidden="true" />
-          </button>
-        </div>
+        <ModalHeader
+          className="p-4 border-b border-(--border-1)"
+          titleClassName="text-lg"
+          onClose={onClose}
+          title={fileKey}
+        />
 
         {/* コンテンツ */}
         <div className="flex-1 overflow-auto p-4">

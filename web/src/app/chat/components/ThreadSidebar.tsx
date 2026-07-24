@@ -30,7 +30,7 @@ export const ThreadSidebar = ({
       {isOpen && (
         <button
           type="button"
-          className="fixed inset-0 z-[40] bg-stone-900/30 backdrop-blur-[3px] cursor-default animate-fade-in"
+          className="fixed inset-0 z-[40] bg-(--bg-overlay) backdrop-blur-[3px] cursor-default animate-fade-in"
           onClick={onClose}
           aria-label="サイドバーを閉じる"
         />
@@ -119,7 +119,7 @@ export const ThreadSidebar = ({
                   }}
                   className={cn(
                     "absolute top-2 right-2 p-1.5 rounded-md transition-all duration-150",
-                    "hover:bg-red-100 hover:text-red-600",
+                    "hover:bg-(--danger-bg) hover:text-(--danger)",
                     "text-(--fg-3)",
                     isSelected
                       ? "opacity-100"

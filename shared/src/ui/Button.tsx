@@ -21,8 +21,8 @@ const buttonVariants = cva(
         ].join(" "),
         destructive: [
           "bg-(--danger) text-white",
-          "hover:bg-red-700",
-          "focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2",
+          "hover:opacity-90",
+          "focus-visible:ring-2 focus-visible:ring-(--danger) focus-visible:ring-offset-2",
         ].join(" "),
         outline: [
           "border border-(--border-1) bg-(--bg-raised)",

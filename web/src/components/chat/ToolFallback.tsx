@@ -1,12 +1,12 @@
-import { cn } from "@nepp-chan/shared/lib/class-merge";
-import { Spinner } from "@nepp-chan/shared/ui/Loading";
 import {
-  AlertCircleIcon,
-  CheckCircle2Icon,
+  CheckCircleIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  SearchIcon,
-} from "lucide-react";
+  ExclamationCircleIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
+import { cn } from "@nepp-chan/shared/lib/class-merge";
+import { Spinner } from "@nepp-chan/shared/ui/Loading";
 import type { FC, ReactNode } from "react";
 import { useState } from "react";
 
@@ -15,6 +15,7 @@ import type {
   ToolPartComponent,
   ToolPartStatus,
 } from "~/components/chat/types";
+import { ErrorBanner } from "~/components/ui/ErrorBanner";
 
 type ToolStatusInfo = {
   label: string;
@@ -37,14 +38,14 @@ const getToolStatus = (status: ToolPartStatus): ToolStatusInfo => {
       label: "完了",
       color: "text-(--success)",
       bgColor: "bg-(--success-bg)",
-      icon: <CheckCircle2Icon className="size-3" />,
+      icon: <CheckCircleIcon className="size-3" />,
     };
   }
   return {
     label: "エラー",
     color: "text-(--danger)",
     bgColor: "bg-(--danger-bg)",
-    icon: <AlertCircleIcon className="size-3" />,
+    icon: <ExclamationCircleIcon className="size-3" />,
   };
 };
 
@@ -95,7 +96,7 @@ export const ToolFallback: ToolPartComponent = ({
       )}
     >
       <div className="aui-tool-fallback-header flex items-center gap-1.5 px-2.5 py-1.5">
-        <SearchIcon
+        <MagnifyingGlassIcon
           className={cn(
             "size-3 shrink-0",
             isRunning ? "text-(--brand) animate-pulse-subtle" : "text-(--fg-3)",
@@ -129,9 +130,7 @@ export const ToolFallback: ToolPartComponent = ({
               <p className="text-xs font-medium text-(--fg-3) mb-1.5">
                 エラー詳細
               </p>
-              <p className="text-sm p-2.5 rounded-lg bg-(--danger-bg) text-(--danger)">
-                {errorReason}
-              </p>
+              <ErrorBanner className="p-2.5">{errorReason}</ErrorBanner>
             </div>
           )}
 

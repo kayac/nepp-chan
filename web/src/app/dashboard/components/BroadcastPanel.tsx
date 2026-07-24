@@ -6,6 +6,7 @@ import {
   PencilSquareIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import { Button } from "@nepp-chan/shared/ui/Button";
 import { useState } from "react";
 import { BroadcastFormModal } from "~/app/dashboard/components/broadcast/BroadcastFormModal";
 import { BroadcastPartPreview } from "~/app/dashboard/components/broadcast/BroadcastPartPreview";
@@ -16,6 +17,9 @@ import {
   useSendBroadcast,
 } from "~/app/dashboard/hooks/useBroadcasts";
 import { useInfiniteScroll } from "~/app/dashboard/hooks/useInfiniteScroll";
+import { EmptyStateCard } from "~/components/ui/EmptyStateCard";
+import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
+import { PanelLoading } from "~/components/ui/PanelLoading";
 import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 import type { BroadcastMessage, BroadcastStatus } from "~/types";
@@ -86,19 +90,11 @@ export const BroadcastPanel = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-stone-500">読み込み中...</div>
-      </div>
-    );
+    return <PanelLoading />;
   }
 
   if (error) {
-    return (
-      <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm">
-        エラー: {error instanceof Error ? error.message : "Unknown error"}
-      </div>
-    );
+    return <ErrorBanner>{formatError(error)}</ErrorBanner>;
   }
 
   const broadcasts = data?.pages.flatMap((page) => page.broadcasts) ?? [];
@@ -111,14 +107,13 @@ export const BroadcastPanel = () => {
           <div className="text-sm text-stone-500">
             {broadcasts.length} / {total}件の配信メッセージ
           </div>
-          <button
+          <Button
             type="button"
             onClick={() => setModalState({ open: true, mode: "create" })}
-            className="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-1.5"
           >
             <PaperAirplaneIcon className="w-4 h-4" />
             新規作成
-          </button>
+          </Button>
         </div>
 
         <div className="flex flex-wrap gap-1">
@@ -151,17 +146,15 @@ export const BroadcastPanel = () => {
       </div>
 
       {(deleteMutation.isError || sendMutation.isError) && (
-        <div className="px-4 py-3 rounded-lg text-sm bg-red-50 text-red-700">
+        <ErrorBanner>
           {deleteMutation.error?.message ||
             sendMutation.error?.message ||
             "操作に失敗しました"}
-        </div>
+        </ErrorBanner>
       )}
 
       {broadcasts.length === 0 ? (
-        <div className="bg-white rounded-xl border border-stone-200 p-6 text-center text-stone-500">
-          配信メッセージがありません
-        </div>
+        <EmptyStateCard>配信メッセージがありません</EmptyStateCard>
       ) : (
         <div className="space-y-3">
           {broadcasts.map((broadcast) => (

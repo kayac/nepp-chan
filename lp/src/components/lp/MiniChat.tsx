@@ -1,9 +1,14 @@
+import {
+  ArrowRightIcon,
+  EllipsisHorizontalIcon,
+} from "@heroicons/react/24/outline";
 import { ChatMarkdown } from "@nepp-chan/shared/components/ChatMarkdown";
+import { MiniChatHeader } from "@nepp-chan/shared/components/MiniChatHeader";
+import { SpeechBubble } from "@nepp-chan/shared/components/SpeechBubble";
 import { INITIAL_MESSAGE } from "@nepp-chan/shared/constants/chat-defaults";
 import { useChatAutoScroll } from "@nepp-chan/shared/hooks/useChatAutoScroll";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { messageText } from "@nepp-chan/shared/lib/message-text";
-import { ArrowRightIcon, EllipsisIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import { MINI_CHAT_QA, type MiniChatQa } from "~/constants/mini-chat-qa";
 
@@ -20,48 +25,35 @@ export const MiniChat = ({ webUrl, iconSrc = "/mascot/icon.png" }: Props) => {
 
   return (
     <div className="flex flex-col rounded-[28px] border border-(--paper-200) bg-white p-5 shadow-(--shadow-float-md)">
-      <div className="flex items-center gap-3 border-b border-(--paper-200) pb-3">
-        <span className="grid size-9 place-items-center overflow-hidden rounded-full bg-(--teal-50)">
-          <img src={iconSrc} alt="" className="size-[34px] object-contain" />
-        </span>
-        <div className="flex flex-col">
-          <span className="font-(family-name:--font-display) text-sm font-bold text-(--snow-800)">
-            ねっぷちゃん
-          </span>
-          <span className="flex items-center gap-1.5 text-[11px] text-(--fg-3)">
-            <span className="size-1.5 rounded-full bg-(--success)" />
-            オンライン
-          </span>
-        </div>
-        <EllipsisIcon
-          className="ml-auto size-3.5 text-(--fg-4)"
-          aria-hidden="true"
-        />
-      </div>
+      <MiniChatHeader
+        iconSrc={iconSrc}
+        className="pb-3"
+        action={
+          <EllipsisHorizontalIcon
+            className="ml-auto size-3.5 text-(--fg-4)"
+            aria-hidden="true"
+          />
+        }
+      />
 
       <div
         ref={streamRef}
         className="flex max-h-[280px] flex-col gap-2 overflow-y-auto py-4"
       >
-        <div
-          className={cn(
-            "w-fit max-w-[78%] break-words rounded-(--r-bubble) px-[18px] py-3 text-sm leading-[1.7]",
-            "self-start bg-(--paper-50) text-(--fg-1)",
-          )}
-        >
+        <SpeechBubble variant="assistant" className="self-start">
           <ChatMarkdown
             text={messageText(INITIAL_MESSAGE)}
             variant="assistant"
           />
-        </div>
+        </SpeechBubble>
         {answered && (
           <>
-            <div className="w-fit max-w-[78%] break-words self-end rounded-(--r-bubble) bg-(--brand-hover) px-[18px] py-3 text-sm leading-[1.7] text-white">
+            <SpeechBubble variant="user" className="self-end">
               <ChatMarkdown text={answered.question} variant="user" />
-            </div>
-            <div className="w-fit max-w-[78%] break-words self-start rounded-(--r-bubble) bg-(--paper-50) px-[18px] py-3 text-sm leading-[1.7] text-(--fg-1)">
+            </SpeechBubble>
+            <SpeechBubble variant="assistant" className="self-start">
               <ChatMarkdown text={answered.answer} variant="assistant" />
-            </div>
+            </SpeechBubble>
           </>
         )}
       </div>

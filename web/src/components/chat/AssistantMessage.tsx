@@ -1,12 +1,16 @@
+import {
+  HandThumbDownIcon,
+  HandThumbUpIcon,
+  LightBulbIcon,
+} from "@heroicons/react/24/outline";
+import { SpeechBubble } from "@nepp-chan/shared/components/SpeechBubble";
 import { Button } from "@nepp-chan/shared/ui/Button";
 import type { UIMessage } from "ai";
 import { isToolOrDynamicToolUIPart } from "ai";
-import { LightbulbIcon, ThumbsDownIcon, ThumbsUpIcon } from "lucide-react";
 import { useState } from "react";
-
 import { FeedbackModal } from "~/app/chat/components/FeedbackModal";
-import { SpeechBubble } from "~/app/chat/components/SpeechBubble";
 import { useChatContext } from "~/app/chat/contexts/ChatContext";
+import { ErrorBanner } from "~/components/ui/ErrorBanner";
 import type { FeedbackRating } from "~/types";
 
 import { MessageParts } from "./MessageParts";
@@ -87,9 +91,9 @@ export const AssistantMessage = ({ message, isLast }: Props) => {
 };
 
 const MessageError = ({ message }: { message: string }) => (
-  <div className="aui-message-error-root mt-2 rounded-lg border border-red-200 bg-(--danger-bg) p-3 text-(--danger) text-sm">
+  <ErrorBanner className="aui-message-error-root mt-2 p-3">
     <p className="aui-message-error-message line-clamp-2">{message}</p>
-  </div>
+  </ErrorBanner>
 );
 
 const AssistantActionBar = ({ messageId }: { messageId: string }) => {
@@ -126,7 +130,7 @@ const FeedbackButtons = ({
       onClick={() => onSelect("good")}
       className="hover:text-(--success) transition-colors duration-150"
     >
-      <ThumbsUpIcon className="size-3.5" />
+      <HandThumbUpIcon className="size-3.5" />
     </Button>
     <Button
       variant="ghost"
@@ -135,7 +139,7 @@ const FeedbackButtons = ({
       onClick={() => onSelect("bad")}
       className="hover:text-(--danger) transition-colors duration-150"
     >
-      <ThumbsDownIcon className="size-3.5" />
+      <HandThumbDownIcon className="size-3.5" />
     </Button>
     <Button
       variant="ghost"
@@ -144,7 +148,7 @@ const FeedbackButtons = ({
       onClick={() => onSelect("idea")}
       className="hover:text-(--warning) transition-colors duration-150"
     >
-      <LightbulbIcon className="size-3.5" />
+      <LightBulbIcon className="size-3.5" />
     </Button>
   </>
 );

@@ -1,3 +1,4 @@
+import { Button } from "@nepp-chan/shared/ui/Button";
 import { type SubmitEvent, useState } from "react";
 import {
   buildInvitationUrl,
@@ -101,13 +102,13 @@ export const InvitationsPanel = () => {
                 aria-label="招待URL"
                 className="flex-1 px-3 py-2 bg-white border border-stone-300 rounded text-sm text-stone-700"
               />
-              <button
+              <Button
                 type="button"
                 onClick={() => copyToClipboard(createdUrl)}
-                className="px-3 py-2 bg-teal-600 text-white rounded text-sm hover:bg-teal-700 whitespace-nowrap"
+                className="whitespace-nowrap"
               >
                 コピー
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -136,13 +137,13 @@ export const InvitationsPanel = () => {
               職員として招待
             </span>
           )}
-          <button
+          <Button
             type="submit"
             disabled={createMutation.isPending}
-            className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 disabled:opacity-50 whitespace-nowrap"
+            className="whitespace-nowrap"
           >
             {createMutation.isPending ? "作成中..." : "招待を作成"}
-          </button>
+          </Button>
         </div>
       </form>
 

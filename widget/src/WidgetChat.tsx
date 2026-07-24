@@ -1,5 +1,8 @@
 import { useChat } from "@ai-sdk/react";
+import { PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ChatMarkdown } from "@nepp-chan/shared/components/ChatMarkdown";
+import { MiniChatHeader } from "@nepp-chan/shared/components/MiniChatHeader";
+import { SpeechBubble } from "@nepp-chan/shared/components/SpeechBubble";
 import {
   INITIAL_MESSAGE,
   SAMPLE_QUESTIONS,
@@ -8,7 +11,6 @@ import { useChatAutoScroll } from "@nepp-chan/shared/hooks/useChatAutoScroll";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { messageText } from "@nepp-chan/shared/lib/message-text";
 import { DefaultChatTransport } from "ai";
-import { SendIcon, XIcon } from "lucide-react";
 import { type SubmitEvent, useEffect, useMemo, useRef, useState } from "react";
 import { acquireAnonymousSession } from "./anonymous-session";
 import { CLOSE_MESSAGE_TYPE } from "./messages";
@@ -123,28 +125,20 @@ export const WidgetChat = ({
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden rounded-[20px] bg-white">
-      <div className="flex items-center gap-3 border-b border-(--paper-200) px-4 py-3">
-        <span className="grid size-9 place-items-center overflow-hidden rounded-full bg-(--teal-50)">
-          <img src={iconSrc} alt="" className="size-[34px] object-contain" />
-        </span>
-        <div className="flex flex-col">
-          <span className="font-(family-name:--font-display) text-sm font-bold text-(--snow-800)">
-            ねっぷちゃん
-          </span>
-          <span className="flex items-center gap-1.5 text-[11px] text-(--fg-3)">
-            <span className="size-1.5 rounded-full bg-(--success)" />
-            オンライン
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={closeWidget}
-          aria-label="チャットを閉じる"
-          className="ml-auto grid size-8 place-items-center rounded-full text-(--fg-3) transition-colors hover:bg-(--paper-100) hover:text-(--fg-1)"
-        >
-          <XIcon className="size-[18px]" aria-hidden="true" />
-        </button>
-      </div>
+      <MiniChatHeader
+        iconSrc={iconSrc}
+        className="px-4 py-3"
+        action={
+          <button
+            type="button"
+            onClick={closeWidget}
+            aria-label="チャットを閉じる"
+            className="ml-auto grid size-8 place-items-center rounded-full text-(--fg-3) transition-colors hover:bg-(--paper-100) hover:text-(--fg-1)"
+          >
+            <XMarkIcon className="size-[18px]" aria-hidden="true" />
+          </button>
+        }
+      />
 
       <div
         ref={streamRef}
@@ -157,34 +151,28 @@ export const WidgetChat = ({
             m.role === "assistant" &&
             isWaitingForText;
           if (!text && !showIndicatorHere) return null;
+          const bubbleVariant = m.role === "user" ? "user" : "assistant";
           return (
-            <div
+            <SpeechBubble
               key={m.id}
+              variant={bubbleVariant}
               className={cn(
-                "w-fit max-w-[85%] break-words rounded-(--r-bubble) px-[18px] py-3 text-sm leading-[1.7]",
-                "animate-[lp-bubble-in_400ms_cubic-bezier(0.22,1,0.36,1)] shadow-(--shadow-float-sm)",
-                m.role === "user"
-                  ? "self-end bg-(--brand-hover) text-white"
-                  : "self-start bg-(--paper-50) text-(--fg-1)",
+                "animate-[lp-bubble-in_400ms_cubic-bezier(0.22,1,0.36,1)]",
+                bubbleVariant === "user" ? "self-end" : "self-start",
               )}
             >
-              {text && (
-                <ChatMarkdown
-                  text={text}
-                  variant={m.role === "user" ? "user" : "assistant"}
-                />
-              )}
+              {text && <ChatMarkdown text={text} variant={bubbleVariant} />}
               {showIndicatorHere && (
                 <WaitingIndicator className="mt-1 first:mt-0" />
               )}
-            </div>
+            </SpeechBubble>
           );
         })}
         {/* 送信直後でまだアシスタントのメッセージが無い間は独立した吹き出しで出す */}
         {isWaitingForText && messages.at(-1)?.role !== "assistant" && (
-          <div className="flex w-fit max-w-[85%] self-start rounded-(--r-bubble) bg-(--paper-50) px-[18px] py-3">
+          <SpeechBubble variant="assistant" className="flex self-start">
             <WaitingIndicator />
-          </div>
+          </SpeechBubble>
         )}
         {(error || bootstrapError) && (
           <div className="w-fit max-w-[85%] self-start rounded-(--r-bubble) bg-red-50 px-[18px] py-3 text-sm text-red-700">
@@ -238,7 +226,7 @@ export const WidgetChat = ({
             "disabled:cursor-not-allowed disabled:opacity-55",
           )}
         >
-          <SendIcon className="size-[18px]" aria-hidden="true" />
+          <PaperAirplaneIcon className="size-[18px]" aria-hidden="true" />
         </button>
       </form>
 

@@ -4,9 +4,11 @@ import {
   PlusIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { Button } from "@nepp-chan/shared/ui/Button";
 
 import { usePollForm } from "~/app/dashboard/hooks/usePollForm";
 import { Dialog } from "~/components/ui/Dialog";
+import { ModalHeader } from "~/components/ui/ModalHeader";
 import type { Poll } from "~/types";
 
 type Props = {
@@ -36,22 +38,13 @@ export const PollForm = ({ poll, onClose }: Props) => {
       className="w-full max-w-xl backdrop:bg-stone-900/30 backdrop:backdrop-blur-[2px]"
     >
       <div className="bg-stone-50 rounded-xl shadow-xl mx-4 max-h-[90dvh] overflow-y-auto">
-        <div className="flex items-start justify-between px-8 pt-8 pb-4">
-          <div>
-            <h3 className="text-2xl font-semibold text-stone-800">
-              {isEditMode ? "投票を編集" : "新規作成"}
-            </h3>
-            <p className="text-sm text-stone-500 mt-1">何を聞きますか？</p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 hover:bg-stone-100 rounded-lg -mr-2"
-            aria-label="閉じる"
-          >
-            <XMarkIcon className="w-5 h-5 text-stone-500" />
-          </button>
-        </div>
+        <ModalHeader
+          className="px-8 pt-8 pb-4"
+          titleClassName="text-2xl font-semibold"
+          onClose={onClose}
+          title={isEditMode ? "投票を編集" : "新規作成"}
+          description="何を聞きますか？"
+        />
 
         <div className="px-8 pb-4">
           <div className="bg-white border border-stone-200 rounded-lg p-5 space-y-6">
@@ -137,23 +130,24 @@ export const PollForm = ({ poll, onClose }: Props) => {
 
         <div className="px-8 py-4 border-t border-stone-200 bg-white">
           <div className="flex gap-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => handleSubmit(false)}
               disabled={!isValid || isSubmitting}
-              className="flex-1 px-4 py-2.5 text-sm font-medium text-stone-700 border border-stone-300 rounded-lg hover:bg-stone-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-2.5"
             >
               下書き保存
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => handleSubmit(true)}
               disabled={!isValid || isSubmitting}
-              className="flex-1 px-5 py-2.5 text-sm font-medium text-white bg-teal-700 hover:bg-teal-800 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+              className="flex-1 py-2.5"
             >
               <PaperAirplaneIcon className="w-4 h-4" />
               {isSubmitting ? "処理中..." : isEditMode ? "保存" : "投票を開始"}
-            </button>
+            </Button>
           </div>
         </div>
 

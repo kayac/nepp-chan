@@ -1,6 +1,6 @@
+import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import { Mascot } from "@nepp-chan/shared/components/Mascot";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
-import { SendIcon } from "lucide-react";
 import { type SubmitEvent, useState } from "react";
 
 const QUICK_PROMPTS: ReadonlyArray<{ icon: string; text: string }> = [
@@ -139,7 +139,7 @@ export const Landing = ({ onSubmit, disabled = false }: Props) => {
             )}
             style={{ boxShadow: "0 4px 12px rgba(15, 118, 110, 0.35)" }}
           >
-            <SendIcon className="size-4" aria-hidden="true" />
+            <PaperAirplaneIcon className="size-4" aria-hidden="true" />
           </button>
         </form>
       </div>

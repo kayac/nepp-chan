@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "baseUrl": "..",
+    "paths": {
+      "~/types": ["web/src/types/index.ts"],
+      "~/components/chat/tool-uis": ["web/src/components/chat/tool-uis/index.ts"],
+      "~/*": ["web/src/*"],
+      "@nepp-chan/shared/styles/*": ["shared/src/styles/*"],
+      "@nepp-chan/shared/ui/*": ["shared/src/ui/*"],
+      "@nepp-chan/shared/components/*": ["shared/src/components/*"],
+      "@nepp-chan/shared/hooks/*": ["shared/src/hooks/*"],
+      "@nepp-chan/shared/lib/*": ["shared/src/lib/*"],
+      "@nepp-chan/shared/api": ["shared/src/api/index.ts"],
+      "@nepp-chan/shared/api/repository/*": ["shared/src/api/repository/*"],
+      "@nepp-chan/shared/schemas/*": ["shared/src/schemas/*"],
+      "@nepp-chan/shared/constants/*": ["shared/src/constants/*"]
+    }
+  }
+}

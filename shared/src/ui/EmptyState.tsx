@@ -5,5 +5,5 @@ type Props = {
 
 export const ToolEmptyState = ({
   message,
-  className = "rounded-2xl bg-stone-50 p-5 text-stone-600",
+  className = "rounded-2xl bg-(--bg-sunken) p-5 text-(--fg-2)",
 }: Props) => <div className={className}>{message}</div>;
