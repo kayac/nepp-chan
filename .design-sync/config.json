@@ -18,7 +18,8 @@
     "AmbientBG": "../.design-sync/groups/AmbientBG.md",
     "ToolLoadingState": "../.design-sync/groups/ToolLoadingState.md",
     "ToolEmptyState": "../.design-sync/groups/ToolEmptyState.md",
-    "ChatMarkdown": "../.design-sync/groups/ChatMarkdown.md"
+    "ChatMarkdown": "../.design-sync/groups/ChatMarkdown.md",
+    "MiniChatHeader": "../.design-sync/groups/MiniChatHeader.md"
   },
   "dtsPropsFor": {
     "Button": "variant?: \"default\" | \"destructive\" | \"outline\" | \"secondary\" | \"ghost\" | \"link\"; size?: \"default\" | \"sm\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\"; asChild?: boolean; disabled?: boolean; className?: string; children?: React.ReactNode; onClick?: () => void;",
@@ -47,7 +48,8 @@
     "Thread": "/* props なし — ChatContext（ChatPreviewProvider）配下で使用。メッセージ一覧 + Composer を含むチャット画面全体 */",
     "ChoiceBar": "choice: string; count: number; percentage: number; isLeading: boolean;",
     "ModalHeader": "title: React.ReactNode; description?: React.ReactNode; onClose: () => void; className?: string; titleClassName?: string;",
-    "RatingBadge": "rating: \"good\" | \"bad\" | \"idea\";"
+    "RatingBadge": "rating: \"good\" | \"bad\" | \"idea\";",
+    "MiniChatHeader": "iconSrc?: string; action?: React.ReactNode; className?: string;"
   },
   "overrides": {
     "Dialog": { "cardMode": "single", "viewport": "560x420" },
@@ -58,7 +60,8 @@
     "ToolPart": { "cardMode": "column" },
     "ToolEmptyState": { "cardMode": "column" },
     "ToolLoadingState": { "cardMode": "column" },
-    "ModalHeader": { "cardMode": "column" }
+    "ModalHeader": { "cardMode": "column" },
+    "MiniChatHeader": { "cardMode": "column" }
   },
   "componentSrcMap": {
     "Button": "src/ui/Button.tsx",
@@ -70,8 +73,9 @@
     "Mascot": "src/components/Mascot.tsx",
     "AmbientBG": "src/components/AmbientBG.tsx",
     "ChatMarkdown": "src/components/ChatMarkdown.tsx",
+    "SpeechBubble": "src/components/SpeechBubble.tsx",
+    "MiniChatHeader": "src/components/MiniChatHeader.tsx",
     "Dialog": "../web/src/components/ui/Dialog.tsx",
-    "SpeechBubble": "../shared/src/components/SpeechBubble.tsx",
     "Landing": "../web/src/app/chat/components/Landing.tsx",
     "TopBar": "../web/src/app/chat/components/TopBar.tsx",
     "ThreadSidebar": "../web/src/app/chat/components/ThreadSidebar.tsx",

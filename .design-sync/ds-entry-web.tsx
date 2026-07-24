@@ -7,7 +7,6 @@ import { ChatContext } from "../web/src/app/chat/contexts/ChatContext";
 export { Dialog } from "../web/src/components/ui/Dialog";
 export { ModalHeader } from "../web/src/components/ui/ModalHeader";
 export { RatingBadge } from "../web/src/components/ui/RatingBadge";
-export { SpeechBubble } from "../shared/src/components/SpeechBubble";
 export { Landing } from "../web/src/app/chat/components/Landing";
 export { TopBar } from "../web/src/app/chat/components/TopBar";
 export { ThreadSidebar } from "../web/src/app/chat/components/ThreadSidebar";
