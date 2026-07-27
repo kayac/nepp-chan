@@ -127,8 +127,8 @@ importers:
         specifier: 1.23.0
         version: 1.23.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
       '@mastra/observability':
-        specifier: 1.16.1
-        version: 1.16.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)
+        specifier: 1.16.2
+        version: 1.16.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)
       '@mastra/rag':
         specifier: 2.4.1
         version: 2.4.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)
@@ -2030,8 +2030,8 @@ packages:
     peerDependencies:
       '@mastra/core': '>=1.4.1-0 <2.0.0-0'
 
-  '@mastra/observability@1.16.1':
-    resolution: {integrity: sha512-Cz737iM3jI2wLd/idx1O5/Sxb8QrGpjrgHZuIWi5MxUJQ0/ptjAzw+yMlGHhwy+3F7LVPzUDL9P/l/EC9pixRg==}
+  '@mastra/observability@1.16.2':
+    resolution: {integrity: sha512-WF1vqzTQ/Cx38ljCPIyVpATf/el4h+mkXWxynrSmUpta5qjEA2gQm20QxEJgn5AMwV0sw5BtDgJh4eE5vbmjQA==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.16.0-0 <2.0.0-0'
@@ -8018,7 +8018,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@mastra/observability@1.16.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)':
+  '@mastra/observability@1.16.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)':
     dependencies:
       '@mastra/core': 1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
       zod: 4.4.3
