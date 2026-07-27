@@ -43,7 +43,7 @@
     "@mastra/rag": "2.4.1",
     "@nepp-chan/shared": "workspace:*",
     "@sentry/cloudflare": "^10.66.0",
-    "ai": "^6.0.208",
+    "ai": "^7.0.37",
     "drizzle-orm": "^0.45.2",
     "glob": "^13.0.6",
     "gray-matter": "^4.0.3",
