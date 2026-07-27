@@ -12,15 +12,17 @@ const { knowledgeGen, webGen, summarizerGen, loggerError } = vi.hoisted(() => ({
   loggerError: vi.fn(),
 }));
 
-vi.mock("~/mastra/core-mastra", () => ({
-  getCoreMastra: () => ({
-    getAgent: (name: string) =>
-      ({
-        voiceSummarizerAgent: { generate: summarizerGen },
-        voiceKnowledgeAgent: { generate: knowledgeGen },
-        voiceWebResearcherAgent: { generate: webGen },
-      })[name],
-  }),
+vi.mock("~/mastra/agents/voice-summarizer-agent", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("~/mastra/agents/voice-summarizer-agent")
+  >()),
+  voiceSummarizerAgent: { generate: summarizerGen },
+}));
+vi.mock("~/mastra/agents/knowledge-agent", () => ({
+  createKnowledgeAgent: () => ({ generate: knowledgeGen }),
+}));
+vi.mock("~/mastra/agents/web-researcher-agent", () => ({
+  createWebResearcherAgent: () => ({ generate: webGen }),
 }));
 vi.mock("~/lib/logger", () => ({
   logger: { error: loggerError, info: vi.fn(), warn: vi.fn() },

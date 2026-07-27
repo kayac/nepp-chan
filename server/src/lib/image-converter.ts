@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import { getCoreMastra } from "~/mastra/core-mastra";
+import { converterAgent } from "~/mastra/agents/converter-agent";
 
 const SUPPORTED_MIME_TYPES = [
   "image/png",
@@ -26,8 +26,7 @@ export const convertToMarkdown = async (
 
   const base64Data = Buffer.from(fileData).toString("base64");
 
-  const agent = getCoreMastra().getAgent("converterAgent");
-  const result = await agent.generate([
+  const result = await converterAgent.generate([
     {
       role: "user",
       content: [
