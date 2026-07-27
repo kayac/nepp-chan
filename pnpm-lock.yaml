@@ -115,8 +115,8 @@ importers:
         specifier: 1.5.1
         version: 1.5.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
       '@mastra/libsql':
-        specifier: 1.16.0
-        version: 1.16.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
+        specifier: 1.17.0
+        version: 1.17.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
       '@mastra/loggers':
         specifier: 1.2.0
         version: 1.2.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
@@ -2006,8 +2006,8 @@ packages:
     peerDependencies:
       '@mastra/core': '>=1.0.0-0 <2.0.0-0'
 
-  '@mastra/libsql@1.16.0':
-    resolution: {integrity: sha512-Rxnt1wm4XTthsYTQGkj221u2UqJDk/XqJfbtYIF03Cly2d1BoWrF8v4VX6t4SeghHNPsJAwVVG95sK6iw9EZnw==}
+  '@mastra/libsql@1.17.0':
+    resolution: {integrity: sha512-h7xpXLS0SICjbWYk6qeU3H46wgvy8obKcsv0cT8PSHogbOpEIeZ/GLFASCTQxUg6KiH8NNHqsO6hXte3558W9g==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.51.0-0 <2.0.0-0'
@@ -7974,7 +7974,7 @@ snapshots:
       sentiment: 5.0.2
       string-similarity: 4.0.4
 
-  '@mastra/libsql@1.16.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))':
+  '@mastra/libsql@1.17.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))':
     dependencies:
       '@libsql/client': 0.17.4
       '@mastra/core': 1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
