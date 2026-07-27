@@ -121,14 +121,14 @@ importers:
         specifier: 1.14.0
         version: 1.14.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(zod@4.4.3)
       '@mastra/memory':
-        specifier: 1.23.0
-        version: 1.23.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
+        specifier: 1.23.1
+        version: 1.23.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
       '@mastra/observability':
-        specifier: 1.16.1
-        version: 1.16.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)
+        specifier: 1.16.2
+        version: 1.16.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)
       '@mastra/rag':
-        specifier: 2.4.1
-        version: 2.4.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)
+        specifier: 2.4.2
+        version: 2.4.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)
       '@nepp-chan/shared':
         specifier: workspace:*
         version: link:../shared
@@ -2088,21 +2088,21 @@ packages:
     peerDependencies:
       '@mastra/core': '>=1.0.0-0 <2.0.0-0'
 
-  '@mastra/memory@1.23.0':
-    resolution: {integrity: sha512-UkJcuZ5S/SDfnrXMmigjZxUUQr42zdcIvW7JVmeN5CIt/lOkfJ6Km89nf6IDXpI8nAcvPiU96WcK4WIPHXTjqw==}
+  '@mastra/memory@1.23.1':
+    resolution: {integrity: sha512-Xzgo4nsKPrn9cV4Bn07Wqkgyf3vrnZbgaTqLe7E6BPma2cPB81e/IthJOzrOy/CpMsam2asLShoYoxelISTXwg==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.4.1-0 <2.0.0-0'
 
-  '@mastra/observability@1.16.1':
-    resolution: {integrity: sha512-Cz737iM3jI2wLd/idx1O5/Sxb8QrGpjrgHZuIWi5MxUJQ0/ptjAzw+yMlGHhwy+3F7LVPzUDL9P/l/EC9pixRg==}
+  '@mastra/observability@1.16.2':
+    resolution: {integrity: sha512-WF1vqzTQ/Cx38ljCPIyVpATf/el4h+mkXWxynrSmUpta5qjEA2gQm20QxEJgn5AMwV0sw5BtDgJh4eE5vbmjQA==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.16.0-0 <2.0.0-0'
       zod: ^3.25.0 || ^4.0.0
 
-  '@mastra/rag@2.4.1':
-    resolution: {integrity: sha512-W8eNdTQEnmxonQYrdoy7E+2GaOVwHXOuzzC0CWDXPviU/FSz7mKnPHTC1noCKh1WNWxQ7l2xQOb2FvAX5nmUHg==}
+  '@mastra/rag@2.4.2':
+    resolution: {integrity: sha512-iwyiCQtSgU2rZp/SmcgTfnNhIFXtLHdwJO6+N2dhZJMR1eVQDaiYIzRfqjEk0cVbbc0XLf4yphOflZke8Y2aMg==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.0.0-0 <2.0.0-0'
@@ -8151,7 +8151,7 @@ snapshots:
       - supports-color
       - zod
 
-  '@mastra/memory@1.23.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))':
+  '@mastra/memory@1.23.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))':
     dependencies:
       '@mastra/core': 1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
       '@mastra/schema-compat': 1.3.4(zod@4.4.3)
@@ -8167,12 +8167,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@mastra/observability@1.16.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)':
+  '@mastra/observability@1.16.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)':
     dependencies:
       '@mastra/core': 1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
       zod: 4.4.3
 
-  '@mastra/rag@2.4.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)':
+  '@mastra/rag@2.4.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)':
     dependencies:
       '@mastra/core': 1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
       big.js: 7.0.1
