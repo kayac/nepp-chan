@@ -17,8 +17,8 @@
     "@heroicons/react": "^2.2.0",
     "@nepp-chan/shared": "workspace:*",
     "ai": "^6.0.208",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
