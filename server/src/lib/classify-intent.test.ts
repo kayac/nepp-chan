@@ -4,10 +4,8 @@ const { generateMock } = vi.hoisted(() => ({
   generateMock: vi.fn(),
 }));
 
-vi.mock("~/mastra/core-mastra", () => ({
-  getCoreMastra: () => ({
-    getAgent: () => ({ generate: generateMock }),
-  }),
+vi.mock("~/mastra/agents/intent-router-agent", () => ({
+  intentRouterAgent: { generate: generateMock },
 }));
 
 const { classifyIntent } = await import("./classify-intent");

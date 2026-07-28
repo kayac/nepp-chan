@@ -4,10 +4,8 @@ const { generateMock } = vi.hoisted(() => ({
   generateMock: vi.fn(),
 }));
 
-vi.mock("~/mastra/core-mastra", () => ({
-  getCoreMastra: () => ({
-    getAgent: () => ({ generate: generateMock }),
-  }),
+vi.mock("~/mastra/agents/converter-agent", () => ({
+  converterAgent: { generate: generateMock },
 }));
 
 const { convertToMarkdown, isSupportedMimeType } = await import(
