@@ -3,6 +3,8 @@ import type {
   PersonaSentiment,
 } from "@nepp-chan/shared/api/repository/persona-repository";
 
+import { startOfWeek, toDateString } from "~/lib/date";
+
 export type VoicePeriod = "week" | "m1" | "all";
 export type VoiceSentiment = PersonaSentiment | "emergency";
 export type VoiceSegment = Exclude<PersonaRelationship, "帰省者">;
@@ -43,6 +45,11 @@ export const SEG_OPTIONS: { value: VoiceSegment; label: string }[] = [
   { value: "移住検討者", label: "🧳 移住検討" },
 ];
 
+export const SORT_OPTIONS: { value: VoiceSort; label: string }[] = [
+  { value: "list", label: "新しい順" },
+  { value: "topics", label: "話題ごと" },
+];
+
 export const TOPIC_OPTIONS = [
   "観光",
   "生活",
@@ -61,23 +68,15 @@ const sentLabel = (value: VoiceSentiment) =>
 const segLabel = (value: VoiceSegment) =>
   SEG_OPTIONS.find((o) => o.value === value)?.label ?? value;
 
-const toDateString = (d: Date) => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-};
-
 export const periodRange = (period: VoicePeriod, now: Date = new Date()) => {
   if (period === "all") {
     return {};
   }
-  const from = new Date(now);
   if (period === "week") {
-    from.setDate(from.getDate() - ((from.getDay() + 6) % 7));
-  } else {
-    from.setDate(from.getDate() - 29);
+    return { from: toDateString(startOfWeek(now)) };
   }
+  const from = new Date(now);
+  from.setDate(from.getDate() - 29);
   return { from: toDateString(from) };
 };
 

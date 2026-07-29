@@ -12,13 +12,13 @@ import {
   groupVoicesByTopic,
   mergeVoices,
   removeChip,
+  SORT_OPTIONS,
   sentimentLabel,
   shouldIncludeEmergencies,
   shouldIncludePersonas,
   toPersonaParams,
   type Voice,
   type VoiceFilter,
-  type VoiceSort,
 } from "~/app/dashboard/components/voices/helpers";
 import { useEmergencies } from "~/app/dashboard/hooks/useEmergencies";
 import { useInfiniteScroll } from "~/app/dashboard/hooks/useInfiniteScroll";
@@ -166,7 +166,9 @@ export const VoicesPanel = ({
   const personasQuery = usePersonas(30, personaParams, {
     enabled: includePersonas,
   });
-  const emergenciesQuery = useEmergencies();
+  const emergenciesQuery = useEmergencies(100, {
+    enabled: includeEmergencies,
+  });
   const extractMutation = useExtractPersonas();
   const deleteMutation = useDeletePersonas();
 
@@ -229,12 +231,7 @@ export const VoicesPanel = ({
         <span className="text-sm text-(--fg-2)">{matchCount}件が該当</span>
 
         <div className="ml-auto flex items-center gap-1 bg-(--bg-sunken) rounded-(--r-pill) p-1">
-          {(
-            [
-              { value: "list", label: "新しい順" },
-              { value: "topics", label: "話題ごと" },
-            ] as { value: VoiceSort; label: string }[]
-          ).map((o) => (
+          {SORT_OPTIONS.map((o) => (
             <button
               key={o.value}
               type="button"

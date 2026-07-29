@@ -1,10 +1,9 @@
 import { useChat } from "@ai-sdk/react";
 import { messageText } from "@nepp-chan/shared/lib/message-text";
-import { DefaultChatTransport, type UIMessage } from "ai";
+import type { UIMessage } from "ai";
 import { type ReactNode, useEffect, useMemo, useRef } from "react";
 
-import { API_BASE } from "~/lib/api/client";
-import { getBearerToken } from "~/lib/auth-token";
+import { createThreadChatTransport } from "~/lib/api/chat-transport";
 
 import { buildGreetingPrompt, isGreetingPrompt } from "../greeting-prompt";
 import { ChatContext, type ChatContextValue } from "./ChatContext";
@@ -28,25 +27,10 @@ export const ChatProvider = ({
 }: Props) => {
   const transport = useMemo(
     () =>
-      new DefaultChatTransport({
-        api: `${API_BASE}/threads/${threadId}/chat`,
-        headers: (): Record<string, string> => {
-          const token = getBearerToken();
-          if (token) {
-            return { Authorization: `Bearer ${token}` };
-          }
-          return {};
-        },
-        prepareSendMessagesRequest({ messages }) {
-          const lastMessage = messages[messages.length - 1];
+      createThreadChatTransport(threadId, {
+        resolveIntent: (lastMessage) => {
           const lastText = lastMessage ? messageText(lastMessage) : "";
-          const intent = isGreetingPrompt(lastText) ? "casual" : undefined;
-          return {
-            body: {
-              message: lastMessage,
-              intent,
-            },
-          };
+          return isGreetingPrompt(lastText) ? "casual" : undefined;
         },
       }),
     [threadId],

@@ -37,11 +37,20 @@ const useChatHandlers = () => {
 };
 
 beforeEach(() => {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
   localStorage.clear();
   setAuthToken("admin-token");
 });
 
 afterEach(() => {
+  vi.unstubAllGlobals();
   localStorage.clear();
 });
 
@@ -51,7 +60,7 @@ describe("MayorChatPanel", () => {
     renderWithQuery(
       <MayorChatPanel
         isOpen
-        request={{ seq: 1, context: "今週 × ネガティブ・12件" }}
+        request={{ context: "今週 × ネガティブ・12件" }}
         onClose={vi.fn()}
       />,
     );
@@ -72,7 +81,7 @@ describe("MayorChatPanel", () => {
     renderWithQuery(
       <MayorChatPanel
         isOpen
-        request={{ seq: 1, context: "直近30日・34件" }}
+        request={{ context: "直近30日・34件" }}
         onClose={vi.fn()}
       />,
     );

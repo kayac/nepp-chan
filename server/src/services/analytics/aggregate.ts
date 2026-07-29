@@ -1,6 +1,7 @@
 import { and, gte, isNotNull, lt, sql } from "drizzle-orm";
 import { createDb, persona } from "~/db";
 import { calcCostUsd } from "~/lib/llm-pricing";
+import { RELATIONSHIPS } from "~/schemas/analytics-schema";
 
 // D1 の createdAt は UTC ISO 文字列。集計はすべて JST（+9 hours）で行い、
 // API は JST ラベル済みのデータを返す（フロントでは変換しない）。
@@ -49,7 +50,6 @@ const SENTIMENTS = ["positive", "negative", "request", "neutral"] as const;
 type Sentiment = (typeof SENTIMENTS)[number];
 
 const RESIDENCES = ["村内", "村外"] as const;
-const RELATIONSHIPS = ["村人", "観光客", "移住検討者", "帰省者"] as const;
 
 export const getConversationStats = async (d1: D1Database, period: Period) => {
   const db = createDb(d1);

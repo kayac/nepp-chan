@@ -4,6 +4,7 @@ import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
 import { requireRole } from "~/middleware/require-role";
 import { personaRepository } from "~/repository/persona-repository";
+import { RELATIONSHIPS } from "~/schemas/analytics-schema";
 import {
   deleteAllPersonas,
   extractAllPendingThreads,
@@ -53,9 +54,7 @@ const listRoute = createRoute({
       sentiments: commaSeparated(
         z.enum(["positive", "negative", "request", "neutral"]),
       ),
-      relationships: commaSeparated(
-        z.enum(["村人", "観光客", "移住検討者", "帰省者"]),
-      ),
+      relationships: commaSeparated(z.enum(RELATIONSHIPS)),
       topic: z.string().optional(),
     }),
   },

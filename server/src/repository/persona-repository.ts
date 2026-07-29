@@ -5,12 +5,14 @@ import {
   eq,
   inArray,
   like,
+  not,
   or,
   type SQL,
   sql,
 } from "drizzle-orm";
 
 import { createDb, type NewPersona, type Persona, persona } from "~/db";
+import { RELATIONSHIPS } from "~/schemas/analytics-schema";
 
 type CreateInput = Omit<NewPersona, "id" | "updatedAt"> & { id: string };
 
@@ -252,11 +254,21 @@ export const personaRepository = {
       filterConditions.push(inArray(persona.sentiment, options.sentiments));
     }
     if (options.relationships && options.relationships.length > 0) {
-      const relationshipCondition = or(
-        ...options.relationships.flatMap((r) => [
+      // aggregate.ts の排他分類（RELATIONSHIPS の先頭一致）と揃える。
+      // 対象語を含んでいても、より優先度の高い語を含む声はその関係性に分類済みなので除外する
+      const mentions = (r: string) =>
+        or(
           like(persona.tags, `%${r}%`),
           like(persona.demographicSummary, `%${r}%`),
-        ]),
+        ) as SQL;
+      const relationshipCondition = or(
+        ...options.relationships.map((r) => {
+          const higher = RELATIONSHIPS.slice(
+            0,
+            RELATIONSHIPS.indexOf(r as (typeof RELATIONSHIPS)[number]),
+          );
+          return and(mentions(r), ...higher.map((h) => not(mentions(h))));
+        }),
       );
       if (relationshipCondition) filterConditions.push(relationshipCondition);
     }

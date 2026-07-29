@@ -3,7 +3,6 @@ import type { Tab } from "~/app/dashboard/App";
 import {
   percentChange,
   sumConversationsInRange,
-  toDateString,
   topTopics,
   troubleTopics,
   weekPeriods,
@@ -16,6 +15,7 @@ import {
 import { useBroadcasts } from "~/app/dashboard/hooks/useBroadcasts";
 import { useEmergencies } from "~/app/dashboard/hooks/useEmergencies";
 import { usePolls } from "~/app/dashboard/hooks/usePolls";
+import { toDateString } from "~/lib/date";
 import { formatDateTime } from "~/lib/format";
 
 interface Props {

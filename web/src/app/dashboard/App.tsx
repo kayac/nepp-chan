@@ -137,7 +137,7 @@ export const App = () => {
   const openMayorChat = (context?: string) => {
     setIsMayorOpen(true);
     if (context) {
-      setMayorRequest((prev) => ({ seq: (prev?.seq ?? 0) + 1, context }));
+      setMayorRequest({ context });
     }
   };
 

@@ -1,5 +1,13 @@
 import { z } from "@hono/zod-openapi";
 
+// 排他分類の優先順位を兼ねる（aggregate.ts と persona 一覧フィルターは先頭一致で1つに分類する）
+export const RELATIONSHIPS = [
+  "村人",
+  "観光客",
+  "移住検討者",
+  "帰省者",
+] as const;
+
 const dateSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)

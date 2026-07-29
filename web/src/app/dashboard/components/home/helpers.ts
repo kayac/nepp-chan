@@ -1,3 +1,5 @@
+import { startOfWeek, toDateString } from "~/lib/date";
+
 type TopicCounts = {
   topic: string;
   total: number;
@@ -7,15 +9,6 @@ type TopicCounts = {
   neutral: number;
 };
 
-export const toDateString = (d: Date) => formatDate(d);
-
-const formatDate = (d: Date) => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-};
-
 const addDays = (d: Date, days: number) => {
   const next = new Date(d);
   next.setDate(next.getDate() + days);
@@ -23,13 +16,12 @@ const addDays = (d: Date, days: number) => {
 };
 
 export const weekPeriods = (now: Date) => {
-  const mondayOffset = (now.getDay() + 6) % 7;
-  const monday = addDays(now, -mondayOffset);
+  const monday = startOfWeek(now);
   const prevMonday = addDays(monday, -7);
   const prevSunday = addDays(monday, -1);
   return {
-    current: { from: formatDate(monday), to: formatDate(now) },
-    previous: { from: formatDate(prevMonday), to: formatDate(prevSunday) },
+    current: { from: toDateString(monday), to: toDateString(now) },
+    previous: { from: toDateString(prevMonday), to: toDateString(prevSunday) },
   };
 };
 

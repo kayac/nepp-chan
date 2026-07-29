@@ -63,6 +63,29 @@ const toggle = <T,>(values: T[], value: T) =>
     ? values.filter((v) => v !== value)
     : [...values, value];
 
+const MultiSelectGroup = <T,>({
+  label,
+  options,
+  selected,
+  onToggle,
+}: {
+  label: string;
+  options: { value: T; label: string }[];
+  selected: T[];
+  onToggle: (values: T[]) => void;
+}) => (
+  <Group label={label} note="複数選べます">
+    {options.map((o) => (
+      <Pill
+        key={String(o.value)}
+        label={o.label}
+        selected={selected.includes(o.value)}
+        onClick={() => onToggle(toggle(selected, o.value))}
+      />
+    ))}
+  </Group>
+);
+
 export const FilterPopover = ({ filter, matchCount, onChange }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const count = appliedCount(filter);
@@ -98,34 +121,19 @@ export const FilterPopover = ({ filter, matchCount, onChange }: Props) => {
               ))}
             </Group>
 
-            <Group label="どんな声か" note="複数選べます">
-              {SENT_OPTIONS.map((o) => (
-                <Pill
-                  key={o.value}
-                  label={o.label}
-                  selected={filter.sents.includes(o.value)}
-                  onClick={() =>
-                    onChange({
-                      ...filter,
-                      sents: toggle(filter.sents, o.value),
-                    })
-                  }
-                />
-              ))}
-            </Group>
+            <MultiSelectGroup
+              label="どんな声か"
+              options={SENT_OPTIONS}
+              selected={filter.sents}
+              onToggle={(sents) => onChange({ ...filter, sents })}
+            />
 
-            <Group label="誰の声か" note="複数選べます">
-              {SEG_OPTIONS.map((o) => (
-                <Pill
-                  key={o.value}
-                  label={o.label}
-                  selected={filter.segs.includes(o.value)}
-                  onClick={() =>
-                    onChange({ ...filter, segs: toggle(filter.segs, o.value) })
-                  }
-                />
-              ))}
-            </Group>
+            <MultiSelectGroup
+              label="誰の声か"
+              options={SEG_OPTIONS}
+              selected={filter.segs}
+              onToggle={(segs) => onChange({ ...filter, segs })}
+            />
 
             <Group label="話題">
               <Pill

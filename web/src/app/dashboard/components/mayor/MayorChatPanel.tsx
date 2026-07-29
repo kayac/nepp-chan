@@ -4,15 +4,13 @@ import { MiniChatHeader } from "@nepp-chan/shared/components/MiniChatHeader";
 import { SpeechBubble } from "@nepp-chan/shared/components/SpeechBubble";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { LoadingDots } from "@nepp-chan/shared/ui/Loading";
-import { DefaultChatTransport } from "ai";
 import { useEffect, useMemo, useRef, useState } from "react";
-
+import { useStickToBottom } from "~/components/chat/hooks/useStickToBottom";
 import { MessageParts } from "~/components/chat/MessageParts";
-import { API_BASE } from "~/lib/api/client";
+import { createThreadChatTransport } from "~/lib/api/chat-transport";
 import { threadRepository } from "~/lib/api/repository";
-import { getBearerToken } from "~/lib/auth-token";
 
-export type MayorRequest = { seq: number; context: string };
+export type MayorRequest = { context: string };
 
 interface Props {
   isOpen: boolean;
@@ -30,17 +28,7 @@ const MayorChat = ({
   request: MayorRequest | null;
 }) => {
   const transport = useMemo(
-    () =>
-      new DefaultChatTransport({
-        api: `${API_BASE}/threads/${threadId}/chat`,
-        headers: (): Record<string, string> => {
-          const token = getBearerToken();
-          return token ? { Authorization: `Bearer ${token}` } : {};
-        },
-        prepareSendMessagesRequest({ messages }) {
-          return { body: { message: messages[messages.length - 1] } };
-        },
-      }),
+    () => createThreadChatTransport(threadId),
     [threadId],
   );
 
@@ -50,20 +38,15 @@ const MayorChat = ({
   });
   const isRunning = status === "submitted" || status === "streaming";
 
-  const lastSeq = useRef(0);
+  const lastRequest = useRef<MayorRequest | null>(null);
   useEffect(() => {
-    if (!request || request.seq === lastSeq.current) return;
-    lastSeq.current = request.seq;
+    if (!request || request === lastRequest.current) return;
+    lastRequest.current = request;
     void sendMessage({ text: `「${request.context}」の声を分析して` });
   }, [request, sendMessage]);
 
   const [input, setInput] = useState("");
-  const bottomRef = useRef<HTMLDivElement>(null);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: メッセージ追加のたびに末尾へ追従する
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView?.({ block: "end" });
-  }, [messages.length, isRunning]);
+  const { viewportRef } = useStickToBottom(messages);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +58,7 @@ const MayorChat = ({
 
   return (
     <>
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div ref={viewportRef} className="flex-1 overflow-y-auto p-4 space-y-3">
         {request && (
           <div className="text-xs text-(--fg-3) bg-(--bg-sunken) rounded-lg px-3 py-2">
             📊 {request.context} について
@@ -109,7 +92,6 @@ const MayorChat = ({
             </SpeechBubble>
           </div>
         )}
-        <div ref={bottomRef} />
       </div>
 
       <div className="border-t border-(--border-1) p-3 space-y-2">
