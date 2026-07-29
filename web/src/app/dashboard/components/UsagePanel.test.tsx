@@ -43,9 +43,7 @@ describe("UsagePanel", () => {
 
     await waitFor(() => {
       expect(screen.getByText("トークン消費・コスト")).toBeInTheDocument();
-      expect(screen.getAllByText(/gemini-2.5-flash/).length).toBeGreaterThan(
-        0,
-      );
+      expect(screen.getAllByText(/gemini-2.5-flash/).length).toBeGreaterThan(0);
     });
   });
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   activeChips,
+  analyzeContextLabel,
   appliedCount,
   DEFAULT_FILTER,
   getSentimentStyle,
@@ -138,7 +139,9 @@ describe("shouldIncludeEmergencies", () => {
 
   it("誰の声か・話題で絞ると含めない（緊急には属性がない）", () => {
     expect(
-      shouldIncludeEmergencies(filter({ sents: ["emergency"], segs: ["村人"] })),
+      shouldIncludeEmergencies(
+        filter({ sents: ["emergency"], segs: ["村人"] }),
+      ),
     ).toBe(false);
     expect(
       shouldIncludeEmergencies(filter({ sents: ["emergency"], topic: "観光" })),
@@ -189,6 +192,23 @@ describe("appliedCount / activeChips / removeChip", () => {
 
     next = removeChip(f, "topic");
     expect(next.topic).toBeNull();
+  });
+});
+
+describe("analyzeContextLabel", () => {
+  it("期間 × 条件 × 件数のラベルを作る", () => {
+    const f = filter({
+      period: "week",
+      sents: ["negative"],
+      segs: ["観光客"],
+    });
+    expect(analyzeContextLabel(f, 12)).toBe(
+      "今週 × ネガティブ × 📷 観光客・12件",
+    );
+  });
+
+  it("条件なしなら期間と件数だけ", () => {
+    expect(analyzeContextLabel(filter(), 34)).toBe("直近30日・34件");
   });
 });
 

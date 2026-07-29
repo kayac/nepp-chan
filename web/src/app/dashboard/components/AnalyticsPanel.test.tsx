@@ -1,7 +1,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { setAuthToken } from "~/lib/auth-token";
 import { server } from "~/test/msw-server";
@@ -213,6 +213,23 @@ describe("AnalyticsPanel", () => {
     await waitFor(() => {
       expect(screen.getByText(/エラー:/)).toBeInTheDocument();
     });
+  });
+
+  it("💬 聞くで各時間軸の文脈つきに onAskMayor が呼ばれる", async () => {
+    useSuccessHandlers();
+    const onAskMayor = vi.fn();
+    const user = userEvent.setup();
+
+    renderWithQuery(<AnalyticsPanel onAskMayor={onAskMayor} />);
+
+    const askButtons = screen.getAllByRole("button", { name: "💬 聞く" });
+    expect(askButtons).toHaveLength(3);
+
+    await user.click(askButtons[0]);
+    expect(onAskMayor).toHaveBeenCalledWith("今週の週次レポート");
+
+    await user.click(askButtons[2]);
+    expect(onAskMayor).toHaveBeenCalledWith("全期間の全体分析");
   });
 
   it("週次レポートを選択すると詳細（ハイライト全文）を表示する", async () => {

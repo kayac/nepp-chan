@@ -40,9 +40,7 @@ const topic = (
 // 2026-07-29（水）固定。今週 = 07-27〜07-29、前週 = 07-20〜07-26
 const NOW = new Date("2026-07-29T10:00:00");
 
-const useDefaultHandlers = ({
-  emergencies = [] as unknown[],
-} = {}) => {
+const useDefaultHandlers = ({ emergencies = [] as unknown[] } = {}) => {
   server.use(
     http.get(`${API}/admin/analytics/persona`, ({ request }) => {
       const from = new URL(request.url).searchParams.get("from");

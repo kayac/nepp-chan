@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { FilterPopover } from "~/app/dashboard/components/voices/FilterPopover";
 import {
   activeChips,
+  analyzeContextLabel,
   DEFAULT_FILTER,
   getSentimentStyle,
   groupVoicesByTopic,
@@ -34,6 +35,7 @@ import { formatDateTime } from "~/lib/format";
 interface Props {
   initialFilter?: Partial<VoiceFilter>;
   canManage?: boolean;
+  onAskMayor?: (context: string) => void;
 }
 
 const SENTIMENT_BAR_COLORS: Record<string, string> = {
@@ -147,7 +149,11 @@ const TopicGroups = ({ voices }: { voices: Voice[] }) => (
   </div>
 );
 
-export const VoicesPanel = ({ initialFilter, canManage = false }: Props) => {
+export const VoicesPanel = ({
+  initialFilter,
+  canManage = false,
+  onAskMayor,
+}: Props) => {
   const [filter, setFilter] = useState<VoiceFilter>({
     ...DEFAULT_FILTER,
     ...initialFilter,
@@ -246,7 +252,7 @@ export const VoicesPanel = ({ initialFilter, canManage = false }: Props) => {
         </div>
       </div>
 
-      {chips.length > 0 && (
+      {(chips.length > 0 || (onAskMayor && matchCount > 0)) && (
         <div className="flex flex-wrap items-center gap-2">
           {chips.map((chip) => (
             <button
@@ -260,6 +266,17 @@ export const VoicesPanel = ({ initialFilter, canManage = false }: Props) => {
               <XMarkIcon className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
           ))}
+          {onAskMayor && matchCount > 0 && (
+            <button
+              type="button"
+              onClick={() =>
+                onAskMayor(analyzeContextLabel(filter, matchCount))
+              }
+              className="ml-auto px-3 py-1.5 rounded-(--r-pill) bg-(--brand-soft) text-sm font-medium text-(--fg-1) hover:bg-(--brand-soft-2) transition-colors"
+            >
+              💬 この{matchCount}件の声を分析してもらう
+            </button>
+          )}
         </div>
       )}
 

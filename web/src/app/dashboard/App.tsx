@@ -20,10 +20,14 @@ import { FeedbackPanel } from "~/app/dashboard/components/FeedbackPanel";
 import { HomePanel } from "~/app/dashboard/components/HomePanel";
 import { InvitationsPanel } from "~/app/dashboard/components/InvitationsPanel";
 import { KnowledgePanel } from "~/app/dashboard/components/KnowledgePanel";
+import {
+  MayorChatPanel,
+  type MayorRequest,
+} from "~/app/dashboard/components/mayor/MayorChatPanel";
 import { PollPanel } from "~/app/dashboard/components/PollPanel";
 import { UsagePanel } from "~/app/dashboard/components/UsagePanel";
-import type { VoiceFilter } from "~/app/dashboard/components/voices/helpers";
 import { VoicesPanel } from "~/app/dashboard/components/VoicesPanel";
+import type { VoiceFilter } from "~/app/dashboard/components/voices/helpers";
 import { useAuth } from "~/app/dashboard/contexts/AuthContext";
 import { useRole } from "~/app/dashboard/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
@@ -127,6 +131,15 @@ export const App = () => {
 
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [voicesFilter, setVoicesFilter] = useState<Partial<VoiceFilter>>();
+  const [isMayorOpen, setIsMayorOpen] = useState(false);
+  const [mayorRequest, setMayorRequest] = useState<MayorRequest | null>(null);
+
+  const openMayorChat = (context?: string) => {
+    setIsMayorOpen(true);
+    if (context) {
+      setMayorRequest((prev) => ({ seq: (prev?.seq ?? 0) + 1, context }));
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -277,12 +290,15 @@ export const App = () => {
         <div className="flex-1 overflow-auto p-4 sm:p-6">
           <div key={activeTab} className="animate-fade-in max-w-5xl">
             {activeTab === "home" && <HomePanel onNavigate={handleTabChange} />}
-            {activeTab === "analytics" && <AnalyticsPanel />}
+            {activeTab === "analytics" && (
+              <AnalyticsPanel onAskMayor={openMayorChat} />
+            )}
             {activeTab === "voices" && (
               <VoicesPanel
                 key={JSON.stringify(voicesFilter ?? {})}
                 initialFilter={voicesFilter}
                 canManage={hasRole("admin")}
+                onAskMayor={openMayorChat}
               />
             )}
             {activeTab === "broadcast" && <BroadcastPanel />}
@@ -294,6 +310,12 @@ export const App = () => {
           </div>
         </div>
       </main>
+
+      <MayorChatPanel
+        isOpen={isMayorOpen}
+        request={mayorRequest}
+        onClose={() => setIsMayorOpen(false)}
+      />
     </div>
   );
 };

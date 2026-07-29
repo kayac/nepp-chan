@@ -117,15 +117,15 @@ describe("VoicesPanel", () => {
     await user.click(screen.getByRole("button", { name: "ネガティブ" }));
 
     await waitFor(() => {
-      expect(
-        calls.some((c) => c.get("sentiments") === "negative"),
-      ).toBe(true);
+      expect(calls.some((c) => c.get("sentiments") === "negative")).toBe(true);
     });
 
     await user.click(screen.getByRole("button", { name: "この条件で見る" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /絞り込む（1）/ })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /絞り込む（1）/ }),
+      ).toBeInTheDocument();
     });
     // 感情で絞ると緊急はストリームから外れる
     expect(screen.queryByText(/熊の出没/)).toBeNull();
@@ -201,6 +201,29 @@ describe("VoicesPanel", () => {
     expect(calls).toHaveLength(0);
   });
 
+  it("分析ボタンでフィルター文脈つきの onAskMayor が呼ばれる", async () => {
+    usePersonaHandlers();
+    const onAskMayor = vi.fn();
+    renderWithQuery(
+      <VoicesPanel
+        initialFilter={{ sents: ["negative"] }}
+        onAskMayor={onAskMayor}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /この1件の声を分析してもらう/ }),
+      ).toBeInTheDocument();
+    });
+
+    const user = userEvent.setup();
+    await user.click(
+      screen.getByRole("button", { name: /この1件の声を分析してもらう/ }),
+    );
+    expect(onAskMayor).toHaveBeenCalledWith("直近30日 × ネガティブ・1件");
+  });
+
   it("すべて解除で初期状態に戻る", async () => {
     usePersonaHandlers();
     renderWithQuery(
@@ -208,7 +231,9 @@ describe("VoicesPanel", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /絞り込む（2）/ })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /絞り込む（2）/ }),
+      ).toBeInTheDocument();
     });
 
     const user = userEvent.setup();

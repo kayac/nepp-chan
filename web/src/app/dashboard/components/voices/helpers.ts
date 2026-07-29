@@ -134,6 +134,15 @@ export const activeChips = (filter: VoiceFilter): FilterChip[] => [
   ...(filter.topic ? [{ key: "topic", label: filter.topic }] : []),
 ];
 
+export const analyzeContextLabel = (filter: VoiceFilter, count: number) => {
+  const periodLabel =
+    PERIOD_OPTIONS.find((o) => o.value === filter.period)?.label ?? "";
+  const conditions = activeChips(filter)
+    .filter((c) => c.key !== "period")
+    .map((c) => c.label);
+  return `${[periodLabel, ...conditions].join(" × ")}・${count}件`;
+};
+
 export const removeChip = (filter: VoiceFilter, key: string): VoiceFilter => {
   if (key === "period") {
     return { ...filter, period: DEFAULT_FILTER.period };

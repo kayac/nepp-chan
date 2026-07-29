@@ -292,9 +292,7 @@ export const personaRepository = {
     const countResult = await db
       .select({ count: count() })
       .from(persona)
-      .where(
-        filterConditions.length > 0 ? and(...filterConditions) : undefined,
-      )
+      .where(filterConditions.length > 0 ? and(...filterConditions) : undefined)
       .get();
 
     return {

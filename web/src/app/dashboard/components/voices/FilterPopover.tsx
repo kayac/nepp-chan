@@ -105,7 +105,10 @@ export const FilterPopover = ({ filter, matchCount, onChange }: Props) => {
                   label={o.label}
                   selected={filter.sents.includes(o.value)}
                   onClick={() =>
-                    onChange({ ...filter, sents: toggle(filter.sents, o.value) })
+                    onChange({
+                      ...filter,
+                      sents: toggle(filter.sents, o.value),
+                    })
                   }
                 />
               ))}

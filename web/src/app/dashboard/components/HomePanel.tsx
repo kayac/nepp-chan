@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import type { Tab } from "~/app/dashboard/App";
-import type { VoiceFilter } from "~/app/dashboard/components/voices/helpers";
 import {
   percentChange,
   sumConversationsInRange,
@@ -9,6 +8,7 @@ import {
   troubleTopics,
   weekPeriods,
 } from "~/app/dashboard/components/home/helpers";
+import type { VoiceFilter } from "~/app/dashboard/components/voices/helpers";
 import {
   useConversationAnalytics,
   usePersonaAnalytics,
@@ -132,8 +132,7 @@ export const HomePanel = ({ onNavigate }: Props) => {
           <ul className="space-y-1.5">
             {thisWeekEmergencies.map((e) => (
               <li key={e.id} className="text-sm text-(--fg-1)">
-                <span className="font-semibold">{e.type}</span>
-                ：{e.description}
+                <span className="font-semibold">{e.type}</span>：{e.description}
                 <span className="text-(--fg-3) ml-2 text-xs">
                   {formatDateTime(e.reportedAt)}
                 </span>
