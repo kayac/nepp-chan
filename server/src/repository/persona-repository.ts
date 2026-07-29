@@ -1,4 +1,14 @@
-import { and, count, desc, eq, like, or, type SQL, sql } from "drizzle-orm";
+import {
+  and,
+  count,
+  desc,
+  eq,
+  inArray,
+  like,
+  or,
+  type SQL,
+  sql,
+} from "drizzle-orm";
 
 import { createDb, type NewPersona, type Persona, persona } from "~/db";
 
@@ -209,7 +219,15 @@ export const personaRepository = {
 
   async listForAdmin(
     d1: D1Database,
-    options: { limit?: number; cursor?: string } = {},
+    options: {
+      limit?: number;
+      cursor?: string;
+      from?: string;
+      to?: string;
+      sentiments?: string[];
+      relationships?: string[];
+      topic?: string;
+    } = {},
   ): Promise<{
     personas: Persona[];
     total: number;
@@ -219,18 +237,45 @@ export const personaRepository = {
     const db = createDb(d1);
     const limit = options.limit ?? 30;
 
+    // 期間・並びは会話終了時刻基準（createdAt は抽出バッチの実行時刻のため）
     const sortDate = sql`COALESCE(${persona.conversationEndedAt}, ${persona.createdAt})`;
 
-    let cursorCondition: SQL | undefined;
+    const filterConditions: SQL[] = [];
+
+    if (options.from) {
+      filterConditions.push(sql`${sortDate} >= ${options.from}`);
+    }
+    if (options.to) {
+      filterConditions.push(sql`${sortDate} < ${options.to}`);
+    }
+    if (options.sentiments && options.sentiments.length > 0) {
+      filterConditions.push(inArray(persona.sentiment, options.sentiments));
+    }
+    if (options.relationships && options.relationships.length > 0) {
+      const relationshipCondition = or(
+        ...options.relationships.flatMap((r) => [
+          like(persona.tags, `%${r}%`),
+          like(persona.demographicSummary, `%${r}%`),
+        ]),
+      );
+      if (relationshipCondition) filterConditions.push(relationshipCondition);
+    }
+    if (options.topic) {
+      filterConditions.push(eq(persona.topic, options.topic));
+    }
+
+    const conditions = [...filterConditions];
     if (options.cursor) {
       const [cursorDate, cursorId] = options.cursor.split("_");
-      cursorCondition = sql`(${sortDate} < ${cursorDate} OR (${sortDate} = ${cursorDate} AND ${persona.id} < ${cursorId}))`;
+      conditions.push(
+        sql`(${sortDate} < ${cursorDate} OR (${sortDate} = ${cursorDate} AND ${persona.id} < ${cursorId}))`,
+      );
     }
 
     const results = await db
       .select()
       .from(persona)
-      .where(cursorCondition)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(sql`${sortDate} DESC`, desc(persona.id))
       .limit(limit + 1)
       .all();
@@ -244,7 +289,13 @@ export const personaRepository = {
         ? `${lastPersona.conversationEndedAt ?? lastPersona.createdAt}_${lastPersona.id}`
         : null;
 
-    const countResult = await db.select({ count: count() }).from(persona).get();
+    const countResult = await db
+      .select({ count: count() })
+      .from(persona)
+      .where(
+        filterConditions.length > 0 ? and(...filterConditions) : undefined,
+      )
+      .get();
 
     return {
       personas,

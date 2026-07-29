@@ -317,6 +317,113 @@ describe("personaRepository", () => {
     });
   });
 
+  describe("listForAdmin フィルター", () => {
+    const seedVoices = async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({
+          id: "v-1",
+          topic: "観光",
+          sentiment: "positive",
+          tags: "そば,駅",
+          demographicSummary: "30代,観光客",
+          createdAt: "2030-01-05T00:00:00Z",
+          conversationEndedAt: "2030-01-10T00:00:00Z",
+        }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({
+          id: "v-2",
+          topic: "生活",
+          sentiment: "negative",
+          tags: "ゴミ分別,村人",
+          demographicSummary: "40代",
+          createdAt: "2030-01-06T00:00:00Z",
+          conversationEndedAt: "2030-01-20T00:00:00Z",
+        }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({
+          id: "v-3",
+          topic: "行政",
+          sentiment: "request",
+          tags: "補助金",
+          demographicSummary: "50代,移住検討者",
+          createdAt: "2030-02-01T00:00:00Z",
+          conversationEndedAt: null,
+        }),
+      );
+    };
+
+    it("sentiments は複数指定の OR", async () => {
+      await seedVoices();
+      const result = await personaRepository.listForAdmin(fakeD1, {
+        sentiments: ["negative", "request"],
+      });
+      expect(result.personas.map((p) => p.id).sort()).toEqual(["v-2", "v-3"]);
+    });
+
+    it("topic は単一一致", async () => {
+      await seedVoices();
+      const result = await personaRepository.listForAdmin(fakeD1, {
+        topic: "観光",
+      });
+      expect(result.personas.map((p) => p.id)).toEqual(["v-1"]);
+    });
+
+    it("relationships は tags / demographicSummary いずれかの部分一致・複数は OR", async () => {
+      await seedVoices();
+      const result = await personaRepository.listForAdmin(fakeD1, {
+        relationships: ["観光客", "村人"],
+      });
+      expect(result.personas.map((p) => p.id).sort()).toEqual(["v-1", "v-2"]);
+
+      const single = await personaRepository.listForAdmin(fakeD1, {
+        relationships: ["移住検討者"],
+      });
+      expect(single.personas.map((p) => p.id)).toEqual(["v-3"]);
+    });
+
+    it("from/to は conversationEndedAt（null なら createdAt）基準", async () => {
+      await seedVoices();
+      const result = await personaRepository.listForAdmin(fakeD1, {
+        from: "2030-01-15T00:00:00Z",
+        to: "2030-02-15T00:00:00Z",
+      });
+      // v-2 は会話終了 2030-01-20、v-3 は createdAt 2030-02-01 にフォールバック
+      expect(result.personas.map((p) => p.id).sort()).toEqual(["v-2", "v-3"]);
+    });
+
+    it("total はフィルター適用後の件数", async () => {
+      await seedVoices();
+      const result = await personaRepository.listForAdmin(fakeD1, {
+        sentiments: ["positive"],
+      });
+      expect(result.total).toBe(1);
+    });
+
+    it("フィルターとカーソルの併用", async () => {
+      await seedVoices();
+      const first = await personaRepository.listForAdmin(fakeD1, {
+        sentiments: ["negative", "request"],
+        limit: 1,
+      });
+      expect(first.personas.map((p) => p.id)).toEqual(["v-3"]);
+      expect(first.hasMore).toBe(true);
+      expect(first.total).toBe(2);
+
+      const next = await personaRepository.listForAdmin(fakeD1, {
+        sentiments: ["negative", "request"],
+        limit: 1,
+        cursor: first.nextCursor!,
+      });
+      expect(next.personas.map((p) => p.id)).toEqual(["v-2"]);
+      expect(next.hasMore).toBe(false);
+    });
+  });
+
   describe("listForAdmin", () => {
     it("conversationEndedAt 優先 + id の複合ソートとカーソル", async () => {
       // conversationEndedAt が null の場合は createdAt にフォールバックして比較する

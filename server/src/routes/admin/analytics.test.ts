@@ -114,22 +114,34 @@ describe("analyticsAdminRoutes: 認可", () => {
     expect(res.status).toBe(401);
   });
 
-  it("staff は 403", async () => {
+  it("staff でも分析系は 200", async () => {
     useAuth("staff");
     const res = await routes.request(authedGet("/persona"), undefined, mockEnv);
-    expect(res.status).toBe(403);
-  });
-
-  it("admin は 403", async () => {
-    useAuth("admin");
-    const res = await routes.request(authedGet("/persona"), undefined, mockEnv);
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(200);
   });
 
   it("super_admin は 200", async () => {
     useAuth("super_admin");
     const res = await routes.request(authedGet("/persona"), undefined, mockEnv);
     expect(res.status).toBe(200);
+  });
+
+  it("利用コストは staff / admin では見られない（super_admin 専用）", async () => {
+    useAuth("staff");
+    const staffRes = await routes.request(
+      authedGet("/usage"),
+      undefined,
+      mockEnv,
+    );
+    expect(staffRes.status).toBe(403);
+
+    useAuth("admin");
+    const adminRes = await routes.request(
+      authedGet("/usage"),
+      undefined,
+      mockEnv,
+    );
+    expect(adminRes.status).toBe(403);
   });
 });
 

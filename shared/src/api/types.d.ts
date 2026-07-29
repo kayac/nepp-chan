@@ -2988,6 +2988,11 @@ export interface paths {
                 query?: {
                     limit?: number;
                     cursor?: string;
+                    from?: string;
+                    to?: string;
+                    sentiments?: string;
+                    relationships?: string;
+                    topic?: string;
                 };
                 header?: never;
                 path?: never;

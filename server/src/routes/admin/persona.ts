@@ -15,7 +15,14 @@ export const personaAdminRoutes = new OpenAPIHono<{
   Variables: Partial<PrincipalVariables>;
 }>();
 
-personaAdminRoutes.use("*", requireRole("admin"));
+personaAdminRoutes.use("*", requireRole("staff"));
+
+const commaSeparated = <T extends z.ZodType<string, string>>(item: T) =>
+  z
+    .string()
+    .optional()
+    .transform((v) => (v ? v.split(",") : undefined))
+    .pipe(z.array(item).optional());
 
 const PersonaSchema = z.object({
   id: z.string(),
@@ -41,6 +48,15 @@ const listRoute = createRoute({
     query: z.object({
       limit: z.coerce.number().int().min(1).optional().default(30),
       cursor: z.string().optional(),
+      from: z.string().optional(),
+      to: z.string().optional(),
+      sentiments: commaSeparated(
+        z.enum(["positive", "negative", "request", "neutral"]),
+      ),
+      relationships: commaSeparated(
+        z.enum(["村人", "観光客", "移住検討者", "帰省者"]),
+      ),
+      topic: z.string().optional(),
     }),
   },
   responses: {
@@ -62,10 +78,16 @@ const listRoute = createRoute({
 });
 
 personaAdminRoutes.openapi(listRoute, async (c) => {
-  const { limit, cursor } = c.req.valid("query");
+  const { limit, cursor, from, to, sentiments, relationships, topic } =
+    c.req.valid("query");
   const result = await personaRepository.listForAdmin(c.env.DB, {
     limit,
     cursor: cursor ?? undefined,
+    from,
+    to,
+    sentiments,
+    relationships,
+    topic,
   });
   return c.json(result, 200);
 });
@@ -89,6 +111,7 @@ const extractAllRoute = createRoute({
   description:
     "未処理または新しいメッセージがあるスレッドからペルソナ情報を抽出します",
   tags: ["Admin - Persona"],
+  middleware: [requireRole("admin")] as const,
   responses: {
     200: {
       description: "抽出完了",
@@ -131,6 +154,7 @@ const extractOneRoute = createRoute({
   summary: "特定スレッドからペルソナを抽出",
   description: "指定したスレッドからペルソナ情報を抽出します",
   tags: ["Admin - Persona"],
+  middleware: [requireRole("admin")] as const,
   request: {
     params: z.object({
       threadId: z.string().min(1),
@@ -170,6 +194,7 @@ const deleteAllRoute = createRoute({
   summary: "全ペルソナを削除",
   description: "蓄積された全てのペルソナ情報を削除します",
   tags: ["Admin - Persona"],
+  middleware: [requireRole("admin")] as const,
   responses: {
     200: {
       description: "削除成功",

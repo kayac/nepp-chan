@@ -36,7 +36,7 @@ export const analyticsAdminRoutes = new OpenAPIHono<{
   Variables: Partial<PrincipalVariables>;
 }>();
 
-analyticsAdminRoutes.use("*", requireRole("super_admin"));
+analyticsAdminRoutes.use("*", requireRole("staff"));
 
 const personaRoute = createRoute({
   method: "get",
@@ -134,6 +134,7 @@ const usageRoute = createRoute({
   path: "/usage",
   tags: ["Admin - Analytics"],
   summary: "週×モデル別のトークン使用量とコスト",
+  middleware: [requireRole("super_admin")] as const,
   request: { query: usageAnalyticsQuerySchema },
   responses: {
     200: {

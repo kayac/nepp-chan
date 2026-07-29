@@ -85,10 +85,32 @@ describe("personaAdminRoutes", () => {
       expect(res.status).toBe(401);
     });
 
-    it("staff ロールは 403（admin 以上要件）", async () => {
+    it("staff ロールでも一覧は取得できる", async () => {
       useAdminAuth({ ...adminUser, role: "staff" as const });
+      vi.mocked(personaRepository.listForAdmin).mockResolvedValue({
+        personas: [],
+        total: 0,
+        nextCursor: null,
+        hasMore: false,
+      });
 
       const res = await routes.request(authed("GET", "/"), undefined, mockEnv);
+
+      expect(res.status).toBe(200);
+    });
+
+    it.each([
+      ["POST", "/extract"],
+      ["POST", "/extract/thread-1"],
+      ["DELETE", "/"],
+    ])("staff ロールは %s %s を実行できない（admin 以上要件）", async (method, path) => {
+      useAdminAuth({ ...adminUser, role: "staff" as const });
+
+      const res = await routes.request(
+        authed(method, path),
+        undefined,
+        mockEnv,
+      );
 
       expect(res.status).toBe(403);
     });
@@ -107,10 +129,13 @@ describe("personaAdminRoutes", () => {
       const res = await routes.request(authed("GET", "/"), undefined, mockEnv);
 
       expect(res.status).toBe(200);
-      expect(personaRepository.listForAdmin).toHaveBeenCalledWith(mockEnv.DB, {
-        limit: 30,
-        cursor: undefined,
-      });
+      expect(personaRepository.listForAdmin).toHaveBeenCalledWith(
+        mockEnv.DB,
+        expect.objectContaining({
+          limit: 30,
+          cursor: undefined,
+        }),
+      );
     });
 
     it("cursor を渡せる", async () => {
@@ -128,10 +153,58 @@ describe("personaAdminRoutes", () => {
         mockEnv,
       );
 
-      expect(personaRepository.listForAdmin).toHaveBeenCalledWith(mockEnv.DB, {
-        limit: 5,
-        cursor: "abc",
+      expect(personaRepository.listForAdmin).toHaveBeenCalledWith(
+        mockEnv.DB,
+        expect.objectContaining({
+          limit: 5,
+          cursor: "abc",
+        }),
+      );
+    });
+
+    it("フィルター query を repository に引き渡す", async () => {
+      useAdminAuth();
+      vi.mocked(personaRepository.listForAdmin).mockResolvedValue({
+        personas: [],
+        total: 0,
+        nextCursor: null,
+        hasMore: false,
       });
+
+      const query = new URLSearchParams({
+        from: "2030-01-01T00:00:00Z",
+        to: "2030-02-01T00:00:00Z",
+        sentiments: "negative,request",
+        relationships: "観光客,村人",
+        topic: "観光",
+      });
+      await routes.request(
+        authed("GET", `/?${query.toString()}`),
+        undefined,
+        mockEnv,
+      );
+
+      expect(personaRepository.listForAdmin).toHaveBeenCalledWith(mockEnv.DB, {
+        limit: 30,
+        cursor: undefined,
+        from: "2030-01-01T00:00:00Z",
+        to: "2030-02-01T00:00:00Z",
+        sentiments: ["negative", "request"],
+        relationships: ["観光客", "村人"],
+        topic: "観光",
+      });
+    });
+
+    it("不正な sentiment 値は 400", async () => {
+      useAdminAuth();
+
+      const res = await routes.request(
+        authed("GET", "/?sentiments=angry"),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(400);
     });
   });
 
