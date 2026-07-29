@@ -42,7 +42,7 @@
     "@mastra/observability": "1.16.2",
     "@mastra/rag": "2.4.2",
     "@nepp-chan/shared": "workspace:*",
-    "@sentry/cloudflare": "^10.66.0",
+    "@sentry/cloudflare": "^10.68.0",
     "ai": "^6.0.208",
     "drizzle-orm": "^0.45.2",
     "glob": "^13.0.6",
