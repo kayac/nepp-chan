@@ -57,8 +57,6 @@ export default defineConfig({
         "src/app/dashboard/components/KnowledgePanel.tsx",
         "src/app/dashboard/components/PersonaPanel.tsx",
         "src/app/dashboard/components/PollPanel.tsx",
-        // UsageSection をタブに載せるだけの wrapper（本体は UsageSection 側でテスト済み）
-        "src/app/dashboard/components/UsagePanel.tsx",
         // フォームロジックは usePollForm に抽出済みで L/B/F 100% テスト済み。
         // PollForm 自体は hook の値を JSX に流すだけの presentational shell
         "src/app/dashboard/components/poll/PollForm.tsx",

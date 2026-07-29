@@ -25,6 +25,17 @@ export const jstDateRange = (days: number, now: Date = new Date()) => ({
   to: toJstDate(now),
 });
 
+export const closedContext = (open: number, closed: number) => {
+  const total = open + closed;
+  if (closed <= 0 || total <= 0) {
+    return null;
+  }
+  return {
+    percent: Math.round((closed / total) * 100),
+    perN: Math.max(1, Math.round(total / closed)),
+  };
+};
+
 export const sentimentTotal = (row: SentimentCounts) =>
   row.positive + row.negative + row.request + row.neutral;
 

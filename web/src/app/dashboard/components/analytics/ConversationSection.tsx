@@ -13,7 +13,7 @@ import {
 } from "~/app/dashboard/hooks/useAnalytics";
 import { AXIS_STYLE, TOOLTIP_STYLE } from "~/lib/chart-helpers";
 import { HourlyChart } from "./HourlyChart";
-import { jstDateRange } from "./helpers";
+import { closedContext, jstDateRange } from "./helpers";
 import { PersonaPeriodSummary } from "./PersonaPeriodSummary";
 import { SectionCard, SectionError, SectionLoading } from "./SectionCard";
 import { StatCards } from "./StatCards";
@@ -24,6 +24,13 @@ const DAYS = 30;
 export const ConversationSection = () => {
   const { data, isLoading, error } = useConversationAnalytics(DAYS);
   const { data: personaData } = usePersonaAnalytics(jstDateRange(DAYS));
+
+  const closed = personaData
+    ? closedContext(
+        personaData.officeHours.open,
+        personaData.officeHours.closed,
+      )
+    : null;
 
   return (
     <SectionCard
@@ -96,6 +103,14 @@ export const ConversationSection = () => {
               <WeekdayChart weekday={data.weekday} />
             </div>
           </div>
+
+          {closed && (
+            <p className="text-sm text-(--fg-2) bg-(--bg-sunken) rounded-lg px-4 py-3">
+              {closed.perN >= 2
+                ? `役場が閉まっている時間も、${closed.perN}件に1件はねっぷちゃんが応対しています（全体の${closed.percent}%）。`
+                : `役場が閉まっている時間の応対が全体の${closed.percent}%を占めています。`}
+            </p>
+          )}
 
           {personaData && (
             <div>

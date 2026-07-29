@@ -157,15 +157,32 @@ afterEach(() => {
 });
 
 describe("AnalyticsPanel", () => {
-  it("4 セクションの見出しを表示する", async () => {
+  it("3つの時間軸見出しとセクションを順に表示する", async () => {
     useSuccessHandlers();
 
     renderWithQuery(<AnalyticsPanel />);
 
-    expect(screen.getByText("会話量")).toBeInTheDocument();
-    expect(screen.getByText("トークン消費・コスト")).toBeInTheDocument();
-    expect(screen.getByText("ペルソナ分析")).toBeInTheDocument();
+    expect(screen.getByText("今週のできごと")).toBeInTheDocument();
+    expect(screen.getByText("最近の動き")).toBeInTheDocument();
+    expect(screen.getByText("村の全体像")).toBeInTheDocument();
     expect(screen.getByText("週次レポート")).toBeInTheDocument();
+    expect(screen.getByText("会話量")).toBeInTheDocument();
+    expect(screen.getByText("全体分析")).toBeInTheDocument();
+    // 利用コストはシステムの利用コストタブに分離済み
+    expect(screen.queryByText("トークン消費・コスト")).toBeNull();
+  });
+
+  it("閉庁時間の文脈文を表示する", async () => {
+    useSuccessHandlers();
+
+    renderWithQuery(<AnalyticsPanel />);
+
+    await waitFor(() => {
+      // 開庁 1 / 閉庁 1 → 2件に1件（全体の50%）
+      expect(
+        screen.getByText(/2件に1件はねっぷちゃんが応対しています/),
+      ).toBeInTheDocument();
+    });
   });
 
   it("取得したサマリー数値を表示する", async () => {
@@ -178,21 +195,6 @@ describe("AnalyticsPanel", () => {
     });
     // 会話数 4（会話量セクションのサマリーカード）
     expect(screen.getByText("4")).toBeInTheDocument();
-  });
-
-  it("usage データが空のときは案内文を表示する", async () => {
-    useSuccessHandlers();
-    server.use(
-      http.get(`${API}/admin/analytics/usage`, () =>
-        HttpResponse.json({ weekly: [] }),
-      ),
-    );
-
-    renderWithQuery(<AnalyticsPanel />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/まだ記録がありません/)).toBeInTheDocument();
-    });
   });
 
   it("API エラー時はセクション内にエラーを表示する", async () => {

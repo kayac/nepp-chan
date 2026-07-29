@@ -176,7 +176,7 @@ export const PersonaSection = () => {
 
   return (
     <SectionCard
-      title="ペルソナ分析"
+      title="全体分析"
       description={`蓄積された村の声の傾向（全期間・${data?.totalCount.toLocaleString() ?? "-"} 件）`}
     >
       {isLoading && <SectionLoading />}

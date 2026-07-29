@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  closedContext,
   formatCostUsd,
   jstDateRange,
   pivotWeeklyUsage,
@@ -95,5 +96,24 @@ describe("topEntries", () => {
       { label: "d", count: 3 },
     ]);
     expect(topEntries(entries, 10)).toHaveLength(3);
+  });
+});
+
+describe("closedContext", () => {
+  it("閉庁時間の割合と「n件に1件」を返す", () => {
+    // 開庁 103 / 閉庁 62 → 全体の 38%、165/62 ≒ 2.66 → 3件に1件
+    expect(closedContext(103, 62)).toEqual({ percent: 38, perN: 3 });
+  });
+
+  it("閉庁が過半数なら perN は 1 に丸められる", () => {
+    expect(closedContext(98, 214)).toEqual({ percent: 69, perN: 1 });
+  });
+
+  it("閉庁 0 件なら null（文脈文を出さない）", () => {
+    expect(closedContext(10, 0)).toBeNull();
+  });
+
+  it("全体 0 件なら null", () => {
+    expect(closedContext(0, 0)).toBeNull();
   });
 });
