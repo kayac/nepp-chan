@@ -27,7 +27,7 @@ import { useAuth } from "~/app/dashboard/contexts/AuthContext";
 import { useRole } from "~/app/dashboard/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
 
-type Tab =
+export type Tab =
   | "home"
   | "analytics"
   | "voices"
@@ -271,7 +271,7 @@ export const App = () => {
 
         <div className="flex-1 overflow-auto p-4 sm:p-6">
           <div key={activeTab} className="animate-fade-in max-w-5xl">
-            {activeTab === "home" && <HomePanel />}
+            {activeTab === "home" && <HomePanel onNavigate={handleTabChange} />}
             {activeTab === "analytics" && <AnalyticsPanel />}
             {activeTab === "voices" && <PersonaPanel />}
             {activeTab === "broadcast" && <BroadcastPanel />}
