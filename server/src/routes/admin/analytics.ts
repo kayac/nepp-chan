@@ -226,6 +226,12 @@ analyticsAdminRoutes.openapi(reportDetailRoute, async (c) => {
     throw new HTTPException(404, { message: "レポートが見つかりません" });
   }
 
+  const stats = weeklyStatsSchema.parse(JSON.parse(report.stats));
+  // コストは利用コスト（/usage）と同じ super_admin 専用の境界に揃える
+  const principal = c.get("principal");
+  const canViewCost =
+    principal?.type === "admin" && principal.user.role === "super_admin";
+
   return c.json(
     {
       report: {
@@ -234,7 +240,7 @@ analyticsAdminRoutes.openapi(reportDetailRoute, async (c) => {
         periodEnd: report.periodEnd,
         summary: report.summary,
         createdAt: report.createdAt,
-        stats: weeklyStatsSchema.parse(JSON.parse(report.stats)),
+        stats: canViewCost ? stats : { ...stats, usageByModel: [] },
       },
     },
     200,

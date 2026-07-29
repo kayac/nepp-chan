@@ -373,6 +373,22 @@ describe("personaRepository", () => {
       expect(result.personas.map((p) => p.id)).toEqual(["v-1"]);
     });
 
+    it("tags が NULL でも demographicSummary の関係語でヒットする", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({
+          id: "v-null-tags",
+          tags: null,
+          demographicSummary: "30代,観光客",
+        }),
+      );
+
+      const result = await personaRepository.listForAdmin(fakeD1, {
+        relationships: ["観光客"],
+      });
+      expect(result.personas.map((p) => p.id)).toEqual(["v-null-tags"]);
+    });
+
     it("複数の関係語を含む声は集計と同じ優先順位で1つの関係性に分類する", async () => {
       // 分析集計（aggregate.ts）は RELATIONSHIPS の先頭一致で排他分類するため、
       // 「村人」と「観光客」の両方を含む声は 村人 として扱い、観光客フィルターには出さない

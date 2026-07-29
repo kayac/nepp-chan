@@ -27,43 +27,39 @@ export const weekPeriods = (now: Date) => {
 
 const troubleCount = (t: TopicCounts) => t.negative + t.request;
 
+// previous が undefined のとき（前週データ未取得）は増減や NEW を出さない
 export const troubleTopics = (
   current: TopicCounts[],
-  previous: TopicCounts[],
+  previous: TopicCounts[] | undefined,
   limit = 3,
 ) =>
   current
     .filter((t) => troubleCount(t) > 0)
-    .map((t) => ({
-      topic: t.topic,
-      count: troubleCount(t),
-      diff:
-        troubleCount(t) -
-        troubleCount(
-          previous.find((p) => p.topic === t.topic) ?? {
-            ...t,
-            negative: 0,
-            request: 0,
-          },
-        ),
-    }))
+    .map((t) => {
+      const prev = previous?.find((p) => p.topic === t.topic);
+      return {
+        topic: t.topic,
+        count: troubleCount(t),
+        diff: previous ? troubleCount(t) - (prev ? troubleCount(prev) : 0) : 0,
+      };
+    })
     .sort((a, b) => b.count - a.count)
     .slice(0, limit);
 
 export const topTopics = (
   current: TopicCounts[],
-  previous: TopicCounts[],
+  previous: TopicCounts[] | undefined,
   limit = 4,
 ) =>
   current
     .filter((t) => t.total > 0)
     .map((t) => {
-      const prevTotal = previous.find((p) => p.topic === t.topic)?.total ?? 0;
+      const prevTotal = previous?.find((p) => p.topic === t.topic)?.total ?? 0;
       return {
         topic: t.topic,
         total: t.total,
-        diff: t.total - prevTotal,
-        isNew: prevTotal === 0,
+        diff: previous ? t.total - prevTotal : 0,
+        isNew: previous ? prevTotal === 0 : false,
       };
     })
     .sort((a, b) => b.total - a.total)

@@ -1,7 +1,7 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { Button } from "@nepp-chan/shared/ui/Button";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { FilterPopover } from "~/app/dashboard/components/voices/FilterPopover";
 import {
@@ -177,6 +177,15 @@ export const VoicesPanel = ({
     isFetching: personasQuery.isFetchingNextPage,
     onFetch: personasQuery.fetchNextPage,
   });
+
+  // 話題ごと表示は全件を集計するため、残りのページを読み切る
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = personasQuery;
+  useEffect(() => {
+    if (filter.sort !== "topics" || !hasNextPage || isFetchingNextPage) {
+      return;
+    }
+    void fetchNextPage();
+  }, [filter.sort, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const isLoading =
     (includePersonas && personasQuery.isLoading) ||

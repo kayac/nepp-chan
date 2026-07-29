@@ -162,7 +162,7 @@ describe("personaAdminRoutes", () => {
       );
     });
 
-    it("フィルター query を repository に引き渡す", async () => {
+    it("フィルター query を repository に引き渡す（from/to は JST 日付 → UTC ISO、to はその日を含む）", async () => {
       useAdminAuth();
       vi.mocked(personaRepository.listForAdmin).mockResolvedValue({
         personas: [],
@@ -172,8 +172,8 @@ describe("personaAdminRoutes", () => {
       });
 
       const query = new URLSearchParams({
-        from: "2030-01-01T00:00:00Z",
-        to: "2030-02-01T00:00:00Z",
+        from: "2030-01-01",
+        to: "2030-02-01",
         sentiments: "negative,request",
         relationships: "観光客,村人",
         topic: "観光",
@@ -187,8 +187,8 @@ describe("personaAdminRoutes", () => {
       expect(personaRepository.listForAdmin).toHaveBeenCalledWith(mockEnv.DB, {
         limit: 30,
         cursor: undefined,
-        from: "2030-01-01T00:00:00Z",
-        to: "2030-02-01T00:00:00Z",
+        from: "2029-12-31T15:00:00.000Z",
+        to: "2030-02-01T15:00:00.000Z",
         sentiments: ["negative", "request"],
         relationships: ["観光客", "村人"],
         topic: "観光",
@@ -200,6 +200,18 @@ describe("personaAdminRoutes", () => {
 
       const res = await routes.request(
         authed("GET", "/?sentiments=angry"),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(400);
+    });
+
+    it("日付形式でない from は 400", async () => {
+      useAdminAuth();
+
+      const res = await routes.request(
+        authed("GET", "/?from=2030-01-01T00:00:00Z"),
         undefined,
         mockEnv,
       );

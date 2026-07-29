@@ -114,9 +114,33 @@ describe("analyticsAdminRoutes: 認可", () => {
     expect(res.status).toBe(401);
   });
 
-  it("staff でも分析系は 200", async () => {
+  it.each([
+    "/persona",
+    "/ontology",
+    "/conversations",
+    "/reports",
+  ])("staff でも分析系（%s）は 200", async (path) => {
     useAuth("staff");
-    const res = await routes.request(authedGet("/persona"), undefined, mockEnv);
+    vi.mocked(getOntology).mockResolvedValue({
+      nodes: [],
+      links: [],
+      meta: {
+        personaTotal: 0,
+        generatedAt: "2026-06-09T00:00:00.000Z",
+        entityLayerStatus: "none",
+        note: "",
+      },
+    });
+    vi.mocked(getConversationStats).mockResolvedValue({
+      daily: [],
+      hourly: [],
+      weekday: [],
+      platforms: [],
+      totals: { conversations: 0, messages: 0 },
+    });
+    vi.mocked(weeklyReportRepository.list).mockResolvedValue([]);
+
+    const res = await routes.request(authedGet(path), undefined, mockEnv);
     expect(res.status).toBe(200);
   });
 
@@ -304,6 +328,49 @@ describe("GET /reports", () => {
       report: { stats: { conversationCount: number } };
     };
     expect(body.report.stats.conversationCount).toBe(10);
+  });
+
+  it("コスト情報（usageByModel）は super_admin だけに返し、staff には空にする", async () => {
+    const withUsage = {
+      ...storedReport,
+      stats: JSON.stringify({
+        ...JSON.parse(storedReport.stats),
+        usageByModel: [
+          {
+            model: "gemini-2.5-flash",
+            inputTokens: 1000,
+            outputTokens: 500,
+            reasoningTokens: 0,
+            cachedInputTokens: 0,
+            totalTokens: 1500,
+            costUsd: 0.0015,
+          },
+        ],
+      }),
+    };
+    vi.mocked(weeklyReportRepository.findById).mockResolvedValue(withUsage);
+
+    const superRes = await routes.request(
+      authedGet("/reports/r-1"),
+      undefined,
+      mockEnv,
+    );
+    const superBody = (await superRes.json()) as {
+      report: { stats: { usageByModel: unknown[] } };
+    };
+    expect(superBody.report.stats.usageByModel).toHaveLength(1);
+
+    useAuth("staff");
+    const staffRes = await routes.request(
+      authedGet("/reports/r-1"),
+      undefined,
+      mockEnv,
+    );
+    expect(staffRes.status).toBe(200);
+    const staffBody = (await staffRes.json()) as {
+      report: { stats: { usageByModel: unknown[] } };
+    };
+    expect(staffBody.report.stats.usageByModel).toEqual([]);
   });
 
   it("存在しないレポートは 404", async () => {

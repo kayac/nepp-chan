@@ -227,7 +227,7 @@ export const personaRepository = {
       from?: string;
       to?: string;
       sentiments?: string[];
-      relationships?: string[];
+      relationships?: (typeof RELATIONSHIPS)[number][];
       topic?: string;
     } = {},
   ): Promise<{
@@ -255,18 +255,13 @@ export const personaRepository = {
     }
     if (options.relationships && options.relationships.length > 0) {
       // aggregate.ts の排他分類（RELATIONSHIPS の先頭一致）と揃える。
-      // 対象語を含んでいても、より優先度の高い語を含む声はその関係性に分類済みなので除外する
+      // 対象語を含んでいても、より優先度の高い語を含む声はその関係性に分類済みなので除外する。
+      // NULL カラムの LIKE は NULL になり NOT() で行ごと落ちるため COALESCE で潰す
       const mentions = (r: string) =>
-        or(
-          like(persona.tags, `%${r}%`),
-          like(persona.demographicSummary, `%${r}%`),
-        ) as SQL;
+        sql`(COALESCE(${persona.tags}, '') LIKE ${`%${r}%`} OR COALESCE(${persona.demographicSummary}, '') LIKE ${`%${r}%`})`;
       const relationshipCondition = or(
         ...options.relationships.map((r) => {
-          const higher = RELATIONSHIPS.slice(
-            0,
-            RELATIONSHIPS.indexOf(r as (typeof RELATIONSHIPS)[number]),
-          );
+          const higher = RELATIONSHIPS.slice(0, RELATIONSHIPS.indexOf(r));
           return and(mentions(r), ...higher.map((h) => not(mentions(h))));
         }),
       );

@@ -168,7 +168,6 @@ describe("AnalyticsPanel", () => {
     expect(screen.getByText("週次レポート")).toBeInTheDocument();
     expect(screen.getByText("会話量")).toBeInTheDocument();
     expect(screen.getByText("全体分析")).toBeInTheDocument();
-    // 利用コストはシステムの利用コストタブに分離済み
     expect(screen.queryByText("トークン消費・コスト")).toBeNull();
   });
 

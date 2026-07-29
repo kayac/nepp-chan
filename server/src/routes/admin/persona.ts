@@ -1,5 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
+import { DAY_MS, jstDateToUtc } from "~/lib/date";
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
 import { requireRole } from "~/middleware/require-role";
@@ -25,6 +26,11 @@ const commaSeparated = <T extends z.ZodType<string, string>>(item: T) =>
     .transform((v) => (v ? v.split(",") : undefined))
     .pipe(z.array(item).optional());
 
+const jstDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .describe("JST の日付（YYYY-MM-DD）");
+
 const PersonaSchema = z.object({
   id: z.string(),
   category: z.string(),
@@ -49,8 +55,10 @@ const listRoute = createRoute({
     query: z.object({
       limit: z.coerce.number().int().min(1).optional().default(30),
       cursor: z.string().optional(),
-      from: z.string().optional(),
-      to: z.string().optional(),
+      from: jstDateSchema.optional(),
+      to: jstDateSchema
+        .optional()
+        .describe("JST の日付（YYYY-MM-DD、この日を含む）"),
       sentiments: commaSeparated(
         z.enum(["positive", "negative", "request", "neutral"]),
       ),
@@ -73,6 +81,7 @@ const listRoute = createRoute({
       },
     },
     401: errorResponse(401),
+    403: errorResponse(403),
   },
 });
 
@@ -82,8 +91,11 @@ personaAdminRoutes.openapi(listRoute, async (c) => {
   const result = await personaRepository.listForAdmin(c.env.DB, {
     limit,
     cursor: cursor ?? undefined,
-    from,
-    to,
+    // 分析 API と同じく JST 日付境界で絞る（to はその日を含むため翌日 0:00 JST 未満）
+    from: from ? jstDateToUtc(from).toISOString() : undefined,
+    to: to
+      ? new Date(jstDateToUtc(to).getTime() + DAY_MS).toISOString()
+      : undefined,
     sentiments,
     relationships,
     topic,
@@ -124,6 +136,7 @@ const extractAllRoute = createRoute({
       },
     },
     401: errorResponse(401),
+    403: errorResponse(403),
     500: errorResponse(500),
   },
 });
@@ -172,6 +185,7 @@ const extractOneRoute = createRoute({
       },
     },
     401: errorResponse(401),
+    403: errorResponse(403),
     404: errorResponse(404),
     500: errorResponse(500),
   },
@@ -207,6 +221,7 @@ const deleteAllRoute = createRoute({
       },
     },
     401: errorResponse(401),
+    403: errorResponse(403),
     500: errorResponse(500),
   },
 });

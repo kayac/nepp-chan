@@ -131,23 +131,25 @@ const MayorChat = ({
 
 export const MayorChatPanel = ({ isOpen, request, onClose }: Props) => {
   const [threadId, setThreadId] = useState<string | null>(null);
+  const [createFailed, setCreateFailed] = useState(false);
   const isCreating = useRef(false);
 
   useEffect(() => {
-    if (!isOpen || threadId || isCreating.current) return;
+    if (!isOpen || threadId || createFailed || isCreating.current) return;
     isCreating.current = true;
     threadRepository
       .createThread("村長モード")
       .then((thread) => setThreadId(thread.id))
       .catch(() => {
         isCreating.current = false;
+        setCreateFailed(true);
       });
-  }, [isOpen, threadId]);
+  }, [isOpen, threadId, createFailed]);
 
   return (
     <aside
       aria-label="村長モードチャット"
-      aria-hidden={!isOpen}
+      inert={!isOpen}
       className={cn(
         "fixed top-0 right-0 z-30 h-dvh w-[424px] max-w-full",
         "bg-(--bg-app) border-l border-(--border-1) shadow-(--shadow-lg)",
@@ -175,6 +177,19 @@ export const MayorChatPanel = ({ isOpen, request, onClose }: Props) => {
       />
       {threadId ? (
         <MayorChat threadId={threadId} request={request} />
+      ) : createFailed ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6 text-center">
+          <p className="text-sm text-(--fg-2)">
+            チャットの準備に失敗しました。通信環境を確認してもう一度お試しください。
+          </p>
+          <button
+            type="button"
+            onClick={() => setCreateFailed(false)}
+            className="px-4 py-1.5 rounded-(--r-pill) bg-(--brand) text-(--fg-on-brand) text-sm font-medium hover:bg-(--brand-press)"
+          >
+            もう一度試す
+          </button>
+        </div>
       ) : (
         <div className="flex-1 flex items-center justify-center">
           <LoadingDots />

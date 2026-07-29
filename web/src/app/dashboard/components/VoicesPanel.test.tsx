@@ -78,11 +78,20 @@ const usePersonaHandlers = () => {
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true });
   vi.setSystemTime(new Date("2026-07-29T10:00:00"));
+  vi.stubGlobal(
+    "IntersectionObserver",
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
   localStorage.clear();
   setAuthToken("admin-token");
 });
 
 afterEach(() => {
+  vi.unstubAllGlobals();
   vi.useRealTimers();
   localStorage.clear();
 });
@@ -189,6 +198,50 @@ describe("VoicesPanel", () => {
     expect(groups.map((g) => g.textContent?.slice(0, 10))).toHaveLength(3);
     expect(groups.some((g) => g.textContent?.includes("観光"))).toBe(true);
     expect(groups.some((g) => g.textContent?.includes("緊急"))).toBe(true);
+  });
+
+  it("話題ごと表示では残りのページを読み切って集計する", async () => {
+    server.use(
+      http.get(`${API}/admin/persona`, ({ request }) => {
+        const cursor = new URL(request.url).searchParams.get("cursor");
+        if (cursor) {
+          return HttpResponse.json({
+            personas: [
+              {
+                ...personas[0],
+                id: "p-3",
+                topic: "行政",
+                content: "移住補助金のページがほしい",
+              },
+            ],
+            total: 3,
+            nextCursor: null,
+            hasMore: false,
+          });
+        }
+        return HttpResponse.json({
+          personas,
+          total: 3,
+          nextCursor: "cur-1",
+          hasMore: true,
+        });
+      }),
+      http.get(`${API}/admin/emergency`, () =>
+        HttpResponse.json({ emergencies: [] }),
+      ),
+    );
+    renderWithQuery(<VoicesPanel />);
+    await waitFor(() => {
+      expect(screen.getByText(/粗大ごみ/)).toBeInTheDocument();
+    });
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "話題ごと" }));
+
+    await waitFor(() => {
+      const groups = screen.getAllByTestId("topic-group");
+      expect(groups.some((g) => g.textContent?.includes("行政"))).toBe(true);
+    });
   });
 
   it("緊急だけを選ぶとペルソナを取得しない", async () => {

@@ -83,11 +83,11 @@ export const HomePanel = ({ onNavigate }: Props) => {
 
   const troubles = troubleTopics(
     currentPersona.data?.topics ?? [],
-    previousPersona.data?.topics ?? [],
+    previousPersona.data?.topics,
   );
   const tops = topTopics(
     currentPersona.data?.topics ?? [],
-    previousPersona.data?.topics ?? [],
+    previousPersona.data?.topics,
   );
 
   const daily = conversations.data?.daily ?? [];

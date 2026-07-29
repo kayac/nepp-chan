@@ -80,6 +80,11 @@ describe("troubleTopics", () => {
     expect(result[0].diff).toBe(2);
   });
 
+  it("前週データが未取得（undefined）なら diff は 0", () => {
+    const current = [topic("生活", { negative: 5 })];
+    expect(troubleTopics(current, undefined)[0].diff).toBe(0);
+  });
+
   it("limit で件数を絞る", () => {
     const current = [
       topic("観光", { negative: 3 }),
@@ -107,6 +112,13 @@ describe("topTopics", () => {
     const result = topTopics(current, previous);
     expect(result.find((t) => t.topic === "行政")?.isNew).toBe(true);
     expect(result.find((t) => t.topic === "観光")?.isNew).toBe(false);
+  });
+
+  it("前週データが未取得（undefined）なら NEW も diff も付けない", () => {
+    const current = [topic("観光", { total: 5 })];
+    const result = topTopics(current, undefined);
+    expect(result[0].isNew).toBe(false);
+    expect(result[0].diff).toBe(0);
   });
 
   it("前週比 diff を含む", () => {

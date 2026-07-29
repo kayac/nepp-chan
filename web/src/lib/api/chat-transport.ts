@@ -13,6 +13,7 @@ export const createThreadChatTransport = (
 ) =>
   new DefaultChatTransport({
     api: `${API_BASE}/threads/${threadId}/chat`,
+    // 戻り値の union を Record に寄せるため注釈が必要（型推論に任せると transport の型に合わない）
     headers: (): Record<string, string> => {
       const token = getBearerToken();
       return token ? { Authorization: `Bearer ${token}` } : {};
