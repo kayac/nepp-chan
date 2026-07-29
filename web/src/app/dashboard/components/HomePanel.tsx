@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { Tab } from "~/app/dashboard/App";
+import type { VoiceFilter } from "~/app/dashboard/components/voices/helpers";
 import {
   percentChange,
   sumConversationsInRange,
@@ -18,7 +19,7 @@ import { usePolls } from "~/app/dashboard/hooks/usePolls";
 import { formatDateTime } from "~/lib/format";
 
 interface Props {
-  onNavigate: (tab: Tab) => void;
+  onNavigate: (tab: Tab, voicesFilter?: Partial<VoiceFilter>) => void;
 }
 
 const formatPeriodDate = (dateStr: string) => {
@@ -123,7 +124,9 @@ export const HomePanel = ({ onNavigate }: Props) => {
             </h3>
             <LinkButton
               label="みんなの声で見る"
-              onClick={() => onNavigate("voices")}
+              onClick={() =>
+                onNavigate("voices", { period: "week", sents: ["emergency"] })
+              }
             />
           </div>
           <ul className="space-y-1.5">
@@ -159,7 +162,15 @@ export const HomePanel = ({ onNavigate }: Props) => {
       <Card
         title="今週の困りごと"
         action={
-          <LinkButton label="詳しく見る" onClick={() => onNavigate("voices")} />
+          <LinkButton
+            label="詳しく見る"
+            onClick={() =>
+              onNavigate("voices", {
+                period: "week",
+                sents: ["negative", "request"],
+              })
+            }
+          />
         }
       >
         {troubles.length === 0 ? (

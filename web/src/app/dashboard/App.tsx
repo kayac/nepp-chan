@@ -20,9 +20,10 @@ import { FeedbackPanel } from "~/app/dashboard/components/FeedbackPanel";
 import { HomePanel } from "~/app/dashboard/components/HomePanel";
 import { InvitationsPanel } from "~/app/dashboard/components/InvitationsPanel";
 import { KnowledgePanel } from "~/app/dashboard/components/KnowledgePanel";
-import { PersonaPanel } from "~/app/dashboard/components/PersonaPanel";
 import { PollPanel } from "~/app/dashboard/components/PollPanel";
 import { UsagePanel } from "~/app/dashboard/components/UsagePanel";
+import type { VoiceFilter } from "~/app/dashboard/components/voices/helpers";
+import { VoicesPanel } from "~/app/dashboard/components/VoicesPanel";
 import { useAuth } from "~/app/dashboard/contexts/AuthContext";
 import { useRole } from "~/app/dashboard/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
@@ -125,13 +126,17 @@ export const App = () => {
   }, [hasRole]);
 
   const [activeTab, setActiveTab] = useState<Tab>("home");
+  const [voicesFilter, setVoicesFilter] = useState<Partial<VoiceFilter>>();
 
   const handleLogout = async () => {
     await logout();
     window.location.href = "/login";
   };
 
-  const handleTabChange = (tabId: Tab) => {
+  const handleTabChange = (tabId: Tab, filter?: Partial<VoiceFilter>) => {
+    if (tabId === "voices") {
+      setVoicesFilter(filter);
+    }
     setActiveTab(tabId);
     setIsSidebarOpen(false);
   };
@@ -273,7 +278,13 @@ export const App = () => {
           <div key={activeTab} className="animate-fade-in max-w-5xl">
             {activeTab === "home" && <HomePanel onNavigate={handleTabChange} />}
             {activeTab === "analytics" && <AnalyticsPanel />}
-            {activeTab === "voices" && <PersonaPanel />}
+            {activeTab === "voices" && (
+              <VoicesPanel
+                key={JSON.stringify(voicesFilter ?? {})}
+                initialFilter={voicesFilter}
+                canManage={hasRole("admin")}
+              />
+            )}
             {activeTab === "broadcast" && <BroadcastPanel />}
             {activeTab === "poll" && <PollPanel />}
             {activeTab === "knowledge" && <KnowledgePanel />}

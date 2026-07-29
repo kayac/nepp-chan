@@ -1,4 +1,6 @@
+import type { FetchPersonasParams } from "@nepp-chan/shared/api/repository/persona-repository";
 import {
+  keepPreviousData,
   useInfiniteQuery,
   useMutation,
   useQueryClient,
@@ -7,13 +9,21 @@ import {
 import { personaRepository } from "~/lib/api/repository";
 import { dashboardKeys } from "./keys";
 
-export const usePersonas = (limit = 30) =>
+type PersonaFilters = Omit<FetchPersonasParams, "limit" | "cursor">;
+
+export const usePersonas = (
+  limit = 30,
+  filters: PersonaFilters = {},
+  options: { enabled?: boolean } = {},
+) =>
   useInfiniteQuery({
-    queryKey: [...dashboardKeys.personas, limit],
+    queryKey: [...dashboardKeys.personas, limit, filters],
     queryFn: ({ pageParam }) =>
-      personaRepository.fetchPersonas({ limit, cursor: pageParam }),
+      personaRepository.fetchPersonas({ ...filters, limit, cursor: pageParam }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: options.enabled ?? true,
+    placeholderData: keepPreviousData,
   });
 
 export const useExtractPersonas = () => {

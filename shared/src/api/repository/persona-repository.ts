@@ -1,9 +1,20 @@
 import type { ApiClient } from "../create-client";
 
-type FetchPersonasParams = {
+export type PersonaSentiment = "positive" | "negative" | "request" | "neutral";
+export type PersonaRelationship = "村人" | "観光客" | "移住検討者" | "帰省者";
+
+export type FetchPersonasParams = {
   limit?: number;
   cursor?: string;
+  from?: string;
+  to?: string;
+  sentiments?: PersonaSentiment[];
+  relationships?: PersonaRelationship[];
+  topic?: string;
 };
+
+const joinOrOmit = (values: string[] | undefined) =>
+  values && values.length > 0 ? values.join(",") : undefined;
 
 export const createPersonaRepository = (client: ApiClient) => ({
   fetchPersonas: async (params: FetchPersonasParams = {}) => {
@@ -12,6 +23,11 @@ export const createPersonaRepository = (client: ApiClient) => ({
         query: {
           limit: params.limit ?? 30,
           cursor: params.cursor,
+          from: params.from,
+          to: params.to,
+          sentiments: joinOrOmit(params.sentiments),
+          relationships: joinOrOmit(params.relationships),
+          topic: params.topic,
         },
       },
     });

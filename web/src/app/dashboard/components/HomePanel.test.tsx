@@ -189,7 +189,10 @@ describe("HomePanel", () => {
 
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: /みんなの声で見る/ }));
-    expect(onNavigate).toHaveBeenCalledWith("voices");
+    expect(onNavigate).toHaveBeenCalledWith("voices", {
+      period: "week",
+      sents: ["emergency"],
+    });
   });
 
   it("先週以前の緊急報告しかなければ緊急セクションを出さない", async () => {

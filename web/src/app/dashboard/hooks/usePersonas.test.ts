@@ -69,6 +69,31 @@ describe("usePersonas", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(received).toBe("5");
   });
+
+  it("フィルターをクエリパラメータで送る", async () => {
+    let params: URLSearchParams | null = null;
+    server.use(
+      http.get(`${API}/admin/persona`, ({ request }) => {
+        params = new URL(request.url).searchParams;
+        return HttpResponse.json({ personas: [], nextCursor: null });
+      }),
+    );
+
+    const { result } = renderHookWithQuery(() =>
+      usePersonas(30, {
+        from: "2026-07-01",
+        sentiments: ["negative"],
+        relationships: ["観光客"],
+        topic: "観光",
+      }),
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(params!.get("from")).toBe("2026-07-01");
+    expect(params!.get("sentiments")).toBe("negative");
+    expect(params!.get("relationships")).toBe("観光客");
+    expect(params!.get("topic")).toBe("観光");
+  });
 });
 
 describe("useExtractPersonas", () => {
