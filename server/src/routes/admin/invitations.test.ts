@@ -215,21 +215,21 @@ describe("invitationRoutes", () => {
     });
 
     // 認可境界: admin は admin / super_admin の招待を作れない
-    it.each([
-      "admin",
-      "super_admin",
-    ] as const)("admin ロールが role=%s を招待しようとして 403", async (role) => {
-      useAuth();
+    it.each(["admin", "super_admin"] as const)(
+      "admin ロールが role=%s を招待しようとして 403",
+      async (role) => {
+        useAuth();
 
-      const res = await routes.request(
-        authedJson("POST", "/", { username: "x", role }),
-        undefined,
-        mockEnv,
-      );
+        const res = await routes.request(
+          authedJson("POST", "/", { username: "x", role }),
+          undefined,
+          mockEnv,
+        );
 
-      expect(res.status).toBe(403);
-      expect(invitationService.createInvitation).not.toHaveBeenCalled();
-    });
+        expect(res.status).toBe(403);
+        expect(invitationService.createInvitation).not.toHaveBeenCalled();
+      },
+    );
 
     it("super_admin は admin / super_admin を招待できる", async () => {
       useAuth(superAdminUser);

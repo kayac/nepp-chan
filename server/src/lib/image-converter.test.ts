@@ -27,14 +27,12 @@ describe("isSupportedMimeType", () => {
     expect(isSupportedMimeType(mime)).toBe(true);
   });
 
-  it.each([
-    "text/plain",
-    "image/bmp",
-    "application/json",
-    "",
-  ])("%s はサポート外", (mime) => {
-    expect(isSupportedMimeType(mime)).toBe(false);
-  });
+  it.each(["text/plain", "image/bmp", "application/json", ""])(
+    "%s はサポート外",
+    (mime) => {
+      expect(isSupportedMimeType(mime)).toBe(false);
+    },
+  );
 });
 
 describe("convertToMarkdown", () => {
