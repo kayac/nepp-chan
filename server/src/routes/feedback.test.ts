@@ -41,24 +41,23 @@ describe("feedbackRoutes: POST /", () => {
     vi.clearAllMocks();
   });
 
-  it.each([
-    "good",
-    "bad",
-    "idea",
-  ] as const)("rating=%s で 201 を返し id を発行する", async (rating) => {
-    vi.mocked(feedbackRepository.create).mockResolvedValue("fb-mock-id");
+  it.each(["good", "bad", "idea"] as const)(
+    "rating=%s で 201 を返し id を発行する",
+    async (rating) => {
+      vi.mocked(feedbackRepository.create).mockResolvedValue("fb-mock-id");
 
-    const res = await feedbackRoutes.request(
-      postJson("/", { ...validBody, rating }),
-      undefined,
-      mockEnv,
-    );
+      const res = await feedbackRoutes.request(
+        postJson("/", { ...validBody, rating }),
+        undefined,
+        mockEnv,
+      );
 
-    expect(res.status).toBe(201);
-    const body = (await res.json()) as { id: string };
-    expect(typeof body.id).toBe("string");
-    expect(body.id.length).toBeGreaterThan(0);
-  });
+      expect(res.status).toBe(201);
+      const body = (await res.json()) as { id: string };
+      expect(typeof body.id).toBe("string");
+      expect(body.id.length).toBeGreaterThan(0);
+    },
+  );
 
   it("create に rating / category / comment を渡す", async () => {
     vi.mocked(feedbackRepository.create).mockResolvedValue("fb-mock-id");

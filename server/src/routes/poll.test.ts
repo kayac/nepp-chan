@@ -88,24 +88,24 @@ describe("pollRoutes (公開): GET /:id", () => {
   });
 
   // 状態遷移: draft / scheduled は公開対象外（404 として隠す）
-  it.each([
-    "draft",
-    "scheduled",
-  ] as const)("status=%s は 404 を返す（公開対象外）", async (status) => {
-    vi.mocked(pollRepository.findById).mockResolvedValue({
-      ...samplePoll,
-      status,
-    });
+  it.each(["draft", "scheduled"] as const)(
+    "status=%s は 404 を返す（公開対象外）",
+    async (status) => {
+      vi.mocked(pollRepository.findById).mockResolvedValue({
+        ...samplePoll,
+        status,
+      });
 
-    const res = await routes.request(
-      new Request("http://localhost/p-1", { method: "GET" }),
-      undefined,
-      mockEnv,
-    );
+      const res = await routes.request(
+        new Request("http://localhost/p-1", { method: "GET" }),
+        undefined,
+        mockEnv,
+      );
 
-    expect(res.status).toBe(404);
-    expect(getPollResults).not.toHaveBeenCalled();
-  });
+      expect(res.status).toBe(404);
+      expect(getPollResults).not.toHaveBeenCalled();
+    },
+  );
 
   it("存在しない poll は 404", async () => {
     vi.mocked(pollRepository.findById).mockResolvedValue(null);

@@ -367,25 +367,25 @@ describe("broadcastAdminRoutes", () => {
       );
     });
 
-    it.each([
-      "sent",
-      "scheduled",
-    ])("status=%s は 400 で削除拒否", async (status) => {
-      useAuth();
-      vi.mocked(broadcastRepository.findById).mockResolvedValue({
-        ...sampleBroadcast,
-        status,
-      });
+    it.each(["sent", "scheduled"])(
+      "status=%s は 400 で削除拒否",
+      async (status) => {
+        useAuth();
+        vi.mocked(broadcastRepository.findById).mockResolvedValue({
+          ...sampleBroadcast,
+          status,
+        });
 
-      const res = await routes.request(
-        authedJson("DELETE", "/b-1"),
-        undefined,
-        mockEnv,
-      );
+        const res = await routes.request(
+          authedJson("DELETE", "/b-1"),
+          undefined,
+          mockEnv,
+        );
 
-      expect(res.status).toBe(400);
-      expect(broadcastRepository.delete).not.toHaveBeenCalled();
-    });
+        expect(res.status).toBe(400);
+        expect(broadcastRepository.delete).not.toHaveBeenCalled();
+      },
+    );
 
     it("image part を含む broadcast 削除時に R2 オブジェクトも削除", async () => {
       useAuth();

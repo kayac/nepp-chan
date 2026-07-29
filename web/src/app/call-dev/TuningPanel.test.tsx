@@ -240,15 +240,18 @@ describe("TuningPanel", () => {
     ["速度", "8EkOjt4xTPGMclNlh1pk-flash_v2_5-0.9_0.5_0.75"],
     ["安定性", "8EkOjt4xTPGMclNlh1pk-flash_v2_5-1.0_0.9_0.75"],
     ["類似度", "8EkOjt4xTPGMclNlh1pk-flash_v2_5-1.0_0.5_0.9"],
-  ])("%s スライダーは音声設定部を差し替えて onChange する", (label, expected) => {
-    const { onChange } = setup({
-      voice: "8EkOjt4xTPGMclNlh1pk-flash_v2_5-1.0_0.5_0.75",
-    });
-    fireEvent.change(screen.getByLabelText(label), {
-      target: { value: "0.9" },
-    });
-    expect(onChange).toHaveBeenCalledWith({ voice: expected });
-  });
+  ])(
+    "%s スライダーは音声設定部を差し替えて onChange する",
+    (label, expected) => {
+      const { onChange } = setup({
+        voice: "8EkOjt4xTPGMclNlh1pk-flash_v2_5-1.0_0.5_0.75",
+      });
+      fireEvent.change(screen.getByLabelText(label), {
+        target: { value: "0.9" },
+      });
+      expect(onChange).toHaveBeenCalledWith({ voice: expected });
+    },
+  );
 
   it("音声詳細のチェックを外すと設定部なしの voice に戻す", () => {
     const { onChange } = setup({
