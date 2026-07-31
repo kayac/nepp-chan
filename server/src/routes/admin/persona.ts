@@ -91,8 +91,8 @@ personaAdminRoutes.openapi(listRoute, async (c) => {
   const result = await personaRepository.listForAdmin(c.env.DB, {
     limit,
     cursor: cursor ?? undefined,
-    // 分析 API と同じく JST 日付境界で絞る（to はその日を含むため翌日 0:00 JST 未満）
     from: from ? jstDateToUtc(from).toISOString() : undefined,
+    // to はその日を含むため翌日 0:00 JST 未満
     to: to
       ? new Date(jstDateToUtc(to).getTime() + DAY_MS).toISOString()
       : undefined,

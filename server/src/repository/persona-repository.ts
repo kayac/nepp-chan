@@ -254,9 +254,8 @@ export const personaRepository = {
       filterConditions.push(inArray(persona.sentiment, options.sentiments));
     }
     if (options.relationships && options.relationships.length > 0) {
-      // aggregate.ts の排他分類（RELATIONSHIPS の先頭一致）と揃える。
-      // 対象語を含んでいても、より優先度の高い語を含む声はその関係性に分類済みなので除外する。
-      // NULL カラムの LIKE は NULL になり NOT() で行ごと落ちるため COALESCE で潰す
+      // aggregate.ts の排他分類（先頭一致優先）と揃えるため、より優先度の高い語を含む声は除外する。
+      // NULL カラムの LIKE は NOT() で行ごと落ちるため COALESCE で潰す
       const mentions = (r: string) =>
         sql`(COALESCE(${persona.tags}, '') LIKE ${`%${r}%`} OR COALESCE(${persona.demographicSummary}, '') LIKE ${`%${r}%`})`;
       const relationshipCondition = or(

@@ -27,7 +27,7 @@ export const weekPeriods = (now: Date) => {
 
 const troubleCount = (t: TopicCounts) => t.negative + t.request;
 
-// previous が undefined のとき（前週データ未取得）は増減や NEW を出さない
+// previous undefined = 前週データ未取得（増減・NEW を出さない）。空配列は前週 0 件として扱う
 export const troubleTopics = (
   current: TopicCounts[],
   previous: TopicCounts[] | undefined,

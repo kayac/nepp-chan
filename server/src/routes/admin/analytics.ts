@@ -227,7 +227,6 @@ analyticsAdminRoutes.openapi(reportDetailRoute, async (c) => {
   }
 
   const stats = weeklyStatsSchema.parse(JSON.parse(report.stats));
-  // コストは利用コスト（/usage）と同じ super_admin 専用の境界に揃える
   const principal = c.get("principal");
   const canViewCost =
     principal?.type === "admin" && principal.user.role === "super_admin";

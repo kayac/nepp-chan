@@ -1,6 +1,6 @@
 import { z } from "@hono/zod-openapi";
 
-// 排他分類の優先順位を兼ねる（aggregate.ts と persona 一覧フィルターは先頭一致で1つに分類する）
+// 配列順は排他分類の優先順位（先頭一致で1つに分類する）
 export const RELATIONSHIPS = [
   "村人",
   "観光客",
