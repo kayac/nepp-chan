@@ -50,31 +50,59 @@ describe("fetchPersonas", () => {
 
     await repo.fetchPersonas({ cursor: "cur-1" });
   });
-});
 
-describe("extractPersonas", () => {
-  it("POST /admin/persona/extract", async () => {
+  it("期間を query で渡す", async () => {
     server.use(
-      http.post(`${API}/admin/persona/extract`, () =>
-        HttpResponse.json({ message: "done", results: [] }),
-      ),
+      http.get(`${API}/admin/persona`, ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        expect(params.get("from")).toBe("2030-01-01T00:00:00Z");
+        expect(params.get("to")).toBe("2030-02-01T00:00:00Z");
+        return HttpResponse.json({
+          personas: [],
+          total: 0,
+          nextCursor: null,
+          hasMore: false,
+        });
+      }),
     );
 
-    const result = await repo.extractPersonas();
-    expect(result?.message).toBe("done");
+    await repo.fetchPersonas({
+      from: "2030-01-01T00:00:00Z",
+      to: "2030-02-01T00:00:00Z",
+    });
   });
 });
 
-describe("deleteAllPersonas", () => {
-  it("DELETE /admin/persona", async () => {
+describe("fetchPersonaTopics", () => {
+  it("感情はカンマ区切り、話題と期間はそのまま query で渡す", async () => {
     server.use(
-      http.delete(`${API}/admin/persona`, () =>
-        HttpResponse.json({ message: "ok", count: 3 }),
-      ),
+      http.get(`${API}/admin/persona/topics`, ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        expect(params.get("sentiments")).toBe("negative,request");
+        expect(params.get("topic")).toBe("生活");
+        expect(params.get("from")).toBe("2030-01-01");
+        return HttpResponse.json({ topics: [] });
+      }),
     );
 
-    const result = await repo.deleteAllPersonas();
-    expect(result?.count).toBe(3);
+    await repo.fetchPersonaTopics({
+      from: "2030-01-01",
+      sentiments: ["negative", "request"],
+      topic: "生活",
+    });
+  });
+
+  it("感情が空なら query に含めない", async () => {
+    server.use(
+      http.get(`${API}/admin/persona/topics`, ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        expect(params.has("sentiments")).toBe(false);
+        expect(params.has("topic")).toBe(false);
+        return HttpResponse.json({ topics: [] });
+      }),
+    );
+
+    await repo.fetchPersonaTopics({ sentiments: [] });
   });
 });
 
@@ -89,23 +117,13 @@ describe("失敗系", () => {
     await expect(repo.fetchPersonas()).rejects.toBeDefined();
   });
 
-  it("extractPersonas: 500 は throw", async () => {
+  it("fetchPersonaTopics: 500 は throw", async () => {
     server.use(
-      http.post(`${API}/admin/persona/extract`, () =>
+      http.get(`${API}/admin/persona/topics`, () =>
         HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
       ),
     );
 
-    await expect(repo.extractPersonas()).rejects.toBeDefined();
-  });
-
-  it("deleteAllPersonas: 500 は throw", async () => {
-    server.use(
-      http.delete(`${API}/admin/persona`, () =>
-        HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
-      ),
-    );
-
-    await expect(repo.deleteAllPersonas()).rejects.toBeDefined();
+    await expect(repo.fetchPersonaTopics()).rejects.toBeDefined();
   });
 });

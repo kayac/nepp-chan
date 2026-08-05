@@ -10,7 +10,6 @@ type Props = {
   titleClassName?: string;
 };
 
-/** モーダル/ダイアログ共通のタイトル(+説明文)+閉じるボタン行 */
 export const ModalHeader = ({
   title,
   description,

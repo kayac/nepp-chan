@@ -1,3 +1,10 @@
+import {
+  classifyRelationship,
+  normalizeSentiment,
+  normalizeTopic,
+  personaAttributes,
+  TOPICS,
+} from "@nepp-chan/shared/lib/persona-attributes";
 import { and, gte, isNotNull, lt, sql } from "drizzle-orm";
 import { createDb, persona } from "~/db";
 import { calcCostUsd } from "~/lib/llm-pricing";
@@ -33,23 +40,7 @@ const AGE_GROUPS = [
   "不明",
 ] as const;
 
-export const TOPICS = [
-  "交通",
-  "買い物",
-  "医療",
-  "除雪",
-  "教育",
-  "行政",
-  "観光",
-  "生活",
-  "その他",
-] as const;
-
-const SENTIMENTS = ["positive", "negative", "request", "neutral"] as const;
-type Sentiment = (typeof SENTIMENTS)[number];
-
 const RESIDENCES = ["村内", "村外"] as const;
-const RELATIONSHIPS = ["村人", "観光客", "移住検討者", "帰省者"] as const;
 
 export const getConversationStats = async (d1: D1Database, period: Period) => {
   const db = createDb(d1);
@@ -191,11 +182,6 @@ const extractAgeGroup = (attributes: string) => {
   return decade >= 10 ? `${decade}代` : "不明";
 };
 
-export const normalizeSentiment = (sentiment: string | null): Sentiment =>
-  SENTIMENTS.includes(sentiment as Sentiment)
-    ? (sentiment as Sentiment)
-    : "neutral";
-
 export const emptySentimentCounts = () => ({
   positive: 0,
   negative: 0,
@@ -271,9 +257,7 @@ export const getPersonaAnalytics = async (
   const relationship = new Map<string, number>();
 
   for (const row of rows) {
-    const attributes = [row.tags, row.demographicSummary]
-      .filter(Boolean)
-      .join(",");
+    const attributes = personaAttributes(row);
     const sentiment = normalizeSentiment(row.sentiment);
 
     const ageCounts = ageSentiment.get(extractAgeGroup(attributes));
@@ -281,10 +265,7 @@ export const getPersonaAnalytics = async (
       ageCounts[sentiment] += 1;
     }
 
-    const topicKey = TOPICS.includes(row.topic as (typeof TOPICS)[number])
-      ? (row.topic as string)
-      : "その他";
-    const topicCounts = topics.get(topicKey);
+    const topicCounts = topics.get(normalizeTopic(row.topic));
     if (topicCounts) {
       topicCounts.total += 1;
       topicCounts[sentiment] += 1;
@@ -294,8 +275,7 @@ export const getPersonaAnalytics = async (
       RESIDENCES.find((r) => attributes.includes(r)) ?? "不明";
     residence.set(residenceKey, (residence.get(residenceKey) ?? 0) + 1);
 
-    const relationshipKey =
-      RELATIONSHIPS.find((r) => attributes.includes(r)) ?? "不明";
+    const relationshipKey = classifyRelationship(attributes) ?? "不明";
     relationship.set(
       relationshipKey,
       (relationship.get(relationshipKey) ?? 0) + 1,

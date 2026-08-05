@@ -1,7 +1,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { setAuthToken } from "~/lib/auth-token";
 import { server } from "~/test/msw-server";
@@ -157,15 +157,31 @@ afterEach(() => {
 });
 
 describe("AnalyticsPanel", () => {
-  it("4 セクションの見出しを表示する", async () => {
+  it("3つの時間軸見出しとセクションを順に表示する", async () => {
     useSuccessHandlers();
 
     renderWithQuery(<AnalyticsPanel />);
 
-    expect(screen.getByText("会話量")).toBeInTheDocument();
-    expect(screen.getByText("トークン消費・コスト")).toBeInTheDocument();
-    expect(screen.getByText("ペルソナ分析")).toBeInTheDocument();
+    expect(screen.getByText("今週のできごと")).toBeInTheDocument();
+    expect(screen.getByText("最近の動き")).toBeInTheDocument();
+    expect(screen.getByText("村の全体像")).toBeInTheDocument();
     expect(screen.getByText("週次レポート")).toBeInTheDocument();
+    expect(screen.getByText("会話量")).toBeInTheDocument();
+    expect(screen.getByText("全体分析")).toBeInTheDocument();
+    expect(screen.queryByText("トークン消費・コスト")).toBeNull();
+  });
+
+  it("閉庁時間の文脈文を表示する", async () => {
+    useSuccessHandlers();
+
+    renderWithQuery(<AnalyticsPanel />);
+
+    await waitFor(() => {
+      // 開庁 1 / 閉庁 1 → 2件に1件（全体の50%）
+      expect(
+        screen.getByText(/2件に1件はねっぷちゃんが応対しています/),
+      ).toBeInTheDocument();
+    });
   });
 
   it("取得したサマリー数値を表示する", async () => {
@@ -178,21 +194,6 @@ describe("AnalyticsPanel", () => {
     });
     // 会話数 4（会話量セクションのサマリーカード）
     expect(screen.getByText("4")).toBeInTheDocument();
-  });
-
-  it("usage データが空のときは案内文を表示する", async () => {
-    useSuccessHandlers();
-    server.use(
-      http.get(`${API}/admin/analytics/usage`, () =>
-        HttpResponse.json({ weekly: [] }),
-      ),
-    );
-
-    renderWithQuery(<AnalyticsPanel />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/まだ記録がありません/)).toBeInTheDocument();
-    });
   });
 
   it("API エラー時はセクション内にエラーを表示する", async () => {
@@ -211,6 +212,46 @@ describe("AnalyticsPanel", () => {
     await waitFor(() => {
       expect(screen.getByText(/エラー:/)).toBeInTheDocument();
     });
+  });
+
+  it("initialSection 指定で該当セクションへスクロールする", async () => {
+    useSuccessHandlers();
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+
+    renderWithQuery(<AnalyticsPanel initialSection="conversation" />);
+
+    await waitFor(() => {
+      expect(scrollIntoView).toHaveBeenCalled();
+    });
+  });
+
+  it("initialSection なしではスクロールしない", async () => {
+    useSuccessHandlers();
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+
+    renderWithQuery(<AnalyticsPanel />);
+
+    expect(screen.getByText("最近の動き")).toBeInTheDocument();
+    expect(scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it("💬 聞くで各時間軸の文脈つきに onAskMayor が呼ばれる", async () => {
+    useSuccessHandlers();
+    const onAskMayor = vi.fn();
+    const user = userEvent.setup();
+
+    renderWithQuery(<AnalyticsPanel onAskMayor={onAskMayor} />);
+
+    const askButtons = screen.getAllByRole("button", { name: "💬 聞く" });
+    expect(askButtons).toHaveLength(3);
+
+    await user.click(askButtons[0]);
+    expect(onAskMayor).toHaveBeenCalledWith("今週の週次レポート");
+
+    await user.click(askButtons[2]);
+    expect(onAskMayor).toHaveBeenCalledWith("全期間の全体分析");
   });
 
   it("週次レポートを選択すると詳細（ハイライト全文）を表示する", async () => {

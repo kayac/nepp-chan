@@ -36,7 +36,7 @@ export const analyticsAdminRoutes = new OpenAPIHono<{
   Variables: Partial<PrincipalVariables>;
 }>();
 
-analyticsAdminRoutes.use("*", requireRole("super_admin"));
+analyticsAdminRoutes.use("*", requireRole("staff"));
 
 const personaRoute = createRoute({
   method: "get",
@@ -134,6 +134,7 @@ const usageRoute = createRoute({
   path: "/usage",
   tags: ["Admin - Analytics"],
   summary: "週×モデル別のトークン使用量とコスト",
+  middleware: [requireRole("super_admin")] as const,
   request: { query: usageAnalyticsQuerySchema },
   responses: {
     200: {
@@ -225,6 +226,11 @@ analyticsAdminRoutes.openapi(reportDetailRoute, async (c) => {
     throw new HTTPException(404, { message: "レポートが見つかりません" });
   }
 
+  const stats = weeklyStatsSchema.parse(JSON.parse(report.stats));
+  const principal = c.get("principal");
+  const canViewCost =
+    principal?.type === "admin" && principal.user.role === "super_admin";
+
   return c.json(
     {
       report: {
@@ -233,7 +239,7 @@ analyticsAdminRoutes.openapi(reportDetailRoute, async (c) => {
         periodEnd: report.periodEnd,
         summary: report.summary,
         createdAt: report.createdAt,
-        stats: weeklyStatsSchema.parse(JSON.parse(report.stats)),
+        stats: canViewCost ? stats : { ...stats, usageByModel: [] },
       },
     },
     200,

@@ -1,6 +1,69 @@
-import { and, count, desc, eq, like, or, type SQL, sql } from "drizzle-orm";
+import { TOPICS } from "@nepp-chan/shared/lib/persona-attributes";
+import {
+  and,
+  count,
+  desc,
+  eq,
+  inArray,
+  like,
+  or,
+  type SQL,
+  sql,
+} from "drizzle-orm";
 
 import { createDb, type NewPersona, type Persona, persona } from "~/db";
+
+const OTHER_TOPIC = "その他";
+const NAMED_TOPICS = TOPICS.filter((t) => t !== OTHER_TOPIC);
+
+// 期間・並びは会話終了時刻基準（createdAt は抽出バッチの実行時刻のため）。
+// 生成列を参照するのは式のままだと idx_persona_sort_date が使えないため
+const sortDate = sql`sort_date`;
+
+type PersonaFilter = {
+  from?: string;
+  to?: string;
+  sentiments?: string[];
+  topic?: string;
+};
+
+const personaFilters = (options: PersonaFilter): SQL[] => {
+  const conditions: SQL[] = [];
+  if (options.from) {
+    conditions.push(sql`${sortDate} >= ${options.from}`);
+  }
+  if (options.to) {
+    conditions.push(sql`${sortDate} < ${options.to}`);
+  }
+  if (options.sentiments && options.sentiments.length > 0) {
+    conditions.push(inArray(persona.sentiment, options.sentiments));
+  }
+  if (options.topic === OTHER_TOPIC) {
+    // その他 = 既知の話題に当てはまらないもの（NULL と未知の値を含む）
+    conditions.push(sql`COALESCE(${persona.topic}, '') NOT IN ${NAMED_TOPICS}`);
+  } else if (options.topic) {
+    conditions.push(eq(persona.topic, options.topic));
+  }
+  return conditions;
+};
+
+// 集計は正規化後の話題で行う（NULL と未知の値は その他 に寄せる）
+const normalizedTopic = sql`CASE WHEN ${inArray(persona.topic, NAMED_TOPICS)} THEN ${persona.topic} ELSE ${OTHER_TOPIC} END`;
+
+const TOP_TAGS_LIMIT = 3;
+
+const countTopTags = (concatenated: string | null) => {
+  const counts = new Map<string, number>();
+  for (const raw of concatenated?.split(",") ?? []) {
+    const tag = raw.trim();
+    if (tag.length === 0) continue;
+    counts.set(tag, (counts.get(tag) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ja"))
+    .slice(0, TOP_TAGS_LIMIT)
+    .map(([tag, count]) => ({ tag, count }));
+};
 
 type CreateInput = Omit<NewPersona, "id" | "updatedAt"> & { id: string };
 
@@ -209,7 +272,14 @@ export const personaRepository = {
 
   async listForAdmin(
     d1: D1Database,
-    options: { limit?: number; cursor?: string } = {},
+    options: {
+      limit?: number;
+      cursor?: string;
+      from?: string;
+      to?: string;
+      sentiments?: string[];
+      topic?: string;
+    } = {},
   ): Promise<{
     personas: Persona[];
     total: number;
@@ -219,18 +289,19 @@ export const personaRepository = {
     const db = createDb(d1);
     const limit = options.limit ?? 30;
 
-    const sortDate = sql`COALESCE(${persona.conversationEndedAt}, ${persona.createdAt})`;
-
-    let cursorCondition: SQL | undefined;
+    const filterConditions = personaFilters(options);
+    const conditions = [...filterConditions];
     if (options.cursor) {
       const [cursorDate, cursorId] = options.cursor.split("_");
-      cursorCondition = sql`(${sortDate} < ${cursorDate} OR (${sortDate} = ${cursorDate} AND ${persona.id} < ${cursorId}))`;
+      conditions.push(
+        sql`(${sortDate} < ${cursorDate} OR (${sortDate} = ${cursorDate} AND ${persona.id} < ${cursorId}))`,
+      );
     }
 
     const results = await db
       .select()
       .from(persona)
-      .where(cursorCondition)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(sql`${sortDate} DESC`, desc(persona.id))
       .limit(limit + 1)
       .all();
@@ -244,7 +315,11 @@ export const personaRepository = {
         ? `${lastPersona.conversationEndedAt ?? lastPersona.createdAt}_${lastPersona.id}`
         : null;
 
-    const countResult = await db.select({ count: count() }).from(persona).get();
+    const countResult = await db
+      .select({ count: count() })
+      .from(persona)
+      .where(filterConditions.length > 0 ? and(...filterConditions) : undefined)
+      .get();
 
     return {
       personas,
@@ -252,6 +327,81 @@ export const personaRepository = {
       nextCursor,
       hasMore,
     };
+  },
+
+  // 話題ごとの件数・感情内訳・代表的な声を SQL で集計する（件数に依存しないコストにするため）
+  async topicBreakdown(d1: D1Database, options: PersonaFilter = {}) {
+    const db = createDb(d1);
+    const conditions = personaFilters(options);
+    const where =
+      conditions.length > 0 ? sql`WHERE ${and(...conditions)}` : sql``;
+
+    const sentimentCount = (value: string) =>
+      sql`SUM(CASE WHEN ${persona.sentiment} = ${value} THEN 1 ELSE 0 END)`;
+
+    const [counts, samples, tagRows] = await Promise.all([
+      db.all<{
+        topic: string;
+        total: number;
+        positive: number;
+        negative: number;
+        request: number;
+        neutral: number;
+      }>(sql`
+        SELECT
+          ${normalizedTopic} AS topic,
+          COUNT(*) AS total,
+          ${sentimentCount("positive")} AS positive,
+          ${sentimentCount("negative")} AS negative,
+          ${sentimentCount("request")} AS request,
+          SUM(CASE WHEN COALESCE(${persona.sentiment}, '') NOT IN ('positive', 'negative', 'request') THEN 1 ELSE 0 END) AS neutral
+        FROM ${persona}
+        ${where}
+        GROUP BY 1
+      `),
+      db.all<{ topic: string; content: string }>(sql`
+        SELECT topic, content FROM (
+          SELECT
+            ${normalizedTopic} AS topic,
+            ${persona.content} AS content,
+            ROW_NUMBER() OVER (
+              PARTITION BY ${normalizedTopic}
+              ORDER BY ${sortDate} DESC, ${persona.id} DESC
+            ) AS rn
+          FROM ${persona}
+          ${where}
+        )
+        WHERE rn = 1
+      `),
+      db.all<{ topic: string; tags: string | null }>(sql`
+        SELECT
+          ${normalizedTopic} AS topic,
+          GROUP_CONCAT(${persona.tags}, ',') AS tags
+        FROM ${persona}
+        ${where}
+        GROUP BY 1
+      `),
+    ]);
+
+    const sampleByTopic = new Map(samples.map((s) => [s.topic, s.content]));
+    const topTagsByTopic = new Map(
+      tagRows.map((row) => [row.topic, countTopTags(row.tags)]),
+    );
+
+    return counts
+      .map((row) => ({
+        topic: row.topic,
+        total: Number(row.total),
+        sentiments: {
+          positive: Number(row.positive),
+          negative: Number(row.negative),
+          request: Number(row.request),
+          neutral: Number(row.neutral),
+        },
+        sample: sampleByTopic.get(row.topic) ?? null,
+        topTags: topTagsByTopic.get(row.topic) ?? [],
+      }))
+      .sort((a, b) => b.total - a.total);
   },
 
   async getStats(d1: D1Database) {

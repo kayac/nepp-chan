@@ -1,10 +1,10 @@
 import {
-  SENTIMENT_SERIES,
   type SentimentCounts,
   sentimentTotal,
   sumSentiments,
   topEntries,
-} from "./helpers";
+} from "~/lib/analytics-summary";
+import { SENTIMENT_SERIES } from "~/lib/chart-helpers";
 
 interface Props {
   data: {
@@ -96,10 +96,6 @@ export const PersonaPeriodSummary = ({ data }: Props) => {
         <TopList title="年代（上位）" entries={ages} />
         <TopList title="トピック（上位）" entries={topics} />
       </div>
-      <p className="text-xs text-stone-500">
-        ※同期間の会話に由来するペルソナ {data.totalCount}
-        件の集計。抽出は毎日深夜実行のため当日分は未反映。雑談などペルソナ化されない会話は含まれません。
-      </p>
     </div>
   );
 };

@@ -1,92 +1,125 @@
 import {
   ArrowLeftEndOnRectangleIcon,
+  BanknotesIcon,
   Bars3Icon,
   BookOpenIcon,
   ChartBarIcon,
   ChatBubbleLeftIcon,
+  ChatBubbleLeftRightIcon,
   EnvelopeIcon,
-  ExclamationTriangleIcon,
   HandThumbUpIcon,
+  HomeIcon,
   MegaphoneIcon,
-  UserGroupIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { useMemo, useState } from "react";
-import { AnalyticsPanel } from "~/app/dashboard/components/AnalyticsPanel";
+import {
+  AnalyticsPanel,
+  type AnalyticsSection,
+} from "~/app/dashboard/components/AnalyticsPanel";
 import { BroadcastPanel } from "~/app/dashboard/components/BroadcastPanel";
-import { EmergencyPanel } from "~/app/dashboard/components/EmergencyPanel";
 import { FeedbackPanel } from "~/app/dashboard/components/FeedbackPanel";
+import { HomePanel } from "~/app/dashboard/components/HomePanel";
 import { InvitationsPanel } from "~/app/dashboard/components/InvitationsPanel";
 import { KnowledgePanel } from "~/app/dashboard/components/KnowledgePanel";
-import { PersonaPanel } from "~/app/dashboard/components/PersonaPanel";
+import {
+  MayorChatPanel,
+  type MayorRequest,
+} from "~/app/dashboard/components/mayor/MayorChatPanel";
 import { PollPanel } from "~/app/dashboard/components/PollPanel";
+import { UsagePanel } from "~/app/dashboard/components/UsagePanel";
+import { VoicesPanel } from "~/app/dashboard/components/VoicesPanel";
+import type { VoiceFilter } from "~/app/dashboard/components/voices/helpers";
 import { useAuth } from "~/app/dashboard/contexts/AuthContext";
 import { useRole } from "~/app/dashboard/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
 
-type Tab =
+export type Tab =
+  | "home"
   | "analytics"
-  | "knowledge"
-  | "persona"
-  | "feedback"
-  | "emergency"
+  | "voices"
   | "broadcast"
   | "poll"
-  | "invitations";
+  | "knowledge"
+  | "feedback"
+  | "invitations"
+  | "usage";
 
 type AdminRole = AdminUser["role"];
+
+type TabGroup = "watch" | "send" | "system";
+
+const tabGroups: { id: TabGroup; label: string }[] = [
+  { id: "watch", label: "見る" },
+  { id: "send", label: "送る" },
+  { id: "system", label: "システム" },
+];
 
 const tabs: {
   id: Tab;
   label: string;
   icon: React.ReactNode;
+  group: TabGroup;
   minRole?: AdminRole;
 }[] = [
   {
+    id: "home",
+    label: "ホーム",
+    icon: <HomeIcon className="w-5 h-5" aria-hidden="true" />,
+    group: "watch",
+  },
+  {
     id: "analytics",
-    label: "分析",
+    label: "村の分析",
     icon: <ChartBarIcon className="w-5 h-5" aria-hidden="true" />,
-    minRole: "super_admin",
+    group: "watch",
   },
   {
-    id: "knowledge",
-    label: "ナレッジ",
-    icon: <BookOpenIcon className="w-5 h-5" aria-hidden="true" />,
-    minRole: "super_admin",
-  },
-  {
-    id: "persona",
-    label: "ペルソナ",
-    icon: <UserGroupIcon className="w-5 h-5" aria-hidden="true" />,
-    minRole: "admin",
-  },
-  {
-    id: "feedback",
-    label: "フィードバック",
-    icon: <ChatBubbleLeftIcon className="w-5 h-5" aria-hidden="true" />,
-    minRole: "admin",
-  },
-  {
-    id: "emergency",
-    label: "緊急情報",
-    icon: <ExclamationTriangleIcon className="w-5 h-5" aria-hidden="true" />,
+    id: "voices",
+    label: "みんなの声",
+    icon: <ChatBubbleLeftRightIcon className="w-5 h-5" aria-hidden="true" />,
+    group: "watch",
   },
   {
     id: "broadcast",
     label: "LINE配信",
     icon: <MegaphoneIcon className="w-5 h-5" aria-hidden="true" />,
+    group: "send",
   },
   {
     id: "poll",
     label: "投票",
     icon: <HandThumbUpIcon className="w-5 h-5" aria-hidden="true" />,
+    group: "send",
+  },
+  {
+    id: "knowledge",
+    label: "ナレッジ",
+    icon: <BookOpenIcon className="w-5 h-5" aria-hidden="true" />,
+    group: "system",
+    minRole: "super_admin",
+  },
+  {
+    id: "feedback",
+    label: "フィードバック",
+    icon: <ChatBubbleLeftIcon className="w-5 h-5" aria-hidden="true" />,
+    group: "system",
+    minRole: "super_admin",
   },
   {
     id: "invitations",
     label: "招待管理",
     icon: <EnvelopeIcon className="w-5 h-5" aria-hidden="true" />,
-    minRole: "admin",
+    group: "system",
+    minRole: "super_admin",
+  },
+  {
+    id: "usage",
+    label: "利用コスト",
+    icon: <BanknotesIcon className="w-5 h-5" aria-hidden="true" />,
+    group: "system",
+    minRole: "super_admin",
   },
 ];
 
@@ -99,17 +132,38 @@ export const App = () => {
     return tabs.filter((t) => !t.minRole || hasRole(t.minRole));
   }, [hasRole]);
 
-  const [activeTab, setActiveTab] = useState<Tab>(
-    visibleTabs[0]?.id ?? "emergency",
-  );
+  const [activeTab, setActiveTab] = useState<Tab>("home");
+  const [voicesFilter, setVoicesFilter] = useState<Partial<VoiceFilter>>();
+  const [analyticsSection, setAnalyticsSection] = useState<AnalyticsSection>();
+  const [isMayorOpen, setIsMayorOpen] = useState(false);
+  const [mayorRequest, setMayorRequest] = useState<MayorRequest | null>(null);
+
+  const openMayorChat = (context?: string) => {
+    setIsMayorOpen(true);
+    if (context) {
+      setMayorRequest({ context });
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
     window.location.href = "/login";
   };
 
-  const handleTabChange = (tabId: Tab) => {
+  const handleTabChange = (tabId: Tab, filter?: Partial<VoiceFilter>) => {
+    if (tabId === "voices") {
+      setVoicesFilter(filter);
+    }
+    if (tabId === "analytics") {
+      setAnalyticsSection(undefined);
+    }
     setActiveTab(tabId);
+    setIsSidebarOpen(false);
+  };
+
+  const handleShowAnalytics = (section?: AnalyticsSection) => {
+    setAnalyticsSection(section);
+    setActiveTab("analytics");
     setIsSidebarOpen(false);
   };
 
@@ -172,23 +226,36 @@ export const App = () => {
         </div>
 
         <nav className="flex-1 overflow-y-auto py-2">
-          {visibleTabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => handleTabChange(tab.id)}
-              className={cn(
-                "w-full px-4 py-3 text-left transition-colors flex items-center gap-3",
-                "hover:bg-stone-50",
-                activeTab === tab.id &&
-                  "bg-teal-50 border-l-2 border-teal-600 text-teal-700",
-                activeTab !== tab.id && "text-stone-600",
-              )}
-            >
-              {tab.icon}
-              <span className="text-sm font-medium">{tab.label}</span>
-            </button>
-          ))}
+          {tabGroups.map((group) => {
+            const groupTabs = visibleTabs.filter((t) => t.group === group.id);
+            if (groupTabs.length === 0) {
+              return null;
+            }
+            return (
+              <div key={group.id} className="mb-2">
+                <div className="px-4 pt-3 pb-1 text-[11px] font-bold text-stone-400 tracking-wider">
+                  {group.label}
+                </div>
+                {groupTabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => handleTabChange(tab.id)}
+                    className={cn(
+                      "w-full px-4 py-3 text-left transition-colors flex items-center gap-3",
+                      "hover:bg-stone-50",
+                      activeTab === tab.id &&
+                        "bg-teal-50 border-l-2 border-teal-600 text-teal-700",
+                      activeTab !== tab.id && "text-stone-600",
+                    )}
+                  >
+                    {tab.icon}
+                    <span className="text-sm font-medium">{tab.label}</span>
+                  </button>
+                ))}
+              </div>
+            );
+          })}
         </nav>
 
         <div className="p-4 border-t border-stone-200 space-y-3">
@@ -235,17 +302,40 @@ export const App = () => {
 
         <div className="flex-1 overflow-auto p-4 sm:p-6">
           <div key={activeTab} className="animate-fade-in max-w-5xl">
-            {activeTab === "analytics" && <AnalyticsPanel />}
-            {activeTab === "knowledge" && <KnowledgePanel />}
-            {activeTab === "persona" && <PersonaPanel />}
-            {activeTab === "feedback" && <FeedbackPanel />}
-            {activeTab === "emergency" && <EmergencyPanel />}
+            {activeTab === "home" && (
+              <HomePanel
+                onNavigate={handleTabChange}
+                onShowAnalytics={handleShowAnalytics}
+              />
+            )}
+            {activeTab === "analytics" && (
+              <AnalyticsPanel
+                onAskMayor={openMayorChat}
+                initialSection={analyticsSection}
+              />
+            )}
+            {activeTab === "voices" && (
+              <VoicesPanel
+                key={JSON.stringify(voicesFilter ?? {})}
+                initialFilter={voicesFilter}
+                onAskMayor={openMayorChat}
+              />
+            )}
             {activeTab === "broadcast" && <BroadcastPanel />}
             {activeTab === "poll" && <PollPanel />}
+            {activeTab === "knowledge" && <KnowledgePanel />}
+            {activeTab === "feedback" && <FeedbackPanel />}
             {activeTab === "invitations" && <InvitationsPanel />}
+            {activeTab === "usage" && <UsagePanel />}
           </div>
         </div>
       </main>
+
+      <MayorChatPanel
+        isOpen={isMayorOpen}
+        request={mayorRequest}
+        onClose={() => setIsMayorOpen(false)}
+      />
     </div>
   );
 };

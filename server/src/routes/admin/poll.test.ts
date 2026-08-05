@@ -9,12 +9,15 @@ vi.mock("~/repository/poll-repository", () => ({
   },
 }));
 
-vi.mock("~/services/poll", () => ({
-  createPoll: vi.fn(),
-  formatPollResponse: vi.fn((p: unknown) => p),
-  getPoll: vi.fn(),
-  updatePoll: vi.fn(),
-}));
+vi.mock("~/services/poll", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("~/services/poll")>();
+  return {
+    createPoll: vi.fn(),
+    formatPollResponse: actual.formatPollResponse,
+    getPoll: vi.fn(),
+    updatePoll: vi.fn(),
+  };
+});
 
 vi.mock("~/services/poll-delivery", () => ({
   sendPoll: vi.fn(),
@@ -131,7 +134,7 @@ describe("pollAdminRoutes", () => {
     it("正常系: polls / nextCursor / hasMore を返す", async () => {
       useAuth();
       vi.mocked(pollRepository.findAll).mockResolvedValue({
-        polls: [samplePollDb],
+        polls: [{ ...samplePollDb, answerCount: 0 }],
         nextCursor: null,
         hasMore: false,
       });
@@ -143,6 +146,26 @@ describe("pollAdminRoutes", () => {
       );
 
       expect(res.status).toBe(200);
+    });
+
+    it("answerCount を各 poll に含める", async () => {
+      useAuth();
+      vi.mocked(pollRepository.findAll).mockResolvedValue({
+        polls: [{ ...samplePollDb, answerCount: 3 }],
+        nextCursor: null,
+        hasMore: false,
+      });
+
+      const res = await routes.request(
+        authedJson("GET", "/"),
+        undefined,
+        mockEnv,
+      );
+
+      const body = (await res.json()) as {
+        polls: { answerCount: number }[];
+      };
+      expect(body.polls[0]?.answerCount).toBe(3);
     });
   });
 

@@ -2,52 +2,38 @@ import { HTTPException } from "hono/http-exception";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // vi.hoisted で vi.mock 内から参照できる変数を定義
-const {
-  mockGet,
-  mockAll,
-  mockSelect,
-  mockDelete,
-  mockDeleteFrom,
-  mockMemoryRecall,
-  mockGenerate,
-} = vi.hoisted(() => {
-  const mockGet = vi.fn();
-  const mockAll = vi.fn();
-  const mockOrderBy = vi.fn().mockReturnValue({ all: mockAll });
-  const mockGroupBy = vi.fn().mockReturnValue({ all: mockAll });
-  const mockWhere = vi.fn().mockReturnValue({ get: mockGet, all: mockAll });
-  const mockFrom = vi.fn().mockReturnValue({
-    where: mockWhere,
-    get: mockGet,
-    orderBy: mockOrderBy,
-    groupBy: mockGroupBy,
+const { mockGet, mockAll, mockSelect, mockMemoryRecall, mockGenerate } =
+  vi.hoisted(() => {
+    const mockGet = vi.fn();
+    const mockAll = vi.fn();
+    const mockOrderBy = vi.fn().mockReturnValue({ all: mockAll });
+    const mockGroupBy = vi.fn().mockReturnValue({ all: mockAll });
+    const mockWhere = vi.fn().mockReturnValue({ get: mockGet, all: mockAll });
+    const mockFrom = vi.fn().mockReturnValue({
+      where: mockWhere,
+      get: mockGet,
+      orderBy: mockOrderBy,
+      groupBy: mockGroupBy,
+    });
+    const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
+    const mockMemoryRecall = vi.fn();
+    const mockGenerate = vi.fn().mockResolvedValue({});
+    return {
+      mockGet,
+      mockAll,
+      mockWhere,
+      mockFrom,
+      mockSelect,
+      mockMemoryRecall,
+      mockGenerate,
+    };
   });
-  const mockDeleteFrom = vi.fn().mockResolvedValue(undefined);
-  const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
-  const mockDelete = vi.fn().mockReturnValue(mockDeleteFrom);
-  const mockMemoryRecall = vi.fn();
-  const mockGenerate = vi.fn().mockResolvedValue({});
-  return {
-    mockGet,
-    mockAll,
-    mockWhere,
-    mockFrom,
-    mockSelect,
-    mockDelete,
-    mockDeleteFrom,
-    mockMemoryRecall,
-    mockGenerate,
-  };
-});
 
 vi.mock("~/db", async (importOriginal) => {
   const actual = await importOriginal<typeof import("~/db")>();
   return {
     ...actual,
-    createDb: vi.fn().mockReturnValue({
-      select: mockSelect,
-      delete: mockDelete,
-    }),
+    createDb: vi.fn().mockReturnValue({ select: mockSelect }),
   };
 });
 
@@ -95,7 +81,6 @@ vi.mock("~/repository/thread-persona-status-repository", () => ({
 
 import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
 import {
-  deleteAllPersonas,
   extractAllPendingThreads,
   extractPersonaFromThreadById,
 } from "./persona-extractor";
@@ -196,39 +181,6 @@ describe("extractPersonaFromThreadById", () => {
 
     expect(result.message).toContain("スキップされました");
     expect(result.message).toContain("no_new_messages");
-  });
-});
-
-describe("deleteAllPersonas", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("persona と threadPersonaStatus の両テーブルを削除する", async () => {
-    mockGet.mockResolvedValue({ count: 5 });
-    mockDeleteFrom.mockResolvedValue(undefined);
-
-    await deleteAllPersonas({} as D1Database);
-
-    expect(mockDelete).toHaveBeenCalledTimes(2);
-  });
-
-  it("削除前の件数を返す", async () => {
-    mockGet.mockResolvedValue({ count: 5 });
-    mockDeleteFrom.mockResolvedValue(undefined);
-
-    const result = await deleteAllPersonas({} as D1Database);
-
-    expect(result.count).toBe(5);
-  });
-
-  it("0件の場合も正常に動作する", async () => {
-    mockGet.mockResolvedValue({ count: 0 });
-    mockDeleteFrom.mockResolvedValue(undefined);
-
-    const result = await deleteAllPersonas({} as D1Database);
-
-    expect(result.count).toBe(0);
   });
 });
 

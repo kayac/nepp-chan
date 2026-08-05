@@ -101,6 +101,29 @@ describe("pollRepository", () => {
       expect(result.hasMore).toBe(true);
     });
 
+    it("各 poll の answerCount に回答数を含む", async () => {
+      await seed(2);
+      await pollRepository.createSubmission(fakeD1, {
+        id: "sub-1",
+        pollId: "p-00",
+        userId: "u-1",
+        selectedChoice: "春",
+        createdAt: "2025-01-02T00:00:00Z",
+      });
+      await pollRepository.createSubmission(fakeD1, {
+        id: "sub-2",
+        pollId: "p-00",
+        userId: "u-2",
+        selectedChoice: "夏",
+        createdAt: "2025-01-02T00:00:01Z",
+      });
+
+      const result = await pollRepository.findAll(fakeD1);
+
+      expect(result.polls.find((p) => p.id === "p-00")?.answerCount).toBe(2);
+      expect(result.polls.find((p) => p.id === "p-01")?.answerCount).toBe(0);
+    });
+
     it("status の配列で複数 status 絞り込み", async () => {
       await pollRepository.create(fakeD1, { ...baseInput, id: "draft-1" });
       await pollRepository.create(fakeD1, {

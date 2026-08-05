@@ -34,6 +34,13 @@ describe("createNeppChanAgent", () => {
       expect(ins).toContain("管理者機能");
     });
 
+    it("isAdmin=true で文脈付き分析依頼の返答型を含む", async () => {
+      const ins = await instructionsOf(build({ isAdmin: true }));
+      expect(ins).toContain("文脈付きの分析依頼");
+      const nonAdmin = await instructionsOf(build());
+      expect(nonAdmin).not.toContain("文脈付きの分析依頼");
+    });
+
     it("platform=line で LINE 制約の指示を追加する", async () => {
       const ins = await instructionsOf(build({ platform: "line" }));
       expect(ins).toContain("LINE チャットの制約");

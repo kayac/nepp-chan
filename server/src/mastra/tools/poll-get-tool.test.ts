@@ -86,7 +86,7 @@ describe("pollGetTool.execute", () => {
 
   it("引数なし: sent / closed の最新リストを返す", async () => {
     vi.mocked(pollRepository.findAll).mockResolvedValue({
-      polls: [dbRow],
+      polls: [{ ...dbRow, answerCount: 0 }],
       nextCursor: null,
       hasMore: false,
     });

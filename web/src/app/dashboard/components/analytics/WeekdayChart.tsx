@@ -7,14 +7,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { DOW_LABELS } from "~/lib/analytics-summary";
 import {
   AXIS_STYLE,
   CLOSED_COLOR,
   OPEN_COLOR,
   TOOLTIP_STYLE,
 } from "~/lib/chart-helpers";
-
-const DOW_LABELS = ["日", "月", "火", "水", "木", "金", "土"];
 
 const isClosedDay = (dow: number) => dow === 0 || dow === 6;
 

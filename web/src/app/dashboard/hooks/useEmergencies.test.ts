@@ -41,10 +41,24 @@ describe("useEmergencies", () => {
       }),
     );
 
-    const { result } = renderHookWithQuery(() => useEmergencies(50));
+    const { result } = renderHookWithQuery(() => useEmergencies());
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(received).toBe("50");
+    expect(received).toBe("100");
+  });
+
+  it("enabled: false なら取得しない", async () => {
+    let calls = 0;
+    server.use(
+      http.get(`${API}/admin/emergency`, () => {
+        calls += 1;
+        return HttpResponse.json({ emergencies: [] });
+      }),
+    );
+
+    renderHookWithQuery(() => useEmergencies({ enabled: false }));
+
+    await waitFor(() => expect(calls).toBe(0));
   });
 
   it("5xx エラー時に isError=true", async () => {

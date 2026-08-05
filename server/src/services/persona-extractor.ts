@@ -3,13 +3,7 @@ import { Memory } from "@mastra/memory";
 import { count, desc, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
-import {
-  createDb,
-  mastraMessages,
-  mastraThreads,
-  persona,
-  threadPersonaStatus,
-} from "~/db";
+import { createDb, mastraMessages, mastraThreads } from "~/db";
 import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
 import { personaAgent } from "~/mastra/agents/persona-agent";
@@ -271,18 +265,4 @@ export const extractPersonaFromThreadById = async (
       : `スレッド ${threadId} はスキップされました: ${result.reason}`;
 
   return { result, message };
-};
-
-export const deleteAllPersonas = async (
-  d1: D1Database,
-): Promise<{ count: number }> => {
-  const db = createDb(d1);
-
-  const countResult = await db.select({ count: count() }).from(persona).get();
-  const totalCount = countResult?.count ?? 0;
-
-  await db.delete(persona);
-  await db.delete(threadPersonaStatus);
-
-  return { count: totalCount };
 };
