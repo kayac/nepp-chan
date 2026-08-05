@@ -1,5 +1,48 @@
 # Changelog
 
+## [v1.0.8](https://github.com/kayac/nepp-chan/compare/v1.0.7...v1.0.8) - 2026-08-05
+
+- chore: Claude Code の品質ゲートと rules を整備する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/770
+- fix(server): embedding テキストに strip されたヘッダー情報を復元 by @vesperworks in https://github.com/kayac/nepp-chan/pull/772
+- build(deps): bump @line/bot-sdk from 11.0.1 to 11.0.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/778
+- build(deps): bump @sentry/react from 10.57.0 to 10.59.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/781
+- build(deps): bump ai from 6.0.198 to 6.0.208 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/782
+- build(deps): bump @radix-ui/react-slot from 1.2.5 to 1.3.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/785
+- build(deps): bump @ai-sdk/react from 3.0.200 to 3.0.210 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/789
+- build(deps): bump @ai-sdk/openai from 3.0.71 to 3.0.73 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/792
+- build(deps): bump lucide-react from 1.20.0 to 1.21.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/796
+- build(deps): 残り21依存パッケージを一括更新（Mastra系/AI SDK/ツール類） by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/806
+- fix: GA 計測を本番デプロイのみに限定 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/810
+- 外部サイトに script 1 行で埋め込めるチャットウィジェットを追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/838
+- chore(claude): スキル・hook の棚卸しと修正 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/839
+- widget を LP に統合し、simple-chat から本チャンネルへ移行 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/871
+- build(deps): patch/minor 依存 15 件を一括 bump by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/872
+- feat: デザイン憲法 DESIGN.md と np-design スキルを追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/873
+- build(deps): Mastra 系 10 パッケージを一括 bump by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/874
+- build(deps): astro 7 / vite 8 系 4 パッケージを一括 bump by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/875
+- fix(server): Mastra 未登録 Agent の generate が workerd でクラッシュする問題を回避 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/903
+- feat: 通話機能 Phase 0 — 音声ブレイン + ブラウザ softphone 検証 (#773) by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/809
+- fix(web): softphoneの発信音とwelcomeGreetingの重なりを解消 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/906
+- fix(server): 検索前の待機案内を最後まで再生する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/907
+- デザインシステム・コンポーネント共通化ブラッシュアップ by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/935
+- perf(server): 音声会話のD1依存を応答経路から外す by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/908
+- build(deps): patch/minor の依存26件を一括更新 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/936
+- build(deps): bump @mastra/core from 1.49.0 to 1.52.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/909
+- build(deps): mastra 系更新と unref ワークアラウンド削除 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/938
+- build(deps): bump the react group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/939
+- build(deps): bump hono from 4.12.31 to 4.12.32 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/954
+- build(deps-dev): bump postcss from 8.5.22 to 8.5.23 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/946
+- build(deps-dev): bump @vitejs/plugin-react from 6.0.3 to 6.0.4 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/944
+- build(deps): bump @sentry/react from 10.67.0 to 10.68.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/945
+- build(deps): bump @radix-ui/react-slot from 1.3.0 to 1.3.3 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/959
+- build(deps): bump @sentry/cloudflare from 10.67.0 to 10.68.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/942
+- build(deps): bump @tanstack/react-query from 5.101.2 to 5.101.4 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/960
+- build(deps-dev): bump @testing-library/jest-dom from 6.9.1 to 7.0.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/948
+- build(deps): bump recharts from 3.9.2 to 3.10.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/949
+- build(deps-dev): bump @biomejs/biome from 2.5.2 to 2.5.5 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/940
+- feat(knowledge): 広報おといねっぷ 2026年4〜7月号 + 納涼まつり2026を追加 by @vesperworks in https://github.com/kayac/nepp-chan/pull/985
+- 管理画面のホームを今週のサマリー中心に再構成 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/986
+
 ## [v1.0.7](https://github.com/kayac/nepp-chan/compare/v1.0.6...v1.0.7) - 2026-06-17
 
 - security: @mastra/deployer マルウェア依存を除去 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/768
