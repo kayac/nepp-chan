@@ -1,20 +1,28 @@
 import type { ApiClient } from "../create-client";
 
 export type PersonaSentiment = "positive" | "negative" | "request" | "neutral";
-export type PersonaRelationship = "村人" | "観光客" | "移住検討者" | "帰省者";
 
-export type FetchPersonasParams = {
-  limit?: number;
-  cursor?: string;
+export type PersonaFilterParams = {
   from?: string;
   to?: string;
   sentiments?: PersonaSentiment[];
-  relationships?: PersonaRelationship[];
   topic?: string;
 };
 
-const joinOrOmit = (values: string[] | undefined) =>
-  values && values.length > 0 ? values.join(",") : undefined;
+export type FetchPersonasParams = PersonaFilterParams & {
+  limit?: number;
+  cursor?: string;
+};
+
+const toQuery = (params: PersonaFilterParams) => ({
+  from: params.from,
+  to: params.to,
+  sentiments:
+    params.sentiments && params.sentiments.length > 0
+      ? params.sentiments.join(",")
+      : undefined,
+  topic: params.topic,
+});
 
 export const createPersonaRepository = (client: ApiClient) => ({
   fetchPersonas: async (params: FetchPersonasParams = {}) => {
@@ -23,11 +31,7 @@ export const createPersonaRepository = (client: ApiClient) => ({
         query: {
           limit: params.limit ?? 30,
           cursor: params.cursor,
-          from: params.from,
-          to: params.to,
-          sentiments: joinOrOmit(params.sentiments),
-          relationships: joinOrOmit(params.relationships),
-          topic: params.topic,
+          ...toQuery(params),
         },
       },
     });
@@ -35,14 +39,10 @@ export const createPersonaRepository = (client: ApiClient) => ({
     return data;
   },
 
-  extractPersonas: async () => {
-    const { data, error } = await client.POST("/admin/persona/extract");
-    if (error) throw error;
-    return data;
-  },
-
-  deleteAllPersonas: async () => {
-    const { data, error } = await client.DELETE("/admin/persona");
+  fetchPersonaTopics: async (params: PersonaFilterParams = {}) => {
+    const { data, error } = await client.GET("/admin/persona/topics", {
+      params: { query: toQuery(params) },
+    });
     if (error) throw error;
     return data;
   },

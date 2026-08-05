@@ -53,7 +53,9 @@ const listRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            polls: z.array(pollResponseSchema),
+            polls: z.array(
+              pollResponseSchema.extend({ answerCount: z.number() }),
+            ),
             nextCursor: z.string().nullable(),
             hasMore: z.boolean(),
           }),
@@ -75,7 +77,10 @@ pollAdminRoutes.openapi(listRoute, async (c) => {
 
   return c.json(
     {
-      polls: result.polls.map(formatPollResponse),
+      polls: result.polls.map((p) => ({
+        ...formatPollResponse(p),
+        answerCount: p.answerCount,
+      })),
       nextCursor: result.nextCursor,
       hasMore: result.hasMore,
     },

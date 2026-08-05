@@ -48,6 +48,7 @@ describe("初期状態", () => {
       scheduledAt: null,
       sentAt: null,
       closedAt: null,
+      answerCount: 0,
     };
     const { result } = renderForm(poll);
     expect(result.current.title).toBe("好きな色は？");
@@ -191,6 +192,7 @@ describe("handleSubmit", () => {
       scheduledAt: null,
       sentAt: null,
       closedAt: null,
+      answerCount: 0,
     };
     let called = false;
     server.use(

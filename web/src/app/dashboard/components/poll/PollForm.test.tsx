@@ -36,6 +36,7 @@ describe("PollForm", () => {
           scheduledAt: null,
           sentAt: null,
           closedAt: null,
+          answerCount: 0,
         }}
         onClose={vi.fn()}
       />,

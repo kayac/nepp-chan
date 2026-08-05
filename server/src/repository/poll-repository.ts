@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, gt, inArray, sql } from "drizzle-orm";
 
 import {
   createDb,
@@ -91,9 +91,14 @@ export const pollRepository = {
     }
 
     const items = await db
-      .select()
+      .select({
+        ...getTableColumns(polls),
+        answerCount: sql`count(${pollSubmissions.id})`.mapWith(Number),
+      })
       .from(polls)
+      .leftJoin(pollSubmissions, eq(pollSubmissions.pollId, polls.id))
       .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .groupBy(polls.id)
       .orderBy(desc(polls.createdAt))
       .limit(limit + 1)
       .all();

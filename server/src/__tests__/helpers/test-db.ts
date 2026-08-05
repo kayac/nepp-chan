@@ -31,7 +31,8 @@ export const createTestDb = async () => {
       entities TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT,
-      conversation_ended_at TEXT
+      conversation_ended_at TEXT,
+      sort_date TEXT GENERATED ALWAYS AS (COALESCE(conversation_ended_at, created_at)) VIRTUAL
     );
 
     -- スレッドペルソナ処理状態テーブル

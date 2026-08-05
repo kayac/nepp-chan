@@ -1,11 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("~/repository/persona-repository", () => ({
-  personaRepository: { listForAdmin: vi.fn() },
+  personaRepository: { listForAdmin: vi.fn(), topicBreakdown: vi.fn() },
 }));
 
 vi.mock("~/services/persona-extractor", () => ({
-  deleteAllPersonas: vi.fn(),
   extractAllPendingThreads: vi.fn(),
   extractPersonaFromThreadById: vi.fn(),
 }));
@@ -102,7 +101,6 @@ describe("personaAdminRoutes", () => {
     it.each([
       ["POST", "/extract"],
       ["POST", "/extract/thread-1"],
-      ["DELETE", "/"],
     ])("staff ロールは %s %s を実行できない（admin 以上要件）", async (method, path) => {
       useAdminAuth({ ...adminUser, role: "staff" as const });
 
@@ -162,7 +160,7 @@ describe("personaAdminRoutes", () => {
       );
     });
 
-    it("フィルター query を repository に引き渡す（from/to は JST 日付 → UTC ISO、to はその日を含む）", async () => {
+    it("期間 query を repository に引き渡す（from/to は JST 日付 → UTC ISO、to はその日を含む）", async () => {
       useAdminAuth();
       vi.mocked(personaRepository.listForAdmin).mockResolvedValue({
         personas: [],
@@ -174,9 +172,6 @@ describe("personaAdminRoutes", () => {
       const query = new URLSearchParams({
         from: "2030-01-01",
         to: "2030-02-01",
-        sentiments: "negative,request",
-        relationships: "観光客,村人",
-        topic: "観光",
       });
       await routes.request(
         authed("GET", `/?${query.toString()}`),
@@ -189,22 +184,7 @@ describe("personaAdminRoutes", () => {
         cursor: undefined,
         from: "2029-12-31T15:00:00.000Z",
         to: "2030-02-01T15:00:00.000Z",
-        sentiments: ["negative", "request"],
-        relationships: ["観光客", "村人"],
-        topic: "観光",
       });
-    });
-
-    it("不正な sentiment 値は 400", async () => {
-      useAdminAuth();
-
-      const res = await routes.request(
-        authed("GET", "/?sentiments=angry"),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(400);
     });
 
     it("日付形式でない from は 400", async () => {
@@ -291,11 +271,8 @@ describe("personaAdminRoutes", () => {
   });
 
   describe("DELETE /", () => {
-    it("正常系: 削除件数を返す", async () => {
+    it("一括削除は提供しない（抽出で復元できないため）", async () => {
       useAdminAuth();
-      vi.mocked(personaExtractor.deleteAllPersonas).mockResolvedValue({
-        count: 7,
-      });
 
       const res = await routes.request(
         authed("DELETE", "/"),
@@ -303,20 +280,84 @@ describe("personaAdminRoutes", () => {
         mockEnv,
       );
 
-      expect(res.status).toBe(200);
-      const body = (await res.json()) as { count: number; message: string };
-      expect(body.count).toBe(7);
-      expect(body.message).toMatch(/7/);
+      expect(res.status).toBe(404);
     });
-
-    it("境界値: 0 件でも 200", async () => {
+  });
+  describe("GET /topics", () => {
+    it("正常系: 集計結果を topics で返す", async () => {
       useAdminAuth();
-      vi.mocked(personaExtractor.deleteAllPersonas).mockResolvedValue({
-        count: 0,
-      });
+      vi.mocked(personaRepository.topicBreakdown).mockResolvedValue([
+        {
+          topic: "生活",
+          total: 4,
+          sentiments: { positive: 0, negative: 3, request: 1, neutral: 0 },
+          sample: "粗大ごみの出し方がわかりにくい",
+          topTags: [{ tag: "粗大ごみ", count: 3 }],
+        },
+      ]);
 
       const res = await routes.request(
-        authed("DELETE", "/"),
+        authed("GET", "/topics"),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as {
+        topics: { topic: string; total: number }[];
+      };
+      expect(body.topics[0]).toMatchObject({
+        topic: "生活",
+        total: 4,
+        topTags: [{ tag: "粗大ごみ", count: 3 }],
+      });
+    });
+
+    it("絞り込み query を repository に引き渡す", async () => {
+      useAdminAuth();
+      vi.mocked(personaRepository.topicBreakdown).mockResolvedValue([]);
+
+      const query = new URLSearchParams({
+        from: "2030-01-01",
+        to: "2030-02-01",
+        sentiments: "negative,request",
+        topic: "生活",
+      });
+      await routes.request(
+        authed("GET", `/topics?${query.toString()}`),
+        undefined,
+        mockEnv,
+      );
+
+      expect(personaRepository.topicBreakdown).toHaveBeenCalledWith(
+        mockEnv.DB,
+        {
+          from: "2029-12-31T15:00:00.000Z",
+          to: "2030-02-01T15:00:00.000Z",
+          sentiments: ["negative", "request"],
+          topic: "生活",
+        },
+      );
+    });
+
+    it("不正な sentiment 値は 400", async () => {
+      useAdminAuth();
+
+      const res = await routes.request(
+        authed("GET", "/topics?sentiments=angry"),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(400);
+    });
+
+    it("staff ロールでも参照できる", async () => {
+      useAdminAuth({ ...adminUser, role: "staff" as const });
+      vi.mocked(personaRepository.topicBreakdown).mockResolvedValue([]);
+
+      const res = await routes.request(
+        authed("GET", "/topics"),
         undefined,
         mockEnv,
       );

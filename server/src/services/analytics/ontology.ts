@@ -1,6 +1,11 @@
+import {
+  normalizeSentiment,
+  normalizeTopic,
+  personaAttributes,
+} from "@nepp-chan/shared/lib/persona-attributes";
 import { createDb, persona } from "~/db";
 import { personaEntitiesSchema } from "~/schemas/persona-entity-schema";
-import { emptySentimentCounts, normalizeSentiment, TOPICS } from "./aggregate";
+import { emptySentimentCounts } from "./aggregate";
 
 const SEGMENTS = [
   "観光客",
@@ -177,14 +182,10 @@ export const getOntology = async (d1: D1Database): Promise<OntologyData> => {
   for (const row of rows) {
     if (row.entities === null) entitiesPending = true;
 
-    const attributes = [row.tags, row.demographicSummary]
-      .filter(Boolean)
-      .join(",");
+    const attributes = personaAttributes(row);
     const segment = extractSegment(attributes);
     const sentiment = normalizeSentiment(row.sentiment);
-    const topic = TOPICS.includes(row.topic as (typeof TOPICS)[number])
-      ? (row.topic as string)
-      : "その他";
+    const topic = normalizeTopic(row.topic);
 
     increment(segmentCounts, segment);
 

@@ -357,72 +357,6 @@ describe("personaRepository", () => {
       );
     };
 
-    it("sentiments は複数指定の OR", async () => {
-      await seedVoices();
-      const result = await personaRepository.listForAdmin(fakeD1, {
-        sentiments: ["negative", "request"],
-      });
-      expect(result.personas.map((p) => p.id).sort()).toEqual(["v-2", "v-3"]);
-    });
-
-    it("topic は単一一致", async () => {
-      await seedVoices();
-      const result = await personaRepository.listForAdmin(fakeD1, {
-        topic: "観光",
-      });
-      expect(result.personas.map((p) => p.id)).toEqual(["v-1"]);
-    });
-
-    it("tags が NULL でも demographicSummary の関係語でヒットする", async () => {
-      await personaRepository.create(
-        fakeD1,
-        baseInput({
-          id: "v-null-tags",
-          tags: null,
-          demographicSummary: "30代,観光客",
-        }),
-      );
-
-      const result = await personaRepository.listForAdmin(fakeD1, {
-        relationships: ["観光客"],
-      });
-      expect(result.personas.map((p) => p.id)).toEqual(["v-null-tags"]);
-    });
-
-    it("複数の関係語を含む声は集計と同じ優先順位で1つの関係性に分類する", async () => {
-      await personaRepository.create(
-        fakeD1,
-        baseInput({
-          id: "v-mix",
-          demographicSummary: "50代,村人",
-          tags: "観光客向けガイド",
-        }),
-      );
-
-      const asVillager = await personaRepository.listForAdmin(fakeD1, {
-        relationships: ["村人"],
-      });
-      expect(asVillager.personas.map((p) => p.id)).toEqual(["v-mix"]);
-
-      const asTourist = await personaRepository.listForAdmin(fakeD1, {
-        relationships: ["観光客"],
-      });
-      expect(asTourist.personas).toEqual([]);
-    });
-
-    it("relationships は tags / demographicSummary いずれかの部分一致・複数は OR", async () => {
-      await seedVoices();
-      const result = await personaRepository.listForAdmin(fakeD1, {
-        relationships: ["観光客", "村人"],
-      });
-      expect(result.personas.map((p) => p.id).sort()).toEqual(["v-1", "v-2"]);
-
-      const single = await personaRepository.listForAdmin(fakeD1, {
-        relationships: ["移住検討者"],
-      });
-      expect(single.personas.map((p) => p.id)).toEqual(["v-3"]);
-    });
-
     it("from/to は conversationEndedAt（null なら createdAt）基準", async () => {
       await seedVoices();
       const result = await personaRepository.listForAdmin(fakeD1, {
@@ -433,18 +367,18 @@ describe("personaRepository", () => {
       expect(result.personas.map((p) => p.id).sort()).toEqual(["v-2", "v-3"]);
     });
 
-    it("total はフィルター適用後の件数", async () => {
+    it("total は期間フィルター適用後の件数", async () => {
       await seedVoices();
       const result = await personaRepository.listForAdmin(fakeD1, {
-        sentiments: ["positive"],
+        from: "2030-01-15T00:00:00Z",
       });
-      expect(result.total).toBe(1);
+      expect(result.total).toBe(2);
     });
 
-    it("フィルターとカーソルの併用", async () => {
+    it("期間フィルターとカーソルの併用", async () => {
       await seedVoices();
       const first = await personaRepository.listForAdmin(fakeD1, {
-        sentiments: ["negative", "request"],
+        from: "2030-01-15T00:00:00Z",
         limit: 1,
       });
       expect(first.personas.map((p) => p.id)).toEqual(["v-3"]);
@@ -452,7 +386,7 @@ describe("personaRepository", () => {
       expect(first.total).toBe(2);
 
       const next = await personaRepository.listForAdmin(fakeD1, {
-        sentiments: ["negative", "request"],
+        from: "2030-01-15T00:00:00Z",
         limit: 1,
         cursor: first.nextCursor!,
       });
@@ -535,6 +469,147 @@ describe("personaRepository", () => {
       expect(stats.total).toBe(3);
       expect(stats.byCategory).toEqual({ preference: 2, interest: 1 });
       expect(stats.bySentiment).toEqual({ positive: 2, negative: 1 });
+    });
+  });
+  describe("topicBreakdown", () => {
+    const voice = (
+      id: string,
+      topic: string | null,
+      sentiment: string | null,
+      endedAt: string,
+    ) =>
+      personaRepository.create(
+        fakeD1,
+        baseInput({
+          id,
+          topic,
+          sentiment,
+          content: `${id} の声`,
+          conversationEndedAt: endedAt,
+          createdAt: endedAt,
+        }),
+      );
+
+    it("話題ごとに件数と感情内訳を返し、件数降順に並べる", async () => {
+      await voice("p-1", "生活", "negative", "2030-01-10T00:00:00Z");
+      await voice("p-2", "生活", "request", "2030-01-11T00:00:00Z");
+      await voice("p-3", "観光", "positive", "2030-01-12T00:00:00Z");
+
+      const result = await personaRepository.topicBreakdown(fakeD1);
+
+      expect(result[0]).toMatchObject({
+        topic: "生活",
+        total: 2,
+        sentiments: { negative: 1, request: 1, positive: 0, neutral: 0 },
+      });
+      expect(result[1]).toMatchObject({ topic: "観光", total: 1 });
+    });
+
+    it("NULL と未知の話題は その他 に寄せる", async () => {
+      await voice("p-null", null, "neutral", "2030-01-10T00:00:00Z");
+      await voice(
+        "p-unknown",
+        "ふるさと納税",
+        "neutral",
+        "2030-01-11T00:00:00Z",
+      );
+
+      const result = await personaRepository.topicBreakdown(fakeD1);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ topic: "その他", total: 2 });
+    });
+
+    it("感情が NULL や未知の値なら neutral に数える", async () => {
+      await voice("p-null", "生活", null, "2030-01-10T00:00:00Z");
+      await voice("p-unknown", "生活", "angry", "2030-01-11T00:00:00Z");
+
+      const result = await personaRepository.topicBreakdown(fakeD1);
+
+      expect(result[0].sentiments.neutral).toBe(2);
+    });
+
+    it("代表的な声は話題ごとの最新1件", async () => {
+      await voice("p-old", "生活", "negative", "2030-01-10T00:00:00Z");
+      await voice("p-new", "生活", "negative", "2030-01-20T00:00:00Z");
+
+      const result = await personaRepository.topicBreakdown(fakeD1);
+
+      expect(result[0].sample).toBe("p-new の声");
+    });
+
+    it("期間で絞り込める", async () => {
+      await voice("p-in", "生活", "negative", "2030-02-01T00:00:00Z");
+      await voice("p-out", "観光", "positive", "2030-01-01T00:00:00Z");
+
+      const result = await personaRepository.topicBreakdown(fakeD1, {
+        from: "2030-01-15T00:00:00Z",
+      });
+
+      expect(result.map((r) => r.topic)).toEqual(["生活"]);
+    });
+
+    it("感情で絞り込める", async () => {
+      await voice("p-neg", "生活", "negative", "2030-01-10T00:00:00Z");
+      await voice("p-pos", "生活", "positive", "2030-01-11T00:00:00Z");
+
+      const result = await personaRepository.topicBreakdown(fakeD1, {
+        sentiments: ["negative"],
+      });
+
+      expect(result[0]).toMatchObject({ topic: "生活", total: 1 });
+    });
+
+    it("その他 で絞ると NULL と未知の話題だけが残る", async () => {
+      await voice("p-null", null, "neutral", "2030-01-10T00:00:00Z");
+      await voice("p-known", "生活", "neutral", "2030-01-11T00:00:00Z");
+
+      const result = await personaRepository.topicBreakdown(fakeD1, {
+        topic: "その他",
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ topic: "その他", total: 1 });
+    });
+
+    it("該当がなければ空配列", async () => {
+      expect(await personaRepository.topicBreakdown(fakeD1)).toEqual([]);
+    });
+
+    it("topTags に話題別の頻出タグを件数降順で上位3件返す", async () => {
+      const tagged = (id: string, tags: string | null) =>
+        personaRepository.create(
+          fakeD1,
+          baseInput({
+            id,
+            topic: "観光",
+            tags,
+            createdAt: "2030-01-10T00:00:00Z",
+          }),
+        );
+      await tagged("p-1", "そば,駅");
+      await tagged("p-2", "そば,天塩川");
+      await tagged("p-3", "そば, 駅 ,クラフト");
+      await tagged("p-4", null);
+
+      const result = await personaRepository.topicBreakdown(fakeD1);
+
+      expect(result[0].topTags).toEqual([
+        { tag: "そば", count: 3 },
+        { tag: "駅", count: 2 },
+        { tag: "クラフト", count: 1 },
+      ]);
+    });
+
+    it("タグを持つ声がない話題の topTags は空配列", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-1", topic: "生活", tags: null }),
+      );
+
+      const result = await personaRepository.topicBreakdown(fakeD1);
+
+      expect(result[0].topTags).toEqual([]);
     });
   });
 });

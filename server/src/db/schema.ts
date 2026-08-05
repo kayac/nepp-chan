@@ -11,6 +11,8 @@ export const emergencyReports = sqliteTable("emergency_reports", {
 });
 
 // ペルソナ（村の集合知）
+// 生成列 sort_date（COALESCE(conversation_ended_at, created_at)）は 0023 で追加。
+// select() でレスポンスに漏らさないためスキーマには載せず、並び替えのみで参照する
 export const persona = sqliteTable("persona", {
   id: text("id").primaryKey(),
   category: text("category").notNull(),

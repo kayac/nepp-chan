@@ -2988,10 +2988,11 @@ export interface paths {
                 query?: {
                     limit?: number;
                     cursor?: string;
+                    /** @description JST の日付（YYYY-MM-DD） */
                     from?: string;
+                    /** @description JST の日付（YYYY-MM-DD、この日を含む） */
                     to?: string;
                     sentiments?: string;
-                    relationships?: string;
                     topic?: string;
                 };
                 header?: never;
@@ -3040,32 +3041,79 @@ export interface paths {
                         };
                     };
                 };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
             };
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/persona/topics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         /**
-         * 全ペルソナを削除
-         * @description 蓄積された全てのペルソナ情報を削除します
+         * 話題ごとの件数・感情内訳・代表的な声
+         * @description 絞り込み条件に該当する声を話題ごとに集計します。件数降順で返します
          */
-        delete: {
+        get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description JST の日付（YYYY-MM-DD） */
+                    from?: string;
+                    /** @description JST の日付（YYYY-MM-DD、この日を含む） */
+                    to?: string;
+                    sentiments?: string;
+                    topic?: string;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
             };
             requestBody?: never;
             responses: {
-                /** @description 削除成功 */
+                /** @description 取得成功 */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
                         "application/json": {
-                            message: string;
-                            count: number;
+                            topics: {
+                                topic: string;
+                                total: number;
+                                sentiments: {
+                                    positive: number;
+                                    negative: number;
+                                    request: number;
+                                    neutral: number;
+                                };
+                                sample: string | null;
+                                topTags: {
+                                    tag: string;
+                                    count: number;
+                                }[];
+                            }[];
                         };
                     };
                 };
@@ -3083,8 +3131,8 @@ export interface paths {
                         };
                     };
                 };
-                /** @description サーバーエラー */
-                500: {
+                /** @description 権限エラー */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3099,6 +3147,9 @@ export interface paths {
                 };
             };
         };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3152,6 +3203,20 @@ export interface paths {
                 };
                 /** @description 認証エラー */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3233,6 +3298,20 @@ export interface paths {
                 };
                 /** @description 認証エラー */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3702,6 +3781,7 @@ export interface paths {
                                 scheduledAt: string | null;
                                 sentAt: string | null;
                                 closedAt: string | null;
+                                answerCount: number;
                             }[];
                             nextCursor: string | null;
                             hasMore: boolean;

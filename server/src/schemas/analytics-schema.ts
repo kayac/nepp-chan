@@ -1,13 +1,5 @@
 import { z } from "@hono/zod-openapi";
 
-// 配列順は排他分類の優先順位（先頭一致で1つに分類する）
-export const RELATIONSHIPS = [
-  "村人",
-  "観光客",
-  "移住検討者",
-  "帰省者",
-] as const;
-
 const dateSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
