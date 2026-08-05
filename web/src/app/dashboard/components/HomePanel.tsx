@@ -8,7 +8,7 @@ import type { VoiceFilter } from "~/app/dashboard/components/voices/helpers";
 import { useHomeSummary } from "~/app/dashboard/hooks/useHomeSummary";
 import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
 import { PanelLoading } from "~/components/ui/PanelLoading";
-import { formatDateTime, formatMonthDay } from "~/lib/format";
+import { formatMonthDay, formatMonthDayTime } from "~/lib/format";
 
 interface Props {
   onNavigate: (tab: Tab, voicesFilter?: Partial<VoiceFilter>) => void;
@@ -77,7 +77,7 @@ export const HomePanel = ({ onNavigate, onShowAnalytics }: Props) => {
       )}
 
       {!error && !isLoading && (
-        <div className="grid gap-4 items-start lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 items-start lg:grid-cols-2">
           <Card
             title="✨ 今週の話題"
             action={
@@ -151,7 +151,7 @@ export const HomePanel = ({ onNavigate, onShowAnalytics }: Props) => {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Card
           title="📣 予約中の配信"
           action={
@@ -172,7 +172,7 @@ export const HomePanel = ({ onNavigate, onShowAnalytics }: Props) => {
                 >
                   {b.scheduledAt && (
                     <span className="shrink-0 text-xs text-(--fg-3)">
-                      {formatDateTime(b.scheduledAt)}
+                      {formatMonthDayTime(b.scheduledAt)}
                     </span>
                   )}
                   <span className="min-w-0 truncate">{b.title}</span>
