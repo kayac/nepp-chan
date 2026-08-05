@@ -49,14 +49,6 @@ export const AnalyticsPanel = ({ onAskMayor, initialSection }: Props) => {
 
   return (
     <div className="space-y-6">
-      <TimeAxisHeading
-        title="今週のできごと"
-        description="週ごとのまとめ・毎週火曜に自動生成"
-        askContext="今週の週次レポート"
-        onAskMayor={onAskMayor}
-      />
-      <ReportsSection />
-
       <div id="analytics-conversation" className="space-y-6">
         <TimeAxisHeading
           title="最近の動き"
@@ -77,6 +69,14 @@ export const AnalyticsPanel = ({ onAskMayor, initialSection }: Props) => {
         <PersonaSection />
         <OntologySection />
       </div>
+
+      <TimeAxisHeading
+        title="今週のできごと"
+        description="週ごとのまとめ・毎週火曜に自動生成"
+        askContext="今週の週次レポート"
+        onAskMayor={onAskMayor}
+      />
+      <ReportsSection />
     </div>
   );
 };

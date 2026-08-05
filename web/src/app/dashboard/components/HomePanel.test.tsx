@@ -91,7 +91,7 @@ const useDefaultHandlers = () => {
       const params = new URL(request.url).searchParams;
       return HttpResponse.json({
         topics:
-          params.get("sentiments") === "positive"
+          params.get("sentiments") === "positive,neutral"
             ? positiveTopics
             : troubleTopics,
       });

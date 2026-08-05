@@ -16,7 +16,7 @@ const PERIOD_DAYS = 7;
 const LIST_LIMIT = 5;
 const TOP_LIMIT = 4;
 const SPEAKER_LIMIT = 2;
-const POSITIVE_SENTS = ["positive"] as const;
+const TOPIC_SENTS = ["positive", "neutral"] as const;
 const TROUBLE_SENTS = ["negative", "request"] as const;
 
 type TopicAggregation = {
@@ -52,7 +52,7 @@ export const useHomeSummary = () => {
 
   const positiveTopics = usePersonaTopics({
     ...period,
-    sentiments: [...POSITIVE_SENTS],
+    sentiments: [...TOPIC_SENTS],
   });
   const troubleTopics = usePersonaTopics({
     ...period,
