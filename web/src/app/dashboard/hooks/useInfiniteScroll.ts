@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 
 type Options = {
   hasNextPage: boolean;
@@ -7,16 +7,17 @@ type Options = {
   threshold?: number;
 };
 
+// センチネルは条件付きで描画されるため、element を state で持って再マウントを検知する
+// （ref オブジェクトだと再マウント時に effect が動かず、外れた DOM を監視し続ける）
 export const useInfiniteScroll = <T extends HTMLElement = HTMLDivElement>({
   hasNextPage,
   isFetching,
   onFetch,
   threshold = 0.1,
 }: Options) => {
-  const ref = useRef<T>(null);
+  const [element, setElement] = useState<T | null>(null);
 
   useEffect(() => {
-    const element = ref.current;
     if (!element) return;
 
     const observer = new IntersectionObserver(
@@ -31,7 +32,7 @@ export const useInfiniteScroll = <T extends HTMLElement = HTMLDivElement>({
     observer.observe(element);
 
     return () => observer.disconnect();
-  }, [hasNextPage, isFetching, onFetch, threshold]);
+  }, [element, hasNextPage, isFetching, onFetch, threshold]);
 
-  return ref;
+  return setElement;
 };

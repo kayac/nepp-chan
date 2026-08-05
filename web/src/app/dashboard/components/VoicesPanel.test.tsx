@@ -49,10 +49,8 @@ const emergencies = [
   },
 ];
 
-type PersonaCall = URLSearchParams;
-
 const usePersonaHandlers = () => {
-  const calls: PersonaCall[] = [];
+  const calls: URLSearchParams[] = [];
   server.use(
     http.get(`${API}/admin/persona`, ({ request }) => {
       const params = new URL(request.url).searchParams;
@@ -68,6 +66,24 @@ const usePersonaHandlers = () => {
         hasMore: false,
       });
     }),
+    http.get(`${API}/admin/persona/topics`, () =>
+      HttpResponse.json({
+        topics: [
+          {
+            topic: "観光",
+            total: 1,
+            sentiments: { positive: 1, negative: 0, request: 0, neutral: 0 },
+            sample: "音威子府そばがとても美味しかった",
+          },
+          {
+            topic: "生活",
+            total: 1,
+            sentiments: { positive: 0, negative: 1, request: 0, neutral: 0 },
+            sample: "粗大ごみの出し方がわかりにくい",
+          },
+        ],
+      }),
+    ),
     http.get(`${API}/admin/emergency`, () =>
       HttpResponse.json({ emergencies }),
     ),
@@ -114,7 +130,7 @@ describe("VoicesPanel", () => {
     expect(screen.getByText("3件が該当")).toBeInTheDocument();
   });
 
-  it("ポップオーバーでネガティブを選ぶと絞り込まれ、チップとバッジが出る", async () => {
+  it("ポップオーバーでネガティブを選ぶとサーバーに絞り込みを投げる", async () => {
     const calls = usePersonaHandlers();
     renderWithQuery(<VoicesPanel />);
     await waitFor(() => {
@@ -124,18 +140,15 @@ describe("VoicesPanel", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: /絞り込む/ }));
     await user.click(screen.getByRole("button", { name: "ネガティブ" }));
+    await user.click(screen.getByRole("button", { name: "この条件で見る" }));
 
     await waitFor(() => {
       expect(calls.some((c) => c.get("sentiments") === "negative")).toBe(true);
     });
-
-    await user.click(screen.getByRole("button", { name: "この条件で見る" }));
-
     await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: /絞り込む（1）/ }),
-      ).toBeInTheDocument();
+      expect(screen.queryByText(/そばがとても美味しかった/)).toBeNull();
     });
+    expect(screen.getByText("粗大ごみの出し方がわかりにくい")).toBeVisible();
     // 感情で絞ると緊急はストリームから外れる
     expect(screen.queryByText(/熊の出没/)).toBeNull();
     expect(
@@ -184,7 +197,7 @@ describe("VoicesPanel", () => {
     });
   });
 
-  it("話題ごと表示に切り替えるとトピックカードでまとまる", async () => {
+  it("話題ごと表示に切り替えるとサーバー集計のトピックカードが並ぶ", async () => {
     usePersonaHandlers();
     renderWithQuery(<VoicesPanel />);
     await waitFor(() => {
@@ -194,54 +207,55 @@ describe("VoicesPanel", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "話題ごと" }));
 
+    await waitFor(() => {
+      expect(screen.getAllByTestId("topic-group").length).toBeGreaterThan(0);
+    });
     const groups = screen.getAllByTestId("topic-group");
-    expect(groups.map((g) => g.textContent?.slice(0, 10))).toHaveLength(3);
     expect(groups.some((g) => g.textContent?.includes("観光"))).toBe(true);
     expect(groups.some((g) => g.textContent?.includes("緊急"))).toBe(true);
   });
 
-  it("話題ごと表示では残りのページを読み切って集計する", async () => {
-    server.use(
-      http.get(`${API}/admin/persona`, ({ request }) => {
-        const cursor = new URL(request.url).searchParams.get("cursor");
-        if (cursor) {
-          return HttpResponse.json({
-            personas: [
-              {
-                ...personas[0],
-                id: "p-3",
-                topic: "行政",
-                content: "移住補助金のページがほしい",
-              },
-            ],
-            total: 3,
-            nextCursor: null,
-            hasMore: false,
-          });
-        }
-        return HttpResponse.json({
-          personas,
-          total: 3,
-          nextCursor: "cur-1",
-          hasMore: true,
-        });
-      }),
-      http.get(`${API}/admin/emergency`, () =>
-        HttpResponse.json({ emergencies: [] }),
-      ),
-    );
+  it("話題カードをクリックすると一覧に切り替わり、その話題で絞られる", async () => {
+    const calls = usePersonaHandlers();
     renderWithQuery(<VoicesPanel />);
     await waitFor(() => {
-      expect(screen.getByText(/粗大ごみ/)).toBeInTheDocument();
+      expect(screen.getByText(/熊の出没/)).toBeInTheDocument();
     });
 
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "話題ごと" }));
+    await waitFor(() => {
+      expect(screen.getAllByTestId("topic-group").length).toBeGreaterThan(0);
+    });
+
+    await user.click(screen.getByRole("button", { name: /観光/ }));
 
     await waitFor(() => {
-      const groups = screen.getAllByTestId("topic-group");
-      expect(groups.some((g) => g.textContent?.includes("行政"))).toBe(true);
+      expect(calls.some((c) => c.get("topic") === "観光")).toBe(true);
     });
+    expect(screen.queryByTestId("topic-group")).toBeNull();
+  });
+
+  it("緊急の話題カードをクリックすると緊急だけの一覧に切り替わる", async () => {
+    usePersonaHandlers();
+    renderWithQuery(<VoicesPanel />);
+    await waitFor(() => {
+      expect(screen.getByText(/熊の出没/)).toBeInTheDocument();
+    });
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "話題ごと" }));
+    await waitFor(() => {
+      expect(screen.getAllByTestId("topic-group").length).toBeGreaterThan(0);
+    });
+
+    await user.click(screen.getByRole("button", { name: /熊の出没/ }));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("topic-group")).toBeNull();
+    });
+    const cards = screen.getAllByTestId("voice-card");
+    expect(cards.every((c) => c.textContent?.includes("緊急"))).toBe(true);
   });
 
   it("緊急だけを選ぶとペルソナを取得しない", async () => {

@@ -164,4 +164,27 @@ describe("useInfiniteScroll", () => {
     render(createElement(Conditional, { mount: false }));
     expect(observe).not.toHaveBeenCalled();
   });
+
+  it("センチネルが再マウントされたら監視を張り直す", () => {
+    const onFetch = vi.fn();
+    const Conditional = ({ mount }: { mount: boolean }) => {
+      const ref = useInfiniteScroll<HTMLDivElement>({
+        hasNextPage: true,
+        isFetching: false,
+        onFetch,
+      });
+      return mount ? createElement("div", { ref }) : null;
+    };
+
+    const { rerender } = render(createElement(Conditional, { mount: true }));
+    expect(observe).toHaveBeenCalledTimes(1);
+
+    // 「話題ごと」に切り替えてセンチネルが外れ、「新しい順」に戻る操作
+    rerender(createElement(Conditional, { mount: false }));
+    rerender(createElement(Conditional, { mount: true }));
+
+    expect(observe).toHaveBeenCalledTimes(2);
+    fire(true);
+    expect(onFetch).toHaveBeenCalledTimes(1);
+  });
 });

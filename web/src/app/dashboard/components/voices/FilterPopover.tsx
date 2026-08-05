@@ -5,7 +5,6 @@ import {
   appliedCount,
   DEFAULT_FILTER,
   PERIOD_OPTIONS,
-  SEG_OPTIONS,
   SENT_OPTIONS,
   TOPIC_OPTIONS,
   type VoiceFilter,
@@ -126,13 +125,6 @@ export const FilterPopover = ({ filter, matchCount, onChange }: Props) => {
               options={SENT_OPTIONS}
               selected={filter.sents}
               onToggle={(sents) => onChange({ ...filter, sents })}
-            />
-
-            <MultiSelectGroup
-              label="誰の声か"
-              options={SEG_OPTIONS}
-              selected={filter.segs}
-              onToggle={(segs) => onChange({ ...filter, segs })}
             />
 
             <Group label="話題">

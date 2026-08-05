@@ -6,9 +6,9 @@ import { setAuthToken } from "~/lib/auth-token";
 import { server } from "~/test/msw-server";
 import { renderHookWithQuery } from "~/test/query";
 import {
-  useDeletePersonas,
-  useExtractPersonas,
+  PERSONA_PAGE_SIZE,
   usePersonas,
+  usePersonaTopics,
 } from "./usePersonas";
 
 const API = "http://localhost:8787";
@@ -23,26 +23,71 @@ afterEach(() => {
 });
 
 describe("usePersonas", () => {
-  it("nextCursor を辿って fetchNextPage できる", async () => {
-    let calls = 0;
+  it("絞り込みとページサイズをクエリパラメータで送る", async () => {
+    let params: URLSearchParams | null = null;
     server.use(
       http.get(`${API}/admin/persona`, ({ request }) => {
-        calls += 1;
-        const cursor = new URL(request.url).searchParams.get("cursor");
-        if (cursor) {
-          return HttpResponse.json({
-            personas: [{ id: "p-2" }],
-            nextCursor: null,
-          });
-        }
+        params = new URL(request.url).searchParams;
         return HttpResponse.json({
-          personas: [{ id: "p-1" }],
-          nextCursor: "cursor-1",
+          personas: [],
+          total: 0,
+          nextCursor: null,
+          hasMore: false,
         });
       }),
     );
 
-    const { result } = renderHookWithQuery(() => usePersonas(10));
+    const { result } = renderHookWithQuery(() =>
+      usePersonas({
+        from: "2026-07-01",
+        sentiments: ["negative", "request"],
+        topic: "生活",
+      }),
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(params!.get("limit")).toBe(String(PERSONA_PAGE_SIZE));
+    expect(params!.get("from")).toBe("2026-07-01");
+    expect(params!.get("sentiments")).toBe("negative,request");
+    expect(params!.get("topic")).toBe("生活");
+  });
+
+  it("空の絞り込みは query に含めない", async () => {
+    let params: URLSearchParams | null = null;
+    server.use(
+      http.get(`${API}/admin/persona`, ({ request }) => {
+        params = new URL(request.url).searchParams;
+        return HttpResponse.json({
+          personas: [],
+          total: 0,
+          nextCursor: null,
+          hasMore: false,
+        });
+      }),
+    );
+
+    const { result } = renderHookWithQuery(() => usePersonas({}));
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(params!.has("sentiments")).toBe(false);
+    expect(params!.has("topic")).toBe(false);
+    expect(params!.has("from")).toBe(false);
+  });
+
+  it("nextCursor を辿って次ページを読める", async () => {
+    server.use(
+      http.get(`${API}/admin/persona`, ({ request }) => {
+        const cursor = new URL(request.url).searchParams.get("cursor");
+        return HttpResponse.json({
+          personas: [{ id: cursor ? "p-2" : "p-1" }],
+          total: 2,
+          nextCursor: cursor ? null : "cur-1",
+          hasMore: !cursor,
+        });
+      }),
+    );
+
+    const { result } = renderHookWithQuery(() => usePersonas({}));
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.hasNextPage).toBe(true);
@@ -52,82 +97,78 @@ describe("usePersonas", () => {
     });
 
     await waitFor(() => expect(result.current.hasNextPage).toBe(false));
-    expect(calls).toBeGreaterThanOrEqual(2);
+    expect(
+      result.current.data?.pages.flatMap((p) => p.personas).map((p) => p.id),
+    ).toEqual(["p-1", "p-2"]);
   });
 
-  it("limit クエリパラメータを送る", async () => {
-    let received: string | null = null;
+  it("enabled: false なら取得しない", async () => {
+    let calls = 0;
     server.use(
-      http.get(`${API}/admin/persona`, ({ request }) => {
-        received = new URL(request.url).searchParams.get("limit");
-        return HttpResponse.json({ personas: [], nextCursor: null });
+      http.get(`${API}/admin/persona`, () => {
+        calls += 1;
+        return HttpResponse.json({
+          personas: [],
+          total: 0,
+          nextCursor: null,
+          hasMore: false,
+        });
       }),
     );
 
-    const { result } = renderHookWithQuery(() => usePersonas(5));
+    renderHookWithQuery(() => usePersonas({}, { enabled: false }));
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(received).toBe("5");
+    await waitFor(() => expect(calls).toBe(0));
   });
+});
 
-  it("フィルターをクエリパラメータで送る", async () => {
+describe("usePersonaTopics", () => {
+  it("集計結果を返し、絞り込みを引き渡す", async () => {
     let params: URLSearchParams | null = null;
     server.use(
-      http.get(`${API}/admin/persona`, ({ request }) => {
+      http.get(`${API}/admin/persona/topics`, ({ request }) => {
         params = new URL(request.url).searchParams;
-        return HttpResponse.json({ personas: [], nextCursor: null });
+        return HttpResponse.json({
+          topics: [
+            {
+              topic: "生活",
+              total: 4,
+              sentiments: {
+                positive: 0,
+                negative: 3,
+                request: 1,
+                neutral: 0,
+              },
+              sample: "粗大ごみの出し方がわかりにくい",
+            },
+          ],
+        });
       }),
     );
 
     const { result } = renderHookWithQuery(() =>
-      usePersonas(30, {
-        from: "2026-07-01",
-        sentiments: ["negative"],
-        relationships: ["観光客"],
-        topic: "観光",
+      usePersonaTopics({ sentiments: ["negative"] }),
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.topics[0]).toMatchObject({
+      topic: "生活",
+      total: 4,
+    });
+    expect(params!.get("sentiments")).toBe("negative");
+  });
+
+  it("enabled: false なら取得しない", async () => {
+    let calls = 0;
+    server.use(
+      http.get(`${API}/admin/persona/topics`, () => {
+        calls += 1;
+        return HttpResponse.json({ topics: [] });
       }),
     );
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(params!.get("from")).toBe("2026-07-01");
-    expect(params!.get("sentiments")).toBe("negative");
-    expect(params!.get("relationships")).toBe("観光客");
-    expect(params!.get("topic")).toBe("観光");
-  });
-});
+    renderHookWithQuery(() => usePersonaTopics({}, { enabled: false }));
 
-describe("useExtractPersonas", () => {
-  it("mutate 成功で isSuccess", async () => {
-    server.use(
-      http.post(`${API}/admin/persona/extract`, () =>
-        HttpResponse.json({ message: "ok" }),
-      ),
-    );
-
-    const { result } = renderHookWithQuery(() => useExtractPersonas());
-
-    await act(async () => {
-      await result.current.mutateAsync();
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-  });
-});
-
-describe("useDeletePersonas", () => {
-  it("mutate 成功で isSuccess", async () => {
-    server.use(
-      http.delete(`${API}/admin/persona`, () =>
-        HttpResponse.json({ message: "deleted" }),
-      ),
-    );
-
-    const { result } = renderHookWithQuery(() => useDeletePersonas());
-
-    await act(async () => {
-      await result.current.mutateAsync();
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    await waitFor(() => expect(calls).toBe(0));
   });
 });

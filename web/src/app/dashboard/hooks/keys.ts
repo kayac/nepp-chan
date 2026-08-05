@@ -12,6 +12,10 @@ export const dashboardKeys = {
   broadcasts: ["dashboard", "broadcasts"] as const,
   broadcastDetail: (id: string) => ["dashboard", "broadcast", id] as const,
   personas: ["dashboard", "personas"] as const,
+  personaList: (filters: unknown) =>
+    ["dashboard", "personas", "list", filters] as const,
+  personaTopics: (filters: unknown) =>
+    ["dashboard", "personas", "topics", filters] as const,
   emergencies: ["dashboard", "emergencies"] as const,
   feedbacks: ["dashboard", "feedbacks"] as const,
   feedbackDetail: (id: string) => ["dashboard", "feedback", id] as const,

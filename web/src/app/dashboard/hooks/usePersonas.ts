@@ -1,47 +1,40 @@
-import type { FetchPersonasParams } from "@nepp-chan/shared/api/repository/persona-repository";
+import type { PersonaFilterParams } from "@nepp-chan/shared/api/repository/persona-repository";
 import {
   keepPreviousData,
   useInfiniteQuery,
-  useMutation,
-  useQueryClient,
+  useQuery,
 } from "@tanstack/react-query";
 
 import { personaRepository } from "~/lib/api/repository";
 import { dashboardKeys } from "./keys";
 
-type PersonaFilters = Omit<FetchPersonasParams, "limit" | "cursor">;
+export const PERSONA_PAGE_SIZE = 30;
 
 export const usePersonas = (
-  limit = 30,
-  filters: PersonaFilters = {},
+  filters: PersonaFilterParams,
   options: { enabled?: boolean } = {},
 ) =>
   useInfiniteQuery({
-    queryKey: [...dashboardKeys.personas, limit, filters],
+    queryKey: dashboardKeys.personaList(filters),
     queryFn: ({ pageParam }) =>
-      personaRepository.fetchPersonas({ ...filters, limit, cursor: pageParam }),
+      personaRepository.fetchPersonas({
+        ...filters,
+        limit: PERSONA_PAGE_SIZE,
+        cursor: pageParam,
+      }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: options.enabled ?? true,
     placeholderData: keepPreviousData,
   });
 
-export const useExtractPersonas = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: personaRepository.extractPersonas,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: dashboardKeys.personas });
-    },
+export const usePersonaTopics = (
+  filters: PersonaFilterParams,
+  options: { enabled?: boolean } = {},
+) =>
+  useQuery({
+    queryKey: dashboardKeys.personaTopics(filters),
+    queryFn: () => personaRepository.fetchPersonaTopics(filters),
+    enabled: options.enabled ?? true,
+    placeholderData: keepPreviousData,
   });
-};
-
-export const useDeletePersonas = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: personaRepository.deleteAllPersonas,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: dashboardKeys.personas });
-    },
-  });
-};

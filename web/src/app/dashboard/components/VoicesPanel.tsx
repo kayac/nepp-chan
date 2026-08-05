@@ -1,40 +1,20 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
-import { Button } from "@nepp-chan/shared/ui/Button";
-import { useEffect, useMemo, useState } from "react";
-
+import { VoiceCard } from "~/app/dashboard/components/VoiceCard";
 import { FilterPopover } from "~/app/dashboard/components/voices/FilterPopover";
 import {
   activeChips,
   analyzeContextLabel,
-  DEFAULT_FILTER,
-  getSentimentStyle,
-  groupVoicesByTopic,
-  mergeVoices,
   removeChip,
   SORT_OPTIONS,
-  sentimentLabel,
-  shouldIncludeEmergencies,
-  shouldIncludePersonas,
-  toPersonaParams,
-  type Voice,
   type VoiceFilter,
 } from "~/app/dashboard/components/voices/helpers";
-import { useEmergencies } from "~/app/dashboard/hooks/useEmergencies";
-import { useInfiniteScroll } from "~/app/dashboard/hooks/useInfiniteScroll";
-import {
-  useDeletePersonas,
-  useExtractPersonas,
-  usePersonas,
-} from "~/app/dashboard/hooks/usePersonas";
+import { EMERGENCY_TOPIC, useVoices } from "~/app/dashboard/hooks/useVoices";
 import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
 import { PanelLoading } from "~/components/ui/PanelLoading";
-import { confirmDialog } from "~/lib/dialog";
-import { formatDateTime } from "~/lib/format";
 
 interface Props {
   initialFilter?: Partial<VoiceFilter>;
-  canManage?: boolean;
   onAskMayor?: (context: string) => void;
 }
 
@@ -45,81 +25,39 @@ const SENTIMENT_BAR_COLORS: Record<string, string> = {
   neutral: "#c9d6df",
 };
 
-const VoiceCard = ({ voice }: { voice: Voice }) => (
-  <article
-    data-testid="voice-card"
-    className={cn(
-      "rounded-xl border border-(--border-1) p-4",
-      voice.kind === "emergency" ? "bg-(--danger-bg)" : "bg-(--bg-raised)",
-    )}
-  >
-    <div className="flex flex-wrap items-center gap-2 mb-1.5">
-      {voice.kind === "emergency" ? (
-        <span className="inline-flex px-2 py-0.5 text-xs font-bold bg-red-100 text-red-700 rounded">
-          緊急
-        </span>
-      ) : (
-        <>
-          {voice.topic && (
-            <span className="inline-flex px-2 py-0.5 text-xs font-medium bg-teal-50 text-teal-700 rounded">
-              {voice.topic}
-            </span>
-          )}
-          {voice.sentiment && (
-            <span
-              className={cn(
-                "inline-flex px-2 py-0.5 text-xs font-medium rounded",
-                getSentimentStyle(voice.sentiment),
-              )}
-            >
-              {sentimentLabel(voice.sentiment)}
-            </span>
-          )}
-        </>
-      )}
-      <span className="text-xs text-(--fg-4) ml-auto whitespace-nowrap">
-        {formatDateTime(voice.date)}
-      </span>
-    </div>
-    <p className="text-sm text-(--fg-1) whitespace-pre-wrap break-words">
-      {voice.content}
-    </p>
-    {voice.kind === "persona" && voice.attributes.length > 0 && (
-      <div className="flex flex-wrap gap-1.5 text-xs pt-2">
-        {voice.attributes.map((attr) => (
-          <span
-            key={attr}
-            className="inline-flex px-1.5 py-0.5 bg-(--bg-sunken) text-(--fg-3) rounded"
-          >
-            {attr}
-          </span>
-        ))}
-      </div>
-    )}
-    {voice.kind === "emergency" && voice.location && (
-      <div className="text-xs text-(--fg-3) pt-2">場所: {voice.location}</div>
-    )}
-  </article>
-);
+type TopicGroup = {
+  topic: string;
+  total: number;
+  sentiments: Record<"positive" | "negative" | "request" | "neutral", number>;
+  sample: string | null;
+};
 
-const TopicGroups = ({ voices }: { voices: Voice[] }) => (
+const TopicGroups = ({
+  topics,
+  onSelect,
+}: {
+  topics: TopicGroup[];
+  onSelect: (topic: string) => void;
+}) => (
   <div className="space-y-3">
-    {groupVoicesByTopic(voices).map((group) => {
+    {topics.map((group) => {
       const barTotal = Object.values(group.sentiments).reduce(
         (sum, n) => sum + n,
         0,
       );
       return (
-        <article
+        <button
           key={group.topic}
+          type="button"
+          onClick={() => onSelect(group.topic)}
           data-testid="topic-group"
-          className="bg-(--bg-raised) rounded-xl border border-(--border-1) p-4"
+          className="block w-full text-left bg-(--bg-raised) rounded-xl border border-(--border-1) p-4 hover:bg-(--bg-sunken) transition-colors"
         >
           <div className="flex items-center gap-2 mb-1.5">
             <h4 className="text-sm font-semibold text-(--fg-1)">
               {group.topic}
             </h4>
-            <span className="text-xs text-(--fg-3)">{group.count}件</span>
+            <span className="text-xs text-(--fg-3)">{group.total}件</span>
           </div>
           {barTotal > 0 && (
             <div
@@ -139,91 +77,40 @@ const TopicGroups = ({ voices }: { voices: Voice[] }) => (
                 ))}
             </div>
           )}
-          <p className="text-sm text-(--fg-2)">
-            「{group.sample}」
-            <span className="text-xs text-(--fg-4) ml-1">— 代表的な声</span>
-          </p>
-        </article>
+          {group.sample && (
+            <p className="text-sm text-(--fg-2)">
+              「{group.sample}」
+              <span className="text-xs text-(--fg-4) ml-1">— 代表的な声</span>
+            </p>
+          )}
+        </button>
       );
     })}
   </div>
 );
 
-export const VoicesPanel = ({
-  initialFilter,
-  canManage = false,
-  onAskMayor,
-}: Props) => {
-  const [filter, setFilter] = useState<VoiceFilter>({
-    ...DEFAULT_FILTER,
-    ...initialFilter,
-  });
-
-  const includePersonas = shouldIncludePersonas(filter);
-  const includeEmergencies = shouldIncludeEmergencies(filter);
-
-  const personaParams = useMemo(() => toPersonaParams(filter), [filter]);
-  const personasQuery = usePersonas(30, personaParams, {
-    enabled: includePersonas,
-  });
-  const emergenciesQuery = useEmergencies(100, {
-    enabled: includeEmergencies,
-  });
-  const extractMutation = useExtractPersonas();
-  const deleteMutation = useDeletePersonas();
-
-  const loadMoreRef = useInfiniteScroll({
-    hasNextPage: personasQuery.hasNextPage ?? false,
-    isFetching: personasQuery.isFetchingNextPage,
-    onFetch: personasQuery.fetchNextPage,
-  });
-
-  // 話題ごと表示は全件を集計するため、残りのページを読み切る
-  const { hasNextPage, isFetchingNextPage, fetchNextPage } = personasQuery;
-  useEffect(() => {
-    if (filter.sort !== "topics" || !hasNextPage || isFetchingNextPage) {
-      return;
-    }
-    void fetchNextPage();
-  }, [filter.sort, hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const isLoading =
-    (includePersonas && personasQuery.isLoading) ||
-    (includeEmergencies && emergenciesQuery.isLoading);
+export const VoicesPanel = ({ initialFilter, onAskMayor }: Props) => {
+  const {
+    filter,
+    setFilter,
+    voices,
+    topics,
+    matchCount,
+    isLoading,
+    error,
+    isFetchingNextPage,
+    loadMoreRef,
+  } = useVoices(initialFilter);
 
   if (isLoading) {
     return <PanelLoading />;
   }
 
-  const error = personasQuery.error ?? emergenciesQuery.error;
   if (error) {
     return <ErrorBanner>{formatError(error)}</ErrorBanner>;
   }
 
-  const personas = includePersonas
-    ? (personasQuery.data?.pages.flatMap((page) => page.personas) ?? [])
-    : [];
-  const emergencies = includeEmergencies
-    ? (emergenciesQuery.data?.emergencies ?? [])
-    : [];
-
-  const voices = mergeVoices(personas, emergencies, { period: filter.period });
-  const emergencyCount = voices.filter((v) => v.kind === "emergency").length;
-  const personaTotal = includePersonas
-    ? (personasQuery.data?.pages[0]?.total ?? 0)
-    : 0;
-  const matchCount = personaTotal + emergencyCount;
-
   const chips = activeChips(filter);
-
-  const handleDelete = () => {
-    if (
-      !confirmDialog("全てのペルソナを削除しますか？この操作は取り消せません。")
-    ) {
-      return;
-    }
-    deleteMutation.mutate();
-  };
 
   return (
     <div className="space-y-4">
@@ -286,55 +173,31 @@ export const VoicesPanel = ({
         </div>
       )}
 
-      {(extractMutation.isError || deleteMutation.isError) && (
-        <ErrorBanner>
-          {extractMutation.error?.message ||
-            deleteMutation.error?.message ||
-            "エラーが発生しました"}
-        </ErrorBanner>
-      )}
-
-      {voices.length === 0 ? (
+      {matchCount === 0 ? (
         <div className="bg-(--bg-raised) rounded-xl border border-(--border-1) py-12 text-center text-sm text-(--fg-3)">
           この条件に当てはまる声はまだありません。条件をゆるめてみてください。
         </div>
       ) : filter.sort === "topics" ? (
-        <TopicGroups voices={voices} />
+        <TopicGroups
+          topics={topics}
+          onSelect={(topic) =>
+            setFilter(
+              topic === EMERGENCY_TOPIC
+                ? { ...filter, sort: "list", sents: ["emergency"] }
+                : { ...filter, sort: "list", topic },
+            )
+          }
+        />
       ) : (
         <div className="space-y-3">
           {voices.map((voice) => (
             <VoiceCard key={`${voice.kind}-${voice.id}`} voice={voice} />
           ))}
           <div ref={loadMoreRef} className="py-2 text-center">
-            {personasQuery.isFetchingNextPage && (
+            {isFetchingNextPage && (
               <div className="text-(--fg-3) text-sm">読み込み中...</div>
             )}
           </div>
-        </div>
-      )}
-
-      {canManage && (
-        <div className="flex gap-2 pt-4 border-t border-(--border-1)">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => extractMutation.mutate()}
-            disabled={extractMutation.isPending || deleteMutation.isPending}
-          >
-            {extractMutation.isPending ? "抽出中..." : "会話から抽出"}
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={
-              extractMutation.isPending ||
-              deleteMutation.isPending ||
-              personas.length === 0
-            }
-          >
-            {deleteMutation.isPending ? "削除中..." : "全て削除"}
-          </Button>
         </div>
       )}
     </div>
