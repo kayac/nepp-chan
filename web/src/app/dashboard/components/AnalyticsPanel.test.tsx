@@ -248,10 +248,10 @@ describe("AnalyticsPanel", () => {
     expect(askButtons).toHaveLength(3);
 
     await user.click(askButtons[0]);
-    expect(onAskMayor).toHaveBeenCalledWith("今週の週次レポート");
+    expect(onAskMayor).toHaveBeenCalledWith("直近30日の会話データ");
 
     await user.click(askButtons[2]);
-    expect(onAskMayor).toHaveBeenCalledWith("全期間の全体分析");
+    expect(onAskMayor).toHaveBeenCalledWith("今週の週次レポート");
   });
 
   it("週次レポートを選択すると詳細（ハイライト全文）を表示する", async () => {
