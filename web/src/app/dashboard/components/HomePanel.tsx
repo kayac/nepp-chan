@@ -175,7 +175,7 @@ export const HomePanel = ({ onNavigate, onShowAnalytics }: Props) => {
                       {formatDateTime(b.scheduledAt)}
                     </span>
                   )}
-                  <span className="truncate">{b.title}</span>
+                  <span className="min-w-0 truncate">{b.title}</span>
                 </li>
               ))}
             </ul>
