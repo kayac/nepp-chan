@@ -101,17 +101,20 @@ describe("personaAdminRoutes", () => {
     it.each([
       ["POST", "/extract"],
       ["POST", "/extract/thread-1"],
-    ])("staff ロールは %s %s を実行できない（admin 以上要件）", async (method, path) => {
-      useAdminAuth({ ...adminUser, role: "staff" as const });
+    ])(
+      "staff ロールは %s %s を実行できない（admin 以上要件）",
+      async (method, path) => {
+        useAdminAuth({ ...adminUser, role: "staff" as const });
 
-      const res = await routes.request(
-        authed(method, path),
-        undefined,
-        mockEnv,
-      );
+        const res = await routes.request(
+          authed(method, path),
+          undefined,
+          mockEnv,
+        );
 
-      expect(res.status).toBe(403);
-    });
+        expect(res.status).toBe(403);
+      },
+    );
   });
 
   describe("GET /", () => {

@@ -114,35 +114,33 @@ describe("analyticsAdminRoutes: 認可", () => {
     expect(res.status).toBe(401);
   });
 
-  it.each([
-    "/persona",
-    "/ontology",
-    "/conversations",
-    "/reports",
-  ])("staff でも分析系（%s）は 200", async (path) => {
-    useAuth("staff");
-    vi.mocked(getOntology).mockResolvedValue({
-      nodes: [],
-      links: [],
-      meta: {
-        personaTotal: 0,
-        generatedAt: "2026-06-09T00:00:00.000Z",
-        entityLayerStatus: "none",
-        note: "",
-      },
-    });
-    vi.mocked(getConversationStats).mockResolvedValue({
-      daily: [],
-      hourly: [],
-      weekday: [],
-      platforms: [],
-      totals: { conversations: 0, messages: 0 },
-    });
-    vi.mocked(weeklyReportRepository.list).mockResolvedValue([]);
+  it.each(["/persona", "/ontology", "/conversations", "/reports"])(
+    "staff でも分析系（%s）は 200",
+    async (path) => {
+      useAuth("staff");
+      vi.mocked(getOntology).mockResolvedValue({
+        nodes: [],
+        links: [],
+        meta: {
+          personaTotal: 0,
+          generatedAt: "2026-06-09T00:00:00.000Z",
+          entityLayerStatus: "none",
+          note: "",
+        },
+      });
+      vi.mocked(getConversationStats).mockResolvedValue({
+        daily: [],
+        hourly: [],
+        weekday: [],
+        platforms: [],
+        totals: { conversations: 0, messages: 0 },
+      });
+      vi.mocked(weeklyReportRepository.list).mockResolvedValue([]);
 
-    const res = await routes.request(authedGet(path), undefined, mockEnv);
-    expect(res.status).toBe(200);
-  });
+      const res = await routes.request(authedGet(path), undefined, mockEnv);
+      expect(res.status).toBe(200);
+    },
+  );
 
   it("super_admin は 200", async () => {
     useAuth("super_admin");
