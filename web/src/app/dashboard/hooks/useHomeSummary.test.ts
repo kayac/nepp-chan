@@ -107,7 +107,7 @@ const useHandlers = ({
       topicCalls.push(params);
       return HttpResponse.json({
         topics:
-          params.get("sentiments") === "positive"
+          params.get("sentiments") === "positive,neutral"
             ? positiveTopics
             : troubleTopics,
       });
@@ -151,9 +151,9 @@ describe("useHomeSummary", () => {
 
     await waitFor(() => expect(topicCalls.length).toBeGreaterThanOrEqual(2));
     expect(topicCalls.every((c) => c.get("from") === "2026-07-28")).toBe(true);
-    expect(topicCalls.some((c) => c.get("sentiments") === "positive")).toBe(
-      true,
-    );
+    expect(
+      topicCalls.some((c) => c.get("sentiments") === "positive,neutral"),
+    ).toBe(true);
     expect(
       topicCalls.some((c) => c.get("sentiments") === "negative,request"),
     ).toBe(true);
