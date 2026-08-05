@@ -11,9 +11,10 @@ import {
   useConversationAnalytics,
   usePersonaAnalytics,
 } from "~/app/dashboard/hooks/useAnalytics";
+import { closedContext } from "~/lib/analytics-summary";
 import { AXIS_STYLE, TOOLTIP_STYLE } from "~/lib/chart-helpers";
 import { HourlyChart } from "./HourlyChart";
-import { closedContext, jstDateRange } from "./helpers";
+import { jstDateRange } from "./helpers";
 import { PersonaPeriodSummary } from "./PersonaPeriodSummary";
 import { SectionCard, SectionError, SectionLoading } from "./SectionCard";
 import { StatCards } from "./StatCards";
@@ -92,13 +93,13 @@ export const ConversationSection = () => {
           <div className="grid lg:grid-cols-[3fr_2fr] gap-6">
             <div>
               <h4 className="text-sm font-medium text-stone-700 mb-2">
-                時間帯分布（JST）
+                時間帯分布
               </h4>
               <HourlyChart hourly={data.hourly} />
             </div>
             <div>
               <h4 className="text-sm font-medium text-stone-700 mb-2">
-                曜日分布（JST）
+                曜日分布
               </h4>
               <WeekdayChart weekday={data.weekday} />
             </div>

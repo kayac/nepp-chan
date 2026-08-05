@@ -1,18 +1,3 @@
-// 中立が件数の大半を占めるため、淡く穏やかな雪の青で「引かせる」配色にする
-export const SENTIMENT_SERIES = [
-  { key: "positive", label: "ポジティブ", color: "#5cb7bb" },
-  { key: "negative", label: "ネガティブ", color: "#e76f7a" },
-  { key: "request", label: "要望", color: "#f4b860" },
-  { key: "neutral", label: "中立", color: "#c8d9e8" },
-] as const;
-
-export type SentimentCounts = {
-  positive: number;
-  negative: number;
-  request: number;
-  neutral: number;
-};
-
 const DAY_MS = 24 * 60 * 60 * 1000;
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
@@ -24,40 +9,6 @@ export const jstDateRange = (days: number, now: Date = new Date()) => ({
   from: toJstDate(new Date(now.getTime() - (days - 1) * DAY_MS)),
   to: toJstDate(now),
 });
-
-export const closedContext = (open: number, closed: number) => {
-  const total = open + closed;
-  if (closed <= 0 || total <= 0) {
-    return null;
-  }
-  return {
-    percent: Math.round((closed / total) * 100),
-    perN: Math.max(1, Math.round(total / closed)),
-  };
-};
-
-export const sentimentTotal = (row: SentimentCounts) =>
-  row.positive + row.negative + row.request + row.neutral;
-
-export const sumSentiments = (rows: SentimentCounts[]): SentimentCounts =>
-  rows.reduce(
-    (acc, row) => ({
-      positive: acc.positive + row.positive,
-      negative: acc.negative + row.negative,
-      request: acc.request + row.request,
-      neutral: acc.neutral + row.neutral,
-    }),
-    { positive: 0, negative: 0, request: 0, neutral: 0 },
-  );
-
-export const topEntries = (
-  entries: { label: string; count: number }[],
-  n: number,
-) =>
-  entries
-    .filter((e) => e.count > 0)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, n);
 
 type WeeklyUsageRow = {
   weekStart: string;

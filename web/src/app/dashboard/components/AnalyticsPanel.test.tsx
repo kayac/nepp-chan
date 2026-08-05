@@ -214,6 +214,29 @@ describe("AnalyticsPanel", () => {
     });
   });
 
+  it("initialSection 指定で該当セクションへスクロールする", async () => {
+    useSuccessHandlers();
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+
+    renderWithQuery(<AnalyticsPanel initialSection="conversation" />);
+
+    await waitFor(() => {
+      expect(scrollIntoView).toHaveBeenCalled();
+    });
+  });
+
+  it("initialSection なしではスクロールしない", async () => {
+    useSuccessHandlers();
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+
+    renderWithQuery(<AnalyticsPanel />);
+
+    expect(screen.getByText("最近の動き")).toBeInTheDocument();
+    expect(scrollIntoView).not.toHaveBeenCalled();
+  });
+
   it("💬 聞くで各時間軸の文脈つきに onAskMayor が呼ばれる", async () => {
     useSuccessHandlers();
     const onAskMayor = vi.fn();

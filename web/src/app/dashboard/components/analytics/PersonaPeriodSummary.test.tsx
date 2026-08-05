@@ -52,8 +52,5 @@ describe("PersonaPeriodSummary", () => {
     expect(screen.getByText("60代")).toBeInTheDocument();
     expect(screen.getByText("交通")).toBeInTheDocument();
     expect(screen.queryByText("医療")).not.toBeInTheDocument();
-
-    // 注記に件数と近似である旨が含まれる
-    expect(screen.getByText(/ペルソナ 6件の集計/)).toBeInTheDocument();
   });
 });

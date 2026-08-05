@@ -1,10 +1,14 @@
+import { useEffect } from "react";
 import { ConversationSection } from "./analytics/ConversationSection";
 import { OntologySection } from "./analytics/OntologySection";
 import { PersonaSection } from "./analytics/PersonaSection";
 import { ReportsSection } from "./analytics/ReportsSection";
 
+export type AnalyticsSection = "conversation" | "overview";
+
 interface Props {
   onAskMayor?: (context: string) => void;
+  initialSection?: AnalyticsSection;
 }
 
 const TimeAxisHeading = ({
@@ -35,31 +39,44 @@ const TimeAxisHeading = ({
   </div>
 );
 
-export const AnalyticsPanel = ({ onAskMayor }: Props) => (
-  <div className="space-y-6">
-    <TimeAxisHeading
-      title="今週のできごと"
-      description="週ごとのまとめ・毎週火曜に自動生成"
-      askContext="今週の週次レポート"
-      onAskMayor={onAskMayor}
-    />
-    <ReportsSection />
+export const AnalyticsPanel = ({ onAskMayor, initialSection }: Props) => {
+  useEffect(() => {
+    if (!initialSection) return;
+    document
+      .getElementById(`analytics-${initialSection}`)
+      ?.scrollIntoView({ block: "start" });
+  }, [initialSection]);
 
-    <TimeAxisHeading
-      title="最近の動き"
-      description="直近30日の生データ"
-      askContext="直近30日の会話データ"
-      onAskMayor={onAskMayor}
-    />
-    <ConversationSection />
+  return (
+    <div className="space-y-6">
+      <TimeAxisHeading
+        title="今週のできごと"
+        description="週ごとのまとめ・毎週火曜に自動生成"
+        askContext="今週の週次レポート"
+        onAskMayor={onAskMayor}
+      />
+      <ReportsSection />
 
-    <TimeAxisHeading
-      title="村の全体像"
-      description="これまでの会話全体から見えるもの"
-      askContext="全期間の全体分析"
-      onAskMayor={onAskMayor}
-    />
-    <PersonaSection />
-    <OntologySection />
-  </div>
-);
+      <div id="analytics-conversation" className="space-y-6">
+        <TimeAxisHeading
+          title="最近の動き"
+          description="直近30日の生データ"
+          askContext="直近30日の会話データ"
+          onAskMayor={onAskMayor}
+        />
+        <ConversationSection />
+      </div>
+
+      <div id="analytics-overview" className="space-y-6">
+        <TimeAxisHeading
+          title="村の全体像"
+          description="これまでの会話全体から見えるもの"
+          askContext="全期間の全体分析"
+          onAskMayor={onAskMayor}
+        />
+        <PersonaSection />
+        <OntologySection />
+      </div>
+    </div>
+  );
+};

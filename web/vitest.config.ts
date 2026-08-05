@@ -84,6 +84,7 @@ export default defineConfig({
         // server 側でテスト済み
         "src/app/dashboard/components/analytics/HourlyChart.tsx",
         "src/app/dashboard/components/analytics/WeekdayChart.tsx",
+        "src/app/dashboard/components/home/WeekTrendChart.tsx",
       ],
       thresholds: {
         branches: 88,

@@ -9,78 +9,93 @@ import { HomePanel } from "./HomePanel";
 
 const API = "http://localhost:8787";
 
-const emptyPersonaAnalytics = {
-  totalCount: 0,
-  hourly: [],
-  weekday: [],
-  officeHours: { open: 0, closed: 0 },
-  ageSentiment: [],
-  topics: [],
-  segments: { residence: [], relationship: [] },
-};
+// 2026-08-03（月）。直近7日 = 07-28〜08-03
+const NOW = new Date("2026-08-03T10:00:00");
 
-const topic = (
-  name: string,
-  counts: Partial<{
-    total: number;
-    positive: number;
-    negative: number;
-    request: number;
-    neutral: number;
-  }>,
-) => ({
-  topic: name,
-  total: counts.total ?? 0,
-  positive: counts.positive ?? 0,
-  negative: counts.negative ?? 0,
-  request: counts.request ?? 0,
-  neutral: counts.neutral ?? 0,
-});
+const positiveTopics = [
+  {
+    topic: "観光",
+    total: 20,
+    sentiments: { positive: 20, negative: 0, request: 0, neutral: 0 },
+    sample: "音威子府そばがとても美味しかった",
+    topTags: [
+      { tag: "そば", count: 3 },
+      { tag: "駅", count: 2 },
+    ],
+  },
+];
 
-// 2026-07-29（水）固定。今週 = 07-27〜07-29、前週 = 07-20〜07-26
-const NOW = new Date("2026-07-29T10:00:00");
+const troubleTopics = [
+  {
+    topic: "生活",
+    total: 6,
+    sentiments: { positive: 0, negative: 6, request: 0, neutral: 0 },
+    sample: "粗大ごみの出し方がわかりにくい",
+    topTags: [{ tag: "粗大ごみ", count: 3 }],
+  },
+];
 
-const useDefaultHandlers = ({ emergencies = [] as unknown[] } = {}) => {
+const useDefaultHandlers = () => {
   server.use(
-    http.get(`${API}/admin/analytics/persona`, ({ request }) => {
-      const from = new URL(request.url).searchParams.get("from");
-      if (from === "2026-07-27") {
-        return HttpResponse.json({
-          ...emptyPersonaAnalytics,
-          totalCount: 15,
-          topics: [
-            topic("観光", { total: 6, positive: 4, negative: 1, request: 1 }),
-            topic("生活", { total: 5, negative: 3, request: 1, neutral: 1 }),
-            topic("行政", { total: 4, neutral: 4 }),
-          ],
-        });
-      }
-      return HttpResponse.json({
-        ...emptyPersonaAnalytics,
-        totalCount: 8,
-        topics: [
-          topic("観光", { total: 3, negative: 1 }),
-          topic("生活", { total: 5, negative: 4, request: 1 }),
-        ],
-      });
-    }),
     http.get(`${API}/admin/analytics/conversations`, () =>
       HttpResponse.json({
         daily: [
-          { date: "2026-07-21", conversations: 25, messages: 60 },
-          { date: "2026-07-27", conversations: 10, messages: 30 },
-          { date: "2026-07-28", conversations: 20, messages: 55 },
-          { date: "2026-07-29", conversations: 5, messages: 12 },
+          { date: "2026-08-02", conversations: 4, messages: 12 },
+          { date: "2026-08-03", conversations: 6, messages: 20 },
         ],
-        hourly: [],
+        hourly: [{ hour: 19, count: 30 }],
         weekday: [],
-        platforms: [],
-        totals: { conversations: 60, messages: 157 },
+        platforms: [
+          { platform: "line", count: 20 },
+          { platform: "web", count: 14 },
+          { platform: "admin", count: 4 },
+        ],
+        totals: { conversations: 34, messages: 120 },
       }),
     ),
-    http.get(`${API}/admin/emergency`, () =>
-      HttpResponse.json({ emergencies }),
+    http.get(`${API}/admin/analytics/persona`, () =>
+      HttpResponse.json({
+        totalCount: 21,
+        hourly: [],
+        weekday: [],
+        officeHours: { open: 40, closed: 60 },
+        ageSentiment: [
+          { age: "50代", positive: 5, negative: 3, request: 0, neutral: 0 },
+          { age: "不明", positive: 0, negative: 0, request: 0, neutral: 30 },
+        ],
+        topics: [
+          {
+            topic: "観光",
+            total: 12,
+            positive: 8,
+            negative: 1,
+            request: 3,
+            neutral: 0,
+          },
+          {
+            topic: "生活",
+            total: 9,
+            positive: 0,
+            negative: 4,
+            request: 0,
+            neutral: 5,
+          },
+        ],
+        segments: {
+          residence: [{ label: "村内", count: 12 }],
+          relationship: [{ label: "村人", count: 10 }],
+        },
+      }),
     ),
+    http.get(`${API}/admin/persona/topics`, ({ request }) => {
+      const params = new URL(request.url).searchParams;
+      return HttpResponse.json({
+        topics:
+          params.get("sentiments") === "positive"
+            ? positiveTopics
+            : troubleTopics,
+      });
+    }),
     http.get(`${API}/admin/broadcast`, () =>
       HttpResponse.json({
         broadcasts: [
@@ -90,11 +105,11 @@ const useDefaultHandlers = ({ emergencies = [] as unknown[] } = {}) => {
             body: "",
             parts: [],
             status: "scheduled",
-            scheduledAt: "2026-07-31T23:00:00Z",
+            scheduledAt: "2026-08-05T23:00:00Z",
             sentAt: null,
             errorMessage: null,
             createdBy: "admin",
-            createdAt: "2026-07-28T00:00:00Z",
+            createdAt: "2026-08-01T00:00:00Z",
             updatedAt: null,
           },
         ],
@@ -117,6 +132,7 @@ const useDefaultHandlers = ({ emergencies = [] as unknown[] } = {}) => {
             scheduledAt: null,
             sentAt: "2026-07-26T00:00:00Z",
             closedAt: null,
+            answerCount: 24,
           },
         ],
         total: 1,
@@ -139,117 +155,222 @@ afterEach(() => {
 });
 
 describe("HomePanel", () => {
-  it("今週の困りごとをネガ+要望の多い順に件数付きで表示する", async () => {
+  it("見出しに直近7日の実日付を出す", async () => {
     useDefaultHandlers();
-    renderWithQuery(<HomePanel onNavigate={vi.fn()} />);
+    renderWithQuery(
+      <HomePanel onNavigate={vi.fn()} onShowAnalytics={vi.fn()} />,
+    );
 
-    await waitFor(() => {
-      expect(screen.getByText("今週の困りごと")).toBeDefined();
-    });
-    const items = screen.getAllByTestId("trouble-topic");
-    expect(items[0].textContent).toContain("生活");
-    expect(items[0].textContent).toContain("4");
-    expect(items[1].textContent).toContain("観光");
+    expect(screen.getByText("今週の音威子府")).toBeVisible();
+    expect(screen.getByText(/7月28日〜8月3日の声から/)).toBeVisible();
   });
 
-  it("トップトピックで前週になかった話題に NEW を付ける", async () => {
+  it("取得中は空文言ではなく読み込み中を出す", async () => {
     useDefaultHandlers();
-    renderWithQuery(<HomePanel onNavigate={vi.fn()} />);
+    renderWithQuery(
+      <HomePanel onNavigate={vi.fn()} onShowAnalytics={vi.fn()} />,
+    );
+
+    expect(screen.getByText("読み込み中...")).toBeVisible();
+    expect(screen.queryByText(/声がありません/)).toBeNull();
 
     await waitFor(() => {
-      expect(screen.getByText("トップトピック")).toBeDefined();
+      expect(screen.getByText("✨ 今週の話題")).toBeVisible();
     });
-    const rows = screen.getAllByTestId("top-topic");
+    expect(screen.queryByText("読み込み中...")).toBeNull();
+  });
+
+  it("ポジの話題と困りごとを別カードに件数・タグ・声つきで出す", async () => {
+    useDefaultHandlers();
+    renderWithQuery(
+      <HomePanel onNavigate={vi.fn()} onShowAnalytics={vi.fn()} />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("✨ 今週の話題")).toBeVisible();
+      expect(screen.getByText("⚠️ 今週の困りごと")).toBeVisible();
+    });
+    const rows = screen.getAllByTestId("topic-row");
     expect(rows[0].textContent).toContain("観光");
-    const gyousei = rows.find((r) => r.textContent?.includes("行政"));
-    expect(gyousei?.textContent).toContain("NEW");
+    expect(rows[0].textContent).toContain("20件");
+    expect(rows[0].textContent).toContain("そば ×3");
+    expect(rows[0].textContent).toContain(
+      "「音威子府そばがとても美味しかった」",
+    );
+    expect(rows[1].textContent).toContain("生活");
+    expect(rows[1].textContent).toContain("粗大ごみ ×3");
+    expect(rows[1].textContent).toContain("「粗大ごみの出し方がわかりにくい」");
   });
 
-  it("今週の緊急報告があれば最上部に表示し、みんなの声へ遷移できる", async () => {
+  it("話題別で見るで話題ビューに遷移する", async () => {
     const onNavigate = vi.fn();
-    useDefaultHandlers({
-      emergencies: [
-        {
-          id: "e-1",
-          type: "熊の出没",
-          description: "物満内地区の農道付近で子熊を目撃",
-          location: "物満内",
-          reportedAt: "2026-07-28T08:40:00Z",
-          updatedAt: null,
-        },
-      ],
-    });
-    renderWithQuery(<HomePanel onNavigate={onNavigate} />);
+    useDefaultHandlers();
+    renderWithQuery(
+      <HomePanel onNavigate={onNavigate} onShowAnalytics={vi.fn()} />,
+    );
 
     await waitFor(() => {
-      expect(screen.getByText(/熊の出没/)).toBeDefined();
+      expect(screen.getByText("✨ 今週の話題")).toBeVisible();
     });
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: /みんなの声で見る/ }));
+    await user.click(screen.getByRole("button", { name: /話題別で見る/ }));
     expect(onNavigate).toHaveBeenCalledWith("voices", {
-      period: "week",
-      sents: ["emergency"],
+      period: "d7",
+      sort: "topics",
     });
   });
 
-  it("先週以前の緊急報告しかなければ緊急セクションを出さない", async () => {
-    useDefaultHandlers({
-      emergencies: [
-        {
-          id: "e-old",
-          type: "停電",
-          description: "村落部",
-          location: null,
-          reportedAt: "2026-07-20T00:00:00Z",
-          updatedAt: null,
-        },
-      ],
-    });
-    renderWithQuery(<HomePanel onNavigate={vi.fn()} />);
+  it("話題の行クリックでその話題と感情に絞った声一覧へ遷移する", async () => {
+    const onNavigate = vi.fn();
+    useDefaultHandlers();
+    renderWithQuery(
+      <HomePanel onNavigate={onNavigate} onShowAnalytics={vi.fn()} />,
+    );
 
     await waitFor(() => {
-      expect(screen.getByText("今週の困りごと")).toBeDefined();
+      expect(screen.getByText("⚠️ 今週の困りごと")).toBeVisible();
     });
-    expect(screen.queryByText("緊急の報告")).toBeNull();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /粗大ごみ ×3/ }));
+    expect(onNavigate).toHaveBeenCalledWith("voices", {
+      period: "d7",
+      topic: "生活",
+      sents: ["negative", "request"],
+    });
+
+    await user.click(screen.getByRole("button", { name: /そば ×3/ }));
+    expect(onNavigate).toHaveBeenCalledWith("voices", {
+      period: "d7",
+      topic: "観光",
+      sents: ["positive"],
+    });
+  });
+
+  it("今週のサマリーに会話数と声の数を出し、村の分析へ遷移できる", async () => {
+    const onShowAnalytics = vi.fn();
+    useDefaultHandlers();
+    renderWithQuery(
+      <HomePanel onNavigate={vi.fn()} onShowAnalytics={onShowAnalytics} />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("📊 今週のサマリー")).toBeVisible();
+    });
+    const strip = screen.getByTestId("activity-strip");
+    expect(strip.textContent).toContain("会話 34件");
+    expect(strip.textContent).toContain("集まった声 21件");
+    expect(strip.textContent).toContain("LINE 20 · Web 14");
+    expect(strip.textContent).not.toContain("管理者");
+
+    const user = userEvent.setup();
+    const links = screen.getAllByRole("button", { name: /村の分析で見る/ });
+    await user.click(links[0]);
+    expect(onShowAnalytics).toHaveBeenCalledWith();
+
+    await user.click(screen.getByRole("button", { name: /会話 34/ }));
+    expect(onShowAnalytics).toHaveBeenCalledWith("conversation");
+
+    await user.click(screen.getByRole("button", { name: /集まった声 21/ }));
+    expect(onShowAnalytics).toHaveBeenCalledWith("overview");
+  });
+
+  it("サマリーに声の内訳と声の分布を出す", async () => {
+    useDefaultHandlers();
+    renderWithQuery(
+      <HomePanel onNavigate={vi.fn()} onShowAnalytics={vi.fn()} />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("sentiment-breakdown")).toBeInTheDocument();
+    });
+    // 期待値は topics 2 行の合算
+    const breakdown = screen.getByTestId("sentiment-breakdown");
+    expect(breakdown.textContent).toContain("ポジティブ 8");
+    expect(breakdown.textContent).toContain("ネガティブ 5");
+    expect(breakdown.textContent).toContain("要望 3");
+
+    const speakers = screen.getByTestId("speaker-breakdown");
+    // 年代の件数は sentiment 内訳の合算
+    expect(speakers.textContent).toContain("50代 8");
+    expect(speakers.textContent).toContain("村内 12");
+    expect(speakers.textContent).toContain("村人 10");
+    expect(speakers.textContent).not.toContain("不明");
+  });
+
+  it("サマリーの感情から声一覧へ絞り込んで遷移する", async () => {
+    const onNavigate = vi.fn();
+    useDefaultHandlers();
+    renderWithQuery(
+      <HomePanel onNavigate={onNavigate} onShowAnalytics={vi.fn()} />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("sentiment-breakdown")).toBeInTheDocument();
+    });
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /要望 3/ }));
+    expect(onNavigate).toHaveBeenCalledWith("voices", {
+      period: "d7",
+      sents: ["request"],
+    });
+  });
+
+  it("会話数の単独カードは出さない", async () => {
+    useDefaultHandlers();
+    renderWithQuery(
+      <HomePanel onNavigate={vi.fn()} onShowAnalytics={vi.fn()} />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("✨ 今週の話題")).toBeVisible();
+    });
+    expect(screen.queryByText(/最近の会話/)).toBeNull();
+    expect(screen.getAllByText(/村の分析で見る/).length).toBeGreaterThan(0);
   });
 
   it("予約中の配信と実施中の投票を表示する", async () => {
     useDefaultHandlers();
-    renderWithQuery(<HomePanel onNavigate={vi.fn()} />);
+    renderWithQuery(
+      <HomePanel onNavigate={vi.fn()} onShowAnalytics={vi.fn()} />,
+    );
 
     await waitFor(() => {
-      expect(screen.getByText("ゴミ収集日の変更のお知らせ")).toBeDefined();
-      expect(screen.getByText("夏まつりの出店、何がいい？")).toBeDefined();
+      expect(screen.getByText("ゴミ収集日の変更のお知らせ")).toBeVisible();
+      expect(screen.getByText("夏まつりの出店、何がいい？")).toBeVisible();
     });
   });
 
-  it("参考の数字に今週の会話数と先週比を表示し、村の分析へ遷移できる", async () => {
-    const onNavigate = vi.fn();
+  it("実施中の投票に開始日と回答数を出す", async () => {
     useDefaultHandlers();
-    renderWithQuery(<HomePanel onNavigate={onNavigate} />);
+    renderWithQuery(
+      <HomePanel onNavigate={vi.fn()} onShowAnalytics={vi.fn()} />,
+    );
 
     await waitFor(() => {
-      expect(screen.getByText(/今週の会話 35/)).toBeDefined();
+      expect(screen.getByText("夏まつりの出店、何がいい？")).toBeVisible();
     });
-    expect(screen.getByText(/40%/)).toBeDefined();
-
-    const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: /村の分析で見る/ }));
-    expect(onNavigate).toHaveBeenCalledWith("analytics");
+    expect(screen.getByText(/7月26日開始/)).toBeVisible();
+    expect(screen.getByText(/24件の回答/)).toBeVisible();
   });
 
-  it("お知らせを作るで LINE配信へ遷移できる", async () => {
-    const onNavigate = vi.fn();
+  it("取得に失敗したら空状態ではなくエラーを出す", async () => {
     useDefaultHandlers();
-    renderWithQuery(<HomePanel onNavigate={onNavigate} />);
+    server.use(
+      http.get(`${API}/admin/persona/topics`, () =>
+        HttpResponse.json({ error: "internal" }, { status: 500 }),
+      ),
+    );
+    renderWithQuery(
+      <HomePanel onNavigate={vi.fn()} onShowAnalytics={vi.fn()} />,
+    );
 
     await waitFor(() => {
-      expect(screen.getByText("トップトピック")).toBeDefined();
+      expect(screen.getByText(/エラー:/)).toBeInTheDocument();
     });
-
-    const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: /お知らせを作る/ }));
-    expect(onNavigate).toHaveBeenCalledWith("broadcast");
+    expect(screen.queryByText("✨ 今週の話題")).toBeNull();
+    expect(screen.queryByText(/この3日はまだ新しい声がありません/)).toBeNull();
   });
 });

@@ -31,7 +31,7 @@ export const UsageSection = () => {
   return (
     <SectionCard
       title="トークン消費・コスト"
-      description="週ごと・モデルごとのトークン量と概算コスト（週初め = JST 月曜）"
+      description="週ごと・モデルごとのトークン量と概算コスト（週初め = 月曜）"
     >
       {isLoading && <SectionLoading />}
       {error != null && <SectionError error={error} />}

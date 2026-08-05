@@ -1,8 +1,4 @@
-const PLATFORM_LABELS: Record<string, string> = {
-  web: "Web",
-  line: "LINE",
-  admin: "管理者",
-};
+import { PLATFORM_LABELS } from "~/lib/analytics-summary";
 
 interface Props {
   conversations: number;

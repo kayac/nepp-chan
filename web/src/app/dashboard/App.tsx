@@ -14,7 +14,10 @@ import {
 } from "@heroicons/react/24/outline";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { useMemo, useState } from "react";
-import { AnalyticsPanel } from "~/app/dashboard/components/AnalyticsPanel";
+import {
+  AnalyticsPanel,
+  type AnalyticsSection,
+} from "~/app/dashboard/components/AnalyticsPanel";
 import { BroadcastPanel } from "~/app/dashboard/components/BroadcastPanel";
 import { FeedbackPanel } from "~/app/dashboard/components/FeedbackPanel";
 import { HomePanel } from "~/app/dashboard/components/HomePanel";
@@ -131,6 +134,7 @@ export const App = () => {
 
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [voicesFilter, setVoicesFilter] = useState<Partial<VoiceFilter>>();
+  const [analyticsSection, setAnalyticsSection] = useState<AnalyticsSection>();
   const [isMayorOpen, setIsMayorOpen] = useState(false);
   const [mayorRequest, setMayorRequest] = useState<MayorRequest | null>(null);
 
@@ -150,7 +154,16 @@ export const App = () => {
     if (tabId === "voices") {
       setVoicesFilter(filter);
     }
+    if (tabId === "analytics") {
+      setAnalyticsSection(undefined);
+    }
     setActiveTab(tabId);
+    setIsSidebarOpen(false);
+  };
+
+  const handleShowAnalytics = (section?: AnalyticsSection) => {
+    setAnalyticsSection(section);
+    setActiveTab("analytics");
     setIsSidebarOpen(false);
   };
 
@@ -289,15 +302,22 @@ export const App = () => {
 
         <div className="flex-1 overflow-auto p-4 sm:p-6">
           <div key={activeTab} className="animate-fade-in max-w-5xl">
-            {activeTab === "home" && <HomePanel onNavigate={handleTabChange} />}
+            {activeTab === "home" && (
+              <HomePanel
+                onNavigate={handleTabChange}
+                onShowAnalytics={handleShowAnalytics}
+              />
+            )}
             {activeTab === "analytics" && (
-              <AnalyticsPanel onAskMayor={openMayorChat} />
+              <AnalyticsPanel
+                onAskMayor={openMayorChat}
+                initialSection={analyticsSection}
+              />
             )}
             {activeTab === "voices" && (
               <VoicesPanel
                 key={JSON.stringify(voicesFilter ?? {})}
                 initialFilter={voicesFilter}
-                canManage={hasRole("admin")}
                 onAskMayor={openMayorChat}
               />
             )}

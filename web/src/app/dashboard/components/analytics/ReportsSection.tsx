@@ -41,9 +41,7 @@ const ReportDetail = ({ id }: { id: string }) => {
       />
 
       <div>
-        <h4 className="text-sm font-medium text-stone-700 mb-2">
-          時間帯分布（JST）
-        </h4>
+        <h4 className="text-sm font-medium text-stone-700 mb-2">時間帯分布</h4>
         <HourlyChart hourly={report.stats.hourly} height={180} />
       </div>
 
@@ -91,7 +89,7 @@ export const ReportsSection = () => {
   return (
     <SectionCard
       title="週次レポート"
-      description="毎週火曜 5:00 JST に前週分（月〜日）を自動生成"
+      description="毎週火曜 5:00 に前週分（月〜日）を自動生成"
     >
       {isLoading && <SectionLoading />}
       {error != null && <SectionError error={error} />}

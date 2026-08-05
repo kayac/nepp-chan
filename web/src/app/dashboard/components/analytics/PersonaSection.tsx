@@ -11,15 +11,16 @@ import {
   YAxis,
 } from "recharts";
 import { usePersonaAnalytics } from "~/app/dashboard/hooks/useAnalytics";
+import { sentimentTotal } from "~/lib/analytics-summary";
 import {
   AXIS_STYLE,
   getColorAt,
   NEPP_CHART_COLORS,
   OPEN_COLOR,
+  SENTIMENT_SERIES,
   TOOLTIP_STYLE,
 } from "~/lib/chart-helpers";
 import { HourlyChart } from "./HourlyChart";
-import { SENTIMENT_SERIES, sentimentTotal } from "./helpers";
 import { SectionCard, SectionError, SectionLoading } from "./SectionCard";
 import { WeekdayChart } from "./WeekdayChart";
 
@@ -199,9 +200,7 @@ export const PersonaSection = () => {
                     件
                   </span>
                 </p>
-                <p className="text-[11px] text-stone-500">
-                  平日 8〜17時（JST）
-                </p>
+                <p className="text-[11px] text-stone-500">平日 8〜17時</p>
               </div>
               <div
                 className="rounded-xl border px-4 py-3"
@@ -224,13 +223,13 @@ export const PersonaSection = () => {
             <div className="grid lg:grid-cols-[3fr_2fr] gap-6">
               <div>
                 <h4 className="text-sm font-medium text-stone-700 mb-2">
-                  時間帯分布（JST）
+                  時間帯分布
                 </h4>
                 <HourlyChart hourly={data.hourly} tooltipLabel="ペルソナ件数" />
               </div>
               <div>
                 <h4 className="text-sm font-medium text-stone-700 mb-2">
-                  曜日分布（JST）
+                  曜日分布
                 </h4>
                 <WeekdayChart
                   weekday={data.weekday}
