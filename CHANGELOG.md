@@ -1,5 +1,10 @@
 # Changelog
 
+## [v1.0.9](https://github.com/kayac/nepp-chan/compare/v1.0.8...v1.0.9) - 2026-08-06
+
+- ダッシュボードの週次レポート表示順と今週の話題の集計を調整 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/987
+- fix(server): Gemini の thinking 無効化指定を minimal に変更 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/989
+
 ## [v1.0.8](https://github.com/kayac/nepp-chan/compare/v1.0.7...v1.0.8) - 2026-08-05
 
 - chore: Claude Code の品質ゲートと rules を整備する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/770
