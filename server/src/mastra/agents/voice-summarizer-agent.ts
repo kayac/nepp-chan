@@ -8,7 +8,7 @@ const summarizerModelConfig = {
   model: GEMINI_FLASH_LITE,
   providerOptions: {
     google: {
-      thinkingConfig: { thinkingBudget: 0 },
+      thinkingConfig: { thinkingLevel: "minimal" as const },
     },
   },
   defaultOptions: { modelSettings: { temperature: 0 } },

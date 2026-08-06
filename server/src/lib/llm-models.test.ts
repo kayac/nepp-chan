@@ -59,7 +59,7 @@ describe("resolveModelTier", () => {
   });
 
   describe("LINE プラットフォーム（非 Admin）", () => {
-    it("casual → プライマリ FLASH_LITE + thinking 無効 (thinkingBudget: 0)", () => {
+    it("casual → プライマリ FLASH_LITE + minimal", () => {
       const tier = resolveModelTier({
         intent: "casual",
         platform: "line",
@@ -67,7 +67,7 @@ describe("resolveModelTier", () => {
       });
       expect(tier.model[0].model).toBe(GEMINI_FLASH_LITE);
       expect(tier.model[0].providerOptions.google.thinkingConfig).toEqual({
-        thinkingBudget: 0,
+        thinkingLevel: "minimal",
       });
     });
 

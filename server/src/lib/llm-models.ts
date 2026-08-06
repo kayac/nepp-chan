@@ -16,12 +16,9 @@ export const OPENAI_SCORER = "openai/gpt-4.1-nano";
 // 埋め込みモデル
 export const GEMINI_EMBEDDING = "gemini-embedding-001";
 
-type ThinkingLevel = "high" | "medium" | "low" | "none";
+// Gemini 3 系では thinking を完全に無効化できず、thinkingBudget: 0 は 400 になる。最小は minimal。
+type ThinkingLevel = "high" | "medium" | "low" | "minimal";
 
-/**
- * Gemini モデルと thinkingConfig を含む Agent 設定を返す。
- * "none" は AI SDK の thinkingLevel enum に存在しないため thinkingBudget: 0 で無効化する。
- */
 export const geminiModelWithThinking = ({
   model = GEMINI_FLASH_LITE,
   level = "low" as ThinkingLevel,
@@ -29,8 +26,7 @@ export const geminiModelWithThinking = ({
   model,
   providerOptions: {
     google: {
-      thinkingConfig:
-        level === "none" ? { thinkingBudget: 0 } : { thinkingLevel: level },
+      thinkingConfig: { thinkingLevel: level },
     },
   },
 });
@@ -86,7 +82,7 @@ const MODEL_TIERS: Record<Intent, Record<"web" | "line", AgentModelConfig>> = {
       model: geminiModelChain({
         primary: GEMINI_FLASH_LITE,
         fallback: GEMINI_FLASH,
-        level: "none",
+        level: "minimal",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.casual },
     },

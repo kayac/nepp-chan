@@ -5,7 +5,7 @@ const routerModelConfig = {
   model: GEMINI_FLASH_LITE,
   providerOptions: {
     google: {
-      thinkingConfig: { thinkingLevel: "none" as const },
+      thinkingConfig: { thinkingLevel: "minimal" as const },
     },
   },
   defaultOptions: { modelSettings: { temperature: 0 } },
