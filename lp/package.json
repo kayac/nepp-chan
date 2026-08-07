@@ -18,7 +18,7 @@
     "@heroicons/react": "^2.2.0",
     "@nepp-chan/shared": "workspace:*",
     "ai": "^6.0.208",
-    "astro": "^7.1.3",
+    "astro": "^7.1.6",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-markdown": "^10.1.0",
