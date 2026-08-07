@@ -5,7 +5,7 @@ import {
 } from "@nepp-chan/shared/components/Mascot";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import type { UIMessage } from "ai";
-import { isToolOrDynamicToolUIPart } from "ai";
+import { isToolUIPart } from "ai";
 import { useEffect, useRef, useState } from "react";
 
 import { useChatContext } from "~/app/chat/contexts/ChatContext";
@@ -31,7 +31,7 @@ type Presentation = {
 const hasRunningToolCall = (parts: UIMessage["parts"]): boolean =>
   parts.some(
     (p) =>
-      isToolOrDynamicToolUIPart(p) &&
+      isToolUIPart(p) &&
       p.state !== "output-available" &&
       p.state !== "output-error",
   );

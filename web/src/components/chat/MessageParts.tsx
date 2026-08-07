@@ -1,5 +1,5 @@
 import type { UIMessage } from "ai";
-import { isToolOrDynamicToolUIPart } from "ai";
+import { isToolUIPart } from "ai";
 
 import { MarkdownText } from "./MarkdownText";
 import { ToolPart } from "./ToolPart";
@@ -20,7 +20,7 @@ export const MessageParts = ({ message }: Props) =>
         />
       );
     }
-    if (isToolOrDynamicToolUIPart(part)) {
+    if (isToolUIPart(part)) {
       return <ToolPart key={part.toolCallId} part={part} />;
     }
     return null;

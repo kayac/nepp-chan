@@ -1,6 +1,6 @@
 import { messageText } from "@nepp-chan/shared/lib/message-text";
 import type { UIMessage } from "ai";
-import { isToolOrDynamicToolUIPart } from "ai";
+import { isToolUIPart } from "ai";
 
 import type { ConversationContext, ToolExecution } from "~/types";
 
@@ -44,7 +44,7 @@ export const extractConversationContext = (
 };
 
 export const extractToolExecutions = (message: UIMessage): ToolExecution[] =>
-  message.parts.filter(isToolOrDynamicToolUIPart).map((part) => ({
+  message.parts.filter(isToolUIPart).map((part) => ({
     toolName: getToolNameFromPart(part),
     state: part.state ?? "unknown",
     input: "input" in part ? part.input : undefined,

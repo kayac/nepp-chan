@@ -1,17 +1,21 @@
 import { useChat } from "@ai-sdk/react";
 import { PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { StopIcon } from "@heroicons/react/24/solid";
 import { ChatMarkdown } from "@nepp-chan/shared/components/ChatMarkdown";
 import { MiniChatHeader } from "@nepp-chan/shared/components/MiniChatHeader";
+import { ScrollToBottomButton } from "@nepp-chan/shared/components/ScrollToBottomButton";
 import { SpeechBubble } from "@nepp-chan/shared/components/SpeechBubble";
 import {
   INITIAL_MESSAGE,
   SAMPLE_QUESTIONS,
 } from "@nepp-chan/shared/constants/chat-defaults";
-import { useChatAutoScroll } from "@nepp-chan/shared/hooks/useChatAutoScroll";
+import { useStickToBottom } from "@nepp-chan/shared/hooks/useStickToBottom";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { messageText } from "@nepp-chan/shared/lib/message-text";
-import { DefaultChatTransport } from "ai";
-import { type SubmitEvent, useEffect, useMemo, useRef, useState } from "react";
+import { getToolDisplayName } from "@nepp-chan/shared/lib/tool-display-text";
+import { Spinner } from "@nepp-chan/shared/ui/Loading";
+import { DefaultChatTransport, getToolName, isToolUIPart } from "ai";
+import { type SubmitEvent, useEffect, useMemo, useState } from "react";
 import { acquireAnonymousSession } from "./anonymous-session";
 import { CLOSE_MESSAGE_TYPE } from "./messages";
 import { createThread } from "./thread";
@@ -26,16 +30,34 @@ const closeWidget = () => {
   window.parent.postMessage({ type: CLOSE_MESSAGE_TYPE }, "*");
 };
 
-const WaitingIndicator = ({ className }: { className?: string }) => (
-  <span
-    role="status"
-    aria-label="回答を生成中"
-    className={cn(
-      "inline-block size-2 rounded-full bg-orange-500 animate-pulse",
-      className,
-    )}
-  />
-);
+const WaitingIndicator = ({
+  toolName,
+  className,
+}: {
+  toolName?: string;
+  className?: string;
+}) =>
+  toolName ? (
+    <span
+      role="status"
+      className={cn(
+        "inline-flex items-center gap-1.5 text-xs text-(--fg-3)",
+        className,
+      )}
+    >
+      <Spinner size="sm" />
+      {getToolDisplayName(toolName, true)}
+    </span>
+  ) : (
+    <span
+      role="status"
+      aria-label="回答を生成中"
+      className={cn(
+        "inline-block size-2 rounded-full bg-orange-500 animate-pulse",
+        className,
+      )}
+    />
+  );
 
 export const WidgetChat = ({
   apiUrl,
@@ -47,7 +69,6 @@ export const WidgetChat = ({
   const [bootstrapError, setBootstrapError] = useState(false);
   const [input, setInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(true);
-  const streamRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     acquireAnonymousSession(apiUrl)
@@ -79,7 +100,7 @@ export const WidgetChat = ({
     [apiUrl, threadId, token],
   );
 
-  const { messages, sendMessage, status, error } = useChat({
+  const { messages, sendMessage, status, error, stop } = useChat({
     // threadId 確定時に id を変えて transport の再生成を強制する
     // （useChat は id が変わらない限り transport の更新を反映しない）
     id: threadId ?? "pending",
@@ -98,8 +119,15 @@ export const WidgetChat = ({
     (status === "streaming" &&
       lastPart !== undefined &&
       lastPart.type !== "text");
+  // 委譲中は Mastra の data-tool-agent パートが末尾に積まれ続けるため、
+  // 末尾ではなく直近のツールパートから実行中のツール名を引く
+  const activeToolPart = lastMessage?.parts.filter(isToolUIPart).at(-1);
+  const activeToolName = activeToolPart
+    ? getToolName(activeToolPart)
+    : undefined;
 
-  useChatAutoScroll(streamRef);
+  const { viewportRef, isAtBottom, scrollToBottom } =
+    useStickToBottom(messages);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -140,7 +168,7 @@ export const WidgetChat = ({
       />
 
       <div
-        ref={streamRef}
+        ref={viewportRef}
         className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4"
       >
         {messages.map((m, index) => {
@@ -162,7 +190,10 @@ export const WidgetChat = ({
             >
               {text && <ChatMarkdown text={text} variant={bubbleVariant} />}
               {showIndicatorHere && (
-                <WaitingIndicator className="mt-1 first:mt-0" />
+                <WaitingIndicator
+                  toolName={activeToolName}
+                  className="mt-1 first:mt-0"
+                />
               )}
             </SpeechBubble>
           );
@@ -170,7 +201,7 @@ export const WidgetChat = ({
         {/* 送信直後でまだアシスタントのメッセージが無い間は独立した吹き出しで出す */}
         {isWaitingForText && messages.at(-1)?.role !== "assistant" && (
           <SpeechBubble variant="assistant" className="flex self-start">
-            <WaitingIndicator />
+            <WaitingIndicator toolName={activeToolName} />
           </SpeechBubble>
         )}
         {(error || bootstrapError) && (
@@ -178,6 +209,14 @@ export const WidgetChat = ({
             通信エラーが発生したよ。もう一度試してみてね。
           </div>
         )}
+
+        <div className="pointer-events-none sticky bottom-0 mt-auto flex justify-center pt-2">
+          <ScrollToBottomButton
+            isAtBottom={isAtBottom}
+            onClick={() => scrollToBottom()}
+            className="pointer-events-auto"
+          />
+        </div>
       </div>
 
       {showSuggestions && (
@@ -213,20 +252,34 @@ export const WidgetChat = ({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="ねっぷちゃんに話しかける…"
-          className="flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-(--fg-4)"
+          className="flex-1 border-0 bg-transparent text-base outline-none placeholder:text-(--fg-4)"
         />
-        <button
-          type="submit"
-          disabled={isBusy || !isReady || !input.trim()}
-          aria-label="送信"
-          className={cn(
-            "grid size-8 place-items-center rounded-full bg-(--teal-700) text-white",
-            "transition-colors hover:bg-(--teal-800)",
-            "disabled:cursor-not-allowed disabled:opacity-55",
-          )}
-        >
-          <PaperAirplaneIcon className="size-[18px]" aria-hidden="true" />
-        </button>
+        {isBusy ? (
+          <button
+            type="button"
+            onClick={stop}
+            aria-label="停止"
+            className={cn(
+              "grid size-8 place-items-center rounded-full bg-(--paper-100) text-(--fg-2)",
+              "transition-colors hover:bg-(--paper-200)",
+            )}
+          >
+            <StopIcon className="size-3" aria-hidden="true" />
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={!isReady || !input.trim()}
+            aria-label="送信"
+            className={cn(
+              "grid size-8 place-items-center rounded-full bg-(--teal-700) text-white",
+              "transition-colors hover:bg-(--teal-800)",
+              "disabled:cursor-not-allowed disabled:opacity-55",
+            )}
+          >
+            <PaperAirplaneIcon className="size-[18px]" aria-hidden="true" />
+          </button>
+        )}
       </form>
 
       <div className="px-4 pb-3 pt-2 text-center">

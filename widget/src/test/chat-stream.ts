@@ -46,7 +46,15 @@ export const buildDeferredChatStreamResponse = () => {
     sendToolCallStart: (
       toolCallId = "tool-1",
       toolName = "agent-knowledgeAgent",
-    ) => send({ type: "tool-input-start", toolCallId, toolName }),
+    ) => {
+      send({ type: "tool-input-start", toolCallId, toolName });
+      // Mastra はサブエージェント実行中、進捗を data-tool-agent として流し続ける
+      send({
+        type: "data-tool-agent",
+        id: toolCallId,
+        data: { id: "knowledge-agent", text: "" },
+      });
+    },
     finish: (text: string, id = "0") => {
       send({ type: "text-delta", id, delta: text });
       send({ type: "text-end", id });

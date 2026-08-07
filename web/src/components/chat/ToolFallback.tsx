@@ -6,16 +6,16 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
+import { getToolDisplayName } from "@nepp-chan/shared/lib/tool-display-text";
 import { Spinner } from "@nepp-chan/shared/ui/Loading";
 import type { FC, ReactNode } from "react";
 import { useState } from "react";
-
-import { getToolDisplayName } from "~/components/chat/tool-display-text";
 import type {
   ToolPartComponent,
   ToolPartStatus,
 } from "~/components/chat/types";
 import { ErrorBanner } from "~/components/ui/ErrorBanner";
+import { useAdminUser } from "~/hooks/useAdminUser";
 
 type ToolStatusInfo = {
   label: string;
@@ -73,6 +73,8 @@ export const ToolFallback: ToolPartComponent = ({
   status,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
+  // 入出力の生データは運用時の調査用。一般利用者には出さない
+  const { data: adminUser } = useAdminUser();
 
   const isError = status.type === "incomplete";
   const isRunning = status.type === "running";
@@ -109,21 +111,23 @@ export const ToolFallback: ToolPartComponent = ({
 
         <StatusBadge status={toolStatus} />
 
-        <button
-          type="button"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="shrink-0 p-0.5 text-(--fg-3) hover:text-(--fg-2) transition-colors"
-          aria-label={isCollapsed ? "詳細を表示" : "詳細を隠す"}
-        >
-          {isCollapsed ? (
-            <ChevronDownIcon className="size-3" />
-          ) : (
-            <ChevronUpIcon className="size-3" />
-          )}
-        </button>
+        {adminUser && (
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="shrink-0 p-0.5 text-(--fg-3) hover:text-(--fg-2) transition-colors"
+            aria-label={isCollapsed ? "詳細を表示" : "詳細を隠す"}
+          >
+            {isCollapsed ? (
+              <ChevronDownIcon className="size-3" />
+            ) : (
+              <ChevronUpIcon className="size-3" />
+            )}
+          </button>
+        )}
       </div>
 
-      {!isCollapsed && (
+      {adminUser && !isCollapsed && (
         <div className="aui-tool-fallback-content flex flex-col gap-2 border-t border-(--border-1) px-3 py-2">
           {errorReason && (
             <div className="aui-tool-fallback-error-root">
