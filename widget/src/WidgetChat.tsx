@@ -72,7 +72,6 @@ export const WidgetChat = ({
           return {
             body: {
               message: messages[messages.length - 1],
-              intent: "casual",
             },
           };
         },

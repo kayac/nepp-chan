@@ -228,6 +228,28 @@ describe("WidgetChat", () => {
     });
   });
 
+  it("intent を送らずサーバーの分類に委ねる", async () => {
+    let body: unknown;
+    server.use(
+      http.post(CHAT_URL, async ({ request }) => {
+        body = await request.json();
+        return buildChatStreamResponse("答えだよ");
+      }),
+    );
+    renderWidgetChat();
+    await waitForReady();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "音威子府駅ってどんなところ？" }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("答えだよ")).toBeTruthy();
+    });
+
+    expect(body).not.toHaveProperty("intent");
+  });
+
   it("通信エラー時はエラーバブルを表示する", async () => {
     server.use(
       http.post(CHAT_URL, () => new HttpResponse("boom", { status: 500 })),
