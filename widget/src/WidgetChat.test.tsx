@@ -192,7 +192,7 @@ describe("WidgetChat", () => {
     });
   });
 
-  it("最初のリアクション文とツール実行後の本回答の間（テキストが途切れる間）も待機インジケータを再表示する", async () => {
+  it("最初のリアクション文とツール実行後の本回答の間はツール実行中のラベルを出す", async () => {
     const deferred = buildDeferredChatStreamResponse();
     server.use(http.post(CHAT_URL, () => deferred.response));
     renderWidgetChat();
@@ -212,13 +212,13 @@ describe("WidgetChat", () => {
     deferred.sendTextEnd();
     deferred.sendToolCallStart();
     await waitFor(() => {
-      expect(screen.getByRole("status", { name: "回答を生成中" })).toBeTruthy();
+      expect(screen.getByText("ねっぷちゃんが調査中")).toBeTruthy();
     });
 
-    // ツール実行後、本回答のテキストが始まったら再度消える
+    // ツール実行後、本回答のテキストが始まったらラベルを消す
     deferred.sendTextStart("1");
     await waitFor(() => {
-      expect(screen.queryByRole("status", { name: "回答を生成中" })).toBeNull();
+      expect(screen.queryByText("ねっぷちゃんが調査中")).toBeNull();
     });
 
     deferred.finish("本回答だよ", "1");
@@ -248,6 +248,41 @@ describe("WidgetChat", () => {
     });
 
     expect(body).not.toHaveProperty("intent");
+  });
+
+  it("生成中は送信ボタンが停止ボタンに変わる", async () => {
+    const deferred = buildDeferredChatStreamResponse();
+    server.use(http.post(CHAT_URL, () => deferred.response));
+    renderWidgetChat();
+    await waitForReady();
+
+    expect(screen.getByLabelText("送信")).toBeTruthy();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "移住の補助金はある？" }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("停止")).toBeTruthy();
+    });
+    expect(screen.queryByLabelText("送信")).toBeNull();
+
+    deferred.sendStart();
+    deferred.sendTextStart();
+    deferred.finish("答えだよ");
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("送信")).toBeTruthy();
+    });
+  });
+
+  it("最下部にいる間は下スクロールボタンを押せない", async () => {
+    renderWidgetChat();
+    await waitForReady();
+
+    expect(
+      screen.getByLabelText("下にスクロール").hasAttribute("disabled"),
+    ).toBe(true);
   });
 
   it("通信エラー時はエラーバブルを表示する", async () => {
