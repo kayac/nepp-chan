@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.0.10](https://github.com/kayac/nepp-chan/compare/v1.0.9...v1.0.10) - 2026-08-07
+
+- fix(widget): intent 固定をやめてサーバーの intent 分類に委ねる by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/990
+
 ## [v1.0.9](https://github.com/kayac/nepp-chan/compare/v1.0.8...v1.0.9) - 2026-08-06
 
 - ダッシュボードの週次レポート表示順と今週の話題の集計を調整 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/987
