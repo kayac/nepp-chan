@@ -1,11 +1,11 @@
-import { ArrowDownIcon } from "@heroicons/react/24/outline";
+import { ScrollToBottomButton } from "@nepp-chan/shared/components/ScrollToBottomButton";
+import { useStickToBottom } from "@nepp-chan/shared/hooks/useStickToBottom";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 
 import { useChatContext } from "~/app/chat/contexts/ChatContext";
 
 import { AssistantMessage, PendingAssistantMessage } from "./AssistantMessage";
 import { Composer } from "./Composer";
-import { useStickToBottom } from "./hooks/useStickToBottom";
 import { UserMessage } from "./UserMessage";
 
 export const Thread = () => {
@@ -52,9 +52,10 @@ export const Thread = () => {
         {showPending && <PendingAssistantMessage />}
 
         <div className="aui-thread-viewport-footer pointer-events-none sticky bottom-0 mx-auto mt-auto flex w-full max-w-(--thread-max-width) flex-col items-center gap-3 overflow-visible pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-4">
-          <ThreadScrollToBottom
+          <ScrollToBottomButton
             isAtBottom={isAtBottom}
             onClick={() => scrollToBottom()}
+            className="aui-thread-scroll-to-bottom pointer-events-auto"
           />
           <Composer />
         </div>
@@ -62,30 +63,3 @@ export const Thread = () => {
     </div>
   );
 };
-
-type ThreadScrollToBottomProps = {
-  isAtBottom: boolean;
-  onClick: () => void;
-};
-
-const ThreadScrollToBottom = ({
-  isAtBottom,
-  onClick,
-}: ThreadScrollToBottomProps) => (
-  <button
-    type="button"
-    onClick={onClick}
-    disabled={isAtBottom}
-    className={cn(
-      "aui-thread-scroll-to-bottom pointer-events-auto",
-      "size-9 rounded-full grid place-items-center",
-      "bg-(--paper-0) border border-(--paper-200) text-(--fg-2)",
-      "transition-all duration-200 hover:border-(--teal-300) hover:text-(--teal-700)",
-      "disabled:invisible opacity-90 hover:opacity-100",
-    )}
-    style={{ boxShadow: "var(--shadow-float-sm)" }}
-    aria-label="下にスクロール"
-  >
-    <ArrowDownIcon className="size-3.5" aria-hidden="true" />
-  </button>
-);

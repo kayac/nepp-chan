@@ -58,7 +58,7 @@ describe("useStickToBottom", () => {
 
   it("初期状態は最下部とみなす", () => {
     render(<TestView dep={0} />);
-    expect(screen.getByTestId("state")).toHaveTextContent("true");
+    expect(screen.getByTestId("state").textContent).toBe("true");
   });
 
   it("上にスクロールすると false、最下部に戻ると true", () => {
@@ -73,7 +73,7 @@ describe("useStickToBottom", () => {
     act(() => {
       vp.dispatchEvent(new Event("scroll"));
     });
-    expect(screen.getByTestId("state")).toHaveTextContent("false");
+    expect(screen.getByTestId("state").textContent).toBe("false");
 
     setScrollMetrics(vp, {
       scrollHeight: 1000,
@@ -83,7 +83,7 @@ describe("useStickToBottom", () => {
     act(() => {
       vp.dispatchEvent(new Event("scroll"));
     });
-    expect(screen.getByTestId("state")).toHaveTextContent("true");
+    expect(screen.getByTestId("state").textContent).toBe("true");
   });
 
   it("scrollToBottom は最下部まで（requestAnimationFrame で）スクロールし true に戻す", async () => {
@@ -117,13 +117,13 @@ describe("useStickToBottom", () => {
     act(() => {
       vp.dispatchEvent(new Event("scroll"));
     });
-    expect(screen.getByTestId("state")).toHaveTextContent("false");
+    expect(screen.getByTestId("state").textContent).toBe("false");
 
     await userEvent.click(screen.getByRole("button", { name: "to-bottom" }));
 
     // 最下部（scrollHeight - clientHeight）へ到達する
     expect(scrollTopValue).toBe(900);
-    expect(screen.getByTestId("state")).toHaveTextContent("true");
+    expect(screen.getByTestId("state").textContent).toBe("true");
   });
 
   it("最下部にいる間は dep 更新でスクロール位置を最下部へ追従する", () => {
