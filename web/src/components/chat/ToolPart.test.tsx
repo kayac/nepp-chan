@@ -1,5 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { renderWithQuery } from "~/test/query";
 
 import { mapToolStateToStatus, ToolPart } from "./ToolPart";
 
@@ -30,7 +31,7 @@ describe("mapToolStateToStatus", () => {
 
 describe("ToolPart", () => {
   it("toolsByName に無いツールは ToolFallback で表示する", () => {
-    render(
+    renderWithQuery(
       <ToolPart
         part={
           {
@@ -48,7 +49,7 @@ describe("ToolPart", () => {
   });
 
   it("toolsByName に登録されたツールは対応コンポーネントで表示する", () => {
-    render(
+    renderWithQuery(
       <ToolPart
         part={
           {

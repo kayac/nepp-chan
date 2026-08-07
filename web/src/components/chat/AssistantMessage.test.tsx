@@ -1,12 +1,12 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { UIMessage } from "ai";
 import { describe, expect, it, vi } from "vitest";
-
 import {
   ChatContext,
   type ChatContextValue,
 } from "~/app/chat/contexts/ChatContext";
+import { renderWithQuery } from "~/test/query";
 
 import { AssistantMessage, PendingAssistantMessage } from "./AssistantMessage";
 
@@ -36,7 +36,7 @@ const renderMessage = (
     stop: vi.fn(),
     ...ctx,
   };
-  return render(
+  return renderWithQuery(
     <ChatContext.Provider value={value}>
       <AssistantMessage message={message} isLast={isLast} />
     </ChatContext.Provider>,
@@ -124,7 +124,7 @@ describe("AssistantMessage", () => {
 
 describe("PendingAssistantMessage", () => {
   it("タイピングドットを表示する", () => {
-    const { container } = render(<PendingAssistantMessage />);
+    const { container } = renderWithQuery(<PendingAssistantMessage />);
     expect(container.querySelector(".aui-typing-dot")).not.toBeNull();
   });
 });
