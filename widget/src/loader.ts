@@ -30,6 +30,13 @@ type MountOptions = {
   doc?: Document;
 };
 
+// クエリ文字列とハッシュには host 側の個人情報が乗りうるので origin + pathname までに絞る
+const buildIframeSrc = (iframeSrc: string) => {
+  const url = new URL(iframeSrc);
+  url.searchParams.set("host", `${location.origin}${location.pathname}`);
+  return url.toString();
+};
+
 const applyPanelState = (iframe: HTMLIFrameElement, open: boolean) => {
   iframe.style.visibility = open ? "visible" : "hidden";
   iframe.style.opacity = open ? "1" : "0";
@@ -138,7 +145,7 @@ export const mountWidget = ({
 
     if (!iframe) {
       iframe = doc.createElement("iframe");
-      iframe.src = iframeSrc;
+      iframe.src = buildIframeSrc(iframeSrc);
       iframe.title = "ねっぷちゃん";
       iframe.style.cssText = `
         position: fixed;

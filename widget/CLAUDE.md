@@ -11,6 +11,7 @@
 - 匿名セッションのトークン/resourceId は localStorage（`nepp-chan-widget:session-token` / `nepp-chan-widget:resource-id`）に保存し、同じブラウザでの再訪問時は再利用する（90日有効）。
 - iframe は lp と同一 origin（`nepp-chan.ai/widget/`）配信。fetch の Origin は配信元になるため、ローダーを貼る host サイトのオリジンは API の CORS 許可リストに無関係。
 - iframe → loader の「閉じる」連携は `postMessage`。loader 側で `event.origin`（iframeSrc のオリジン）と `event.source`（iframe の contentWindow）を検証してから閉じる。
+- loader は iframe の src に `?host=<埋め込み元の origin + pathname>` を付ける。iframe は自ドメイン配信で `Referer` が使えないため、どのページに置かれた widget かはこのクエリでしか分からない。GA の `page_location` にそのまま乗るので、ページ別の利用状況はレポート上で切れる。host 側の URL に個人情報が乗りうるのでクエリ文字列とハッシュは落とす。値は自己申告なので認可には使えない。
 - ボタン設置 2500ms 後、`INITIAL_MESSAGE` の挨拶文を吹き出しティーザーとして表示する。localStorage（`nepp-chan-widget:teaser-dismissed-at`）に閉じた時刻を記録し、7 日以内は再表示しない。
 
 ## host への導入
@@ -24,6 +25,8 @@ host 側で CSP を設定している場合は `nepp-chan.ai` を `script-src` �
 ## 配信
 
 lp の Pages に同居配信する。`lp build` が widget をビルドして `lp/public/widget/` に出力し、Astro が `dist/widget/` へ配置する（専用サブドメインは設けない）。API URL / Web URL はビルド時に `VITE_API_URL` / `VITE_WEB_URL` で注入する（deploy ワークフローの LP ジョブで設定）。
+
+GA は `VITE_GA_MEASUREMENT_ID` を渡した本番ビルドでのみ有効（lp と同じ測定 ID）。host サイトから見るとサードパーティ Cookie になるため、ブロック環境では計測が漏れる。
 
 | 環境 | ローダー URL |
 | ---- | ------------ |

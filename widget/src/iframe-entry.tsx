@@ -1,7 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { initAnalytics } from "./analytics";
 import "./iframe.css";
 import { WidgetChat } from "./WidgetChat";
+
+initAnalytics();
 
 const root = document.getElementById("root");
 if (!root) throw new Error("#root が見つかりません");
