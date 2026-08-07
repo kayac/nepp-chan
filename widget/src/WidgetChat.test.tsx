@@ -285,6 +285,43 @@ describe("WidgetChat", () => {
     ).toBe(true);
   });
 
+  it("上にスクロールすると下スクロールボタンで最下部へ戻れる", async () => {
+    renderWidgetChat();
+    await waitForReady();
+
+    const viewport = screen.getByLabelText("下にスクロール").parentElement
+      ?.parentElement as HTMLElement;
+    let scrollTop = 0;
+    Object.defineProperty(viewport, "scrollHeight", {
+      value: 1000,
+      configurable: true,
+    });
+    Object.defineProperty(viewport, "clientHeight", {
+      value: 100,
+      configurable: true,
+    });
+    Object.defineProperty(viewport, "scrollTop", {
+      get: () => scrollTop,
+      set: (v: number) => {
+        scrollTop = v;
+      },
+      configurable: true,
+    });
+
+    fireEvent.scroll(viewport);
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText("下にスクロール").hasAttribute("disabled"),
+      ).toBe(false);
+    });
+
+    fireEvent.click(screen.getByLabelText("下にスクロール"));
+
+    await waitFor(() => {
+      expect(scrollTop).toBe(900);
+    });
+  });
+
   it("通信エラー時はエラーバブルを表示する", async () => {
     server.use(
       http.post(CHAT_URL, () => new HttpResponse("boom", { status: 500 })),
