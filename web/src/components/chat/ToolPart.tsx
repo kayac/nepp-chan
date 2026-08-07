@@ -1,5 +1,5 @@
 import type { DynamicToolUIPart, ToolUIPart } from "ai";
-import { getToolOrDynamicToolName } from "ai";
+import { getToolName } from "ai";
 
 import { ToolFallback } from "~/components/chat/ToolFallback";
 import { toolsByName } from "~/components/chat/tool-uis";
@@ -22,7 +22,7 @@ export const mapToolStateToStatus = (
 };
 
 export const ToolPart = ({ part }: { part: AnyToolPart }) => {
-  const toolName = getToolOrDynamicToolName(part);
+  const toolName = getToolName(part);
   const status = mapToolStateToStatus(part.state, part.errorText);
   const result = part.state === "output-available" ? part.output : undefined;
   const args = part.input ?? {};

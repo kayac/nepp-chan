@@ -6,7 +6,7 @@ import {
 import { SpeechBubble } from "@nepp-chan/shared/components/SpeechBubble";
 import { Button } from "@nepp-chan/shared/ui/Button";
 import type { UIMessage } from "ai";
-import { isToolOrDynamicToolUIPart } from "ai";
+import { isToolUIPart } from "ai";
 import { useState } from "react";
 import { FeedbackModal } from "~/app/chat/components/FeedbackModal";
 import { useChatContext } from "~/app/chat/contexts/ChatContext";
@@ -59,8 +59,7 @@ export const AssistantMessage = ({ message, isLast }: Props) => {
   const { isRunning, error } = useChatContext();
   const isActive = isLast && isRunning;
   const hasVisibleContent = message.parts.some(
-    (p) =>
-      (p.type === "text" && p.text.length > 0) || isToolOrDynamicToolUIPart(p),
+    (p) => (p.type === "text" && p.text.length > 0) || isToolUIPart(p),
   );
   const showTypingDot = isActive && !hasVisibleContent;
 

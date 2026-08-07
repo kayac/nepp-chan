@@ -14,11 +14,7 @@ import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { messageText } from "@nepp-chan/shared/lib/message-text";
 import { getToolDisplayName } from "@nepp-chan/shared/lib/tool-display-text";
 import { Spinner } from "@nepp-chan/shared/ui/Loading";
-import {
-  DefaultChatTransport,
-  getToolOrDynamicToolName,
-  isToolOrDynamicToolUIPart,
-} from "ai";
+import { DefaultChatTransport, getToolName, isToolUIPart } from "ai";
 import { type SubmitEvent, useEffect, useMemo, useState } from "react";
 import { acquireAnonymousSession } from "./anonymous-session";
 import { CLOSE_MESSAGE_TYPE } from "./messages";
@@ -125,11 +121,9 @@ export const WidgetChat = ({
       lastPart.type !== "text");
   // 委譲中は Mastra の data-tool-agent パートが末尾に積まれ続けるため、
   // 末尾ではなく直近のツールパートから実行中のツール名を引く
-  const activeToolPart = lastMessage?.parts
-    .filter(isToolOrDynamicToolUIPart)
-    .at(-1);
+  const activeToolPart = lastMessage?.parts.filter(isToolUIPart).at(-1);
   const activeToolName = activeToolPart
-    ? getToolOrDynamicToolName(activeToolPart)
+    ? getToolName(activeToolPart)
     : undefined;
 
   const { viewportRef, isAtBottom, scrollToBottom } =
