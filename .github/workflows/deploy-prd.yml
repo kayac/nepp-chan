@@ -98,3 +98,4 @@ jobs:
           PUBLIC_GA_MEASUREMENT_ID: G-FMW4FP326K
           VITE_API_URL: https://api.nepp-chan.ai
           VITE_WEB_URL: https://web.nepp-chan.ai
+          VITE_GA_MEASUREMENT_ID: G-FMW4FP326K
