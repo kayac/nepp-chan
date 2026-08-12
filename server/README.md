@@ -284,7 +284,8 @@ curl -X POST http://localhost:8787/chat \
 
 | 変数名                         | 説明                             |
 | ------------------------------ | -------------------------------- |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | Google Generative AI キー        |
+| `OPENAI_API_KEY`               | OpenAI API キー（メイン LLM）    |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google キー（embedding・Custom Search） |
 | `GOOGLE_SEARCH_ENGINE_ID`      | Google Custom Search エンジン ID |
 
 ## Cloudflare 型生成

@@ -63,7 +63,7 @@
 
 ### タイムアウト・リトライ
 
-- 外部 API（Gemini / Google Custom Search / LINE Messaging API）失敗時の挙動: 指数バックオフ・最大リトライ回数・デッドラインの伝播
+- 外部 API（OpenAI / Google Custom Search / LINE Messaging API）失敗時の挙動: 指数バックオフ・最大リトライ回数・デッドラインの伝播
 - リトライ可能 / 不可能エラーの判定が正しいか（4xx をリトライしていないか）
 
 ### 部分失敗

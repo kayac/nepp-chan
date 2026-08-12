@@ -102,7 +102,8 @@ cp web/.env.example web/.env
 
 | 変数名                         | 用途                                  |
 | ------------------------------ | ------------------------------------- |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API                            |
+| `OPENAI_API_KEY`               | メイン LLM（GPT-5.6）・Eval スコアラー |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | embedding（Vectorize）・Custom Search |
 | `GOOGLE_SEARCH_ENGINE_ID`      | Custom Search                         |
 | `WEB_URL`                      | Web URL                               |
 | `LINE_CHANNEL_SECRET`          | LINE 署名検証                         |
@@ -128,6 +129,7 @@ cp web/.env.example web/.env
 
 ```bash
 # Workers シークレット
+wrangler secret put OPENAI_API_KEY
 wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 
 # Pages 環境変数は Cloudflare Dashboard で設定
