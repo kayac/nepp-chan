@@ -587,6 +587,16 @@ export const TuningPanel = ({
           "endCallEnabled",
           "お別れの挨拶を検知したら AI が通話を終了する",
         )}
+        {boolRow(
+          "検索先をねっぷちゃんが選ぶ",
+          "parentRoutingEnabled",
+          "資料なしの要点化を挟まず、村のことは knowledge・時事は web へ直行する",
+        )}
+        {boolRow(
+          "問いかけを先読みして検索",
+          "prefetchEnabled",
+          "ツール呼び出しの判断を待たず、発話が届いた時点で knowledge 検索を始める",
+        )}
       </Section>
 
       <button

@@ -52,6 +52,8 @@ const baseValues = {
   holdAudioUrl: "https://example.com/hold.mp3",
   holdDelayMs: "0",
   endCallEnabled: "true",
+  parentRoutingEnabled: "true",
+  prefetchEnabled: "true",
 };
 
 const setup = (overrides: Partial<typeof baseValues> = {}) => {
@@ -216,6 +218,8 @@ describe("TuningPanel", () => {
     ["partialPrompts", "partialPrompts", "false"],
     ["あいづち", "aizuchiEnabled", "false"],
     ["保留音", "holdAudioEnabled", "false"],
+    ["検索先をねっぷちゃんが選ぶ", "parentRoutingEnabled", "false"],
+    ["問いかけを先読みして検索", "prefetchEnabled", "false"],
   ])("%s のトグルは %s を onChange する", (label, key, value) => {
     const { onChange } = setup();
     fireEvent.click(screen.getByLabelText(label));
