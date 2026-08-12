@@ -21,19 +21,28 @@ async function* fakeFullStream(chunks: FakeChunk[]) {
   for (const chunk of chunks) yield chunk;
 }
 
-const { getMemoryStoreMock, saveMessagesMock, saveThreadMock, streamMock } =
-  vi.hoisted(() => ({
-    getMemoryStoreMock: vi.fn(),
-    saveMessagesMock: vi.fn(),
-    saveThreadMock: vi.fn(),
-    streamMock: vi.fn(),
-  }));
+const {
+  getMemoryStoreMock,
+  saveMessagesMock,
+  saveThreadMock,
+  streamMock,
+  prefetchMock,
+} = vi.hoisted(() => ({
+  getMemoryStoreMock: vi.fn(),
+  saveMessagesMock: vi.fn(),
+  saveThreadMock: vi.fn(),
+  streamMock: vi.fn(),
+  prefetchMock: vi.fn(),
+}));
 
 vi.mock("~/lib/storage", () => ({
   getStorage: vi.fn().mockResolvedValue({ getStore: getMemoryStoreMock }),
 }));
 vi.mock("~/mastra/agents/nepp-chan-agent", () => ({
   createNeppChanAgent: vi.fn(() => ({})),
+}));
+vi.mock("~/mastra/tools/voice-answer-tool", () => ({
+  startVoicePrefetch: prefetchMock,
 }));
 vi.mock("@mastra/core/mastra", () => ({
   Mastra: class {
@@ -58,6 +67,8 @@ describe("createVoiceConversation", () => {
     });
     saveMessagesMock.mockReset();
     saveThreadMock.mockReset();
+    prefetchMock.mockReset();
+    prefetchMock.mockResolvedValue("投機検索の資料");
   });
 
   it("Mastra Memory を使わず、通話内の履歴を明示して text-delta を返す", async () => {
@@ -257,6 +268,139 @@ describe("createVoiceConversation", () => {
     expect(timingCalls[0][1]).not.toHaveProperty("intent");
 
     infoSpy.mockRestore();
+  });
+
+  describe("投機検索（prefetch）", () => {
+    const drain = async (
+      params: Parameters<
+        Awaited<ReturnType<typeof createVoiceConversation>>["runTurn"]
+      >[0],
+    ) => {
+      streamMock.mockResolvedValue({
+        fullStream: fakeFullStream([textDelta("はい")]),
+      });
+      const { runTurn } = await createVoiceConversation({
+        env,
+        from: "client:x",
+        callSid: "CA123",
+      });
+      for await (const _ of runTurn(params)) {
+      }
+    };
+
+    it("問いかけなら親の判断を待たず検索を起動し、ターン専用スロットでツールへ渡す", async () => {
+      let currentAtStream: unknown;
+      streamMock.mockImplementation(async (_input, opts) => {
+        currentAtStream = opts.requestContext.get("voicePrefetch")?.current;
+        return { fullStream: fakeFullStream([textDelta("はい")]) };
+      });
+      const { runTurn } = await createVoiceConversation({
+        env,
+        from: "client:x",
+        callSid: "CA123",
+      });
+      for await (const _ of runTurn({
+        text: "そば屋はどこ？",
+        prefetchEnabled: true,
+      })) {
+      }
+
+      expect(prefetchMock).toHaveBeenCalledWith(
+        expect.objectContaining({ question: "そば屋はどこ？" }),
+      );
+      expect(currentAtStream).toMatchObject({ query: "そば屋はどこ？" });
+    });
+
+    it("問いかけでない雑談では起動しない", async () => {
+      await drain({ text: "今日は疲れたよ", prefetchEnabled: true });
+
+      expect(prefetchMock).not.toHaveBeenCalled();
+    });
+
+    it("findings が貯まっていても話題転換に備えて起動する", async () => {
+      const findingsSlot = {
+        entries: [
+          {
+            query: "そば",
+            source: "knowledge" as const,
+            text: "前の資料",
+          },
+        ],
+      };
+
+      await drain({
+        text: "郵便局はどこ？",
+        prefetchEnabled: true,
+        findingsSlot,
+      });
+
+      expect(prefetchMock).toHaveBeenCalledWith(
+        expect.objectContaining({ question: "郵便局はどこ？" }),
+      );
+    });
+
+    it("prefetchEnabled でなければ起動しない", async () => {
+      await drain({ text: "そば屋はどこ？" });
+
+      expect(prefetchMock).not.toHaveBeenCalled();
+    });
+
+    it("ツールに消費されなかった投機検索はターン終了時に中断する", async () => {
+      await drain({ text: "そば屋はどこ？", prefetchEnabled: true });
+
+      const prefetchSignal = prefetchMock.mock.calls[0][0].signal;
+      expect(prefetchSignal.aborted).toBe(true);
+    });
+
+    it("stream の初期化が失敗しても投機検索を中断する", async () => {
+      streamMock.mockRejectedValueOnce(new Error("api error"));
+      const { runTurn } = await createVoiceConversation({
+        env,
+        from: "client:x",
+        callSid: "CA123",
+      });
+
+      await expect(async () => {
+        for await (const _ of runTurn({
+          text: "そば屋はどこ？",
+          prefetchEnabled: true,
+        })) {
+        }
+      }).rejects.toThrow("api error");
+
+      const prefetchSignal = prefetchMock.mock.calls[0][0].signal;
+      expect(prefetchSignal.aborted).toBe(true);
+    });
+
+    it("ターンの中断で投機検索も即座に中断される", async () => {
+      const controller = new AbortController();
+      let abortedDuringStream: boolean | undefined;
+      streamMock.mockImplementation(async () => {
+        controller.abort();
+        abortedDuringStream = prefetchMock.mock.calls[0][0].signal.aborted;
+        return { fullStream: fakeFullStream([]) };
+      });
+      const { runTurn } = await createVoiceConversation({
+        env,
+        from: "client:x",
+        callSid: "CA123",
+      });
+      for await (const _ of runTurn({
+        text: "そば屋はどこ？",
+        prefetchEnabled: true,
+        signal: controller.signal,
+      })) {
+      }
+
+      expect(abortedDuringStream).toBe(true);
+    });
+
+    it("parentRouting を requestContext 経由でツールへ渡す", async () => {
+      await drain({ text: "そば屋はどこ？", parentRouting: true });
+
+      const { requestContext } = streamMock.mock.calls[0][1];
+      expect(requestContext.get("voiceParentRouting")).toBe(true);
+    });
   });
 
   it("signal を agent.stream に渡し、中断で停止する", async () => {

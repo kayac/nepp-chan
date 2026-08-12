@@ -9,9 +9,16 @@ import {
   voiceSummarizerAgent,
 } from "~/mastra/agents/voice-summarizer-agent";
 import { createWebResearcherAgent } from "~/mastra/agents/web-researcher-agent";
-import type { VoiceFindings } from "~/services/voice/findings-slot";
+import {
+  hasVoiceFindings,
+  pushVoiceFindings,
+  type VoiceFindings,
+  type VoicePrefetch,
+} from "~/services/voice/findings-slot";
 import {
   getVoiceFindings,
+  getVoiceParentRouting,
+  getVoicePrefetch,
   getVoiceSearchStart,
   getVoiceTurnSignal,
 } from "./helpers";
@@ -20,13 +27,25 @@ export const voiceAnswerToolName = "voiceAnswerTool";
 
 const ABORTED_ANSWER = "ごめんね、うまく調べられなかったみたい。";
 
+const PREFETCH_GRACE_MS = 150;
+
 const voiceKnowledgeAgent = createKnowledgeAgent();
 const voiceWebResearcherAgent = createWebResearcherAgent();
 
+type Source = "knowledge" | "web";
+
 type Decision =
   | { kind: "answer"; text: string }
-  | { kind: "route"; source: "knowledge" | "web" }
+  | { kind: "route"; source: Source }
   | { kind: "miss" };
+
+const renderFindings = (entries: VoiceFindings[]) =>
+  entries
+    .map(
+      (entry, i) =>
+        `【資料${i + 1} | 質問「${entry.query}」 | ${entry.source}】\n${entry.text}`,
+    )
+    .join("\n\n");
 
 const decide = async (
   question: string,
@@ -37,9 +56,14 @@ const decide = async (
   const prompt = findings
     ? `質問:「${question}」\n\n手元の資料:\n${findings}`
     : `質問:「${question}」\n\n手元の資料: なし`;
+  const start = Date.now();
   const res = await voiceSummarizerAgent.generate(prompt, {
     requestContext,
     abortSignal: signal,
+  });
+  logger.info("[Voice] decide done", {
+    ms: Date.now() - start,
+    withFindings: Boolean(findings),
   });
   const out = (res.text ?? "").trim();
   if (out.startsWith(NEED_KNOWLEDGE)) {
@@ -51,7 +75,7 @@ const decide = async (
 };
 
 const runSearch = async (
-  source: "knowledge" | "web",
+  source: Source,
   question: string,
   requestContext: RequestContext | undefined,
   signal: AbortSignal | undefined,
@@ -65,6 +89,36 @@ const runSearch = async (
   return res.text ?? "";
 };
 
+export const startVoicePrefetch = ({
+  question,
+  requestContext,
+  signal,
+}: {
+  question: string;
+  requestContext?: RequestContext;
+  signal?: AbortSignal;
+}) => {
+  const start = Date.now();
+  return voiceKnowledgeAgent
+    .generate(question, { requestContext, abortSignal: signal })
+    .then((res) => {
+      const text = res.text ?? "";
+      logger.info("[Voice] prefetch done", {
+        ms: Date.now() - start,
+        query: question,
+        resultChars: text.length,
+      });
+      return text;
+    })
+    .catch((error) => {
+      logger.info("[Voice] prefetch dropped", {
+        ms: Date.now() - start,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return "";
+    });
+};
+
 export const voiceAnswerTool = createTool({
   id: "voice-answer",
   description:
@@ -73,69 +127,142 @@ export const voiceAnswerTool = createTool({
     question: z
       .string()
       .describe("ユーザーが知りたいこと。会話の流れをふまえた具体的な問い"),
+    source: z
+      .enum(["knowledge", "web"])
+      .optional()
+      .describe(
+        "音威子府村ローカルのこと（施設・観光・行政・歴史・イベント・村の店）は knowledge、天気・ニュース・時事・村外の一般的なことは web",
+      ),
   }),
   outputSchema: z.object({
     answer: z.string(),
   }),
   execute: async (inputData, context) => {
-    const { question } = inputData;
+    const { question, source } = inputData;
     const requestContext = context?.requestContext;
     const slot = getVoiceFindings(context);
+    const prefetchSlot = getVoicePrefetch(context);
+    const parentRouting = getVoiceParentRouting(context);
     const startHold = getVoiceSearchStart(context);
     const signal = getVoiceTurnSignal(context);
+    const t0 = Date.now();
+
+    const discardPrefetch = (keep?: VoicePrefetch) => {
+      const current = prefetchSlot?.current;
+      if (current && current !== keep) current.abort();
+      if (prefetchSlot) prefetchSlot.current = undefined;
+    };
 
     try {
       logger.info("[Voice] answer start", {
         question,
-        slotQuery: slot?.current?.query ?? "",
-        slotSource: slot?.current?.source ?? "",
-        slotChars: slot?.current?.text.length ?? 0,
+        source: source ?? "",
+        parentRouting,
+        hasPrefetch: Boolean(prefetchSlot?.current),
+        slotEntries: slot?.entries.length ?? 0,
+        slotChars:
+          slot?.entries.reduce((sum, entry) => sum + entry.text.length, 0) ?? 0,
       });
-      if (!slot?.current) startHold?.();
 
-      const first = await decide(
-        question,
-        slot?.current?.text,
-        requestContext,
-        signal,
-      );
-      if (signal?.aborted) return { answer: ABORTED_ANSWER };
-      if (first.kind === "answer") {
-        logger.info("[Voice] answered from slot", { answer: first.text });
-        return { answer: first.text };
-      }
-
-      startHold?.();
-      const routes: Array<"knowledge" | "web"> =
-        first.kind === "route" && first.source === "web"
-          ? ["web"]
-          : ["knowledge", "web"];
-
-      for (const source of routes) {
-        const text = await runSearch(source, question, requestContext, signal);
+      let summarizerRoute: Source | undefined;
+      if (!parentRouting || hasVoiceFindings(slot)) {
+        if (!hasVoiceFindings(slot)) startHold?.();
+        const first = await decide(
+          question,
+          slot && hasVoiceFindings(slot)
+            ? renderFindings(slot.entries)
+            : undefined,
+          requestContext,
+          signal,
+        );
         if (signal?.aborted) return { answer: ABORTED_ANSWER };
-        const findings: VoiceFindings = { query: question, source, text };
-        if (slot) slot.current = findings;
+        if (first.kind === "answer") {
+          discardPrefetch();
+          logger.info("[Voice] answered from slot", {
+            answer: first.text,
+            totalMs: Date.now() - t0,
+          });
+          return { answer: first.text };
+        }
+        if (first.kind === "route") summarizerRoute = first.source;
+      }
+      const searchSource = parentRouting
+        ? (source ?? summarizerRoute)
+        : summarizerRoute;
+      const routes: Source[] =
+        searchSource === "web" ? ["web"] : ["knowledge", "web"];
+
+      const tryAnswer = async (
+        route: Source,
+        text: string,
+        timing: { ms: number; fromPrefetch: boolean },
+      ) => {
         logger.info("[Voice] search done", {
-          source,
+          source: route,
           query: question,
+          ...timing,
           resultChars: text.length,
           resultHead: text.slice(0, 120),
-          savedToSlot: slot !== undefined,
         });
-
         const answer = await decide(question, text, requestContext, signal);
+        if (answer.kind !== "answer") return undefined;
+        const findings: VoiceFindings = {
+          query: question,
+          source: route,
+          text,
+        };
+        if (slot) pushVoiceFindings(slot, findings);
+        logger.info("[Voice] answered from search", {
+          source: route,
+          answer: answer.text,
+          totalMs: Date.now() - t0,
+        });
+        return answer.text;
+      };
+
+      const prefetched =
+        routes[0] === "knowledge" ? prefetchSlot?.current : undefined;
+      discardPrefetch(prefetched);
+
+      if (prefetched) {
+        const waitStart = Date.now();
+        const quick = await Promise.race([
+          prefetched.promise,
+          new Promise<undefined>((resolve) =>
+            setTimeout(() => resolve(undefined), PREFETCH_GRACE_MS),
+          ),
+        ]);
+        if (quick === undefined) startHold?.();
+        const text = quick ?? (await prefetched.promise);
         if (signal?.aborted) return { answer: ABORTED_ANSWER };
-        if (answer.kind === "answer") {
-          logger.info("[Voice] answered from search", {
-            source,
-            answer: answer.text,
+        if (text) {
+          const answer = await tryAnswer("knowledge", text, {
+            ms: Date.now() - waitStart,
+            fromPrefetch: true,
           });
-          return { answer: answer.text };
+          if (signal?.aborted) return { answer: ABORTED_ANSWER };
+          if (answer !== undefined) return { answer };
         }
       }
 
-      logger.info("[Voice] no answer found", { question });
+      startHold?.();
+
+      for (const route of routes) {
+        const searchStart = Date.now();
+        const text = await runSearch(route, question, requestContext, signal);
+        if (signal?.aborted) return { answer: ABORTED_ANSWER };
+        const answer = await tryAnswer(route, text, {
+          ms: Date.now() - searchStart,
+          fromPrefetch: false,
+        });
+        if (signal?.aborted) return { answer: ABORTED_ANSWER };
+        if (answer !== undefined) return { answer };
+      }
+
+      logger.info("[Voice] no answer found", {
+        question,
+        totalMs: Date.now() - t0,
+      });
       return { answer: "ごめんね、それは今わからなかったな。" };
     } catch (error) {
       if (signal?.aborted) return { answer: ABORTED_ANSWER };

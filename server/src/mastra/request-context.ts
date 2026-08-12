@@ -2,7 +2,10 @@ import type { D1Store } from "@mastra/cloudflare-d1";
 import { RequestContext } from "@mastra/core/request-context";
 
 import type { AuthUser } from "~/schemas/auth-schema";
-import type { VoiceFindingsSlot } from "~/services/voice/findings-slot";
+import type {
+  VoiceFindingsSlot,
+  VoicePrefetchSlot,
+} from "~/services/voice/findings-slot";
 
 export type MastraRequestContextType = {
   storage?: D1Store;
@@ -11,6 +14,8 @@ export type MastraRequestContextType = {
   conversationEndedAt?: string;
   adminUser?: AuthUser;
   voiceFindings?: VoiceFindingsSlot;
+  voicePrefetch?: VoicePrefetchSlot;
+  voiceParentRouting?: boolean;
   voiceSearchStart?: () => void;
   voiceTurnSignal?: AbortSignal;
   voiceEndCall?: () => void;
@@ -31,6 +36,12 @@ export const createRequestContext = (values: MastraRequestContextType) => {
   }
   if (values.voiceFindings) {
     requestContext.set("voiceFindings", values.voiceFindings);
+  }
+  if (values.voicePrefetch) {
+    requestContext.set("voicePrefetch", values.voicePrefetch);
+  }
+  if (values.voiceParentRouting !== undefined) {
+    requestContext.set("voiceParentRouting", values.voiceParentRouting);
   }
   if (values.voiceSearchStart) {
     requestContext.set("voiceSearchStart", values.voiceSearchStart);

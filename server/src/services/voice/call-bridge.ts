@@ -219,6 +219,8 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
           endRequested = true;
         },
         findingsSlot: this.findingsSlot,
+        prefetchEnabled: this.config.prefetchEnabled,
+        parentRouting: this.config.parentRoutingEnabled,
       })) {
         if (controller.signal.aborted) break;
         if (firstSendMs === null) firstSendMs = Date.now() - t0;

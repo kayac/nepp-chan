@@ -1,7 +1,10 @@
 import type { ToolExecutionContext } from "@mastra/core/tools";
 import { ROLE_LEVEL } from "~/middleware/require-role";
 import type { AdminRole, AuthUser } from "~/schemas/auth-schema";
-import type { VoiceFindingsSlot } from "~/services/voice/findings-slot";
+import type {
+  VoiceFindingsSlot,
+  VoicePrefetchSlot,
+} from "~/services/voice/findings-slot";
 
 type ToolContext = ToolExecutionContext | undefined;
 
@@ -25,6 +28,16 @@ export const getVoiceFindings = (
   context?.requestContext?.get("voiceFindings") as
     | VoiceFindingsSlot
     | undefined;
+
+export const getVoicePrefetch = (
+  context: ToolContext,
+): VoicePrefetchSlot | undefined =>
+  context?.requestContext?.get("voicePrefetch") as
+    | VoicePrefetchSlot
+    | undefined;
+
+export const getVoiceParentRouting = (context: ToolContext): boolean =>
+  context?.requestContext?.get("voiceParentRouting") === true;
 
 export const getVoiceSearchStart = (
   context: ToolContext,
