@@ -232,3 +232,14 @@ export const dataRetentionLogs = sqliteTable("data_retention_logs", {
 
 export type DataRetentionLog = typeof dataRetentionLogs.$inferSelect;
 export type NewDataRetentionLog = typeof dataRetentionLogs.$inferInsert;
+
+export const widgetSites = sqliteTable("widget_sites", {
+  id: text("id").primaryKey(),
+  host: text("host").notNull().unique(),
+  instructions: text("instructions").notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at"),
+});
+
+export type WidgetSite = typeof widgetSites.$inferSelect;
+export type NewWidgetSite = typeof widgetSites.$inferInsert;

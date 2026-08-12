@@ -8,6 +8,7 @@ import { createKnowledgeRepository } from "@nepp-chan/shared/api/repository/know
 import { createPersonaRepository } from "@nepp-chan/shared/api/repository/persona-repository";
 import { createPollRepository } from "@nepp-chan/shared/api/repository/poll-repository";
 import { createThreadRepository } from "@nepp-chan/shared/api/repository/thread-repository";
+import { createWidgetSiteRepository } from "@nepp-chan/shared/api/repository/widget-site-repository";
 
 import { API_BASE, client } from "./client";
 
@@ -25,3 +26,4 @@ export const knowledgeRepository = createKnowledgeRepository(client, API_BASE);
 export const personaRepository = createPersonaRepository(client);
 export const pollRepository = createPollRepository(client);
 export const threadRepository = createThreadRepository(client);
+export const widgetSiteRepository = createWidgetSiteRepository(client);

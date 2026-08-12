@@ -5,11 +5,17 @@ const {
   mockClassifyIntent,
   mockGetThreadById,
   mockRecordLlmUsage,
+  mockFindWidgetSiteByHost,
 } = vi.hoisted(() => ({
   mockHandleChatStream: vi.fn(),
   mockClassifyIntent: vi.fn(),
   mockGetThreadById: vi.fn(),
   mockRecordLlmUsage: vi.fn(),
+  mockFindWidgetSiteByHost: vi.fn(),
+}));
+
+vi.mock("~/repository/widget-site-repository", () => ({
+  widgetSiteRepository: { findByHost: mockFindWidgetSiteByHost },
 }));
 
 vi.mock("@mastra/ai-sdk", () => ({
@@ -141,6 +147,7 @@ describe("chatRoutes: POST /:threadId/chat", () => {
     vi.clearAllMocks();
     mockHandleChatStream.mockResolvedValue(buildStubStream());
     mockClassifyIntent.mockResolvedValue("casual");
+    mockFindWidgetSiteByHost.mockResolvedValue(null);
   });
 
   it("認証なしは 401", async () => {
@@ -308,6 +315,81 @@ describe("chatRoutes: POST /:threadId/chat", () => {
 
     expect(mockCreateNeppChanAgent).toHaveBeenCalledWith(
       expect.objectContaining({ platform: "widget" }),
+    );
+  });
+
+  it("widget で登録済みの siteHost なら設置サイトの instructions を渡す", async () => {
+    useAnonAuth(WIDGET_RES_ID);
+    mockGetThreadById.mockResolvedValue({
+      ...ownThread,
+      resourceId: WIDGET_RES_ID,
+    });
+    mockFindWidgetSiteByHost.mockResolvedValue({
+      id: "ws-1",
+      host: "vill.otoineppu.hokkaido.jp",
+      instructions: "行政手続きの案内を優先する",
+      createdAt: "2026-08-12T00:00:00.000Z",
+      updatedAt: null,
+    });
+
+    await routes.request(
+      buildReq("/thread-1/chat", {
+        ...validBody,
+        siteHost: "www.vill.otoineppu.hokkaido.jp",
+      }),
+      undefined,
+      mockEnv,
+    );
+
+    expect(mockFindWidgetSiteByHost).toHaveBeenCalledWith(
+      mockEnv.DB,
+      "www.vill.otoineppu.hokkaido.jp",
+    );
+    expect(mockCreateNeppChanAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        siteInstructions: "行政手続きの案内を優先する",
+      }),
+    );
+  });
+
+  it("widget でも未登録の siteHost なら instructions を渡さない", async () => {
+    useAnonAuth(WIDGET_RES_ID);
+    mockGetThreadById.mockResolvedValue({
+      ...ownThread,
+      resourceId: WIDGET_RES_ID,
+    });
+    mockFindWidgetSiteByHost.mockResolvedValue(null);
+
+    await routes.request(
+      buildReq("/thread-1/chat", {
+        ...validBody,
+        siteHost: "evil.example.com",
+      }),
+      undefined,
+      mockEnv,
+    );
+
+    expect(mockCreateNeppChanAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ siteInstructions: undefined }),
+    );
+  });
+
+  it("web の resourceId では siteHost が来ても設置サイトを引かない", async () => {
+    useAnonAuth();
+    mockGetThreadById.mockResolvedValue(ownThread);
+
+    await routes.request(
+      buildReq("/thread-1/chat", {
+        ...validBody,
+        siteHost: "www.vill.otoineppu.hokkaido.jp",
+      }),
+      undefined,
+      mockEnv,
+    );
+
+    expect(mockFindWidgetSiteByHost).not.toHaveBeenCalled();
+    expect(mockCreateNeppChanAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ siteInstructions: undefined }),
     );
   });
 

@@ -12,6 +12,7 @@ import { createRequestContext } from "~/mastra/request-context";
 import { requireAuth } from "~/middleware/auth";
 import type { ThreadVariables } from "~/middleware/require-thread-access";
 import { requireThreadAccess } from "~/middleware/require-thread-access";
+import { widgetSiteRepository } from "~/repository/widget-site-repository";
 import { recordLlmUsage } from "~/services/analytics/llm-usage";
 
 export const chatRoutes = new OpenAPIHono<{
@@ -27,6 +28,7 @@ const ChatSendRequestSchema = z.object({
     createdAt: z.coerce.date().optional(),
   }),
   intent: z.enum(["casual", "thinking"]).optional(),
+  siteHost: z.string().max(255).optional(),
 });
 
 const chatRoute = createRoute({
@@ -64,7 +66,7 @@ const chatRoute = createRoute({
 
 chatRoutes.openapi(chatRoute, async (c) => {
   const { threadId } = c.req.valid("param");
-  const { message, intent: fixedIntent } = c.req.valid("json");
+  const { message, intent: fixedIntent, siteHost } = c.req.valid("json");
   const thread = c.get("thread");
   const principal = c.get("principal");
 
@@ -79,6 +81,10 @@ chatRoutes.openapi(chatRoute, async (c) => {
   // widget 由来の resourceId は widget- prefix を持つ（server/src/lib/principal.ts の
   // line:/admin: と同じ、resourceId prefix でチャネルを区別する規約）
   const platform = thread.resourceId.startsWith("widget-") ? "widget" : "web";
+  const site =
+    platform === "widget" && siteHost
+      ? await widgetSiteRepository.findByHost(c.env.DB, siteHost)
+      : null;
 
   const storage = await getStorage(c.env.DB);
 
@@ -98,6 +104,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
     isAdmin: enableAdminAgents,
     modelConfig,
     platform,
+    siteInstructions: site?.instructions,
   });
   const mastra = new Mastra({
     agents: { neppChanAgent },

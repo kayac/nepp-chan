@@ -48,6 +48,22 @@ describe("createNeppChanAgent", () => {
       expect(ins).not.toContain("管理者機能");
     });
 
+    it("siteInstructions を設置サイトの文脈として見出しごと差し込む", async () => {
+      const ins = await instructionsOf(
+        build({
+          platform: "widget",
+          siteInstructions: "行政手続きの案内を優先する",
+        }),
+      );
+      expect(ins).toContain("## 設置サイトの文脈");
+      expect(ins).toContain("行政手続きの案内を優先する");
+    });
+
+    it("siteInstructions なしの widget では設置サイトの指示を含まない", async () => {
+      const ins = await instructionsOf(build({ platform: "widget" }));
+      expect(ins).not.toContain("設置サイトの文脈");
+    });
+
     it("常に現在の日時セクションを含む", async () => {
       const ins = await instructionsOf(build());
       expect(ins).toContain("現在の日時");

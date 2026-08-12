@@ -8,6 +8,7 @@ export {
   personaAdminRoutes,
   pollAdminRoutes,
   userAdminRoutes,
+  widgetSiteAdminRoutes,
 } from "./admin";
 export { authRoutes } from "./auth";
 export { broadcastMediaRoutes } from "./broadcast-media";
