@@ -20,13 +20,13 @@ export const pushVoiceFindings = (
   slot: VoiceFindingsSlot,
   findings: VoiceFindings,
 ) => {
+  if (findings.text.length > MAX_FINDINGS_CHARS) return;
   slot.entries.push(findings);
   const totalChars = () =>
     slot.entries.reduce((sum, entry) => sum + entry.text.length, 0);
   while (
-    slot.entries.length > 1 &&
-    (slot.entries.length > MAX_FINDINGS_ENTRIES ||
-      totalChars() > MAX_FINDINGS_CHARS)
+    slot.entries.length > MAX_FINDINGS_ENTRIES ||
+    totalChars() > MAX_FINDINGS_CHARS
   ) {
     slot.entries.shift();
   }

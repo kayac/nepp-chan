@@ -51,10 +51,11 @@ describe("pushVoiceFindings", () => {
     expect(slot.entries.map((e) => e.query)).toEqual(["新しい"]);
   });
 
-  it("1件で上限を超える資料も直近の1件は残す", () => {
+  it("1件で上限を超える資料は保存せず、既存の資料も捨てない", () => {
     const slot = createVoiceFindingsSlot();
+    pushVoiceFindings(slot, findings("既存"));
     pushVoiceFindings(slot, findings("巨大", 5000));
 
-    expect(slot.entries.map((e) => e.query)).toEqual(["巨大"]);
+    expect(slot.entries.map((e) => e.query)).toEqual(["既存"]);
   });
 });
