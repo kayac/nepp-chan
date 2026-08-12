@@ -127,7 +127,7 @@ describe("CallBridge", () => {
     });
   });
 
-  it("先回りのトグルをターンに引き渡し、オフなら投機スロットを渡さない", async () => {
+  it("先回りのトグルをターンに引き渡す", async () => {
     const runTurn = vi.fn(async function* () {
       yield "回答";
     });
@@ -151,7 +151,7 @@ describe("CallBridge", () => {
     expect(runTurn).toHaveBeenLastCalledWith(
       expect.objectContaining({
         parentRouting: true,
-        prefetchSlot: expect.any(Object),
+        prefetchEnabled: true,
       }),
     );
 
@@ -165,7 +165,7 @@ describe("CallBridge", () => {
     expect(runTurn).toHaveBeenLastCalledWith(
       expect.objectContaining({
         parentRouting: false,
-        prefetchSlot: undefined,
+        prefetchEnabled: false,
       }),
     );
   });

@@ -9,7 +9,10 @@ import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { startVoicePrefetch } from "~/mastra/tools/voice-answer-tool";
 import { isQuestionLike } from "./filler";
-import type { VoiceFindingsSlot, VoicePrefetchSlot } from "./findings-slot";
+import {
+  createVoicePrefetchSlot,
+  type VoiceFindingsSlot,
+} from "./findings-slot";
 
 type RunTurnParams = {
   text: string;
@@ -17,7 +20,7 @@ type RunTurnParams = {
   onToolCall?: () => void;
   onEndCall?: () => void;
   findingsSlot?: VoiceFindingsSlot;
-  prefetchSlot?: VoicePrefetchSlot;
+  prefetchEnabled?: boolean;
   parentRouting?: boolean;
 };
 
@@ -67,10 +70,13 @@ export const createVoiceConversation = async ({
     onToolCall,
     onEndCall,
     findingsSlot,
-    prefetchSlot,
+    prefetchEnabled,
     parentRouting,
   }: RunTurnParams) {
     const start = Date.now();
+    const prefetchSlot = prefetchEnabled
+      ? createVoicePrefetchSlot()
+      : undefined;
     const requestContext = createRequestContext({
       db: env.DB,
       env,
@@ -82,38 +88,35 @@ export const createVoiceConversation = async ({
       voiceEndCall: onEndCall,
     });
 
-    if (prefetchSlot) {
-      prefetchSlot.current?.abort();
-      prefetchSlot.current = undefined;
-      if (isQuestionLike(text)) {
-        logger.info("[Voice] prefetch start", { query: text });
-        const controller = new AbortController();
-        signal?.addEventListener("abort", () => controller.abort(), {
-          once: true,
-        });
-        prefetchSlot.current = {
-          query: text,
-          abort: () => controller.abort(),
-          promise: startVoicePrefetch({
-            question: text,
-            requestContext,
-            signal: controller.signal,
-          }),
-        };
-      }
+    if (prefetchSlot && isQuestionLike(text)) {
+      logger.info("[Voice] prefetch start", { query: text });
+      const controller = new AbortController();
+      signal?.addEventListener("abort", () => controller.abort(), {
+        once: true,
+      });
+      prefetchSlot.current = {
+        query: text,
+        abort: () => controller.abort(),
+        promise: startVoicePrefetch({
+          question: text,
+          requestContext,
+          signal: controller.signal,
+        }),
+      };
     }
 
     const input: ModelMessage[] = [...history, { role: "user", content: text }];
 
-    const result = await agent.stream(input, {
-      requestContext,
-      abortSignal: signal,
-    });
-    const streamReadyMs = Date.now() - start;
-
+    let streamReadyMs: number | undefined;
     let firstTokenMs: number | null = null;
     let assistantText = "";
     try {
+      const result = await agent.stream(input, {
+        requestContext,
+        abortSignal: signal,
+      });
+      streamReadyMs = Date.now() - start;
+
       for await (const chunk of result.fullStream) {
         if (signal?.aborted) return;
         if (chunk.type === "tool-call") {
@@ -147,9 +150,12 @@ export const createVoiceConversation = async ({
         history = [...input, assistantMessage].slice(-MAX_HISTORY_MESSAGES);
       }
     } finally {
-      const timing: Record<string, number> = { streamReadyMs };
-      if (firstTokenMs !== null) timing.firstTokenMs = firstTokenMs;
-      logger.info("[Voice] llm timing", timing);
+      prefetchSlot?.current?.abort();
+      if (streamReadyMs !== undefined) {
+        const timing: Record<string, number> = { streamReadyMs };
+        if (firstTokenMs !== null) timing.firstTokenMs = firstTokenMs;
+        logger.info("[Voice] llm timing", timing);
+      }
     }
   };
 

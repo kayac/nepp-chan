@@ -9,9 +9,7 @@ import {
 import { createVoiceConversation } from "./conversation";
 import {
   createVoiceFindingsSlot,
-  createVoicePrefetchSlot,
   type VoiceFindingsSlot,
-  type VoicePrefetchSlot,
 } from "./findings-slot";
 import {
   endMessage,
@@ -48,7 +46,6 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
   // 直前の中間認識からの経過時間の観測用（endpointing がどれだけ確定を保留するか）。
   private lastInterimAt: number | null = null;
   private findingsSlot: VoiceFindingsSlot = createVoiceFindingsSlot();
-  private prefetchSlot: VoicePrefetchSlot = createVoicePrefetchSlot();
   private config: BridgeConfig = BRIDGE_CONFIG_DEFAULTS;
   private pendingEndTimer: ReturnType<typeof setTimeout> | null = null;
   private conversationPromise: ReturnType<
@@ -222,9 +219,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
           endRequested = true;
         },
         findingsSlot: this.findingsSlot,
-        prefetchSlot: this.config.prefetchEnabled
-          ? this.prefetchSlot
-          : undefined,
+        prefetchEnabled: this.config.prefetchEnabled,
         parentRouting: this.config.parentRoutingEnabled,
       })) {
         if (controller.signal.aborted) break;

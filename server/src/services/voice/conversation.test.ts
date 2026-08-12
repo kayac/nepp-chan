@@ -2,10 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { logger } from "~/lib/logger";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createVoiceConversation } from "./conversation";
-import {
-  createVoicePrefetchSlot,
-  type VoicePrefetchSlot,
-} from "./findings-slot";
 
 type FakeChunk =
   | { type: "text-delta"; payload: { text: string } }
@@ -292,31 +288,36 @@ describe("createVoiceConversation", () => {
       }
     };
 
-    it("問いかけなら親の判断を待たず検索を起動し、スロットに入れる", async () => {
-      const prefetchSlot = createVoicePrefetchSlot();
-
-      await drain({ text: "そば屋はどこ？", prefetchSlot });
+    it("問いかけなら親の判断を待たず検索を起動し、ターン専用スロットでツールへ渡す", async () => {
+      let currentAtStream: unknown;
+      streamMock.mockImplementation(async (_input, opts) => {
+        currentAtStream = opts.requestContext.get("voicePrefetch")?.current;
+        return { fullStream: fakeFullStream([textDelta("はい")]) };
+      });
+      const { runTurn } = await createVoiceConversation({
+        env,
+        from: "client:x",
+        callSid: "CA123",
+      });
+      for await (const _ of runTurn({
+        text: "そば屋はどこ？",
+        prefetchEnabled: true,
+      })) {
+      }
 
       expect(prefetchMock).toHaveBeenCalledWith(
         expect.objectContaining({ question: "そば屋はどこ？" }),
       );
-      expect(prefetchSlot.current?.query).toBe("そば屋はどこ？");
-      await expect(prefetchSlot.current?.promise).resolves.toBe(
-        "投機検索の資料",
-      );
+      expect(currentAtStream).toMatchObject({ query: "そば屋はどこ？" });
     });
 
     it("問いかけでない雑談では起動しない", async () => {
-      const prefetchSlot = createVoicePrefetchSlot();
-
-      await drain({ text: "今日は疲れたよ", prefetchSlot });
+      await drain({ text: "今日は疲れたよ", prefetchEnabled: true });
 
       expect(prefetchMock).not.toHaveBeenCalled();
-      expect(prefetchSlot.current).toBeUndefined();
     });
 
     it("findings が貯まっていても話題転換に備えて起動する", async () => {
-      const prefetchSlot = createVoicePrefetchSlot();
       const findingsSlot = {
         entries: [
           {
@@ -327,50 +328,71 @@ describe("createVoiceConversation", () => {
         ],
       };
 
-      await drain({ text: "郵便局はどこ？", prefetchSlot, findingsSlot });
+      await drain({
+        text: "郵便局はどこ？",
+        prefetchEnabled: true,
+        findingsSlot,
+      });
 
       expect(prefetchMock).toHaveBeenCalledWith(
         expect.objectContaining({ question: "郵便局はどこ？" }),
       );
     });
 
-    it("スロットを渡さなければ起動しない", async () => {
+    it("prefetchEnabled でなければ起動しない", async () => {
       await drain({ text: "そば屋はどこ？" });
 
       expect(prefetchMock).not.toHaveBeenCalled();
     });
 
-    it("前ターンの投機結果はターン開始時に打ち切って破棄する", async () => {
-      const abort = vi.fn();
-      const prefetchSlot: VoicePrefetchSlot = {
-        current: {
-          query: "古い質問",
-          promise: Promise.resolve("古い資料"),
-          abort,
-        },
-      };
+    it("ツールに消費されなかった投機検索はターン終了時に中断する", async () => {
+      await drain({ text: "そば屋はどこ？", prefetchEnabled: true });
 
-      await drain({ text: "今日は疲れたよ", prefetchSlot });
-
-      expect(prefetchSlot.current).toBeUndefined();
-      expect(abort).toHaveBeenCalled();
+      const prefetchSignal = prefetchMock.mock.calls[0][0].signal;
+      expect(prefetchSignal.aborted).toBe(true);
     });
 
-    it("ターンの中断で投機検索も中断される", async () => {
-      const controller = new AbortController();
-      const prefetchSlot = createVoicePrefetchSlot();
-
-      await drain({
-        text: "そば屋はどこ？",
-        prefetchSlot,
-        signal: controller.signal,
+    it("stream の初期化が失敗しても投機検索を中断する", async () => {
+      streamMock.mockRejectedValueOnce(new Error("api error"));
+      const { runTurn } = await createVoiceConversation({
+        env,
+        from: "client:x",
+        callSid: "CA123",
       });
+
+      await expect(async () => {
+        for await (const _ of runTurn({
+          text: "そば屋はどこ？",
+          prefetchEnabled: true,
+        })) {
+        }
+      }).rejects.toThrow("api error");
+
       const prefetchSignal = prefetchMock.mock.calls[0][0].signal;
-      expect(prefetchSignal.aborted).toBe(false);
-
-      controller.abort();
-
       expect(prefetchSignal.aborted).toBe(true);
+    });
+
+    it("ターンの中断で投機検索も即座に中断される", async () => {
+      const controller = new AbortController();
+      let abortedDuringStream: boolean | undefined;
+      streamMock.mockImplementation(async () => {
+        controller.abort();
+        abortedDuringStream = prefetchMock.mock.calls[0][0].signal.aborted;
+        return { fullStream: fakeFullStream([]) };
+      });
+      const { runTurn } = await createVoiceConversation({
+        env,
+        from: "client:x",
+        callSid: "CA123",
+      });
+      for await (const _ of runTurn({
+        text: "そば屋はどこ？",
+        prefetchEnabled: true,
+        signal: controller.signal,
+      })) {
+      }
+
+      expect(abortedDuringStream).toBe(true);
     });
 
     it("parentRouting を requestContext 経由でツールへ渡す", async () => {
