@@ -42,13 +42,37 @@ describe("calcCostUsd", () => {
     expect(cost).toBeCloseTo(11.25, 10);
   });
 
+  it("luna モデルは input $0.20/1M・output $1.20/1M で計算する", () => {
+    const cost = calcCostUsd("openai/gpt-5.6-luna", {
+      inputTokens: 1_000_000,
+      outputTokens: 1_000_000,
+    });
+    expect(cost).toBeCloseTo(1.4, 10);
+  });
+
+  it("terra モデルは input $2.00/1M・output $12.00/1M で計算する", () => {
+    const cost = calcCostUsd("openai/gpt-5.6-terra", {
+      inputTokens: 1_000_000,
+      outputTokens: 1_000_000,
+    });
+    expect(cost).toBeCloseTo(14, 10);
+  });
+
+  it("sol モデルは input $5.00/1M・output $30.00/1M で計算する", () => {
+    const cost = calcCostUsd("openai/gpt-5.6-sol", {
+      inputTokens: 1_000_000,
+      outputTokens: 1_000_000,
+    });
+    expect(cost).toBeCloseTo(35, 10);
+  });
+
   it("reasoning トークンは output 単価で加算する", () => {
-    const cost = calcCostUsd("gemini-2.5-flash", {
+    const cost = calcCostUsd("openai/gpt-5.6-luna", {
       inputTokens: 0,
       outputTokens: 500_000,
       reasoningTokens: 500_000,
     });
-    expect(cost).toBeCloseTo(2.5, 10);
+    expect(cost).toBeCloseTo(1.2, 10);
   });
 
   it("未知のモデルは 0 を返す", () => {
