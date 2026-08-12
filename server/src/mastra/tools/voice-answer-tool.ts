@@ -13,6 +13,7 @@ import {
   hasVoiceFindings,
   pushVoiceFindings,
   type VoiceFindings,
+  type VoicePrefetch,
 } from "~/services/voice/findings-slot";
 import {
   getVoiceFindings,
@@ -146,6 +147,12 @@ export const voiceAnswerTool = createTool({
     const signal = getVoiceTurnSignal(context);
     const t0 = Date.now();
 
+    const discardPrefetch = (keep?: VoicePrefetch) => {
+      const current = prefetchSlot?.current;
+      if (current && current !== keep) current.abort();
+      if (prefetchSlot) prefetchSlot.current = undefined;
+    };
+
     try {
       logger.info("[Voice] answer start", {
         question,
@@ -157,10 +164,8 @@ export const voiceAnswerTool = createTool({
           slot?.entries.reduce((sum, entry) => sum + entry.text.length, 0) ?? 0,
       });
 
-      let routes: Source[];
-      if (parentRouting && !hasVoiceFindings(slot)) {
-        routes = source === "web" ? ["web"] : ["knowledge", "web"];
-      } else {
+      let summarizerRoute: Source | undefined;
+      if (!parentRouting || hasVoiceFindings(slot)) {
         if (!hasVoiceFindings(slot)) startHold?.();
         const first = await decide(
           question,
@@ -172,39 +177,41 @@ export const voiceAnswerTool = createTool({
         );
         if (signal?.aborted) return { answer: ABORTED_ANSWER };
         if (first.kind === "answer") {
+          discardPrefetch();
           logger.info("[Voice] answered from slot", {
             answer: first.text,
             totalMs: Date.now() - t0,
           });
           return { answer: first.text };
         }
-        routes =
-          first.kind === "route" && first.source === "web"
-            ? ["web"]
-            : ["knowledge", "web"];
+        if (first.kind === "route") summarizerRoute = first.source;
       }
+      const searchSource = parentRouting
+        ? (source ?? summarizerRoute)
+        : summarizerRoute;
+      const routes: Source[] =
+        searchSource === "web" ? ["web"] : ["knowledge", "web"];
 
       const tryAnswer = async (
         route: Source,
         text: string,
         timing: { ms: number; fromPrefetch: boolean },
       ) => {
-        const findings: VoiceFindings = {
-          query: question,
-          source: route,
-          text,
-        };
-        if (slot) pushVoiceFindings(slot, findings);
         logger.info("[Voice] search done", {
           source: route,
           query: question,
           ...timing,
           resultChars: text.length,
           resultHead: text.slice(0, 120),
-          savedToSlot: slot !== undefined,
         });
         const answer = await decide(question, text, requestContext, signal);
         if (answer.kind !== "answer") return undefined;
+        const findings: VoiceFindings = {
+          query: question,
+          source: route,
+          text,
+        };
+        if (slot) pushVoiceFindings(slot, findings);
         logger.info("[Voice] answered from search", {
           source: route,
           answer: answer.text,
@@ -215,8 +222,7 @@ export const voiceAnswerTool = createTool({
 
       const prefetched =
         routes[0] === "knowledge" ? prefetchSlot?.current : undefined;
-      if (prefetchSlot?.current && !prefetched) prefetchSlot.current.abort();
-      if (prefetchSlot) prefetchSlot.current = undefined;
+      discardPrefetch(prefetched);
 
       if (prefetched) {
         const waitStart = Date.now();

@@ -122,7 +122,7 @@ describe("voiceAnswerTool", () => {
     expect(slot.entries.at(-1)?.source).toBe("web");
   });
 
-  it("knowledge で足りないと web にエスカレーションする", async () => {
+  it("knowledge で足りないと web にエスカレーションし、空振りの knowledge 資料は保存しない", async () => {
     summarizerGen
       .mockResolvedValueOnce({ text: "NEED_KNOWLEDGE" })
       .mockResolvedValueOnce({ text: "NEED_WEB" })
@@ -136,19 +136,21 @@ describe("voiceAnswerTool", () => {
     expect(result.answer).toBe("答えだよ");
     expect(knowledgeGen).toHaveBeenCalledTimes(1);
     expect(webGen).toHaveBeenCalledTimes(1);
-    expect(slot.entries.at(-1)?.source).toBe("web");
+    expect(slot.entries).toEqual([
+      { query: "最新の補助金は？", source: "web", text: "web の資料" },
+    ]);
   });
 
-  it("どの検索でも答えられないと正直に伝える", async () => {
+  it("どの検索でも答えられないと正直に伝え、空振り資料は保存しない", async () => {
     summarizerGen.mockResolvedValue({ text: "NEED_WEB" });
     knowledgeGen.mockResolvedValueOnce({ text: "無関係" });
     webGen.mockResolvedValueOnce({ text: "無関係" });
+    const slot = createVoiceFindingsSlot();
 
-    const result = await call("答えのない質問", {
-      slot: createVoiceFindingsSlot(),
-    });
+    const result = await call("答えのない質問", { slot });
 
     expect(result.answer).toContain("わからなかった");
+    expect(slot.entries).toEqual([]);
   });
 
   it("例外時はキャラを保った fallback を返す", async () => {
@@ -367,6 +369,65 @@ describe("voiceAnswerTool", () => {
       expect(knowledgeGen).not.toHaveBeenCalled();
     });
 
+    it("findings で答えられないときの検索先は要点化の提案ではなく親の source に従う", async () => {
+      summarizerGen
+        .mockResolvedValueOnce({ text: "NEED_WEB" })
+        .mockResolvedValueOnce({ text: "定休日は月曜だよ" });
+      knowledgeGen.mockResolvedValueOnce({ text: "定休日の資料" });
+      const slot: VoiceFindingsSlot = {
+        entries: [{ query: "そば", source: "knowledge", text: "前の資料" }],
+      };
+
+      const result = await call("そばの定休日は？", {
+        slot,
+        source: "knowledge",
+        parentRouting: true,
+      });
+
+      expect(result.answer).toBe("定休日は月曜だよ");
+      expect(knowledgeGen).toHaveBeenCalledTimes(1);
+      expect(webGen).not.toHaveBeenCalled();
+    });
+
+    it("親が web を指定していれば findings 不発時も knowledge を空振りしない", async () => {
+      summarizerGen
+        .mockResolvedValueOnce({ text: "NEED_KNOWLEDGE" })
+        .mockResolvedValueOnce({ text: "明日は雨だよ" });
+      webGen.mockResolvedValueOnce({ text: "天気資料" });
+      const slot: VoiceFindingsSlot = {
+        entries: [{ query: "そば", source: "knowledge", text: "前の資料" }],
+      };
+
+      const result = await call("明日の天気は？", {
+        slot,
+        source: "web",
+        parentRouting: true,
+      });
+
+      expect(result.answer).toBe("明日は雨だよ");
+      expect(webGen).toHaveBeenCalledTimes(1);
+      expect(knowledgeGen).not.toHaveBeenCalled();
+    });
+
+    it("source 未指定なら要点化の提案にフォールバックする", async () => {
+      summarizerGen
+        .mockResolvedValueOnce({ text: "NEED_WEB" })
+        .mockResolvedValueOnce({ text: "晴れだよ" });
+      webGen.mockResolvedValueOnce({ text: "天気資料" });
+      const slot: VoiceFindingsSlot = {
+        entries: [{ query: "そば", source: "knowledge", text: "前の資料" }],
+      };
+
+      const result = await call("明日の天気は？", {
+        slot,
+        parentRouting: true,
+      });
+
+      expect(result.answer).toBe("晴れだよ");
+      expect(webGen).toHaveBeenCalledTimes(1);
+      expect(knowledgeGen).not.toHaveBeenCalled();
+    });
+
     it("オフなら source を無視して従来どおり要点化でルーティングする", async () => {
       summarizerGen
         .mockResolvedValueOnce({ text: "NEED_KNOWLEDGE" })
@@ -431,6 +492,34 @@ describe("voiceAnswerTool", () => {
       expect(result.answer).toBe("あるよ");
       expect(knowledgeGen).toHaveBeenCalledTimes(1);
       expect(slot.entries.at(-1)?.text).toBe("本検索の資料");
+    });
+
+    it("貯めた資料から即答したターンでは先行検索を打ち切って破棄する", async () => {
+      summarizerGen.mockResolvedValueOnce({ text: "11時からだよ" });
+      const abort = vi.fn();
+      const prefetch: VoicePrefetchSlot = {
+        current: {
+          query: "営業時間は？",
+          promise: Promise.resolve("未使用の資料"),
+          abort,
+        },
+      };
+      const slot: VoiceFindingsSlot = {
+        entries: [
+          { query: "そば", source: "knowledge", text: "営業時間 11:00〜" },
+        ],
+      };
+
+      const result = await call("営業時間は？", {
+        slot,
+        source: "knowledge",
+        parentRouting: true,
+        prefetch,
+      });
+
+      expect(result.answer).toBe("11時からだよ");
+      expect(abort).toHaveBeenCalled();
+      expect(prefetch.current).toBeUndefined();
     });
 
     it("web に route されたターンでは先行検索を使わず打ち切る", async () => {
