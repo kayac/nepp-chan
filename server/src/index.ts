@@ -29,6 +29,7 @@ import {
   threadsRoutes,
   twilioVoiceRoutes,
   userAdminRoutes,
+  widgetSiteAdminRoutes,
 } from "~/routes";
 import type { LineEventMessage } from "~/schemas/line-schema";
 import { CallBridge, handleRelayUpgrade } from "~/services/voice/call-bridge";
@@ -54,6 +55,7 @@ app.route("/admin/emergency", emergencyAdminRoutes);
 app.route("/admin/invitations", invitationRoutes);
 app.route("/admin/users", userAdminRoutes);
 app.route("/admin/polls", pollAdminRoutes);
+app.route("/admin/widget-sites", widgetSiteAdminRoutes);
 app.route("/polls", pollRoutes);
 app.route("/auth", authRoutes);
 app.route("/line", lineRoutes);

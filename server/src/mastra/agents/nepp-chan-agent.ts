@@ -308,6 +308,7 @@ export const neppChanMemoryOptions = {
 type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
   isAdmin?: boolean;
   platform?: Platform;
+  siteInstructions?: string;
   modelConfig: AgentModelConfig;
   withMemory?: boolean;
 };
@@ -315,6 +316,7 @@ type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
 export const createNeppChanAgent = ({
   isAdmin = false,
   platform = "web",
+  siteInstructions,
   modelConfig,
   withMemory = true,
   ...agentOptions
@@ -334,6 +336,7 @@ export const createNeppChanAgent = ({
       baseInstructions(platform),
       platform === "line" ? lineInstructions : "",
       platform === "voice" ? voiceInstructions : "",
+      siteInstructions ? `## 設置サイトの文脈\n${siteInstructions}` : "",
       `## 現在の日時\n${getCurrentDateInfo()}`,
       isAdmin ? adminInstructions : "",
     ]

@@ -99,7 +99,32 @@ describe("mountWidget", () => {
     document.body.querySelector("button")?.click();
     const iframe = document.body.querySelector("iframe");
     expect(iframe).not.toBeNull();
-    expect(iframe?.getAttribute("src")).toBe(IFRAME_SRC);
+    expect(iframe?.getAttribute("src")).toContain(IFRAME_SRC);
+  });
+
+  it("iframe の src に埋め込み元ページを host として渡す", () => {
+    mount();
+    document.body.querySelector("button")?.click();
+    const src = document.body.querySelector("iframe")?.getAttribute("src");
+
+    expect(new URL(src as string).searchParams.get("host")).toBe(
+      `${location.origin}${location.pathname}`,
+    );
+  });
+
+  it("host にクエリ文字列やハッシュを含めない", () => {
+    const original = window.location.href;
+    window.history.replaceState({}, "", "/iju?utm_source=mail&name=taro#top");
+
+    mount();
+    document.body.querySelector("button")?.click();
+    const src = document.body.querySelector("iframe")?.getAttribute("src");
+
+    expect(new URL(src as string).searchParams.get("host")).toBe(
+      `${location.origin}/iju`,
+    );
+
+    window.history.replaceState({}, "", original);
   });
 
   it("初回クリック直後は閉じた状態のスタイルで挿入する", () => {

@@ -7,6 +7,7 @@ import {
   ChatBubbleLeftIcon,
   ChatBubbleLeftRightIcon,
   EnvelopeIcon,
+  GlobeAltIcon,
   HandThumbUpIcon,
   HomeIcon,
   MegaphoneIcon,
@@ -31,6 +32,7 @@ import { PollPanel } from "~/app/dashboard/components/PollPanel";
 import { UsagePanel } from "~/app/dashboard/components/UsagePanel";
 import { VoicesPanel } from "~/app/dashboard/components/VoicesPanel";
 import type { VoiceFilter } from "~/app/dashboard/components/voices/helpers";
+import { WidgetSitesPanel } from "~/app/dashboard/components/WidgetSitesPanel";
 import { useAuth } from "~/app/dashboard/contexts/AuthContext";
 import { useRole } from "~/app/dashboard/hooks/useRole";
 import type { AdminUser } from "~/lib/api/auth";
@@ -44,6 +46,7 @@ export type Tab =
   | "knowledge"
   | "feedback"
   | "invitations"
+  | "widget-sites"
   | "usage";
 
 type AdminRole = AdminUser["role"];
@@ -111,6 +114,13 @@ const tabs: {
     id: "invitations",
     label: "招待管理",
     icon: <EnvelopeIcon className="w-5 h-5" aria-hidden="true" />,
+    group: "system",
+    minRole: "super_admin",
+  },
+  {
+    id: "widget-sites",
+    label: "設置サイト",
+    icon: <GlobeAltIcon className="w-5 h-5" aria-hidden="true" />,
     group: "system",
     minRole: "super_admin",
   },
@@ -326,6 +336,7 @@ export const App = () => {
             {activeTab === "knowledge" && <KnowledgePanel />}
             {activeTab === "feedback" && <FeedbackPanel />}
             {activeTab === "invitations" && <InvitationsPanel />}
+            {activeTab === "widget-sites" && <WidgetSitesPanel />}
             {activeTab === "usage" && <UsagePanel />}
           </div>
         </div>

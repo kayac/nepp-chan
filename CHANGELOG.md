@@ -1,5 +1,10 @@
 # Changelog
 
+## [v1.0.11](https://github.com/kayac/nepp-chan/compare/v1.0.10...v1.0.11) - 2026-08-07
+
+- feat(widget): 本チャット相当のスクロール追従・停止ボタン・ツール表示を widget に入れる by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/992
+- feat(widget): 埋め込み元ページを GA で追えるようにする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/993
+
 ## [v1.0.10](https://github.com/kayac/nepp-chan/compare/v1.0.9...v1.0.10) - 2026-08-07
 
 - fix(widget): intent 固定をやめてサーバーの intent 分類に委ねる by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/990
