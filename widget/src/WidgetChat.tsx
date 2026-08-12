@@ -24,6 +24,7 @@ type Props = {
   apiUrl: string;
   webUrl: string;
   iconSrc?: string;
+  siteHost?: string;
 };
 
 const closeWidget = () => {
@@ -63,6 +64,7 @@ export const WidgetChat = ({
   apiUrl,
   webUrl,
   iconSrc = "/mascot/icon.png",
+  siteHost,
 }: Props) => {
   const [token, setToken] = useState<string | null>(null);
   const [threadId, setThreadId] = useState<string | null>(null);
@@ -93,11 +95,12 @@ export const WidgetChat = ({
           return {
             body: {
               message: messages[messages.length - 1],
+              ...(siteHost && { siteHost }),
             },
           };
         },
       }),
-    [apiUrl, threadId, token],
+    [apiUrl, threadId, token, siteHost],
   );
 
   const { messages, sendMessage, status, error, stop } = useChat({

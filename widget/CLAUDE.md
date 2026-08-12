@@ -12,6 +12,7 @@
 - iframe は lp と同一 origin（`nepp-chan.ai/widget/`）配信。fetch の Origin は配信元になるため、ローダーを貼る host サイトのオリジンは API の CORS 許可リストに無関係。
 - iframe → loader の「閉じる」連携は `postMessage`。loader 側で `event.origin`（iframeSrc のオリジン）と `event.source`（iframe の contentWindow）を検証してから閉じる。
 - loader は iframe の src に `?host=<埋め込み元の origin + pathname>` を付ける。iframe は自ドメイン配信で `Referer` が使えないため、どのページに置かれた widget かはこのクエリでしか分からない。GA の `page_location` にそのまま乗るので、ページ別の利用状況はレポート上で切れる。host 側の URL に個人情報が乗りうるのでクエリ文字列とハッシュは落とす。値は自己申告なので認可には使えない。
+- iframe は上記 `host` クエリからホスト名だけを取り出し、チャット送信時に `siteHost` として API に渡す。サーバーは `widget_sites` テーブル（管理画面の「設置サイト」タブで super_admin が編集）に完全一致で登録があるときだけ、その行の instructions をねっぷちゃんに足す。`siteHost` は host 側の自己申告で偽装できるため、instructions に入るのは管理画面で登録されたテキストだけにしてある。パスは渡さない（閲覧ページ自体が機微になりうるうえ、会話に混ざると Mastra memory やペルソナ抽出に流入するため）。
 - ボタン設置 2500ms 後、`INITIAL_MESSAGE` の挨拶文を吹き出しティーザーとして表示する。localStorage（`nepp-chan-widget:teaser-dismissed-at`）に閉じた時刻を記録し、7 日以内は再表示しない。
 
 ## host への導入

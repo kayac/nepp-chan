@@ -250,6 +250,56 @@ describe("WidgetChat", () => {
     expect(body).not.toHaveProperty("intent");
   });
 
+  it("設置サイトのホストを body に載せて送る", async () => {
+    let body: Record<string, unknown> = {};
+    server.use(
+      http.post(CHAT_URL, async ({ request }) => {
+        body = (await request.json()) as Record<string, unknown>;
+        return buildChatStreamResponse("答えだよ");
+      }),
+    );
+    render(
+      <WidgetChat
+        apiUrl={API_URL}
+        webUrl={WEB_URL}
+        siteHost="www.vill.otoineppu.hokkaido.jp"
+      />,
+    );
+    await waitForReady();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "移住の補助金はある？" }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("答えだよ")).toBeTruthy();
+    });
+
+    expect(body.siteHost).toBe("www.vill.otoineppu.hokkaido.jp");
+  });
+
+  it("設置サイトのホストが無ければ siteHost を送らない", async () => {
+    let body: Record<string, unknown> = {};
+    server.use(
+      http.post(CHAT_URL, async ({ request }) => {
+        body = (await request.json()) as Record<string, unknown>;
+        return buildChatStreamResponse("答えだよ");
+      }),
+    );
+    renderWidgetChat();
+    await waitForReady();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "移住の補助金はある？" }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("答えだよ")).toBeTruthy();
+    });
+
+    expect(body).not.toHaveProperty("siteHost");
+  });
+
   it("生成中は送信ボタンが停止ボタンに変わる", async () => {
     const deferred = buildDeferredChatStreamResponse();
     server.use(http.post(CHAT_URL, () => deferred.response));
