@@ -49,6 +49,7 @@ pnpm --filter @nepp-chan/widget test   # WidgetChat / loader の単体テスト
 - `src/WidgetChat.tsx` — フローティングウィジェット専用のチャット UI（フルハイト・連続会話・ヘッダーに閉じるボタン）。マウント時に匿名セッション取得 → スレッド作成の順で bootstrap し、`@ai-sdk/react` の `DefaultChatTransport` で `/threads/{threadId}/chat` を叩く
 - `src/anonymous-session.ts` — `acquireAnonymousSession`。匿名 JWT の取得・localStorage 読み書き
 - `src/thread.ts` — `createThread`。`POST /threads` で新規スレッドを作成
+- `src/site-host.ts` — `resolveSiteHost`。loader が付ける `host` クエリからホスト名だけを取り出す
 - `src/iframe-entry.tsx` — iframe 中身。`WidgetChat` をマウント
 - `src/iframe.css` — Tailwind + shared スタイルを iframe に読み込む
 - `src/messages.ts` — `CLOSE_MESSAGE_TYPE`（loader と iframe で共有する postMessage の type）
