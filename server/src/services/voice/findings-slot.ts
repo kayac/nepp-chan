@@ -4,8 +4,6 @@ export type VoiceFindings = {
   text: string;
 };
 
-// 通話1回分の検索結果をすべて貯め、以後のターンは資料から検索なしで答える。
-// 全件が要点化プロンプトに入るため、件数と総文字数で古いものから捨てる。
 export type VoiceFindingsSlot = { entries: VoiceFindings[] };
 
 const MAX_FINDINGS_ENTRIES = 8;
@@ -34,8 +32,6 @@ export const pushVoiceFindings = (
   }
 };
 
-// 親エージェントがツールを呼ぶと決める前に走らせる投機検索。
-// 資料が使われず捨てられたときに打ち切れるよう abort を持つ。
 export type VoicePrefetch = {
   query: string;
   promise: Promise<string>;

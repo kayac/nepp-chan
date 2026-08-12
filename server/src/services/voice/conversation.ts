@@ -85,7 +85,6 @@ export const createVoiceConversation = async ({
     if (prefetchSlot) {
       prefetchSlot.current?.abort();
       prefetchSlot.current = undefined;
-      // 貯めた findings で答えられるターンでは無駄になるが、話題転換の検索を隠すため毎回走らせる。
       if (isQuestionLike(text)) {
         logger.info("[Voice] prefetch start", { query: text });
         const controller = new AbortController();

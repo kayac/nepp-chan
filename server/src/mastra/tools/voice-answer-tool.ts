@@ -26,7 +26,6 @@ export const voiceAnswerToolName = "voiceAnswerTool";
 
 const ABORTED_ANSWER = "ごめんね、うまく調べられなかったみたい。";
 
-// 先行検索の完了をこの時間だけ待ってから、待たせる前提の発話に切り替える。
 const PREFETCH_GRACE_MS = 150;
 
 const voiceKnowledgeAgent = createKnowledgeAgent();
@@ -89,8 +88,6 @@ const runSearch = async (
   return res.text ?? "";
 };
 
-// 親エージェントがツール呼び出しを決める前に knowledge 検索を先行させる。
-// 投機なので失敗は空文字に潰し、ツール側の通常検索にフォールバックさせる。
 export const startVoicePrefetch = ({
   question,
   requestContext,
@@ -129,7 +126,6 @@ export const voiceAnswerTool = createTool({
     question: z
       .string()
       .describe("ユーザーが知りたいこと。会話の流れをふまえた具体的な問い"),
-    // 未指定でも検索を止めないよう optional。省略時は knowledge 起点にフォールバックする。
     source: z
       .enum(["knowledge", "web"])
       .optional()
@@ -162,8 +158,6 @@ export const voiceAnswerTool = createTool({
       });
 
       let routes: Source[];
-      // 手元の findings があるときは資料で答えられるか先に見る。
-      // 空のときは資料なしの要点化がルーティングにしかならないので、親の判断をそのまま使う。
       if (parentRouting && !hasVoiceFindings(slot)) {
         routes = source === "web" ? ["web"] : ["knowledge", "web"];
       } else {
@@ -219,7 +213,6 @@ export const voiceAnswerTool = createTool({
         return answer.text;
       };
 
-      // 投機検索は knowledge を先頭に引くときだけ使う。使わない分は打ち切る。
       const prefetched =
         routes[0] === "knowledge" ? prefetchSlot?.current : undefined;
       if (prefetchSlot?.current && !prefetched) prefetchSlot.current.abort();
@@ -227,7 +220,6 @@ export const voiceAnswerTool = createTool({
 
       if (prefetched) {
         const waitStart = Date.now();
-        // 先行検索が済んでいれば、待ちの一言も保留音も出さずに答える。
         const quick = await Promise.race([
           prefetched.promise,
           new Promise<undefined>((resolve) =>
@@ -245,8 +237,6 @@ export const voiceAnswerTool = createTool({
           if (signal?.aborted) return { answer: ABORTED_ANSWER };
           if (answer !== undefined) return { answer };
         }
-        // 投機のクエリは親が具体化する前の発話なので、外れていたら
-        // question での本検索からやり直す。
       }
 
       startHold?.();

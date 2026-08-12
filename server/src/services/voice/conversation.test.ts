@@ -289,7 +289,6 @@ describe("createVoiceConversation", () => {
         callSid: "CA123",
       });
       for await (const _ of runTurn(params)) {
-        // drain
       }
     };
 
