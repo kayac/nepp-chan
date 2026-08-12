@@ -103,7 +103,7 @@ cp web/.env.example web/.env
 | 変数名                         | 用途                                  |
 | ------------------------------ | ------------------------------------- |
 | `OPENAI_API_KEY`               | メイン LLM（GPT-5.6）・Eval スコアラー |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | embedding（Vectorize）・Custom Search |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | embedding・Web 検索グラウンディング・Custom Search |
 | `GOOGLE_SEARCH_ENGINE_ID`      | Custom Search                         |
 | `WEB_URL`                      | Web URL                               |
 | `LINE_CHANNEL_SECRET`          | LINE 署名検証                         |

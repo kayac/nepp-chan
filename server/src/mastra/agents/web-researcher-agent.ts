@@ -1,7 +1,7 @@
+import { google } from "@ai-sdk/google";
 import { Agent } from "@mastra/core/agent";
 import { getCurrentDateInfo } from "~/lib/date";
-import { modelWithReasoning } from "~/lib/llm-models";
-import { searchGoogleTool } from "../tools/google-search-tool";
+import { GEMINI_GROUNDING } from "~/lib/llm-models";
 
 const baseInstructions = `
 あなたはインターネットから最新情報を収集する専門エージェントです。
@@ -23,19 +23,28 @@ const baseInstructions = `
 - 検索結果の年度・日付が古い場合は「最新情報は直接確認をおすすめします」と補足する
 `;
 
+const researcherModelConfig = {
+  model: GEMINI_GROUNDING,
+  providerOptions: {
+    google: {
+      thinkingConfig: { thinkingLevel: "low" as const },
+    },
+  },
+};
+
 export const createWebResearcherAgent = () =>
   new Agent({
     id: "web-researcher",
     name: "Web Researcher",
     description: `インターネットから最新情報を収集するエージェント。
-    Google検索を使って、リアルタイムの情報を取得し要約を提供する。`,
+    Google検索グラウンディングを使って、リアルタイムの情報を取得し要約を提供する。`,
     instructions: () => `${baseInstructions}
 ## 現在の日時
 ${getCurrentDateInfo()}
 `,
-    ...modelWithReasoning(),
+    ...researcherModelConfig,
     tools: {
-      searchGoogleTool,
+      googleSearch: google.tools.googleSearch({}),
     },
   });
 

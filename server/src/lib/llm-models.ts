@@ -7,6 +7,9 @@ export const OPENAI_SCORER = "openai/gpt-4.1-nano";
 // 埋め込みモデル
 export const GEMINI_EMBEDDING = "gemini-embedding-001";
 
+// Google 検索グラウンディングは Gemini 専用機能のため web-researcher だけ Gemini を使う
+export const GEMINI_GROUNDING = "google/gemini-flash-lite-latest";
+
 type ReasoningEffort = "high" | "medium" | "low" | "minimal";
 
 export const modelWithReasoning = ({
