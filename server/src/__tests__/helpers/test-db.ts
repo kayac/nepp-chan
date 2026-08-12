@@ -177,6 +177,15 @@ export const createTestDb = async () => {
       created_at TEXT NOT NULL
     );
 
+    -- ウィジェット設置サイト allowlist
+    CREATE TABLE IF NOT EXISTS widget_sites (
+      id TEXT PRIMARY KEY,
+      host TEXT NOT NULL UNIQUE,
+      instructions TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT
+    );
+
     -- Mastra 管理テーブル（read-only スキーマ。テストのフィクスチャ生成用に最低限のカラムを定義）
     CREATE TABLE IF NOT EXISTS mastra_threads (
       id TEXT PRIMARY KEY,
