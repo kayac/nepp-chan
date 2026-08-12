@@ -4,7 +4,7 @@ import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { getCurrentDateInfo } from "~/lib/date";
 import {
   type AgentModelConfig,
-  GEMINI_FLASH_LITE,
+  OPENAI_LITE,
   resolveModelTier,
 } from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
@@ -293,7 +293,7 @@ const voiceInstructions = `
 
 export const neppChanMemoryOptions = {
   generateTitle: {
-    model: GEMINI_FLASH_LITE,
+    model: OPENAI_LITE,
     instructions:
       "ユーザーの最初のメッセージから15文字以内の簡潔な日本語タイトルを生成する。",
   },

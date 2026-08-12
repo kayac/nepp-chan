@@ -1,5 +1,5 @@
 import { Agent } from "@mastra/core/agent";
-import { geminiModelWithThinking } from "~/lib/llm-models";
+import { modelWithReasoning } from "~/lib/llm-models";
 import { adminPersonaTool } from "~/mastra/tools/admin-persona-tool";
 import { personaAggregateTool } from "~/mastra/tools/persona-aggregate-tool";
 import { personaGetTool } from "~/mastra/tools/persona-get-tool";
@@ -105,7 +105,7 @@ export const personaAnalystAgent = new Agent({
 - データがない場合は「データがありません」と正直に報告
 - 推測は「推測」と明記する
 `,
-  ...geminiModelWithThinking(),
+  ...modelWithReasoning(),
   tools: {
     adminPersonaTool,
     personaAggregateTool,

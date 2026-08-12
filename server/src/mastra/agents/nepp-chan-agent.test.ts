@@ -1,7 +1,7 @@
 import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { describe, expect, it } from "vitest";
 
-import { type AgentModelConfig, GEMINI_FLASH_LITE } from "~/lib/llm-models";
+import { type AgentModelConfig, OPENAI_LITE } from "~/lib/llm-models";
 import { broadcastGetToolName } from "~/mastra/tools/broadcast-get-tool";
 import { pollGetToolName } from "~/mastra/tools/poll-get-tool";
 import { voiceAnswerToolName } from "~/mastra/tools/voice-answer-tool";
@@ -116,7 +116,7 @@ describe("createNeppChanAgent", () => {
 
   describe("memory オプション", () => {
     it("タイトル生成は FLASH_LITE + 日本語指示で行う", () => {
-      expect(neppChanMemoryOptions.generateTitle.model).toBe(GEMINI_FLASH_LITE);
+      expect(neppChanMemoryOptions.generateTitle.model).toBe(OPENAI_LITE);
       expect(neppChanMemoryOptions.generateTitle.instructions).toContain(
         "日本語",
       );

@@ -1,6 +1,6 @@
 import { Agent } from "@mastra/core/agent";
 import { AGENT_TOOL_NAMES } from "@nepp-chan/shared/constants/agent-tools";
-import { geminiModelWithThinking } from "~/lib/llm-models";
+import { modelWithReasoning } from "~/lib/llm-models";
 import { emergencyReportTool } from "~/mastra/tools/emergency-report-tool";
 import { emergencyUpdateTool } from "~/mastra/tools/emergency-update-tool";
 
@@ -47,7 +47,7 @@ export const emergencyReporterAgent = new Agent({
 - ${AGENT_TOOL_NAMES.emergencyReport}: 新規の緊急報告を記録
 - ${AGENT_TOOL_NAMES.emergencyUpdate}: 既存の報告に情報を追加
 `,
-  ...geminiModelWithThinking(),
+  ...modelWithReasoning(),
   tools: {
     [AGENT_TOOL_NAMES.emergencyReport]: emergencyReportTool,
     [AGENT_TOOL_NAMES.emergencyUpdate]: emergencyUpdateTool,

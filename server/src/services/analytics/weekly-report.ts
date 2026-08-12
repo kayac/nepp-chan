@@ -2,7 +2,7 @@ import { Mastra } from "@mastra/core/mastra";
 import { and, gte, lt } from "drizzle-orm";
 import { createDb, persona } from "~/db";
 import { DAY_MS, jstDateLabel, startOfJstWeek, WEEK_MS } from "~/lib/date";
-import { GEMINI_FLASH } from "~/lib/llm-models";
+import { OPENAI_MAIN } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
 import { weeklyReportAgent } from "~/mastra/agents/weekly-report-agent";
@@ -86,7 +86,7 @@ const generateWeeklySummary = async (
   );
 
   await recordLlmUsage(env.DB, {
-    model: GEMINI_FLASH,
+    model: OPENAI_MAIN,
     usage: response.totalUsage,
     source: "weekly-report",
   });

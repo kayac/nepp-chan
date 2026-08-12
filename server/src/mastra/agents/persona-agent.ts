@@ -1,5 +1,5 @@
 import { Agent } from "@mastra/core/agent";
-import { geminiModelWithThinking } from "~/lib/llm-models";
+import { modelWithReasoning } from "~/lib/llm-models";
 import { personaSaveTool } from "~/mastra/tools/persona-save-tool";
 import { personaUpdateTool } from "~/mastra/tools/persona-update-tool";
 
@@ -86,7 +86,7 @@ neutral を安易に選ばない。声には何らかの感情や意図が含ま
 ## 複数トピック対応
 複数トピックが含まれる場合はそれぞれ別のペルソナとして保存する。
 `,
-  ...geminiModelWithThinking(),
+  ...modelWithReasoning(),
   tools: {
     personaSaveTool,
     personaUpdateTool,

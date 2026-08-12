@@ -408,7 +408,7 @@ describe("chatRoutes: POST /:threadId/chat", () => {
 
     expect(mockRecordLlmUsage).toHaveBeenCalledWith(
       mockEnv.DB,
-      expect.objectContaining({ model: "google/gemini-flash-lite-latest" }),
+      expect.objectContaining({ model: "openai/gpt-5.6-luna" }),
     );
   });
 

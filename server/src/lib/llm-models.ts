@@ -1,7 +1,6 @@
 // Mastra 形式のモデル名（Agent の model プロパティに使用）
-export const GEMINI_FLASH = "google/gemini-flash-latest";
-export const GEMINI_FLASH_LITE = "google/gemini-flash-lite-latest";
-export const GEMINI_PRO = "google/gemini-2.5-pro";
+export const OPENAI_MAIN = "openai/gpt-5.6-terra";
+export const OPENAI_LITE = "openai/gpt-5.6-luna";
 
 // Eval 全体テスト用（RPD 無制限、latest ではなくバージョン固定）
 export const GEMINI_FLASH_EVAL = "google/gemini-2.5-flash-lite";
@@ -16,17 +15,16 @@ export const OPENAI_SCORER = "openai/gpt-4.1-nano";
 // 埋め込みモデル
 export const GEMINI_EMBEDDING = "gemini-embedding-001";
 
-// Gemini 3 系では thinking を完全に無効化できず、thinkingBudget: 0 は 400 になる。最小は minimal。
-type ThinkingLevel = "high" | "medium" | "low" | "minimal";
+type ReasoningEffort = "high" | "medium" | "low" | "minimal";
 
-export const geminiModelWithThinking = ({
-  model = GEMINI_FLASH_LITE,
-  level = "low" as ThinkingLevel,
+export const modelWithReasoning = ({
+  model = OPENAI_LITE,
+  effort = "low" as ReasoningEffort,
 } = {}) => ({
   model,
   providerOptions: {
-    google: {
-      thinkingConfig: { thinkingLevel: level },
+    openai: {
+      reasoningEffort: effort,
     },
   },
 });
@@ -34,34 +32,34 @@ export const geminiModelWithThinking = ({
 export type Intent = "casual" | "thinking";
 
 /**
- * プライマリ障害・レート制限時に同じ thinking 設定のままフォールバックする
- * モデル連鎖を返す。コスト暴発を避けるため PRO へはフォールバックしない。
+ * プライマリ障害・レート制限時に同じ reasoning 設定のままフォールバックする
+ * モデル連鎖を返す。コスト暴発を避けるため上位モデルへは連鎖しない。
  * id を省略すると Agent 構築時に randomUUID() が呼ばれ、モジュールグローバルで
  * 生成する Agent が workerd の起動を壊すため必ず明示する。
  */
-const geminiModelChain = ({
+const modelChain = ({
   primary,
   fallback,
-  level,
+  effort,
 }: {
   primary: string;
   fallback: string;
-  level: ThinkingLevel;
+  effort: ReasoningEffort;
 }) => [
   {
     id: primary,
-    ...geminiModelWithThinking({ model: primary, level }),
+    ...modelWithReasoning({ model: primary, effort }),
     maxRetries: 1,
   },
   {
     id: fallback,
-    ...geminiModelWithThinking({ model: fallback, level }),
+    ...modelWithReasoning({ model: fallback, effort }),
     maxRetries: 1,
   },
 ];
 
 export type AgentModelConfig = {
-  model: ReturnType<typeof geminiModelChain>;
+  model: ReturnType<typeof modelChain>;
   defaultOptions: { maxSteps: number };
 };
 
@@ -71,36 +69,36 @@ const MAX_STEPS = { casual: 5, thinking: 10 } as const;
 const MODEL_TIERS: Record<Intent, Record<"web" | "line", AgentModelConfig>> = {
   casual: {
     web: {
-      model: geminiModelChain({
-        primary: GEMINI_FLASH_LITE,
-        fallback: GEMINI_FLASH,
-        level: "low",
+      model: modelChain({
+        primary: OPENAI_LITE,
+        fallback: OPENAI_MAIN,
+        effort: "low",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.casual },
     },
     line: {
-      model: geminiModelChain({
-        primary: GEMINI_FLASH_LITE,
-        fallback: GEMINI_FLASH,
-        level: "minimal",
+      model: modelChain({
+        primary: OPENAI_LITE,
+        fallback: OPENAI_MAIN,
+        effort: "minimal",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.casual },
     },
   },
   thinking: {
     web: {
-      model: geminiModelChain({
-        primary: GEMINI_FLASH,
-        fallback: GEMINI_FLASH_LITE,
-        level: "high",
+      model: modelChain({
+        primary: OPENAI_MAIN,
+        fallback: OPENAI_LITE,
+        effort: "high",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.thinking },
     },
     line: {
-      model: geminiModelChain({
-        primary: GEMINI_FLASH,
-        fallback: GEMINI_FLASH_LITE,
-        level: "medium",
+      model: modelChain({
+        primary: OPENAI_MAIN,
+        fallback: OPENAI_LITE,
+        effort: "medium",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.thinking },
     },
@@ -110,10 +108,10 @@ const MODEL_TIERS: Record<Intent, Record<"web" | "line", AgentModelConfig>> = {
 const VOICE_MAX_STEPS = 10;
 
 export const voiceModelConfig: AgentModelConfig = {
-  model: geminiModelChain({
-    primary: GEMINI_FLASH_LITE,
-    fallback: GEMINI_FLASH,
-    level: "low",
+  model: modelChain({
+    primary: OPENAI_LITE,
+    fallback: OPENAI_MAIN,
+    effort: "low",
   }),
   defaultOptions: { maxSteps: VOICE_MAX_STEPS },
 };

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-  GEMINI_FLASH,
-  GEMINI_FLASH_LITE,
   type Intent,
+  OPENAI_LITE,
+  OPENAI_MAIN,
   primaryModelId,
   resolveModelTier,
   voiceModelConfig,
@@ -15,11 +15,11 @@ describe("resolveModelTier", () => {
 
     for (const intent of intents) {
       for (const platform of platforms) {
-        it(`intent=${intent}, platform=${platform} でもプライマリ FLASH + high`, () => {
+        it(`intent=${intent}, platform=${platform} でもプライマリ MAIN + high`, () => {
           const tier = resolveModelTier({ intent, platform, isAdmin: true });
-          expect(tier.model[0].model).toBe(GEMINI_FLASH);
+          expect(tier.model[0].model).toBe(OPENAI_MAIN);
           expect(
-            tier.model[0].providerOptions.google.thinkingConfig.thinkingLevel,
+            tier.model[0].providerOptions.openai.reasoningEffort,
           ).toBe("high");
         });
       }
@@ -27,77 +27,72 @@ describe("resolveModelTier", () => {
   });
 
   describe("Web プラットフォーム（非 Admin）", () => {
-    it("casual → プライマリ FLASH_LITE + low、フォールバック FLASH", () => {
+    it("casual → プライマリ LITE + low、フォールバック MAIN", () => {
       const tier = resolveModelTier({
         intent: "casual",
         platform: "web",
         isAdmin: false,
       });
       expect(tier.model.map((m) => m.model)).toEqual([
-        GEMINI_FLASH_LITE,
-        GEMINI_FLASH,
+        OPENAI_LITE,
+        OPENAI_MAIN,
       ]);
-      expect(
-        tier.model[0].providerOptions.google.thinkingConfig.thinkingLevel,
-      ).toBe("low");
+      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe("low");
     });
 
-    it("thinking → プライマリ FLASH + high、フォールバック FLASH_LITE", () => {
+    it("thinking → プライマリ MAIN + high、フォールバック LITE", () => {
       const tier = resolveModelTier({
         intent: "thinking",
         platform: "web",
         isAdmin: false,
       });
       expect(tier.model.map((m) => m.model)).toEqual([
-        GEMINI_FLASH,
-        GEMINI_FLASH_LITE,
+        OPENAI_MAIN,
+        OPENAI_LITE,
       ]);
-      expect(
-        tier.model[0].providerOptions.google.thinkingConfig.thinkingLevel,
-      ).toBe("high");
+      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe("high");
     });
   });
 
   describe("LINE プラットフォーム（非 Admin）", () => {
-    it("casual → プライマリ FLASH_LITE + minimal", () => {
+    it("casual → プライマリ LITE + minimal", () => {
       const tier = resolveModelTier({
         intent: "casual",
         platform: "line",
         isAdmin: false,
       });
-      expect(tier.model[0].model).toBe(GEMINI_FLASH_LITE);
-      expect(tier.model[0].providerOptions.google.thinkingConfig).toEqual({
-        thinkingLevel: "minimal",
+      expect(tier.model[0].model).toBe(OPENAI_LITE);
+      expect(tier.model[0].providerOptions.openai).toEqual({
+        reasoningEffort: "minimal",
       });
     });
 
-    it("thinking → プライマリ FLASH + medium", () => {
+    it("thinking → プライマリ MAIN + medium", () => {
       const tier = resolveModelTier({
         intent: "thinking",
         platform: "line",
         isAdmin: false,
       });
-      expect(tier.model[0].model).toBe(GEMINI_FLASH);
-      expect(
-        tier.model[0].providerOptions.google.thinkingConfig.thinkingLevel,
-      ).toBe("medium");
+      expect(tier.model[0].model).toBe(OPENAI_MAIN);
+      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
+        "medium",
+      );
     });
   });
 
   describe("voiceModelConfig（通話用の固定モデル）", () => {
-    it("プライマリ FLASH_LITE + low、フォールバック FLASH", () => {
+    it("プライマリ LITE + low、フォールバック MAIN", () => {
       expect(voiceModelConfig.model.map((m) => m.model)).toEqual([
-        GEMINI_FLASH_LITE,
-        GEMINI_FLASH,
+        OPENAI_LITE,
+        OPENAI_MAIN,
       ]);
       expect(
-        voiceModelConfig.model[0].providerOptions.google.thinkingConfig
-          .thinkingLevel,
+        voiceModelConfig.model[0].providerOptions.openai.reasoningEffort,
       ).toBe("low");
     });
 
-    it("重い FLASH/medium は使わない（軽量ゲート）", () => {
-      expect(voiceModelConfig.model[0].model).not.toBe(GEMINI_FLASH);
+    it("重い MAIN は使わない（軽量ゲート）", () => {
+      expect(voiceModelConfig.model[0].model).not.toBe(OPENAI_MAIN);
     });
 
     it("tool 委譲のため maxSteps は 10 を維持", () => {
@@ -126,15 +121,15 @@ describe("resolveModelTier", () => {
   });
 
   describe("フォールバック構成", () => {
-    it("フォールバックはプライマリと同じ thinking 設定を引き継ぐ", () => {
+    it("フォールバックはプライマリと同じ reasoning 設定を引き継ぐ", () => {
       const tier = resolveModelTier({
         intent: "thinking",
         platform: "line",
         isAdmin: false,
       });
-      expect(
-        tier.model[1].providerOptions.google.thinkingConfig.thinkingLevel,
-      ).toBe("medium");
+      expect(tier.model[1].providerOptions.openai.reasoningEffort).toBe(
+        "medium",
+      );
     });
 
     it("全エントリに maxRetries が設定されている", () => {
@@ -168,6 +163,6 @@ describe("primaryModelId", () => {
       platform: "web",
       isAdmin: false,
     });
-    expect(primaryModelId(tier)).toBe(GEMINI_FLASH_LITE);
+    expect(primaryModelId(tier)).toBe(OPENAI_LITE);
   });
 });

@@ -1,6 +1,6 @@
 import { Agent } from "@mastra/core/agent";
 import { getCurrentDateInfo } from "~/lib/date";
-import { geminiModelWithThinking } from "~/lib/llm-models";
+import { modelWithReasoning } from "~/lib/llm-models";
 import {
   broadcastGetTool,
   broadcastGetToolName,
@@ -131,7 +131,7 @@ export const createKnowledgeAgent = (model?: string) =>
     description:
       "音威子府村の情報を検索・回答する担当。村に関する情報（歴史、施設、観光、村長、行政、行事）を検索して回答する。",
     instructions: knowledgeAgentInstructions,
-    ...geminiModelWithThinking({ model }),
+    ...modelWithReasoning({ model }),
     tools: {
       knowledgeSearchTool,
       [broadcastGetToolName]: broadcastGetTool,

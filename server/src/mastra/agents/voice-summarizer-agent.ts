@@ -1,11 +1,11 @@
 import { Agent } from "@mastra/core/agent";
-import { GEMINI_FLASH_LITE } from "~/lib/llm-models";
+import { OPENAI_LITE } from "~/lib/llm-models";
 
 export const NEED_KNOWLEDGE = "NEED_KNOWLEDGE";
 export const NEED_WEB = "NEED_WEB";
 
 const summarizerModelConfig = {
-  model: GEMINI_FLASH_LITE,
+  model: OPENAI_LITE,
   providerOptions: {
     google: {
       thinkingConfig: { thinkingLevel: "minimal" as const },

@@ -1,8 +1,8 @@
 import { Agent } from "@mastra/core/agent";
-import { GEMINI_FLASH_LITE } from "~/lib/llm-models";
+import { OPENAI_LITE } from "~/lib/llm-models";
 
 const routerModelConfig = {
-  model: GEMINI_FLASH_LITE,
+  model: OPENAI_LITE,
   providerOptions: {
     google: {
       thinkingConfig: { thinkingLevel: "minimal" as const },

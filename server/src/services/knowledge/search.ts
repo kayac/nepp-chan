@@ -2,7 +2,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { MastraAgentRelevanceScorer } from "@mastra/core/relevance";
 import { rerankWithScorer } from "@mastra/rag";
 import { embed } from "ai";
-import { GEMINI_EMBEDDING, GEMINI_FLASH } from "~/lib/llm-models";
+import { GEMINI_EMBEDDING, OPENAI_LITE } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 
 const EMBEDDING_DIMENSIONS = 1536;
@@ -14,7 +14,7 @@ const RERANK_TOP_K = 5;
 // 呼び出しごとの new は Agent ごとに ephemeral Mastra を増殖させるためモジュールスコープで保持する
 const knowledgeRerankScorer = new MastraAgentRelevanceScorer(
   "knowledge-reranker",
-  GEMINI_FLASH,
+  OPENAI_LITE,
 );
 
 export type KnowledgeResult = {
