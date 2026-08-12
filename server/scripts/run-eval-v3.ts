@@ -239,11 +239,10 @@ const resolveEvalApiKeys = (env: CloudflareBindings): void => {
   // biome-ignore lint/suspicious/noExplicitAny: eval 時のみ env proxy を上書き
   (env as any).GOOGLE_GENERATIVE_AI_API_KEY = googleKey;
 
-  // biome-ignore lint/suspicious/noExplicitAny: .dev.vars の追加キーは CloudflareBindings に未定義
-  const openaiKey = (env as any).OPENAI_API_KEY as string | undefined;
+  const openaiKey = env.OPENAI_API_KEY as string | undefined;
   if (openaiKey) {
     process.env.OPENAI_API_KEY = openaiKey;
-    console.log("🔑 OpenAI APIキーを使用（スコアラー: gpt-5-nano）");
+    console.log("🔑 OpenAI APIキーを使用（スコアラー: gpt-4.1-nano）");
   } else {
     console.warn(
       "⚠️ OPENAI_API_KEY が未設定。エージェント実行とスコアラーが失敗します",
@@ -604,8 +603,6 @@ const runEvalScorers = async ({
   if (context.length === 0) return scores;
 
   // faithfulness: 常に 0.000 を返す既知バグのためスキップ
-  // see: Phase 1 スコアラー検証結果（完璧な回答でも 0.000）
-  // TODO: Mastra/Gemini のバグ修正後に再有効化
 
   try {
     const result = await createContextPrecisionScorer({

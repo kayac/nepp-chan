@@ -18,9 +18,9 @@ describe("resolveModelTier", () => {
         it(`intent=${intent}, platform=${platform} でもプライマリ MAIN + high`, () => {
           const tier = resolveModelTier({ intent, platform, isAdmin: true });
           expect(tier.model[0].model).toBe(OPENAI_MAIN);
-          expect(
-            tier.model[0].providerOptions.openai.reasoningEffort,
-          ).toBe("high");
+          expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
+            "high",
+          );
         });
       }
     }

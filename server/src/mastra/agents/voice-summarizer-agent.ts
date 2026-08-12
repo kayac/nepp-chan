@@ -4,11 +4,12 @@ import { OPENAI_LITE } from "~/lib/llm-models";
 export const NEED_KNOWLEDGE = "NEED_KNOWLEDGE";
 export const NEED_WEB = "NEED_WEB";
 
+// reasoning を有効にすると temperature が strip されるため、決定的要約には none が必須
 const summarizerModelConfig = {
   model: OPENAI_LITE,
   providerOptions: {
-    google: {
-      thinkingConfig: { thinkingLevel: "minimal" as const },
+    openai: {
+      reasoningEffort: "none" as const,
     },
   },
   defaultOptions: { modelSettings: { temperature: 0 } },

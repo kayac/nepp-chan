@@ -115,7 +115,7 @@ describe("createNeppChanAgent", () => {
   });
 
   describe("memory オプション", () => {
-    it("タイトル生成は FLASH_LITE + 日本語指示で行う", () => {
+    it("タイトル生成は LITE + 日本語指示で行う", () => {
       expect(neppChanMemoryOptions.generateTitle.model).toBe(OPENAI_LITE);
       expect(neppChanMemoryOptions.generateTitle.instructions).toContain(
         "日本語",

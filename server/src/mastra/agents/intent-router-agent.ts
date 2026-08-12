@@ -1,11 +1,12 @@
 import { Agent } from "@mastra/core/agent";
 import { OPENAI_LITE } from "~/lib/llm-models";
 
+// reasoning を有効にすると temperature が strip されるため、決定的分類には none が必須
 const routerModelConfig = {
   model: OPENAI_LITE,
   providerOptions: {
-    google: {
-      thinkingConfig: { thinkingLevel: "minimal" as const },
+    openai: {
+      reasoningEffort: "none" as const,
     },
   },
   defaultOptions: { modelSettings: { temperature: 0 } },

@@ -2,7 +2,6 @@
 export const OPENAI_MAIN = "openai/gpt-5.6-terra";
 export const OPENAI_LITE = "openai/gpt-5.6-luna";
 
-// Eval スコアラー用
 export const OPENAI_SCORER = "openai/gpt-4.1-nano";
 
 // 埋め込みモデル

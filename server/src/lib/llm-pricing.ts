@@ -1,9 +1,7 @@
 import { logger } from "~/lib/logger";
 
-// USD per 1M tokens（OpenAI: https://developers.openai.com/api/docs/pricing 2026-08-12 時点、
-// Gemini: https://ai.google.dev/gemini-api/docs/pricing 2026-06-10 時点。Gemini 行は過去の
-// llm_usage レコードのコスト表示用に残す）
-// どちらのプロバイダも reasoning トークンは output 単価で課金される。
+// USD per 1M tokens（OpenAI 2026-08-12・Gemini 2026-06-10 時点の公式 pricing。Gemini 行は過去の llm_usage 表示用）
+// reasoning トークンはどちらのプロバイダも output 単価で課金される。
 // modelId の部分一致で解決するため、"flash-lite" を "flash" より先に置くこと。
 const PRICING = [
   { match: "luna", inputPer1M: 0.2, outputPer1M: 1.2 },

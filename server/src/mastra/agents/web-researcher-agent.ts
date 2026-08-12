@@ -1,7 +1,7 @@
-import { google } from "@ai-sdk/google";
 import { Agent } from "@mastra/core/agent";
 import { getCurrentDateInfo } from "~/lib/date";
 import { modelWithReasoning } from "~/lib/llm-models";
+import { searchGoogleTool } from "../tools/google-search-tool";
 
 const baseInstructions = `
 あなたはインターネットから最新情報を収集する専門エージェントです。
@@ -28,14 +28,14 @@ export const createWebResearcherAgent = () =>
     id: "web-researcher",
     name: "Web Researcher",
     description: `インターネットから最新情報を収集するエージェント。
-    Google検索グラウンディングを使って、リアルタイムの情報を取得し要約を提供する。`,
+    Google検索を使って、リアルタイムの情報を取得し要約を提供する。`,
     instructions: () => `${baseInstructions}
 ## 現在の日時
 ${getCurrentDateInfo()}
 `,
     ...modelWithReasoning(),
     tools: {
-      googleSearch: google.tools.googleSearch({}),
+      searchGoogleTool,
     },
   });
 

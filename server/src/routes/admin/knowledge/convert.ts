@@ -90,7 +90,7 @@ const convertFileRoute = createRoute({
   path: "/convert",
   summary: "画像/PDFをMarkdownに変換",
   description:
-    "画像またはPDFファイルをGeminiで読み取り、Markdown形式に変換してR2に保存します",
+    "画像またはPDFファイルをLLMで読み取り、Markdown形式に変換してR2に保存します",
   tags: ["Admin - Knowledge"],
   request: {
     body: {
