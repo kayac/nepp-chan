@@ -1684,7 +1684,7 @@ const main = async () => {
   }
 
   // ─── クォータ事前チェック ──────────────────────────────────
-  const CALLS_PER_ITERATION = 22; // 実測ベース（チャット+thinking+rerank+embed）
+  const CALLS_PER_ITERATION = 22;
   const envCount = args.compare ? 3 : 1;
   const estimatedAgentCalls =
     testCases.length * args.n * CALLS_PER_ITERATION * envCount;

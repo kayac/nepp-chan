@@ -1,7 +1,5 @@
-# メイン LLM（GPT-5.6）・Eval スコアラー用
 OPENAI_API_KEY=your-api-key-here
 
-# embedding・Web 検索グラウンディング・Custom Search 用
 GOOGLE_GENERATIVE_AI_API_KEY=your-api-key-here
 GOOGLE_SEARCH_ENGINE_ID=your-engine-id-here
 

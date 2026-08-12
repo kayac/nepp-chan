@@ -105,8 +105,6 @@ export const extractPersonaFromThread = async (
       { requestContext },
     );
   } catch (error) {
-    // エラーは一時的な失敗の可能性があるため処理位置を前進させない。
-    // messageCount を返さないことで status を更新せず、次回バッチで再試行する。
     logger.error(`Persona extraction failed for thread ${threadId}`, error);
     return { skipped: true, reason: "extraction_error" };
   }

@@ -27,8 +27,6 @@ export const modelWithReasoning = ({
 export type Intent = "casual" | "thinking";
 
 /**
- * プライマリ障害・レート制限時に同じ reasoning 設定のままフォールバックする
- * モデル連鎖を返す。コスト暴発を避けるため上位モデルへは連鎖しない。
  * id を省略すると Agent 構築時に randomUUID() が呼ばれ、モジュールグローバルで
  * 生成する Agent が workerd の起動を壊すため必ず明示する。
  */

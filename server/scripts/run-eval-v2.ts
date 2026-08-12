@@ -212,7 +212,6 @@ const isAbstention = (answer: string): boolean => {
 // ─── Eval用APIキー解決 ───────────────────────────────────
 
 const resolveEvalApiKeys = (env: CloudflareBindings): void => {
-  // Google（embedding 用）
   // biome-ignore lint/suspicious/noExplicitAny: .dev.vars の追加キーは CloudflareBindings に未定義
   const evalGoogleKey = (env as any).EVAL_GOOGLE_API_KEY as string | undefined;
   const googleKey = evalGoogleKey || env.GOOGLE_GENERATIVE_AI_API_KEY;
@@ -1466,7 +1465,7 @@ const main = async () => {
   }
 
   // ─── クォータ事前チェック ──────────────────────────────────
-  const CALLS_PER_ITERATION = 22; // 実測ベース（チャット+thinking+rerank+embed）
+  const CALLS_PER_ITERATION = 22;
   const envCount = args.compare ? 3 : 1;
   const estimatedAgentCalls =
     testCases.length * args.n * CALLS_PER_ITERATION * envCount;
