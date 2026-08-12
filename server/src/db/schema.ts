@@ -233,10 +233,8 @@ export const dataRetentionLogs = sqliteTable("data_retention_logs", {
 export type DataRetentionLog = typeof dataRetentionLogs.$inferSelect;
 export type NewDataRetentionLog = typeof dataRetentionLogs.$inferInsert;
 
-// 埋め込みウィジェットの設置サイト allowlist
 export const widgetSites = sqliteTable("widget_sites", {
   id: text("id").primaryKey(),
-  // 保存も照合も normalizeSiteHost を通した形に揃える
   host: text("host").notNull().unique(),
   instructions: text("instructions").notNull(),
   createdAt: text("created_at").notNull(),

@@ -177,7 +177,6 @@ export const createTestDb = async () => {
       created_at TEXT NOT NULL
     );
 
-    -- ウィジェット設置サイト allowlist
     CREATE TABLE IF NOT EXISTS widget_sites (
       id TEXT PRIMARY KEY,
       host TEXT NOT NULL UNIQUE,

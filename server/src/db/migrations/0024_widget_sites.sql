@@ -1,4 +1,3 @@
--- 埋め込みウィジェットの設置サイト allowlist
 CREATE TABLE IF NOT EXISTS widget_sites (
   id TEXT PRIMARY KEY,
   host TEXT NOT NULL UNIQUE,
