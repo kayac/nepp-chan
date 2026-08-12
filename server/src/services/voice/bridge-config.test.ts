@@ -116,6 +116,19 @@ describe("parseBridgeConfig: 自動終話", () => {
   });
 });
 
+describe("parseBridgeConfig: 応答の先回り", () => {
+  it("parentRoutingEnabled / prefetchEnabled は既定 true で false に切り替えられる", () => {
+    expect(parseBridgeConfig({}).parentRoutingEnabled).toBe(true);
+    expect(parseBridgeConfig({}).prefetchEnabled).toBe(true);
+    const off = parseBridgeConfig({
+      parentRoutingEnabled: "false",
+      prefetchEnabled: "false",
+    });
+    expect(off.parentRoutingEnabled).toBe(false);
+    expect(off.prefetchEnabled).toBe(false);
+  });
+});
+
 describe("serializeBridgeConfig", () => {
   it("全フィールドを string 化し、parseBridgeConfig で往復できる", () => {
     const config = {
@@ -130,6 +143,8 @@ describe("serializeBridgeConfig", () => {
       holdAudioUrl: "https://example.com/hold.mp3",
       holdDelayMs: 1200,
       endCallEnabled: false,
+      parentRoutingEnabled: false,
+      prefetchEnabled: false,
     };
     const serialized = serializeBridgeConfig(config);
     expect(Object.values(serialized).every((v) => typeof v === "string")).toBe(

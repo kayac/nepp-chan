@@ -56,6 +56,8 @@ export type BridgeConfig = {
   holdAudioUrl: string;
   holdDelayMs: number;
   endCallEnabled: boolean;
+  parentRoutingEnabled: boolean;
+  prefetchEnabled: boolean;
 };
 
 export const BRIDGE_CONFIG_DEFAULTS: BridgeConfig = {
@@ -70,6 +72,8 @@ export const BRIDGE_CONFIG_DEFAULTS: BridgeConfig = {
   holdAudioUrl: "https://amachamusic.chagasi.com/mp3/tsukinokobune.mp3",
   holdDelayMs: 0,
   endCallEnabled: true,
+  parentRoutingEnabled: true,
+  prefetchEnabled: true,
 };
 
 const delayParam = z.coerce.number().int().min(0).max(5_000);
@@ -89,6 +93,8 @@ export const bridgeFieldSchemas = {
     .refine((v) => URL.canParse(v) && new URL(v).protocol === "https:"),
   holdDelayMs: delayParam,
   endCallEnabled: boolParam,
+  parentRoutingEnabled: boolParam,
+  prefetchEnabled: boolParam,
 } satisfies Record<string, z.ZodType>;
 
 export const parseBridgeConfig = (
@@ -110,4 +116,6 @@ export const serializeBridgeConfig = (config: BridgeConfig) => ({
   holdAudioUrl: config.holdAudioUrl,
   holdDelayMs: String(config.holdDelayMs),
   endCallEnabled: String(config.endCallEnabled),
+  parentRoutingEnabled: String(config.parentRoutingEnabled),
+  prefetchEnabled: String(config.prefetchEnabled),
 });

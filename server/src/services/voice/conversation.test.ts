@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { logger } from "~/lib/logger";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createVoiceConversation } from "./conversation";
+import {
+  createVoicePrefetchSlot,
+  type VoicePrefetchSlot,
+} from "./findings-slot";
 
 type FakeChunk =
   | { type: "text-delta"; payload: { text: string } }
@@ -21,19 +25,28 @@ async function* fakeFullStream(chunks: FakeChunk[]) {
   for (const chunk of chunks) yield chunk;
 }
 
-const { getMemoryStoreMock, saveMessagesMock, saveThreadMock, streamMock } =
-  vi.hoisted(() => ({
-    getMemoryStoreMock: vi.fn(),
-    saveMessagesMock: vi.fn(),
-    saveThreadMock: vi.fn(),
-    streamMock: vi.fn(),
-  }));
+const {
+  getMemoryStoreMock,
+  saveMessagesMock,
+  saveThreadMock,
+  streamMock,
+  prefetchMock,
+} = vi.hoisted(() => ({
+  getMemoryStoreMock: vi.fn(),
+  saveMessagesMock: vi.fn(),
+  saveThreadMock: vi.fn(),
+  streamMock: vi.fn(),
+  prefetchMock: vi.fn(),
+}));
 
 vi.mock("~/lib/storage", () => ({
   getStorage: vi.fn().mockResolvedValue({ getStore: getMemoryStoreMock }),
 }));
 vi.mock("~/mastra/agents/nepp-chan-agent", () => ({
   createNeppChanAgent: vi.fn(() => ({})),
+}));
+vi.mock("~/mastra/tools/voice-answer-tool", () => ({
+  startVoicePrefetch: prefetchMock,
 }));
 vi.mock("@mastra/core/mastra", () => ({
   Mastra: class {
@@ -58,6 +71,8 @@ describe("createVoiceConversation", () => {
     });
     saveMessagesMock.mockReset();
     saveThreadMock.mockReset();
+    prefetchMock.mockReset();
+    prefetchMock.mockResolvedValue("投機検索の資料");
   });
 
   it("Mastra Memory を使わず、通話内の履歴を明示して text-delta を返す", async () => {
@@ -257,6 +272,114 @@ describe("createVoiceConversation", () => {
     expect(timingCalls[0][1]).not.toHaveProperty("intent");
 
     infoSpy.mockRestore();
+  });
+
+  describe("投機検索（prefetch）", () => {
+    const drain = async (
+      params: Parameters<
+        Awaited<ReturnType<typeof createVoiceConversation>>["runTurn"]
+      >[0],
+    ) => {
+      streamMock.mockResolvedValue({
+        fullStream: fakeFullStream([textDelta("はい")]),
+      });
+      const { runTurn } = await createVoiceConversation({
+        env,
+        from: "client:x",
+        callSid: "CA123",
+      });
+      for await (const _ of runTurn(params)) {
+        // drain
+      }
+    };
+
+    it("問いかけなら親の判断を待たず検索を起動し、スロットに入れる", async () => {
+      const prefetchSlot = createVoicePrefetchSlot();
+
+      await drain({ text: "そば屋はどこ？", prefetchSlot });
+
+      expect(prefetchMock).toHaveBeenCalledWith(
+        expect.objectContaining({ question: "そば屋はどこ？" }),
+      );
+      expect(prefetchSlot.current?.query).toBe("そば屋はどこ？");
+      await expect(prefetchSlot.current?.promise).resolves.toBe(
+        "投機検索の資料",
+      );
+    });
+
+    it("問いかけでない雑談では起動しない", async () => {
+      const prefetchSlot = createVoicePrefetchSlot();
+
+      await drain({ text: "今日は疲れたよ", prefetchSlot });
+
+      expect(prefetchMock).not.toHaveBeenCalled();
+      expect(prefetchSlot.current).toBeUndefined();
+    });
+
+    it("findings が貯まっていても話題転換に備えて起動する", async () => {
+      const prefetchSlot = createVoicePrefetchSlot();
+      const findingsSlot = {
+        entries: [
+          {
+            query: "そば",
+            source: "knowledge" as const,
+            text: "前の資料",
+          },
+        ],
+      };
+
+      await drain({ text: "郵便局はどこ？", prefetchSlot, findingsSlot });
+
+      expect(prefetchMock).toHaveBeenCalledWith(
+        expect.objectContaining({ question: "郵便局はどこ？" }),
+      );
+    });
+
+    it("スロットを渡さなければ起動しない", async () => {
+      await drain({ text: "そば屋はどこ？" });
+
+      expect(prefetchMock).not.toHaveBeenCalled();
+    });
+
+    it("前ターンの投機結果はターン開始時に打ち切って破棄する", async () => {
+      const abort = vi.fn();
+      const prefetchSlot: VoicePrefetchSlot = {
+        current: {
+          query: "古い質問",
+          promise: Promise.resolve("古い資料"),
+          abort,
+        },
+      };
+
+      await drain({ text: "今日は疲れたよ", prefetchSlot });
+
+      expect(prefetchSlot.current).toBeUndefined();
+      expect(abort).toHaveBeenCalled();
+    });
+
+    it("ターンの中断で投機検索も中断される", async () => {
+      const controller = new AbortController();
+      const prefetchSlot = createVoicePrefetchSlot();
+
+      await drain({
+        text: "そば屋はどこ？",
+        prefetchSlot,
+        signal: controller.signal,
+      });
+      const prefetchSignal = prefetchMock.mock.calls[0][0].signal;
+      expect(prefetchSignal.aborted).toBe(false);
+
+      controller.abort();
+
+      expect(prefetchSignal.aborted).toBe(true);
+    });
+
+    it("parentRouting を requestContext 経由でツールへ渡す", async () => {
+      await drain({ text: "そば屋はどこ？", parentRouting: true });
+
+      const { requestContext } = streamMock.mock.calls[0][1];
+      expect(requestContext.get("voiceParentRouting")).toBe(true);
+    });
   });
 
   it("signal を agent.stream に渡し、中断で停止する", async () => {

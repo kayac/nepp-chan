@@ -7,7 +7,9 @@ import { getStorage } from "~/lib/storage";
 import { sanitizeForSpeech } from "~/lib/voice-text";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
-import type { VoiceFindingsSlot } from "./findings-slot";
+import { startVoicePrefetch } from "~/mastra/tools/voice-answer-tool";
+import { isQuestionLike } from "./filler";
+import type { VoiceFindingsSlot, VoicePrefetchSlot } from "./findings-slot";
 
 type RunTurnParams = {
   text: string;
@@ -15,6 +17,8 @@ type RunTurnParams = {
   onToolCall?: () => void;
   onEndCall?: () => void;
   findingsSlot?: VoiceFindingsSlot;
+  prefetchSlot?: VoicePrefetchSlot;
+  parentRouting?: boolean;
 };
 
 type PersistTurnParams = {
@@ -63,16 +67,43 @@ export const createVoiceConversation = async ({
     onToolCall,
     onEndCall,
     findingsSlot,
+    prefetchSlot,
+    parentRouting,
   }: RunTurnParams) {
     const start = Date.now();
     const requestContext = createRequestContext({
       db: env.DB,
       env,
       voiceFindings: findingsSlot,
+      voicePrefetch: prefetchSlot,
+      voiceParentRouting: parentRouting,
       voiceSearchStart: onToolCall,
       voiceTurnSignal: signal,
       voiceEndCall: onEndCall,
     });
+
+    if (prefetchSlot) {
+      prefetchSlot.current?.abort();
+      prefetchSlot.current = undefined;
+      // 貯めた findings で答えられるターンでは無駄になるが、話題転換の検索を隠すため毎回走らせる。
+      if (isQuestionLike(text)) {
+        logger.info("[Voice] prefetch start", { query: text });
+        const controller = new AbortController();
+        signal?.addEventListener("abort", () => controller.abort(), {
+          once: true,
+        });
+        prefetchSlot.current = {
+          query: text,
+          abort: () => controller.abort(),
+          promise: startVoicePrefetch({
+            question: text,
+            requestContext,
+            signal: controller.signal,
+          }),
+        };
+      }
+    }
+
     const input: ModelMessage[] = [...history, { role: "user", content: text }];
 
     const result = await agent.stream(input, {

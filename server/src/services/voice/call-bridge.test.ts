@@ -127,6 +127,49 @@ describe("CallBridge", () => {
     });
   });
 
+  it("先回りのトグルをターンに引き渡し、オフなら投機スロットを渡さない", async () => {
+    const runTurn = vi.fn(async function* () {
+      yield "回答";
+    });
+    createVoiceConversationMock.mockResolvedValue({
+      runTurn,
+      persistTurn: vi.fn(),
+    });
+
+    const bridge = new CallBridge(
+      {} as DurableObjectState,
+      {} as CloudflareBindings,
+    );
+    const ws = { send: vi.fn() } as unknown as WebSocket;
+    const handlePrompt = Reflect.get(bridge, "handlePrompt") as (
+      ws: WebSocket,
+      text: string,
+    ) => Promise<void>;
+
+    await handlePrompt.call(bridge, ws, "質問");
+
+    expect(runTurn).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        parentRouting: true,
+        prefetchSlot: expect.any(Object),
+      }),
+    );
+
+    Reflect.set(bridge, "config", {
+      ...(Reflect.get(bridge, "config") as Record<string, unknown>),
+      parentRoutingEnabled: false,
+      prefetchEnabled: false,
+    });
+    await handlePrompt.call(bridge, ws, "次の質問");
+
+    expect(runTurn).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        parentRouting: false,
+        prefetchSlot: undefined,
+      }),
+    );
+  });
+
   it("完了トークン送信後は D1 保存中でも active turn を解除する", async () => {
     let resolvePersistence: (() => void) | undefined;
     const runTurn = vi.fn(async function* () {
