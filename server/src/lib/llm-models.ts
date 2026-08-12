@@ -2,14 +2,7 @@
 export const OPENAI_MAIN = "openai/gpt-5.6-terra";
 export const OPENAI_LITE = "openai/gpt-5.6-luna";
 
-// Eval 全体テスト用（RPD 無制限、latest ではなくバージョン固定）
-export const GEMINI_FLASH_EVAL = "google/gemini-2.5-flash-lite";
-
-// Eval スコアラー専用モデル（Flash Lite は構造化出力で反復バグあり）
-// https://github.com/google-gemini/cookbook/issues/449
-export const GEMINI_SCORER = "google/gemini-2.5-flash";
-
-// OpenAI eval スコアラー用（Gemini 構造化出力バグの代替）
+// Eval スコアラー用
 export const OPENAI_SCORER = "openai/gpt-4.1-nano";
 
 // 埋め込みモデル
