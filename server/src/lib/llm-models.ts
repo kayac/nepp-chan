@@ -10,13 +10,12 @@ export const GEMINI_EMBEDDING = "gemini-embedding-001";
 // Google 検索グラウンディングは Gemini 専用機能のため web-researcher だけ Gemini を使う
 export const GEMINI_GROUNDING = "google/gemini-flash-lite-latest";
 
-// Eval 全体テスト用（RPD 無制限、latest ではなくバージョン固定）
+// Gemini latest は RPD 制限対象のため、Eval は固定バージョンを使う
 export const GEMINI_FLASH_EVAL = "google/gemini-2.5-flash-lite";
 
 type ReasoningEffort = "high" | "medium" | "low" | "minimal";
 
-// providerOptions は各プロバイダが自分の名前空間だけを読むため、
-// model に google/ 系を渡しても reasoning 指定が効くよう両方を持たせる
+// providerOptions はモデル側の名前空間だけが読まれるため、OpenAI/Google の両方を指定する
 export const modelWithReasoning = ({
   model = OPENAI_LITE,
   effort = "low" as ReasoningEffort,

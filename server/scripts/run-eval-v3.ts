@@ -223,7 +223,6 @@ interface CliArgs {
   compare: boolean;
   /** テストケース間のインターバル（秒）。デフォルト5秒 */
   interval: number;
-  /** エージェントモデル: eval=2.5-flash-lite(RPD無制限), production=gpt-5.6-terra(本番同一) */
   model: "eval" | "production";
   /** バッチサイズ（指定時はプロセス分割モード） */
   batchSize?: number;
@@ -1397,7 +1396,6 @@ const runTestCaseEval = async (params: {
         (result as any).steps,
       );
 
-      // production(OpenAI) 実行分を Gemini RPD に混入させない
       if (countGeminiRpd) {
         const geminiCalls =
           transcript.length +
@@ -1672,7 +1670,6 @@ const main = async () => {
     return;
   }
 
-  // モデル選択: eval=gemini-2.5-flash-lite(RPD無制限), production=gpt-5.6-terra(本番同一)
   const evalModelId =
     args.model === "production" ? OPENAI_MAIN : GEMINI_FLASH_EVAL;
   const evalModelLabel =
