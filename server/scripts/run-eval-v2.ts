@@ -50,7 +50,7 @@ import { createNeppChanAgent } from "../src/mastra/agents/nepp-chan-agent";
 import type { TestCase, TestCategory } from "./data/eval-test-cases";
 import { evalTestCases } from "./data/eval-test-cases";
 import { evalV2TestCases } from "./data/eval-v2-test-cases";
-import { incrementGeminiCounter } from "./lib/gemini-counter";
+import { getGeminiUsage, incrementGeminiCounter } from "./lib/gemini-counter";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -1507,10 +1507,14 @@ const main = async () => {
   const estimatedAgentCalls =
     testCases.length * args.n * CALLS_PER_ITERATION * envCount;
   const estimatedScorerCalls = testCases.length * args.n * 4 * envCount;
+  const GEMINI_RPD = 10_000;
   const OPENAI_RPM = 500;
   const estimatedDurationMin = Math.ceil(
     (testCases.length * args.n * 70 * envCount) / 60,
   );
+
+  const currentUsage = getGeminiUsage("eval");
+  const alreadyUsed = currentUsage.requests;
 
   console.log("─── クォータ事前チェック ─────────────────────────");
   if (args.model === "eval") {
@@ -1519,10 +1523,31 @@ const main = async () => {
       `   推定コール数: ${estimatedAgentCalls.toLocaleString()}（RPD制限なし）`,
     );
   } else {
-    console.log(`   OpenAI モデル: ${evalModelLabel}`);
+    const remaining = GEMINI_RPD - alreadyUsed;
+    const totalAfterRun = alreadyUsed + estimatedAgentCalls;
     console.log(
-      `   推定コール数: ${estimatedAgentCalls.toLocaleString()} (RPM ${OPENAI_RPM})`,
+      `   Gemini 今日の累計: ${alreadyUsed.toLocaleString()} / ${GEMINI_RPD.toLocaleString()} RPD (残り ${remaining.toLocaleString()})`,
     );
+    console.log(
+      `   Gemini 推定消費: +${estimatedAgentCalls.toLocaleString()} → 合計 ${totalAfterRun.toLocaleString()} (${((totalAfterRun / GEMINI_RPD) * 100).toFixed(0)}%)`,
+    );
+
+    if (totalAfterRun > GEMINI_RPD * 0.8) {
+      console.warn(
+        `\n⚠️  警告: 実行後に Gemini RPD の ${((totalAfterRun / GEMINI_RPD) * 100).toFixed(0)}% に到達する見込みです`,
+      );
+      if (totalAfterRun > GEMINI_RPD) {
+        const safeN = Math.floor(
+          (remaining * 0.8) /
+            (testCases.length * CALLS_PER_ITERATION * envCount),
+        );
+        console.error(
+          "\n❌ エラー: Gemini RPD を超過します。テストケース数または n を減らしてください",
+        );
+        console.error(`   推奨: n=${Math.max(1, safeN)} 以下`);
+        process.exit(1);
+      }
+    }
   }
   console.log(
     `   OpenAI 推定リクエスト数: ${estimatedScorerCalls.toLocaleString()} (RPM ${OPENAI_RPM})`,
