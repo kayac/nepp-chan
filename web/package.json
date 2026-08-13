@@ -10,8 +10,8 @@
     "preview": "astro preview",
     "test": "TZ=Asia/Tokyo vitest",
     "test:cov": "TZ=Asia/Tokyo vitest run --coverage",
-    "deploy": "pnpm build && wrangler pages deploy --project-name nepp-chan-web-dev --branch develop",
-    "deploy:prd": "pnpm build && wrangler pages deploy --project-name nepp-chan-web-prd --branch main",
+    "deploy": "PUBLIC_ENV=dev pnpm build && wrangler pages deploy --project-name nepp-chan-web-dev --branch develop",
+    "deploy:prd": "PUBLIC_ENV=prd pnpm build && wrangler pages deploy --project-name nepp-chan-web-prd --branch main",
     "openapi:generate": "openapi-typescript http://localhost:8787/doc -o ../shared/src/api/types.d.ts"
   },
   "dependencies": {

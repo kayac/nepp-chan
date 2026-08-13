@@ -1,5 +1,7 @@
 ---
-const measurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
+import { ENVIRONMENT } from "~/constants/environment";
+
+const measurementId = ENVIRONMENT.gaMeasurementId;
 const enabled = import.meta.env.PROD && measurementId;
 ---
 
