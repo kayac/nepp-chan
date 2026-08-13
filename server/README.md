@@ -113,7 +113,6 @@ pnpm cf-typegen       # Cloudflare 型生成
 pnpm db:generate      # スキーマから SQL 生成 → src/db/migrations/
 pnpm db:migrate:dev   # リモート D1 (nepp-chan-db-dev) に適用
 pnpm db:migrate:local # ローカル D1 に適用
-pnpm db:studio        # Drizzle Studio（DB GUI）起動
 pnpm db:check         # スキーマとマイグレーションの整合性チェック
 
 # ナレッジ管理
