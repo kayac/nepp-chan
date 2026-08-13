@@ -105,6 +105,19 @@ export const extractPersonaFromThread = async (
       { requestContext },
     );
   } catch (error) {
+    // Gemini API が candidates を返さない場合は「保存すべきペルソナがない」と判断
+    // これは正常な動作なので skipped として扱う
+    const isNoPersonaFound =
+      error instanceof Error && error.message === "Invalid JSON response";
+    if (isNoPersonaFound) {
+      return {
+        skipped: true,
+        reason: "no_persona_found",
+        messageCount: totalMessages,
+      };
+    }
+    // その他のエラーは一時的な失敗の可能性があるため処理位置を前進させない。
+    // messageCount を返さないことで status を更新せず、次回バッチで再試行する。
     logger.error(`Persona extraction failed for thread ${threadId}`, error);
     return { skipped: true, reason: "extraction_error" };
   }

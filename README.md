@@ -48,7 +48,7 @@
 
 - **フレームワーク**: Hono, Mastra
 - **ランタイム**: Cloudflare Workers / Pages
-- **AI**: OpenAI (GPT-5.6)、Google Gemini (embedding・Web検索)
+- **AI**: OpenAI (GPT-5.6)、Google Gemini
 - **フロントエンド**: Astro, React, TailwindCSS
 - **データベース**: Cloudflare D1
 - **言語**: TypeScript

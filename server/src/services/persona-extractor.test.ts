@@ -199,7 +199,19 @@ describe("extractPersonaFromThreadById エラー処理", () => {
     });
   });
 
-  it("generate のエラーは extraction_error としてスキップ", async () => {
+  it("Invalid JSON response エラーは no_persona_found としてスキップ", async () => {
+    mockGenerate.mockRejectedValueOnce(new Error("Invalid JSON response"));
+
+    const result = await extractPersonaFromThreadById(threadId, mockEnv);
+
+    expect(result.result).toMatchObject({
+      skipped: true,
+      reason: "no_persona_found",
+    });
+    expect(threadPersonaStatusRepository.upsert).not.toHaveBeenCalled();
+  });
+
+  it("その他のエラーは extraction_error としてスキップ", async () => {
     mockGenerate.mockRejectedValueOnce(new Error("boom"));
 
     const result = await extractPersonaFromThreadById(threadId, mockEnv);
@@ -288,7 +300,7 @@ describe("extractAllPendingThreads", () => {
     );
   });
 
-  it("generate エラー時は upsert せず次回バッチで再試行させる", async () => {
+  it("Invalid JSON エラー時も messageCount を含むスキップなら upsert する", async () => {
     vi.mocked(threadPersonaStatusRepository.findAll).mockResolvedValue([]);
     mockAll
       .mockResolvedValueOnce([{ id: "t1", resourceId: "r1" }])
@@ -299,15 +311,15 @@ describe("extractAllPendingThreads", () => {
         { role: "assistant", content: "a1", createdAt: new Date() },
       ],
     });
-    mockGenerate.mockRejectedValueOnce(new Error("boom"));
+    mockGenerate.mockRejectedValueOnce(new Error("Invalid JSON response"));
 
     const result = await extractAllPendingThreads(mockEnv);
 
     expect(result[0].result).toMatchObject({
       skipped: true,
-      reason: "extraction_error",
+      reason: "no_persona_found",
     });
-    expect(threadPersonaStatusRepository.upsert).not.toHaveBeenCalled();
+    expect(threadPersonaStatusRepository.upsert).toHaveBeenCalled();
   });
 
   it("recall を全件・古い順（perPage:false / createdAt ASC）で呼ぶ", async () => {

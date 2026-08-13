@@ -36,12 +36,21 @@ import {
 import { LibSQLStore } from "@mastra/libsql";
 import { Memory } from "@mastra/memory";
 import { getPlatformProxy } from "wrangler";
-import { OPENAI_SCORER, resolveModelTier } from "../src/lib/llm-models";
-import { knowledgeAgent } from "../src/mastra/agents/knowledge-agent";
+import {
+  GEMINI_FLASH_EVAL,
+  OPENAI_MAIN,
+  OPENAI_SCORER,
+  resolveModelTier,
+} from "../src/lib/llm-models";
+import {
+  createKnowledgeAgent,
+  knowledgeAgent,
+} from "../src/mastra/agents/knowledge-agent";
 import { createNeppChanAgent } from "../src/mastra/agents/nepp-chan-agent";
 import type { TestCase, TestCategory } from "./data/eval-test-cases";
 import { evalTestCases } from "./data/eval-test-cases";
 import { evalV2TestCases } from "./data/eval-v2-test-cases";
+import { incrementGeminiCounter } from "./lib/gemini-counter";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -185,6 +194,8 @@ interface CliArgs {
   compare: boolean;
   /** テストケース間のインターバル（秒）。デフォルト5秒 */
   interval: number;
+  /** エージェントモデル: eval=2.5-flash-lite(RPD無制限), production=gpt-5.6-terra(本番同一) */
+  model: "eval" | "production";
   /** バッチサイズ（指定時はプロセス分割モード） */
   batchSize?: number;
   /** テストケース開始インデックス（子プロセス用） */
@@ -212,6 +223,7 @@ const isAbstention = (answer: string): boolean => {
 // ─── Eval用APIキー解決 ───────────────────────────────────
 
 const resolveEvalApiKeys = (env: CloudflareBindings): void => {
+  // Gemini（エージェント実行用）
   // biome-ignore lint/suspicious/noExplicitAny: .dev.vars の追加キーは CloudflareBindings に未定義
   const evalGoogleKey = (env as any).EVAL_GOOGLE_API_KEY as string | undefined;
   const googleKey = evalGoogleKey || env.GOOGLE_GENERATIVE_AI_API_KEY;
@@ -224,13 +236,15 @@ const resolveEvalApiKeys = (env: CloudflareBindings): void => {
   // biome-ignore lint/suspicious/noExplicitAny: eval 時のみ env proxy を上書き
   (env as any).GOOGLE_GENERATIVE_AI_API_KEY = googleKey;
 
-  const openaiKey = env.OPENAI_API_KEY as string | undefined;
+  // OpenAI（スコアラー用）
+  // biome-ignore lint/suspicious/noExplicitAny: .dev.vars の追加キーは CloudflareBindings に未定義
+  const openaiKey = (env as any).OPENAI_API_KEY as string | undefined;
   if (openaiKey) {
     process.env.OPENAI_API_KEY = openaiKey;
     console.log("🔑 OpenAI APIキーを使用（スコアラー: gpt-4.1-nano）");
   } else {
     console.warn(
-      "⚠️ OPENAI_API_KEY が未設定。エージェント実行とスコアラーが失敗します",
+      "⚠️ OPENAI_API_KEY が未設定。スコアラーと production 時のエージェント実行が失敗します",
     );
   }
 };
@@ -245,6 +259,7 @@ const parseArgs = (): CliArgs => {
     env: "local",
     compare: false,
     interval: 5,
+    model: "eval",
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -275,6 +290,9 @@ const parseArgs = (): CliArgs => {
         break;
       case "--interval":
         result.interval = Number.parseInt(args[++i], 10);
+        break;
+      case "--model":
+        result.model = args[++i] as "eval" | "production";
         break;
       case "--batch-size":
         result.batchSize = Number.parseInt(args[++i], 10);
@@ -388,6 +406,8 @@ const runEvalScorers = async ({
   if (context.length === 0) return scores;
 
   // faithfulness: 常に 0.000 を返す既知バグのためスキップ
+  // see: Phase 1 スコアラー検証結果（完璧な回答でも 0.000）
+  // TODO: Mastra/Gemini のバグ修正後に再有効化
 
   try {
     const result = await createContextPrecisionScorer({
@@ -403,7 +423,7 @@ const runEvalScorers = async ({
     console.warn("  ⚠ contextPrecision scorer failed:", (e as Error).message);
   }
 
-  // contextRelevance: 構造化出力が間欠的に失敗することがあるためリトライ付き
+  // contextRelevance: Gemini の構造化出力が間欠的に失敗するためリトライ付き
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const result = await createContextRelevanceScorerLLM({
@@ -1235,6 +1255,8 @@ const runTestCaseEval = async (params: {
         0,
       );
 
+      // Gemini RPD カウンター: チャット(steps) + rerank(toolCalls) = Flash API コール数
+      incrementGeminiCounter(stepCount + toolCallCount, "eval");
       const hasAnswer = result.text.trim().length > 0;
 
       timeline.push({
@@ -1421,9 +1443,17 @@ const main = async () => {
     return;
   }
 
+  // モデル選択: eval=gemini-2.5-flash-lite(RPD無制限), production=gpt-5.6-terra(本番同一)
+  const evalModelId =
+    args.model === "production" ? OPENAI_MAIN : GEMINI_FLASH_EVAL;
+  const evalModelLabel =
+    args.model === "production"
+      ? "gpt-5.6-terra（本番同一）"
+      : "gemini-2.5-flash-lite（eval用、RPD無制限）";
+
   console.log("🔄 Eval V2 開始");
   console.log(`   エージェント: ${args.agent}`);
-  console.log("   モデル: 本番同一（gpt-5.6）");
+  console.log(`   モデル: ${evalModelLabel}`);
   console.log(`   テストケース数: ${testCases.length}`);
   console.log(`   各N回: ${args.n}`);
   console.log(
@@ -1442,7 +1472,10 @@ const main = async () => {
 
   // エージェント選択
   const agentMap: Record<string, ReturnType<typeof createNeppChanAgent>> = {
-    knowledge: knowledgeAgent,
+    knowledge:
+      args.model === "production"
+        ? knowledgeAgent
+        : createKnowledgeAgent(evalModelId),
     "nepp-chan": createNeppChanAgent({
       isAdmin: false,
       modelConfig: resolveModelTier({
@@ -1465,6 +1498,10 @@ const main = async () => {
   }
 
   // ─── クォータ事前チェック ──────────────────────────────────
+  // 1イテレーションあたりの実測 Gemini コール数:
+  //   agent.generate() チャット + thinking + retry: ~15
+  //   knowledgeSearch embed + rerank: ~7
+  //   合計: ~22（Google AI Studio 実測ベース）
   const CALLS_PER_ITERATION = 22;
   const envCount = args.compare ? 3 : 1;
   const estimatedAgentCalls =
@@ -1476,8 +1513,19 @@ const main = async () => {
   );
 
   console.log("─── クォータ事前チェック ─────────────────────────");
+  if (args.model === "eval") {
+    console.log(`   Gemini モデル: ${evalModelLabel}（RPD 無制限）`);
+    console.log(
+      `   推定コール数: ${estimatedAgentCalls.toLocaleString()}（RPD制限なし）`,
+    );
+  } else {
+    console.log(`   OpenAI モデル: ${evalModelLabel}`);
+    console.log(
+      `   推定コール数: ${estimatedAgentCalls.toLocaleString()} (RPM ${OPENAI_RPM})`,
+    );
+  }
   console.log(
-    `   OpenAI 推定リクエスト数: ${(estimatedAgentCalls + estimatedScorerCalls).toLocaleString()} (RPM ${OPENAI_RPM})`,
+    `   OpenAI 推定リクエスト数: ${estimatedScorerCalls.toLocaleString()} (RPM ${OPENAI_RPM})`,
   );
   console.log(`   推定実行時間: ${estimatedDurationMin}分`);
   console.log("─────────────────────────────────────────────────\n");
