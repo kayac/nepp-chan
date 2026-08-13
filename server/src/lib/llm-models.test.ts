@@ -1,12 +1,27 @@
 import { describe, expect, it } from "vitest";
 import {
+  GEMINI_FLASH_EVAL,
   type Intent,
+  modelWithReasoning,
   OPENAI_LITE,
   OPENAI_MAIN,
   primaryModelId,
   resolveModelTier,
   voiceModelConfig,
 } from "./llm-models";
+
+describe("modelWithReasoning", () => {
+  it("google 系モデルにも reasoning 指定が効くよう両プロバイダの providerOptions を持つ", () => {
+    const config = modelWithReasoning({
+      model: GEMINI_FLASH_EVAL,
+      effort: "medium",
+    });
+    expect(config.providerOptions.openai.reasoningEffort).toBe("medium");
+    expect(config.providerOptions.google.thinkingConfig.thinkingLevel).toBe(
+      "medium",
+    );
+  });
+});
 
 describe("resolveModelTier", () => {
   describe("Admin は常に thinking/web ティア", () => {

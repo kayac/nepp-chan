@@ -121,7 +121,7 @@ LINE 公式アカウントを「友だち追加」いただき、または Web �
 | 委託先 | 所在国 | 委託業務 |
 | --- | --- | --- |
 | Cloudflare, Inc. | 米国 | 本サービスのクラウド基盤の提供 |
-| OpenAI, L.L.C. | 米国 | AI による応答生成 |
+| OpenAI, L.L.C. | 米国 | AI による応答生成、資料検索のためのテキスト解析 |
 | Google LLC | 米国 | AI による応答生成、資料検索のためのテキスト解析、ウェブ情報検索の提供 |
 | Functional Software, Inc. (Sentry) | 米国 | エラー監視・通知 |
 
@@ -195,7 +195,7 @@ LINE 公式アカウントを「友だち追加」いただき、または Web �
 
 | サービス名 | 提供者・所在国 | 送信される情報の概要 | 利用目的 | プライバシーポリシー |
 | --- | --- | --- | --- | --- |
-| GPT（OpenAI API） | OpenAI, L.L.C.（米国） | お客様が本サービスに送信されたご質問・メッセージ | 音威子府村に関するご質問に対する AI 応答の生成 | [https://openai.com/policies/privacy-policy/](https://openai.com/policies/privacy-policy/) |
+| GPT（OpenAI API） | OpenAI, L.L.C.（米国） | お客様が本サービスに送信されたご質問・メッセージ | 音威子府村に関するご質問に対する AI 応答の生成、およびご質問に関連する村の資料を検索するためのテキスト解析 | [https://openai.com/policies/privacy-policy/](https://openai.com/policies/privacy-policy/) |
 | Gemini | Google LLC（米国） | お客様が本サービスに送信されたご質問・メッセージ | 音威子府村に関するご質問に対する AI 応答の生成、およびご質問に関連する村の資料を検索するためのテキスト解析 | [https://policies.google.com/privacy](https://policies.google.com/privacy) |
 | Google 検索 | Google LLC（米国） | ご質問内容から弊社が生成した検索キーワード | 公開情報の補足取得 | [https://policies.google.com/privacy](https://policies.google.com/privacy) |
 

@@ -204,6 +204,8 @@ interface CliArgs {
   to?: number;
 }
 
+let countGeminiRpd = true;
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // ─── Abstention 判定 ─────────────────────────────────────
@@ -241,7 +243,7 @@ const resolveEvalApiKeys = (env: CloudflareBindings): void => {
   const openaiKey = (env as any).OPENAI_API_KEY as string | undefined;
   if (openaiKey) {
     process.env.OPENAI_API_KEY = openaiKey;
-    console.log("🔑 OpenAI APIキーを使用（スコアラー: gpt-4.1-nano）");
+    console.log("🔑 OpenAI APIキーを使用");
   } else {
     console.warn(
       "⚠️ OPENAI_API_KEY が未設定。スコアラーと production 時のエージェント実行が失敗します",
@@ -1255,8 +1257,10 @@ const runTestCaseEval = async (params: {
         0,
       );
 
-      // Gemini RPD カウンター: チャット(steps) + rerank(toolCalls) = Flash API コール数
-      incrementGeminiCounter(stepCount + toolCallCount, "eval");
+      // production(OpenAI) 実行分を Gemini RPD に混入させない
+      if (countGeminiRpd) {
+        incrementGeminiCounter(stepCount + toolCallCount, "eval");
+      }
       const hasAnswer = result.text.trim().length > 0;
 
       timeline.push({
@@ -1347,6 +1351,7 @@ const runTestCaseEval = async (params: {
 
 const main = async () => {
   const args = parseArgs();
+  countGeminiRpd = args.model === "eval";
 
   // テストケースの解決
   let testCases: TestCase[];

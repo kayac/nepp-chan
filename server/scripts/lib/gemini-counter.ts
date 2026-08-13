@@ -5,7 +5,7 @@
  * ローカルファイルでリクエスト数を追跡する。
  *
  * キー種別ごとに別ファイルで管理:
- * - main: GOOGLE_GENERATIVE_AI_API_KEY（本番会話用）
+ * - main: GOOGLE_GENERATIVE_AI_API_KEY（本番 Gemini 用途: embedding・Web 検索グラウンディング）
  * - eval: EVAL_GOOGLE_API_KEY（eval 専用）
  *
  * 並列安全: append-only ログ形式。各行が「日付,カウント,タイムスタンプ」で、

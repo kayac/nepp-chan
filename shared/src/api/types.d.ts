@@ -2795,7 +2795,7 @@ export interface paths {
         put?: never;
         /**
          * 画像/PDFをMarkdownに変換
-         * @description 画像またはPDFファイルをGeminiで読み取り、Markdown形式に変換してR2に保存します
+         * @description 画像またはPDFファイルをLLMで読み取り、Markdown形式に変換してR2に保存します
          */
         post: {
             parameters: {

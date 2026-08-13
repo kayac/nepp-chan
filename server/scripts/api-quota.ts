@@ -136,7 +136,7 @@ const main = async () => {
 
   const keyLabels: Record<GeminiKeyType, string> = {
     eval: "Eval専用 (EVAL_GOOGLE_API_KEY)",
-    main: "本番会話 (GOOGLE_GENERATIVE_AI_API_KEY)",
+    main: "本番 Gemini (GOOGLE_GENERATIVE_AI_API_KEY)",
   };
 
   section("Gemini (ローカルカウンター)");
@@ -163,7 +163,7 @@ const main = async () => {
   const openaiKey = env.OPENAI_API_KEY as string | undefined;
 
   if (openaiKey) {
-    section("OpenAI (gpt-4.1-nano) — Eval スコアラー用");
+    section("OpenAI (gpt-4.1-nano プローブ)");
     const oai = await fetchOpenAIQuota(openaiKey);
     if (oai) {
       const usedReq = oai.limitRequests - oai.remainingRequests;
