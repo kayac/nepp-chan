@@ -1,1 +1,4 @@
-export const LP_URL = import.meta.env.PUBLIC_LP_URL || "/";
+import { ENVIRONMENT } from "./environment";
+
+export const API_URL = ENVIRONMENT.api;
+export const LP_URL = ENVIRONMENT.lp;

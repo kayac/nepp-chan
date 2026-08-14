@@ -4,7 +4,7 @@ import { setAuthToken } from "~/lib/auth-token";
 import { server } from "~/test/msw-server";
 import { fetchCurrentUser, login, postLogout, register } from "./auth";
 
-const API_BASE = "http://localhost:8787"; // PUBLIC_API_URL は test 環境では空文字
+const API_BASE = "http://localhost:8787";
 
 const adminUser = {
   id: "u-1",

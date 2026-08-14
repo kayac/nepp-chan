@@ -8,8 +8,8 @@
     "build": "pnpm --filter @nepp-chan/widget build && astro build",
     "check": "astro check",
     "preview": "astro preview",
-    "deploy": "pnpm build && wrangler pages deploy --project-name nepp-chan-lp-dev --branch develop",
-    "deploy:prd": "pnpm build && wrangler pages deploy --project-name nepp-chan-lp-prd --branch main"
+    "deploy": "PUBLIC_ENV=dev VITE_ENV=dev pnpm build && wrangler pages deploy --project-name nepp-chan-lp-dev --branch develop",
+    "deploy:prd": "PUBLIC_ENV=prd VITE_ENV=prd pnpm build && wrangler pages deploy --project-name nepp-chan-lp-prd --branch main"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.210",

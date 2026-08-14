@@ -4,8 +4,7 @@ declare global {
   }
 }
 
-export const initAnalytics = () => {
-  const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+export const initAnalytics = (measurementId: string | undefined) => {
   if (!import.meta.env.PROD || !measurementId) return;
 
   const script = document.createElement("script");

@@ -47,11 +47,7 @@ pnpm deploy:prd       # prd 環境へデプロイ
 
 ## 環境変数
 
-`.env.example` をコピーして `.env` を作成。詳細はルートの [README.md](../README.md) を参照。
-
-```bash
-cp .env.example .env
-```
+接続先は `PUBLIC_ENV` で選択し、URL は `shared/src/constants/environments.ts` に定義。未指定なら `local` になるため、ローカル開発に設定は不要。詳細はルートの [README.md](../README.md) を参照。
 
 ## Basic 認証
 
