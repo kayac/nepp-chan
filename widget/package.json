@@ -13,7 +13,7 @@
     "test:cov": "vitest run --coverage"
   },
   "dependencies": {
-    "@ai-sdk/react": "^3.0.210",
+    "@ai-sdk/react": "^4.0.62",
     "@heroicons/react": "^2.2.0",
     "@nepp-chan/shared": "workspace:*",
     "ai": "^6.0.208",
