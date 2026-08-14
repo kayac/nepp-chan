@@ -11,9 +11,6 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
-    env: {
-      PUBLIC_API_URL: "http://localhost:8787",
-    },
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "json-summary"],

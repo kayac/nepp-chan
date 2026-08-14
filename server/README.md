@@ -10,14 +10,6 @@ pnpm install
 
 ### 環境変数の設定
 
-`.env.example` をコピーして `.env` を作成。詳細はルートの [README.md](../README.md) を参照。
-
-```bash
-cp .env.example .env
-```
-
-### wrangler 用環境変数
-
 `.dev.vars.example` を `.dev.vars` にコピーして値を設定：
 
 ```bash
@@ -113,7 +105,6 @@ pnpm cf-typegen       # Cloudflare 型生成
 pnpm db:generate      # スキーマから SQL 生成 → src/db/migrations/
 pnpm db:migrate:dev   # リモート D1 (nepp-chan-db-dev) に適用
 pnpm db:migrate:local # ローカル D1 に適用
-pnpm db:studio        # Drizzle Studio（DB GUI）起動
 pnpm db:check         # スキーマとマイグレーションの整合性チェック
 
 # ナレッジ管理
@@ -241,9 +232,7 @@ pnpm knowledge:upload:dev --file=mayor-interview.md
 pnpm knowledge:upload:dev --clean --file=mayor-interview.md
 ```
 
-**必要な環境変数**
-
-ルートの `.env` または `.env.local` に設定（詳細は [README.md](../README.md) 参照）
+アップロード先は `--env` で決まり、バケット名と Vectorize インデックス名は `scripts/upload-knowledge.ts` の定数。
 
 ### 管理API
 

@@ -75,37 +75,21 @@ knowledge/ 配下 329 ファイルを clean アップロードした場合の正
 
 ## 環境変数
 
-`.env.example` をコピーして `.env` を作成。
+ローカルの機密は `server/.dev.vars` に集約する。
 
 ```bash
-# ルート
-cp .env.example .env
-cp .env.production.example .env.production  # 本番ナレッジアップロード用（任意）
-
-# server
-cp server/.env.example server/.env
 cp server/.dev.vars.example server/.dev.vars
-
-# web
-cp web/.env.example web/.env
 ```
 
-### ルート環境変数
+web / lp / widget の接続先は `PUBLIC_ENV`（widget は `VITE_ENV`）で選択し、URL は `shared/src/constants/environments.ts` に定義する。未指定なら `local`。dev / prd の環境名は各パッケージの `deploy` / `deploy:prd` スクリプトが渡す。環境名とデプロイ先の Pages プロジェクトが同じ行に並ぶため、食い違いに気付きやすい。
 
-| 変数名                 | 用途                           |
-| ---------------------- | ------------------------------ |
-| `CLOUDFLARE_ACCOUNT_ID`| Cloudflare アカウント ID       |
-| `R2_BUCKET_NAME`       | R2 バケット名                  |
-| `VECTORIZE_INDEX_NAME` | Vectorize インデックス名       |
-
-### server 環境変数
+### server/.dev.vars
 
 | 変数名                         | 用途                                  |
 | ------------------------------ | ------------------------------------- |
 | `OPENAI_API_KEY`               | メイン LLM（GPT-5.6）・Eval スコアラー |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API（embedding・Web 検索・eval）・Custom Search |
 | `GOOGLE_SEARCH_ENGINE_ID`      | Custom Search                         |
-| `WEB_URL`                      | Web URL                               |
 | `LINE_CHANNEL_SECRET`          | LINE 署名検証                         |
 | `LINE_CHANNEL_ACCESS_TOKEN`    | LINE API 認証                         |
 | `JWT_SECRET`                   | anonymous セッション JWT 署名         |
@@ -116,12 +100,6 @@ cp web/.env.example web/.env
 | `TWILIO_TWIML_APP_SID`         | softphone の発信先 TwiML App          |
 | `TWILIO_AUTH_TOKEN`            | webhook 署名検証（X-Twilio-Signature）|
 | `CALL_TOKEN_SECRET`            | relay WS 短命トークン署名（HMAC）     |
-
-### web 環境変数
-
-| 変数名         | 用途    |
-| -------------- | ------- |
-| `PUBLIC_API_URL` | API URL |
 
 ### 本番環境
 

@@ -1,5 +1,6 @@
 import { createApiClient } from "@nepp-chan/shared/api";
 import * as Sentry from "@sentry/react";
+import { API_URL } from "~/constants/urls";
 import {
   getBearerToken,
   getSessionToken,
@@ -8,7 +9,7 @@ import {
 import { queryClient } from "~/lib/query-client";
 import { adminUserKeys } from "./keys";
 
-const API_BASE = import.meta.env.PUBLIC_API_URL || "";
+const API_BASE = API_URL;
 
 /**
  * 401 を受けたら admin token を破棄して anonymous session に切替えて再試行するか判定する。

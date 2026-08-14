@@ -25,9 +25,9 @@ host 側で CSP を設定している場合は `nepp-chan.ai` を `script-src` �
 
 ## 配信
 
-lp の Pages に同居配信する。`lp build` が widget をビルドして `lp/public/widget/` に出力し、Astro が `dist/widget/` へ配置する（専用サブドメインは設けない）。API URL / Web URL はビルド時に `VITE_API_URL` / `VITE_WEB_URL` で注入する（deploy ワークフローの LP ジョブで設定）。
+lp の Pages に同居配信する。`lp build` が widget をビルドして `lp/public/widget/` に出力し、Astro が `dist/widget/` へ配置する（専用サブドメインは設けない）。接続先は `VITE_ENV` で選択し、URL は `shared/src/constants/environments.ts` に定義する。dev / prd の環境名は lp の `deploy` / `deploy:prd` スクリプトが渡す。
 
-GA は `VITE_GA_MEASUREMENT_ID` を渡した本番ビルドでのみ有効（lp と同じ測定 ID）。host サイトから見るとサードパーティ Cookie になるため、ブロック環境では計測が漏れる。
+GA は prd ビルドでのみ有効。host サイトから見るとサードパーティ Cookie になるため、ブロック環境では計測が漏れる。
 
 | 環境 | ローダー URL |
 | ---- | ------------ |
@@ -36,7 +36,7 @@ GA は `VITE_GA_MEASUREMENT_ID` を渡した本番ビルドでのみ有効（lp 
 
 ## 開発
 
-ローカルでは API URL / Web URL を `.env` で渡す（`cp widget/.env.example widget/.env`）。これが無いと `dev` や `lp:build` で接続先が未定義になる。
+`VITE_ENV` 未指定なら `local` を使うため、ローカル開発に設定は要らない。
 
 ```bash
 pnpm --filter @nepp-chan/widget dev    # iframe ページ単体（localhost:5175）

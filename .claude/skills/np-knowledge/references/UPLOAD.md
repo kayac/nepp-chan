@@ -32,13 +32,13 @@ R2 キーはディレクトリ構造を保持する（例: `villotoinep/kurashi/
 
 ## 環境の向き先
 
-| 環境 | env ファイル | R2 バケット | Vectorize インデックス |
-|------|-------------|-------------|----------------------|
-| local | `.env.local` | `nepp-chan-knowledge-local` | `nepp-chan-knowledge-local` |
-| dev | `.env.development` | `nepp-chan-knowledge-dev` | `nepp-chan-knowledge-dev` |
-| prd | `.env.production` | `nepp-chan-knowledge-prd` | `nepp-chan-knowledge-prd` |
+| 環境 | R2 バケット | Vectorize インデックス |
+|------|-------------|----------------------|
+| local | `nepp-chan-knowledge-local` | `nepp-chan-knowledge-local` |
+| dev | `nepp-chan-knowledge-dev` | `nepp-chan-knowledge-dev` |
+| prd | `nepp-chan-knowledge-prd` | `nepp-chan-knowledge-prd` |
 
-**向き先は各 `.env.*` ファイルの値で決まる。** `--clean` は Vectorize のみ影響（D1/会話履歴/ユーザーデータに影響なし）。
+**向き先は `--env` で決まり、バケット名とインデックス名は `scripts/upload-knowledge.ts` の定数。** `--clean` は Vectorize のみ影響（D1/会話履歴/ユーザーデータに影響なし）。
 
 ## 進捗追跡
 

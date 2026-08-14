@@ -81,27 +81,13 @@ pnpm install
 
 ### 環境変数の設定
 
-`.env.example` をコピーして `.env` を作成します。
+ローカルの機密は `server/.dev.vars` に集約しています。
 
 ```bash
-# ルート（ナレッジアップロードスクリプト用）
-cp .env.example .env
-
-# server
-cp server/.env.example server/.env
 cp server/.dev.vars.example server/.dev.vars
-
-# web
-cp web/.env.example web/.env
-
-# lp
-cp lp/.env.example lp/.env
-
-# widget
-cp widget/.env.example widget/.env
 ```
 
-各 `.env` ファイルに適切な値を設定してください。
+web / lp / widget の接続先は `PUBLIC_ENV`（widget は `VITE_ENV`）で選択し、URL は `shared/src/constants/environments.ts` に定義しています。未指定なら `local` になるため、ローカル開発に設定は不要です。dev / prd の環境名は `deploy` / `deploy:prd` スクリプトが渡します。
 
 ### D1 データベースの初期化
 

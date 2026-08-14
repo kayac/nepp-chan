@@ -2,30 +2,33 @@ import { execSync } from "node:child_process";
 import { glob } from "glob";
 
 const KNOWLEDGE_DIR = "./knowledge";
-const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
-const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
-const VECTORIZE_INDEX_NAME = process.env.VECTORIZE_INDEX_NAME;
+const CLOUDFLARE_ACCOUNT_ID = "51544998e04526c4d6cc9e3e08653361";
 
-const validateEnv = () => {
-  const missing: string[] = [];
-  if (!CLOUDFLARE_ACCOUNT_ID) missing.push("CLOUDFLARE_ACCOUNT_ID");
-  if (!R2_BUCKET_NAME) missing.push("R2_BUCKET_NAME");
-  if (!VECTORIZE_INDEX_NAME) missing.push("VECTORIZE_INDEX_NAME");
+const ENVIRONMENTS = {
+  local: {
+    bucket: "nepp-chan-knowledge-local",
+    index: "nepp-chan-knowledge-local",
+  },
+  dev: {
+    bucket: "nepp-chan-knowledge-dev",
+    index: "nepp-chan-knowledge-dev",
+  },
+  prd: {
+    bucket: "nepp-chan-knowledge-prd",
+    index: "nepp-chan-knowledge-prd",
+  },
+} as const;
 
-  if (missing.length > 0) {
-    console.error(
-      `Error: Missing required environment variables: ${missing.join(", ")}`,
-    );
-    console.error(
-      "Please set them in .env.local/.env.development/.env.production file.",
-    );
-    process.exit(1);
-  }
-};
+type EnvName = keyof typeof ENVIRONMENTS;
+type Target = (typeof ENVIRONMENTS)[EnvName];
+
+const isEnvName = (value: string | undefined): value is EnvName =>
+  value !== undefined && value in ENVIRONMENTS;
 
 const parseArgs = () => {
   const args = process.argv.slice(2);
   return {
+    env: args.find((arg) => arg.startsWith("--env="))?.split("=")[1],
     clean: args.includes("--clean"),
     file: args.find((arg) => arg.startsWith("--file="))?.split("=")[1],
     help: args.includes("--help") || args.includes("-h"),
@@ -41,11 +44,6 @@ Options:
   --file=<filename> 特定のファイルのみアップロード
   --help, -h        ヘルプを表示
 
-Environment Variables (required, set via .env.local/.env.development/.env.production):
-  CLOUDFLARE_ACCOUNT_ID  Cloudflare アカウント ID
-  R2_BUCKET_NAME         R2 バケット名
-  VECTORIZE_INDEX_NAME   Vectorize インデックス名
-
 Examples:
   pnpm knowledge:upload:dev                    # 全ファイルをR2にアップロード
   pnpm knowledge:upload:dev --file=foo.md      # 特定ファイルのみ
@@ -57,11 +55,11 @@ Note:
 `);
 };
 
-const uploadToR2 = (filepath: string, key: string): boolean => {
+const uploadToR2 = (target: Target, filepath: string, key: string): boolean => {
   try {
     console.log(`  Uploading to R2: ${key}`);
     execSync(
-      `CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler r2 object put ${R2_BUCKET_NAME}/${key} --file="${filepath}" --remote`,
+      `CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler r2 object put ${target.bucket}/${key} --file="${filepath}" --remote`,
       { stdio: "pipe" },
     );
     return true;
@@ -74,14 +72,14 @@ const uploadToR2 = (filepath: string, key: string): boolean => {
   }
 };
 
-const deleteVectorizeIndex = (): boolean => {
+const deleteVectorizeIndex = (target: Target): boolean => {
   try {
-    console.log(`  Deleting Vectorize index: ${VECTORIZE_INDEX_NAME}`);
+    console.log(`  Deleting Vectorize index: ${target.index}`);
 
     // wrangler vectorize delete でインデックスを削除
     // -y フラグで確認をスキップ
     execSync(
-      `CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler vectorize delete ${VECTORIZE_INDEX_NAME} -y`,
+      `CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler vectorize delete ${target.index} -y`,
       { stdio: "pipe" },
     );
 
@@ -89,7 +87,7 @@ const deleteVectorizeIndex = (): boolean => {
 
     // インデックスを再作成（1536次元、cosine類似度）
     execSync(
-      `CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler vectorize create ${VECTORIZE_INDEX_NAME} --dimensions=1536 --metric=cosine`,
+      `CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler vectorize create ${target.index} --dimensions=1536 --metric=cosine`,
       { stdio: "pipe" },
     );
 
@@ -112,12 +110,20 @@ const main = async () => {
     process.exit(0);
   }
 
-  validateEnv();
+  if (!isEnvName(args.env)) {
+    console.error(
+      `Error: --env には local、dev、prd のいずれかを指定してください: ${args.env ?? "未指定"}`,
+    );
+    process.exit(1);
+  }
+
+  const target = ENVIRONMENTS[args.env];
+  console.log(`Target: ${args.env} (${target.bucket})\n`);
 
   if (args.clean) {
     console.log("=== Knowledge Clean Script ===\n");
 
-    const success = deleteVectorizeIndex();
+    const success = deleteVectorizeIndex(target);
     if (success) {
       console.log("\n=== Clean Complete ===");
     } else {
@@ -146,7 +152,7 @@ const main = async () => {
   let uploadedCount = 0;
   for (const filepath of files) {
     const key = filepath.replace("knowledge/", "");
-    if (uploadToR2(filepath, key)) {
+    if (uploadToR2(target, filepath, key)) {
       uploadedCount++;
     }
   }

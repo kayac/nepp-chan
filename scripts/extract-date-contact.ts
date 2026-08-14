@@ -67,7 +67,7 @@ const REVIEW_FILE = `${OUTPUT_DIR}/date-contact-needs-review.tsv`;
 const API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 if (!API_KEY) {
   console.error(
-    "GOOGLE_GENERATIVE_AI_API_KEY が未設定です。--env-file=.env.local を指定してください。",
+    "GOOGLE_GENERATIVE_AI_API_KEY が未設定です。server/.dev.vars に設定してください。",
   );
   process.exit(1);
 }

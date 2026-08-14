@@ -81,27 +81,13 @@ pnpm install
 
 ### Environment Variables
 
-Copy `.env.example` to create `.env` files.
+Local secrets live in `server/.dev.vars`.
 
 ```bash
-# root (for knowledge upload scripts)
-cp .env.example .env
-
-# server
-cp server/.env.example server/.env
 cp server/.dev.vars.example server/.dev.vars
-
-# web
-cp web/.env.example web/.env
-
-# lp
-cp lp/.env.example lp/.env
-
-# widget
-cp widget/.env.example widget/.env
 ```
 
-Set appropriate values in each `.env` file.
+web / lp / widget select their environment via `PUBLIC_ENV` (`VITE_ENV` for widget); the URLs live in `shared/src/constants/environments.ts`. Unset means `local`, so local development needs no configuration. The `deploy` / `deploy:prd` scripts pass the environment name for dev / prd.
 
 ### Initialize D1 Database
 
