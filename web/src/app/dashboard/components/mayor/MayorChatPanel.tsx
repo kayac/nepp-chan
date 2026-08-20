@@ -35,6 +35,7 @@ const MayorChat = ({
   const { messages, status, sendMessage } = useChat({
     id: threadId,
     transport,
+    experimental_throttle: 50,
   });
   const isRunning = status === "submitted" || status === "streaming";
 
