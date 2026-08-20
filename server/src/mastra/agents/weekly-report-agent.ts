@@ -22,5 +22,5 @@ export const weeklyReportAgent = new Agent({
 - 入力にない情報を推測で補わない
 - 箇条書きの羅列だけで終わらせない（傾向の解釈を添える）
 `,
-  ...modelWithReasoning({ model: OPENAI_MAIN, effort: "low" }),
+  ...modelWithReasoning({ model: OPENAI_MAIN, effort: "high" }),
 });

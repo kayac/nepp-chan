@@ -1,6 +1,6 @@
 import { Agent } from "@mastra/core/agent";
 import { getCurrentDateInfo } from "~/lib/date";
-import { modelWithReasoning } from "~/lib/llm-models";
+import { modelWithReasoning, type ReasoningEffort } from "~/lib/llm-models";
 import {
   broadcastGetTool,
   broadcastGetToolName,
@@ -124,14 +124,20 @@ ${getCurrentDateInfo()}
 - 過去を明示する表現（「去年の」「以前の」「○年の」）がある場合のみ、該当時期で検索する
 `;
 
-export const createKnowledgeAgent = (model?: string) =>
+export const createKnowledgeAgent = ({
+  model,
+  effort,
+}: {
+  model?: string;
+  effort?: ReasoningEffort;
+} = {}) =>
   new Agent({
     id: "knowledge-agent",
     name: "Knowledge Agent",
     description:
       "音威子府村の情報を検索・回答する担当。村に関する情報（歴史、施設、観光、村長、行政、行事）を検索して回答する。",
     instructions: knowledgeAgentInstructions,
-    ...modelWithReasoning({ model }),
+    ...modelWithReasoning({ model, effort }),
     tools: {
       knowledgeSearchTool,
       [broadcastGetToolName]: broadcastGetTool,

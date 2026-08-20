@@ -1,15 +1,13 @@
 import { Agent } from "@mastra/core/agent";
-import { OPENAI_LITE } from "~/lib/llm-models";
+import { OPENAI_LITE, reasoningProviderOptions } from "~/lib/llm-models";
 
 // reasoning を有効にすると temperature が strip されるため、決定的分類には none が必須
 const routerModelConfig = {
   model: OPENAI_LITE,
-  providerOptions: {
-    openai: {
-      reasoningEffort: "none" as const,
-    },
+  defaultOptions: {
+    modelSettings: { temperature: 0 },
+    providerOptions: reasoningProviderOptions("none"),
   },
-  defaultOptions: { modelSettings: { temperature: 0 } },
 };
 
 export const intentRouterAgent = new Agent({

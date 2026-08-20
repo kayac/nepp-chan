@@ -1,5 +1,5 @@
 import { Agent } from "@mastra/core/agent";
-import { OPENAI_LITE } from "~/lib/llm-models";
+import { OPENAI_LITE, reasoningProviderOptions } from "~/lib/llm-models";
 
 export const NEED_KNOWLEDGE = "NEED_KNOWLEDGE";
 export const NEED_WEB = "NEED_WEB";
@@ -7,12 +7,10 @@ export const NEED_WEB = "NEED_WEB";
 // reasoning を有効にすると temperature が strip されるため、決定的要約には none が必須
 const summarizerModelConfig = {
   model: OPENAI_LITE,
-  providerOptions: {
-    openai: {
-      reasoningEffort: "none" as const,
-    },
+  defaultOptions: {
+    modelSettings: { temperature: 0 },
+    providerOptions: reasoningProviderOptions("none"),
   },
-  defaultOptions: { modelSettings: { temperature: 0 } },
 };
 
 export const voiceSummarizerAgent = new Agent({

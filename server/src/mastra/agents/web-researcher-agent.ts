@@ -23,13 +23,9 @@ const baseInstructions = `
 - 検索結果の年度・日付が古い場合は「最新情報は直接確認をおすすめします」と補足する
 `;
 
+// Gemini は thinking の効き幅が極端なため、明示せず動的思考に委ねる
 const researcherModelConfig = {
   model: GEMINI_GROUNDING,
-  providerOptions: {
-    google: {
-      thinkingConfig: { thinkingLevel: "low" as const },
-    },
-  },
 };
 
 export const createWebResearcherAgent = () =>

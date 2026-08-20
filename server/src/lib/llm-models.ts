@@ -13,22 +13,39 @@ export const GEMINI_GROUNDING = "google/gemini-flash-lite-latest";
 // Gemini latest は RPD 制限対象のため、Eval は固定バージョンを使う
 export const GEMINI_FLASH_EVAL = "google/gemini-2.5-flash-lite";
 
-type ReasoningEffort = "high" | "medium" | "low" | "minimal";
+export type ReasoningEffort =
+  | "none"
+  | "low"
+  | "medium"
+  | "high"
+  | "xhigh"
+  | "max";
 
-// providerOptions はモデル側の名前空間だけが読まれるため、OpenAI/Google の両方を指定する
+// Gemini の thinkingLevel は minimal/low/medium/high のみで none と xhigh 以上が無い
+const GOOGLE_THINKING_LEVEL = {
+  none: "minimal",
+  low: "low",
+  medium: "medium",
+  high: "high",
+  xhigh: "high",
+  max: "high",
+} as const satisfies Record<ReasoningEffort, string>;
+
+// providerOptions はモデル側の名前空間だけが読まれるため両方指定する
+export const reasoningProviderOptions = (effort: ReasoningEffort) => ({
+  openai: { reasoningEffort: effort },
+  google: {
+    thinkingConfig: { thinkingLevel: GOOGLE_THINKING_LEVEL[effort] },
+  },
+});
+
+// Agent 直下の providerOptions は型に存在せず黙って捨てられるため defaultOptions に入れる
 export const modelWithReasoning = ({
   model = OPENAI_LITE,
-  effort = "low" as ReasoningEffort,
+  effort = "high" as ReasoningEffort,
 } = {}) => ({
   model,
-  providerOptions: {
-    openai: {
-      reasoningEffort: effort,
-    },
-    google: {
-      thinkingConfig: { thinkingLevel: effort },
-    },
-  },
+  defaultOptions: { providerOptions: reasoningProviderOptions(effort) },
 });
 
 export type Intent = "casual" | "thinking";
@@ -48,12 +65,14 @@ const modelChain = ({
 }) => [
   {
     id: primary,
-    ...modelWithReasoning({ model: primary, effort }),
+    model: primary,
+    providerOptions: reasoningProviderOptions(effort),
     maxRetries: 1,
   },
   {
     id: fallback,
-    ...modelWithReasoning({ model: fallback, effort }),
+    model: fallback,
+    providerOptions: reasoningProviderOptions(effort),
     maxRetries: 1,
   },
 ];
@@ -72,7 +91,7 @@ const MODEL_TIERS: Record<Intent, Record<"web" | "line", AgentModelConfig>> = {
       model: modelChain({
         primary: OPENAI_LITE,
         fallback: OPENAI_MAIN,
-        effort: "low",
+        effort: "high",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.casual },
     },
@@ -80,7 +99,7 @@ const MODEL_TIERS: Record<Intent, Record<"web" | "line", AgentModelConfig>> = {
       model: modelChain({
         primary: OPENAI_LITE,
         fallback: OPENAI_MAIN,
-        effort: "minimal",
+        effort: "high",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.casual },
     },
@@ -90,7 +109,7 @@ const MODEL_TIERS: Record<Intent, Record<"web" | "line", AgentModelConfig>> = {
       model: modelChain({
         primary: OPENAI_MAIN,
         fallback: OPENAI_LITE,
-        effort: "high",
+        effort: "xhigh",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.thinking },
     },
@@ -98,7 +117,7 @@ const MODEL_TIERS: Record<Intent, Record<"web" | "line", AgentModelConfig>> = {
       model: modelChain({
         primary: OPENAI_MAIN,
         fallback: OPENAI_LITE,
-        effort: "medium",
+        effort: "high",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.thinking },
     },

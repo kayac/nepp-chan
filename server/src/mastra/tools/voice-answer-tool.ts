@@ -29,7 +29,7 @@ const ABORTED_ANSWER = "ごめんね、うまく調べられなかったみた�
 
 const PREFETCH_GRACE_MS = 150;
 
-const voiceKnowledgeAgent = createKnowledgeAgent();
+const voiceKnowledgeAgent = createKnowledgeAgent({ effort: "low" });
 const voiceWebResearcherAgent = createWebResearcherAgent();
 
 type Source = "knowledge" | "web";

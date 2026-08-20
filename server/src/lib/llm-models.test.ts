@@ -16,10 +16,45 @@ describe("modelWithReasoning", () => {
       model: GEMINI_FLASH_EVAL,
       effort: "medium",
     });
-    expect(config.providerOptions.openai.reasoningEffort).toBe("medium");
-    expect(config.providerOptions.google.thinkingConfig.thinkingLevel).toBe(
+    expect(config.defaultOptions.providerOptions.openai.reasoningEffort).toBe(
       "medium",
     );
+    expect(
+      config.defaultOptions.providerOptions.google.thinkingConfig.thinkingLevel,
+    ).toBe("medium");
+  });
+
+  it("Agent 直下の providerOptions は捨てられるため defaultOptions に入れる", () => {
+    expect(modelWithReasoning()).not.toHaveProperty("providerOptions");
+  });
+
+  it("既定の effort は high", () => {
+    expect(
+      modelWithReasoning().defaultOptions.providerOptions.openai
+        .reasoningEffort,
+    ).toBe("high");
+  });
+
+  it("Gemini の thinkingLevel に none が無いため minimal へ読み替える", () => {
+    const config = modelWithReasoning({ effort: "none" });
+
+    expect(config.defaultOptions.providerOptions.openai.reasoningEffort).toBe(
+      "none",
+    );
+    expect(
+      config.defaultOptions.providerOptions.google.thinkingConfig.thinkingLevel,
+    ).toBe("minimal");
+  });
+
+  it("Gemini の thinkingLevel に xhigh が無いため high へ丸める", () => {
+    const config = modelWithReasoning({ effort: "xhigh" });
+
+    expect(config.defaultOptions.providerOptions.openai.reasoningEffort).toBe(
+      "xhigh",
+    );
+    expect(
+      config.defaultOptions.providerOptions.google.thinkingConfig.thinkingLevel,
+    ).toBe("high");
   });
 });
 
@@ -30,11 +65,11 @@ describe("resolveModelTier", () => {
 
     for (const intent of intents) {
       for (const platform of platforms) {
-        it(`intent=${intent}, platform=${platform} でもプライマリ MAIN + high`, () => {
+        it(`intent=${intent}, platform=${platform} でもプライマリ MAIN + xhigh`, () => {
           const tier = resolveModelTier({ intent, platform, isAdmin: true });
           expect(tier.model[0].model).toBe(OPENAI_MAIN);
           expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
-            "high",
+            "xhigh",
           );
         });
       }
@@ -42,7 +77,7 @@ describe("resolveModelTier", () => {
   });
 
   describe("Web プラットフォーム（非 Admin）", () => {
-    it("casual → プライマリ LITE + low、フォールバック MAIN", () => {
+    it("casual → プライマリ LITE + high、フォールバック MAIN", () => {
       const tier = resolveModelTier({
         intent: "casual",
         platform: "web",
@@ -52,10 +87,10 @@ describe("resolveModelTier", () => {
         OPENAI_LITE,
         OPENAI_MAIN,
       ]);
-      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe("low");
+      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe("high");
     });
 
-    it("thinking → プライマリ MAIN + high、フォールバック LITE", () => {
+    it("thinking → プライマリ MAIN + xhigh、フォールバック LITE", () => {
       const tier = resolveModelTier({
         intent: "thinking",
         platform: "web",
@@ -65,12 +100,14 @@ describe("resolveModelTier", () => {
         OPENAI_MAIN,
         OPENAI_LITE,
       ]);
-      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe("high");
+      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
+        "xhigh",
+      );
     });
   });
 
   describe("LINE プラットフォーム（非 Admin）", () => {
-    it("casual → プライマリ LITE + minimal", () => {
+    it("casual → プライマリ LITE + high", () => {
       const tier = resolveModelTier({
         intent: "casual",
         platform: "line",
@@ -78,20 +115,18 @@ describe("resolveModelTier", () => {
       });
       expect(tier.model[0].model).toBe(OPENAI_LITE);
       expect(tier.model[0].providerOptions.openai).toEqual({
-        reasoningEffort: "minimal",
+        reasoningEffort: "high",
       });
     });
 
-    it("thinking → プライマリ MAIN + medium", () => {
+    it("thinking → プライマリ MAIN + high", () => {
       const tier = resolveModelTier({
         intent: "thinking",
         platform: "line",
         isAdmin: false,
       });
       expect(tier.model[0].model).toBe(OPENAI_MAIN);
-      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
-        "medium",
-      );
+      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe("high");
     });
   });
 
@@ -142,9 +177,7 @@ describe("resolveModelTier", () => {
         platform: "line",
         isAdmin: false,
       });
-      expect(tier.model[1].providerOptions.openai.reasoningEffort).toBe(
-        "medium",
-      );
+      expect(tier.model[1].providerOptions.openai.reasoningEffort).toBe("high");
     });
 
     it("全エントリに maxRetries が設定されている", () => {

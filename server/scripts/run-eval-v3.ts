@@ -1698,7 +1698,7 @@ const main = async () => {
     knowledge:
       args.model === "production"
         ? knowledgeAgent
-        : createKnowledgeAgent(evalModelId),
+        : createKnowledgeAgent({ model: evalModelId }),
     "nepp-chan": createNeppChanAgent({
       isAdmin: false,
       modelConfig: resolveModelTier({
