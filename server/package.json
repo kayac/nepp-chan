@@ -23,7 +23,7 @@
     "api:quota": "tsx scripts/api-quota.ts"
   },
   "dependencies": {
-    "@ai-sdk/google": "^3.0.83",
+    "@ai-sdk/google": "^4.0.44",
     "@ai-sdk/openai": "^3.0.73",
     "@hono/swagger-ui": "^0.6.1",
     "@hono/zod-openapi": "^1.6.0",
