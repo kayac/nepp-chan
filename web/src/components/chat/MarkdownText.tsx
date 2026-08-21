@@ -9,6 +9,7 @@ import {
   useContext,
 } from "react";
 import Markdown, { type Components } from "react-markdown";
+import remarkCjkFriendly from "remark-cjk-friendly";
 import remarkGfm from "remark-gfm";
 
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
@@ -232,7 +233,10 @@ const components: Components = {
 
 const MarkdownTextImpl = ({ text }: { text: string }) => (
   <div className="aui-md">
-    <Markdown remarkPlugins={[remarkGfm]} components={components}>
+    <Markdown
+      remarkPlugins={[remarkGfm, remarkCjkFriendly]}
+      components={components}
+    >
       {text}
     </Markdown>
   </div>
