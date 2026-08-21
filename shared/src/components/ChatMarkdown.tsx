@@ -1,5 +1,6 @@
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import ReactMarkdown, { type Components } from "react-markdown";
+import remarkCjkFriendly from "remark-cjk-friendly";
 import remarkGfm from "remark-gfm";
 
 type Variant = "user" | "assistant";
@@ -9,7 +10,7 @@ type Props = {
   variant: Variant;
 };
 
-const REMARK_PLUGINS = [remarkGfm];
+const REMARK_PLUGINS = [remarkGfm, remarkCjkFriendly];
 
 const buildComponents = (variant: Variant): Components => ({
   p: ({ children }) => <p className="my-1 first:mt-0 last:mb-0">{children}</p>,

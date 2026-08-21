@@ -80,4 +80,28 @@ describe("ChatMarkdown", () => {
       "border-white/20",
     );
   });
+
+  it("約物に隣接する強調を CJK 文中で描画する", () => {
+    const { container } = render(
+      <ChatMarkdown
+        text={"村は**「まち」「ひと」「しごと」**の三本柱で進めています"}
+        variant="assistant"
+      />,
+    );
+    expect(container.querySelector("strong")?.textContent).toBe(
+      "「まち」「ひと」「しごと」",
+    );
+  });
+
+  it("閉じ括弧の直後で強調を閉じられる", () => {
+    const { container } = render(
+      <ChatMarkdown
+        text={"**住民課住民生活室（Tel:01656-5-3312）**が窓口です"}
+        variant="assistant"
+      />,
+    );
+    expect(container.querySelector("strong")?.textContent).toBe(
+      "住民課住民生活室（Tel:01656-5-3312）",
+    );
+  });
 });
