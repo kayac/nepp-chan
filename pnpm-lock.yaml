@@ -121,8 +121,8 @@ importers:
         specifier: 1.15.0
         version: 1.15.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.4.3))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@10.2.2)(zod@4.4.3)
       '@mastra/memory':
-        specifier: 1.23.1
-        version: 1.23.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.4.3))(supports-color@10.2.2)
+        specifier: 1.26.2
+        version: 1.26.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.4.3))(supports-color@10.2.2)
       '@mastra/observability':
         specifier: 1.16.2
         version: 1.16.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
@@ -2306,8 +2306,8 @@ packages:
     peerDependencies:
       '@mastra/core': '>=1.0.0-0 <2.0.0-0'
 
-  '@mastra/memory@1.23.1':
-    resolution: {integrity: sha512-Xzgo4nsKPrn9cV4Bn07Wqkgyf3vrnZbgaTqLe7E6BPma2cPB81e/IthJOzrOy/CpMsam2asLShoYoxelISTXwg==}
+  '@mastra/memory@1.26.2':
+    resolution: {integrity: sha512-9eFJg/9TXEUJmWdJbAJkt4FCa8cNdK1lFEUgXwqpjijnsMLtaLUAeqHz86pI5E34hpJYlPhMwLKiRzM1e4iAsg==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.4.1-0 <2.0.0-0'
@@ -2328,6 +2328,12 @@ packages:
 
   '@mastra/schema-compat@1.3.4':
     resolution: {integrity: sha512-2ObUsd21KIVelQy+eKPxJvnMxtmKnWacsIkZovhEYjVcQX9OYTDQ+u4E4RboIJZvurJnFx++/ujQLFznUaEYMg==}
+    engines: {node: '>=22.13.0'}
+    peerDependencies:
+      zod: ^3.25.0 || ^4.0.0
+
+  '@mastra/schema-compat@1.3.7':
+    resolution: {integrity: sha512-06WfY+j9rulYnDp8CM7pL7JIyrntkMolqmyyb1VJNEzlYTQCIcJcY0SwQiubZv2tztmoYGikszDiRVyXp0E9gA==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
@@ -4630,11 +4636,6 @@ packages:
     resolution: {integrity: sha512-BAg6QkE8W+TuQLrrw0Ugr7HegXduRuuj8/ti2kSOc+jz1dmx8/WNcjr6XGnq5YpDWxFwwaavqD0+jIUOKelTsw==}
     engines: {node: '>= 4'}
 
-  image-size@1.2.1:
-    resolution: {integrity: sha512-rH+46sQJ2dlwfjfhCyNx5thzrv+dtmBIhPHk0zgRUukHzZ/kRueTJXoYYsclBaKcSMBWuGbOFXtioLpzTb5euw==}
-    engines: {node: '>=16.x'}
-    hasBin: true
-
   immer@11.1.15:
     resolution: {integrity: sha512-VrNANlmnWQnh5COXIIOQXM9oOJw7naGKlBT74ZOOR6lpVXc3gFEu9FJLDFcpCJ2j+NWr8TIwtWD//T6ZX6TKiQ==}
 
@@ -5664,8 +5665,8 @@ packages:
     resolution: {integrity: sha512-DEvV2ZF2r2/63V+tK8hQvrR2ZGn10srHbXviTlcv7Kpzw8jWiNTqbVgjO3IY8RxrrOUF8VPMQQFysYYYv0YZxw==}
     engines: {node: '>=6'}
 
-  probe-image-size@7.3.0:
-    resolution: {integrity: sha512-7CaDeBwiAbh6ohXsvLbAZhO7wzsZAmaevfxe39qvCwRh8LyaZfDlBGGLU1CCTgrTLtCOdwBBhjOrIHaIIimHfQ==}
+  probe-image-size@7.4.0:
+    resolution: {integrity: sha512-cdEprVtZxV+awMde9X+4jILBFYh4CARxVrQaMl4wY4YcPWbul9jntXrIW95NInBDyJwcVUP3U0T6yukN8rMBaQ==}
 
   process-ancestry@0.1.0:
     resolution: {integrity: sha512-tGqJW/UnclpYASFcM6Xh8D8l/BMtaQ9+CSG0vlJSJTcdMM4lDRv4c6H0Pdcsfted+bVczdYSfk2fdukg2gQkZg==}
@@ -5717,9 +5718,6 @@ packages:
 
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
-
-  queue@6.0.2:
-    resolution: {integrity: sha512-iHZWu+q3IdFZFX36ro/lKBkSvfkztY5Y7HMiPlOUjhupPcG2JMfst2KKEpu5XndviX/3UhFbRngUPNKtgvtZiA==}
 
   quick-format-unescaped@4.0.4:
     resolution: {integrity: sha512-tYC1Q1hgyRuHgloV/YXs2w15unPVh8qfu/qCTfhTYamaw7fyhumKa2yGpdSo87vY32rIclj+4fWYQXUMs9EHvg==}
@@ -5945,10 +5943,6 @@ packages:
 
   satteri@0.9.5:
     resolution: {integrity: sha512-ZuWVl+vnM64y+/TtX8Kosv2c00W+hLQiiwnEL6H0UKVVrxFqMw4D2CJHHQaouVd89OAhtBBfjWLqhKi3TVUV4w==}
-
-  sax@1.6.0:
-    resolution: {integrity: sha512-6R3J5M4AcbtLUdZmRv2SygeVaM7IhrLXu9BmnOGmmACak8fiUtOsYNWUS4uK7upbmHIBbLBeFeI//477BKLBzA==}
-    engines: {node: '>=11.0.0'}
 
   sax@1.6.1:
     resolution: {integrity: sha512-42tBVwLWnaQvW5zc4HbZrTuWccECCZfBi92FDuwtqxasH+JbPB3/FOKb1m222K42R4WxuxzzMsTswfzgtSu64Q==}
@@ -6290,6 +6284,9 @@ packages:
 
   tokenx@1.3.0:
     resolution: {integrity: sha512-NLdXTEZkKiO0gZuLtMoZKjCXTREXeZZt8nnnNeyoXtNZAfG/GKGSbQtLU5STspc0rMSwcA+UJfWZkbNU01iKmQ==}
+
+  tokenx@1.6.0:
+    resolution: {integrity: sha512-CKTjk345ajvBAUp5xUI9a5KKN0zU0lBueVHQbCskH1Hp6WkUKsPW2qGCYNs0pxNyfzxfo+IIjdt2W4sMbw/qBw==}
 
   tough-cookie@6.0.1:
     resolution: {integrity: sha512-LktZQb3IeoUWB9lqR5EWTHgW/VTITCXg4D21M+lvybRVdylLrRMnqaIONLVb5mav8vM19m44HIcGq4qASeu2Qw==}
@@ -8519,17 +8516,16 @@ snapshots:
       - supports-color
       - zod
 
-  '@mastra/memory@1.23.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.4.3))(supports-color@10.2.2)':
+  '@mastra/memory@1.26.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.4.3))(supports-color@10.2.2)':
     dependencies:
       '@mastra/core': 1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.4.3)
-      '@mastra/schema-compat': 1.3.4(zod@4.4.3)
+      '@mastra/schema-compat': 1.3.7(zod@4.4.3)
       async-mutex: 0.5.0
       diff: 8.0.4
-      image-size: 1.2.1
       json-schema: 0.4.0
       lru-cache: 11.5.2
-      probe-image-size: 7.3.0(supports-color@10.2.2)
-      tokenx: 1.3.0
+      probe-image-size: 7.4.0(supports-color@10.2.2)
+      tokenx: 1.6.0
       xxhash-wasm: 1.1.0
       zod: 4.4.3
     transitivePeerDependencies:
@@ -8558,6 +8554,12 @@ snapshots:
       zod-from-json-schema: 0.5.6
       zod-from-json-schema-v3: zod-from-json-schema@0.0.5
       zod-to-json-schema: 3.25.2(zod@4.4.3)
+
+  '@mastra/schema-compat@1.3.7(zod@4.4.3)':
+    dependencies:
+      json-schema-to-zod: 2.8.1
+      zod: 4.4.3
+      zod-from-json-schema: 0.5.6
 
   '@mastra/server@1.52.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)':
     dependencies:
@@ -10899,10 +10901,6 @@ snapshots:
 
   ignore@7.0.6: {}
 
-  image-size@1.2.1:
-    dependencies:
-      queue: 6.0.2
-
   immer@11.1.15: {}
 
   import-meta-resolve@4.2.0: {}
@@ -11791,7 +11789,7 @@ snapshots:
     dependencies:
       debug: 3.2.7(supports-color@10.2.2)
       iconv-lite: 0.4.24
-      sax: 1.6.0
+      sax: 1.6.1
     transitivePeerDependencies:
       - supports-color
 
@@ -12064,7 +12062,7 @@ snapshots:
 
   prismjs@1.30.0: {}
 
-  probe-image-size@7.3.0(supports-color@10.2.2):
+  probe-image-size@7.4.0(supports-color@10.2.2):
     dependencies:
       lodash.merge: 4.6.2
       needle: 2.9.1(supports-color@10.2.2)
@@ -12110,10 +12108,6 @@ snapshots:
   quansync@0.2.11: {}
 
   queue-microtask@1.2.3: {}
-
-  queue@6.0.2:
-    dependencies:
-      inherits: 2.0.4
 
   quick-format-unescaped@4.0.4: {}
 
@@ -12435,8 +12429,6 @@ snapshots:
       '@bruits/satteri-wasm32-wasi': 0.9.5
       '@bruits/satteri-win32-arm64-msvc': 0.9.5
       '@bruits/satteri-win32-x64-msvc': 0.9.5
-
-  sax@1.6.0: {}
 
   sax@1.6.1: {}
 
@@ -12851,6 +12843,8 @@ snapshots:
   toidentifier@1.0.1: {}
 
   tokenx@1.3.0: {}
+
+  tokenx@1.6.0: {}
 
   tough-cookie@6.0.1:
     dependencies:
