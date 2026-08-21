@@ -65,9 +65,9 @@ describe("resolveModelTier", () => {
 
     for (const intent of intents) {
       for (const platform of platforms) {
-        it(`intent=${intent}, platform=${platform} でもプライマリ MAIN + xhigh`, () => {
+        it(`intent=${intent}, platform=${platform} でもプライマリ LITE + xhigh`, () => {
           const tier = resolveModelTier({ intent, platform, isAdmin: true });
-          expect(tier.model[0].model).toBe(OPENAI_MAIN);
+          expect(tier.model[0].model).toBe(OPENAI_LITE);
           expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
             "xhigh",
           );
@@ -77,7 +77,7 @@ describe("resolveModelTier", () => {
   });
 
   describe("Web プラットフォーム（非 Admin）", () => {
-    it("casual → プライマリ LITE + high、フォールバック MAIN", () => {
+    it("casual → プライマリ LITE + medium、フォールバック MAIN", () => {
       const tier = resolveModelTier({
         intent: "casual",
         platform: "web",
@@ -87,27 +87,30 @@ describe("resolveModelTier", () => {
         OPENAI_LITE,
         OPENAI_MAIN,
       ]);
-      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe("high");
+      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
+        "medium",
+      );
     });
 
-    it("thinking → プライマリ MAIN + xhigh、フォールバック LITE", () => {
+    it("thinking → プライマリ LITE + xhigh、フォールバック MAIN", () => {
       const tier = resolveModelTier({
         intent: "thinking",
         platform: "web",
         isAdmin: false,
       });
       expect(tier.model.map((m) => m.model)).toEqual([
-        OPENAI_MAIN,
         OPENAI_LITE,
+        OPENAI_MAIN,
       ]);
       expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
         "xhigh",
       );
+      expect(tier.model[0].providerOptions.openai.textVerbosity).toBe("high");
     });
   });
 
   describe("LINE プラットフォーム（非 Admin）", () => {
-    it("casual → プライマリ LITE + high", () => {
+    it("casual → プライマリ LITE + medium", () => {
       const tier = resolveModelTier({
         intent: "casual",
         platform: "line",
@@ -115,18 +118,23 @@ describe("resolveModelTier", () => {
       });
       expect(tier.model[0].model).toBe(OPENAI_LITE);
       expect(tier.model[0].providerOptions.openai).toEqual({
-        reasoningEffort: "high",
+        reasoningEffort: "medium",
       });
     });
 
-    it("thinking → プライマリ MAIN + high", () => {
+    it("thinking → プライマリ LITE + xhigh", () => {
       const tier = resolveModelTier({
         intent: "thinking",
         platform: "line",
         isAdmin: false,
       });
-      expect(tier.model[0].model).toBe(OPENAI_MAIN);
-      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe("high");
+      expect(tier.model[0].model).toBe(OPENAI_LITE);
+      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
+        "xhigh",
+      );
+      expect(tier.model[0].providerOptions.openai).not.toHaveProperty(
+        "textVerbosity",
+      );
     });
   });
 
@@ -177,7 +185,9 @@ describe("resolveModelTier", () => {
         platform: "line",
         isAdmin: false,
       });
-      expect(tier.model[1].providerOptions.openai.reasoningEffort).toBe("high");
+      expect(tier.model[1].providerOptions.openai.reasoningEffort).toBe(
+        "xhigh",
+      );
     });
 
     it("全エントリに maxRetries が設定されている", () => {

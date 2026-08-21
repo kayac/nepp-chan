@@ -2,7 +2,8 @@
 export const OPENAI_MAIN = "openai/gpt-5.6-terra";
 export const OPENAI_LITE = "openai/gpt-5.6-luna";
 
-export const OPENAI_SCORER = "openai/gpt-4.1-nano";
+// 最軽量モデル。非 reasoning のため temperature 指定が有効（決定的な分類・スコアリング向け）
+export const OPENAI_NANO = "openai/gpt-4.1-nano";
 
 // 埋め込みモデル
 export const GEMINI_EMBEDDING = "gemini-embedding-001";
@@ -21,6 +22,8 @@ export type ReasoningEffort =
   | "xhigh"
   | "max";
 
+type TextVerbosity = "low" | "medium" | "high";
+
 // Gemini の thinkingLevel は minimal/low/medium/high のみで none と xhigh 以上が無い
 const GOOGLE_THINKING_LEVEL = {
   none: "minimal",
@@ -32,8 +35,14 @@ const GOOGLE_THINKING_LEVEL = {
 } as const satisfies Record<ReasoningEffort, string>;
 
 // providerOptions はモデル側の名前空間だけが読まれるため両方指定する
-export const reasoningProviderOptions = (effort: ReasoningEffort) => ({
-  openai: { reasoningEffort: effort },
+export const reasoningProviderOptions = (
+  effort: ReasoningEffort,
+  textVerbosity?: TextVerbosity,
+) => ({
+  openai: {
+    reasoningEffort: effort,
+    ...(textVerbosity && { textVerbosity }),
+  },
   google: {
     thinkingConfig: { thinkingLevel: GOOGLE_THINKING_LEVEL[effort] },
   },
@@ -58,21 +67,23 @@ const modelChain = ({
   primary,
   fallback,
   effort,
+  textVerbosity,
 }: {
   primary: string;
   fallback: string;
   effort: ReasoningEffort;
+  textVerbosity?: TextVerbosity;
 }) => [
   {
     id: primary,
     model: primary,
-    providerOptions: reasoningProviderOptions(effort),
+    providerOptions: reasoningProviderOptions(effort, textVerbosity),
     maxRetries: 1,
   },
   {
     id: fallback,
     model: fallback,
-    providerOptions: reasoningProviderOptions(effort),
+    providerOptions: reasoningProviderOptions(effort, textVerbosity),
     maxRetries: 1,
   },
 ];
@@ -91,7 +102,7 @@ const MODEL_TIERS: Record<Intent, Record<"web" | "line", AgentModelConfig>> = {
       model: modelChain({
         primary: OPENAI_LITE,
         fallback: OPENAI_MAIN,
-        effort: "high",
+        effort: "medium",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.casual },
     },
@@ -99,7 +110,7 @@ const MODEL_TIERS: Record<Intent, Record<"web" | "line", AgentModelConfig>> = {
       model: modelChain({
         primary: OPENAI_LITE,
         fallback: OPENAI_MAIN,
-        effort: "high",
+        effort: "medium",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.casual },
     },
@@ -107,17 +118,18 @@ const MODEL_TIERS: Record<Intent, Record<"web" | "line", AgentModelConfig>> = {
   thinking: {
     web: {
       model: modelChain({
-        primary: OPENAI_MAIN,
-        fallback: OPENAI_LITE,
+        primary: OPENAI_LITE,
+        fallback: OPENAI_MAIN,
         effort: "xhigh",
+        textVerbosity: "high",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.thinking },
     },
     line: {
       model: modelChain({
-        primary: OPENAI_MAIN,
-        fallback: OPENAI_LITE,
-        effort: "high",
+        primary: OPENAI_LITE,
+        fallback: OPENAI_MAIN,
+        effort: "xhigh",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.thinking },
     },

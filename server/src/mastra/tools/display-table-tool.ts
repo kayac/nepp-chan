@@ -7,10 +7,6 @@ export const displayTableTool = createDisplayTool({
   description: `データをテーブル形式で表示するツール。
 一覧データや複数フィールドの比較を見せたいときに使用する。
 
-## 使用判断の基準
-- 2列以上 × 2行以上のデータ → テーブルを使う
-- 単純なリスト → テキストで十分
-
 ## 入力形式
 - title: テーブルのタイトル（省略可）
 - columns: 列定義の配列。各要素:

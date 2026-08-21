@@ -1,12 +1,11 @@
 import { Agent } from "@mastra/core/agent";
-import { OPENAI_LITE, reasoningProviderOptions } from "~/lib/llm-models";
+import { OPENAI_NANO } from "~/lib/llm-models";
 
-// reasoning を有効にすると temperature が strip されるため、決定的分類には none が必須
+// gpt-5 系は temperature が strip されるため、決定的分類には非 reasoning モデルを維持する
 const routerModelConfig = {
-  model: OPENAI_LITE,
+  model: OPENAI_NANO,
   defaultOptions: {
     modelSettings: { temperature: 0 },
-    providerOptions: reasoningProviderOptions("none"),
   },
 };
 

@@ -39,7 +39,7 @@ import { getPlatformProxy } from "wrangler";
 import {
   GEMINI_FLASH_EVAL,
   OPENAI_MAIN,
-  OPENAI_SCORER,
+  OPENAI_NANO,
   resolveModelTier,
 } from "../src/lib/llm-models";
 import {
@@ -596,7 +596,7 @@ const runEvalScorers = async ({
 
   try {
     const result = await createAnswerSimilarityScorer({
-      model: OPENAI_SCORER,
+      model: OPENAI_NANO,
     }).run({
       input: testRun.input,
       output: testRun.output,
@@ -625,7 +625,7 @@ const runEvalScorers = async ({
 
   try {
     const result = await createContextPrecisionScorer({
-      model: OPENAI_SCORER,
+      model: OPENAI_NANO,
       options: { context },
     }).run({
       input: testRun.input,
@@ -641,7 +641,7 @@ const runEvalScorers = async ({
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const result = await createContextRelevanceScorerLLM({
-        model: OPENAI_SCORER,
+        model: OPENAI_NANO,
         options: { context },
       }).run({
         input: testRun.input,
@@ -667,7 +667,7 @@ const runEvalScorers = async ({
   } else {
     try {
       const result = await createHallucinationScorer({
-        model: OPENAI_SCORER,
+        model: OPENAI_NANO,
         options: { context },
       }).run({
         input: testRun.input,

@@ -1,5 +1,6 @@
 const GREETING_PREFIX = "新しい会話が始まりました。";
-const GREETING_SUFFIX = "時間帯や季節に合った短い挨拶をしてください。";
+const GREETING_SUFFIX =
+  "時間帯や季節に合った挨拶をして、最後に話したいことや手伝えることはないか尋ねてください。";
 
 /** 新規スレッド開始時に挨拶を促すプロンプト */
 export const GREETING_PROMPT = `${GREETING_PREFIX}${GREETING_SUFFIX}`;
