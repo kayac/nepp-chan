@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.83",
-    "@ai-sdk/openai": "^3.0.73",
+    "@ai-sdk/openai": "^4.0.45",
     "@hono/swagger-ui": "^0.6.1",
     "@hono/zod-openapi": "^1.6.0",
     "@line/bot-sdk": "^11.2.0",
