@@ -26,7 +26,7 @@
     "@ai-sdk/google": "^3.0.83",
     "@ai-sdk/openai": "^3.0.73",
     "@hono/swagger-ui": "^0.6.1",
-    "@hono/zod-openapi": "^1.6.0",
+    "@hono/zod-openapi": "^1.6.1",
     "@line/bot-sdk": "^11.2.0",
     "@mastra/ai-sdk": "^1.6.2",
     "@mastra/cloudflare-d1": "1.1.1",
