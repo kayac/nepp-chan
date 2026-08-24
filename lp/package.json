@@ -14,7 +14,7 @@
   "dependencies": {
     "@ai-sdk/react": "^3.0.210",
     "@astrojs/check": "^0.9.10",
-    "@astrojs/react": "^6.0.2",
+    "@astrojs/react": "^6.0.4",
     "@heroicons/react": "^2.2.0",
     "@nepp-chan/shared": "workspace:*",
     "ai": "^6.0.208",
