@@ -109,8 +109,8 @@ importers:
         specifier: 1.52.1
         version: 1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.4.3)
       '@mastra/evals':
-        specifier: 1.7.0
-        version: 1.7.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.4.3))
+        specifier: 1.9.0
+        version: 1.9.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.4.3))
       '@mastra/libsql':
         specifier: 1.17.0
         version: 1.17.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.4.3))
@@ -2346,8 +2346,8 @@ packages:
     peerDependencies:
       '@mastra/core': '>=1.50.0-0 <2.0.0-0'
 
-  '@mastra/evals@1.7.0':
-    resolution: {integrity: sha512-K+UXN0h+Z9RfTyD1rCZJP2WbLjfti/3S2DT32BLUwsNaBZmEODEeNByyFA5bfW3XrsoMcKMEl1TOIKfVt6jFbg==}
+  '@mastra/evals@1.9.0':
+    resolution: {integrity: sha512-brabLN4sEwFzyH6MvqPHrhPQ6Pn7ITBMVlF4oMn/loJxr0BZ8W+8ea0WwtWvYQ6BM1awYuPS1iTsIe/slifWcg==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.0.0-0 <2.0.0-0'
@@ -8752,7 +8752,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@mastra/evals@1.7.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.4.3))':
+  '@mastra/evals@1.9.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.4.3))':
     dependencies:
       '@mastra/core': 1.52.1(ai@6.0.208(zod@4.4.3))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.4.3)
       compromise: 14.16.0
