@@ -152,7 +152,11 @@ export const createTestDb = async () => {
       platform TEXT,
       source TEXT NOT NULL,
       intent TEXT,
+      agent TEXT,
+      turn_index INTEGER,
+      duration_ms INTEGER,
       thread_id TEXT,
+      cost_usd REAL,
       created_at TEXT NOT NULL
     );
 
