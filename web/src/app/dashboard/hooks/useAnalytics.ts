@@ -29,6 +29,28 @@ export const useUsageAnalytics = (weeks = 12) =>
     queryFn: () => analyticsRepository.fetchUsageAnalytics(weeks),
   });
 
+export const useThreadUsage = (days = 30, limit = 50) =>
+  useQuery({
+    queryKey: dashboardKeys.analyticsThreadUsage(days, limit),
+    queryFn: () => analyticsRepository.fetchThreadUsage({ days, limit }),
+  });
+
+export const useOperationCost = (days = 30) =>
+  useQuery({
+    queryKey: dashboardKeys.analyticsOperationCost(days),
+    queryFn: () => analyticsRepository.fetchOperationCost(days),
+  });
+
+export const useThreadTurnUsage = (threadId: string | null) =>
+  useQuery({
+    queryKey: dashboardKeys.analyticsThreadTurnUsage(threadId ?? ""),
+    queryFn: () => {
+      if (!threadId) throw new Error("threadId is required");
+      return analyticsRepository.fetchThreadTurnUsage(threadId);
+    },
+    enabled: !!threadId,
+  });
+
 export const useWeeklyReports = () =>
   useQuery({
     queryKey: dashboardKeys.weeklyReports,

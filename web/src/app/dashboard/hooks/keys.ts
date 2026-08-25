@@ -5,6 +5,12 @@ export const dashboardKeys = {
     ["dashboard", "analytics", "conversations", days] as const,
   analyticsUsage: (weeks: number) =>
     ["dashboard", "analytics", "usage", weeks] as const,
+  analyticsThreadUsage: (days: number, limit: number) =>
+    ["dashboard", "analytics", "usage", "threads", days, limit] as const,
+  analyticsOperationCost: (days: number) =>
+    ["dashboard", "analytics", "usage", "operation", days] as const,
+  analyticsThreadTurnUsage: (threadId: string) =>
+    ["dashboard", "analytics", "usage", "thread-turns", threadId] as const,
   analyticsOntology: ["dashboard", "analytics", "ontology"] as const,
   weeklyReports: ["dashboard", "analytics", "reports"] as const,
   weeklyReportDetail: (id: string) =>
