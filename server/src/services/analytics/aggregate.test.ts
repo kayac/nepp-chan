@@ -22,6 +22,9 @@ const {
   getConversationStats,
   getWeeklyUsage,
   getUsageByModel,
+  getThreadUsage,
+  getThreadTurnUsage,
+  getOperationCost,
   getPersonaAnalytics,
 } = await import("./aggregate");
 
@@ -316,6 +319,595 @@ describe("getWeeklyUsage", () => {
     const lite = weekly.find((w) => w.model === "gemini-2.5-flash-lite");
     expect(flash?.costUsd).toBeCloseTo(2.8, 10);
     expect(lite?.costUsd).toBeCloseTo(0.1, 10);
+  });
+});
+
+describe("getWeeklyUsage（costUsd 永続化との併用）", () => {
+  let db: TestDb;
+
+  beforeEach(async () => {
+    db = await createTestDb();
+    testDbHolder.db = db;
+  });
+
+  it("cost_usd 永続済み行はその値、NULL 行は現行単価の概算を合算する", async () => {
+    await db.insert(llmUsage).values([
+      {
+        id: "u1",
+        model: "openai/gpt-5.6-luna",
+        inputTokens: 1_000_000,
+        outputTokens: 0,
+        totalTokens: 1_000_000,
+        source: "chat",
+        costUsd: 0.5,
+        createdAt: "2026-06-09T00:00:00.000Z",
+      },
+      {
+        id: "u2",
+        model: "openai/gpt-5.6-luna",
+        inputTokens: 1_000_000,
+        outputTokens: 0,
+        totalTokens: 1_000_000,
+        source: "chat",
+        costUsd: null,
+        createdAt: "2026-06-09T01:00:00.000Z",
+      },
+    ]);
+
+    const weekly = await getWeeklyUsage(d1, {
+      from: "2026-06-01T00:00:00.000Z",
+    });
+
+    // 永続 0.5 + NULL 行の概算（1M input × $0.20/1M = 0.2）
+    expect(weekly[0]?.costUsd).toBeCloseTo(0.7, 10);
+  });
+});
+
+describe("getThreadUsage", () => {
+  let db: TestDb;
+
+  const insertUsage = async (params: {
+    id: string;
+    model?: string;
+    inputTokens?: number;
+    outputTokens?: number;
+    cachedInputTokens?: number;
+    source?: string;
+    agent?: string | null;
+    threadId?: string | null;
+    platform?: string | null;
+    costUsd?: number | null;
+    createdAt?: string;
+  }) => {
+    await db.insert(llmUsage).values({
+      id: params.id,
+      model: params.model ?? "openai/gpt-5.6-luna",
+      inputTokens: params.inputTokens ?? 0,
+      outputTokens: params.outputTokens ?? 0,
+      cachedInputTokens: params.cachedInputTokens ?? 0,
+      totalTokens: (params.inputTokens ?? 0) + (params.outputTokens ?? 0),
+      source: params.source ?? "chat",
+      agent: params.agent,
+      threadId: params.threadId,
+      platform: params.platform,
+      costUsd: params.costUsd,
+      createdAt: params.createdAt ?? "2026-06-09T00:00:00.000Z",
+    });
+  };
+
+  const period = {
+    from: "2026-06-01T00:00:00.000Z",
+    to: "2026-06-15T00:00:00.000Z",
+  };
+
+  beforeEach(async () => {
+    db = await createTestDb();
+    testDbHolder.db = db;
+  });
+
+  it("スレッドごとに合算し、chat 行数をメッセージ数として数える", async () => {
+    await insertThread(db, "t1", WEB_RESOURCE);
+    await insertUsage({
+      id: "u1",
+      threadId: "t1",
+      platform: "web",
+      inputTokens: 100,
+      outputTokens: 50,
+      costUsd: 0.01,
+    });
+    await insertUsage({
+      id: "u2",
+      threadId: "t1",
+      platform: "web",
+      inputTokens: 200,
+      outputTokens: 100,
+      costUsd: 0.02,
+    });
+    await insertUsage({
+      id: "u3",
+      threadId: "t1",
+      source: "intent-classify",
+      inputTokens: 10,
+      costUsd: 0.001,
+    });
+
+    const result = await getThreadUsage(d1, period, { limit: 50 });
+
+    expect(result.threads).toHaveLength(1);
+    expect(result.threads[0]).toMatchObject({
+      threadId: "t1",
+      platform: "web",
+      messageCount: 2,
+      inputTokens: 310,
+      outputTokens: 150,
+    });
+    expect(result.threads[0]?.costUsd).toBeCloseTo(0.031, 10);
+    expect(result.threads[0]?.models).toEqual(["openai/gpt-5.6-luna"]);
+  });
+
+  it("会話ごと・全体のエージェント別内訳をコスト降順で返す", async () => {
+    await insertUsage({
+      id: "u1",
+      threadId: "t1",
+      agent: "nepp-chan",
+      costUsd: 0.01,
+    });
+    await insertUsage({
+      id: "u2",
+      threadId: "t1",
+      agent: "knowledge",
+      source: "subagent",
+      costUsd: 0.05,
+    });
+    await insertUsage({
+      id: "u3",
+      threadId: "t1",
+      agent: "knowledge",
+      source: "subagent",
+      model: "gemini-flash-lite-latest",
+      costUsd: 0.02,
+    });
+
+    const result = await getThreadUsage(d1, period, { limit: 50 });
+
+    expect(result.threads[0]?.agents).toEqual([
+      expect.objectContaining({ agent: "knowledge", costUsd: 0.07 }),
+      expect.objectContaining({ agent: "nepp-chan", costUsd: 0.01 }),
+    ]);
+    expect(result.summary.byAgent).toEqual([
+      expect.objectContaining({ agent: "knowledge", costUsd: 0.07 }),
+      expect.objectContaining({ agent: "nepp-chan", costUsd: 0.01 }),
+    ]);
+  });
+
+  it("検索クエリの埋め込みは会話原価に含め、定期処理は含めない", async () => {
+    await insertUsage({ id: "u1", threadId: "t1", costUsd: 0.01 });
+    await insertUsage({
+      id: "u2",
+      threadId: "t1",
+      agent: "embedding",
+      source: "embedding",
+      model: "gemini-embedding-001",
+      costUsd: 0.02,
+    });
+    await insertUsage({
+      id: "u3",
+      threadId: null,
+      source: "weekly-report",
+      costUsd: 0.03,
+    });
+
+    const result = await getThreadUsage(d1, period, { limit: 50 });
+
+    expect(result.summary.conversationCostUsd).toBeCloseTo(0.03, 10);
+    expect(result.summary.byAgent.map((a) => a.agent)).toEqual([
+      "embedding",
+      null,
+    ]);
+  });
+
+  it("agent 列追加前の行（agent NULL）も 1 グループとして集計する", async () => {
+    await insertUsage({ id: "u1", threadId: "t1", agent: null, costUsd: 0.01 });
+
+    const result = await getThreadUsage(d1, period, { limit: 50 });
+
+    expect(result.threads[0]?.agents).toEqual([
+      expect.objectContaining({ agent: null, costUsd: 0.01 }),
+    ]);
+  });
+
+  it("cost_usd NULL の行は現行単価の概算で補完する", async () => {
+    await insertUsage({
+      id: "u1",
+      threadId: "t1",
+      inputTokens: 1_000_000,
+      costUsd: 0.5,
+    });
+    await insertUsage({
+      id: "u2",
+      threadId: "t1",
+      inputTokens: 1_000_000,
+      costUsd: null,
+    });
+
+    const result = await getThreadUsage(d1, period, { limit: 50 });
+
+    expect(result.threads[0]?.costUsd).toBeCloseTo(0.7, 10);
+  });
+
+  it("mastra_messages から会話の開始・終了・所要秒数を出す", async () => {
+    await insertThread(db, "t1", WEB_RESOURCE);
+    await insertMessage(db, {
+      id: "m1",
+      threadId: "t1",
+      createdAt: "2026-06-09T00:00:00.000Z",
+    });
+    await insertMessage(db, {
+      id: "m2",
+      threadId: "t1",
+      role: "assistant",
+      createdAt: "2026-06-09T00:10:00.000Z",
+    });
+    await insertUsage({ id: "u1", threadId: "t1", costUsd: 0.01 });
+
+    const result = await getThreadUsage(d1, period, { limit: 50 });
+
+    expect(result.threads[0]).toMatchObject({
+      firstMessageAt: "2026-06-09T00:00:00.000Z",
+      lastMessageAt: "2026-06-09T00:10:00.000Z",
+      durationSeconds: 600,
+    });
+  });
+
+  it("会話時間は集計期間内のメッセージだけで計算する", async () => {
+    await insertThread(db, "t1", "line:abc");
+    // 期間外（過去）のメッセージは LINE の生涯スレッドを想定
+    await insertMessage(db, {
+      id: "m0",
+      threadId: "t1",
+      createdAt: "2026-05-01T00:00:00.000Z",
+    });
+    await insertMessage(db, {
+      id: "m1",
+      threadId: "t1",
+      createdAt: "2026-06-09T00:00:00.000Z",
+    });
+    await insertMessage(db, {
+      id: "m2",
+      threadId: "t1",
+      role: "assistant",
+      createdAt: "2026-06-09T00:05:00.000Z",
+    });
+    await insertUsage({ id: "u1", threadId: "t1", costUsd: 0.01 });
+
+    const result = await getThreadUsage(d1, period, { limit: 50 });
+
+    expect(result.threads[0]).toMatchObject({
+      firstMessageAt: "2026-06-09T00:00:00.000Z",
+      durationSeconds: 300,
+    });
+  });
+
+  it("メッセージが保持期間切れで無いスレッドは時刻・所要秒数が null になる", async () => {
+    await insertUsage({ id: "u1", threadId: "t1", costUsd: 0.01 });
+
+    const result = await getThreadUsage(d1, period, { limit: 50 });
+
+    expect(result.threads[0]).toMatchObject({
+      firstMessageAt: null,
+      lastMessageAt: null,
+      durationSeconds: null,
+    });
+  });
+
+  it("summary は会話原価と 1 メッセージ・1 会話あたりの平均を返す", async () => {
+    await insertUsage({ id: "u1", threadId: "t1", costUsd: 0.03 });
+    await insertUsage({ id: "u2", threadId: "t1", costUsd: 0.01 });
+    await insertUsage({ id: "u3", threadId: "t2", costUsd: 0.02 });
+
+    const result = await getThreadUsage(d1, period, { limit: 50 });
+
+    expect(result.summary.threads).toBe(2);
+    expect(result.summary.messages).toBe(3);
+    expect(result.summary.conversationCostUsd).toBeCloseTo(0.06, 10);
+    expect(result.summary.avgCostPerMessageUsd).toBeCloseTo(0.02, 10);
+    expect(result.summary.avgCostPerThreadUsd).toBeCloseTo(0.03, 10);
+  });
+
+  it("記録が無ければ平均は null を返す", async () => {
+    const result = await getThreadUsage(d1, period, { limit: 50 });
+
+    expect(result.summary).toMatchObject({
+      threads: 0,
+      messages: 0,
+      avgCostPerMessageUsd: null,
+      avgCostPerThreadUsd: null,
+    });
+    expect(result.threads).toEqual([]);
+  });
+
+  it("limit はコスト降順で適用し、summary は全件で計算する", async () => {
+    await insertUsage({ id: "u1", threadId: "t1", costUsd: 0.01 });
+    await insertUsage({ id: "u2", threadId: "t2", costUsd: 0.05 });
+
+    const result = await getThreadUsage(d1, period, { limit: 1 });
+
+    expect(result.threads).toHaveLength(1);
+    expect(result.threads[0]?.threadId).toBe("t2");
+    expect(result.summary.threads).toBe(2);
+  });
+
+  it("期間外の行は集計しない", async () => {
+    await insertUsage({
+      id: "u1",
+      threadId: "t1",
+      costUsd: 0.01,
+      createdAt: "2026-06-20T00:00:00.000Z",
+    });
+
+    const result = await getThreadUsage(d1, period, { limit: 50 });
+
+    expect(result.threads).toEqual([]);
+    expect(result.summary.conversationCostUsd).toBe(0);
+  });
+});
+
+describe("getOperationCost", () => {
+  let db: TestDb;
+
+  const period = {
+    from: "2026-06-01T00:00:00.000Z",
+    to: "2026-06-15T00:00:00.000Z",
+  };
+
+  const insertUsage = async (params: {
+    id: string;
+    source: string;
+    agent?: string;
+    model?: string;
+    totalTokens?: number;
+    costUsd?: number;
+    threadId?: string | null;
+    createdAt?: string;
+  }) => {
+    await db.insert(llmUsage).values({
+      id: params.id,
+      model: params.model ?? "openai/gpt-5.6-luna",
+      totalTokens: params.totalTokens ?? 0,
+      source: params.source,
+      agent: params.agent,
+      threadId: params.threadId,
+      costUsd: params.costUsd,
+      createdAt: params.createdAt ?? "2026-06-09T00:00:00.000Z",
+    });
+  };
+
+  beforeEach(async () => {
+    db = await createTestDb();
+    testDbHolder.db = db;
+  });
+
+  it("会話・ナレッジ基盤・バッチの 3 区分に分けて集計する", async () => {
+    await insertUsage({
+      id: "u1",
+      source: "chat",
+      agent: "nepp-chan",
+      threadId: "t1",
+      costUsd: 0.05,
+    });
+    await insertUsage({
+      id: "u2",
+      source: "rerank",
+      agent: "knowledge-reranker",
+      threadId: "t1",
+      costUsd: 0.02,
+    });
+    await insertUsage({
+      id: "u3",
+      source: "embedding",
+      agent: "embedding",
+      model: "gemini-embedding-001",
+      costUsd: 0.01,
+    });
+    await insertUsage({
+      id: "u4",
+      source: "weekly-report",
+      agent: "weekly-report",
+      costUsd: 0.03,
+    });
+
+    const result = await getOperationCost(d1, period);
+
+    expect(result.totalCostUsd).toBeCloseTo(0.11, 10);
+    expect(
+      result.byCategory.map((c) => [c.category, Number(c.costUsd.toFixed(4))]),
+    ).toEqual([
+      ["conversation", 0.07],
+      ["batch", 0.03],
+      ["knowledge-base", 0.01],
+    ]);
+  });
+
+  it("区分ごとにエージェント別の内訳を返す", async () => {
+    await insertUsage({
+      id: "u1",
+      source: "chat",
+      agent: "nepp-chan",
+      costUsd: 0.02,
+    });
+    await insertUsage({
+      id: "u2",
+      source: "subagent",
+      agent: "knowledge",
+      costUsd: 0.06,
+    });
+
+    const result = await getOperationCost(d1, period);
+
+    expect(result.byCategory[0]?.agents).toEqual([
+      expect.objectContaining({ agent: "knowledge", costUsd: 0.06 }),
+      expect.objectContaining({ agent: "nepp-chan", costUsd: 0.02 }),
+    ]);
+  });
+
+  it("プロバイダ別（OpenAI / Google）をコスト降順で返す", async () => {
+    await insertUsage({
+      id: "u1",
+      source: "chat",
+      model: "openai/gpt-5.6-luna",
+      totalTokens: 100,
+      costUsd: 0.05,
+    });
+    await insertUsage({
+      id: "u2",
+      source: "embedding",
+      model: "gemini-embedding-001",
+      totalTokens: 200,
+      costUsd: 0.01,
+    });
+    await insertUsage({
+      id: "u3",
+      source: "weekly-report",
+      model: "gemini-2.5-flash",
+      totalTokens: 300,
+      costUsd: 0.02,
+    });
+
+    const result = await getOperationCost(d1, period);
+
+    expect(result.byProvider).toEqual([
+      { provider: "openai", totalTokens: 100, costUsd: 0.05 },
+      { provider: "google", totalTokens: 500, costUsd: 0.03 },
+    ]);
+  });
+
+  it("JST の日付ごとの推移を古い順に返す", async () => {
+    await insertUsage({
+      id: "u1",
+      source: "chat",
+      costUsd: 0.02,
+      createdAt: "2026-06-09T15:00:00.000Z", // JST 06-10 00:00
+    });
+    await insertUsage({
+      id: "u2",
+      source: "chat",
+      costUsd: 0.03,
+      createdAt: "2026-06-09T14:59:00.000Z", // JST 06-09 23:59
+    });
+    await insertUsage({
+      id: "u3",
+      source: "rerank",
+      costUsd: 0.01,
+      createdAt: "2026-06-09T16:00:00.000Z", // JST 06-10 01:00
+    });
+
+    const result = await getOperationCost(d1, period);
+
+    expect(result.daily).toEqual([
+      { date: "2026-06-09", costUsd: 0.03 },
+      { date: "2026-06-10", costUsd: expect.closeTo(0.03, 10) },
+    ]);
+  });
+
+  it("期間外の行は集計しない", async () => {
+    await insertUsage({
+      id: "u1",
+      source: "chat",
+      costUsd: 0.05,
+      createdAt: "2026-06-20T00:00:00.000Z",
+    });
+
+    const result = await getOperationCost(d1, period);
+
+    expect(result.totalCostUsd).toBe(0);
+    expect(result.byCategory).toEqual([]);
+    expect(result.daily).toEqual([]);
+  });
+});
+
+describe("getThreadTurnUsage", () => {
+  let db: TestDb;
+
+  const insertUsage = async (params: {
+    id: string;
+    turnIndex?: number | null;
+    agent?: string | null;
+    source?: string;
+    model?: string;
+    totalTokens?: number;
+    costUsd?: number | null;
+    durationMs?: number | null;
+  }) => {
+    await db.insert(llmUsage).values({
+      id: params.id,
+      model: params.model ?? "openai/gpt-5.6-luna",
+      totalTokens: params.totalTokens ?? 0,
+      source: params.source ?? "chat",
+      agent: params.agent,
+      turnIndex: params.turnIndex,
+      durationMs: params.durationMs,
+      threadId: "t1",
+      costUsd: params.costUsd,
+      createdAt: "2026-06-09T00:00:00.000Z",
+    });
+  };
+
+  beforeEach(async () => {
+    db = await createTestDb();
+    testDbHolder.db = db;
+  });
+
+  it("往復ごとにコスト・エージェント内訳・所要時間を返す", async () => {
+    await insertUsage({
+      id: "u1",
+      turnIndex: 1,
+      agent: "nepp-chan",
+      costUsd: 0.01,
+      durationMs: 18_000,
+    });
+    await insertUsage({
+      id: "u2",
+      turnIndex: 1,
+      agent: "knowledge",
+      source: "subagent",
+      costUsd: 0.05,
+    });
+    await insertUsage({
+      id: "u3",
+      turnIndex: 2,
+      agent: "nepp-chan",
+      costUsd: 0.002,
+      durationMs: 3_000,
+    });
+
+    const { turns } = await getThreadTurnUsage(d1, "t1");
+
+    expect(turns).toHaveLength(2);
+    expect(turns[0]).toMatchObject({
+      turnIndex: 1,
+      durationMs: 18_000,
+      answeredAt: "2026-06-09T00:00:00.000Z",
+    });
+    expect(turns[0]?.costUsd).toBeCloseTo(0.06, 10);
+    expect(turns[0]?.agents).toEqual([
+      expect.objectContaining({ agent: "knowledge", costUsd: 0.05 }),
+      expect.objectContaining({ agent: "nepp-chan", costUsd: 0.01 }),
+    ]);
+    expect(turns[1]).toMatchObject({ turnIndex: 2, durationMs: 3_000 });
+  });
+
+  it("turn_index 記録前の行は turnIndex: null として末尾にまとめる", async () => {
+    await insertUsage({ id: "u1", turnIndex: null, costUsd: 0.03 });
+    await insertUsage({ id: "u2", turnIndex: 1, costUsd: 0.01 });
+
+    const { turns } = await getThreadTurnUsage(d1, "t1");
+
+    expect(turns.map((t) => t.turnIndex)).toEqual([1, null]);
+  });
+
+  it("記録が無ければ空配列を返す", async () => {
+    const { turns } = await getThreadTurnUsage(d1, "t1");
+    expect(turns).toEqual([]);
   });
 });
 
