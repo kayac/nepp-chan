@@ -7,6 +7,8 @@ import {
 } from "~/mastra/tools/broadcast-get-tool";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 
+const KNOWLEDGE_MAX_STEPS = 5;
+
 const baseInstructions = `
 あなたは音威子府村の情報検索専門エージェントです。
 村のナレッジとLINE配信から、歴史、施設、観光、行政、行事などを検索して回答します。
@@ -17,6 +19,9 @@ const baseInstructions = `
 - 「この前のお知らせ」「さっきの案内」など配信を指す質問では ${broadcastGetToolName} を優先する
 - 検索結果を全て確認し、質問に関係する情報を統合する。score は関連性の目安として使う
 - 具体的な日程、曜日、手順、料金などが見つからず、title・source・section に手がかりがある場合は、それらを含むクエリに書き換えて再検索する
+- 再検索は観点を変えるときだけ行う。語順や語尾を変えただけの同じ意図のクエリを繰り返さない
+- 2回検索して出てこない情報はナレッジに無いと判断し、探し続けずに回答へ進む
+- クエリは検索したい内容の自然な日本語で書く。site: や引用符などの検索演算子は効果がないため使わない
 
 ## 回答
 - 検索結果にない情報を補完しない
@@ -64,9 +69,11 @@ ${getCurrentDateInfo()}
 - 過去を明示する表現（「去年の」「以前の」「○年の」）がある場合のみ、該当時期で検索する
 `;
 
+const KNOWLEDGE_EFFORT: ReasoningEffort = "medium";
+
 export const createKnowledgeAgent = ({
   model,
-  effort,
+  effort = KNOWLEDGE_EFFORT,
 }: {
   model?: string;
   effort?: ReasoningEffort;
@@ -77,7 +84,7 @@ export const createKnowledgeAgent = ({
     description:
       "音威子府村の情報を検索・回答する担当。村に関する情報（歴史、施設、観光、村長、行政、行事）を検索して回答する。",
     instructions: knowledgeAgentInstructions,
-    ...modelWithReasoning({ model, effort }),
+    ...modelWithReasoning({ model, effort, maxSteps: KNOWLEDGE_MAX_STEPS }),
     tools: {
       knowledgeSearchTool,
       [broadcastGetToolName]: broadcastGetTool,

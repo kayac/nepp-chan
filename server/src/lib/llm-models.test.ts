@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   GEMINI_FLASH_EVAL,
-  type Intent,
   modelWithReasoning,
   OPENAI_LITE,
   OPENAI_MAIN,
@@ -59,20 +58,35 @@ describe("modelWithReasoning", () => {
 });
 
 describe("resolveModelTier", () => {
-  describe("Admin は常に thinking/web ティア", () => {
-    const intents: Intent[] = ["casual", "thinking"];
+  describe("Admin も intent に従う（maxSteps だけ引き上げる）", () => {
     const platforms = ["web", "line"] as const;
 
-    for (const intent of intents) {
-      for (const platform of platforms) {
-        it(`intent=${intent}, platform=${platform} でもプライマリ LITE + xhigh`, () => {
-          const tier = resolveModelTier({ intent, platform, isAdmin: true });
-          expect(tier.model[0].model).toBe(OPENAI_LITE);
-          expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
-            "xhigh",
-          );
+    for (const platform of platforms) {
+      it(`casual/${platform} は effort=medium のまま maxSteps だけ thinking と揃える`, () => {
+        const tier = resolveModelTier({
+          intent: "casual",
+          platform,
+          isAdmin: true,
         });
-      }
+        expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
+          "medium",
+        );
+        expect(tier.defaultOptions.maxSteps).toBe(
+          resolveModelTier({ intent: "thinking", platform, isAdmin: false })
+            .defaultOptions.maxSteps,
+        );
+      });
+
+      it(`thinking/${platform} は非 Admin と同じ設定`, () => {
+        const tier = resolveModelTier({
+          intent: "thinking",
+          platform,
+          isAdmin: true,
+        });
+        expect(tier).toEqual(
+          resolveModelTier({ intent: "thinking", platform, isAdmin: false }),
+        );
+      });
     }
   });
 

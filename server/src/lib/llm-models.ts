@@ -52,9 +52,17 @@ export const reasoningProviderOptions = (
 export const modelWithReasoning = ({
   model = OPENAI_LITE,
   effort = "high" as ReasoningEffort,
+  maxSteps,
+}: {
+  model?: string;
+  effort?: ReasoningEffort;
+  maxSteps?: number;
 } = {}) => ({
   model,
-  defaultOptions: { providerOptions: reasoningProviderOptions(effort) },
+  defaultOptions: {
+    providerOptions: reasoningProviderOptions(effort),
+    ...(maxSteps !== undefined && { maxSteps }),
+  },
 });
 
 export type Intent = "casual" | "thinking";
@@ -148,7 +156,8 @@ export const voiceModelConfig: AgentModelConfig = {
 };
 
 /**
- * Intent・プラットフォーム・管理者フラグからモデル設定を解決する
+ * Intent・プラットフォーム・管理者フラグからモデル設定を解決する。
+ * 管理者は管理ツールを連鎖的に呼ぶため、casual でも thinking と同じ maxSteps を与える
  */
 export const resolveModelTier = ({
   intent,
@@ -159,10 +168,14 @@ export const resolveModelTier = ({
   platform: "web" | "line";
   isAdmin: boolean;
 }): AgentModelConfig => {
-  if (isAdmin) {
-    return MODEL_TIERS.thinking.web;
+  const tier = MODEL_TIERS[intent][platform];
+  if (isAdmin && tier.defaultOptions.maxSteps < MAX_STEPS.thinking) {
+    return {
+      ...tier,
+      defaultOptions: { ...tier.defaultOptions, maxSteps: MAX_STEPS.thinking },
+    };
   }
-  return MODEL_TIERS[intent][platform];
+  return tier;
 };
 
 export const primaryModelId = (config: AgentModelConfig) =>
