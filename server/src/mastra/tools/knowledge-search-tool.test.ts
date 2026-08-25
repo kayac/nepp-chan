@@ -57,6 +57,11 @@ describe("knowledgeSearchTool.execute", () => {
     );
 
     expect(result.results).toHaveLength(1);
-    expect(searchKnowledge).toHaveBeenCalledWith("歴史", env.VECTORIZE, "key");
+    expect(searchKnowledge).toHaveBeenCalledWith(
+      "歴史",
+      env.VECTORIZE,
+      "key",
+      expect.anything(),
+    );
   });
 });

@@ -56,6 +56,7 @@ vi.mock("~/lib/split-message", () => ({
 
 vi.mock("~/services/analytics/llm-usage", () => ({
   recordLlmUsage: vi.fn(async () => undefined),
+  nextTurnIndex: vi.fn(async () => 1),
 }));
 
 vi.mock("~/lib/logger", () => ({
@@ -213,14 +214,19 @@ describe("generateReply", () => {
 
     await generateReply(baseParams);
 
-    expect(recordLlmUsage).toHaveBeenCalledWith(baseParams.env.DB, {
-      model: "google/gemini-flash-lite-latest",
-      usage: { inputTokens: 20, outputTokens: 10 },
-      platform: "line",
-      source: "chat",
-      intent: "casual",
-      threadId: "thr-1",
-    });
+    expect(recordLlmUsage).toHaveBeenCalledWith(
+      baseParams.env.DB,
+      expect.objectContaining({
+        model: "google/gemini-flash-lite-latest",
+        usage: { inputTokens: 20, outputTokens: 10 },
+        platform: "line",
+        source: "chat",
+        agent: "nepp-chan",
+        intent: "casual",
+        threadId: "thr-1",
+        turnIndex: 1,
+      }),
+    );
   });
 
   it("agent.generate に resource / thread を渡す", async () => {

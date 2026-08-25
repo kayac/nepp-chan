@@ -89,6 +89,7 @@ const generateWeeklySummary = async (
     model: OPENAI_MAIN,
     usage: response.totalUsage,
     source: "weekly-report",
+    agent: "weekly-report",
   });
 
   return response.text;
