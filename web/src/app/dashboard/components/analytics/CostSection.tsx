@@ -27,7 +27,9 @@ export const CostSection = () => {
   const error = operation.error ?? threadUsage.error;
   const summary = threadUsage.data?.summary;
   const threads = threadUsage.data?.threads ?? [];
-  const byAgent = summary?.byAgent ?? [];
+  const byAgent = (summary?.byAgent ?? []).filter(
+    (entry) => entry.agent !== null,
+  );
   const agentTotal = byAgent.reduce((sum, a) => sum + a.costUsd, 0);
   const maxThreadCost = threads.reduce((max, t) => Math.max(max, t.costUsd), 0);
   const avgMessage = summary?.avgCostPerMessageUsd ?? null;

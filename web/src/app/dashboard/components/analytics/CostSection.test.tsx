@@ -29,6 +29,7 @@ const threadUsage = {
     byAgent: [
       { agent: "knowledge-reranker", totalTokens: 537_000, costUsd: 0.185 },
       { agent: "nepp-chan", totalTokens: 566_000, costUsd: 0.083 },
+      { agent: null, totalTokens: 10_000, costUsd: 0.01 },
     ],
   },
   threads: [
@@ -120,6 +121,7 @@ describe("CostSection", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("リランク")).toBeInTheDocument();
     expect(screen.getByText("¥27.75")).toBeInTheDocument();
+    expect(screen.queryByText("記録前")).toBeNull();
   });
 
   it("会話行にチャネルとメッセージ数を表示する", async () => {
@@ -137,6 +139,21 @@ describe("CostSection", () => {
       http.get(`${API}/admin/analytics/usage/threads/fe6eb2b6-thread-1`, () =>
         HttpResponse.json({
           turns: [
+            {
+              turnIndex: null,
+              answeredAt: null,
+              totalTokens: 1_000,
+              costUsd: 0.01,
+              durationMs: null,
+              intent: null,
+              agents: [
+                {
+                  agent: null,
+                  totalTokens: 1_000,
+                  costUsd: 0.01,
+                },
+              ],
+            },
             {
               turnIndex: 1,
               answeredAt: "2026-08-25T08:24:00.000Z",
@@ -166,6 +183,7 @@ describe("CostSection", () => {
     expect(screen.getByText("thinking")).toBeInTheDocument();
     expect(screen.getByText("ナレッジ検索")).toBeInTheDocument();
     expect(screen.getByText("¥7.5")).toBeInTheDocument();
+    expect(screen.queryByText("記録前")).toBeNull();
   });
 
   it("記録が無ければ空状態を表示する", async () => {

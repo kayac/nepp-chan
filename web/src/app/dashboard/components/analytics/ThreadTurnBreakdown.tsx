@@ -16,7 +16,7 @@ const formatDurationMs = (ms: number | null) =>
 
 export const ThreadTurnBreakdown = ({ threadId }: Props) => {
   const { data, isLoading, error } = useThreadTurnUsage(threadId);
-  const turns = data?.turns ?? [];
+  const turns = (data?.turns ?? []).filter((turn) => turn.turnIndex !== null);
 
   if (isLoading) return <SectionLoading />;
   if (error != null) return <SectionError error={error} />;
