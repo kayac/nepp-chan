@@ -299,8 +299,9 @@ describe("GET /usage/threads/{threadId}", () => {
         totalTokens: 1000,
         costUsd: 0.05,
         durationMs: 18_000,
+        intent: "thinking",
         agents: [
-          { agent: "knowledge", totalTokens: 800, costUsd: 0.04, calls: 3 },
+          { agent: "knowledge", totalTokens: 800, costUsd: 0.04 },
         ],
       },
     ],

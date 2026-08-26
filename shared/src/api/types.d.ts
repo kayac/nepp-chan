@@ -1121,6 +1121,7 @@ export interface paths {
                                 totalTokens: number;
                                 costUsd: number;
                                 durationMs: number | null;
+                                intent: string | null;
                                 agents: {
                                     agent: string | null;
                                     totalTokens: number;

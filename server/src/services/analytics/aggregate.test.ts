@@ -834,6 +834,7 @@ describe("getThreadTurnUsage", () => {
     agent?: string | null;
     source?: string;
     model?: string;
+    intent?: "casual" | "thinking";
     totalTokens?: number;
     costUsd?: number | null;
     durationMs?: number | null;
@@ -844,6 +845,7 @@ describe("getThreadTurnUsage", () => {
       totalTokens: params.totalTokens ?? 0,
       source: params.source ?? "chat",
       agent: params.agent,
+      intent: params.intent,
       turnIndex: params.turnIndex,
       durationMs: params.durationMs,
       threadId: "t1",
@@ -894,6 +896,25 @@ describe("getThreadTurnUsage", () => {
       expect.objectContaining({ agent: "nepp-chan", costUsd: 0.01 }),
     ]);
     expect(turns[1]).toMatchObject({ turnIndex: 2, durationMs: 3_000 });
+  });
+
+  it("本体の応答行から intent を取り出す", async () => {
+    await insertUsage({
+      id: "u1",
+      turnIndex: 1,
+      agent: "nepp-chan",
+      intent: "thinking",
+    });
+    await insertUsage({
+      id: "u2",
+      turnIndex: 1,
+      agent: "knowledge",
+      source: "subagent",
+    });
+
+    const { turns } = await getThreadTurnUsage(d1, "t1");
+
+    expect(turns[0]?.intent).toBe("thinking");
   });
 
   it("turn_index 記録前の行は turnIndex: null として末尾にまとめる", async () => {

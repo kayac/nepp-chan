@@ -471,6 +471,7 @@ export const getThreadTurnUsage = async (d1: D1Database, threadId: string) => {
       agent: string | null;
       durationMs: number | null;
       answeredAt: string;
+      intent: string | null;
     }
   >(sql`
     SELECT turn_index AS turnIndex,
@@ -478,6 +479,7 @@ export const getThreadTurnUsage = async (d1: D1Database, threadId: string) => {
            model,
            MAX(CASE WHEN source = 'chat' THEN duration_ms END) AS durationMs,
            MAX(CASE WHEN source = 'chat' THEN created_at END) AS answeredAt,
+           MAX(CASE WHEN source = 'chat' THEN intent END) AS intent,
            ${usageSumColumns}
     FROM llm_usage
     WHERE thread_id = ${threadId}
@@ -492,6 +494,7 @@ export const getThreadTurnUsage = async (d1: D1Database, threadId: string) => {
     costUsd: number;
     durationMs: number | null;
     answeredAt: string | null;
+    intent: string | null;
     agentTotals: Map<string | null, AgentTotals>;
   };
   const turns = new Map<number | null, TurnTotals>();
@@ -503,12 +506,14 @@ export const getThreadTurnUsage = async (d1: D1Database, threadId: string) => {
       costUsd: 0,
       durationMs: null,
       answeredAt: null,
+      intent: null,
       agentTotals: new Map<string | null, AgentTotals>(),
     };
     current.totalTokens += Number(row.totalTokens);
     current.costUsd += usageCostUsd(row);
     current.durationMs = current.durationMs ?? row.durationMs ?? null;
     current.answeredAt = current.answeredAt ?? row.answeredAt ?? null;
+    current.intent = current.intent ?? row.intent ?? null;
     addAgentTotals(current.agentTotals, row);
     turns.set(key, current);
   }

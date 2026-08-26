@@ -37,6 +37,7 @@ export const ThreadTurnBreakdown = ({ threadId }: Props) => {
             <th className="px-2 py-1 text-right font-medium">コスト</th>
             <th className="px-2 py-1 text-right font-medium">トークン</th>
             <th className="px-2 py-1 text-right font-medium">応答時間</th>
+            <th className="px-2 py-1 text-left font-medium">種別</th>
             <th className="px-2 py-1 text-left font-medium">内訳</th>
           </tr>
         </thead>
@@ -54,6 +55,9 @@ export const ThreadTurnBreakdown = ({ threadId }: Props) => {
               </td>
               <td className="px-2 py-1 text-right tabular-nums text-(--fg-2)">
                 {formatDurationMs(turn.durationMs)}
+              </td>
+              <td className="px-2 py-1 text-(--fg-2) whitespace-nowrap">
+                {turn.intent ?? "-"}
               </td>
               <td className="px-2 py-1 min-w-40">
                 {turn.costUsd > 0 && (

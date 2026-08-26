@@ -143,6 +143,7 @@ describe("CostSection", () => {
               totalTokens: 12_000,
               costUsd: 0.072,
               durationMs: 33_200,
+              intent: "thinking",
               agents: [
                 {
                   agent: "knowledge",
@@ -162,6 +163,7 @@ describe("CostSection", () => {
 
     expect(await screen.findByText("8/25 17:24")).toBeInTheDocument();
     expect(screen.getByText("33.2秒")).toBeInTheDocument();
+    expect(screen.getByText("thinking")).toBeInTheDocument();
     expect(screen.getByText("ナレッジ検索")).toBeInTheDocument();
     expect(screen.getByText("¥7.5")).toBeInTheDocument();
   });

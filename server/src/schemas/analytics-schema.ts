@@ -185,6 +185,8 @@ export const threadTurnUsageResponseSchema = z.object({
       totalTokens: z.number(),
       costUsd: z.number(),
       durationMs: z.number().nullable(),
+      // casual / thinking。intent 記録前の行は null
+      intent: z.string().nullable(),
       agents: z.array(agentCostSchema),
     }),
   ),
