@@ -10,10 +10,11 @@ export const threadKeys = {
     [...threadKeys.all, "messages", threadId] as const,
 };
 
-export const useThreads = (page = 0, perPage = 20) =>
+export const useThreads = (enabled = true, page = 0, perPage = 20) =>
   useQuery({
     queryKey: threadKeys.list(),
     queryFn: () => threadRepository.fetchThreads(page, perPage),
+    enabled,
   });
 
 export const useThread = (threadId: string) =>
