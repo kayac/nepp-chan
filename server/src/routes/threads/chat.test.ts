@@ -336,6 +336,7 @@ describe("chatRoutes: POST /:threadId/chat", () => {
       buildReq("/thread-1/chat", {
         ...validBody,
         siteHost: "www.vill.otoineppu.hokkaido.jp",
+        currentPageUrl: "https://www.vill.otoineppu.hokkaido.jp/kurashi/hoken/",
       }),
       undefined,
       mockEnv,
@@ -348,7 +349,37 @@ describe("chatRoutes: POST /:threadId/chat", () => {
     expect(mockCreateNeppChanAgent).toHaveBeenCalledWith(
       expect.objectContaining({
         siteInstructions: "行政手続きの案内を優先する",
+        currentPageUrl: "https://www.vill.otoineppu.hokkaido.jp/kurashi/hoken/",
       }),
+    );
+  });
+
+  it("登録サイトと異なる currentPageUrl はエージェントに渡さない", async () => {
+    useAnonAuth(WIDGET_RES_ID);
+    mockGetThreadById.mockResolvedValue({
+      ...ownThread,
+      resourceId: WIDGET_RES_ID,
+    });
+    mockFindWidgetSiteByHost.mockResolvedValue({
+      id: "ws-1",
+      host: "vill.otoineppu.hokkaido.jp",
+      instructions: "行政手続きの案内を優先する",
+      createdAt: "2026-08-12T00:00:00.000Z",
+      updatedAt: null,
+    });
+
+    await routes.request(
+      buildReq("/thread-1/chat", {
+        ...validBody,
+        siteHost: "www.vill.otoineppu.hokkaido.jp",
+        currentPageUrl: "https://evil.example.com/kurashi/hoken/",
+      }),
+      undefined,
+      mockEnv,
+    );
+
+    expect(mockCreateNeppChanAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ currentPageUrl: undefined }),
     );
   });
 

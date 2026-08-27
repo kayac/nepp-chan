@@ -7,6 +7,7 @@ import { primaryModelId, resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import type { PrincipalVariables } from "~/lib/principal";
 import { getStorage } from "~/lib/storage";
+import { normalizeSiteHost } from "~/lib/widget-site";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { requireAuth } from "~/middleware/auth";
@@ -29,6 +30,7 @@ const ChatSendRequestSchema = z.object({
   }),
   intent: z.enum(["casual", "thinking"]).optional(),
   siteHost: z.string().max(255).optional(),
+  currentPageUrl: z.url().max(2048).optional(),
 });
 
 const chatRoute = createRoute({
@@ -66,7 +68,12 @@ const chatRoute = createRoute({
 
 chatRoutes.openapi(chatRoute, async (c) => {
   const { threadId } = c.req.valid("param");
-  const { message, intent: fixedIntent, siteHost } = c.req.valid("json");
+  const {
+    message,
+    intent: fixedIntent,
+    siteHost,
+    currentPageUrl,
+  } = c.req.valid("json");
   const thread = c.get("thread");
   const principal = c.get("principal");
 
@@ -85,6 +92,12 @@ chatRoutes.openapi(chatRoute, async (c) => {
     platform === "widget" && siteHost
       ? await widgetSiteRepository.findByHost(c.env.DB, siteHost)
       : null;
+  const verifiedCurrentPageUrl =
+    site &&
+    currentPageUrl &&
+    normalizeSiteHost(new URL(currentPageUrl).hostname) === site.host
+      ? currentPageUrl
+      : undefined;
 
   const storage = await getStorage(c.env.DB);
 
@@ -105,6 +118,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
     modelConfig,
     platform,
     siteInstructions: site?.instructions,
+    currentPageUrl: verifiedCurrentPageUrl,
   });
   const mastra = new Mastra({
     agents: { neppChanAgent },
