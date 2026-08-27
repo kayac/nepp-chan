@@ -64,7 +64,7 @@ describe("WidgetSitesPanel", () => {
 
     fireEvent.change(
       screen.getByPlaceholderText(
-        "行政手続き・窓口案内の質問を優先して受け止める",
+        "設置サイトは音威子府村公式ホームページである",
       ),
       { target: { value: "案内文" } },
     );
@@ -90,7 +90,7 @@ describe("WidgetSitesPanel", () => {
     );
     fireEvent.change(
       screen.getByPlaceholderText(
-        "行政手続き・窓口案内の質問を優先して受け止める",
+        "設置サイトは音威子府村公式ホームページである",
       ),
       { target: { value: "案内文" } },
     );
@@ -195,7 +195,7 @@ describe("WidgetSitesPanel", () => {
     );
     fireEvent.change(
       screen.getByPlaceholderText(
-        "行政手続き・窓口案内の質問を優先して受け止める",
+        "設置サイトは音威子府村公式ホームページである",
       ),
       { target: { value: "案内文" } },
     );

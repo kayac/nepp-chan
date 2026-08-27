@@ -5,27 +5,31 @@ import { ChatMarkdown } from "@nepp-chan/shared/components/ChatMarkdown";
 import { MiniChatHeader } from "@nepp-chan/shared/components/MiniChatHeader";
 import { ScrollToBottomButton } from "@nepp-chan/shared/components/ScrollToBottomButton";
 import { SpeechBubble } from "@nepp-chan/shared/components/SpeechBubble";
-import {
-  INITIAL_MESSAGE,
-  SAMPLE_QUESTIONS,
-} from "@nepp-chan/shared/constants/chat-defaults";
+import { SAMPLE_QUESTIONS } from "@nepp-chan/shared/constants/chat-defaults";
 import { useStickToBottom } from "@nepp-chan/shared/hooks/useStickToBottom";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { messageText } from "@nepp-chan/shared/lib/message-text";
 import { getToolDisplayName } from "@nepp-chan/shared/lib/tool-display-text";
 import { Spinner } from "@nepp-chan/shared/ui/Loading";
 import { DefaultChatTransport, getToolName, isToolUIPart } from "ai";
-import { type SubmitEvent, useEffect, useMemo, useState } from "react";
+import { type SubmitEvent, useEffect, useMemo, useRef, useState } from "react";
 import { acquireAnonymousSession } from "./anonymous-session";
+import { requestCurrentPageUrl } from "./current-page";
 import { CLOSE_MESSAGE_TYPE } from "./messages";
 import { createThread } from "./thread";
+import { WIDGET_INITIAL_MESSAGE } from "./widget-chat-defaults";
 
 type Props = {
   apiUrl: string;
   webUrl: string;
   iconSrc?: string;
   siteHost?: string;
+  initialPageUrl?: string;
 };
+
+const WELCOME_REQUEST_MESSAGE_ID = "widget-welcome-request";
+const WELCOME_REQUEST =
+  "この設置サイトを訪れたユーザーへの最初の挨拶を2文以内で生成してください。設置サイトの文脈に沿ってサイト名を自然に含め、このページで気になることを質問できると伝えてください。検索やツールは使わないでください。";
 
 const closeWidget = () => {
   window.parent.postMessage({ type: CLOSE_MESSAGE_TYPE }, "*");
@@ -65,12 +69,14 @@ export const WidgetChat = ({
   webUrl,
   iconSrc = "/mascot/icon.png",
   siteHost,
+  initialPageUrl,
 }: Props) => {
   const [token, setToken] = useState<string | null>(null);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [bootstrapError, setBootstrapError] = useState(false);
   const [input, setInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const welcomedThreadId = useRef<string | null>(null);
 
   useEffect(() => {
     acquireAnonymousSession(apiUrl)
@@ -91,28 +97,45 @@ export const WidgetChat = ({
         api: `${apiUrl}/threads/${threadId}/chat`,
         headers: (): Record<string, string> =>
           token ? { Authorization: `Bearer ${token}` } : {},
-        prepareSendMessagesRequest({ messages }) {
+        async prepareSendMessagesRequest({ messages, body }) {
+          const currentPageUrl = await requestCurrentPageUrl(initialPageUrl);
           return {
             body: {
               message: messages[messages.length - 1],
               ...(siteHost && { siteHost }),
+              ...(currentPageUrl && { currentPageUrl }),
+              ...body,
             },
           };
         },
       }),
-    [apiUrl, threadId, token, siteHost],
+    [apiUrl, threadId, token, siteHost, initialPageUrl],
   );
 
   const { messages, sendMessage, status, error, stop } = useChat({
     // threadId 確定時に id を変えて transport の再生成を強制する
     // （useChat は id が変わらない限り transport の更新を反映しない）
     id: threadId ?? "pending",
-    messages: [INITIAL_MESSAGE],
+    messages: siteHost ? [] : [WIDGET_INITIAL_MESSAGE],
     transport,
     experimental_throttle: 50,
   });
 
   const isBusy = status === "submitted" || status === "streaming";
+
+  useEffect(() => {
+    if (!siteHost || !threadId || !isReady) return;
+    if (welcomedThreadId.current === threadId) return;
+    welcomedThreadId.current = threadId;
+    void sendMessage(
+      {
+        id: WELCOME_REQUEST_MESSAGE_ID,
+        role: "user",
+        parts: [{ type: "text", text: WELCOME_REQUEST }],
+      },
+      { body: { intent: "casual", isGreeting: true } },
+    );
+  }, [isReady, sendMessage, siteHost, threadId]);
   // ツール呼び出し中はテキストパートが途切れるので、最後のパートが text 以外なら
   // （ツール実行中のステップ境界等）待機インジケータを再表示する
   const lastMessage = messages[messages.length - 1];
@@ -175,6 +198,7 @@ export const WidgetChat = ({
         className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4"
       >
         {messages.map((m, index) => {
+          if (m.id === WELCOME_REQUEST_MESSAGE_ID) return null;
           const text = messageText(m);
           const showIndicatorHere =
             index === messages.length - 1 &&

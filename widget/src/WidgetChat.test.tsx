@@ -51,7 +51,7 @@ afterEach(() => {
 });
 
 describe("WidgetChat", () => {
-  it("初回挨拶メッセージを表示する", () => {
+  it("設置サイトが無い場合は固定の初回挨拶を表示する", () => {
     renderWidgetChat();
     expect(screen.getByText(/こんにちは〜！ねっぷちゃんだよ/)).toBeTruthy();
   });
@@ -250,12 +250,14 @@ describe("WidgetChat", () => {
     expect(body).not.toHaveProperty("intent");
   });
 
-  it("設置サイトのホストを body に載せて送る", async () => {
+  it("設置サイトの文脈で最初の挨拶を生成する", async () => {
     let body: Record<string, unknown> = {};
     server.use(
       http.post(CHAT_URL, async ({ request }) => {
         body = (await request.json()) as Record<string, unknown>;
-        return buildChatStreamResponse("答えだよ");
+        return buildChatStreamResponse(
+          "音威子府村のホームページへようこそ！気になることを聞いてね。",
+        );
       }),
     );
     render(
@@ -263,19 +265,22 @@ describe("WidgetChat", () => {
         apiUrl={API_URL}
         webUrl={WEB_URL}
         siteHost="www.vill.otoineppu.hokkaido.jp"
+        initialPageUrl="https://www.vill.otoineppu.hokkaido.jp/kurashi/"
       />,
     );
-    await waitForReady();
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "移住の補助金はある？" }),
-    );
-
     await waitFor(() => {
-      expect(screen.getByText("答えだよ")).toBeTruthy();
+      expect(
+        screen.getByText(/音威子府村のホームページへようこそ/),
+      ).toBeTruthy();
     });
 
     expect(body.siteHost).toBe("www.vill.otoineppu.hokkaido.jp");
+    expect(body.currentPageUrl).toBe(
+      "https://www.vill.otoineppu.hokkaido.jp/kurashi/",
+    );
+    expect(body.intent).toBe("casual");
+    expect(body.isGreeting).toBe(true);
+    expect(screen.queryByText(/最初の挨拶を生成/)).toBeNull();
   });
 
   it("設置サイトのホストが無ければ siteHost を送らない", async () => {

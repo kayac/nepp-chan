@@ -59,6 +59,24 @@ describe("createNeppChanAgent", () => {
       expect(ins).toContain("行政手続きの案内を優先する");
     });
 
+    it("widget の現在ページを起点に案内する共通ルールを含む", async () => {
+      const ins = await instructionsOf(
+        build({
+          platform: "widget",
+          currentPageUrl:
+            "https://www.vill.otoineppu.hokkaido.jp/kurashi/hoken/",
+        }),
+      );
+      expect(ins).toContain("ユーザーが現在表示しているページの URL");
+      expect(ins).toContain(
+        "https://www.vill.otoineppu.hokkaido.jp/kurashi/hoken/",
+      );
+      expect(ins).toContain("「このページ」「ここ」「これ」");
+      expect(ins).toContain("このページに置かれた案内役");
+      expect(ins).toContain("次に行うことや関連ページ");
+      expect(ins).toContain("URL だけを返さず");
+    });
+
     it("siteInstructions なしの widget では設置サイトの指示を含まない", async () => {
       const ins = await instructionsOf(build({ platform: "widget" }));
       expect(ins).not.toContain("設置サイトの文脈");

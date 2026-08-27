@@ -73,6 +73,7 @@ export const getConversationStats = async (d1: D1Database, period: Period) => {
       db.all<{ platform: string; count: number }>(sql`
       SELECT CASE WHEN t.resourceId LIKE 'line:%' THEN 'line'
                   WHEN t.resourceId LIKE 'admin:%' THEN 'admin'
+                  WHEN t.resourceId LIKE 'widget-%' THEN 'widget'
                   ELSE 'web' END AS platform,
              COUNT(*) AS count
       FROM mastra_messages m
