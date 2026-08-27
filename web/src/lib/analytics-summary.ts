@@ -2,6 +2,7 @@ export const PLATFORM_LABELS: Record<string, string> = {
   web: "Web",
   line: "LINE",
   admin: "管理者",
+  widget: "ウィジェット",
 };
 
 export const DOW_LABELS = ["日", "月", "火", "水", "木", "金", "土"];
