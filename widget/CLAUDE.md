@@ -13,7 +13,7 @@
 - iframe → loader の「閉じる」連携は `postMessage`。loader 側で `event.origin`（iframeSrc のオリジン）と `event.source`（iframe の contentWindow）を検証してから閉じる。
 - loader は iframe の src に `?host=<埋め込み元の origin + pathname>` を付ける。iframe は自ドメイン配信で `Referer` が使えないため、どのページに置かれた widget かはこのクエリでしか分からない。GA の `page_location` にそのまま乗るので、ページ別の利用状況はレポート上で切れる。host 側の URL に個人情報が乗りうるのでクエリ文字列とハッシュは落とす。値は自己申告なので認可には使えない。
 - iframe は上記 `host` クエリからホスト名を取り出し、チャット送信時に `siteHost` として API に渡す。さらに送信直前に loader へ `postMessage` で問い合わせ、遷移後を含む現在の `origin + pathname` を `currentPageUrl` として渡す。サーバーは `widget_sites` テーブル（管理画面の「設置サイト」タブで super_admin が編集）に完全一致で登録があり、URL のホストもその登録サイトと一致するときだけ、現在ページと登録済み instructions をねっぷちゃんへ足す。案内方法の共通ルールはコード側が持つため、instructions にはサイト名・対象範囲などサイト固有の情報だけを記載する。クエリ文字列とハッシュは渡さない。
-- 設置サイトが分かる場合は、パネルを開いた直後に登録済み instructions と現在ページを使って最初の挨拶を生成する。内部の生成依頼は画面に出さず、生成した返答だけを表示する。設置サイトがない iframe 単体表示では固定挨拶を使う。
+- 設置サイトが分かる場合は、パネルを開いた直後に登録済み instructions と現在ページを使って最初の挨拶を生成する。内部の生成依頼は画面に出さず、会話メモリにも保存せず、生成した返答だけを表示する。設置サイトがない iframe 単体表示では固定挨拶を使う。
 - ボタン設置 2500ms 後、固定挨拶文を吹き出しティーザーとして表示する。localStorage（`nepp-chan-widget:teaser-dismissed-at`）に閉じた時刻を記録し、7 日以内は再表示しない。
 
 ## host への導入

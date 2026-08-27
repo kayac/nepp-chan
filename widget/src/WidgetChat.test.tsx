@@ -279,6 +279,7 @@ describe("WidgetChat", () => {
       "https://www.vill.otoineppu.hokkaido.jp/kurashi/",
     );
     expect(body.intent).toBe("casual");
+    expect(body.isGreeting).toBe(true);
     expect(screen.queryByText(/最初の挨拶を生成/)).toBeNull();
   });
 

@@ -31,6 +31,7 @@ const ChatSendRequestSchema = z.object({
   intent: z.enum(["casual", "thinking"]).optional(),
   siteHost: z.string().max(255).optional(),
   currentPageUrl: z.url().max(2048).optional(),
+  isGreeting: z.boolean().optional(),
 });
 
 const chatRoute = createRoute({
@@ -73,6 +74,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
     intent: fixedIntent,
     siteHost,
     currentPageUrl,
+    isGreeting,
   } = c.req.valid("json");
   const thread = c.get("thread");
   const principal = c.get("principal");
@@ -88,6 +90,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
   // widget 由来の resourceId は widget- prefix を持つ（server/src/lib/principal.ts の
   // line:/admin: と同じ、resourceId prefix でチャネルを区別する規約）
   const platform = thread.resourceId.startsWith("widget-") ? "widget" : "web";
+  const isWidgetGreeting = platform === "widget" && isGreeting === true;
   const site =
     platform === "widget" && siteHost
       ? await widgetSiteRepository.findByHost(c.env.DB, siteHost)
@@ -137,10 +140,12 @@ chatRoutes.openapi(chatRoute, async (c) => {
     agentId: "neppChanAgent",
     messages: [message],
     requestContext,
-    memory: {
-      resource: thread.resourceId,
-      thread: threadId,
-    },
+    memory: isWidgetGreeting
+      ? undefined
+      : {
+          resource: thread.resourceId,
+          thread: threadId,
+        },
     // onFinish はレスポンス返却後に発火するため waitUntil で記録を完了させる
     onFinish: (event) =>
       waitUntil(

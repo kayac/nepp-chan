@@ -383,6 +383,25 @@ describe("chatRoutes: POST /:threadId/chat", () => {
     );
   });
 
+  it("widget の生成挨拶は会話メモリに保存しない", async () => {
+    useAnonAuth(WIDGET_RES_ID);
+    mockGetThreadById.mockResolvedValue({
+      ...ownThread,
+      resourceId: WIDGET_RES_ID,
+    });
+
+    await routes.request(
+      buildReq("/thread-1/chat", {
+        ...validBody,
+        isGreeting: true,
+      }),
+      undefined,
+      mockEnv,
+    );
+
+    expect(mockHandleChatStream.mock.calls[0][0].params.memory).toBeUndefined();
+  });
+
   it("widget でも未登録の siteHost なら instructions を渡さない", async () => {
     useAnonAuth(WIDGET_RES_ID);
     mockGetThreadById.mockResolvedValue({

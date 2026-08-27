@@ -133,7 +133,7 @@ export const WidgetChat = ({
         role: "user",
         parts: [{ type: "text", text: WELCOME_REQUEST }],
       },
-      { body: { intent: "casual" } },
+      { body: { intent: "casual", isGreeting: true } },
     );
   }, [isReady, sendMessage, siteHost, threadId]);
   // ツール呼び出し中はテキストパートが途切れるので、最後のパートが text 以外なら
