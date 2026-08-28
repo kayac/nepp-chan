@@ -1,6 +1,6 @@
 import { act, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setAuthToken } from "~/lib/auth-token";
 import { server } from "~/test/msw-server";
 import { renderHookWithQuery } from "~/test/query";
@@ -50,6 +50,16 @@ describe("useThreads", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.threads).toHaveLength(1);
+  });
+
+  it("無効なら threads を取得しない", () => {
+    const handler = vi.fn();
+    server.use(http.get(`${API}/threads`, handler));
+
+    const { result } = renderHookWithQuery(() => useThreads(false));
+
+    expect(result.current.fetchStatus).toBe("idle");
+    expect(handler).not.toHaveBeenCalled();
   });
 });
 

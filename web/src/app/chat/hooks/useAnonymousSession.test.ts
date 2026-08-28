@@ -8,6 +8,9 @@ import { useAnonymousSession } from "./useAnonymousSession";
 
 const API = "http://localhost:8787";
 
+const sessionToken = (expiresAt: number) =>
+  `header.${btoa(JSON.stringify({ exp: expiresAt }))}.signature`;
+
 beforeEach(() => {
   localStorage.clear();
 });
@@ -18,12 +21,45 @@ afterEach(() => {
 
 describe("useAnonymousSession", () => {
   it("既にトークンがあれば即 isReady=true・isFirstVisit=false", async () => {
-    setSessionToken("existing");
+    setSessionToken(sessionToken(Math.floor(Date.now() / 1000) + 60));
 
     const { result } = renderHook(() => useAnonymousSession());
 
     expect(result.current.isReady).toBe(true);
     expect(result.current.isFirstVisit).toBe(false);
+  });
+
+  it("期限切れトークンなら API から再取得する", async () => {
+    setSessionToken(sessionToken(Math.floor(Date.now() / 1000) - 1));
+    server.use(
+      http.post(`${API}/auth/anonymous-session`, () =>
+        HttpResponse.json({ token: "renewed-token", resourceId: "res-2" }),
+      ),
+    );
+
+    const { result } = renderHook(() => useAnonymousSession());
+
+    expect(result.current.isReady).toBe(false);
+    expect(result.current.isFirstVisit).toBe(true);
+    await waitFor(() => expect(result.current.isReady).toBe(true));
+    expect(getSessionToken()).toBe("renewed-token");
+    expect(getResourceId()).toBe("res-2");
+  });
+
+  it("壊れたトークンなら API から再取得する", async () => {
+    setSessionToken("invalid-token");
+    server.use(
+      http.post(`${API}/auth/anonymous-session`, () =>
+        HttpResponse.json({ token: "renewed-token", resourceId: "res-3" }),
+      ),
+    );
+
+    const { result } = renderHook(() => useAnonymousSession());
+
+    expect(result.current.isReady).toBe(false);
+    await waitFor(() => expect(result.current.isReady).toBe(true));
+    expect(getSessionToken()).toBe("renewed-token");
+    expect(getResourceId()).toBe("res-3");
   });
 
   it("トークン無しなら API を叩いて取得・isFirstVisit=true", async () => {
