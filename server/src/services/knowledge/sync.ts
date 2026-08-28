@@ -20,6 +20,7 @@ type SyncDeps = {
   bucket: R2Bucket;
   vectorize: VectorizeIndex;
   apiKey: string;
+  d1?: D1Database;
 };
 
 const isFileEdited = (mdFile: R2Object, originalsMap: Map<string, Date>) => {
@@ -38,6 +39,7 @@ export const syncAll = async ({
   bucket,
   vectorize,
   apiKey,
+  d1,
 }: SyncDeps): Promise<SyncAllResult> => {
   const listed = await bucket.list();
   const allObjects = listed.objects;
@@ -70,6 +72,7 @@ export const syncAll = async ({
       content,
       vectorize,
       apiKey,
+      d1,
     );
 
     results.push({
@@ -97,5 +100,11 @@ export const syncFile = async (
   deps: Omit<SyncDeps, "bucket">,
 ): Promise<{ chunks: number; error?: string }> => {
   await deleteKnowledgeBySource(deps.vectorize, key);
-  return processKnowledgeFile(key, content, deps.vectorize, deps.apiKey);
+  return processKnowledgeFile(
+    key,
+    content,
+    deps.vectorize,
+    deps.apiKey,
+    deps.d1,
+  );
 };

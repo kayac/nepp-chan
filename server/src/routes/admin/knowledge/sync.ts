@@ -78,6 +78,7 @@ knowledgeSyncRoutes.openapi(syncAllRoute, async (c) => {
     bucket: c.env.KNOWLEDGE_BUCKET,
     vectorize: c.env.VECTORIZE,
     apiKey,
+    d1: c.env.DB,
   });
 
   return c.json(

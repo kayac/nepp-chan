@@ -6,6 +6,7 @@ import {
   broadcastGetToolName,
 } from "~/mastra/tools/broadcast-get-tool";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
+import { withUsageRecording } from "~/services/analytics/llm-usage";
 
 const KNOWLEDGE_MAX_STEPS = 5;
 
@@ -84,7 +85,10 @@ export const createKnowledgeAgent = ({
     description:
       "音威子府村の情報を検索・回答する担当。村に関する情報（歴史、施設、観光、村長、行政、行事）を検索して回答する。",
     instructions: knowledgeAgentInstructions,
-    ...modelWithReasoning({ model, effort, maxSteps: KNOWLEDGE_MAX_STEPS }),
+    ...withUsageRecording(
+      modelWithReasoning({ model, effort, maxSteps: KNOWLEDGE_MAX_STEPS }),
+      { agent: "knowledge" },
+    ),
     tools: {
       knowledgeSearchTool,
       [broadcastGetToolName]: broadcastGetTool,

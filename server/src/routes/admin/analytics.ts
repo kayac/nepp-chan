@@ -15,8 +15,13 @@ import {
   conversationAnalyticsQuerySchema,
   conversationAnalyticsResponseSchema,
   ontologyResponseSchema,
+  operationCostQuerySchema,
+  operationCostResponseSchema,
   personaAnalyticsQuerySchema,
   personaAnalyticsResponseSchema,
+  threadTurnUsageResponseSchema,
+  threadUsageQuerySchema,
+  threadUsageResponseSchema,
   usageAnalyticsQuerySchema,
   usageAnalyticsResponseSchema,
   weeklyReportDetailResponseSchema,
@@ -26,7 +31,10 @@ import {
 } from "~/schemas/analytics-schema";
 import {
   getConversationStats,
+  getOperationCost,
   getPersonaAnalytics,
+  getThreadTurnUsage,
+  getThreadUsage,
   getWeeklyUsage,
 } from "~/services/analytics/aggregate";
 import { getOntology } from "~/services/analytics/ontology";
@@ -160,6 +168,108 @@ analyticsAdminRoutes.openapi(usageRoute, async (c) => {
   });
 
   return c.json({ weekly }, 200);
+});
+
+const threadUsageRoute = createRoute({
+  method: "get",
+  path: "/usage/threads",
+  tags: ["Admin - Analytics"],
+  summary: "会話（スレッド）単位のトークン使用量とコスト",
+  description:
+    "メッセージ = 1往復。平均原価はバッチ（週次レポート等）を除いた会話紐づきコストで計算する。",
+  middleware: [requireRole("super_admin")] as const,
+  request: { query: threadUsageQuerySchema },
+  responses: {
+    200: {
+      description: "会話単位の usage 集計（コスト降順）",
+      content: {
+        "application/json": { schema: threadUsageResponseSchema },
+      },
+    },
+    400: errorResponse(400),
+    401: errorResponse(401),
+    403: errorResponse(403),
+  },
+});
+
+analyticsAdminRoutes.openapi(threadUsageRoute, async (c) => {
+  const { days, limit } = c.req.valid("query");
+  const now = new Date();
+
+  const result = await getThreadUsage(
+    c.env.DB,
+    {
+      from: startOfJstDay(
+        new Date(now.getTime() - (days - 1) * DAY_MS),
+      ).toISOString(),
+      to: now.toISOString(),
+    },
+    { limit },
+  );
+
+  return c.json(result, 200);
+});
+
+const operationCostRoute = createRoute({
+  method: "get",
+  path: "/usage/operation",
+  tags: ["Admin - Analytics"],
+  summary: "運用コスト全体（用途別・プロバイダ別）",
+  description:
+    "会話 / ナレッジ基盤（埋め込み）/ バッチの用途別と、請求突き合わせ用のプロバイダ別内訳。",
+  middleware: [requireRole("super_admin")] as const,
+  request: { query: operationCostQuerySchema },
+  responses: {
+    200: {
+      description: "期間内の運用コスト内訳",
+      content: {
+        "application/json": { schema: operationCostResponseSchema },
+      },
+    },
+    400: errorResponse(400),
+    401: errorResponse(401),
+    403: errorResponse(403),
+  },
+});
+
+analyticsAdminRoutes.openapi(operationCostRoute, async (c) => {
+  const { days } = c.req.valid("query");
+  const now = new Date();
+
+  const result = await getOperationCost(c.env.DB, {
+    from: startOfJstDay(
+      new Date(now.getTime() - (days - 1) * DAY_MS),
+    ).toISOString(),
+    to: now.toISOString(),
+  });
+
+  return c.json(result, 200);
+});
+
+const threadTurnUsageRoute = createRoute({
+  method: "get",
+  path: "/usage/threads/{threadId}",
+  tags: ["Admin - Analytics"],
+  summary: "会話内のメッセージ（1往復）ごとのコスト内訳",
+  middleware: [requireRole("super_admin")] as const,
+  request: { params: z.object({ threadId: z.string().min(1) }) },
+  responses: {
+    200: {
+      description: "往復ごとのコスト・エージェント別内訳・所要時間",
+      content: {
+        "application/json": { schema: threadTurnUsageResponseSchema },
+      },
+    },
+    401: errorResponse(401),
+    403: errorResponse(403),
+  },
+});
+
+analyticsAdminRoutes.openapi(threadTurnUsageRoute, async (c) => {
+  const { threadId } = c.req.valid("param");
+  const result = await getThreadTurnUsage(c.env.DB, threadId);
+
+  return c.json(result, 200);
 });
 
 const reportsRoute = createRoute({

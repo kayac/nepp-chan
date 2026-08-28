@@ -867,6 +867,308 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/analytics/usage/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 会話（スレッド）単位のトークン使用量とコスト
+         * @description メッセージ = 1往復。平均原価はバッチ（週次レポート等）を除いた会話紐づきコストで計算する。
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description 集計対象の直近日数（raw 会話の保持期間 30 日が上限） */
+                    days?: number;
+                    /** @description 返す会話数の上限（コスト降順） */
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 会話単位の usage 集計（コスト降順） */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            summary: {
+                                threads: number;
+                                messages: number;
+                                conversationCostUsd: number;
+                                avgCostPerMessageUsd: number | null;
+                                avgCostPerThreadUsd: number | null;
+                                byAgent: {
+                                    agent: string | null;
+                                    totalTokens: number;
+                                    costUsd: number;
+                                }[];
+                            };
+                            threads: {
+                                threadId: string;
+                                platform: string | null;
+                                messageCount: number;
+                                inputTokens: number;
+                                outputTokens: number;
+                                reasoningTokens: number;
+                                cachedInputTokens: number;
+                                totalTokens: number;
+                                costUsd: number;
+                                models: string[];
+                                agents: {
+                                    agent: string | null;
+                                    totalTokens: number;
+                                    costUsd: number;
+                                }[];
+                                firstMessageAt: string | null;
+                                lastMessageAt: string | null;
+                                durationSeconds: number | null;
+                            }[];
+                        };
+                    };
+                };
+                /** @description リクエストエラー */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/analytics/usage/operation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 運用コスト全体（用途別・プロバイダ別）
+         * @description 会話 / ナレッジ基盤（埋め込み）/ バッチの用途別と、請求突き合わせ用のプロバイダ別内訳。
+         */
+        get: {
+            parameters: {
+                query?: {
+                    days?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 期間内の運用コスト内訳 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            totalCostUsd: number;
+                            byCategory: {
+                                category: string;
+                                costUsd: number;
+                                agents: {
+                                    agent: string | null;
+                                    totalTokens: number;
+                                    costUsd: number;
+                                }[];
+                            }[];
+                            byProvider: {
+                                provider: string;
+                                totalTokens: number;
+                                costUsd: number;
+                            }[];
+                            daily: {
+                                date: string;
+                                costUsd: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description リクエストエラー */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/analytics/usage/threads/{threadId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 会話内のメッセージ（1往復）ごとのコスト内訳 */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    threadId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 往復ごとのコスト・エージェント別内訳・所要時間 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            turns: {
+                                turnIndex: number | null;
+                                answeredAt: string | null;
+                                totalTokens: number;
+                                costUsd: number;
+                                durationMs: number | null;
+                                intent: string | null;
+                                agents: {
+                                    agent: string | null;
+                                    totalTokens: number;
+                                    costUsd: number;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/analytics/reports": {
         parameters: {
             query?: never;

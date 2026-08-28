@@ -2,6 +2,7 @@ import { google } from "@ai-sdk/google";
 import { Agent } from "@mastra/core/agent";
 import { getCurrentDateInfo } from "~/lib/date";
 import { GEMINI_GROUNDING } from "~/lib/llm-models";
+import { withUsageRecording } from "~/services/analytics/llm-usage";
 
 const baseInstructions = `
 あなたはインターネットから最新情報を収集する専門エージェントです。
@@ -39,7 +40,7 @@ export const createWebResearcherAgent = () =>
 ## 現在の日時
 ${getCurrentDateInfo()}
 `,
-    ...researcherModelConfig,
+    ...withUsageRecording(researcherModelConfig, { agent: "web-researcher" }),
     tools: {
       googleSearch: google.tools.googleSearch({}),
     },

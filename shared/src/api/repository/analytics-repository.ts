@@ -33,6 +33,34 @@ export const createAnalyticsRepository = (client: ApiClient) => ({
     return data;
   },
 
+  fetchThreadUsage: async (params: { days?: number; limit?: number } = {}) => {
+    const { data, error } = await client.GET("/admin/analytics/usage/threads", {
+      params: { query: params },
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  fetchOperationCost: async (days = 30) => {
+    const { data, error } = await client.GET(
+      "/admin/analytics/usage/operation",
+      {
+        params: { query: { days } },
+      },
+    );
+    if (error) throw error;
+    return data;
+  },
+
+  fetchThreadTurnUsage: async (threadId: string) => {
+    const { data, error } = await client.GET(
+      "/admin/analytics/usage/threads/{threadId}",
+      { params: { path: { threadId } } },
+    );
+    if (error) throw error;
+    return data;
+  },
+
   fetchWeeklyReports: async (limit = 12) => {
     const { data, error } = await client.GET("/admin/analytics/reports", {
       params: { query: { limit } },

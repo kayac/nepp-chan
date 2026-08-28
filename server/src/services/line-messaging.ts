@@ -8,7 +8,7 @@ import { getStorage } from "~/lib/storage";
 import { stripMarkdown } from "~/lib/strip-markdown";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
-import { recordLlmUsage } from "~/services/analytics/llm-usage";
+import { nextTurnIndex, recordLlmUsage } from "~/services/analytics/llm-usage";
 import { injectBroadcastsToThread } from "~/services/broadcast-thread-injector";
 import { injectPollsToThread } from "~/services/poll-thread-injector";
 
@@ -25,11 +25,16 @@ export const generateReply = async (params: {
   env: CloudflareBindings;
 }) => {
   const storage = await getStorage(params.env.DB);
+  const turnIndex = await nextTurnIndex(params.env.DB, params.threadId);
+  const startedAt = Date.now();
 
   const requestContext = createRequestContext({
     storage,
     db: params.env.DB,
     env: params.env,
+    usagePlatform: "line",
+    usageThreadId: params.threadId,
+    usageTurnIndex: turnIndex,
   });
 
   params.client
@@ -63,7 +68,7 @@ export const generateReply = async (params: {
 
   // Intent 分類でモデルティアを決定（非テキストメッセージは casual 直行）
   const intent = params.userMessage
-    ? await classifyIntent(params.userMessage)
+    ? await classifyIntent(params.userMessage, requestContext)
     : "casual";
   const modelConfig = resolveModelTier({
     intent,
@@ -92,12 +97,16 @@ export const generateReply = async (params: {
   });
 
   await recordLlmUsage(params.env.DB, {
-    model: primaryModelId(modelConfig),
+    // フォールバック発火時も実際に応答したモデルで記録する
+    model: response.response?.modelId ?? primaryModelId(modelConfig),
     usage: response.totalUsage,
     platform: "line",
     source: "chat",
+    agent: "nepp-chan",
     intent,
     threadId: params.threadId,
+    turnIndex,
+    durationMs: Date.now() - startedAt,
   });
 
   const stepTexts = (response.steps ?? []).map((step) => step.text);

@@ -3,6 +3,7 @@ import { AGENT_TOOL_NAMES } from "@nepp-chan/shared/constants/agent-tools";
 import { modelWithReasoning } from "~/lib/llm-models";
 import { emergencyReportTool } from "~/mastra/tools/emergency-report-tool";
 import { emergencyUpdateTool } from "~/mastra/tools/emergency-update-tool";
+import { withUsageRecording } from "~/services/analytics/llm-usage";
 
 export const emergencyReporterAgent = new Agent({
   id: "emergency-reporter-agent",
@@ -47,7 +48,9 @@ export const emergencyReporterAgent = new Agent({
 - ${AGENT_TOOL_NAMES.emergencyReport}: 新規の緊急報告を記録
 - ${AGENT_TOOL_NAMES.emergencyUpdate}: 既存の報告に情報を追加
 `,
-  ...modelWithReasoning({ effort: "medium" }),
+  ...withUsageRecording(modelWithReasoning({ effort: "medium" }), {
+    agent: "emergency-reporter",
+  }),
   tools: {
     [AGENT_TOOL_NAMES.emergencyReport]: emergencyReportTool,
     [AGENT_TOOL_NAMES.emergencyUpdate]: emergencyUpdateTool,

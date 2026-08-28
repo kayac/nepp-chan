@@ -13,7 +13,7 @@ import { requireAuth } from "~/middleware/auth";
 import type { ThreadVariables } from "~/middleware/require-thread-access";
 import { requireThreadAccess } from "~/middleware/require-thread-access";
 import { widgetSiteRepository } from "~/repository/widget-site-repository";
-import { recordLlmUsage } from "~/services/analytics/llm-usage";
+import { nextTurnIndex, recordLlmUsage } from "~/services/analytics/llm-usage";
 
 export const chatRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -87,6 +87,18 @@ chatRoutes.openapi(chatRoute, async (c) => {
       : null;
 
   const storage = await getStorage(c.env.DB);
+  const turnIndex = await nextTurnIndex(c.env.DB, threadId);
+  const startedAt = Date.now();
+
+  const requestContext = createRequestContext({
+    storage,
+    db: c.env.DB,
+    env: c.env,
+    adminUser,
+    usagePlatform: platform,
+    usageThreadId: threadId,
+    usageTurnIndex: turnIndex,
+  });
 
   // Intent 分類でモデルティアを決定（fixedIntent 指定時はルータースキップ）
   const userText = (
@@ -94,7 +106,8 @@ chatRoutes.openapi(chatRoute, async (c) => {
       | { type: string; text: string }
       | undefined
   )?.text;
-  const intent = fixedIntent ?? (await classifyIntent(userText ?? ""));
+  const intent =
+    fixedIntent ?? (await classifyIntent(userText ?? "", requestContext));
   const modelConfig = resolveModelTier({ intent, platform: "web", isAdmin });
   logger.info(`[Chat] intent: ${intent}`, { threadId });
 
@@ -107,13 +120,6 @@ chatRoutes.openapi(chatRoute, async (c) => {
   const mastra = new Mastra({
     agents: { neppChanAgent },
     storage,
-  });
-
-  const requestContext = createRequestContext({
-    storage,
-    db: c.env.DB,
-    env: c.env,
-    adminUser,
   });
 
   return respondWithChatStream({
@@ -133,8 +139,11 @@ chatRoutes.openapi(chatRoute, async (c) => {
           usage: event.totalUsage,
           platform,
           source: "chat",
+          agent: "nepp-chan",
           intent,
           threadId,
+          turnIndex,
+          durationMs: Date.now() - startedAt,
         }),
       ),
   });
