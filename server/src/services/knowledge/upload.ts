@@ -9,6 +9,7 @@ type UploadDeps = {
   bucket: R2Bucket;
   vectorize: VectorizeIndex;
   apiKey: string;
+  d1?: D1Database;
 };
 
 type UploadResult = {
@@ -53,6 +54,7 @@ export const uploadMarkdownFile = async (
   const result = await syncFile(key, content, {
     vectorize: deps.vectorize,
     apiKey: deps.apiKey,
+    d1: deps.d1,
   });
 
   return { key, chunks: result.chunks, error: result.error };
@@ -87,7 +89,7 @@ export const convertAndUpload = async (
   logger.info(`[Convert] Converting ${file.name} (${mimeType}) to ${key}`);
 
   const fileData = await file.arrayBuffer();
-  const markdown = await convertToMarkdown(fileData, mimeType);
+  const markdown = await convertToMarkdown(fileData, mimeType, deps.d1);
 
   logger.info(`[Convert] Generated ${markdown.length} bytes of markdown`);
 
@@ -107,6 +109,7 @@ export const convertAndUpload = async (
   const result = await syncFile(key, markdown, {
     vectorize: deps.vectorize,
     apiKey: deps.apiKey,
+    d1: deps.d1,
   });
 
   return {
@@ -144,7 +147,7 @@ export const reconvertFromOriginal = async (
   logger.info(`[Reconvert] Converting ${originalKey} (${mimeType}) to ${key}`);
 
   const fileData = await object.arrayBuffer();
-  const markdown = await convertToMarkdown(fileData, mimeType);
+  const markdown = await convertToMarkdown(fileData, mimeType, deps.d1);
 
   logger.info(`[Reconvert] Generated ${markdown.length} bytes of markdown`);
 
@@ -155,6 +158,7 @@ export const reconvertFromOriginal = async (
   const result = await syncFile(key, markdown, {
     vectorize: deps.vectorize,
     apiKey: deps.apiKey,
+    d1: deps.d1,
   });
 
   return {

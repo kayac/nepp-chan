@@ -72,6 +72,7 @@ knowledgeConvertRoutes.openapi(uploadFileRoute, async (c) => {
     bucket: c.env.KNOWLEDGE_BUCKET,
     vectorize: c.env.VECTORIZE,
     apiKey,
+    d1: c.env.DB,
   });
 
   return c.json(
@@ -146,6 +147,7 @@ knowledgeConvertRoutes.openapi(convertFileRoute, async (c) => {
     bucket: c.env.KNOWLEDGE_BUCKET,
     vectorize: c.env.VECTORIZE,
     apiKey,
+    d1: c.env.DB,
   });
 
   return c.json(
@@ -216,6 +218,7 @@ knowledgeConvertRoutes.openapi(reconvertFileRoute, async (c) => {
     bucket: c.env.KNOWLEDGE_BUCKET,
     vectorize: c.env.VECTORIZE,
     apiKey,
+    d1: c.env.DB,
   });
 
   return c.json(

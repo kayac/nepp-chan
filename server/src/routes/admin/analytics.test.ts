@@ -3,6 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("~/services/analytics/aggregate", () => ({
   getConversationStats: vi.fn(),
   getWeeklyUsage: vi.fn(),
+  getThreadUsage: vi.fn(),
+  getThreadTurnUsage: vi.fn(),
+  getOperationCost: vi.fn(),
   getPersonaAnalytics: vi.fn(),
 }));
 
@@ -29,8 +32,14 @@ vi.mock("~/services/analytics/ontology", () => ({
   getOntology: vi.fn(),
 }));
 
-const { getConversationStats, getWeeklyUsage, getPersonaAnalytics } =
-  await import("~/services/analytics/aggregate");
+const {
+  getConversationStats,
+  getWeeklyUsage,
+  getThreadUsage,
+  getThreadTurnUsage,
+  getOperationCost,
+  getPersonaAnalytics,
+} = await import("~/services/analytics/aggregate");
 const { getOntology } = await import("~/services/analytics/ontology");
 const { weeklyReportRepository } = await import(
   "~/repository/weekly-report-repository"
@@ -164,6 +173,164 @@ describe("analyticsAdminRoutes: 認可", () => {
       mockEnv,
     );
     expect(adminRes.status).toBe(403);
+  });
+
+  it("会話単位の利用コストも super_admin 専用", async () => {
+    useAuth("admin");
+    const res = await routes.request(
+      authedGet("/usage/threads"),
+      undefined,
+      mockEnv,
+    );
+    expect(res.status).toBe(403);
+  });
+});
+
+describe("GET /usage/threads", () => {
+  const emptyThreadUsage = {
+    summary: {
+      threads: 0,
+      messages: 0,
+      conversationCostUsd: 0,
+      avgCostPerMessageUsd: null,
+      avgCostPerThreadUsd: null,
+      byAgent: [],
+    },
+    threads: [],
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useAuth("super_admin");
+    vi.mocked(getThreadUsage).mockResolvedValue(emptyThreadUsage);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-10T02:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("days 日分を JST 日初め起点で集計し limit を渡す", async () => {
+    const res = await routes.request(
+      authedGet("/usage/threads?days=7&limit=10"),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(200);
+    // JST 06-10 の 7 日前 = JST 06-04 00:00（UTC 06-03 15:00）
+    expect(getThreadUsage).toHaveBeenCalledWith(
+      mockEnv.DB,
+      {
+        from: "2026-06-03T15:00:00.000Z",
+        to: "2026-06-10T02:00:00.000Z",
+      },
+      { limit: 10 },
+    );
+    expect(await res.json()).toEqual(emptyThreadUsage);
+  });
+
+  it("days は 30 を超えると 400", async () => {
+    const res = await routes.request(
+      authedGet("/usage/threads?days=31"),
+      undefined,
+      mockEnv,
+    );
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("GET /usage/operation", () => {
+  const operationCost = {
+    totalCostUsd: 0.11,
+    byCategory: [
+      { category: "conversation", costUsd: 0.07, agents: [] },
+      { category: "knowledge-base", costUsd: 0.04, agents: [] },
+    ],
+    byProvider: [{ provider: "openai", totalTokens: 100, costUsd: 0.11 }],
+    daily: [{ date: "2026-06-09", costUsd: 0.11 }],
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getOperationCost).mockResolvedValue(operationCost);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-10T02:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("super_admin は用途別・プロバイダ別の内訳を取得できる", async () => {
+    useAuth("super_admin");
+    const res = await routes.request(
+      authedGet("/usage/operation?days=7"),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(getOperationCost).toHaveBeenCalledWith(mockEnv.DB, {
+      from: "2026-06-03T15:00:00.000Z",
+      to: "2026-06-10T02:00:00.000Z",
+    });
+    expect(await res.json()).toEqual(operationCost);
+  });
+
+  it("admin は 403", async () => {
+    useAuth("admin");
+    const res = await routes.request(
+      authedGet("/usage/operation"),
+      undefined,
+      mockEnv,
+    );
+    expect(res.status).toBe(403);
+  });
+});
+
+describe("GET /usage/threads/{threadId}", () => {
+  const turnUsage = {
+    turns: [
+      {
+        turnIndex: 1,
+        answeredAt: "2026-06-09T00:00:00.000Z",
+        totalTokens: 1000,
+        costUsd: 0.05,
+        durationMs: 18_000,
+        intent: "thinking",
+        agents: [{ agent: "knowledge", totalTokens: 800, costUsd: 0.04 }],
+      },
+    ],
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getThreadTurnUsage).mockResolvedValue(turnUsage);
+  });
+
+  it("super_admin は往復ごとの内訳を取得できる", async () => {
+    useAuth("super_admin");
+    const res = await routes.request(
+      authedGet("/usage/threads/thread-1"),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(getThreadTurnUsage).toHaveBeenCalledWith(mockEnv.DB, "thread-1");
+    expect(await res.json()).toEqual(turnUsage);
+  });
+
+  it("admin は 403", async () => {
+    useAuth("admin");
+    const res = await routes.request(
+      authedGet("/usage/threads/thread-1"),
+      undefined,
+      mockEnv,
+    );
+    expect(res.status).toBe(403);
   });
 });
 

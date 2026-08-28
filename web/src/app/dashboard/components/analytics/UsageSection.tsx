@@ -77,9 +77,9 @@ export const UsageSection = () => {
               </BarChart>
             </ResponsiveContainer>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-auto max-h-[32rem]">
               <table className="w-full text-sm">
-                <thead className="bg-stone-50 border-b border-stone-200">
+                <thead className="bg-stone-50 border-b border-stone-200 sticky top-0">
                   <tr>
                     <th className="px-3 py-2 text-left font-medium text-stone-600">
                       週

@@ -53,6 +53,7 @@ export const knowledgeSearchTool = createTool({
       inputData.query,
       env.VECTORIZE,
       env.GOOGLE_GENERATIVE_AI_API_KEY,
+      context?.requestContext,
     );
   },
 });

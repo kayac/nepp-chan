@@ -133,6 +133,107 @@ export const usageAnalyticsResponseSchema = z.object({
   weekly: z.array(z.object({ weekStart: z.string(), ...modelUsageShape })),
 });
 
+export const threadUsageQuerySchema = z.object({
+  days: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(30)
+    .default(30)
+    .describe("集計対象の直近日数（raw 会話の保持期間 30 日が上限）"),
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(200)
+    .default(50)
+    .describe("返す会話数の上限（コスト降順）"),
+});
+
+const agentCostSchema = z.object({
+  // agent 列追加前の記録は null
+  agent: z.string().nullable(),
+  totalTokens: z.number(),
+  costUsd: z.number(),
+});
+
+const threadUsageItemSchema = z.object({
+  threadId: z.string(),
+  platform: z.string().nullable(),
+  // メッセージ数 = 1往復（ユーザー発話→応答）を 1 と数える
+  messageCount: z.number(),
+  inputTokens: z.number(),
+  outputTokens: z.number(),
+  reasoningTokens: z.number(),
+  cachedInputTokens: z.number(),
+  totalTokens: z.number(),
+  costUsd: z.number(),
+  models: z.array(z.string()),
+  agents: z.array(agentCostSchema),
+  firstMessageAt: z.string().nullable(),
+  lastMessageAt: z.string().nullable(),
+  durationSeconds: z.number().nullable(),
+});
+
+export const threadTurnUsageResponseSchema = z.object({
+  turns: z.array(
+    z.object({
+      // turn_index 記録前の行は null
+      turnIndex: z.number().nullable(),
+      // 応答を記録した時刻。会話ログとの突き合わせに使う
+      answeredAt: z.string().nullable(),
+      totalTokens: z.number(),
+      costUsd: z.number(),
+      durationMs: z.number().nullable(),
+      // casual / thinking。intent 記録前の行は null
+      intent: z.string().nullable(),
+      agents: z.array(agentCostSchema),
+    }),
+  ),
+});
+
+export const threadUsageResponseSchema = z.object({
+  summary: z.object({
+    threads: z.number(),
+    messages: z.number(),
+    conversationCostUsd: z.number(),
+    avgCostPerMessageUsd: z.number().nullable(),
+    avgCostPerThreadUsd: z.number().nullable(),
+    byAgent: z.array(agentCostSchema),
+  }),
+  threads: z.array(threadUsageItemSchema),
+});
+
+const providerCostSchema = z.object({
+  provider: z.string(),
+  totalTokens: z.number(),
+  costUsd: z.number(),
+});
+
+export const operationCostQuerySchema = z.object({
+  days: z.coerce.number().int().min(1).max(180).default(30),
+});
+
+export const operationCostResponseSchema = z.object({
+  totalCostUsd: z.number(),
+  byCategory: z.array(
+    z.object({
+      // conversation: 会話に直接かかる費用 / knowledge-base: 埋め込み / batch: 定期処理
+      category: z.string(),
+      costUsd: z.number(),
+      agents: z.array(agentCostSchema),
+    }),
+  ),
+  byProvider: z.array(providerCostSchema),
+  daily: z.array(
+    z.object({
+      // JST の日付（YYYY-MM-DD）
+      date: z.string(),
+      costUsd: z.number(),
+    }),
+  ),
+});
+
 // 週次レポートの stats(JSON) の中身。生成側（weekly-report service）と共有する
 export const weeklyStatsSchema = z.object({
   conversationCount: z.number(),

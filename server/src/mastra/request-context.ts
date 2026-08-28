@@ -2,6 +2,7 @@ import type { D1Store } from "@mastra/cloudflare-d1";
 import { RequestContext } from "@mastra/core/request-context";
 
 import type { AuthUser } from "~/schemas/auth-schema";
+import type { LlmUsagePlatform } from "~/services/analytics/llm-usage";
 import type {
   VoiceFindingsSlot,
   VoicePrefetchSlot,
@@ -13,6 +14,9 @@ export type MastraRequestContextType = {
   env: CloudflareBindings;
   conversationEndedAt?: string;
   adminUser?: AuthUser;
+  usagePlatform?: LlmUsagePlatform;
+  usageThreadId?: string;
+  usageTurnIndex?: number;
   voiceFindings?: VoiceFindingsSlot;
   voicePrefetch?: VoicePrefetchSlot;
   voiceParentRouting?: boolean;
@@ -33,6 +37,15 @@ export const createRequestContext = (values: MastraRequestContextType) => {
   }
   if (values.adminUser) {
     requestContext.set("adminUser", values.adminUser);
+  }
+  if (values.usagePlatform) {
+    requestContext.set("usagePlatform", values.usagePlatform);
+  }
+  if (values.usageThreadId) {
+    requestContext.set("usageThreadId", values.usageThreadId);
+  }
+  if (values.usageTurnIndex !== undefined) {
+    requestContext.set("usageTurnIndex", values.usageTurnIndex);
   }
   if (values.voiceFindings) {
     requestContext.set("voiceFindings", values.voiceFindings);

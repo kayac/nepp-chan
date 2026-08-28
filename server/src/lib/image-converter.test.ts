@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { generateMock } = vi.hoisted(() => ({
+const { generateMock, recordLlmUsageMock } = vi.hoisted(() => ({
   generateMock: vi.fn(),
+  recordLlmUsageMock: vi.fn(),
 }));
 
 vi.mock("~/mastra/agents/converter-agent", () => ({
   converterAgent: { generate: generateMock },
+}));
+
+vi.mock("~/services/analytics/llm-usage", () => ({
+  recordLlmUsage: recordLlmUsageMock,
 }));
 
 const { convertToMarkdown, isSupportedMimeType } = await import(
@@ -14,6 +19,7 @@ const { convertToMarkdown, isSupportedMimeType } = await import(
 
 beforeEach(() => {
   generateMock.mockReset();
+  recordLlmUsageMock.mockReset();
 });
 
 describe("isSupportedMimeType", () => {
@@ -65,5 +71,31 @@ describe("convertToMarkdown", () => {
     expect(messages[0].content[0].type).toBe("file");
     // base64("\xde\xad\xbe\xef") = "3q2+7w==" / Buffer.from のエンコード
     expect(messages[0].content[0].data).toBe("3q2+7w==");
+  });
+
+  it("d1 を渡すと実応答モデルと usage を image-convert として記録する", async () => {
+    generateMock.mockResolvedValueOnce({
+      text: "ok",
+      totalUsage: { inputTokens: 100, outputTokens: 10 },
+      response: { modelId: "openai/gpt-5.6-terra" },
+    });
+    const d1 = {} as D1Database;
+
+    await convertToMarkdown(new ArrayBuffer(4), "image/png", d1);
+
+    expect(recordLlmUsageMock).toHaveBeenCalledWith(d1, {
+      model: "openai/gpt-5.6-terra",
+      usage: { inputTokens: 100, outputTokens: 10 },
+      source: "image-convert",
+      agent: "converter",
+    });
+  });
+
+  it("d1 が無ければ記録しない", async () => {
+    generateMock.mockResolvedValueOnce({ text: "ok" });
+
+    await convertToMarkdown(new ArrayBuffer(4), "image/png");
+
+    expect(recordLlmUsageMock).not.toHaveBeenCalled();
   });
 });

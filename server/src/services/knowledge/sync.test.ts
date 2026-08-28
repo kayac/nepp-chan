@@ -83,6 +83,7 @@ describe("syncAll", () => {
       "# hello",
       vectorize,
       "k",
+      undefined,
     );
     expect(result.totalFiles).toBe(1);
     expect(result.totalChunks).toBe(2);
@@ -180,6 +181,7 @@ describe("syncFile", () => {
       "# c",
       vectorize,
       "k",
+      undefined,
     );
     expect(result).toEqual({ chunks: 7 });
   });

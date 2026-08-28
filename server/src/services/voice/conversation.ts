@@ -1,6 +1,6 @@
 import { Mastra } from "@mastra/core/mastra";
 import type { ModelMessage } from "ai";
-import { voiceModelConfig } from "~/lib/llm-models";
+import { primaryModelId, voiceModelConfig } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { toVoiceIds } from "~/lib/principal";
 import { getStorage } from "~/lib/storage";
@@ -8,6 +8,7 @@ import { sanitizeForSpeech } from "~/lib/voice-text";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { startVoicePrefetch } from "~/mastra/tools/voice-answer-tool";
+import { recordLlmUsage } from "~/services/analytics/llm-usage";
 import { isQuestionLike } from "./filler";
 import {
   createVoicePrefetchSlot,
@@ -16,6 +17,7 @@ import {
 
 type RunTurnParams = {
   text: string;
+  turnIndex?: number;
   signal?: AbortSignal;
   onToolCall?: () => void;
   onEndCall?: () => void;
@@ -66,6 +68,7 @@ export const createVoiceConversation = async ({
 
   const runTurn = async function* ({
     text,
+    turnIndex,
     signal,
     onToolCall,
     onEndCall,
@@ -80,6 +83,9 @@ export const createVoiceConversation = async ({
     const requestContext = createRequestContext({
       db: env.DB,
       env,
+      usagePlatform: "voice",
+      usageThreadId: threadId,
+      usageTurnIndex: turnIndex,
       voiceFindings: findingsSlot,
       voicePrefetch: prefetchSlot,
       voiceParentRouting: parentRouting,
@@ -148,6 +154,23 @@ export const createVoiceConversation = async ({
           content: assistantText,
         };
         history = [...input, assistantMessage].slice(-MAX_HISTORY_MESSAGES);
+      }
+      // totalUsage はストリーム完走後にのみ resolve するため、中断ターンでは記録しない
+      if (!signal?.aborted) {
+        const [totalUsage, response] = await Promise.all([
+          result.totalUsage,
+          result.response,
+        ]);
+        await recordLlmUsage(env.DB, {
+          model: response?.modelId ?? primaryModelId(voiceModelConfig),
+          usage: totalUsage,
+          platform: "voice",
+          source: "chat",
+          agent: "nepp-chan",
+          threadId,
+          turnIndex,
+          durationMs: Date.now() - start,
+        });
       }
     } finally {
       prefetchSlot?.current?.abort();

@@ -369,7 +369,7 @@ broadcastAdminRoutes.openapi(uploadImageRoute, async (c) => {
 
   let imageDescription: string | undefined;
   try {
-    imageDescription = await convertToMarkdown(fileData, file.type);
+    imageDescription = await convertToMarkdown(fileData, file.type, c.env.DB);
   } catch (error) {
     logger.error("[Broadcast] Image OCR failed during upload", error);
   }
