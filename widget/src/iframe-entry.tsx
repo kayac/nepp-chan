@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { initAnalytics } from "./analytics";
 import { ENVIRONMENT } from "./environment";
-import { resolveSiteHost } from "./site-host";
+import { resolveSiteHost, resolveSitePageUrl } from "./site-host";
 import "./iframe.css";
 import { WidgetChat } from "./WidgetChat";
 
@@ -17,6 +17,7 @@ createRoot(root).render(
       apiUrl={ENVIRONMENT.api}
       webUrl={ENVIRONMENT.web}
       siteHost={resolveSiteHost(location.search)}
+      initialPageUrl={resolveSitePageUrl(location.search)}
     />
   </StrictMode>,
 );

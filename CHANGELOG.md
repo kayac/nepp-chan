@@ -1,5 +1,45 @@
 # Changelog
 
+## [v1.0.12](https://github.com/kayac/nepp-chan/compare/v1.0.11...v1.0.12) - 2026-08-28
+
+- ウィジェットに設置サイトの文脈を持たせる by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1015
+- feat(voice): 通話の検索を先回りして応答遅延を減らす by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1016
+- build(deps-dev): bump wrangler from 4.114.0 to 4.119.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1011
+- build(deps-dev): bump @testing-library/user-event from 14.6.1 to 14.6.3 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1010
+- build(deps-dev): bump vite from 8.1.5 to 8.2.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1009
+- build(deps-dev): bump postcss from 8.5.23 to 8.5.26 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1002
+- build(deps-dev): bump @biomejs/biome from 2.5.5 to 2.5.7 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1000
+- build(deps): bump hono from 4.12.32 to 4.13.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/998
+- build(deps): bump @astrojs/check from 0.9.9 to 0.9.10 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/971
+- build(deps): bump @sentry/cloudflare from 10.68.0 to 10.69.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/965
+- fix(deps): pnpm-lock.yaml の重複キーを除去 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1018
+- build(deps): bump @sentry/react from 10.68.0 to 10.69.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/962
+- build(deps): bump astro from 7.1.3 to 7.2.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1003
+- build(deps): bump @astrojs/react from 6.0.1 to 6.0.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/973
+- build(deps-dev): bump tsx from 4.23.1 to 4.23.11 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1001
+- build(deps-dev): bump @types/node from 26.1.1 to 26.2.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/975
+- build(deps-dev): bump @vitejs/plugin-react from 6.0.4 to 6.0.5 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/972
+- build(deps-dev): bump the react group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/961
+- refactor(env): env ファイルを .dev.vars 1 本に集約する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1020
+- fix(web): CJK 約物に隣接する強調がチャットで描画されない問題を解消する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1047
+- build(deps-dev): bump wrangler from 4.119.0 to 4.123.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1024
+- build(deps): bump @hono/zod-openapi from 1.5.1 to 1.6.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1030
+- build(deps): bump @sentry/cloudflare from 10.69.0 to 10.70.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1032
+- build(deps-dev): bump @testing-library/user-event from 14.6.3 to 14.6.4 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1033
+- build(deps-dev): bump tsx from 4.23.11 to 4.23.12 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1034
+- build(deps-dev): bump @testing-library/jest-dom from 7.0.0 to 7.0.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1036
+- build(deps): bump @sentry/react from 10.69.0 to 10.70.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1040
+- build(deps-dev): bump @biomejs/biome from 2.5.7 to 2.5.9 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1042
+- build(deps): bump hono from 4.13.1 to 4.13.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1044
+- build(deps): bump astro from 7.2.0 to 7.2.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1041
+- build(deps): bump @mastra/memory from 1.23.1 to 1.26.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1029
+- build(deps): bump @mastra/mcp from 1.15.0 to 1.16.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1039
+- build(deps): bump @mastra/observability from 1.16.2 to 1.17.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1045
+- build(deps): bump @mastra/evals from 1.6.0 to 1.7.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/995
+- build(deps): bump @mastra/rag from 2.4.2 to 2.5.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1038
+- feat(widget): 閲覧中ページに応じた案内と分析を追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1073
+- fix(web): 期限切れ匿名セッションを自動再発行する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1074
+
 ## [v1.0.11](https://github.com/kayac/nepp-chan/compare/v1.0.10...v1.0.11) - 2026-08-07
 
 - feat(widget): 本チャット相当のスクロール追従・停止ボタン・ツール表示を widget に入れる by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/992

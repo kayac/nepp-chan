@@ -257,6 +257,7 @@ type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
   isAdmin?: boolean;
   platform?: Platform;
   siteInstructions?: string;
+  currentPageUrl?: string;
   modelConfig: AgentModelConfig;
   withMemory?: boolean;
 };
@@ -265,6 +266,7 @@ export const createNeppChanAgent = ({
   isAdmin = false,
   platform = "web",
   siteInstructions,
+  currentPageUrl,
   modelConfig,
   withMemory = true,
   ...agentOptions
@@ -285,6 +287,18 @@ export const createNeppChanAgent = ({
       platform === "line" ? lineInstructions : "",
       platform === "voice" ? voiceInstructions : "",
       siteInstructions ? `## 設置サイトの文脈\n${siteInstructions}` : "",
+      platform === "widget" && currentPageUrl
+        ? `## 閲覧中ページの案内
+ユーザーが現在表示しているページの URL:
+${currentPageUrl}
+
+あなたはこのページに置かれた案内役として振る舞う。
+- 「このページ」「ここ」「これ」などは、会話の文脈上ほかの対象が明らかでない限り、閲覧中のページを指すものとして扱う
+- 閲覧中のページと質問内容を起点に、掲載情報をわかりやすく説明する
+- 必要に応じて、次に行うことや関連ページを具体的に案内する
+- ページの分野に合わせて偏りなく対応する
+- URL だけを返さず、ユーザーが判断・行動できる要点を添える`
+        : "",
       `## 現在の日時\n${getCurrentDateInfo()}`,
       isAdmin ? adminInstructions : "",
     ]

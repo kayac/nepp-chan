@@ -2,9 +2,16 @@ import { describe, expect, it } from "vitest";
 import {
   closedContext,
   dailyBars,
+  PLATFORM_LABELS,
   sumSentiments,
   topEntries,
 } from "./analytics-summary";
+
+describe("PLATFORM_LABELS", () => {
+  it("ウィジェットの表示名を返す", () => {
+    expect(PLATFORM_LABELS.widget).toBe("ウィジェット");
+  });
+});
 
 describe("sumSentiments", () => {
   it("sentiment 内訳を合算する", () => {

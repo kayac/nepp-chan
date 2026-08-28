@@ -7,6 +7,7 @@ import { primaryModelId, resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import type { PrincipalVariables } from "~/lib/principal";
 import { getStorage } from "~/lib/storage";
+import { normalizeSiteHost } from "~/lib/widget-site";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { requireAuth } from "~/middleware/auth";
@@ -29,6 +30,8 @@ const ChatSendRequestSchema = z.object({
   }),
   intent: z.enum(["casual", "thinking"]).optional(),
   siteHost: z.string().max(255).optional(),
+  currentPageUrl: z.url().max(2048).optional(),
+  isGreeting: z.boolean().optional(),
 });
 
 const chatRoute = createRoute({
@@ -66,7 +69,13 @@ const chatRoute = createRoute({
 
 chatRoutes.openapi(chatRoute, async (c) => {
   const { threadId } = c.req.valid("param");
-  const { message, intent: fixedIntent, siteHost } = c.req.valid("json");
+  const {
+    message,
+    intent: fixedIntent,
+    siteHost,
+    currentPageUrl,
+    isGreeting,
+  } = c.req.valid("json");
   const thread = c.get("thread");
   const principal = c.get("principal");
 
@@ -81,10 +90,17 @@ chatRoutes.openapi(chatRoute, async (c) => {
   // widget 由来の resourceId は widget- prefix を持つ（server/src/lib/principal.ts の
   // line:/admin: と同じ、resourceId prefix でチャネルを区別する規約）
   const platform = thread.resourceId.startsWith("widget-") ? "widget" : "web";
+  const isWidgetGreeting = platform === "widget" && isGreeting === true;
   const site =
     platform === "widget" && siteHost
       ? await widgetSiteRepository.findByHost(c.env.DB, siteHost)
       : null;
+  const verifiedCurrentPageUrl =
+    site &&
+    currentPageUrl &&
+    normalizeSiteHost(new URL(currentPageUrl).hostname) === site.host
+      ? currentPageUrl
+      : undefined;
 
   const storage = await getStorage(c.env.DB);
   const turnIndex = await nextTurnIndex(c.env.DB, threadId);
@@ -116,6 +132,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
     modelConfig,
     platform,
     siteInstructions: site?.instructions,
+    currentPageUrl: verifiedCurrentPageUrl,
   });
   const mastra = new Mastra({
     agents: { neppChanAgent },
@@ -127,10 +144,12 @@ chatRoutes.openapi(chatRoute, async (c) => {
     agentId: "neppChanAgent",
     messages: [message],
     requestContext,
-    memory: {
-      resource: thread.resourceId,
-      thread: threadId,
-    },
+    memory: isWidgetGreeting
+      ? undefined
+      : {
+          resource: thread.resourceId,
+          thread: threadId,
+        },
     // onFinish はレスポンス返却後に発火するため waitUntil で記録を完了させる
     onFinish: (event) =>
       waitUntil(

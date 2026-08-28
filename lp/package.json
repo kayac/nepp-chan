@@ -1,7 +1,7 @@
 {
   "name": "@nepp-chan/lp",
   "private": true,
-  "version": "1.0.11",
+  "version": "1.0.12",
   "type": "module",
   "scripts": {
     "dev": "astro dev",
@@ -18,7 +18,7 @@
     "@heroicons/react": "^2.2.0",
     "@nepp-chan/shared": "workspace:*",
     "ai": "^6.0.208",
-    "astro": "^7.2.0",
+    "astro": "^7.2.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-markdown": "^10.1.0",
@@ -31,6 +31,6 @@
     "@types/react-dom": "^19.2.4",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
-    "wrangler": "^4.119.0"
+    "wrangler": "^4.123.0"
   }
 }

@@ -1,4 +1,3 @@
-import { INITIAL_MESSAGE } from "@nepp-chan/shared/constants/chat-defaults";
 import { messageText } from "@nepp-chan/shared/lib/message-text";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -7,7 +6,12 @@ import {
   resolveIconSrc,
   resolveIframeSrc,
 } from "./loader";
-import { CLOSE_MESSAGE_TYPE } from "./messages";
+import {
+  CLOSE_MESSAGE_TYPE,
+  CURRENT_PAGE_REQUEST_MESSAGE_TYPE,
+  CURRENT_PAGE_RESPONSE_MESSAGE_TYPE,
+} from "./messages";
+import { WIDGET_INITIAL_MESSAGE } from "./widget-chat-defaults";
 
 const WIDGET_FLAG = "__neppChatWidgetLoaded";
 const SCRIPT_SRC = "https://nepp-chan.ai/widget/widget.js";
@@ -274,8 +278,40 @@ describe("mountWidget", () => {
     });
   });
 
+  describe("iframe からの現在ページ問い合わせ", () => {
+    it("問い合わせ時点の origin + pathname を iframe に返す", () => {
+      mount();
+      document.body.querySelector("button")?.click();
+      const iframe = document.body.querySelector<HTMLIFrameElement>("iframe");
+      const postMessage = vi.spyOn(
+        iframe?.contentWindow as Window,
+        "postMessage",
+      );
+      const original = window.location.href;
+      window.history.replaceState({}, "", "/kurashi/hoken/?from=top#detail");
+
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          origin: new URL(IFRAME_SRC).origin,
+          source: iframe?.contentWindow,
+          data: { type: CURRENT_PAGE_REQUEST_MESSAGE_TYPE },
+        }),
+      );
+
+      expect(postMessage).toHaveBeenCalledWith(
+        {
+          type: CURRENT_PAGE_RESPONSE_MESSAGE_TYPE,
+          currentPageUrl: `${location.origin}/kurashi/hoken/`,
+        },
+        new URL(IFRAME_SRC).origin,
+      );
+
+      window.history.replaceState({}, "", original);
+    });
+  });
+
   describe("吹き出しティーザー", () => {
-    const teaserText = messageText(INITIAL_MESSAGE);
+    const teaserText = messageText(WIDGET_INITIAL_MESSAGE);
 
     const findPanelButton = () =>
       document.body.querySelector<HTMLButtonElement>(

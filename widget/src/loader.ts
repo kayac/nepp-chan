@@ -1,6 +1,10 @@
-import { INITIAL_MESSAGE } from "@nepp-chan/shared/constants/chat-defaults";
 import { messageText } from "@nepp-chan/shared/lib/message-text";
-import { CLOSE_MESSAGE_TYPE } from "./messages";
+import {
+  CLOSE_MESSAGE_TYPE,
+  CURRENT_PAGE_REQUEST_MESSAGE_TYPE,
+  CURRENT_PAGE_RESPONSE_MESSAGE_TYPE,
+} from "./messages";
+import { WIDGET_INITIAL_MESSAGE } from "./widget-chat-defaults";
 
 const WIDGET_FLAG = "__neppChatWidgetLoaded";
 const Z_INDEX = "2147483000";
@@ -8,7 +12,7 @@ const PANEL_TRANSITION_MS = 200;
 const TEASER_DELAY_MS = 2500;
 const TEASER_REVIVE_MS = 7 * 24 * 60 * 60 * 1000;
 const TEASER_DISMISSED_KEY = "nepp-chan-widget:teaser-dismissed-at";
-const TEASER_TEXT = messageText(INITIAL_MESSAGE);
+const TEASER_TEXT = messageText(WIDGET_INITIAL_MESSAGE);
 
 export const resolveIframeSrc = (scriptSrc: string) =>
   new URL("index.html", scriptSrc).href;
@@ -261,11 +265,17 @@ export const mountWidget = ({
     if (!iframe) return;
     if (event.origin !== iframeOrigin) return;
     if (event.source !== iframe.contentWindow) return;
-    if (
-      (event.data as { type?: unknown } | null)?.type !== CLOSE_MESSAGE_TYPE
-    ) {
+    const type = (event.data as { type?: unknown } | null)?.type;
+    if (type === CURRENT_PAGE_REQUEST_MESSAGE_TYPE) {
+      iframe.contentWindow?.postMessage(
+        {
+          type: CURRENT_PAGE_RESPONSE_MESSAGE_TYPE,
+          currentPageUrl: `${win.location.origin}${win.location.pathname}`,
+        },
+        iframeOrigin,
+      );
       return;
     }
-    setOpen(false);
+    if (type === CLOSE_MESSAGE_TYPE) setOpen(false);
   });
 };

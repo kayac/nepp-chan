@@ -98,7 +98,7 @@ export const WidgetSitesPanel = () => {
             value={instructions}
             onChange={(e) => setInstructions(e.target.value)}
             rows={6}
-            placeholder="行政手続き・窓口案内の質問を優先して受け止める"
+            placeholder="設置サイトは音威子府村公式ホームページである"
             className="w-full px-3 py-2 border border-stone-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </label>

@@ -30,7 +30,8 @@ export const useThreadManager = () => {
   const [initialMessage, setInitialMessage] = useState<InitialMessage>();
   const hasInitialized = useRef(false);
 
-  const { data: threadsData, isSuccess: threadsLoaded } = useThreads();
+  const { data: threadsData, isSuccess: threadsLoaded } =
+    useThreads(isSessionReady);
   const threads = useMemo(() => threadsData?.threads ?? [], [threadsData]);
 
   const createThreadMutation = useCreateThread();

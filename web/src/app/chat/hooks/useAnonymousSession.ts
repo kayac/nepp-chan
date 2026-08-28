@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { API_BASE } from "~/lib/api/client";
-import { getSessionToken, setSessionToken } from "~/lib/auth-token";
+import {
+  getSessionToken,
+  removeSessionToken,
+  setSessionToken,
+} from "~/lib/auth-token";
 import { setResourceId } from "~/lib/resource";
 
 type SessionState = {
   isReady: boolean;
-  /** マウント時に session token が未保存だった = この訪問が初回 */
   isFirstVisit: boolean;
 };
 
@@ -22,14 +25,33 @@ const acquireSessionToken = async (): Promise<{
   return res.json();
 };
 
+const isSessionTokenActive = (token: string) => {
+  try {
+    const payload = token.split(".")[1];
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+    const { exp } = JSON.parse(atob(padded)) as { exp?: unknown };
+    return typeof exp === "number" && exp > Date.now() / 1000;
+  } catch {
+    return false;
+  }
+};
+
 export const useAnonymousSession = (): SessionState => {
-  const initialHadToken = useRef(
-    typeof window !== "undefined" && !!getSessionToken(),
+  const initialToken = useRef(
+    typeof window !== "undefined" ? getSessionToken() : null,
   );
-  const [isReady, setIsReady] = useState(initialHadToken.current);
+  const initialHadActiveToken = useRef(
+    !!initialToken.current && isSessionTokenActive(initialToken.current),
+  );
+  const [isReady, setIsReady] = useState(initialHadActiveToken.current);
 
   useEffect(() => {
     if (isReady) return;
+
+    if (initialToken.current) {
+      removeSessionToken();
+    }
 
     acquireSessionToken()
       .then(({ token, resourceId }) => {
@@ -43,5 +65,5 @@ export const useAnonymousSession = (): SessionState => {
       });
   }, [isReady]);
 
-  return { isReady, isFirstVisit: !initialHadToken.current };
+  return { isReady, isFirstVisit: !initialHadActiveToken.current };
 };

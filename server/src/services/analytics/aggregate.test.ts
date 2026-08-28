@@ -171,9 +171,10 @@ describe("getConversationStats", () => {
     expect(stats.totals.messages).toBe(0);
   });
 
-  it("resourceId プレフィックスで line / admin / web に分類する", async () => {
+  it("resourceId プレフィックスで line / admin / widget / web に分類する", async () => {
     await insertThread(db, "t-line", "line:hashed-abc");
     await insertThread(db, "t-admin", "admin:user-1");
+    await insertThread(db, "t-widget", "widget-anonymous-1");
     await insertThread(db, "t-web", WEB_RESOURCE);
     await insertMessage(db, {
       id: "m1",
@@ -192,8 +193,13 @@ describe("getConversationStats", () => {
     });
     await insertMessage(db, {
       id: "m4",
-      threadId: "t-web",
+      threadId: "t-widget",
       createdAt: "2026-06-09T04:00:00.000Z",
+    });
+    await insertMessage(db, {
+      id: "m5",
+      threadId: "t-web",
+      createdAt: "2026-06-09T05:00:00.000Z",
     });
 
     const stats = await getConversationStats(d1, {
@@ -205,6 +211,7 @@ describe("getConversationStats", () => {
       expect.arrayContaining([
         { platform: "line", count: 2 },
         { platform: "admin", count: 1 },
+        { platform: "widget", count: 1 },
         { platform: "web", count: 1 },
       ]),
     );

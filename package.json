@@ -1,6 +1,6 @@
 {
   "name": "nepp-chan",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "private": true,
   "type": "module",
   "engines": {
@@ -51,10 +51,10 @@
     "openapi:generate": "pnpm --filter @nepp-chan/web openapi:generate"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.7",
+    "@biomejs/biome": "^2.5.9",
     "glob": "^13.0.6",
     "gray-matter": "^4.0.3",
-    "tsx": "^4.23.11",
-    "wrangler": "^4.119.0"
+    "tsx": "^4.23.12",
+    "wrangler": "^4.123.0"
   }
 }
