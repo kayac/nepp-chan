@@ -1,6 +1,7 @@
 import { Agent } from "@mastra/core/agent";
-import { geminiModelWithThinking } from "~/lib/llm-models";
+import { modelWithReasoning } from "~/lib/llm-models";
 import { adminFeedbackTool } from "~/mastra/tools/admin-feedback-tool";
+import { withUsageRecording } from "~/services/analytics/llm-usage";
 
 export const feedbackAgent = new Agent({
   id: "feedback-agent",
@@ -31,7 +32,7 @@ export const feedbackAgent = new Agent({
 ## 利用可能なツール
 - admin-feedback: フィードバック一覧と統計の取得（認証必須）
 `,
-  ...geminiModelWithThinking(),
+  ...withUsageRecording(modelWithReasoning(), { agent: "feedback" }),
   tools: {
     adminFeedbackTool,
   },

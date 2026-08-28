@@ -40,6 +40,7 @@ export const ChatProvider = ({
     id: threadId,
     messages: initialMessages,
     transport,
+    experimental_throttle: 50,
   });
 
   const sent = useRef(false);

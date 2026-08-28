@@ -97,6 +97,7 @@ export const extractPersonaFromThread = async (
     db: env.DB,
     env,
     conversationEndedAt,
+    usageThreadId: threadId,
   });
 
   try {

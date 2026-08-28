@@ -74,6 +74,7 @@ vi.mock("~/services/thread", () => ({
 
 vi.mock("~/services/analytics/llm-usage", () => ({
   recordLlmUsage: mockRecordLlmUsage,
+  nextTurnIndex: vi.fn(async () => 1),
 }));
 
 vi.mock("~/repository/admin-session-repository", () => ({
@@ -216,7 +217,10 @@ describe("chatRoutes: POST /:threadId/chat", () => {
       mockEnv,
     );
 
-    expect(mockClassifyIntent).toHaveBeenCalledWith("こんにちは");
+    expect(mockClassifyIntent).toHaveBeenCalledWith(
+      "こんにちは",
+      expect.anything(),
+    );
   });
 
   it("text パートが無いメッセージは空文字で classifyIntent を呼ぶ", async () => {
@@ -231,7 +235,7 @@ describe("chatRoutes: POST /:threadId/chat", () => {
       mockEnv,
     );
 
-    expect(mockClassifyIntent).toHaveBeenCalledWith("");
+    expect(mockClassifyIntent).toHaveBeenCalledWith("", expect.anything());
   });
 
   it("ストリーム完了時に usage を platform=web で記録する", async () => {
@@ -250,14 +254,19 @@ describe("chatRoutes: POST /:threadId/chat", () => {
       model: { modelId: "gemini-2.5-flash-lite" },
     });
 
-    expect(mockRecordLlmUsage).toHaveBeenCalledWith(mockEnv.DB, {
-      model: "gemini-2.5-flash-lite",
-      usage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
-      platform: "web",
-      source: "chat",
-      intent: "casual",
-      threadId: "thread-1",
-    });
+    expect(mockRecordLlmUsage).toHaveBeenCalledWith(
+      mockEnv.DB,
+      expect.objectContaining({
+        model: "gemini-2.5-flash-lite",
+        usage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
+        platform: "web",
+        source: "chat",
+        agent: "nepp-chan",
+        intent: "casual",
+        threadId: "thread-1",
+        turnIndex: 1,
+      }),
+    );
   });
 
   it("widget- prefix の resourceId では usage を platform=widget で記録する", async () => {
@@ -458,7 +467,7 @@ describe("chatRoutes: POST /:threadId/chat", () => {
 
     expect(mockRecordLlmUsage).toHaveBeenCalledWith(
       mockEnv.DB,
-      expect.objectContaining({ model: "google/gemini-flash-lite-latest" }),
+      expect.objectContaining({ model: "openai/gpt-5.6-luna" }),
     );
   });
 

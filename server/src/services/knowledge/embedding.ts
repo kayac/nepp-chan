@@ -4,6 +4,7 @@ import { embedMany } from "ai";
 import matter from "gray-matter";
 import { GEMINI_EMBEDDING } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
+import { recordLlmUsage } from "~/services/analytics/llm-usage";
 
 const EMBEDDING_DIMENSIONS = 1536;
 const BATCH_SIZE = 100;
@@ -110,15 +111,16 @@ const chunkDocument = async (
  */
 const generateEmbeddings = async (texts: string[], apiKey: string) => {
   if (texts.length === 0) {
-    return [];
+    return { embeddings: [], tokens: 0 };
   }
 
   const model = getEmbeddingModel(apiKey);
   const allEmbeddings: number[][] = [];
+  let tokens = 0;
 
   for (let i = 0; i < texts.length; i += BATCH_SIZE) {
     const batch = texts.slice(i, i + BATCH_SIZE);
-    const { embeddings } = await embedMany({
+    const { embeddings, usage } = await embedMany({
       model,
       values: batch,
       providerOptions: {
@@ -129,9 +131,10 @@ const generateEmbeddings = async (texts: string[], apiKey: string) => {
       },
     });
     allEmbeddings.push(...embeddings);
+    tokens += usage?.tokens ?? 0;
   }
 
-  return allEmbeddings;
+  return { embeddings: allEmbeddings, tokens };
 };
 
 /**
@@ -142,6 +145,7 @@ export const processKnowledgeFile = async (
   content: string,
   vectorize: VectorizeIndex,
   apiKey: string,
+  d1?: D1Database,
 ): Promise<{ chunks: number; error?: string }> => {
   try {
     // 1. Chunk 分割（MDocument のメソッドを活用）
@@ -152,7 +156,15 @@ export const processKnowledgeFile = async (
     }
 
     // 2. Embeddings 生成
-    const embeddings = await generateEmbeddings(texts, apiKey);
+    const { embeddings, tokens } = await generateEmbeddings(texts, apiKey);
+    if (d1) {
+      await recordLlmUsage(d1, {
+        model: GEMINI_EMBEDDING,
+        usage: { inputTokens: tokens },
+        source: "embedding",
+        agent: "embedding",
+      });
+    }
 
     // 3. ベクトルデータの作成
     const vectors: VectorData[] = texts.map((_, i) => ({

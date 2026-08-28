@@ -1,5 +1,5 @@
 import { Agent } from "@mastra/core/agent";
-import { GEMINI_FLASH, geminiModelWithThinking } from "~/lib/llm-models";
+import { modelWithReasoning, OPENAI_MAIN } from "~/lib/llm-models";
 
 export const weeklyReportAgent = new Agent({
   id: "weekly-report-agent",
@@ -22,5 +22,5 @@ export const weeklyReportAgent = new Agent({
 - 入力にない情報を推測で補わない
 - 箇条書きの羅列だけで終わらせない（傾向の解釈を添える）
 `,
-  ...geminiModelWithThinking({ model: GEMINI_FLASH, level: "low" }),
+  ...modelWithReasoning({ model: OPENAI_MAIN, effort: "high" }),
 });

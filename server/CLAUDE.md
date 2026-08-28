@@ -88,7 +88,7 @@ throw new HTTPException(404, { message: "Not found" });
 ### エージェント規約
 
 - instructions: 日本語で記述、セクションは `##` で区分
-- model: デフォルト `GEMINI_FLASH`、推論精度重視なら `GEMINI_PRO`
+- model: `lib/llm-models.ts` の定数を使用。軽量処理は `OPENAI_LITE`、推論精度重視なら `OPENAI_MAIN`
 - 動的 instructions: 現在日時が必要な場合のみ関数化（`lib/date.ts` の `getCurrentDateInfo()` を使用）
 
 ### ルート規約

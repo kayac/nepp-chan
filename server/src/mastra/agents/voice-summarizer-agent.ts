@@ -1,23 +1,23 @@
 import { Agent } from "@mastra/core/agent";
-import { GEMINI_FLASH_LITE } from "~/lib/llm-models";
+import { OPENAI_LITE, reasoningProviderOptions } from "~/lib/llm-models";
+import { withUsageRecording } from "~/services/analytics/llm-usage";
 
 export const NEED_KNOWLEDGE = "NEED_KNOWLEDGE";
 export const NEED_WEB = "NEED_WEB";
 
+// reasoning を有効にすると temperature が strip されるため、決定的要約には none が必須
 const summarizerModelConfig = {
-  model: GEMINI_FLASH_LITE,
-  providerOptions: {
-    google: {
-      thinkingConfig: { thinkingLevel: "minimal" as const },
-    },
+  model: OPENAI_LITE,
+  defaultOptions: {
+    modelSettings: { temperature: 0 },
+    providerOptions: reasoningProviderOptions("none"),
   },
-  defaultOptions: { modelSettings: { temperature: 0 } },
 };
 
 export const voiceSummarizerAgent = new Agent({
   id: "voice-summarizer",
   name: "Voice Summarizer",
-  ...summarizerModelConfig,
+  ...withUsageRecording(summarizerModelConfig, { agent: "voice-summarizer" }),
   instructions: `あなたは音声通話の裏方。ユーザーの質問と「手元の資料」が与えられる。喋る担当は別にいるので、キャラ付け・前置き・装飾は一切しない。事実の抽出だけを行う。
 
 資料は【資料N | 質問「…」 | 出典】の形式で複数並ぶことがある。番号が大きい資料ほど後から取得したもの。質問に関係する資料だけを使い、同じ質問について内容が食い違うときは後から取得した資料を優先する。

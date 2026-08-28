@@ -112,6 +112,49 @@ describe("fetchUsageAnalytics", () => {
   });
 });
 
+describe("fetchThreadUsage", () => {
+  it("daysとlimitを渡せる", async () => {
+    server.use(
+      http.get(`${API}/admin/analytics/usage/threads`, ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        expect(params.get("days")).toBe("7");
+        expect(params.get("limit")).toBe("10");
+        return HttpResponse.json({ summary: {}, threads: [] });
+      }),
+    );
+
+    const result = await repo.fetchThreadUsage({ days: 7, limit: 10 });
+    expect(result?.threads).toEqual([]);
+  });
+});
+
+describe("fetchOperationCost", () => {
+  it("デフォルトdays=30", async () => {
+    server.use(
+      http.get(`${API}/admin/analytics/usage/operation`, ({ request }) => {
+        expect(new URL(request.url).searchParams.get("days")).toBe("30");
+        return HttpResponse.json({ totalCostUsd: 0, byCategory: [] });
+      }),
+    );
+
+    const result = await repo.fetchOperationCost();
+    expect(result?.totalCostUsd).toBe(0);
+  });
+});
+
+describe("fetchThreadTurnUsage", () => {
+  it("指定したスレッドのターン別利用量を取得する", async () => {
+    server.use(
+      http.get(`${API}/admin/analytics/usage/threads/thread-1`, () =>
+        HttpResponse.json({ turns: [] }),
+      ),
+    );
+
+    const result = await repo.fetchThreadTurnUsage("thread-1");
+    expect(result?.turns).toEqual([]);
+  });
+});
+
 describe("fetchWeeklyReports", () => {
   it("一覧を取得する", async () => {
     server.use(

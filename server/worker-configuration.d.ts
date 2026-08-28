@@ -10,6 +10,7 @@ interface __BaseEnv_CloudflareBindings {
 	ENVIRONMENT: "development";
 	WEB_URL: "https://dev-web.nepp-chan.ai";
 	LP_URL: "https://dev.nepp-chan.ai";
+	OPENAI_API_KEY: string;
 	GOOGLE_GENERATIVE_AI_API_KEY: string;
 	GOOGLE_SEARCH_ENGINE_ID: string;
 	JWT_SECRET: string;
@@ -36,7 +37,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "ENVIRONMENT" | "WEB_URL" | "LP_URL" | "GOOGLE_GENERATIVE_AI_API_KEY" | "GOOGLE_SEARCH_ENGINE_ID" | "JWT_SECRET" | "RESOURCE_ID_HASH_SECRET" | "LINE_CHANNEL_SECRET" | "LINE_CHANNEL_ACCESS_TOKEN" | "TWILIO_ACCOUNT_SID" | "TWILIO_API_KEY_SID" | "TWILIO_API_KEY_SECRET" | "TWILIO_TWIML_APP_SID" | "CALL_TOKEN_SECRET" | "TWILIO_AUTH_TOKEN">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "ENVIRONMENT" | "WEB_URL" | "LP_URL" | "OPENAI_API_KEY" | "GOOGLE_GENERATIVE_AI_API_KEY" | "GOOGLE_SEARCH_ENGINE_ID" | "JWT_SECRET" | "RESOURCE_ID_HASH_SECRET" | "LINE_CHANNEL_SECRET" | "LINE_CHANNEL_ACCESS_TOKEN" | "TWILIO_ACCOUNT_SID" | "TWILIO_API_KEY_SID" | "TWILIO_API_KEY_SECRET" | "TWILIO_TWIML_APP_SID" | "CALL_TOKEN_SECRET" | "TWILIO_AUTH_TOKEN">> {}
 }
 
 // Begin runtime types

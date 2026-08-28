@@ -7,11 +7,18 @@ import {
   type VoicePrefetchSlot,
 } from "~/services/voice/findings-slot";
 
-const { knowledgeGen, webGen, summarizerGen, loggerError } = vi.hoisted(() => ({
+const {
+  knowledgeGen,
+  webGen,
+  summarizerGen,
+  loggerError,
+  knowledgeAgentOptions,
+} = vi.hoisted(() => ({
   knowledgeGen: vi.fn(),
   webGen: vi.fn(),
   summarizerGen: vi.fn(),
   loggerError: vi.fn(),
+  knowledgeAgentOptions: [] as unknown[],
 }));
 
 vi.mock("~/mastra/agents/voice-summarizer-agent", async (importOriginal) => ({
@@ -21,7 +28,10 @@ vi.mock("~/mastra/agents/voice-summarizer-agent", async (importOriginal) => ({
   voiceSummarizerAgent: { generate: summarizerGen },
 }));
 vi.mock("~/mastra/agents/knowledge-agent", () => ({
-  createKnowledgeAgent: () => ({ generate: knowledgeGen }),
+  createKnowledgeAgent: (options?: unknown) => {
+    knowledgeAgentOptions.push(options);
+    return { generate: knowledgeGen };
+  },
 }));
 vi.mock("~/mastra/agents/web-researcher-agent", () => ({
   createWebResearcherAgent: () => ({ generate: webGen }),
@@ -31,6 +41,12 @@ vi.mock("~/lib/logger", () => ({
 }));
 
 const { voiceAnswerTool } = await import("./voice-answer-tool");
+
+describe("通話用エージェントの生成", () => {
+  it("knowledge-agent は通話の応答速度を優先して effort low で作る", () => {
+    expect(knowledgeAgentOptions).toEqual([{ effort: "low" }]);
+  });
+});
 
 const holdFn = vi.fn();
 

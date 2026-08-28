@@ -1,103 +1,170 @@
 import { describe, expect, it } from "vitest";
 import {
-  GEMINI_FLASH,
-  GEMINI_FLASH_LITE,
-  type Intent,
+  GEMINI_FLASH_EVAL,
+  modelWithReasoning,
+  OPENAI_LITE,
+  OPENAI_MAIN,
   primaryModelId,
   resolveModelTier,
   voiceModelConfig,
 } from "./llm-models";
 
+describe("modelWithReasoning", () => {
+  it("google 系モデルにも reasoning 指定が効くよう両プロバイダの providerOptions を持つ", () => {
+    const config = modelWithReasoning({
+      model: GEMINI_FLASH_EVAL,
+      effort: "medium",
+    });
+    expect(config.defaultOptions.providerOptions.openai.reasoningEffort).toBe(
+      "medium",
+    );
+    expect(
+      config.defaultOptions.providerOptions.google.thinkingConfig.thinkingLevel,
+    ).toBe("medium");
+  });
+
+  it("Agent 直下の providerOptions は捨てられるため defaultOptions に入れる", () => {
+    expect(modelWithReasoning()).not.toHaveProperty("providerOptions");
+  });
+
+  it("既定の effort は high", () => {
+    expect(
+      modelWithReasoning().defaultOptions.providerOptions.openai
+        .reasoningEffort,
+    ).toBe("high");
+  });
+
+  it("Gemini の thinkingLevel に none が無いため minimal へ読み替える", () => {
+    const config = modelWithReasoning({ effort: "none" });
+
+    expect(config.defaultOptions.providerOptions.openai.reasoningEffort).toBe(
+      "none",
+    );
+    expect(
+      config.defaultOptions.providerOptions.google.thinkingConfig.thinkingLevel,
+    ).toBe("minimal");
+  });
+
+  it("Gemini の thinkingLevel に xhigh が無いため high へ丸める", () => {
+    const config = modelWithReasoning({ effort: "xhigh" });
+
+    expect(config.defaultOptions.providerOptions.openai.reasoningEffort).toBe(
+      "xhigh",
+    );
+    expect(
+      config.defaultOptions.providerOptions.google.thinkingConfig.thinkingLevel,
+    ).toBe("high");
+  });
+});
+
 describe("resolveModelTier", () => {
-  describe("Admin は常に thinking/web ティア", () => {
-    const intents: Intent[] = ["casual", "thinking"];
+  describe("Admin も intent に従う（maxSteps だけ引き上げる）", () => {
     const platforms = ["web", "line"] as const;
 
-    for (const intent of intents) {
-      for (const platform of platforms) {
-        it(`intent=${intent}, platform=${platform} でもプライマリ FLASH + high`, () => {
-          const tier = resolveModelTier({ intent, platform, isAdmin: true });
-          expect(tier.model[0].model).toBe(GEMINI_FLASH);
-          expect(
-            tier.model[0].providerOptions.google.thinkingConfig.thinkingLevel,
-          ).toBe("high");
+    for (const platform of platforms) {
+      it(`casual/${platform} は effort=medium のまま maxSteps だけ thinking と揃える`, () => {
+        const tier = resolveModelTier({
+          intent: "casual",
+          platform,
+          isAdmin: true,
         });
-      }
+        expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
+          "medium",
+        );
+        expect(tier.defaultOptions.maxSteps).toBe(
+          resolveModelTier({ intent: "thinking", platform, isAdmin: false })
+            .defaultOptions.maxSteps,
+        );
+      });
+
+      it(`thinking/${platform} は非 Admin と同じ設定`, () => {
+        const tier = resolveModelTier({
+          intent: "thinking",
+          platform,
+          isAdmin: true,
+        });
+        expect(tier).toEqual(
+          resolveModelTier({ intent: "thinking", platform, isAdmin: false }),
+        );
+      });
     }
   });
 
   describe("Web プラットフォーム（非 Admin）", () => {
-    it("casual → プライマリ FLASH_LITE + low、フォールバック FLASH", () => {
+    it("casual → プライマリ LITE + medium、フォールバック MAIN", () => {
       const tier = resolveModelTier({
         intent: "casual",
         platform: "web",
         isAdmin: false,
       });
       expect(tier.model.map((m) => m.model)).toEqual([
-        GEMINI_FLASH_LITE,
-        GEMINI_FLASH,
+        OPENAI_LITE,
+        OPENAI_MAIN,
       ]);
-      expect(
-        tier.model[0].providerOptions.google.thinkingConfig.thinkingLevel,
-      ).toBe("low");
+      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
+        "medium",
+      );
     });
 
-    it("thinking → プライマリ FLASH + high、フォールバック FLASH_LITE", () => {
+    it("thinking → プライマリ LITE + xhigh、フォールバック MAIN", () => {
       const tier = resolveModelTier({
         intent: "thinking",
         platform: "web",
         isAdmin: false,
       });
       expect(tier.model.map((m) => m.model)).toEqual([
-        GEMINI_FLASH,
-        GEMINI_FLASH_LITE,
+        OPENAI_LITE,
+        OPENAI_MAIN,
       ]);
-      expect(
-        tier.model[0].providerOptions.google.thinkingConfig.thinkingLevel,
-      ).toBe("high");
+      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
+        "xhigh",
+      );
+      expect(tier.model[0].providerOptions.openai.textVerbosity).toBe("high");
     });
   });
 
   describe("LINE プラットフォーム（非 Admin）", () => {
-    it("casual → プライマリ FLASH_LITE + minimal", () => {
+    it("casual → プライマリ LITE + medium", () => {
       const tier = resolveModelTier({
         intent: "casual",
         platform: "line",
         isAdmin: false,
       });
-      expect(tier.model[0].model).toBe(GEMINI_FLASH_LITE);
-      expect(tier.model[0].providerOptions.google.thinkingConfig).toEqual({
-        thinkingLevel: "minimal",
+      expect(tier.model[0].model).toBe(OPENAI_LITE);
+      expect(tier.model[0].providerOptions.openai).toEqual({
+        reasoningEffort: "medium",
       });
     });
 
-    it("thinking → プライマリ FLASH + medium", () => {
+    it("thinking → プライマリ LITE + xhigh", () => {
       const tier = resolveModelTier({
         intent: "thinking",
         platform: "line",
         isAdmin: false,
       });
-      expect(tier.model[0].model).toBe(GEMINI_FLASH);
-      expect(
-        tier.model[0].providerOptions.google.thinkingConfig.thinkingLevel,
-      ).toBe("medium");
+      expect(tier.model[0].model).toBe(OPENAI_LITE);
+      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
+        "xhigh",
+      );
+      expect(tier.model[0].providerOptions.openai).not.toHaveProperty(
+        "textVerbosity",
+      );
     });
   });
 
   describe("voiceModelConfig（通話用の固定モデル）", () => {
-    it("プライマリ FLASH_LITE + low、フォールバック FLASH", () => {
+    it("プライマリ LITE + low、フォールバック MAIN", () => {
       expect(voiceModelConfig.model.map((m) => m.model)).toEqual([
-        GEMINI_FLASH_LITE,
-        GEMINI_FLASH,
+        OPENAI_LITE,
+        OPENAI_MAIN,
       ]);
       expect(
-        voiceModelConfig.model[0].providerOptions.google.thinkingConfig
-          .thinkingLevel,
+        voiceModelConfig.model[0].providerOptions.openai.reasoningEffort,
       ).toBe("low");
     });
 
-    it("重い FLASH/medium は使わない（軽量ゲート）", () => {
-      expect(voiceModelConfig.model[0].model).not.toBe(GEMINI_FLASH);
+    it("重い MAIN は使わない（軽量ゲート）", () => {
+      expect(voiceModelConfig.model[0].model).not.toBe(OPENAI_MAIN);
     });
 
     it("tool 委譲のため maxSteps は 10 を維持", () => {
@@ -126,15 +193,15 @@ describe("resolveModelTier", () => {
   });
 
   describe("フォールバック構成", () => {
-    it("フォールバックはプライマリと同じ thinking 設定を引き継ぐ", () => {
+    it("フォールバックはプライマリと同じ reasoning 設定を引き継ぐ", () => {
       const tier = resolveModelTier({
         intent: "thinking",
         platform: "line",
         isAdmin: false,
       });
-      expect(
-        tier.model[1].providerOptions.google.thinkingConfig.thinkingLevel,
-      ).toBe("medium");
+      expect(tier.model[1].providerOptions.openai.reasoningEffort).toBe(
+        "xhigh",
+      );
     });
 
     it("全エントリに maxRetries が設定されている", () => {
@@ -168,6 +235,6 @@ describe("primaryModelId", () => {
       platform: "web",
       isAdmin: false,
     });
-    expect(primaryModelId(tier)).toBe(GEMINI_FLASH_LITE);
+    expect(primaryModelId(tier)).toBe(OPENAI_LITE);
   });
 });

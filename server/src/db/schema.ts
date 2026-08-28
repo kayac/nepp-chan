@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 // 緊急報告
 export const emergencyReports = sqliteTable("emergency_reports", {
@@ -198,10 +198,16 @@ export const llmUsage = sqliteTable("llm_usage", {
   reasoningTokens: integer("reasoning_tokens").notNull().default(0),
   cachedInputTokens: integer("cached_input_tokens").notNull().default(0),
   totalTokens: integer("total_tokens").notNull().default(0),
-  platform: text("platform"), // "web" | "line" | "lp" | "widget" | null（バッチ系）
-  source: text("source").notNull(), // "chat" | "persona-extract" | "weekly-report" | "intent-classify"
+  platform: text("platform"), // "web" | "line" | "lp" | "widget" | "voice" | null（バッチ系）
+  source: text("source").notNull(), // "chat" | "subagent" | "intent-classify" | "persona-extract" | "weekly-report" | "image-convert"
+  agent: text("agent"), // 呼び出し元エージェント名（"nepp-chan" "knowledge" 等）。列追加前の行は null
+  turnIndex: integer("turn_index"), // スレッド内の何往復目か（1 始まり）。列追加前の行は null
+  durationMs: integer("duration_ms"), // 呼び出し 1 回の所要時間
   intent: text("intent"), // "casual" | "thinking"
   threadId: text("thread_id"),
+  // 記録時点の単価による確定額（USD）。単価変動後も過去実績が書き換わらないよう永続化する。
+  // NULL はコスト永続化開始前の行で、集計時に現行単価で概算する
+  costUsd: real("cost_usd"),
   createdAt: text("created_at").notNull(),
 });
 

@@ -72,6 +72,7 @@ knowledgeConvertRoutes.openapi(uploadFileRoute, async (c) => {
     bucket: c.env.KNOWLEDGE_BUCKET,
     vectorize: c.env.VECTORIZE,
     apiKey,
+    d1: c.env.DB,
   });
 
   return c.json(
@@ -90,7 +91,7 @@ const convertFileRoute = createRoute({
   path: "/convert",
   summary: "画像/PDFをMarkdownに変換",
   description:
-    "画像またはPDFファイルをGeminiで読み取り、Markdown形式に変換してR2に保存します",
+    "画像またはPDFファイルをLLMで読み取り、Markdown形式に変換してR2に保存します",
   tags: ["Admin - Knowledge"],
   request: {
     body: {
@@ -146,6 +147,7 @@ knowledgeConvertRoutes.openapi(convertFileRoute, async (c) => {
     bucket: c.env.KNOWLEDGE_BUCKET,
     vectorize: c.env.VECTORIZE,
     apiKey,
+    d1: c.env.DB,
   });
 
   return c.json(
@@ -216,6 +218,7 @@ knowledgeConvertRoutes.openapi(reconvertFileRoute, async (c) => {
     bucket: c.env.KNOWLEDGE_BUCKET,
     vectorize: c.env.VECTORIZE,
     apiKey,
+    d1: c.env.DB,
   });
 
   return c.json(

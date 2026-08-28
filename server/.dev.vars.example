@@ -1,3 +1,5 @@
+OPENAI_API_KEY=your-api-key-here
+
 GOOGLE_GENERATIVE_AI_API_KEY=your-api-key-here
 GOOGLE_SEARCH_ENGINE_ID=your-engine-id-here
 
@@ -10,12 +12,9 @@ RESOURCE_ID_HASH_SECRET=local-dev-resource-id-hash-secret-change-me
 # Eval専用（省略時は GOOGLE_GENERATIVE_AI_API_KEY を使用）
 EVAL_GOOGLE_API_KEY=
 
-# OpenAI（Evalスコアラー用: gpt-5-nano）
-OPENAI_API_KEY=
-
 # LINE Messaging API
 LINE_CHANNEL_SECRET=your-channel-secret-here
-LINE_CHANNEL_ACCESS_TOKEN=your-chan=======
+LINE_CHANNEL_ACCESS_TOKEN=your-channel-access-token-here
 
 # Sentry
 SENTRY_DSN=

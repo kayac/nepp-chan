@@ -124,6 +124,7 @@ knowledgeFilesRoutes.openapi(saveFileRoute, async (c) => {
   const result = await syncFile(key, content, {
     vectorize: c.env.VECTORIZE,
     apiKey,
+    d1: c.env.DB,
   });
 
   return c.json(

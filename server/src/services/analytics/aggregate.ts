@@ -114,19 +114,44 @@ type UsageSumRow = {
   reasoningTokens: number;
   cachedInputTokens: number;
   totalTokens: number;
+  persistedCostUsd: number;
+  legacyInputTokens: number;
+  legacyOutputTokens: number;
+  legacyCachedInputTokens: number;
 };
 
-const withCost = (row: UsageSumRow) => {
-  const summed = {
-    model: row.model,
-    inputTokens: Number(row.inputTokens),
-    outputTokens: Number(row.outputTokens),
-    reasoningTokens: Number(row.reasoningTokens),
-    cachedInputTokens: Number(row.cachedInputTokens),
-    totalTokens: Number(row.totalTokens),
-  };
-  return { ...summed, costUsd: calcCostUsd(row.model, summed) };
-};
+// トークン合算と costUsd 算出用の SELECT 列。
+// cost_usd は記録時点の単価で永続化されるが、永続化開始前の行（NULL）は
+// legacy* のトークン数から現行単価で概算して合算する
+const usageSumColumns = sql`
+  SUM(input_tokens) AS inputTokens,
+  SUM(output_tokens) AS outputTokens,
+  SUM(reasoning_tokens) AS reasoningTokens,
+  SUM(cached_input_tokens) AS cachedInputTokens,
+  SUM(total_tokens) AS totalTokens,
+  SUM(COALESCE(cost_usd, 0)) AS persistedCostUsd,
+  SUM(CASE WHEN cost_usd IS NULL THEN input_tokens ELSE 0 END) AS legacyInputTokens,
+  SUM(CASE WHEN cost_usd IS NULL THEN output_tokens ELSE 0 END) AS legacyOutputTokens,
+  SUM(CASE WHEN cost_usd IS NULL THEN cached_input_tokens ELSE 0 END) AS legacyCachedInputTokens
+`;
+
+const usageCostUsd = (row: UsageSumRow) =>
+  Number(row.persistedCostUsd) +
+  calcCostUsd(row.model, {
+    inputTokens: Number(row.legacyInputTokens),
+    outputTokens: Number(row.legacyOutputTokens),
+    cachedInputTokens: Number(row.legacyCachedInputTokens),
+  });
+
+const withCost = (row: UsageSumRow) => ({
+  model: row.model,
+  inputTokens: Number(row.inputTokens),
+  outputTokens: Number(row.outputTokens),
+  reasoningTokens: Number(row.reasoningTokens),
+  cachedInputTokens: Number(row.cachedInputTokens),
+  totalTokens: Number(row.totalTokens),
+  costUsd: usageCostUsd(row),
+});
 
 export const getWeeklyUsage = async (
   d1: D1Database,
@@ -138,11 +163,7 @@ export const getWeeklyUsage = async (
   const rows = await db.all<UsageSumRow & { weekStart: string }>(sql`
     SELECT date(created_at, '+9 hours', '-6 days', 'weekday 1') AS weekStart,
            model,
-           SUM(input_tokens) AS inputTokens,
-           SUM(output_tokens) AS outputTokens,
-           SUM(reasoning_tokens) AS reasoningTokens,
-           SUM(cached_input_tokens) AS cachedInputTokens,
-           SUM(total_tokens) AS totalTokens
+           ${usageSumColumns}
     FROM llm_usage
     WHERE created_at >= ${params.from}
     GROUP BY weekStart, model
@@ -157,11 +178,7 @@ export const getUsageByModel = async (d1: D1Database, period: Period) => {
 
   const rows = await db.all<UsageSumRow>(sql`
     SELECT model,
-           SUM(input_tokens) AS inputTokens,
-           SUM(output_tokens) AS outputTokens,
-           SUM(reasoning_tokens) AS reasoningTokens,
-           SUM(cached_input_tokens) AS cachedInputTokens,
-           SUM(total_tokens) AS totalTokens
+           ${usageSumColumns}
     FROM llm_usage
     WHERE created_at >= ${period.from} AND created_at < ${period.to}
     GROUP BY model
@@ -169,6 +186,352 @@ export const getUsageByModel = async (d1: D1Database, period: Period) => {
   `);
 
   return rows.map(withCost);
+};
+
+type ThreadUsageRow = UsageSumRow & {
+  threadId: string;
+  agent: string | null;
+  platform: string | null;
+  chatCalls: number;
+};
+
+type AgentTotals = {
+  agent: string | null;
+  totalTokens: number;
+  costUsd: number;
+};
+
+const addAgentTotals = (
+  map: Map<string | null, AgentTotals>,
+  row: UsageSumRow & { agent: string | null },
+) => {
+  const current = map.get(row.agent) ?? {
+    agent: row.agent,
+    totalTokens: 0,
+    costUsd: 0,
+  };
+  current.totalTokens += Number(row.totalTokens);
+  current.costUsd += usageCostUsd(row);
+  map.set(row.agent, current);
+};
+
+const sortedAgentTotals = (map: Map<string | null, AgentTotals>) =>
+  [...map.values()].sort((a, b) => b.costUsd - a.costUsd);
+
+// 会話に直接かかった費用と、それ以外の運用費を分けて見るための区分。
+// embedding は検索クエリ分（スレッドに紐づく）が会話、ナレッジ同期分が基盤
+const usageCategoryExpr = sql`
+  CASE
+    WHEN source IN ('chat', 'subagent', 'intent-classify', 'rerank') THEN 'conversation'
+    WHEN source = 'embedding' AND thread_id IS NOT NULL THEN 'conversation'
+    WHEN source = 'embedding' THEN 'knowledge-base'
+    ELSE 'batch'
+  END
+`;
+
+// 請求元の突き合わせ用。モデル ID からプロバイダを判定する
+const providerOf = (model: string) => {
+  if (model.includes("gemini")) return "google";
+  if (model.includes("gpt")) return "openai";
+  return "other";
+};
+
+type ProviderTotals = {
+  provider: string;
+  totalTokens: number;
+  costUsd: number;
+};
+
+const addProviderTotals = (
+  map: Map<string, ProviderTotals>,
+  row: UsageSumRow,
+) => {
+  const provider = providerOf(row.model);
+  const current = map.get(provider) ?? {
+    provider,
+    totalTokens: 0,
+    costUsd: 0,
+  };
+  current.totalTokens += Number(row.totalTokens);
+  current.costUsd += usageCostUsd(row);
+  map.set(provider, current);
+};
+
+export const getOperationCost = async (d1: D1Database, period: Period) => {
+  const db = createDb(d1);
+
+  const [rows, dailyRows] = await Promise.all([
+    db.all<UsageSumRow & { category: string; agent: string | null }>(sql`
+      SELECT ${usageCategoryExpr} AS category,
+             agent,
+             model,
+             ${usageSumColumns}
+      FROM llm_usage
+      WHERE created_at >= ${period.from} AND created_at < ${period.to}
+      GROUP BY category, agent, model
+    `),
+    db.all<UsageSumRow & { date: string }>(sql`
+      SELECT date(created_at, '+9 hours') AS date,
+             model,
+             ${usageSumColumns}
+      FROM llm_usage
+      WHERE created_at >= ${period.from} AND created_at < ${period.to}
+      GROUP BY date, model
+      ORDER BY date
+    `),
+  ]);
+
+  const dailyTotals = new Map<string, number>();
+  for (const row of dailyRows) {
+    dailyTotals.set(
+      row.date,
+      (dailyTotals.get(row.date) ?? 0) + usageCostUsd(row),
+    );
+  }
+
+  const byCategory = new Map<
+    string,
+    {
+      category: string;
+      costUsd: number;
+      agentTotals: Map<string | null, AgentTotals>;
+    }
+  >();
+  const byProvider = new Map<string, ProviderTotals>();
+  for (const row of rows) {
+    const current = byCategory.get(row.category) ?? {
+      category: row.category,
+      costUsd: 0,
+      agentTotals: new Map<string | null, AgentTotals>(),
+    };
+    current.costUsd += usageCostUsd(row);
+    addAgentTotals(current.agentTotals, row);
+    byCategory.set(row.category, current);
+    addProviderTotals(byProvider, row);
+  }
+
+  return {
+    totalCostUsd: [...byCategory.values()].reduce(
+      (sum, c) => sum + c.costUsd,
+      0,
+    ),
+    byCategory: [...byCategory.values()]
+      .sort((a, b) => b.costUsd - a.costUsd)
+      .map(({ agentTotals, ...category }) => ({
+        ...category,
+        agents: sortedAgentTotals(agentTotals),
+      })),
+    byProvider: [...byProvider.values()].sort((a, b) => b.costUsd - a.costUsd),
+    daily: [...dailyTotals.entries()].map(([date, costUsd]) => ({
+      date,
+      costUsd,
+    })),
+  };
+};
+
+export const getThreadUsage = async (
+  d1: D1Database,
+  period: Period,
+  params: { limit: number },
+) => {
+  const db = createDb(d1);
+
+  const [threadModelRows, messageRows] = await Promise.all([
+    db.all<ThreadUsageRow>(sql`
+      SELECT thread_id AS threadId,
+             agent,
+             model,
+             MAX(platform) AS platform,
+             SUM(CASE WHEN source = 'chat' THEN 1 ELSE 0 END) AS chatCalls,
+             ${usageSumColumns}
+      FROM llm_usage
+      WHERE created_at >= ${period.from} AND created_at < ${period.to}
+        AND thread_id IS NOT NULL
+        AND ${usageCategoryExpr} = 'conversation'
+      GROUP BY thread_id, agent, model
+    `),
+    db.all<{
+      threadId: string;
+      firstMessageAt: string;
+      lastMessageAt: string;
+    }>(sql`
+      SELECT thread_id AS threadId,
+             MIN(createdAt) AS firstMessageAt,
+             MAX(createdAt) AS lastMessageAt
+      FROM mastra_messages
+      WHERE createdAt >= ${period.from} AND createdAt < ${period.to}
+        AND thread_id IN (
+          SELECT DISTINCT thread_id FROM llm_usage
+          WHERE created_at >= ${period.from} AND created_at < ${period.to}
+            AND thread_id IS NOT NULL
+        )
+      GROUP BY thread_id
+    `),
+  ]);
+
+  const messagesByThread = new Map(
+    messageRows.map((row) => [row.threadId, row]),
+  );
+
+  type ThreadTotals = {
+    threadId: string;
+    platform: string | null;
+    messageCount: number;
+    inputTokens: number;
+    outputTokens: number;
+    reasoningTokens: number;
+    cachedInputTokens: number;
+    totalTokens: number;
+    costUsd: number;
+    models: string[];
+    agentTotals: Map<string | null, AgentTotals>;
+  };
+  const threadTotals = new Map<string, ThreadTotals>();
+  const byAgent = new Map<string | null, AgentTotals>();
+  for (const row of threadModelRows) {
+    const current = threadTotals.get(row.threadId) ?? {
+      threadId: row.threadId,
+      platform: null,
+      messageCount: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+      reasoningTokens: 0,
+      cachedInputTokens: 0,
+      totalTokens: 0,
+      costUsd: 0,
+      models: [],
+      agentTotals: new Map<string | null, AgentTotals>(),
+    };
+    current.platform = current.platform ?? row.platform;
+    current.messageCount += Number(row.chatCalls);
+    current.inputTokens += Number(row.inputTokens);
+    current.outputTokens += Number(row.outputTokens);
+    current.reasoningTokens += Number(row.reasoningTokens);
+    current.cachedInputTokens += Number(row.cachedInputTokens);
+    current.totalTokens += Number(row.totalTokens);
+    current.costUsd += usageCostUsd(row);
+    if (!current.models.includes(row.model)) {
+      current.models.push(row.model);
+    }
+    addAgentTotals(current.agentTotals, row);
+    addAgentTotals(byAgent, row);
+    threadTotals.set(row.threadId, current);
+  }
+  for (const thread of threadTotals.values()) {
+    thread.models.sort();
+  }
+
+  const threads = [...threadTotals.values()]
+    .sort((a, b) => b.costUsd - a.costUsd)
+    .slice(0, params.limit)
+    .map((thread) => {
+      const message = messagesByThread.get(thread.threadId);
+      const durationSeconds = message
+        ? Math.round(
+            (new Date(message.lastMessageAt).getTime() -
+              new Date(message.firstMessageAt).getTime()) /
+              1000,
+          )
+        : null;
+      const { agentTotals, ...rest } = thread;
+      return {
+        ...rest,
+        agents: sortedAgentTotals(agentTotals),
+        firstMessageAt: message?.firstMessageAt ?? null,
+        lastMessageAt: message?.lastMessageAt ?? null,
+        durationSeconds,
+      };
+    });
+
+  const allThreads = [...threadTotals.values()];
+  const conversationCostUsd = allThreads.reduce((sum, t) => sum + t.costUsd, 0);
+  const messages = allThreads.reduce((sum, t) => sum + t.messageCount, 0);
+  const threadCount = allThreads.length;
+
+  return {
+    summary: {
+      threads: threadCount,
+      messages,
+      conversationCostUsd,
+      avgCostPerMessageUsd:
+        messages > 0 ? conversationCostUsd / messages : null,
+      avgCostPerThreadUsd:
+        threadCount > 0 ? conversationCostUsd / threadCount : null,
+      byAgent: sortedAgentTotals(byAgent),
+    },
+    threads,
+  };
+};
+
+export const getThreadTurnUsage = async (d1: D1Database, threadId: string) => {
+  const db = createDb(d1);
+
+  const rows = await db.all<
+    UsageSumRow & {
+      turnIndex: number | null;
+      agent: string | null;
+      durationMs: number | null;
+      answeredAt: string;
+      intent: string | null;
+    }
+  >(sql`
+    SELECT turn_index AS turnIndex,
+           agent,
+           model,
+           MAX(CASE WHEN source = 'chat' THEN duration_ms END) AS durationMs,
+           MAX(CASE WHEN source = 'chat' THEN created_at END) AS answeredAt,
+           MAX(CASE WHEN source = 'chat' THEN intent END) AS intent,
+           ${usageSumColumns}
+    FROM llm_usage
+    WHERE thread_id = ${threadId}
+      AND ${usageCategoryExpr} = 'conversation'
+    GROUP BY turn_index, agent, model
+    ORDER BY turn_index, agent
+  `);
+
+  type TurnTotals = {
+    turnIndex: number | null;
+    totalTokens: number;
+    costUsd: number;
+    durationMs: number | null;
+    answeredAt: string | null;
+    intent: string | null;
+    agentTotals: Map<string | null, AgentTotals>;
+  };
+  const turns = new Map<number | null, TurnTotals>();
+  for (const row of rows) {
+    const key = row.turnIndex === null ? null : Number(row.turnIndex);
+    const current = turns.get(key) ?? {
+      turnIndex: key,
+      totalTokens: 0,
+      costUsd: 0,
+      durationMs: null,
+      answeredAt: null,
+      intent: null,
+      agentTotals: new Map<string | null, AgentTotals>(),
+    };
+    current.totalTokens += Number(row.totalTokens);
+    current.costUsd += usageCostUsd(row);
+    current.durationMs = current.durationMs ?? row.durationMs ?? null;
+    current.answeredAt = current.answeredAt ?? row.answeredAt ?? null;
+    current.intent = current.intent ?? row.intent ?? null;
+    addAgentTotals(current.agentTotals, row);
+    turns.set(key, current);
+  }
+
+  return {
+    // turn_index 記録前の行は turnIndex: null にまとまり、末尾に並ぶ
+    turns: [...turns.values()]
+      .sort(
+        (a, b) =>
+          (a.turnIndex ?? Number.MAX_SAFE_INTEGER) -
+          (b.turnIndex ?? Number.MAX_SAFE_INTEGER),
+      )
+      .map(({ agentTotals, ...turn }) => ({
+        ...turn,
+        agents: sortedAgentTotals(agentTotals),
+      })),
+  };
 };
 
 const extractAgeGroup = (attributes: string) => {

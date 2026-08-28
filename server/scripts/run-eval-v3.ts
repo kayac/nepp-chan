@@ -37,9 +37,9 @@ import { LibSQLStore } from "@mastra/libsql";
 import { Memory } from "@mastra/memory";
 import { getPlatformProxy } from "wrangler";
 import {
-  GEMINI_FLASH,
   GEMINI_FLASH_EVAL,
-  OPENAI_SCORER,
+  OPENAI_MAIN,
+  OPENAI_NANO,
   resolveModelTier,
 } from "../src/lib/llm-models";
 import {
@@ -223,7 +223,6 @@ interface CliArgs {
   compare: boolean;
   /** テストケース間のインターバル（秒）。デフォルト5秒 */
   interval: number;
-  /** エージェントモデル: eval=2.5-flash-lite(RPD無制限), production=flash-latest(本番同一) */
   model: "eval" | "production";
   /** バッチサイズ（指定時はプロセス分割モード） */
   batchSize?: number;
@@ -232,6 +231,8 @@ interface CliArgs {
   /** テストケース終了インデックス（子プロセス用） */
   to?: number;
 }
+
+let countGeminiRpd = true;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -254,10 +255,10 @@ const resolveEvalApiKeys = (env: CloudflareBindings): void => {
   const openaiKey = (env as any).OPENAI_API_KEY as string | undefined;
   if (openaiKey) {
     process.env.OPENAI_API_KEY = openaiKey;
-    console.log("🔑 OpenAI APIキーを使用（スコアラー: gpt-5-nano）");
+    console.log("🔑 OpenAI APIキーを使用");
   } else {
     console.warn(
-      "⚠️ OPENAI_API_KEY が未設定。スコアラーが失敗する可能性があります",
+      "⚠️ OPENAI_API_KEY が未設定。スコアラーと production 時のエージェント実行が失敗します",
     );
   }
 };
@@ -595,7 +596,7 @@ const runEvalScorers = async ({
 
   try {
     const result = await createAnswerSimilarityScorer({
-      model: OPENAI_SCORER,
+      model: OPENAI_NANO,
     }).run({
       input: testRun.input,
       output: testRun.output,
@@ -624,7 +625,7 @@ const runEvalScorers = async ({
 
   try {
     const result = await createContextPrecisionScorer({
-      model: OPENAI_SCORER,
+      model: OPENAI_NANO,
       options: { context },
     }).run({
       input: testRun.input,
@@ -640,7 +641,7 @@ const runEvalScorers = async ({
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const result = await createContextRelevanceScorerLLM({
-        model: OPENAI_SCORER,
+        model: OPENAI_NANO,
         options: { context },
       }).run({
         input: testRun.input,
@@ -666,7 +667,7 @@ const runEvalScorers = async ({
   } else {
     try {
       const result = await createHallucinationScorer({
-        model: OPENAI_SCORER,
+        model: OPENAI_NANO,
         options: { context },
       }).run({
         input: testRun.input,
@@ -1395,11 +1396,12 @@ const runTestCaseEval = async (params: {
         (result as any).steps,
       );
 
-      // Gemini RPD カウンター: チャット(steps) + rerank(toolCalls) = Flash API コール数
-      const geminiCalls =
-        transcript.length +
-        transcript.reduce((sum, s) => sum + s.toolCalls.length, 0);
-      incrementGeminiCounter(geminiCalls, "eval");
+      if (countGeminiRpd) {
+        const geminiCalls =
+          transcript.length +
+          transcript.reduce((sum, s) => sum + s.toolCalls.length, 0);
+        incrementGeminiCounter(geminiCalls, "eval");
+      }
 
       const abstentionDetected = isAbstention(result.text);
 
@@ -1548,6 +1550,7 @@ const runTestCaseEval = async (params: {
 
 const main = async () => {
   const args = parseArgs();
+  countGeminiRpd = args.model === "eval";
 
   // テストケースの解決
   let testCases: TestCaseV3[];
@@ -1667,12 +1670,11 @@ const main = async () => {
     return;
   }
 
-  // モデル選択: eval=gemini-2.5-flash-lite(RPD無制限), production=flash-latest(本番同一)
   const evalModelId =
-    args.model === "production" ? GEMINI_FLASH : GEMINI_FLASH_EVAL;
+    args.model === "production" ? OPENAI_MAIN : GEMINI_FLASH_EVAL;
   const evalModelLabel =
     args.model === "production"
-      ? "gemini-flash-latest（本番同一）"
+      ? "gpt-5.6-terra（本番同一）"
       : "gemini-2.5-flash-lite（eval用、RPD無制限）";
 
   console.log("🔄 Eval V3 開始");
@@ -1696,7 +1698,7 @@ const main = async () => {
     knowledge:
       args.model === "production"
         ? knowledgeAgent
-        : createKnowledgeAgent(evalModelId),
+        : createKnowledgeAgent({ model: evalModelId }),
     "nepp-chan": createNeppChanAgent({
       isAdmin: false,
       modelConfig: resolveModelTier({
@@ -1721,7 +1723,7 @@ const main = async () => {
   // ─── クォータ事前チェック ──────────────────────────────────
   const CALLS_PER_ITERATION = 22; // 実測ベース（チャット+thinking+rerank+embed）
   const envCount = args.compare ? 3 : 1;
-  const estimatedGeminiCalls =
+  const estimatedAgentCalls =
     testCases.length * args.n * CALLS_PER_ITERATION * envCount;
   const estimatedScorerCalls = testCases.length * args.n * 4 * envCount;
   const GEMINI_RPD = 10_000;
@@ -1737,16 +1739,16 @@ const main = async () => {
   if (args.model === "eval") {
     console.log(`   Gemini モデル: ${evalModelLabel}（RPD 無制限）`);
     console.log(
-      `   推定コール数: ${estimatedGeminiCalls.toLocaleString()}（RPD制限なし）`,
+      `   推定コール数: ${estimatedAgentCalls.toLocaleString()}（RPD制限なし）`,
     );
   } else {
     const remaining = GEMINI_RPD - alreadyUsed;
-    const totalAfterRun = alreadyUsed + estimatedGeminiCalls;
+    const totalAfterRun = alreadyUsed + estimatedAgentCalls;
     console.log(
       `   Gemini 今日の累計: ${alreadyUsed.toLocaleString()} / ${GEMINI_RPD.toLocaleString()} RPD (残り ${remaining.toLocaleString()})`,
     );
     console.log(
-      `   Gemini 推定消費: +${estimatedGeminiCalls.toLocaleString()} → 合計 ${totalAfterRun.toLocaleString()} (${((totalAfterRun / GEMINI_RPD) * 100).toFixed(0)}%)`,
+      `   Gemini 推定消費: +${estimatedAgentCalls.toLocaleString()} → 合計 ${totalAfterRun.toLocaleString()} (${((totalAfterRun / GEMINI_RPD) * 100).toFixed(0)}%)`,
     );
 
     if (totalAfterRun > GEMINI_RPD * 0.8) {

@@ -48,7 +48,7 @@ To ensure no one is left behind — including those unfamiliar with digital tech
 
 - **Framework**: Hono, Mastra
 - **Runtime**: Cloudflare Workers / Pages
-- **AI**: Google Generative AI (Gemini)
+- **AI**: OpenAI (GPT-5.6), Google Gemini
 - **Frontend**: Astro, React, TailwindCSS
 - **Database**: Cloudflare D1
 - **Language**: TypeScript

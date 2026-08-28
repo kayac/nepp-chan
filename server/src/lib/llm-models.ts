@@ -1,67 +1,103 @@
 // Mastra 形式のモデル名（Agent の model プロパティに使用）
-export const GEMINI_FLASH = "google/gemini-flash-latest";
-export const GEMINI_FLASH_LITE = "google/gemini-flash-lite-latest";
-export const GEMINI_PRO = "google/gemini-2.5-pro";
+export const OPENAI_MAIN = "openai/gpt-5.6-terra";
+export const OPENAI_LITE = "openai/gpt-5.6-luna";
 
-// Eval 全体テスト用（RPD 無制限、latest ではなくバージョン固定）
-export const GEMINI_FLASH_EVAL = "google/gemini-2.5-flash-lite";
-
-// Eval スコアラー専用モデル（Flash Lite は構造化出力で反復バグあり）
-// https://github.com/google-gemini/cookbook/issues/449
-export const GEMINI_SCORER = "google/gemini-2.5-flash";
-
-// OpenAI eval スコアラー用（Gemini 構造化出力バグの代替）
-export const OPENAI_SCORER = "openai/gpt-4.1-nano";
+// 最軽量モデル。非 reasoning のため temperature 指定が有効（決定的な分類・スコアリング向け）
+export const OPENAI_NANO = "openai/gpt-4.1-nano";
 
 // 埋め込みモデル
 export const GEMINI_EMBEDDING = "gemini-embedding-001";
 
-// Gemini 3 系では thinking を完全に無効化できず、thinkingBudget: 0 は 400 になる。最小は minimal。
-type ThinkingLevel = "high" | "medium" | "low" | "minimal";
+// Google 検索グラウンディングは Gemini 専用機能のため web-researcher だけ Gemini を使う
+export const GEMINI_GROUNDING = "google/gemini-flash-lite-latest";
 
-export const geminiModelWithThinking = ({
-  model = GEMINI_FLASH_LITE,
-  level = "low" as ThinkingLevel,
+// Gemini latest は RPD 制限対象のため、Eval は固定バージョンを使う
+export const GEMINI_FLASH_EVAL = "google/gemini-2.5-flash-lite";
+
+export type ReasoningEffort =
+  | "none"
+  | "low"
+  | "medium"
+  | "high"
+  | "xhigh"
+  | "max";
+
+type TextVerbosity = "low" | "medium" | "high";
+
+// Gemini の thinkingLevel は minimal/low/medium/high のみで none と xhigh 以上が無い
+const GOOGLE_THINKING_LEVEL = {
+  none: "minimal",
+  low: "low",
+  medium: "medium",
+  high: "high",
+  xhigh: "high",
+  max: "high",
+} as const satisfies Record<ReasoningEffort, string>;
+
+// providerOptions はモデル側の名前空間だけが読まれるため両方指定する
+export const reasoningProviderOptions = (
+  effort: ReasoningEffort,
+  textVerbosity?: TextVerbosity,
+) => ({
+  openai: {
+    reasoningEffort: effort,
+    ...(textVerbosity && { textVerbosity }),
+  },
+  google: {
+    thinkingConfig: { thinkingLevel: GOOGLE_THINKING_LEVEL[effort] },
+  },
+});
+
+// Agent 直下の providerOptions は型に存在せず黙って捨てられるため defaultOptions に入れる
+export const modelWithReasoning = ({
+  model = OPENAI_LITE,
+  effort = "high" as ReasoningEffort,
+  maxSteps,
+}: {
+  model?: string;
+  effort?: ReasoningEffort;
+  maxSteps?: number;
 } = {}) => ({
   model,
-  providerOptions: {
-    google: {
-      thinkingConfig: { thinkingLevel: level },
-    },
+  defaultOptions: {
+    providerOptions: reasoningProviderOptions(effort),
+    ...(maxSteps !== undefined && { maxSteps }),
   },
 });
 
 export type Intent = "casual" | "thinking";
 
 /**
- * プライマリ障害・レート制限時に同じ thinking 設定のままフォールバックする
- * モデル連鎖を返す。コスト暴発を避けるため PRO へはフォールバックしない。
  * id を省略すると Agent 構築時に randomUUID() が呼ばれ、モジュールグローバルで
  * 生成する Agent が workerd の起動を壊すため必ず明示する。
  */
-const geminiModelChain = ({
+const modelChain = ({
   primary,
   fallback,
-  level,
+  effort,
+  textVerbosity,
 }: {
   primary: string;
   fallback: string;
-  level: ThinkingLevel;
+  effort: ReasoningEffort;
+  textVerbosity?: TextVerbosity;
 }) => [
   {
     id: primary,
-    ...geminiModelWithThinking({ model: primary, level }),
+    model: primary,
+    providerOptions: reasoningProviderOptions(effort, textVerbosity),
     maxRetries: 1,
   },
   {
     id: fallback,
-    ...geminiModelWithThinking({ model: fallback, level }),
+    model: fallback,
+    providerOptions: reasoningProviderOptions(effort, textVerbosity),
     maxRetries: 1,
   },
 ];
 
 export type AgentModelConfig = {
-  model: ReturnType<typeof geminiModelChain>;
+  model: ReturnType<typeof modelChain>;
   defaultOptions: { maxSteps: number };
 };
 
@@ -71,36 +107,37 @@ const MAX_STEPS = { casual: 5, thinking: 10 } as const;
 const MODEL_TIERS: Record<Intent, Record<"web" | "line", AgentModelConfig>> = {
   casual: {
     web: {
-      model: geminiModelChain({
-        primary: GEMINI_FLASH_LITE,
-        fallback: GEMINI_FLASH,
-        level: "low",
+      model: modelChain({
+        primary: OPENAI_LITE,
+        fallback: OPENAI_MAIN,
+        effort: "medium",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.casual },
     },
     line: {
-      model: geminiModelChain({
-        primary: GEMINI_FLASH_LITE,
-        fallback: GEMINI_FLASH,
-        level: "minimal",
+      model: modelChain({
+        primary: OPENAI_LITE,
+        fallback: OPENAI_MAIN,
+        effort: "medium",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.casual },
     },
   },
   thinking: {
     web: {
-      model: geminiModelChain({
-        primary: GEMINI_FLASH,
-        fallback: GEMINI_FLASH_LITE,
-        level: "high",
+      model: modelChain({
+        primary: OPENAI_LITE,
+        fallback: OPENAI_MAIN,
+        effort: "xhigh",
+        textVerbosity: "high",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.thinking },
     },
     line: {
-      model: geminiModelChain({
-        primary: GEMINI_FLASH,
-        fallback: GEMINI_FLASH_LITE,
-        level: "medium",
+      model: modelChain({
+        primary: OPENAI_LITE,
+        fallback: OPENAI_MAIN,
+        effort: "xhigh",
       }),
       defaultOptions: { maxSteps: MAX_STEPS.thinking },
     },
@@ -110,16 +147,17 @@ const MODEL_TIERS: Record<Intent, Record<"web" | "line", AgentModelConfig>> = {
 const VOICE_MAX_STEPS = 10;
 
 export const voiceModelConfig: AgentModelConfig = {
-  model: geminiModelChain({
-    primary: GEMINI_FLASH_LITE,
-    fallback: GEMINI_FLASH,
-    level: "low",
+  model: modelChain({
+    primary: OPENAI_LITE,
+    fallback: OPENAI_MAIN,
+    effort: "low",
   }),
   defaultOptions: { maxSteps: VOICE_MAX_STEPS },
 };
 
 /**
- * Intent・プラットフォーム・管理者フラグからモデル設定を解決する
+ * Intent・プラットフォーム・管理者フラグからモデル設定を解決する。
+ * 管理者は管理ツールを連鎖的に呼ぶため、casual でも thinking と同じ maxSteps を与える
  */
 export const resolveModelTier = ({
   intent,
@@ -130,10 +168,14 @@ export const resolveModelTier = ({
   platform: "web" | "line";
   isAdmin: boolean;
 }): AgentModelConfig => {
-  if (isAdmin) {
-    return MODEL_TIERS.thinking.web;
+  const tier = MODEL_TIERS[intent][platform];
+  if (isAdmin && tier.defaultOptions.maxSteps < MAX_STEPS.thinking) {
+    return {
+      ...tier,
+      defaultOptions: { ...tier.defaultOptions, maxSteps: MAX_STEPS.thinking },
+    };
   }
-  return MODEL_TIERS[intent][platform];
+  return tier;
 };
 
 export const primaryModelId = (config: AgentModelConfig) =>
