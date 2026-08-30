@@ -1,6 +1,7 @@
-import { and, desc, eq, like, lte, sql } from "drizzle-orm";
+import { and, desc, eq, lte, or, sql } from "drizzle-orm";
 
 import { type BroadcastMessage, broadcastMessages, createDb } from "~/db";
+import { splitSearchKeywords } from "~/lib/search-keywords";
 
 type CreateInput = {
   id: string;
@@ -220,16 +221,18 @@ export const broadcastRepository = {
 
   async findByKeyword(d1: D1Database, keyword: string, limit = 10) {
     const db = createDb(d1);
-    const escaped = keyword.replace(/[%_]/g, (c) => `\\${c}`);
+    const words = splitSearchKeywords(keyword);
+    const keywordConditions = words.map(
+      (word) =>
+        sql`(instr(${broadcastMessages.title}, ${word}) > 0 OR instr(${broadcastMessages.body}, ${word}) > 0)`,
+    );
+    const keywordCondition = or(...keywordConditions);
 
     return db
       .select()
       .from(broadcastMessages)
       .where(
-        and(
-          eq(broadcastMessages.status, "sent"),
-          sql`(${like(broadcastMessages.title, `%${escaped}%`)} OR ${like(broadcastMessages.body, `%${escaped}%`)})`,
-        ),
+        and(eq(broadcastMessages.status, "sent"), keywordCondition ?? sql`0`),
       )
       .orderBy(desc(broadcastMessages.sentAt))
       .limit(limit)
