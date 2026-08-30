@@ -12,12 +12,20 @@ const instructionsOf = async () =>
   );
 
 describe("createKnowledgeAgent", () => {
-  it("未確認情報を補完せず、質問の中心に分かる範囲で答える", async () => {
+  it("未確認情報を補完せず、質問の中心に必要な事実を返す", async () => {
     const ins = await instructionsOf();
     expect(ins).toContain("検索結果にない情報を補完しない");
-    expect(ins).toContain("質問の中心に分かる範囲で答える");
+    expect(ins).toContain("質問の中心に必要な事実");
     expect(ins).toContain("回答に影響する重要な項目");
     expect(ins).not.toContain("質問された項目を漏れなく確認");
+  });
+
+  it("ユーザー向けの文章ではなく調査メモを返す", async () => {
+    const ins = await instructionsOf();
+    expect(ins).toContain("ユーザー向けの文章に整えない");
+    expect(ins).toContain("確認できた事実");
+    expect(ins).toContain("関連URL");
+    expect(ins).toContain("不確実・矛盾・未確認");
   });
 
   it("検索結果が矛盾するときの優先基準を含む", async () => {
@@ -59,5 +67,15 @@ describe("createKnowledgeAgent", () => {
     expect(ins).toContain("最新状況を確認できない場合");
     expect(ins).toContain("必要に応じて直接確認を案内する");
     expect(ins).not.toContain("古い情報を使う場合は");
+  });
+
+  it("現在日時を検索語へ機械的に追加しない", async () => {
+    const ins = await instructionsOf();
+    expect(ins).toContain("現在の日付や年を機械的に追加しない");
+    expect(ins).toContain("「今日」は上記の現在日時との照合に使う");
+    expect(ins).toContain("過去の日付を「今日」として扱わない");
+    expect(ins).not.toContain(
+      "時間表現がない場合でも、時間依存の情報は現在の年度・年を基準にクエリを生成する",
+    );
   });
 });

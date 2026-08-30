@@ -211,6 +211,15 @@ describe("createNeppChanAgent", () => {
       expect(ins).toContain("天気・交通・ニュース・時事・村外の情報");
     });
 
+    it("knowledgeAgent の調査メモからユーザー向け回答を1度だけ作る", async () => {
+      const ins = await instructionsOf(build());
+      expect(ins).toContain("ユーザー向け回答ではなく調査メモ");
+      expect(ins).toContain(
+        "ねっぷちゃんが一度だけユーザー向け回答を組み立てる",
+      );
+      expect(ins).toContain("調査メモの文面をそのまま言い換えない");
+    });
+
     it("widget だけ緊急エージェントへの委譲を指示しない", async () => {
       const widgetIns = await instructionsOf(build({ platform: "widget" }));
       expect(widgetIns).not.toContain("emergencyReporterAgent");
