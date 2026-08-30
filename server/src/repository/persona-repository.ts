@@ -12,6 +12,7 @@ import {
 } from "drizzle-orm";
 
 import { createDb, type NewPersona, type Persona, persona } from "~/db";
+import { splitSearchKeywords } from "~/lib/search-keywords";
 
 const OTHER_TOPIC = "その他";
 const NAMED_TOPICS = TOPICS.filter((t) => t !== OTHER_TOPIC);
@@ -165,10 +166,7 @@ export const personaRepository = {
     }
 
     if (options.keyword) {
-      const words = options.keyword
-        .split(/\s+/)
-        .filter((w) => w.length > 0)
-        .slice(0, 5);
+      const words = splitSearchKeywords(options.keyword);
       if (words.length === 1) {
         conditions.push(like(persona.content, `%${words[0]}%`));
       } else if (words.length > 1) {
