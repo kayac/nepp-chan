@@ -87,7 +87,7 @@ neutral を安易に選ばない。声には何らかの感情や意図が含ま
 ## 複数トピック対応
 複数トピックが含まれる場合はそれぞれ別のペルソナとして保存する。
 `,
-  ...withUsageRecording(modelWithReasoning(), {
+  ...withUsageRecording(modelWithReasoning({ effort: "medium" }), {
     agent: "persona",
     source: "persona-extract",
   }),

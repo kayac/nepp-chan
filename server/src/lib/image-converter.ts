@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import { OPENAI_MAIN } from "~/lib/llm-models";
+import { OPENAI_LITE } from "~/lib/llm-models";
 import { converterAgent } from "~/mastra/agents/converter-agent";
 import { recordLlmUsage } from "~/services/analytics/llm-usage";
 
@@ -44,7 +44,7 @@ export const convertToMarkdown = async (
 
   if (d1) {
     await recordLlmUsage(d1, {
-      model: result.response?.modelId ?? OPENAI_MAIN,
+      model: result.response?.modelId ?? OPENAI_LITE,
       usage: result.totalUsage,
       source: "image-convert",
       agent: "converter",

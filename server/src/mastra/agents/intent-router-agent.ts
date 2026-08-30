@@ -1,19 +1,11 @@
 import { Agent } from "@mastra/core/agent";
-import { OPENAI_NANO } from "~/lib/llm-models";
+import { deterministicModelConfig } from "~/lib/llm-models";
 import { withUsageRecording } from "~/services/analytics/llm-usage";
-
-// gpt-5 系は temperature が strip されるため、決定的分類には非 reasoning モデルを維持する
-const routerModelConfig = {
-  model: OPENAI_NANO,
-  defaultOptions: {
-    modelSettings: { temperature: 0 },
-  },
-};
 
 export const intentRouterAgent = new Agent({
   id: "intent-router",
   name: "Intent Router",
-  ...withUsageRecording(routerModelConfig, {
+  ...withUsageRecording(deterministicModelConfig, {
     agent: "intent-router",
     source: "intent-classify",
   }),

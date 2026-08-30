@@ -32,7 +32,9 @@ export const feedbackAgent = new Agent({
 ## 利用可能なツール
 - admin-feedback: フィードバック一覧と統計の取得（認証必須）
 `,
-  ...withUsageRecording(modelWithReasoning(), { agent: "feedback" }),
+  ...withUsageRecording(modelWithReasoning({ effort: "low" }), {
+    agent: "feedback",
+  }),
   tools: {
     adminFeedbackTool,
   },
