@@ -38,8 +38,8 @@ import { Memory } from "@mastra/memory";
 import { getPlatformProxy } from "wrangler";
 import {
   GEMINI_FLASH_EVAL,
-  OPENAI_MAIN,
   OPENAI_LITE,
+  OPENAI_MAIN,
   resolveModelTier,
 } from "../src/lib/llm-models";
 import {

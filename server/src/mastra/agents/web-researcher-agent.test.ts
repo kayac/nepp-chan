@@ -12,21 +12,13 @@ const instructionsOf = async () =>
   );
 
 describe("createWebResearcherAgent", () => {
-  it("OpenAI Luna を medium reasoning で使用する", async () => {
+  it("Gemini の検索グラウンディングを使用する", async () => {
     const agent = createWebResearcherAgent();
     const model = await agent.getModel();
-    const options = await agent.getDefaultOptions();
+    const tools = await agent.listTools();
 
-    expect(model.provider).toContain("openai");
-    expect(model.modelId).toBe("gpt-5.6-luna");
-    expect(options.providerOptions).toMatchObject({
-      openai: { reasoningEffort: "medium" },
-    });
-  });
-
-  it("OpenAI Web Searchを使用する", async () => {
-    const tools = await createWebResearcherAgent().listTools();
-    expect(Object.keys(tools)).toEqual(["webSearch"]);
+    expect(model.provider).toContain("google");
+    expect(Object.keys(tools)).toEqual(["googleSearch"]);
   });
 
   it("未確定情報を省かず、確度を保って伝える", async () => {
@@ -46,10 +38,8 @@ describe("createWebResearcherAgent", () => {
     );
   });
 
-  it("正確な値は公式資料本体を確認し、調査メモだけを返す", async () => {
+  it("ユーザー向け文章ではなく調査メモを返す", async () => {
     const ins = await instructionsOf();
-    expect(ins).toContain("公式資料本体");
-    expect(ins).toContain("具体的な値を取得できるまで");
     expect(ins).toContain("ユーザー向けの文章に整えない");
     expect(ins).toContain("簡潔な調査メモ");
   });

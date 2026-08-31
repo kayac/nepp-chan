@@ -5,6 +5,9 @@ export const OPENAI_LITE = "openai/gpt-5.6-luna";
 // 埋め込みモデル
 export const GEMINI_EMBEDDING = "gemini-embedding-001";
 
+// Web 検索は検索グラウンディングの無料枠と応答速度で Gemini を使う
+export const GEMINI_GROUNDING = "google/gemini-flash-lite-latest";
+
 // Gemini latest は RPD 制限対象のため、Eval は固定バージョンを使う
 export const GEMINI_FLASH_EVAL = "google/gemini-2.5-flash-lite";
 
