@@ -4,6 +4,7 @@ import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { getCurrentDateInfo } from "~/lib/date";
 import {
   type AgentModelConfig,
+  type Intent,
   OPENAI_LITE,
   resolveModelTier,
 } from "~/lib/llm-models";
@@ -240,19 +241,22 @@ const voiceInstructions = `
 - 自分から一方的に通話を切らない
 `;
 
-export const neppChanMemoryOptions = {
-  generateTitle: {
-    model: OPENAI_LITE,
-    instructions:
-      "ユーザーの最初のメッセージから15文字以内の簡潔な日本語タイトルを生成する。",
-  },
-  workingMemory: {
-    enabled: true,
-    scope: "resource",
-    schema: personaSchema,
-  },
-  lastMessages: 20,
-} as const;
+const LAST_MESSAGES = { casual: 6, thinking: 20 } as const;
+
+export const neppChanMemoryOptions = (intent: Intent) =>
+  ({
+    generateTitle: {
+      model: OPENAI_LITE,
+      instructions:
+        "ユーザーの最初のメッセージから15文字以内の簡潔な日本語タイトルを生成する。",
+    },
+    workingMemory: {
+      enabled: true,
+      scope: "resource",
+      schema: personaSchema,
+    },
+    lastMessages: LAST_MESSAGES[intent],
+  }) as const;
 
 type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
   isAdmin?: boolean;
@@ -260,6 +264,7 @@ type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
   siteInstructions?: string;
   currentPageUrl?: string;
   modelConfig: AgentModelConfig;
+  intent?: Intent;
   withMemory?: boolean;
 };
 
@@ -269,6 +274,7 @@ export const createNeppChanAgent = ({
   siteInstructions,
   currentPageUrl,
   modelConfig,
+  intent = "thinking",
   withMemory = true,
   ...agentOptions
 }: Props) => {
@@ -315,7 +321,7 @@ ${currentPageUrl}
     tools,
     ...(withMemory && {
       memory: ({ requestContext }) =>
-        getMemoryFromContext(requestContext, neppChanMemoryOptions),
+        getMemoryFromContext(requestContext, neppChanMemoryOptions(intent)),
     }),
     ...agentOptions,
   });

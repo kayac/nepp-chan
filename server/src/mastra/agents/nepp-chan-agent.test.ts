@@ -294,17 +294,22 @@ describe("createNeppChanAgent", () => {
 
   describe("memory オプション", () => {
     it("タイトル生成は LITE + 日本語指示で行う", () => {
-      expect(neppChanMemoryOptions.generateTitle.model).toBe(OPENAI_LITE);
-      expect(neppChanMemoryOptions.generateTitle.instructions).toContain(
-        "日本語",
-      );
+      const options = neppChanMemoryOptions("thinking");
+      expect(options.generateTitle.model).toBe(OPENAI_LITE);
+      expect(options.generateTitle.instructions).toContain("日本語");
     });
 
     it("working memory は resource スコープで有効", () => {
-      expect(neppChanMemoryOptions.workingMemory).toMatchObject({
+      expect(neppChanMemoryOptions("thinking").workingMemory).toMatchObject({
         enabled: true,
         scope: "resource",
       });
+    });
+
+    it("casual は thinking より短い履歴で応答する", () => {
+      expect(neppChanMemoryOptions("casual").lastMessages).toBeLessThan(
+        neppChanMemoryOptions("thinking").lastMessages,
+      );
     });
   });
 });

@@ -130,6 +130,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
   const neppChanAgent = createNeppChanAgent({
     isAdmin: enableAdminAgents,
     modelConfig,
+    intent,
     platform,
     siteInstructions: site?.instructions,
     currentPageUrl: verifiedCurrentPageUrl,

@@ -80,6 +80,7 @@ export const generateReply = async (params: {
   const neppChanAgent = createNeppChanAgent({
     platform: "line",
     modelConfig,
+    intent,
   });
   const mastra = new Mastra({
     agents: { neppChanAgent },
