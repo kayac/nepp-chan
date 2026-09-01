@@ -12,6 +12,7 @@ import {
   mastraThreads,
   messageFeedback,
   pollSubmissions,
+  retrievalRuns,
   threadPersonaStatus,
 } from "~/db";
 import { logger } from "~/lib/logger";
@@ -24,6 +25,7 @@ const RETENTION_DAYS = {
   message_feedback: 180,
   llm_usage: 180, // 週次レポートに集計が恒久保存されるため raw は短期で良い
   poll_submissions: 365,
+  retrieval_runs: 90,
   data_retention_logs: 1095,
 } as const;
 
@@ -143,6 +145,15 @@ export const runDataRetention = async (
         db,
         pollSubmissions,
         sql`datetime(${pollSubmissions.createdAt}) < datetime(${cutoff(now, RETENTION_DAYS.poll_submissions)})`,
+      ),
+    });
+
+    results.push({
+      table: "retrieval_runs",
+      deletedCount: await countAndDelete(
+        db,
+        retrievalRuns,
+        sql`datetime(${retrievalRuns.createdAt}) < datetime(${cutoff(now, RETENTION_DAYS.retrieval_runs)})`,
       ),
     });
 
