@@ -1,0 +1,140 @@
+import { useState } from "react";
+import {
+  useCorrections,
+  useRetireCorrection,
+  useReverifyCorrection,
+} from "~/app/dashboard/hooks/useCorrections";
+import { EmptyStateCard } from "~/components/ui/EmptyStateCard";
+import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
+import { FilterTabs } from "~/components/ui/FilterTabs";
+import { PanelLoading } from "~/components/ui/PanelLoading";
+import { confirmDialog } from "~/lib/dialog";
+import { formatDateTime } from "~/lib/format";
+
+type StatusFilter = "published" | "needs_review" | "retired" | "all";
+
+const FILTERS: Array<{ value: StatusFilter; label: string }> = [
+  { value: "published", label: "公開中" },
+  { value: "needs_review", label: "要再確認" },
+  { value: "retired", label: "廃止済み" },
+  { value: "all", label: "すべて" },
+];
+
+export const CorrectionsPanel = () => {
+  const [filter, setFilter] = useState<StatusFilter>("published");
+  const { data, isLoading, error } = useCorrections();
+  const retireMutation = useRetireCorrection();
+  const reverifyMutation = useReverifyCorrection();
+
+  if (isLoading) {
+    return <PanelLoading />;
+  }
+
+  if (error) {
+    return <ErrorBanner>{formatError(error)}</ErrorBanner>;
+  }
+
+  const all = data?.corrections ?? [];
+  const corrections = all.filter((correction) => {
+    if (filter === "all") return true;
+    if (filter === "needs_review") {
+      return correction.status === "published" && !!correction.needsReviewAt;
+    }
+    return correction.status === filter;
+  });
+  const needsReviewCount = all.filter(
+    (c) => c.status === "published" && c.needsReviewAt,
+  ).length;
+
+  const handleRetire = (id: string) => {
+    if (!confirmDialog("この訂正を廃止しますか？検索対象から外れます。")) {
+      return;
+    }
+    retireMutation.mutate(id);
+  };
+
+  return (
+    <div className="space-y-4">
+      <FilterTabs
+        options={FILTERS.map((option) => ({
+          value: option.value,
+          label:
+            option.value === "needs_review" && needsReviewCount > 0
+              ? `${option.label} (${needsReviewCount})`
+              : option.label,
+        }))}
+        value={filter}
+        onChange={setFilter}
+      />
+
+      {(retireMutation.isError || reverifyMutation.isError) && (
+        <ErrorBanner>
+          {formatError(retireMutation.error ?? reverifyMutation.error)}
+        </ErrorBanner>
+      )}
+
+      {corrections.length === 0 ? (
+        <EmptyStateCard>訂正はありません</EmptyStateCard>
+      ) : (
+        <div className="space-y-3">
+          {corrections.map((correction) => (
+            <div
+              key={correction.id}
+              className={`bg-white rounded-xl border border-stone-200 p-4 space-y-2 ${
+                correction.status === "retired" ? "opacity-60" : ""
+              }`}
+            >
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-mono text-xs text-stone-600">
+                  {correction.correctsSourcePath}
+                </span>
+                {correction.status === "retired" ? (
+                  <span className="inline-flex px-2 py-0.5 text-xs font-medium bg-stone-100 text-stone-500 rounded">
+                    廃止済み
+                  </span>
+                ) : correction.needsReviewAt ? (
+                  <span className="inline-flex px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded">
+                    要再確認（元ページが更新されました）
+                  </span>
+                ) : (
+                  <span className="inline-flex px-2 py-0.5 text-xs font-medium bg-teal-100 text-teal-700 rounded">
+                    公開中
+                  </span>
+                )}
+                <span className="text-xs text-stone-400 ml-auto">
+                  {correction.verifiedAt} 村確認 ・{" "}
+                  {formatDateTime(correction.createdAt)}
+                </span>
+              </div>
+              <p className="text-sm text-stone-700 whitespace-pre-wrap">
+                {correction.body}
+              </p>
+              {correction.status === "published" && (
+                <div className="flex gap-2">
+                  {correction.needsReviewAt && (
+                    <button
+                      type="button"
+                      disabled={reverifyMutation.isPending}
+                      onClick={() => reverifyMutation.mutate(correction.id)}
+                      className="px-3 py-1.5 bg-teal-600 text-white text-xs font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 transition-colors"
+                    >
+                      内容を確認した（維持する）
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    disabled={retireMutation.isPending}
+                    onClick={() => handleRetire(correction.id)}
+                    className="px-3 py-1.5 bg-stone-100 text-stone-600 text-xs font-medium rounded-lg hover:bg-stone-200 disabled:opacity-50 transition-colors"
+                  >
+                    廃止する
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};

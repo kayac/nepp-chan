@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { CorrectionForm } from "~/app/dashboard/components/review/CorrectionForm";
 import {
   useReviewDetail,
   useSubmitReviewDecision,
@@ -28,6 +29,15 @@ export const ReviewDetailModal = ({ answerRunId, onClose }: Props) => {
   const { data, isLoading, error } = useReviewDetail(answerRunId);
   const decisionMutation = useSubmitReviewDecision();
   const [comment, setComment] = useState("");
+  const [showCorrectionForm, setShowCorrectionForm] = useState(false);
+
+  const correctionSourceOptions = [
+    ...new Set(
+      (data?.runs ?? [])
+        .flatMap((run) => run.hits.map((hit) => hit.source))
+        .filter((source) => !source.startsWith("curated/corrections/")),
+    ),
+  ];
 
   const handleDecide = (decision: ReviewDecisionType) => {
     decisionMutation.mutate(
@@ -181,6 +191,27 @@ export const ReviewDetailModal = ({ answerRunId, onClose }: Props) => {
             )}
 
             <div className="border-t border-stone-200 pt-4 space-y-3">
+              {showCorrectionForm ? (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-stone-700">
+                    訂正の発行
+                  </h3>
+                  <CorrectionForm
+                    answerRunId={answerRunId}
+                    sourceOptions={correctionSourceOptions}
+                  />
+                </div>
+              ) : (
+                correctionSourceOptions.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCorrectionForm(true)}
+                    className="text-teal-600 hover:text-teal-700 hover:underline text-sm"
+                  >
+                    訂正を作成する
+                  </button>
+                )
+              )}
               <textarea
                 value={comment}
                 onChange={(event) => setComment(event.target.value)}

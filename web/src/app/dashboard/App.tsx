@@ -12,6 +12,7 @@ import {
   HandThumbUpIcon,
   HomeIcon,
   MegaphoneIcon,
+  PencilSquareIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
@@ -21,6 +22,7 @@ import {
   type AnalyticsSection,
 } from "~/app/dashboard/components/AnalyticsPanel";
 import { BroadcastPanel } from "~/app/dashboard/components/BroadcastPanel";
+import { CorrectionsPanel } from "~/app/dashboard/components/CorrectionsPanel";
 import { FeedbackPanel } from "~/app/dashboard/components/FeedbackPanel";
 import { HomePanel } from "~/app/dashboard/components/HomePanel";
 import { InvitationsPanel } from "~/app/dashboard/components/InvitationsPanel";
@@ -48,6 +50,7 @@ export type Tab =
   | "knowledge"
   | "feedback"
   | "review"
+  | "corrections"
   | "invitations"
   | "widget-sites"
   | "usage";
@@ -110,6 +113,13 @@ const tabs: {
     id: "review",
     label: "回答レビュー",
     icon: <ClipboardDocumentCheckIcon className="w-5 h-5" aria-hidden="true" />,
+    group: "watch",
+    minRole: "admin",
+  },
+  {
+    id: "corrections",
+    label: "訂正",
+    icon: <PencilSquareIcon className="w-5 h-5" aria-hidden="true" />,
     group: "watch",
     minRole: "admin",
   },
@@ -345,6 +355,7 @@ export const App = () => {
             {activeTab === "poll" && <PollPanel />}
             {activeTab === "knowledge" && <KnowledgePanel />}
             {activeTab === "review" && <ReviewPanel />}
+            {activeTab === "corrections" && <CorrectionsPanel />}
             {activeTab === "feedback" && <FeedbackPanel />}
             {activeTab === "invitations" && <InvitationsPanel />}
             {activeTab === "widget-sites" && <WidgetSitesPanel />}
