@@ -54,6 +54,51 @@ describe("modelWithReasoning", () => {
       config.defaultOptions.providerOptions.google.thinkingConfig.thinkingLevel,
     ).toBe("high");
   });
+
+  it("promptCacheKey は openai の providerOptions にだけ渡す", () => {
+    const config = modelWithReasoning({
+      effort: "medium",
+      promptCacheKey: "knowledge",
+    });
+    expect(config.defaultOptions.providerOptions.openai.promptCacheKey).toBe(
+      "knowledge",
+    );
+    expect(config.defaultOptions.providerOptions.google).not.toHaveProperty(
+      "promptCacheKey",
+    );
+  });
+
+  it("promptCacheKey 未指定なら providerOptions に含めない", () => {
+    const config = modelWithReasoning({ effort: "medium" });
+    expect(config.defaultOptions.providerOptions.openai).not.toHaveProperty(
+      "promptCacheKey",
+    );
+  });
+});
+
+describe("promptCacheKey（プレフィックスキャッシュの誘導キー）", () => {
+  it("メインエージェントはプラットフォーム × intent ごとのキーを持つ", () => {
+    const cases = [
+      { intent: "casual", platform: "web", key: "nepp-chan-web-casual" },
+      { intent: "casual", platform: "line", key: "nepp-chan-line-casual" },
+      { intent: "thinking", platform: "web", key: "nepp-chan-web-thinking" },
+      { intent: "thinking", platform: "line", key: "nepp-chan-line-thinking" },
+    ] as const;
+    for (const { intent, platform, key } of cases) {
+      const tier = resolveModelTier({ intent, platform, isAdmin: false });
+      for (const entry of tier.model) {
+        expect(entry.providerOptions.openai.promptCacheKey).toBe(key);
+      }
+    }
+  });
+
+  it("voice はチェーン全体で nepp-chan-voice を使う", () => {
+    for (const entry of voiceModelConfig.model) {
+      expect(entry.providerOptions.openai.promptCacheKey).toBe(
+        "nepp-chan-voice",
+      );
+    }
+  });
 });
 
 describe("resolveModelTier", () => {
@@ -130,6 +175,7 @@ describe("resolveModelTier", () => {
       expect(tier.model[0].model).toBe(OPENAI_LITE);
       expect(tier.model[0].providerOptions.openai).toEqual({
         reasoningEffort: "none",
+        promptCacheKey: "nepp-chan-line-casual",
       });
     });
 

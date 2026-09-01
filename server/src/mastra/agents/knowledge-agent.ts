@@ -90,7 +90,12 @@ export const createKnowledgeAgent = ({
       "音威子府村の情報（歴史、施設、観光、村長、行政、行事）を検索し、ユーザー向け文章ではない簡潔な調査メモを返す担当。",
     instructions: knowledgeAgentInstructions,
     ...withUsageRecording(
-      modelWithReasoning({ model, effort, maxSteps: KNOWLEDGE_MAX_STEPS }),
+      modelWithReasoning({
+        model,
+        effort,
+        maxSteps: KNOWLEDGE_MAX_STEPS,
+        promptCacheKey: "knowledge",
+      }),
       { agent: "knowledge" },
     ),
     tools: {

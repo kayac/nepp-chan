@@ -106,9 +106,10 @@ export const personaAnalystAgent = new Agent({
 - データがない場合は「データがありません」と正直に報告
 - 推測は「推測」と明記する
 `,
-  ...withUsageRecording(modelWithReasoning({ effort: "medium" }), {
-    agent: "persona-analyst",
-  }),
+  ...withUsageRecording(
+    modelWithReasoning({ effort: "medium", promptCacheKey: "persona-analyst" }),
+    { agent: "persona-analyst" },
+  ),
   tools: {
     adminPersonaTool,
     personaAggregateTool,

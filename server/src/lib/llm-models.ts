@@ -31,14 +31,24 @@ const GOOGLE_THINKING_LEVEL = {
   max: "high",
 } as const satisfies Record<ReasoningEffort, string>;
 
+type OpenAIProviderOptions = {
+  textVerbosity?: TextVerbosity;
+  promptCacheKey?: string;
+};
+
 // providerOptions はモデル側の名前空間だけが読まれるため両方指定する
 export const reasoningProviderOptions = (
   effort: ReasoningEffort,
-  textVerbosity?: TextVerbosity,
+  openaiOptions?: OpenAIProviderOptions,
 ) => ({
   openai: {
     reasoningEffort: effort,
-    ...(textVerbosity && { textVerbosity }),
+    ...(openaiOptions?.textVerbosity && {
+      textVerbosity: openaiOptions.textVerbosity,
+    }),
+    ...(openaiOptions?.promptCacheKey && {
+      promptCacheKey: openaiOptions.promptCacheKey,
+    }),
   },
   google: {
     thinkingConfig: { thinkingLevel: GOOGLE_THINKING_LEVEL[effort] },
@@ -50,14 +60,16 @@ export const modelWithReasoning = ({
   model = OPENAI_LITE,
   effort,
   maxSteps,
+  promptCacheKey,
 }: {
   model?: string;
   effort: ReasoningEffort;
   maxSteps?: number;
+  promptCacheKey?: string;
 }) => ({
   model,
   defaultOptions: {
-    providerOptions: reasoningProviderOptions(effort),
+    providerOptions: reasoningProviderOptions(effort, { promptCacheKey }),
     ...(maxSteps !== undefined && { maxSteps }),
   },
 });
@@ -73,22 +85,30 @@ const modelChain = ({
   fallback,
   effort,
   textVerbosity,
+  promptCacheKey,
 }: {
   primary: string;
   fallback: string;
   effort: ReasoningEffort;
   textVerbosity?: TextVerbosity;
+  promptCacheKey?: string;
 }) => [
   {
     id: primary,
     model: primary,
-    providerOptions: reasoningProviderOptions(effort, textVerbosity),
+    providerOptions: reasoningProviderOptions(effort, {
+      textVerbosity,
+      promptCacheKey,
+    }),
     maxRetries: 1,
   },
   {
     id: fallback,
     model: fallback,
-    providerOptions: reasoningProviderOptions(effort, textVerbosity),
+    providerOptions: reasoningProviderOptions(effort, {
+      textVerbosity,
+      promptCacheKey,
+    }),
     maxRetries: 1,
   },
 ];
@@ -110,28 +130,25 @@ const thinkingTier = (
     fallback: OPENAI_MAIN,
     effort,
     textVerbosity: platform === "web" ? "high" : undefined,
+    promptCacheKey: `nepp-chan-${platform}-thinking`,
   }),
   defaultOptions: { maxSteps: MAX_STEPS.thinking },
 });
 
+const casualTier = (platform: "web" | "line"): AgentModelConfig => ({
+  model: modelChain({
+    primary: OPENAI_LITE,
+    fallback: OPENAI_MAIN,
+    effort: "none",
+    promptCacheKey: `nepp-chan-${platform}-casual`,
+  }),
+  defaultOptions: { maxSteps: MAX_STEPS.casual },
+});
+
 const MODEL_TIERS: Record<Intent, Record<"web" | "line", AgentModelConfig>> = {
   casual: {
-    web: {
-      model: modelChain({
-        primary: OPENAI_LITE,
-        fallback: OPENAI_MAIN,
-        effort: "none",
-      }),
-      defaultOptions: { maxSteps: MAX_STEPS.casual },
-    },
-    line: {
-      model: modelChain({
-        primary: OPENAI_LITE,
-        fallback: OPENAI_MAIN,
-        effort: "none",
-      }),
-      defaultOptions: { maxSteps: MAX_STEPS.casual },
-    },
+    web: casualTier("web"),
+    line: casualTier("line"),
   },
   thinking: {
     web: thinkingTier("web", "medium"),
@@ -154,6 +171,7 @@ export const voiceModelConfig: AgentModelConfig = {
     primary: OPENAI_LITE,
     fallback: OPENAI_MAIN,
     effort: "low",
+    promptCacheKey: "nepp-chan-voice",
   }),
   defaultOptions: { maxSteps: VOICE_MAX_STEPS },
 };
