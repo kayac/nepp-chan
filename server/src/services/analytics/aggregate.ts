@@ -153,24 +153,23 @@ const withCost = (row: UsageSumRow) => ({
   costUsd: usageCostUsd(row),
 });
 
-export const getWeeklyUsage = async (
+export const getDailyUsage = async (
   d1: D1Database,
   params: { from: string },
 ) => {
   const db = createDb(d1);
 
-  // '-6 days' で戻してから 'weekday 1' で進めると「その日を含む週の月曜」に正規化される
-  const rows = await db.all<UsageSumRow & { weekStart: string }>(sql`
-    SELECT date(created_at, '+9 hours', '-6 days', 'weekday 1') AS weekStart,
+  const rows = await db.all<UsageSumRow & { date: string }>(sql`
+    SELECT date(created_at, '+9 hours') AS date,
            model,
            ${usageSumColumns}
     FROM llm_usage
     WHERE created_at >= ${params.from}
-    GROUP BY weekStart, model
-    ORDER BY weekStart, model
+    GROUP BY date, model
+    ORDER BY date, model
   `);
 
-  return rows.map((row) => ({ weekStart: row.weekStart, ...withCost(row) }));
+  return rows.map((row) => ({ date: row.date, ...withCost(row) }));
 };
 
 export const getUsageByModel = async (d1: D1Database, period: Period) => {
