@@ -15,6 +15,7 @@ import type { ThreadVariables } from "~/middleware/require-thread-access";
 import { requireThreadAccess } from "~/middleware/require-thread-access";
 import { widgetSiteRepository } from "~/repository/widget-site-repository";
 import { nextTurnIndex, recordLlmUsage } from "~/services/analytics/llm-usage";
+import { linkRetrievalRunsToMessage } from "~/services/knowledge/retrieval-trace";
 
 export const chatRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -33,6 +34,16 @@ const ChatSendRequestSchema = z.object({
   currentPageUrl: z.url().max(2048).optional(),
   isGreeting: z.boolean().optional(),
 });
+
+const extractAssistantMessageId = (event: unknown) => {
+  const uiMessages =
+    (
+      event as {
+        response?: { uiMessages?: Array<{ id?: string; role?: string }> };
+      }
+    ).response?.uiMessages ?? [];
+  return uiMessages.findLast((message) => message.role === "assistant")?.id;
+};
 
 const chatRoute = createRoute({
   method: "post",
@@ -153,7 +164,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
           thread: threadId,
         },
     // onFinish はレスポンス返却後に発火するため waitUntil で記録を完了させる
-    onFinish: (event) =>
+    onFinish: (event) => {
       waitUntil(
         recordLlmUsage(c.env.DB, {
           model: event.model?.modelId ?? primaryModelId(modelConfig),
@@ -166,6 +177,13 @@ chatRoutes.openapi(chatRoute, async (c) => {
           turnIndex,
           durationMs: Date.now() - startedAt,
         }),
-      ),
+      );
+      const assistantMessageId = extractAssistantMessageId(event);
+      if (assistantMessageId) {
+        waitUntil(
+          linkRetrievalRunsToMessage(requestContext, assistantMessageId),
+        );
+      }
+    },
   });
 });

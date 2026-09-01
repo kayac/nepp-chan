@@ -53,6 +53,14 @@ vi.mock("~/mastra/request-context", () => ({
   createRequestContext: vi.fn(() => ({})),
 }));
 
+const { mockLinkRetrievalRunsToMessage } = vi.hoisted(() => ({
+  mockLinkRetrievalRunsToMessage: vi.fn(),
+}));
+
+vi.mock("~/services/knowledge/retrieval-trace", () => ({
+  linkRetrievalRunsToMessage: mockLinkRetrievalRunsToMessage,
+}));
+
 vi.mock("@mastra/memory", () => ({
   Memory: vi.fn(function () {
     return {
@@ -267,6 +275,49 @@ describe("chatRoutes: POST /:threadId/chat", () => {
         turnIndex: 1,
       }),
     );
+  });
+
+  it("ストリーム完了時に assistant メッセージ ID を retrieval run へ紐付ける", async () => {
+    useAnonAuth();
+    mockGetThreadById.mockResolvedValue(ownThread);
+
+    await routes.request(
+      buildReq("/thread-1/chat", validBody),
+      undefined,
+      mockEnv,
+    );
+
+    const { onFinish } = mockHandleChatStream.mock.calls[0][0].params;
+    onFinish({
+      totalUsage: { inputTokens: 1 },
+      response: {
+        uiMessages: [
+          { id: "user-1", role: "user" },
+          { id: "assistant-1", role: "assistant" },
+        ],
+      },
+    });
+
+    expect(mockLinkRetrievalRunsToMessage).toHaveBeenCalledWith(
+      expect.anything(),
+      "assistant-1",
+    );
+  });
+
+  it("assistant メッセージが無ければ紐付けしない", async () => {
+    useAnonAuth();
+    mockGetThreadById.mockResolvedValue(ownThread);
+
+    await routes.request(
+      buildReq("/thread-1/chat", validBody),
+      undefined,
+      mockEnv,
+    );
+
+    const { onFinish } = mockHandleChatStream.mock.calls[0][0].params;
+    onFinish({ totalUsage: { inputTokens: 1 } });
+
+    expect(mockLinkRetrievalRunsToMessage).not.toHaveBeenCalled();
   });
 
   it("widget- prefix の resourceId では usage を platform=widget で記録する", async () => {
