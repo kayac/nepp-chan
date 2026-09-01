@@ -51,7 +51,7 @@ export const generateReply = async (params: {
       }),
     );
 
-  // Intent 分類（非テキストメッセージは casual 直行）は配信・投票の注入と独立なので並行実行する
+  // Intent 分類でモデルティアを決定（非テキストメッセージは casual 直行）
   const [intent] = await Promise.all([
     params.userMessage
       ? classifyIntent(params.userMessage, requestContext)
