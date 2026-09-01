@@ -7,6 +7,7 @@ export {
   knowledgeAdminRoutes,
   personaAdminRoutes,
   pollAdminRoutes,
+  reviewAdminRoutes,
   userAdminRoutes,
   widgetSiteAdminRoutes,
 } from "./admin";

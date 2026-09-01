@@ -26,6 +26,7 @@ import {
   personaAdminRoutes,
   pollAdminRoutes,
   pollRoutes,
+  reviewAdminRoutes,
   threadsRoutes,
   twilioVoiceRoutes,
   userAdminRoutes,
@@ -51,6 +52,7 @@ app.route("/broadcast/media", broadcastMediaRoutes);
 app.route("/admin/feedback", feedbackAdminRoutes);
 app.route("/admin/knowledge", knowledgeAdminRoutes);
 app.route("/admin/persona", personaAdminRoutes);
+app.route("/admin/review", reviewAdminRoutes);
 app.route("/admin/emergency", emergencyAdminRoutes);
 app.route("/admin/invitations", invitationRoutes);
 app.route("/admin/users", userAdminRoutes);
