@@ -21,7 +21,18 @@ type ChunkMetadata = {
   section?: string;
   subsection?: string;
   content: string;
+  contentHash: string;
   [key: string]: string | number | boolean | string[] | undefined;
+};
+
+const hashText = async (text: string) => {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(text),
+  );
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
 };
 
 type VectorData = {
@@ -85,19 +96,22 @@ const chunkDocument = async (
       .join(" > ");
     return prefix ? `${prefix}\n\n${allTexts[i]}` : allTexts[i];
   });
-  const metadata: ChunkMetadata[] = filteredIndices.map((i, idx) => {
-    const chunkMeta = chunkMetadataList[i] as
-      | Record<string, unknown>
-      | undefined;
-    return {
-      ...frontmatter,
-      source: filename,
-      title: chunkMeta?.title as string | undefined,
-      section: chunkMeta?.section as string | undefined,
-      subsection: chunkMeta?.subsection as string | undefined,
-      content: texts[idx],
-    };
-  });
+  const metadata: ChunkMetadata[] = await Promise.all(
+    filteredIndices.map(async (i, idx) => {
+      const chunkMeta = chunkMetadataList[i] as
+        | Record<string, unknown>
+        | undefined;
+      return {
+        ...frontmatter,
+        source: filename,
+        title: chunkMeta?.title as string | undefined,
+        section: chunkMeta?.section as string | undefined,
+        subsection: chunkMeta?.subsection as string | undefined,
+        content: texts[idx],
+        contentHash: await hashText(texts[idx]),
+      };
+    }),
+  );
 
   logger.info(
     `[Knowledge Sync] ${filename}: ${allTexts.length} chunks -> ${texts.length} after filtering (min ${MIN_CHUNK_LENGTH} chars)`,

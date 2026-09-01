@@ -131,6 +131,25 @@ describe("processKnowledgeFile", () => {
     expect(upsertArg[1].metadata.subsection).toBe("Sub");
   });
 
+  it("chunk 本文の SHA-256 を contentHash として付与する", async () => {
+    const bodyA = "a".repeat(100);
+    setChunks([bodyA, bodyA, "b".repeat(100)], [{}, {}, {}]);
+    vi.mocked(embedMany).mockResolvedValueOnce({
+      embeddings: [fakeEmbedding(), fakeEmbedding(), fakeEmbedding()],
+    } as never);
+
+    const vectorize = buildVectorize();
+    await processKnowledgeFile("guide.md", "x", vectorize, "key");
+
+    const upsertArg = vi.mocked(vectorize.upsert).mock.calls[0]?.[0] as Array<{
+      metadata: Record<string, unknown>;
+    }>;
+    const hashes = upsertArg.map((v) => v.metadata.contentHash);
+    expect(hashes[0]).toMatch(/^[0-9a-f]{64}$/);
+    expect(hashes[0]).toBe(hashes[1]);
+    expect(hashes[2]).not.toBe(hashes[0]);
+  });
+
   it("strip されたヘッダー情報を embedding テキストの先頭にプレフィックスとして復元する", async () => {
     const bodyA = "a".repeat(100);
     const bodyB = "b".repeat(100);
