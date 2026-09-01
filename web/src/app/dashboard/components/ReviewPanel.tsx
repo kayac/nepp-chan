@@ -11,6 +11,7 @@ import { useInfiniteScroll } from "~/app/dashboard/hooks/useInfiniteScroll";
 import { useReviewQueue } from "~/app/dashboard/hooks/useReview";
 import { EmptyStateCard } from "~/components/ui/EmptyStateCard";
 import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
+import { FilterTabs } from "~/components/ui/FilterTabs";
 import { PanelLoading } from "~/components/ui/PanelLoading";
 import { formatDateTime } from "~/lib/format";
 
@@ -51,22 +52,7 @@ export const ReviewPanel = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-1">
-        {FILTERS.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => setFilter(option.value)}
-            className={`px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors ${
-              filter === option.value
-                ? "bg-stone-800 text-white"
-                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
+      <FilterTabs options={FILTERS} value={filter} onChange={setFilter} />
 
       {items.length === 0 ? (
         <EmptyStateCard>要確認の回答はありません</EmptyStateCard>
