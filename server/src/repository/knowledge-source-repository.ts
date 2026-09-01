@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, isNotNull } from "drizzle-orm";
 import {
   createDb,
   type KnowledgeSource,
@@ -38,6 +38,18 @@ export const knowledgeSourceRepository = {
       .where(eq(knowledgeSources.sourcePath, sourcePath))
       .get();
     return result ?? null;
+  },
+
+  async listCanonicalUrls(d1: D1Database) {
+    const db = createDb(d1);
+    const rows = await db
+      .select({ canonicalUrl: knowledgeSources.canonicalUrl })
+      .from(knowledgeSources)
+      .where(isNotNull(knowledgeSources.canonicalUrl))
+      .all();
+    return rows
+      .map((row) => row.canonicalUrl)
+      .filter((url): url is string => url !== null);
   },
 
   async list(d1: D1Database) {
