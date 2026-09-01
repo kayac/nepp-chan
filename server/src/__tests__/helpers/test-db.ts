@@ -160,6 +160,20 @@ export const createTestDb = async () => {
       created_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS knowledge_corrections (
+      id TEXT PRIMARY KEY,
+      corrects_source_path TEXT NOT NULL,
+      body TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'published',
+      verified_at TEXT NOT NULL,
+      approved_by TEXT NOT NULL,
+      related_feedback_id TEXT,
+      answer_run_id TEXT,
+      needs_review_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT
+    );
+
     CREATE TABLE IF NOT EXISTS review_decisions (
       id TEXT PRIMARY KEY,
       answer_run_id TEXT NOT NULL,
