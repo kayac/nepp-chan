@@ -7,6 +7,7 @@ import {
 } from "~/mastra/tools/broadcast-get-tool";
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 import { withUsageRecording } from "~/services/analytics/llm-usage";
+import { CURATED_CORRECTIONS_PREFIX } from "~/services/knowledge/corrections";
 
 const KNOWLEDGE_MAX_STEPS = 5;
 
@@ -32,6 +33,7 @@ const baseInstructions = `
 - 「確認できた事実」「関連URL」「不確実・矛盾・未確認」に分け、該当する内容がない区分は省く
 - 関連する結果がなければ、確認できなかった範囲を調査メモに残す
 - 検索結果が矛盾する場合は混ぜて断定せず、より新しく公式性の高い情報を優先し、差異を明記する
+- source が ${CURATED_CORRECTIONS_PREFIX} の結果は村が確認した訂正であり、対象の元情報と矛盾する場合は必ず訂正を優先する
 
 ## 情報の時点
 - イベント日程、営業期間、料金、募集、届出期限などは、現在日時と照合して有効性と時制を判断する

@@ -10,10 +10,12 @@ import {
   OPENAI_LITE,
 } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
+import { getRequestDb } from "~/mastra/request-context";
 import {
   recordUsageFromContext,
   withUsageRecording,
 } from "~/services/analytics/llm-usage";
+import { applyCorrections } from "~/services/knowledge/corrections";
 import { recordRetrievalRunInBackground } from "~/services/knowledge/retrieval-trace";
 
 const EMBEDDING_DIMENSIONS = 1536;
@@ -188,8 +190,11 @@ export const searchKnowledge = async (
         .join(", "),
     });
 
+    const d1 = getRequestDb(requestContext);
     return {
-      results: knowledgeResults,
+      results: d1
+        ? await applyCorrections(d1, knowledgeResults)
+        : knowledgeResults,
     };
   } catch (error) {
     logger.error("Knowledge search error", error);

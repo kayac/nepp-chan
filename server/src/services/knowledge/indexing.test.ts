@@ -29,6 +29,9 @@ const { sha256Hex } = await import("~/lib/crypto");
 const { knowledgeSourceRepository } = await import(
   "~/repository/knowledge-source-repository"
 );
+const { knowledgeCorrectionRepository } = await import(
+  "~/repository/knowledge-correction-repository"
+);
 const { indexKnowledgeSource, removeKnowledgeSource } = await import(
   "./indexing"
 );
@@ -207,6 +210,50 @@ describe("indexKnowledgeSource", () => {
     const row = await knowledgeSourceRepository.findByPath(d1, "bus/index.md");
     expect(row?.canonicalUrl).toBe("https://example.com/manual");
     expect(row?.chunkCount).toBe(3);
+  });
+
+  it("内容が変わったら紐づく訂正を要再確認にする", async () => {
+    await knowledgeSourceRepository.insert(d1, {
+      sourcePath: "bus/index.md",
+      approvalStatus: "approved",
+      sourceHash: "old-hash",
+      createdAt: "2026-09-01T00:00:00.000Z",
+    });
+    await knowledgeCorrectionRepository.insert(d1, {
+      id: "cor-1",
+      correctsSourcePath: "bus/index.md",
+      body: "訂正本文",
+      verifiedAt: "2026-09-01",
+      approvedBy: "admin-1",
+      createdAt: "2026-09-01T00:00:00.000Z",
+    });
+
+    await indexKnowledgeSource("bus/index.md", content, deps);
+
+    const correction = await knowledgeCorrectionRepository.findById(
+      d1,
+      "cor-1",
+    );
+    expect(correction?.needsReviewAt).not.toBeNull();
+  });
+
+  it("初回登録では訂正を要再確認にしない", async () => {
+    await knowledgeCorrectionRepository.insert(d1, {
+      id: "cor-1",
+      correctsSourcePath: "bus/index.md",
+      body: "訂正本文",
+      verifiedAt: "2026-09-01",
+      approvedBy: "admin-1",
+      createdAt: "2026-09-01T00:00:00.000Z",
+    });
+
+    await indexKnowledgeSource("bus/index.md", content, deps);
+
+    const correction = await knowledgeCorrectionRepository.findById(
+      d1,
+      "cor-1",
+    );
+    expect(correction?.needsReviewAt).toBeNull();
   });
 
   it("index 済みなのに未承認の情報源はベクトルを削除して整合させる", async () => {

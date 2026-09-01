@@ -36,12 +36,17 @@ vi.mock("~/services/knowledge/retrieval-trace", () => ({
   recordRetrievalRunInBackground: vi.fn(),
 }));
 
+vi.mock("~/services/knowledge/corrections", () => ({
+  applyCorrections: vi.fn(),
+}));
+
 const { embed } = await import("ai");
 const { rerankWithScorer } = await import("@mastra/rag");
 const { logger } = await import("~/lib/logger");
 const { recordRetrievalRunInBackground } = await import(
   "~/services/knowledge/retrieval-trace"
 );
+const { applyCorrections } = await import("~/services/knowledge/corrections");
 const { searchKnowledge } = await import("./search");
 
 const buildVectorize = () =>
@@ -56,6 +61,7 @@ beforeEach(() => {
   vi.mocked(rerankWithScorer).mockReset();
   vi.mocked(logger.error).mockReset();
   vi.mocked(recordRetrievalRunInBackground).mockReset();
+  vi.mocked(applyCorrections).mockReset();
 });
 
 describe("searchKnowledge", () => {
@@ -148,6 +154,52 @@ describe("searchKnowledge", () => {
     };
     expect(rerankArg.query).toBe("クエリ");
     expect(rerankArg.results[0].metadata.source).toBe("doc.md");
+  });
+
+  it("requestContext に db があれば訂正を適用した結果を返す", async () => {
+    vi.mocked(embed).mockResolvedValueOnce({ embedding: [0.1] } as never);
+    const vectorize = buildVectorize();
+    vi.mocked(vectorize.query).mockResolvedValueOnce({
+      matches: [{ id: "v1", score: 0.8, metadata: { content: "本文1" } }],
+    } as never);
+    vi.mocked(rerankWithScorer).mockResolvedValueOnce([
+      {
+        score: 0.95,
+        result: { id: "v1", score: 0.8, metadata: { source: "doc.md" } },
+      },
+    ] as never);
+    const corrected = [
+      { content: "訂正", score: 1, source: "curated/corrections/cor-1.md" },
+    ];
+    vi.mocked(applyCorrections).mockResolvedValueOnce(corrected as never);
+
+    const d1 = {} as D1Database;
+    const requestContext = {
+      get: (key: string) => (key === "db" ? d1 : undefined),
+    } as never;
+
+    const result = await searchKnowledge("q", vectorize, "key", requestContext);
+
+    expect(applyCorrections).toHaveBeenCalledWith(d1, expect.any(Array));
+    expect(result.results).toBe(corrected);
+  });
+
+  it("db が無ければ訂正を適用しない", async () => {
+    vi.mocked(embed).mockResolvedValueOnce({ embedding: [0.1] } as never);
+    const vectorize = buildVectorize();
+    vi.mocked(vectorize.query).mockResolvedValueOnce({
+      matches: [{ id: "v1", score: 0.8, metadata: { content: "本文1" } }],
+    } as never);
+    vi.mocked(rerankWithScorer).mockResolvedValueOnce([
+      {
+        score: 0.95,
+        result: { id: "v1", score: 0.8, metadata: { source: "doc.md" } },
+      },
+    ] as never);
+
+    await searchKnowledge("q", vectorize, "key");
+
+    expect(applyCorrections).not.toHaveBeenCalled();
   });
 
   it("rerank 後の hits をトレースに記録する", async () => {

@@ -1,4 +1,5 @@
 import { logger } from "~/lib/logger";
+import { knowledgeCorrectionRepository } from "~/repository/knowledge-correction-repository";
 import { knowledgeSourceRepository } from "~/repository/knowledge-source-repository";
 import { deleteKnowledgeBySource, processKnowledgeFile } from "./embedding";
 import { buildSourceRecord } from "./source-meta";
@@ -65,6 +66,12 @@ export const indexKnowledgeSource = async (
         ...meta,
         ...(options.r2Etag && { r2Etag: options.r2Etag }),
       });
+      if (existing.sourceHash) {
+        await knowledgeCorrectionRepository.markNeedsReviewByCorrects(
+          deps.d1,
+          key,
+        );
+      }
     }
     if (promoted && existing.approvalStatus === "pending") {
       await knowledgeSourceRepository.update(deps.d1, key, {
