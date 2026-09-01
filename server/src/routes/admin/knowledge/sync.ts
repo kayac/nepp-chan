@@ -64,6 +64,7 @@ const syncAllRoute = createRoute({
               }),
             ),
             editedCount: z.number().optional(),
+            skippedCount: z.number().optional(),
           }),
         },
       },
@@ -85,9 +86,13 @@ knowledgeSyncRoutes.openapi(syncAllRoute, async (c) => {
 
   return c.json(
     {
-      message: `${result.totalFiles}ファイル、${result.totalChunks}チャンクを同期しました`,
+      message:
+        result.skippedCount > 0
+          ? `${result.totalFiles}ファイル中${result.skippedCount}件は未承認のためスキップし、${result.totalChunks}チャンクを同期しました`
+          : `${result.totalFiles}ファイル、${result.totalChunks}チャンクを同期しました`,
       results: result.results,
       editedCount: result.editedCount,
+      skippedCount: result.skippedCount,
     },
     200,
   );
