@@ -7,7 +7,10 @@ import { createDb, mastraMessages, mastraThreads } from "~/db";
 import type { LlmServiceTier } from "~/lib/llm-pricing";
 import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
-import { createPersonaAgent, personaAgent } from "~/mastra/agents/persona-agent";
+import {
+  createPersonaAgent,
+  personaAgent,
+} from "~/mastra/agents/persona-agent";
 import { getWorkingMemoryByThread } from "~/mastra/memory";
 import { createRequestContext } from "~/mastra/request-context";
 import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";

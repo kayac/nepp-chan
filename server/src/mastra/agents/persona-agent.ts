@@ -87,7 +87,9 @@ neutral を安易に選ばない。声には何らかの感情や意図が含ま
 
 export const createPersonaAgent = ({
   serviceTier,
-}: { serviceTier?: LlmServiceTier } = {}) =>
+}: {
+  serviceTier?: LlmServiceTier;
+} = {}) =>
   new Agent({
     id: "persona-agent",
     name: "Persona Agent",
