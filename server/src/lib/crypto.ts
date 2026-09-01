@@ -61,6 +61,16 @@ export const hmacSha1Base64 = async (value: string, secret: string) => {
   return btoa(String.fromCharCode(...new Uint8Array(signature)));
 };
 
+export const sha256Hex = async (value: string) => {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(value),
+  );
+  return Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+};
+
 export const generateId = () => {
   const array = new Uint8Array(16);
   crypto.getRandomValues(array);

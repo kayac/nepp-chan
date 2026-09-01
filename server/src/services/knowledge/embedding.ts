@@ -2,6 +2,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { MDocument } from "@mastra/rag";
 import { embedMany } from "ai";
 import matter from "gray-matter";
+import { sha256Hex } from "~/lib/crypto";
 import { GEMINI_EMBEDDING } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { recordLlmUsage } from "~/services/analytics/llm-usage";
@@ -23,16 +24,6 @@ type ChunkMetadata = {
   content: string;
   contentHash: string;
   [key: string]: string | number | boolean | string[] | undefined;
-};
-
-const hashText = async (text: string) => {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(text),
-  );
-  return [...new Uint8Array(digest)]
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
 };
 
 type VectorData = {
@@ -108,7 +99,7 @@ const chunkDocument = async (
         section: chunkMeta?.section as string | undefined,
         subsection: chunkMeta?.subsection as string | undefined,
         content: texts[idx],
-        contentHash: await hashText(texts[idx]),
+        contentHash: await sha256Hex(texts[idx]),
       };
     }),
   );

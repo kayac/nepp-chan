@@ -7,6 +7,7 @@ import {
   generateToken,
   hmacSha1Base64,
   hmacSha256,
+  sha256Hex,
 } from "./crypto";
 
 describe("hmacSha256", () => {
@@ -107,5 +108,18 @@ describe("generateToken", () => {
   it("呼び出しごとに異なる値を返す", () => {
     const tokens = new Set(Array.from({ length: 20 }, generateToken));
     expect(tokens.size).toBe(20);
+  });
+});
+
+describe("sha256Hex", () => {
+  it("既知の入力に対して SHA-256 の hex を返す", async () => {
+    expect(await sha256Hex("abc")).toBe(
+      "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+    );
+  });
+
+  it("同じ入力は同じハッシュ、異なる入力は異なるハッシュになる", async () => {
+    expect(await sha256Hex("foo")).toBe(await sha256Hex("foo"));
+    expect(await sha256Hex("foo")).not.toBe(await sha256Hex("bar"));
   });
 });
