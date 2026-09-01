@@ -101,7 +101,7 @@ export const createPersonaAgent = ({
         promptCacheKey: "persona",
         serviceTier,
       }),
-      { agent: "persona", source: "persona-extract", serviceTier },
+      { agent: "persona", source: "persona-extract" },
     ),
     tools: {
       personaSaveTool,
@@ -110,3 +110,11 @@ export const createPersonaAgent = ({
   });
 
 export const personaAgent = createPersonaAgent();
+
+let flexPersonaAgent: ReturnType<typeof createPersonaAgent> | undefined;
+
+export const getPersonaAgent = (serviceTier?: LlmServiceTier) => {
+  if (serviceTier !== "flex") return personaAgent;
+  flexPersonaAgent ??= createPersonaAgent({ serviceTier: "flex" });
+  return flexPersonaAgent;
+};

@@ -138,21 +138,24 @@ export const recordUsageFromContext = (
 };
 
 /** defaultOptions を動的関数に置き換えるため、静的オプションは defaults 経由で引き継ぐ */
+const serviceTierOf = (defaultOptions?: Record<string, unknown>) =>
+  (
+    defaultOptions?.providerOptions as
+      | { openai?: { serviceTier?: LlmServiceTier } }
+      | undefined
+  )?.openai?.serviceTier;
+
 export const withUsageRecording = <
   T extends { model: string; defaultOptions?: Record<string, unknown> },
 >(
   config: T,
-  params: {
-    agent: string;
-    source?: LlmUsageSource;
-    serviceTier?: LlmServiceTier;
-  },
+  params: { agent: string; source?: LlmUsageSource },
 ) => ({
   model: config.model,
   defaultOptions: usageRecordingOptions({
     source: params.source ?? "subagent",
     agent: params.agent,
-    serviceTier: params.serviceTier,
+    serviceTier: serviceTierOf(config.defaultOptions),
     fallbackModel: config.model,
     defaults: config.defaultOptions,
   }),

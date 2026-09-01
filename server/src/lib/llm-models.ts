@@ -104,26 +104,16 @@ const modelChain = ({
   effort: ReasoningEffort;
   textVerbosity?: TextVerbosity;
   promptCacheKey?: string;
-}) => [
-  {
-    id: primary,
-    model: primary,
-    providerOptions: reasoningProviderOptions(effort, {
-      textVerbosity,
-      promptCacheKey,
-    }),
-    maxRetries: 1,
-  },
-  {
-    id: fallback,
-    model: fallback,
-    providerOptions: reasoningProviderOptions(effort, {
-      textVerbosity,
-      promptCacheKey,
-    }),
-    maxRetries: 1,
-  },
-];
+}) => {
+  const providerOptions = reasoningProviderOptions(effort, {
+    textVerbosity,
+    promptCacheKey,
+  });
+  return [
+    { id: primary, model: primary, providerOptions, maxRetries: 1 },
+    { id: fallback, model: fallback, providerOptions, maxRetries: 1 },
+  ];
+};
 
 export type AgentModelConfig = {
   model: ReturnType<typeof modelChain>;

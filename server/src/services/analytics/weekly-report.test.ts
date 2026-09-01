@@ -37,6 +37,7 @@ vi.mock("~/mastra/request-context", () => ({
 
 vi.mock("~/mastra/agents/weekly-report-agent", () => ({
   weeklyReportAgent: { id: "weekly-report-agent" },
+  WEEKLY_REPORT_SERVICE_TIER: "flex",
 }));
 
 vi.mock("~/lib/logger", () => ({

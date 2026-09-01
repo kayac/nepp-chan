@@ -5,7 +5,10 @@ import { DAY_MS, jstDateLabel, startOfJstWeek, WEEK_MS } from "~/lib/date";
 import { OPENAI_LITE } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
-import { weeklyReportAgent } from "~/mastra/agents/weekly-report-agent";
+import {
+  WEEKLY_REPORT_SERVICE_TIER,
+  weeklyReportAgent,
+} from "~/mastra/agents/weekly-report-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { weeklyReportRepository } from "~/repository/weekly-report-repository";
 import type { WeeklyStats } from "~/schemas/analytics-schema";
@@ -90,7 +93,7 @@ const generateWeeklySummary = async (
     usage: response.totalUsage,
     source: "weekly-report",
     agent: "weekly-report",
-    serviceTier: "flex",
+    serviceTier: WEEKLY_REPORT_SERVICE_TIER,
   });
 
   return response.text;
