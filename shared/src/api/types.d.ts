@@ -4771,6 +4771,192 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/source-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 情報源候補の一覧を取得
+         * @description Web 検索の回答で参照された、未収集の公式ページ候補を一覧します
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 取得成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            candidates: {
+                                id: string;
+                                url: string;
+                                /** @enum {string} */
+                                status: "pending" | "approved" | "rejected";
+                                occurrenceCount: number;
+                                relatedAnswerRunId: string | null;
+                                decidedBy: string | null;
+                                decidedAt: string | null;
+                                lastSeenAt: string;
+                                createdAt: string;
+                                updatedAt: string | null;
+                            }[];
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/source-candidates/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 情報源候補の承認状態を変更
+         * @description 承認した候補はナレッジ収集の対象として scraper パイプラインに追加します
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        action: "approve" | "reject";
+                    };
+                };
+            };
+            responses: {
+                /** @description 変更成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            candidate: {
+                                id: string;
+                                url: string;
+                                /** @enum {string} */
+                                status: "pending" | "approved" | "rejected";
+                                occurrenceCount: number;
+                                relatedAnswerRunId: string | null;
+                                decidedBy: string | null;
+                                decidedAt: string | null;
+                                lastSeenAt: string;
+                                createdAt: string;
+                                updatedAt: string | null;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/admin/emergency": {
         parameters: {
             query?: never;
