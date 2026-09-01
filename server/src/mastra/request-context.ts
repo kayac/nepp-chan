@@ -25,6 +25,9 @@ export type MastraRequestContextType = {
   voiceEndCall?: () => void;
 };
 
+export const getRequestDb = (requestContext: RequestContext | undefined) =>
+  requestContext?.get("db") as D1Database | undefined;
+
 export const createRequestContext = (values: MastraRequestContextType) => {
   const requestContext = new RequestContext();
   if (values.storage) {

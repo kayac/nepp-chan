@@ -5,6 +5,7 @@ import { createDb, llmUsage } from "~/db";
 import { calcCostUsd, type LlmServiceTier } from "~/lib/llm-pricing";
 import { logger } from "~/lib/logger";
 import { waitUntilInBackground } from "~/lib/wait-until";
+import { getRequestDb } from "~/mastra/request-context";
 
 export type LlmUsagePlatform = "web" | "line" | "lp" | "widget" | "voice";
 
@@ -130,7 +131,7 @@ export const recordUsageFromContext = (
     durationMs?: number;
   },
 ) => {
-  const db = requestContext?.get("db") as D1Database | undefined;
+  const db = getRequestDb(requestContext);
   if (!db) return;
   return recordLlmUsage(db, {
     ...params,
@@ -180,7 +181,7 @@ export const usageRecordingOptions =
     return {
       ...(params.defaults ?? ({} as T)),
       onFinish: (event: MastraOnFinishCallbackArgs) => {
-        const db = requestContext?.get("db") as D1Database | undefined;
+        const db = getRequestDb(requestContext);
         if (!db) return;
         const recording = recordLlmUsage(db, {
           model: event.model?.modelId ?? params.fallbackModel,
