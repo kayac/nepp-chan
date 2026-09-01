@@ -11,4 +11,12 @@ describe("weeklyReportAgent", () => {
       },
     });
   });
+
+  it("週次 cron 専用なので flex tier で動く", () => {
+    expect(weeklyReportAgent.getDefaultOptions()).toMatchObject({
+      providerOptions: {
+        openai: { serviceTier: "flex" },
+      },
+    });
+  });
 });

@@ -1,14 +1,11 @@
 import { Agent } from "@mastra/core/agent";
 import { modelWithReasoning } from "~/lib/llm-models";
+import type { LlmServiceTier } from "~/lib/llm-pricing";
 import { personaSaveTool } from "~/mastra/tools/persona-save-tool";
 import { personaUpdateTool } from "~/mastra/tools/persona-update-tool";
 import { withUsageRecording } from "~/services/analytics/llm-usage";
 
-export const personaAgent = new Agent({
-  id: "persona-agent",
-  name: "Persona Agent",
-  description: "村の集合知（ペルソナ）を蓄積・更新する担当",
-  instructions: `
+const instructions = `
 あなたは村の集合知を管理する専門エージェントです。
 ユーザーの声を匿名化して村の集合知として蓄積・更新します。
 純粋な挨拶や天気確認のみの場合は保存不要。それ以外は積極的に保存する。
@@ -86,13 +83,28 @@ neutral を安易に選ばない。声には何らかの感情や意図が含ま
 
 ## 複数トピック対応
 複数トピックが含まれる場合はそれぞれ別のペルソナとして保存する。
-`,
-  ...withUsageRecording(
-    modelWithReasoning({ effort: "medium", promptCacheKey: "persona" }),
-    { agent: "persona", source: "persona-extract" },
-  ),
-  tools: {
-    personaSaveTool,
-    personaUpdateTool,
-  },
-});
+`;
+
+export const createPersonaAgent = ({
+  serviceTier,
+}: { serviceTier?: LlmServiceTier } = {}) =>
+  new Agent({
+    id: "persona-agent",
+    name: "Persona Agent",
+    description: "村の集合知（ペルソナ）を蓄積・更新する担当",
+    instructions,
+    ...withUsageRecording(
+      modelWithReasoning({
+        effort: "medium",
+        promptCacheKey: "persona",
+        serviceTier,
+      }),
+      { agent: "persona", source: "persona-extract", serviceTier },
+    ),
+    tools: {
+      personaSaveTool,
+      personaUpdateTool,
+    },
+  });
+
+export const personaAgent = createPersonaAgent();

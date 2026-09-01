@@ -1,3 +1,5 @@
+import type { LlmServiceTier } from "~/lib/llm-pricing";
+
 // Mastra 形式のモデル名（Agent の model プロパティに使用）
 export const OPENAI_MAIN = "openai/gpt-5.6-terra";
 export const OPENAI_LITE = "openai/gpt-5.6-luna";
@@ -34,6 +36,7 @@ const GOOGLE_THINKING_LEVEL = {
 type OpenAIProviderOptions = {
   textVerbosity?: TextVerbosity;
   promptCacheKey?: string;
+  serviceTier?: LlmServiceTier;
 };
 
 // providerOptions はモデル側の名前空間だけが読まれるため両方指定する
@@ -49,6 +52,9 @@ export const reasoningProviderOptions = (
     ...(openaiOptions?.promptCacheKey && {
       promptCacheKey: openaiOptions.promptCacheKey,
     }),
+    ...(openaiOptions?.serviceTier && {
+      serviceTier: openaiOptions.serviceTier,
+    }),
   },
   google: {
     thinkingConfig: { thinkingLevel: GOOGLE_THINKING_LEVEL[effort] },
@@ -61,15 +67,20 @@ export const modelWithReasoning = ({
   effort,
   maxSteps,
   promptCacheKey,
+  serviceTier,
 }: {
   model?: string;
   effort: ReasoningEffort;
   maxSteps?: number;
   promptCacheKey?: string;
+  serviceTier?: LlmServiceTier;
 }) => ({
   model,
   defaultOptions: {
-    providerOptions: reasoningProviderOptions(effort, { promptCacheKey }),
+    providerOptions: reasoningProviderOptions(effort, {
+      promptCacheKey,
+      serviceTier,
+    }),
     ...(maxSteps !== undefined && { maxSteps }),
   },
 });

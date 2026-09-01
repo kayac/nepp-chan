@@ -2,7 +2,7 @@ import type { RequestContext } from "@mastra/core/request-context";
 import type { MastraOnFinishCallbackArgs } from "@mastra/core/stream";
 import { and, count, eq } from "drizzle-orm";
 import { createDb, llmUsage } from "~/db";
-import { calcCostUsd } from "~/lib/llm-pricing";
+import { calcCostUsd, type LlmServiceTier } from "~/lib/llm-pricing";
 import { logger } from "~/lib/logger";
 
 export type LlmUsagePlatform = "web" | "line" | "lp" | "widget" | "voice";
@@ -33,6 +33,7 @@ type LlmUsageParams = {
   threadId?: string;
   turnIndex?: number;
   durationMs?: number;
+  serviceTier?: LlmServiceTier;
 };
 
 /**
@@ -75,11 +76,11 @@ export const recordLlmUsage = async (
       threadId: params.threadId,
       turnIndex: params.turnIndex,
       durationMs: params.durationMs,
-      costUsd: calcCostUsd(params.model, {
-        inputTokens,
-        outputTokens,
-        cachedInputTokens,
-      }),
+      costUsd: calcCostUsd(
+        params.model,
+        { inputTokens, outputTokens, cachedInputTokens },
+        { serviceTier: params.serviceTier },
+      ),
       createdAt: new Date().toISOString(),
     });
   } catch (error) {
@@ -141,12 +142,17 @@ export const withUsageRecording = <
   T extends { model: string; defaultOptions?: Record<string, unknown> },
 >(
   config: T,
-  params: { agent: string; source?: LlmUsageSource },
+  params: {
+    agent: string;
+    source?: LlmUsageSource;
+    serviceTier?: LlmServiceTier;
+  },
 ) => ({
   model: config.model,
   defaultOptions: usageRecordingOptions({
     source: params.source ?? "subagent",
     agent: params.agent,
+    serviceTier: params.serviceTier,
     fallbackModel: config.model,
     defaults: config.defaultOptions,
   }),
@@ -161,6 +167,7 @@ export const usageRecordingOptions =
   <T extends Record<string, unknown>>(params: {
     source: LlmUsageSource;
     agent?: string;
+    serviceTier?: LlmServiceTier;
     fallbackModel: string;
     defaults?: T;
   }) =>
@@ -176,6 +183,7 @@ export const usageRecordingOptions =
           usage: event.totalUsage,
           source: params.source,
           agent: params.agent,
+          serviceTier: params.serviceTier,
           durationMs: Date.now() - startedAt,
           ...contextAttributes(requestContext),
         });

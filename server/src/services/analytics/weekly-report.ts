@@ -90,6 +90,7 @@ const generateWeeklySummary = async (
     usage: response.totalUsage,
     source: "weekly-report",
     agent: "weekly-report",
+    serviceTier: "flex",
   });
 
   return response.text;
