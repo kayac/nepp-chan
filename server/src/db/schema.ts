@@ -222,7 +222,7 @@ export const knowledgeSources = sqliteTable("knowledge_sources", {
   sourceHash: text("source_hash"),
   r2Etag: text("r2_etag"),
   chunkCount: integer("chunk_count").notNull().default(0),
-  approvalStatus: text("approval_status").notNull().default("pending"), // "pending" | "approved" | "rejected" | "disabled"
+  approvalStatus: text("approval_status").notNull().default("pending"),
   approvedBy: text("approved_by"),
   approvedAt: text("approved_at"),
   disabledAt: text("disabled_at"),
@@ -249,6 +249,19 @@ export const retrievalRuns = sqliteTable("retrieval_runs", {
 
 export type RetrievalRun = typeof retrievalRuns.$inferSelect;
 export type NewRetrievalRun = typeof retrievalRuns.$inferInsert;
+
+export const reviewDecisions = sqliteTable("review_decisions", {
+  id: text("id").primaryKey(),
+  answerRunId: text("answer_run_id").notNull(),
+  feedbackId: text("feedback_id"),
+  decision: text("decision").notNull(),
+  comment: text("comment"),
+  reviewedBy: text("reviewed_by").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
+export type ReviewDecision = typeof reviewDecisions.$inferSelect;
+export type NewReviewDecision = typeof reviewDecisions.$inferInsert;
 
 // 週次レポート（数値集計 + LLM ハイライト要約の恒久記録）
 export const weeklyReports = sqliteTable("weekly_reports", {
