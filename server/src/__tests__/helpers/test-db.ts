@@ -160,6 +160,18 @@ export const createTestDb = async () => {
       created_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS retrieval_runs (
+      id TEXT PRIMARY KEY,
+      answer_run_id TEXT,
+      thread_id TEXT,
+      message_id TEXT,
+      turn_index INTEGER,
+      query TEXT NOT NULL,
+      hits TEXT NOT NULL,
+      duration_ms INTEGER,
+      created_at TEXT NOT NULL
+    );
+
     -- 週次レポート
     CREATE TABLE IF NOT EXISTS weekly_reports (
       id TEXT PRIMARY KEY,

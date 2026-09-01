@@ -214,6 +214,21 @@ export const llmUsage = sqliteTable("llm_usage", {
 export type LlmUsage = typeof llmUsage.$inferSelect;
 export type NewLlmUsage = typeof llmUsage.$inferInsert;
 
+export const retrievalRuns = sqliteTable("retrieval_runs", {
+  id: text("id").primaryKey(),
+  answerRunId: text("answer_run_id"),
+  threadId: text("thread_id"),
+  messageId: text("message_id"),
+  turnIndex: integer("turn_index"),
+  query: text("query").notNull(),
+  hits: text("hits").notNull(), // JSON（RetrievalHit[]）
+  durationMs: integer("duration_ms"),
+  createdAt: text("created_at").notNull(),
+});
+
+export type RetrievalRun = typeof retrievalRuns.$inferSelect;
+export type NewRetrievalRun = typeof retrievalRuns.$inferInsert;
+
 // 週次レポート（数値集計 + LLM ハイライト要約の恒久記録）
 export const weeklyReports = sqliteTable("weekly_reports", {
   id: text("id").primaryKey(),
