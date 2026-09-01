@@ -17,6 +17,11 @@ type DailyUsageRow = {
   costUsd: number;
 };
 
+const monthOf = (date: string) => date.slice(0, 7);
+
+export const jstCurrentMonth = (now: Date = new Date()) =>
+  monthOf(toJstDate(now));
+
 export const pivotDailyUsage = <T extends DailyUsageRow>(daily: T[]) => {
   const models = [...new Set(daily.map((d) => d.model))];
   const dates = [...new Set(daily.map((d) => d.date))];
@@ -45,6 +50,31 @@ export const groupUsageByDate = <T extends DailyUsageRow>(daily: T[]) => {
       };
     })
     .sort((a, b) => b.date.localeCompare(a.date));
+};
+
+export const groupUsageByMonth = <T extends DailyUsageRow>(daily: T[]) => {
+  const months = [...new Set(daily.map((d) => monthOf(d.date)))];
+
+  return months
+    .map((month) => {
+      const days = groupUsageByDate(
+        daily.filter((d) => monthOf(d.date) === month),
+      );
+      const rows = days.flatMap((d) => d.models);
+      return {
+        month,
+        days,
+        models: [...new Set(rows.map((r) => r.model))].map((model) => ({
+          model,
+          totalTokens: rows
+            .filter((r) => r.model === model)
+            .reduce((sum, r) => sum + r.totalTokens, 0),
+        })),
+        totalTokens: days.reduce((sum, d) => sum + d.totalTokens, 0),
+        costUsd: days.reduce((sum, d) => sum + d.costUsd, 0),
+      };
+    })
+    .sort((a, b) => b.month.localeCompare(a.month));
 };
 
 // 表示用の目安レート。請求は USD で確定し、円表示は直感的な把握のための概算
