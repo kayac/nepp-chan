@@ -3,6 +3,7 @@ import type { PrincipalVariables } from "~/lib/principal";
 import { requireRole } from "~/middleware/require-role";
 import { knowledgeConvertRoutes } from "./convert";
 import { knowledgeFilesRoutes } from "./files";
+import { knowledgeSourcesRoutes } from "./sources";
 import { knowledgeSyncRoutes } from "./sync";
 
 export const knowledgeAdminRoutes = new OpenAPIHono<{
@@ -13,5 +14,6 @@ export const knowledgeAdminRoutes = new OpenAPIHono<{
 knowledgeAdminRoutes.use("*", requireRole("super_admin"));
 
 knowledgeAdminRoutes.route("/", knowledgeSyncRoutes);
+knowledgeAdminRoutes.route("/", knowledgeSourcesRoutes);
 knowledgeAdminRoutes.route("/", knowledgeFilesRoutes);
 knowledgeAdminRoutes.route("/", knowledgeConvertRoutes);
