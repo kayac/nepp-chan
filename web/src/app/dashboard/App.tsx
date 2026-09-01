@@ -7,6 +7,7 @@ import {
   ChatBubbleLeftIcon,
   ChatBubbleLeftRightIcon,
   ClipboardDocumentCheckIcon,
+  DocumentPlusIcon,
   EnvelopeIcon,
   GlobeAltIcon,
   HandThumbUpIcon,
@@ -33,6 +34,7 @@ import {
 } from "~/app/dashboard/components/mayor/MayorChatPanel";
 import { PollPanel } from "~/app/dashboard/components/PollPanel";
 import { ReviewPanel } from "~/app/dashboard/components/ReviewPanel";
+import { SourceCandidatesPanel } from "~/app/dashboard/components/SourceCandidatesPanel";
 import { UsagePanel } from "~/app/dashboard/components/UsagePanel";
 import { VoicesPanel } from "~/app/dashboard/components/VoicesPanel";
 import type { VoiceFilter } from "~/app/dashboard/components/voices/helpers";
@@ -51,6 +53,7 @@ export type Tab =
   | "feedback"
   | "review"
   | "corrections"
+  | "source-candidates"
   | "invitations"
   | "widget-sites"
   | "usage";
@@ -120,6 +123,13 @@ const tabs: {
     id: "corrections",
     label: "訂正",
     icon: <PencilSquareIcon className="w-5 h-5" aria-hidden="true" />,
+    group: "watch",
+    minRole: "admin",
+  },
+  {
+    id: "source-candidates",
+    label: "情報源候補",
+    icon: <DocumentPlusIcon className="w-5 h-5" aria-hidden="true" />,
     group: "watch",
     minRole: "admin",
   },
@@ -356,6 +366,7 @@ export const App = () => {
             {activeTab === "knowledge" && <KnowledgePanel />}
             {activeTab === "review" && <ReviewPanel />}
             {activeTab === "corrections" && <CorrectionsPanel />}
+            {activeTab === "source-candidates" && <SourceCandidatesPanel />}
             {activeTab === "feedback" && <FeedbackPanel />}
             {activeTab === "invitations" && <InvitationsPanel />}
             {activeTab === "widget-sites" && <WidgetSitesPanel />}

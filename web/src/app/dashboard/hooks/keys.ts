@@ -26,6 +26,7 @@ export const dashboardKeys = {
   feedbacks: ["dashboard", "feedbacks"] as const,
   feedbackDetail: (id: string) => ["dashboard", "feedback", id] as const,
   corrections: ["dashboard", "corrections"] as const,
+  sourceCandidates: ["dashboard", "source-candidates"] as const,
   reviewQueue: ["dashboard", "review", "queue"] as const,
   reviewDetail: (answerRunId: string) =>
     ["dashboard", "review", "detail", answerRunId] as const,
