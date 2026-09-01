@@ -13,7 +13,7 @@ dist/
 .idea/shelf
 .brain/
 .agent/
-review/
+/review/
 .claude/settings.local.json
 .claude/worktrees/
 .claude/scheduled_tasks.lock
