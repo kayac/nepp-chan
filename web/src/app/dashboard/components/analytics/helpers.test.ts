@@ -3,7 +3,6 @@ import {
   agentLabel,
   cacheRatePercent,
   formatCostJpy,
-  formatCostUsd,
   formatDurationSeconds,
   formatJstTime,
   groupUsageByDate,
@@ -67,13 +66,6 @@ describe("groupUsageByDate", () => {
 
   it("空配列は空の結果を返す", () => {
     expect(groupUsageByDate([])).toEqual([]);
-  });
-});
-
-describe("formatCostUsd", () => {
-  it("小数 4 桁の USD 表記にする", () => {
-    expect(formatCostUsd(0.01234)).toBe("$0.0123");
-    expect(formatCostUsd(0)).toBe("$0.0000");
   });
 });
 

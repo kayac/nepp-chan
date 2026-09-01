@@ -47,15 +47,6 @@ export const groupUsageByDate = <T extends DailyUsageRow>(daily: T[]) => {
     .sort((a, b) => b.date.localeCompare(a.date));
 };
 
-const usdFormat = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 4,
-  maximumFractionDigits: 4,
-});
-
-export const formatCostUsd = (value: number) => usdFormat.format(value);
-
 // 表示用の目安レート。請求は USD で確定し、円表示は直感的な把握のための概算
 export const USD_JPY_RATE = 150;
 
