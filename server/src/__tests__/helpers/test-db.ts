@@ -160,6 +160,24 @@ export const createTestDb = async () => {
       created_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS knowledge_sources (
+      source_path TEXT PRIMARY KEY,
+      canonical_url TEXT,
+      source_type TEXT,
+      source_authority INTEGER,
+      source_hash TEXT,
+      r2_etag TEXT,
+      chunk_count INTEGER NOT NULL DEFAULT 0,
+      approval_status TEXT NOT NULL DEFAULT 'pending',
+      approved_by TEXT,
+      approved_at TEXT,
+      disabled_at TEXT,
+      verified_at TEXT,
+      indexed_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT
+    );
+
     CREATE TABLE IF NOT EXISTS retrieval_runs (
       id TEXT PRIMARY KEY,
       answer_run_id TEXT,

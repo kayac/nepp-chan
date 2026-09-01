@@ -214,6 +214,27 @@ export const llmUsage = sqliteTable("llm_usage", {
 export type LlmUsage = typeof llmUsage.$inferSelect;
 export type NewLlmUsage = typeof llmUsage.$inferInsert;
 
+export const knowledgeSources = sqliteTable("knowledge_sources", {
+  sourcePath: text("source_path").primaryKey(),
+  canonicalUrl: text("canonical_url"),
+  sourceType: text("source_type"),
+  sourceAuthority: integer("source_authority"),
+  sourceHash: text("source_hash"),
+  r2Etag: text("r2_etag"),
+  chunkCount: integer("chunk_count").notNull().default(0),
+  approvalStatus: text("approval_status").notNull().default("pending"), // "pending" | "approved" | "rejected" | "disabled"
+  approvedBy: text("approved_by"),
+  approvedAt: text("approved_at"),
+  disabledAt: text("disabled_at"),
+  verifiedAt: text("verified_at"),
+  indexedAt: text("indexed_at"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at"),
+});
+
+export type KnowledgeSource = typeof knowledgeSources.$inferSelect;
+export type NewKnowledgeSource = typeof knowledgeSources.$inferInsert;
+
 export const retrievalRuns = sqliteTable("retrieval_runs", {
   id: text("id").primaryKey(),
   answerRunId: text("answer_run_id"),
