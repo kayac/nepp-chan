@@ -11,6 +11,7 @@ import {
   pollSubmissions,
   polls,
   retrievalRuns,
+  reviewDecisions,
   threadPersonaStatus,
 } from "~/db";
 
@@ -276,6 +277,31 @@ describe("runDataRetention", () => {
     expect(remaining.map((r) => r.id)).toEqual(["fresh"]);
   });
 
+  it("review_decisions のうち 1095 日より前のものだけ削除する", async () => {
+    const db = testDbHolder.db as TestDb;
+    await db.insert(reviewDecisions).values([
+      {
+        id: "old",
+        answerRunId: "ar-1",
+        decision: "no_issue",
+        reviewedBy: "admin-1",
+        createdAt: daysAgo(1096),
+      },
+      {
+        id: "fresh",
+        answerRunId: "ar-2",
+        decision: "no_issue",
+        reviewedBy: "admin-1",
+        createdAt: daysAgo(1),
+      },
+    ]);
+
+    await runDataRetention(env, { now: NOW });
+
+    const remaining = await db.select().from(reviewDecisions);
+    expect(remaining.map((r) => r.id)).toEqual(["fresh"]);
+  });
+
   it("data_retention_logs のうち 1095 日より前のものを自身も削除する", async () => {
     const db = testDbHolder.db as TestDb;
     await db.insert(dataRetentionLogs).values([
@@ -345,6 +371,7 @@ describe("runDataRetention", () => {
         "llm_usage",
         "poll_submissions",
         "retrieval_runs",
+        "review_decisions",
         "data_retention_logs",
       ]),
     );
@@ -363,6 +390,7 @@ describe("runDataRetention", () => {
       { table: "llm_usage", deletedCount: 0 },
       { table: "poll_submissions", deletedCount: 0 },
       { table: "retrieval_runs", deletedCount: 0 },
+      { table: "review_decisions", deletedCount: 0 },
       { table: "data_retention_logs", deletedCount: 0 },
     ]);
   });
@@ -370,7 +398,7 @@ describe("runDataRetention", () => {
   it("options を省略すると現在時刻を基準に実行する", async () => {
     const results = await runDataRetention(env);
 
-    expect(results).toHaveLength(9);
+    expect(results).toHaveLength(10);
     expect(results.every((r) => r.deletedCount === 0)).toBe(true);
   });
 
