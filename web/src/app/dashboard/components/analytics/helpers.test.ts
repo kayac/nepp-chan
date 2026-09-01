@@ -6,39 +6,67 @@ import {
   formatCostUsd,
   formatDurationSeconds,
   formatJstTime,
+  groupUsageByDate,
   jstDateRange,
-  pivotWeeklyUsage,
+  pivotDailyUsage,
   platformLabel,
 } from "./helpers";
 
-const row = (weekStart: string, model: string, totalTokens: number) => ({
-  weekStart,
+const row = (
+  date: string,
+  model: string,
+  totalTokens: number,
+  costUsd = 0,
+) => ({
+  date,
   model,
   totalTokens,
-  costUsd: 0,
+  costUsd,
 });
 
-describe("pivotWeeklyUsage", () => {
-  it("週ごとにモデルをキーにした行へ変換する", () => {
-    const { models, rows } = pivotWeeklyUsage([
+describe("pivotDailyUsage", () => {
+  it("日ごとにモデルをキーにした行へ変換する", () => {
+    const { models, rows } = pivotDailyUsage([
       row("2026-06-01", "gemini-2.5-flash", 100),
       row("2026-06-01", "gemini-2.5-flash-lite", 50),
-      row("2026-06-08", "gemini-2.5-flash", 200),
+      row("2026-06-02", "gemini-2.5-flash", 200),
     ]);
 
     expect(models).toEqual(["gemini-2.5-flash", "gemini-2.5-flash-lite"]);
     expect(rows).toEqual([
       {
-        weekStart: "2026-06-01",
+        date: "2026-06-01",
         "gemini-2.5-flash": 100,
         "gemini-2.5-flash-lite": 50,
       },
-      { weekStart: "2026-06-08", "gemini-2.5-flash": 200 },
+      { date: "2026-06-02", "gemini-2.5-flash": 200 },
     ]);
   });
 
   it("空配列は空の結果を返す", () => {
-    expect(pivotWeeklyUsage([])).toEqual({ models: [], rows: [] });
+    expect(pivotDailyUsage([])).toEqual({ models: [], rows: [] });
+  });
+});
+
+describe("groupUsageByDate", () => {
+  it("日ごとにモデル内訳と合計をまとめ、新しい日付から並べる", () => {
+    const result = groupUsageByDate([
+      row("2026-06-01", "gemini-2.5-flash", 100, 0.5),
+      row("2026-06-01", "gemini-2.5-flash-lite", 50, 0.25),
+      row("2026-06-02", "gemini-2.5-flash", 200, 1),
+    ]);
+
+    expect(result.map((d) => d.date)).toEqual(["2026-06-02", "2026-06-01"]);
+    expect(result[1]).toMatchObject({
+      date: "2026-06-01",
+      totalTokens: 150,
+      costUsd: 0.75,
+    });
+    expect(result[1]?.models).toHaveLength(2);
+  });
+
+  it("空配列は空の結果を返す", () => {
+    expect(groupUsageByDate([])).toEqual([]);
   });
 });
 

@@ -10,27 +10,41 @@ export const jstDateRange = (days: number, now: Date = new Date()) => ({
   to: toJstDate(now),
 });
 
-type WeeklyUsageRow = {
-  weekStart: string;
+type DailyUsageRow = {
+  date: string;
   model: string;
   totalTokens: number;
   costUsd: number;
 };
 
-export const pivotWeeklyUsage = (weekly: WeeklyUsageRow[]) => {
-  const models = [...new Set(weekly.map((w) => w.model))];
-  const weeks = [...new Set(weekly.map((w) => w.weekStart))];
+export const pivotDailyUsage = <T extends DailyUsageRow>(daily: T[]) => {
+  const models = [...new Set(daily.map((d) => d.model))];
+  const dates = [...new Set(daily.map((d) => d.date))];
 
-  const rows = weeks.map((weekStart) => ({
-    weekStart,
+  const rows = dates.map((date) => ({
+    date,
     ...Object.fromEntries(
-      weekly
-        .filter((w) => w.weekStart === weekStart)
-        .map((w) => [w.model, w.totalTokens]),
+      daily.filter((d) => d.date === date).map((d) => [d.model, d.totalTokens]),
     ),
   }));
 
   return { models, rows };
+};
+
+export const groupUsageByDate = <T extends DailyUsageRow>(daily: T[]) => {
+  const dates = [...new Set(daily.map((d) => d.date))];
+
+  return dates
+    .map((date) => {
+      const models = daily.filter((d) => d.date === date);
+      return {
+        date,
+        models,
+        totalTokens: models.reduce((sum, m) => sum + m.totalTokens, 0),
+        costUsd: models.reduce((sum, m) => sum + m.costUsd, 0),
+      };
+    })
+    .sort((a, b) => b.date.localeCompare(a.date));
 };
 
 const usdFormat = new Intl.NumberFormat("en-US", {
