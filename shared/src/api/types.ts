@@ -139,5 +139,9 @@ export type ReviewQueueItem = ReviewQueueResponse["items"][number];
 export type ReviewDetail = GetOk<"/admin/review/{answerRunId}">;
 export type ReviewDecisionType = "no_issue" | "incorrect" | "source_missing";
 
+// 訂正
+export type CorrectionsResponse = GetOk<"/admin/corrections">;
+export type KnowledgeCorrection = CorrectionsResponse["corrections"][number];
+
 // OpenAPI paths 自体も再エクスポート
 export type { paths } from "./types.d";

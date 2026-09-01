@@ -3986,7 +3986,8 @@ export interface paths {
                                     webFallback: boolean;
                                     badFeedback: boolean;
                                 };
-                                decision: string | null;
+                                /** @enum {string|null} */
+                                decision: "no_issue" | "incorrect" | "source_missing" | null;
                                 decidedAt: string | null;
                             }[];
                             nextCursor: string | null;
@@ -4126,7 +4127,8 @@ export interface paths {
                             }[];
                             decisions: {
                                 id: string;
-                                decision: string;
+                                /** @enum {string} */
+                                decision: "no_issue" | "incorrect" | "source_missing";
                                 comment: string | null;
                                 reviewedBy: string;
                                 createdAt: string;
@@ -4228,7 +4230,8 @@ export interface paths {
                             message: string;
                             decision: {
                                 id: string;
-                                decision: string;
+                                /** @enum {string} */
+                                decision: "no_issue" | "incorrect" | "source_missing";
                                 comment: string | null;
                                 reviewedBy: string;
                                 createdAt: string;
@@ -4266,6 +4269,488 @@ export interface paths {
                 };
                 /** @description リソースが見つかりません */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/corrections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 訂正一覧を取得
+         * @description 村が発行したナレッジ訂正の一覧を返します
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 取得成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            corrections: {
+                                id: string;
+                                correctsSourcePath: string;
+                                body: string;
+                                /** @enum {string} */
+                                status: "published" | "retired";
+                                verifiedAt: string;
+                                approvedBy: string;
+                                relatedFeedbackId: string | null;
+                                answerRunId: string | null;
+                                needsReviewAt: string | null;
+                                createdAt: string;
+                                updatedAt: string | null;
+                            }[];
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * 訂正を発行
+         * @description 元ナレッジを書き換えずに、村が確認した訂正を curated ナレッジとして発行します
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        correctsSourcePath: string;
+                        body: string;
+                        relatedFeedbackId?: string;
+                        answerRunId?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 発行成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            correction: {
+                                id: string;
+                                correctsSourcePath: string;
+                                body: string;
+                                /** @enum {string} */
+                                status: "published" | "retired";
+                                verifiedAt: string;
+                                approvedBy: string;
+                                relatedFeedbackId: string | null;
+                                answerRunId: string | null;
+                                needsReviewAt: string | null;
+                                createdAt: string;
+                                updatedAt: string | null;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description サーバーエラー */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/corrections/{id}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 訂正を廃止
+         * @description 訂正を検索対象から外します。記録は履歴として残ります
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 廃止成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            correction: {
+                                id: string;
+                                correctsSourcePath: string;
+                                body: string;
+                                /** @enum {string} */
+                                status: "published" | "retired";
+                                verifiedAt: string;
+                                approvedBy: string;
+                                relatedFeedbackId: string | null;
+                                answerRunId: string | null;
+                                needsReviewAt: string | null;
+                                createdAt: string;
+                                updatedAt: string | null;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/corrections/{id}/reverify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 訂正を再確認済みにする
+         * @description 元ナレッジの更新後も訂正が有効であることを確認し、確認日を更新して再発行します
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 再確認成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            correction: {
+                                id: string;
+                                correctsSourcePath: string;
+                                body: string;
+                                /** @enum {string} */
+                                status: "published" | "retired";
+                                verifiedAt: string;
+                                approvedBy: string;
+                                relatedFeedbackId: string | null;
+                                answerRunId: string | null;
+                                needsReviewAt: string | null;
+                                createdAt: string;
+                                updatedAt: string | null;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description サーバーエラー */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/corrections/republish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 公開中の訂正を一括再発行
+         * @description R2 再構築時などに、公開中の全訂正を R2 と検索へ再反映します
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 再発行結果 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            published: number;
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description サーバーエラー */
+                500: {
                     headers: {
                         [name: string]: unknown;
                     };
