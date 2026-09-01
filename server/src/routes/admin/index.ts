@@ -1,5 +1,6 @@
 export { analyticsAdminRoutes } from "./analytics";
 export { broadcastAdminRoutes } from "./broadcast";
+export { correctionsAdminRoutes } from "./corrections";
 export { emergencyAdminRoutes } from "./emergency";
 export { feedbackAdminRoutes } from "./feedback";
 export { invitationRoutes } from "./invitations";

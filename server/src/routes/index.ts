@@ -1,6 +1,7 @@
 export {
   analyticsAdminRoutes,
   broadcastAdminRoutes,
+  correctionsAdminRoutes,
   emergencyAdminRoutes,
   feedbackAdminRoutes,
   invitationRoutes,
