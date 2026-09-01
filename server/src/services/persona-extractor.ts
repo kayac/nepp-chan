@@ -4,9 +4,10 @@ import { count, desc, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
 import { createDb, mastraMessages, mastraThreads } from "~/db";
+import type { LlmServiceTier } from "~/lib/llm-pricing";
 import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
-import { personaAgent } from "~/mastra/agents/persona-agent";
+import { getPersonaAgent } from "~/mastra/agents/persona-agent";
 import { getWorkingMemoryByThread } from "~/mastra/memory";
 import { createRequestContext } from "~/mastra/request-context";
 import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
@@ -40,6 +41,7 @@ export const extractPersonaFromThread = async (
   resourceId: string,
   lastMessageCount: number,
   env: CloudflareBindings,
+  options: { serviceTier?: LlmServiceTier } = {},
 ): Promise<ExtractResult> => {
   const memory = await getMemory(env.DB);
 
@@ -88,7 +90,7 @@ export const extractPersonaFromThread = async (
 
   const storage = await getStorage(env.DB);
   const mastra = new Mastra({
-    agents: { personaAgent },
+    agents: { personaAgent: getPersonaAgent(options.serviceTier) },
     storage,
   });
   const agent = mastra.getAgent("personaAgent");
@@ -191,6 +193,7 @@ export const extractAllPendingThreads = async (env: CloudflareBindings) => {
       thread.resourceId,
       lastMessageCount,
       env,
+      { serviceTier: "flex" },
     );
 
     results.push({ threadId: thread.id, result });

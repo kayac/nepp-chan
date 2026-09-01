@@ -91,10 +91,13 @@ chatRoutes.openapi(chatRoute, async (c) => {
   // line:/admin: と同じ、resourceId prefix でチャネルを区別する規約）
   const platform = thread.resourceId.startsWith("widget-") ? "widget" : "web";
   const isWidgetGreeting = platform === "widget" && isGreeting === true;
-  const site =
+  const [site, storage, turnIndex] = await Promise.all([
     platform === "widget" && siteHost
-      ? await widgetSiteRepository.findByHost(c.env.DB, siteHost)
-      : null;
+      ? widgetSiteRepository.findByHost(c.env.DB, siteHost)
+      : null,
+    getStorage(c.env.DB),
+    nextTurnIndex(c.env.DB, threadId),
+  ]);
   const verifiedCurrentPageUrl =
     site &&
     currentPageUrl &&
@@ -102,8 +105,6 @@ chatRoutes.openapi(chatRoute, async (c) => {
       ? currentPageUrl
       : undefined;
 
-  const storage = await getStorage(c.env.DB);
-  const turnIndex = await nextTurnIndex(c.env.DB, threadId);
   const startedAt = Date.now();
 
   const requestContext = createRequestContext({
@@ -130,6 +131,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
   const neppChanAgent = createNeppChanAgent({
     isAdmin: enableAdminAgents,
     modelConfig,
+    intent,
     platform,
     siteInstructions: site?.instructions,
     currentPageUrl: verifiedCurrentPageUrl,

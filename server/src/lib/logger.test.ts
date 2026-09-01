@@ -56,6 +56,21 @@ describe("logger.error", () => {
     expect(Sentry.logger.error).toHaveBeenCalledWith("op failed", expected);
   });
 
+  it("Error の cause も安全な項目だけ記録する", () => {
+    const error = new Error("query failed", {
+      cause: new Error("database is locked"),
+    });
+
+    logger.error("db failed", error);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith("db failed", {
+      "error.type": "Error",
+      "error.message": "query failed",
+      "error.cause.type": "Error",
+      "error.cause.message": "database is locked",
+    });
+  });
+
   it("error が undefined でも attrs だけで動く", () => {
     logger.error("just a message", undefined, { count: 3 });
 

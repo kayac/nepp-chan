@@ -4,7 +4,8 @@ import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { getCurrentDateInfo } from "~/lib/date";
 import {
   type AgentModelConfig,
-  OPENAI_LITE,
+  type Intent,
+  OPENAI_NANO,
   resolveModelTier,
 } from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
@@ -79,7 +80,8 @@ ${
   platform === "voice"
     ? `- 村の情報・最新情報・時事・天気など事実にもとづく質問 → ${voiceAnswerToolName} ツールを使う（このツールが検索と要点化をまとめて行う）`
     : `- 村の情報（最新のお知らせを含む）→ knowledgeAgent に委譲。ナレッジ検索と配信検索でも重要項目が見つからなければ、webResearcherAgent で補う
-- 天気・交通・ニュース・時事・村外の情報 → webResearcherAgent`
+- 天気・交通・ニュース・時事・村外の情報 → webResearcherAgent
+- knowledgeAgent の返却内容はユーザー向け回答ではなく調査メモ。事実・URL・不確実性を根拠に、ねっぷちゃんが一度だけユーザー向け回答を組み立てる。調査メモの文面をそのまま言い換えない`
 }
 
 ### 調べなくていいケース
@@ -239,19 +241,22 @@ const voiceInstructions = `
 - 自分から一方的に通話を切らない
 `;
 
-export const neppChanMemoryOptions = {
-  generateTitle: {
-    model: OPENAI_LITE,
-    instructions:
-      "ユーザーの最初のメッセージから15文字以内の簡潔な日本語タイトルを生成する。",
-  },
-  workingMemory: {
-    enabled: true,
-    scope: "resource",
-    schema: personaSchema,
-  },
-  lastMessages: 20,
-} as const;
+const LAST_MESSAGES = { casual: 6, thinking: 20 } as const;
+
+export const neppChanMemoryOptions = (intent: Intent) =>
+  ({
+    generateTitle: {
+      model: OPENAI_NANO,
+      instructions:
+        "ユーザーの最初のメッセージから15文字以内の簡潔な日本語タイトルを生成する。",
+    },
+    workingMemory: {
+      enabled: true,
+      scope: "resource",
+      schema: personaSchema,
+    },
+    lastMessages: LAST_MESSAGES[intent],
+  }) as const;
 
 type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
   isAdmin?: boolean;
@@ -259,6 +264,7 @@ type Props = Omit<AgentConfig, "id" | "name" | "instructions" | "model"> & {
   siteInstructions?: string;
   currentPageUrl?: string;
   modelConfig: AgentModelConfig;
+  intent?: Intent;
   withMemory?: boolean;
 };
 
@@ -268,6 +274,7 @@ export const createNeppChanAgent = ({
   siteInstructions,
   currentPageUrl,
   modelConfig,
+  intent = "thinking",
   withMemory = true,
   ...agentOptions
 }: Props) => {
@@ -314,7 +321,7 @@ ${currentPageUrl}
     tools,
     ...(withMemory && {
       memory: ({ requestContext }) =>
-        getMemoryFromContext(requestContext, neppChanMemoryOptions),
+        getMemoryFromContext(requestContext, neppChanMemoryOptions(intent)),
     }),
     ...agentOptions,
   });

@@ -117,6 +117,38 @@ describe("calcCostUsd", () => {
     expect(cost).toBeCloseTo(0.15, 10);
   });
 
+  describe("flex tier（Batch API 単価 = 標準の 50%）", () => {
+    it("input・output とも半額で計算する", () => {
+      const cost = calcCostUsd(
+        "openai/gpt-5.6-luna",
+        { inputTokens: 1_000_000, outputTokens: 1_000_000 },
+        { serviceTier: "flex" },
+      );
+      expect(cost).toBeCloseTo(0.7, 10);
+    });
+
+    it("cached input も半額で計算する", () => {
+      const cost = calcCostUsd(
+        "openai/gpt-5.6-luna",
+        {
+          inputTokens: 1_000_000,
+          cachedInputTokens: 1_000_000,
+          outputTokens: 0,
+        },
+        { serviceTier: "flex" },
+      );
+      expect(cost).toBeCloseTo(0.01, 10);
+    });
+
+    it("serviceTier 未指定は標準単価のまま", () => {
+      const cost = calcCostUsd("openai/gpt-5.6-luna", {
+        inputTokens: 1_000_000,
+        outputTokens: 1_000_000,
+      });
+      expect(cost).toBeCloseTo(1.4, 10);
+    });
+  });
+
   it("未知のモデルは 0 を返す", () => {
     const cost = calcCostUsd("unknown-model", {
       inputTokens: 1_000_000,

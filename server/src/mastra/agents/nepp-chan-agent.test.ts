@@ -1,7 +1,7 @@
 import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { describe, expect, it } from "vitest";
 
-import { type AgentModelConfig, OPENAI_LITE } from "~/lib/llm-models";
+import type { AgentModelConfig } from "~/lib/llm-models";
 import { broadcastGetToolName } from "~/mastra/tools/broadcast-get-tool";
 import { endCallToolName } from "~/mastra/tools/end-call-tool";
 import { pollGetToolName } from "~/mastra/tools/poll-get-tool";
@@ -211,6 +211,15 @@ describe("createNeppChanAgent", () => {
       expect(ins).toContain("天気・交通・ニュース・時事・村外の情報");
     });
 
+    it("knowledgeAgent の調査メモからユーザー向け回答を1度だけ作る", async () => {
+      const ins = await instructionsOf(build());
+      expect(ins).toContain("ユーザー向け回答ではなく調査メモ");
+      expect(ins).toContain(
+        "ねっぷちゃんが一度だけユーザー向け回答を組み立てる",
+      );
+      expect(ins).toContain("調査メモの文面をそのまま言い換えない");
+    });
+
     it("widget だけ緊急エージェントへの委譲を指示しない", async () => {
       const widgetIns = await instructionsOf(build({ platform: "widget" }));
       expect(widgetIns).not.toContain("emergencyReporterAgent");
@@ -284,18 +293,17 @@ describe("createNeppChanAgent", () => {
   });
 
   describe("memory オプション", () => {
-    it("タイトル生成は LITE + 日本語指示で行う", () => {
-      expect(neppChanMemoryOptions.generateTitle.model).toBe(OPENAI_LITE);
-      expect(neppChanMemoryOptions.generateTitle.instructions).toContain(
-        "日本語",
-      );
-    });
-
     it("working memory は resource スコープで有効", () => {
-      expect(neppChanMemoryOptions.workingMemory).toMatchObject({
+      expect(neppChanMemoryOptions("thinking").workingMemory).toMatchObject({
         enabled: true,
         scope: "resource",
       });
+    });
+
+    it("casual は thinking より短い履歴で応答する", () => {
+      expect(neppChanMemoryOptions("casual").lastMessages).toBeLessThan(
+        neppChanMemoryOptions("thinking").lastMessages,
+      );
     });
   });
 });

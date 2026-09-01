@@ -20,7 +20,9 @@ export const broadcastGetTool = createTool({
     keyword: z
       .string()
       .optional()
-      .describe("検索キーワード。タイトルや本文から検索する場合に指定"),
+      .describe(
+        "タイトルや本文を探す短い検索語。複数語は空白で区切り、質問全文ではなく重要な語だけを最大5語指定",
+      ),
     limit: z
       .number()
       .int()

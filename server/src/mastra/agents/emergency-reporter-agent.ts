@@ -48,9 +48,13 @@ export const emergencyReporterAgent = new Agent({
 - ${AGENT_TOOL_NAMES.emergencyReport}: 新規の緊急報告を記録
 - ${AGENT_TOOL_NAMES.emergencyUpdate}: 既存の報告に情報を追加
 `,
-  ...withUsageRecording(modelWithReasoning({ effort: "medium" }), {
-    agent: "emergency-reporter",
-  }),
+  ...withUsageRecording(
+    modelWithReasoning({
+      effort: "medium",
+      promptCacheKey: "emergency-reporter",
+    }),
+    { agent: "emergency-reporter" },
+  ),
   tools: {
     [AGENT_TOOL_NAMES.emergencyReport]: emergencyReportTool,
     [AGENT_TOOL_NAMES.emergencyUpdate]: emergencyUpdateTool,

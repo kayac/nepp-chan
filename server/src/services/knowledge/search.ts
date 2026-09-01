@@ -4,7 +4,11 @@ import { createSimilarityPrompt } from "@mastra/core/relevance";
 import type { RequestContext } from "@mastra/core/request-context";
 import { rerankWithScorer } from "@mastra/rag";
 import { embed } from "ai";
-import { GEMINI_EMBEDDING, OPENAI_LITE } from "~/lib/llm-models";
+import {
+  GEMINI_EMBEDDING,
+  modelWithReasoning,
+  OPENAI_LITE,
+} from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import {
   recordUsageFromContext,
@@ -35,7 +39,7 @@ Consider:
 - Quality and specificity
 Always return just the number, no explanation.`,
   ...withUsageRecording(
-    { model: OPENAI_LITE },
+    modelWithReasoning({ model: OPENAI_LITE, effort: "none" }),
     { agent: "knowledge-reranker", source: "rerank" },
   ),
 });

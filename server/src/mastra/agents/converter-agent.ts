@@ -1,5 +1,5 @@
 import { Agent } from "@mastra/core/agent";
-import { OPENAI_MAIN } from "~/lib/llm-models";
+import { modelWithReasoning } from "~/lib/llm-models";
 
 const INSTRUCTIONS = `提供された画像・PDFの内容をMarkdown形式で出力する。
 
@@ -21,5 +21,5 @@ export const converterAgent = new Agent({
   id: "document-converter",
   name: "Document Converter",
   instructions: INSTRUCTIONS,
-  model: OPENAI_MAIN,
+  ...modelWithReasoning({ effort: "low" }),
 });

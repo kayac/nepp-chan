@@ -39,6 +39,10 @@ const PRICING = [
   },
 ] as const;
 
+export type LlmServiceTier = "flex";
+
+const FLEX_RATE = 0.5;
+
 export const calcCostUsd = (
   model: string,
   usage: {
@@ -46,6 +50,7 @@ export const calcCostUsd = (
     outputTokens: number;
     cachedInputTokens?: number;
   },
+  options?: { serviceTier?: LlmServiceTier },
 ) => {
   const pricing = PRICING.find((p) => model.includes(p.match));
   if (!pricing) {
@@ -56,9 +61,11 @@ export const calcCostUsd = (
   // reasoning 分を含む総数。reasoningTokens を別途加算すると二重課金になる
   const cachedInputTokens = usage.cachedInputTokens ?? 0;
   const freshInputTokens = Math.max(0, usage.inputTokens - cachedInputTokens);
+  const tierRate = options?.serviceTier === "flex" ? FLEX_RATE : 1;
   return (
-    (freshInputTokens * pricing.inputPer1M) / 1_000_000 +
-    (cachedInputTokens * pricing.cachedInputPer1M) / 1_000_000 +
-    (usage.outputTokens * pricing.outputPer1M) / 1_000_000
+    tierRate *
+    ((freshInputTokens * pricing.inputPer1M) / 1_000_000 +
+      (cachedInputTokens * pricing.cachedInputPer1M) / 1_000_000 +
+      (usage.outputTokens * pricing.outputPer1M) / 1_000_000)
   );
 };

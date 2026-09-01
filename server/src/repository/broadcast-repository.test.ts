@@ -267,6 +267,49 @@ describe("broadcastRepository", () => {
 
       expect(result.map((r) => r.id).sort()).toEqual(["b-1", "b-2"]);
     });
+
+    it("複数の検索語はいずれかを含む配信を返す", async () => {
+      await db.insert(broadcastMessages).values([
+        {
+          ...baseInput,
+          id: "b-1",
+          title: "飲食店のお知らせ",
+          body: "営業時間を変更します",
+          status: "sent",
+          sentAt: "2025-01-01T00:00:00Z",
+        },
+        {
+          ...baseInput,
+          id: "b-2",
+          title: "施設休業のお知らせ",
+          body: "温泉は臨時休業です",
+          status: "sent",
+          sentAt: "2025-01-02T00:00:00Z",
+        },
+      ]);
+
+      const result = await broadcastRepository.findByKeyword(
+        fakeD1,
+        "飲食店 休業",
+      );
+
+      expect(result.map((r) => r.id).sort()).toEqual(["b-1", "b-2"]);
+    });
+
+    it("LIKE のワイルドカードを検索語として解釈しない", async () => {
+      await db.insert(broadcastMessages).values({
+        ...baseInput,
+        id: "b-1",
+        title: "通常のお知らせ",
+        body: "本文",
+        status: "sent",
+        sentAt: "2025-01-01T00:00:00Z",
+      });
+
+      expect(await broadcastRepository.findByKeyword(fakeD1, "%")).toHaveLength(
+        0,
+      );
+    });
   });
 
   describe("findRecentSent", () => {

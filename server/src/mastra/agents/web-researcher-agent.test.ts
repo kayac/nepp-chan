@@ -12,6 +12,15 @@ const instructionsOf = async () =>
   );
 
 describe("createWebResearcherAgent", () => {
+  it("Gemini の検索グラウンディングを使用する", async () => {
+    const agent = createWebResearcherAgent();
+    const model = await agent.getModel();
+    const tools = await agent.listTools();
+
+    expect(model.provider).toContain("google");
+    expect(Object.keys(tools)).toEqual(["googleSearch"]);
+  });
+
   it("未確定情報を省かず、確度を保って伝える", async () => {
     const ins = await instructionsOf();
     expect(ins).toContain("情報は確度を保って伝える");
@@ -27,5 +36,11 @@ describe("createWebResearcherAgent", () => {
     expect(ins).not.toContain(
       "検索結果の年度・日付が古い場合は「最新情報は直接確認をおすすめします」",
     );
+  });
+
+  it("ユーザー向け文章ではなく調査メモを返す", async () => {
+    const ins = await instructionsOf();
+    expect(ins).toContain("ユーザー向けの文章に整えない");
+    expect(ins).toContain("簡潔な調査メモ");
   });
 });

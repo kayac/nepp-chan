@@ -2,7 +2,7 @@ import type { RequestContext } from "@mastra/core/request-context";
 import type { MastraOnFinishCallbackArgs } from "@mastra/core/stream";
 import { and, count, eq } from "drizzle-orm";
 import { createDb, llmUsage } from "~/db";
-import { calcCostUsd } from "~/lib/llm-pricing";
+import { calcCostUsd, type LlmServiceTier } from "~/lib/llm-pricing";
 import { logger } from "~/lib/logger";
 
 export type LlmUsagePlatform = "web" | "line" | "lp" | "widget" | "voice";
@@ -33,6 +33,7 @@ type LlmUsageParams = {
   threadId?: string;
   turnIndex?: number;
   durationMs?: number;
+  serviceTier?: LlmServiceTier;
 };
 
 /**
@@ -75,11 +76,11 @@ export const recordLlmUsage = async (
       threadId: params.threadId,
       turnIndex: params.turnIndex,
       durationMs: params.durationMs,
-      costUsd: calcCostUsd(params.model, {
-        inputTokens,
-        outputTokens,
-        cachedInputTokens,
-      }),
+      costUsd: calcCostUsd(
+        params.model,
+        { inputTokens, outputTokens, cachedInputTokens },
+        { serviceTier: params.serviceTier },
+      ),
       createdAt: new Date().toISOString(),
     });
   } catch (error) {
@@ -137,6 +138,13 @@ export const recordUsageFromContext = (
 };
 
 /** defaultOptions を動的関数に置き換えるため、静的オプションは defaults 経由で引き継ぐ */
+const serviceTierOf = (defaultOptions?: Record<string, unknown>) =>
+  (
+    defaultOptions?.providerOptions as
+      | { openai?: { serviceTier?: LlmServiceTier } }
+      | undefined
+  )?.openai?.serviceTier;
+
 export const withUsageRecording = <
   T extends { model: string; defaultOptions?: Record<string, unknown> },
 >(
@@ -147,6 +155,7 @@ export const withUsageRecording = <
   defaultOptions: usageRecordingOptions({
     source: params.source ?? "subagent",
     agent: params.agent,
+    serviceTier: serviceTierOf(config.defaultOptions),
     fallbackModel: config.model,
     defaults: config.defaultOptions,
   }),
@@ -161,6 +170,7 @@ export const usageRecordingOptions =
   <T extends Record<string, unknown>>(params: {
     source: LlmUsageSource;
     agent?: string;
+    serviceTier?: LlmServiceTier;
     fallbackModel: string;
     defaults?: T;
   }) =>
@@ -176,6 +186,7 @@ export const usageRecordingOptions =
           usage: event.totalUsage,
           source: params.source,
           agent: params.agent,
+          serviceTier: params.serviceTier,
           durationMs: Date.now() - startedAt,
           ...contextAttributes(requestContext),
         });

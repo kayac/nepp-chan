@@ -64,7 +64,7 @@ vi.mock("@mastra/core/mastra", () => ({
 }));
 
 vi.mock("~/mastra/agents/persona-agent", () => ({
-  personaAgent: {},
+  getPersonaAgent: vi.fn().mockReturnValue({}),
 }));
 
 vi.mock("~/mastra/request-context", () => ({

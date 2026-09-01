@@ -2,10 +2,13 @@ import { Mastra } from "@mastra/core/mastra";
 import { and, gte, lt } from "drizzle-orm";
 import { createDb, persona } from "~/db";
 import { DAY_MS, jstDateLabel, startOfJstWeek, WEEK_MS } from "~/lib/date";
-import { OPENAI_MAIN } from "~/lib/llm-models";
+import { OPENAI_LITE } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
-import { weeklyReportAgent } from "~/mastra/agents/weekly-report-agent";
+import {
+  WEEKLY_REPORT_SERVICE_TIER,
+  weeklyReportAgent,
+} from "~/mastra/agents/weekly-report-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { weeklyReportRepository } from "~/repository/weekly-report-repository";
 import type { WeeklyStats } from "~/schemas/analytics-schema";
@@ -86,10 +89,11 @@ const generateWeeklySummary = async (
   );
 
   await recordLlmUsage(env.DB, {
-    model: OPENAI_MAIN,
+    model: OPENAI_LITE,
     usage: response.totalUsage,
     source: "weekly-report",
     agent: "weekly-report",
+    serviceTier: WEEKLY_REPORT_SERVICE_TIER,
   });
 
   return response.text;

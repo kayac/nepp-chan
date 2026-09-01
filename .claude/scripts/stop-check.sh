@@ -31,6 +31,9 @@ while IFS= read -r file; do
     *.test.ts|*.test.tsx|*.spec.ts|*.spec.tsx) continue ;;
     *.d.ts) continue ;;
     */__tests__/*|*/__mocks__/*|*/test/*) continue ;;
+    # エージェント定義は宣言的な設定・配線のみでテスト必須の対象外（担保は型）。
+    # instructions の仕様テストを書くのは任意
+    server/src/mastra/agents/*) continue ;;
   esac
   case "$file" in
     server/src/*.ts|web/src/*.ts|web/src/*.tsx)

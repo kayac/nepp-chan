@@ -1,5 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const { agentConfigs } = vi.hoisted(() => ({
+  agentConfigs: [] as Array<Record<string, unknown>>,
+}));
+
+vi.mock("@mastra/core/agent", () => ({
+  Agent: class {
+    constructor(config: Record<string, unknown>) {
+      agentConfigs.push(config);
+    }
+
+    generate = vi.fn();
+  },
+}));
+
 vi.mock("@ai-sdk/google", () => ({
   createGoogleGenerativeAI: vi.fn(() => ({
     textEmbeddingModel: vi.fn(() => ({ id: "fake-embedding-model" })),
@@ -37,6 +51,21 @@ beforeEach(() => {
 });
 
 describe("searchKnowledge", () => {
+  it("reranker は Luna の reasoning none を使う", () => {
+    const config = agentConfigs.find(
+      (candidate) => candidate.id === "relevance-scorer-knowledge-reranker",
+    );
+    if (!config) throw new Error("reranker Agent が構築されていない");
+    const defaultOptions = (
+      config.defaultOptions as (args: Record<string, unknown>) => {
+        providerOptions: { openai: { reasoningEffort: string } };
+      }
+    )({});
+
+    expect(config.model).toBe("openai/gpt-5.6-luna");
+    expect(defaultOptions.providerOptions.openai.reasoningEffort).toBe("none");
+  });
+
   it("matches が無ければ空配列を返す", async () => {
     vi.mocked(embed).mockResolvedValueOnce({ embedding: [0.1] } as never);
     const vectorize = buildVectorize();
