@@ -24,8 +24,10 @@ export const generateReply = async (params: {
   threadId: string;
   env: CloudflareBindings;
 }) => {
-  const storage = await getStorage(params.env.DB);
-  const turnIndex = await nextTurnIndex(params.env.DB, params.threadId);
+  const [storage, turnIndex] = await Promise.all([
+    getStorage(params.env.DB),
+    nextTurnIndex(params.env.DB, params.threadId),
+  ]);
   const startedAt = Date.now();
 
   const requestContext = createRequestContext({
@@ -49,7 +51,11 @@ export const generateReply = async (params: {
       }),
     );
 
-  await Promise.all([
+  // Intent 分類（非テキストメッセージは casual 直行）は配信・投票の注入と独立なので並行実行する
+  const [intent] = await Promise.all([
+    params.userMessage
+      ? classifyIntent(params.userMessage, requestContext)
+      : ("casual" as const),
     injectBroadcastsToThread({
       d1: params.env.DB,
       storage,
@@ -65,11 +71,6 @@ export const generateReply = async (params: {
       userId: params.hashedUserId,
     }),
   ]);
-
-  // Intent 分類でモデルティアを決定（非テキストメッセージは casual 直行）
-  const intent = params.userMessage
-    ? await classifyIntent(params.userMessage, requestContext)
-    : "casual";
   const modelConfig = resolveModelTier({
     intent,
     platform: "line",
