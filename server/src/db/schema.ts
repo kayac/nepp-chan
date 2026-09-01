@@ -250,6 +250,22 @@ export const retrievalRuns = sqliteTable("retrieval_runs", {
 export type RetrievalRun = typeof retrievalRuns.$inferSelect;
 export type NewRetrievalRun = typeof retrievalRuns.$inferInsert;
 
+export const sourceCandidates = sqliteTable("source_candidates", {
+  id: text("id").primaryKey(),
+  url: text("url").notNull().unique(),
+  status: text("status").notNull().default("pending"),
+  occurrenceCount: integer("occurrence_count").notNull().default(1),
+  relatedAnswerRunId: text("related_answer_run_id"),
+  decidedBy: text("decided_by"),
+  decidedAt: text("decided_at"),
+  lastSeenAt: text("last_seen_at").notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at"),
+});
+
+export type SourceCandidate = typeof sourceCandidates.$inferSelect;
+export type NewSourceCandidate = typeof sourceCandidates.$inferInsert;
+
 export const knowledgeCorrections = sqliteTable("knowledge_corrections", {
   id: text("id").primaryKey(),
   correctsSourcePath: text("corrects_source_path").notNull(),
