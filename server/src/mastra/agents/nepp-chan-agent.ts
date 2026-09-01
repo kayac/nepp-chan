@@ -5,7 +5,7 @@ import { getCurrentDateInfo } from "~/lib/date";
 import {
   type AgentModelConfig,
   type Intent,
-  OPENAI_LITE,
+  OPENAI_NANO,
   resolveModelTier,
 } from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
@@ -246,7 +246,7 @@ const LAST_MESSAGES = { casual: 6, thinking: 20 } as const;
 export const neppChanMemoryOptions = (intent: Intent) =>
   ({
     generateTitle: {
-      model: OPENAI_LITE,
+      model: OPENAI_NANO,
       instructions:
         "ユーザーの最初のメッセージから15文字以内の簡潔な日本語タイトルを生成する。",
     },

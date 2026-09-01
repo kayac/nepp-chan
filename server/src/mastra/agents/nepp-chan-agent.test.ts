@@ -1,7 +1,7 @@
 import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { describe, expect, it } from "vitest";
 
-import { type AgentModelConfig, OPENAI_LITE } from "~/lib/llm-models";
+import { type AgentModelConfig, OPENAI_NANO } from "~/lib/llm-models";
 import { broadcastGetToolName } from "~/mastra/tools/broadcast-get-tool";
 import { endCallToolName } from "~/mastra/tools/end-call-tool";
 import { pollGetToolName } from "~/mastra/tools/poll-get-tool";
@@ -293,9 +293,9 @@ describe("createNeppChanAgent", () => {
   });
 
   describe("memory オプション", () => {
-    it("タイトル生成は LITE + 日本語指示で行う", () => {
+    it("タイトル生成は NANO（既定 effort が none）+ 日本語指示で行う", () => {
       const options = neppChanMemoryOptions("thinking");
-      expect(options.generateTitle.model).toBe(OPENAI_LITE);
+      expect(options.generateTitle.model).toBe(OPENAI_NANO);
       expect(options.generateTitle.instructions).toContain("日本語");
     });
 
