@@ -429,6 +429,9 @@ export interface paths {
                         /** @enum {string} */
                         intent?: "casual" | "thinking";
                         siteHost?: string;
+                        /** Format: uri */
+                        currentPageUrl?: string;
+                        isGreeting?: boolean;
                     };
                 };
             };
@@ -782,12 +785,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 週×モデル別のトークン使用量とコスト */
+        /** 日×モデル別のトークン使用量とコスト */
         get: {
             parameters: {
                 query?: {
-                    /** @description 集計対象の直近週数 */
-                    weeks?: number;
+                    /** @description 集計対象の直近日数（llm_usage の保持期間 180 日が上限） */
+                    days?: number;
                 };
                 header?: never;
                 path?: never;
@@ -795,15 +798,15 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description 週次トークン使用量（週初めは JST 月曜） */
+                /** @description 日次トークン使用量（日付は JST） */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
                         "application/json": {
-                            weekly: {
-                                weekStart: string;
+                            daily: {
+                                date: string;
                                 model: string;
                                 inputTokens: number;
                                 outputTokens: number;
