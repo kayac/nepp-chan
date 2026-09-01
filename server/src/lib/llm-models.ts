@@ -1,14 +1,11 @@
 import type { LlmServiceTier } from "~/lib/llm-pricing";
 
-// Mastra 形式のモデル名（Agent の model プロパティに使用）
 export const OPENAI_MAIN = "openai/gpt-5.6-terra";
 export const OPENAI_LITE = "openai/gpt-5.6-luna";
 export const OPENAI_NANO = "openai/gpt-5.4-nano";
 
-// 埋め込みモデル
 export const GEMINI_EMBEDDING = "gemini-embedding-001";
 
-// Web 検索は検索グラウンディングの無料枠と応答速度で Gemini を使う
 export const GEMINI_GROUNDING = "google/gemini-flash-lite-latest";
 
 // Gemini latest は RPD 制限対象のため、Eval は固定バージョンを使う
