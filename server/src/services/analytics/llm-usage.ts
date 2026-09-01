@@ -4,6 +4,7 @@ import { and, count, eq } from "drizzle-orm";
 import { createDb, llmUsage } from "~/db";
 import { calcCostUsd, type LlmServiceTier } from "~/lib/llm-pricing";
 import { logger } from "~/lib/logger";
+import { waitUntilInBackground } from "~/lib/wait-until";
 
 export type LlmUsagePlatform = "web" | "line" | "lp" | "widget" | "voice";
 
@@ -190,11 +191,7 @@ export const usageRecordingOptions =
           durationMs: Date.now() - startedAt,
           ...contextAttributes(requestContext),
         });
-        // cloudflare:workers は workerd 専用モジュール。top-level import すると
-        // このファイルを import 経由で読む Node 実行の eval スクリプトが落ちる
-        void import("cloudflare:workers")
-          .then(({ waitUntil }) => waitUntil(recording))
-          .catch(() => {});
+        waitUntilInBackground(recording);
         return recording;
       },
     };

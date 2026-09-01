@@ -14,6 +14,7 @@ import {
   recordUsageFromContext,
   withUsageRecording,
 } from "~/services/analytics/llm-usage";
+import { recordRetrievalRunInBackground } from "~/services/knowledge/retrieval-trace";
 
 const EMBEDDING_DIMENSIONS = 1536;
 
@@ -77,6 +78,7 @@ export const searchKnowledge = async (
   apiKey: string,
   requestContext?: RequestContext,
 ): Promise<SearchOutput> => {
+  const startedAt = Date.now();
   try {
     logger.info("[Knowledge] search", { query });
     const google = createGoogleGenerativeAI({ apiKey });
@@ -105,6 +107,11 @@ export const searchKnowledge = async (
     });
 
     if (!results.matches || results.matches.length === 0) {
+      recordRetrievalRunInBackground(requestContext, {
+        query,
+        hits: [],
+        durationMs: Date.now() - startedAt,
+      });
       return {
         results: [],
       };
@@ -125,6 +132,7 @@ export const searchKnowledge = async (
           url: metadata?.url as string | undefined,
           date: metadata?.date as string | undefined,
           dateType: metadata?.date_type as string | undefined,
+          contentHash: metadata?.contentHash as string | undefined,
         },
       };
     });
@@ -154,6 +162,21 @@ export const searchKnowledge = async (
       date: r.result.metadata?.date as string | undefined,
       dateType: r.result.metadata?.dateType as string | undefined,
     }));
+
+    recordRetrievalRunInBackground(requestContext, {
+      query,
+      hits: knowledgeResults.map((result, i) => ({
+        source: result.source,
+        title: result.title,
+        section: result.section,
+        score: rerankedResults[i].result.score,
+        rerankScore: result.score,
+        contentHash: rerankedResults[i].result.metadata?.contentHash as
+          | string
+          | undefined,
+      })),
+      durationMs: Date.now() - startedAt,
+    });
 
     logger.info("[Knowledge] search result", {
       query,

@@ -32,9 +32,16 @@ vi.mock("~/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
+vi.mock("~/services/knowledge/retrieval-trace", () => ({
+  recordRetrievalRunInBackground: vi.fn(),
+}));
+
 const { embed } = await import("ai");
 const { rerankWithScorer } = await import("@mastra/rag");
 const { logger } = await import("~/lib/logger");
+const { recordRetrievalRunInBackground } = await import(
+  "~/services/knowledge/retrieval-trace"
+);
 const { searchKnowledge } = await import("./search");
 
 const buildVectorize = () =>
@@ -48,6 +55,7 @@ beforeEach(() => {
   vi.mocked(embed).mockReset();
   vi.mocked(rerankWithScorer).mockReset();
   vi.mocked(logger.error).mockReset();
+  vi.mocked(recordRetrievalRunInBackground).mockReset();
 });
 
 describe("searchKnowledge", () => {
@@ -140,6 +148,63 @@ describe("searchKnowledge", () => {
     };
     expect(rerankArg.query).toBe("クエリ");
     expect(rerankArg.results[0].metadata.source).toBe("doc.md");
+  });
+
+  it("rerank 後の hits をトレースに記録する", async () => {
+    vi.mocked(embed).mockResolvedValueOnce({ embedding: [0.1] } as never);
+    const vectorize = buildVectorize();
+    vi.mocked(vectorize.query).mockResolvedValueOnce({
+      matches: [{ id: "v1", score: 0.8, metadata: { content: "本文1" } }],
+    } as never);
+    vi.mocked(rerankWithScorer).mockResolvedValueOnce([
+      {
+        score: 0.95,
+        result: {
+          id: "v1",
+          score: 0.8,
+          metadata: {
+            content: "本文1",
+            source: "doc.md",
+            title: "Tタイトル",
+            section: "Sセク",
+            contentHash: "hash1",
+          },
+        },
+      },
+    ] as never);
+
+    await searchKnowledge("クエリ", vectorize, "key");
+
+    expect(recordRetrievalRunInBackground).toHaveBeenCalledWith(undefined, {
+      query: "クエリ",
+      hits: [
+        {
+          source: "doc.md",
+          title: "Tタイトル",
+          section: "Sセク",
+          score: 0.8,
+          rerankScore: 0.95,
+          contentHash: "hash1",
+        },
+      ],
+      durationMs: expect.any(Number),
+    });
+  });
+
+  it("0 件の検索も hits 空配列でトレースに記録する", async () => {
+    vi.mocked(embed).mockResolvedValueOnce({ embedding: [0.1] } as never);
+    const vectorize = buildVectorize();
+    vi.mocked(vectorize.query).mockResolvedValueOnce({
+      matches: [],
+    } as never);
+
+    await searchKnowledge("見つからないクエリ", vectorize, "key");
+
+    expect(recordRetrievalRunInBackground).toHaveBeenCalledWith(undefined, {
+      query: "見つからないクエリ",
+      hits: [],
+      durationMs: expect.any(Number),
+    });
   });
 
   it("metadata 欠落フィールドは unknown / 空文字で埋める", async () => {

@@ -47,6 +47,8 @@ export const createRequestContext = (values: MastraRequestContextType) => {
   if (values.usageTurnIndex !== undefined) {
     requestContext.set("usageTurnIndex", values.usageTurnIndex);
   }
+  requestContext.set("answerRunId", crypto.randomUUID());
+  requestContext.set("retrievalTracePending", []);
   if (values.voiceFindings) {
     requestContext.set("voiceFindings", values.voiceFindings);
   }
