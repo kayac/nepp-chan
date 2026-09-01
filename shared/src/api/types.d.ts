@@ -429,6 +429,9 @@ export interface paths {
                         /** @enum {string} */
                         intent?: "casual" | "thinking";
                         siteHost?: string;
+                        /** Format: uri */
+                        currentPageUrl?: string;
+                        isGreeting?: boolean;
                     };
                 };
             };
@@ -2531,6 +2534,282 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/knowledge/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 情報源一覧を取得
+         * @description ナレッジ情報源の承認状態を一覧します
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 情報源一覧 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            sources: {
+                                sourcePath: string;
+                                canonicalUrl: string | null;
+                                sourceType: string | null;
+                                sourceAuthority: number | null;
+                                /** @enum {string} */
+                                approvalStatus: "pending" | "approved" | "rejected" | "disabled";
+                                chunkCount: number;
+                                approvedBy: string | null;
+                                approvedAt: string | null;
+                                disabledAt: string | null;
+                                verifiedAt: string | null;
+                                indexedAt: string | null;
+                                createdAt: string;
+                                updatedAt: string | null;
+                            }[];
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/knowledge/sources/backfill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 既存ナレッジを承認済み情報源として登録
+         * @description R2 の Markdown のうち情報源未登録のものを approved で一括登録します
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 登録結果 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            registered: number;
+                            skipped: number;
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/knowledge/sources/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 情報源の承認状態を変更
+         * @description approve は再インデックス、reject / disable は検索対象からの削除まで行います
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        sourcePath: string;
+                        /** @enum {string} */
+                        action: "approve" | "reject" | "disable";
+                    };
+                };
+            };
+            responses: {
+                /** @description 変更結果 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            source: {
+                                sourcePath: string;
+                                canonicalUrl: string | null;
+                                sourceType: string | null;
+                                sourceAuthority: number | null;
+                                /** @enum {string} */
+                                approvalStatus: "pending" | "approved" | "rejected" | "disabled";
+                                chunkCount: number;
+                                approvedBy: string | null;
+                                approvedAt: string | null;
+                                disabledAt: string | null;
+                                verifiedAt: string | null;
+                                indexedAt: string | null;
+                                createdAt: string;
+                                updatedAt: string | null;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description サーバーエラー */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/admin/knowledge/files": {
         parameters: {
             query?: never;
@@ -3643,6 +3922,350 @@ export interface paths {
                 };
                 /** @description サーバーエラー */
                 500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 要確認の回答一覧を取得
+         * @description bad 評価・ナレッジ検索 0 件・Web フォールバックのいずれかに該当する回答を一覧します
+         */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    cursor?: string;
+                    decided?: "true" | "false";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 取得成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                answerRunId: string;
+                                threadId: string | null;
+                                messageId: string | null;
+                                turnIndex: number | null;
+                                createdAt: string;
+                                searchCount: number;
+                                queries: string[];
+                                flags: {
+                                    zeroHit: boolean;
+                                    webFallback: boolean;
+                                    badFeedback: boolean;
+                                };
+                                decision: string | null;
+                                decidedAt: string | null;
+                            }[];
+                            nextCursor: string | null;
+                            hasMore: boolean;
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/review/{answerRunId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 要確認回答の詳細を取得
+         * @description 質問・回答・検索の根拠・ユーザー評価・判断履歴を返します
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    answerRunId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 取得成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            answerRunId: string;
+                            threadId: string | null;
+                            messageId: string | null;
+                            turnIndex: number | null;
+                            createdAt: string;
+                            flags: {
+                                zeroHit: boolean;
+                                webFallback: boolean;
+                                badFeedback: boolean;
+                            };
+                            runs: {
+                                query: string;
+                                hits: {
+                                    source: string;
+                                    title?: string;
+                                    section?: string;
+                                    score: number;
+                                    rerankScore?: number;
+                                    contentHash?: string;
+                                }[];
+                                durationMs: number | null;
+                                createdAt: string;
+                            }[];
+                            conversation: {
+                                question: string | null;
+                                answer: string;
+                            } | null;
+                            feedbacks: {
+                                id: string;
+                                threadId: string;
+                                messageId: string;
+                                /** @enum {string} */
+                                rating: "good" | "bad" | "idea";
+                                /** @enum {string|null} */
+                                category: "incorrect_fact" | "outdated_info" | "nonexistent_info" | "off_topic" | "other" | null;
+                                comment: string | null;
+                                createdAt: string;
+                                resolvedAt: string | null;
+                                conversationContext: {
+                                    targetMessage: {
+                                        id: string;
+                                        role: string;
+                                        content: string;
+                                    };
+                                    previousMessages: {
+                                        id: string;
+                                        role: string;
+                                        content: string;
+                                    }[];
+                                    nextMessages: {
+                                        id: string;
+                                        role: string;
+                                        content: string;
+                                    }[];
+                                };
+                                toolExecutions: {
+                                    toolName: string;
+                                    state: string;
+                                    input?: unknown;
+                                    output?: unknown;
+                                    errorText?: string;
+                                }[] | null;
+                            }[];
+                            decisions: {
+                                id: string;
+                                decision: string;
+                                comment: string | null;
+                                reviewedBy: string;
+                                createdAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/review/{answerRunId}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 要確認回答への判断を記録
+         * @description 問題なし / 誤り / 情報源不足 のいずれかを記録します。bad 評価があれば解決済みにします
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    answerRunId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        decision: "no_issue" | "incorrect" | "source_missing";
+                        comment?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 記録成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            decision: {
+                                id: string;
+                                decision: string;
+                                comment: string | null;
+                                reviewedBy: string;
+                                createdAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
