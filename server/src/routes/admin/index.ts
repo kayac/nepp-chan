@@ -8,5 +8,6 @@ export { knowledgeAdminRoutes } from "./knowledge";
 export { personaAdminRoutes } from "./persona";
 export { pollAdminRoutes } from "./poll";
 export { reviewAdminRoutes } from "./review";
+export { sourceCandidatesAdminRoutes } from "./source-candidates";
 export { userAdminRoutes } from "./users";
 export { widgetSiteAdminRoutes } from "./widget-sites";

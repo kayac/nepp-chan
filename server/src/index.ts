@@ -28,6 +28,7 @@ import {
   pollAdminRoutes,
   pollRoutes,
   reviewAdminRoutes,
+  sourceCandidatesAdminRoutes,
   threadsRoutes,
   twilioVoiceRoutes,
   userAdminRoutes,
@@ -55,6 +56,7 @@ app.route("/admin/knowledge", knowledgeAdminRoutes);
 app.route("/admin/persona", personaAdminRoutes);
 app.route("/admin/review", reviewAdminRoutes);
 app.route("/admin/corrections", correctionsAdminRoutes);
+app.route("/admin/source-candidates", sourceCandidatesAdminRoutes);
 app.route("/admin/emergency", emergencyAdminRoutes);
 app.route("/admin/invitations", invitationRoutes);
 app.route("/admin/users", userAdminRoutes);

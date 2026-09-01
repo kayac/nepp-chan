@@ -9,6 +9,7 @@ export {
   personaAdminRoutes,
   pollAdminRoutes,
   reviewAdminRoutes,
+  sourceCandidatesAdminRoutes,
   userAdminRoutes,
   widgetSiteAdminRoutes,
 } from "./admin";
