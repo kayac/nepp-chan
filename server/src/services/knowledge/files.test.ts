@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./embedding", () => ({
-  deleteKnowledgeBySource: vi.fn(),
+vi.mock("./indexing", () => ({
+  removeKnowledgeSource: vi.fn(),
 }));
 
 vi.mock("~/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const { deleteKnowledgeBySource } = await import("./embedding");
+const { removeKnowledgeSource } = await import("./indexing");
 const { deleteFile, getFile, getOriginalFile, listFiles, listUnifiedFiles } =
   await import("./files");
 
@@ -59,7 +59,7 @@ const buildBucket = (
 };
 
 beforeEach(() => {
-  vi.mocked(deleteKnowledgeBySource).mockReset();
+  vi.mocked(removeKnowledgeSource).mockReset();
 });
 
 describe("listFiles", () => {
@@ -287,6 +287,8 @@ describe("getOriginalFile", () => {
   });
 });
 
+const d1 = {} as D1Database;
+
 describe("deleteFile", () => {
   it("Markdown + originals + Vectorize を削除", async () => {
     const bucket = buildBucket([
@@ -298,18 +300,21 @@ describe("deleteFile", () => {
     ]);
     const vectorize = {} as VectorizeIndex;
 
-    await deleteFile(bucket, vectorize, "doc.md");
+    await deleteFile(bucket, vectorize, d1, "doc.md");
 
     expect(bucket.delete).toHaveBeenCalledWith("doc.md");
     expect(bucket.delete).toHaveBeenCalledWith("originals/doc.pdf");
-    expect(deleteKnowledgeBySource).toHaveBeenCalledWith(vectorize, "doc.md");
+    expect(removeKnowledgeSource).toHaveBeenCalledWith("doc.md", {
+      d1,
+      vectorize,
+    });
   });
 
   it("key に拡張子無しを渡しても .md を付けて削除", async () => {
     const bucket = buildBucket([]);
     const vectorize = {} as VectorizeIndex;
 
-    await deleteFile(bucket, vectorize, "doc");
+    await deleteFile(bucket, vectorize, d1, "doc");
 
     expect(bucket.delete).toHaveBeenCalledWith("doc.md");
   });
@@ -324,7 +329,7 @@ describe("deleteFile", () => {
     ]);
     const vectorize = {} as VectorizeIndex;
 
-    await deleteFile(bucket, vectorize, "doc.md");
+    await deleteFile(bucket, vectorize, d1, "doc.md");
 
     // doc.md は削除される
     expect(bucket.delete).toHaveBeenCalledWith("doc.md");

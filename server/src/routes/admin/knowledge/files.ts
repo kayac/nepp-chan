@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
+import { requireAdminUser } from "~/lib/principal";
 import {
   deleteFile,
   getFile,
@@ -125,11 +126,14 @@ knowledgeFilesRoutes.openapi(saveFileRoute, async (c) => {
     vectorize: c.env.VECTORIZE,
     apiKey,
     d1: c.env.DB,
+    approveAs: requireAdminUser(c.get("principal")).id,
   });
 
   return c.json(
     {
-      message: `ファイルを保存し、${result.chunks}チャンクを同期しました`,
+      message: result.indexed
+        ? `ファイルを保存し、${result.chunks}チャンクを同期しました`
+        : `ファイルを保存しました。情報源が ${result.status} のため検索には反映されません`,
       chunks: result.chunks,
     },
     200,
@@ -159,7 +163,7 @@ knowledgeFilesRoutes.openapi(deleteFileRoute, async (c) => {
   const { key } = c.req.valid("param");
   validateFileKey(key);
 
-  await deleteFile(c.env.KNOWLEDGE_BUCKET, c.env.VECTORIZE, key);
+  await deleteFile(c.env.KNOWLEDGE_BUCKET, c.env.VECTORIZE, c.env.DB, key);
   const baseName = key.replace(/\.md$/, "");
   return c.json({ message: `${baseName} を完全に削除しました` }, 200);
 });

@@ -1,5 +1,5 @@
 import { logger } from "~/lib/logger";
-import { deleteKnowledgeBySource, processKnowledgeFile } from "./embedding";
+import { indexKnowledgeSource } from "./indexing";
 import { buildOriginalsMap, EDIT_THRESHOLD_MS } from "./utils";
 
 type SyncResult = {
@@ -7,6 +7,7 @@ type SyncResult = {
   chunks: number;
   error?: string;
   edited?: boolean;
+  skipped?: boolean;
 };
 
 type SyncAllResult = {
@@ -14,13 +15,14 @@ type SyncAllResult = {
   totalFiles: number;
   totalChunks: number;
   editedCount: number;
+  skippedCount: number;
 };
 
 type SyncDeps = {
   bucket: R2Bucket;
   vectorize: VectorizeIndex;
   apiKey: string;
-  d1?: D1Database;
+  d1: D1Database;
 };
 
 const isFileEdited = (mdFile: R2Object, originalsMap: Map<string, Date>) => {
@@ -32,6 +34,16 @@ const isFileEdited = (mdFile: R2Object, originalsMap: Map<string, Date>) => {
   );
 };
 
+export const listMarkdownObjects = async (bucket: R2Bucket) => {
+  const listed = await bucket.list();
+  return {
+    allObjects: listed.objects,
+    mdFiles: listed.objects.filter(
+      (obj) => obj.key.endsWith(".md") && !obj.key.startsWith("originals/"),
+    ),
+  };
+};
+
 /**
  * R2バケットの全Markdownファイルを読み込み、Vectorizeに同期
  */
@@ -41,12 +53,7 @@ export const syncAll = async ({
   apiKey,
   d1,
 }: SyncDeps): Promise<SyncAllResult> => {
-  const listed = await bucket.list();
-  const allObjects = listed.objects;
-
-  const mdFiles = allObjects.filter(
-    (obj) => obj.key.endsWith(".md") && !obj.key.startsWith("originals/"),
-  );
+  const { allObjects, mdFiles } = await listMarkdownObjects(bucket);
   const originalsMap = buildOriginalsMap(allObjects);
 
   logger.info(`[Sync] Found ${mdFiles.length} markdown files`);
@@ -66,13 +73,11 @@ export const syncAll = async ({
       `[Sync] Processing ${obj.key} (${content.length} bytes)${edited ? " [EDITED]" : ""}`,
     );
 
-    await deleteKnowledgeBySource(vectorize, obj.key);
-    const result = await processKnowledgeFile(
+    const result = await indexKnowledgeSource(
       obj.key,
       content,
-      vectorize,
-      apiKey,
-      d1,
+      { d1, vectorize, apiKey },
+      { r2Etag: obj.etag },
     );
 
     results.push({
@@ -80,6 +85,7 @@ export const syncAll = async ({
       chunks: result.chunks,
       error: result.error,
       edited,
+      skipped: result.indexed ? undefined : true,
     });
   }
 
@@ -88,6 +94,7 @@ export const syncAll = async ({
     totalFiles: mdFiles.length,
     totalChunks: results.reduce((sum, r) => sum + r.chunks, 0),
     editedCount: results.filter((r) => r.edited).length,
+    skippedCount: results.filter((r) => r.skipped).length,
   };
 };
 
@@ -97,14 +104,12 @@ export const syncAll = async ({
 export const syncFile = async (
   key: string,
   content: string,
-  deps: Omit<SyncDeps, "bucket">,
-): Promise<{ chunks: number; error?: string }> => {
-  await deleteKnowledgeBySource(deps.vectorize, key);
-  return processKnowledgeFile(
+  deps: Omit<SyncDeps, "bucket"> & { approveAs?: string },
+) => {
+  return indexKnowledgeSource(
     key,
     content,
-    deps.vectorize,
-    deps.apiKey,
-    deps.d1,
+    { d1: deps.d1, vectorize: deps.vectorize, apiKey: deps.apiKey },
+    { approveAs: deps.approveAs },
   );
 };

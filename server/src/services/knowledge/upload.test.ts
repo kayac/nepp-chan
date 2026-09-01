@@ -42,7 +42,9 @@ const buildFile = (
 };
 
 beforeEach(() => {
-  vi.mocked(syncFile).mockReset().mockResolvedValue({ chunks: 3 });
+  vi.mocked(syncFile)
+    .mockReset()
+    .mockResolvedValue({ indexed: true, status: "approved", chunks: 3 });
   vi.mocked(convertToMarkdown).mockReset().mockResolvedValue("# converted");
   vi.mocked(isSupportedMimeType).mockReset().mockReturnValue(true);
 });
@@ -56,6 +58,8 @@ describe("uploadMarkdownFile", () => {
       bucket,
       vectorize: {} as VectorizeIndex,
       apiKey: "k",
+      d1: {} as D1Database,
+      approveAs: "admin-1",
     });
 
     expect(bucket.put).toHaveBeenCalledWith("doc.md", "# hello", {
@@ -64,6 +68,8 @@ describe("uploadMarkdownFile", () => {
     expect(syncFile).toHaveBeenCalledWith("doc.md", "# hello", {
       vectorize: {},
       apiKey: "k",
+      d1: {},
+      approveAs: "admin-1",
     });
     expect(result).toEqual({ key: "doc.md", chunks: 3 });
   });
@@ -76,6 +82,8 @@ describe("uploadMarkdownFile", () => {
       bucket,
       vectorize: {} as VectorizeIndex,
       apiKey: "k",
+      d1: {} as D1Database,
+      approveAs: "admin-1",
     });
 
     expect(result.key).toBe("custom.md");
@@ -88,6 +96,8 @@ describe("uploadMarkdownFile", () => {
       bucket,
       vectorize: {} as VectorizeIndex,
       apiKey: "k",
+      d1: {} as D1Database,
+      approveAs: "admin-1",
     });
     expect(result.key).toBe("ready.md");
   });
@@ -104,19 +114,28 @@ describe("uploadMarkdownFile", () => {
         bucket,
         vectorize: {} as VectorizeIndex,
         apiKey: "k",
+        d1: {} as D1Database,
+        approveAs: "admin-1",
       }),
     ).rejects.toThrow(/exceeds limit/);
     expect(bucket.put).not.toHaveBeenCalled();
   });
 
   it("syncFile の error を伝播", async () => {
-    vi.mocked(syncFile).mockResolvedValueOnce({ chunks: 0, error: "boom" });
+    vi.mocked(syncFile).mockResolvedValueOnce({
+      indexed: true,
+      status: "approved",
+      chunks: 0,
+      error: "boom",
+    });
     const bucket = buildBucket();
     const file = buildFile("x", { name: "doc.md" });
     const result = await uploadMarkdownFile(file, null, {
       bucket,
       vectorize: {} as VectorizeIndex,
       apiKey: "k",
+      d1: {} as D1Database,
+      approveAs: "admin-1",
     });
     expect(result.error).toBe("boom");
   });
@@ -134,6 +153,8 @@ describe("convertAndUpload", () => {
       bucket,
       vectorize: {} as VectorizeIndex,
       apiKey: "k",
+      d1: {} as D1Database,
+      approveAs: "admin-1",
     });
 
     // originals/photo.png に元ファイル
@@ -165,6 +186,8 @@ describe("convertAndUpload", () => {
         bucket: buildBucket(),
         vectorize: {} as VectorizeIndex,
         apiKey: "k",
+        d1: {} as D1Database,
+        approveAs: "admin-1",
       }),
     ).rejects.toThrow(/exceeds limit/);
   });
@@ -177,6 +200,8 @@ describe("convertAndUpload", () => {
         bucket: buildBucket(),
         vectorize: {} as VectorizeIndex,
         apiKey: "k",
+        d1: {} as D1Database,
+        approveAs: "admin-1",
       }),
     ).rejects.toThrow(/Unsupported file type/);
   });
@@ -188,6 +213,8 @@ describe("convertAndUpload", () => {
       bucket,
       vectorize: {} as VectorizeIndex,
       apiKey: "k",
+      d1: {} as D1Database,
+      approveAs: "admin-1",
     });
     // file.name に "." が無いので extension は "bin"... wait, "no-ext".split(".") = ["no-ext"], pop = "no-ext"
     // 実装的には pop || "bin" で "no-ext" になる
@@ -208,6 +235,8 @@ describe("reconvertFromOriginal", () => {
         bucket,
         vectorize: {} as VectorizeIndex,
         apiKey: "k",
+        d1: {} as D1Database,
+        approveAs: "admin-1",
       }),
     ).rejects.toThrow(/Original file not found/);
   });
@@ -225,6 +254,8 @@ describe("reconvertFromOriginal", () => {
         bucket,
         vectorize: {} as VectorizeIndex,
         apiKey: "k",
+        d1: {} as D1Database,
+        approveAs: "admin-1",
       }),
     ).rejects.toThrow(/Unsupported file type/);
   });
@@ -240,6 +271,8 @@ describe("reconvertFromOriginal", () => {
       bucket,
       vectorize: {} as VectorizeIndex,
       apiKey: "k",
+      d1: {} as D1Database,
+      approveAs: "admin-1",
     });
 
     expect(bucket.put).toHaveBeenCalledWith("x.md", "# converted", {
@@ -265,6 +298,8 @@ describe("reconvertFromOriginal", () => {
         bucket,
         vectorize: {} as VectorizeIndex,
         apiKey: "k",
+        d1: {} as D1Database,
+        approveAs: "admin-1",
       }),
     ).rejects.toThrow();
     expect(isSupportedMimeType).toHaveBeenCalledWith(

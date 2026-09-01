@@ -1,5 +1,5 @@
 import { logger } from "~/lib/logger";
-import { deleteKnowledgeBySource } from "./embedding";
+import { removeKnowledgeSource } from "./indexing";
 import { buildOriginalsMap, EDIT_THRESHOLD_MS, extractBaseName } from "./utils";
 
 export type FileInfo = {
@@ -188,6 +188,7 @@ export const getOriginalFile = async (
 export const deleteFile = async (
   bucket: R2Bucket,
   vectorize: VectorizeIndex,
+  d1: D1Database,
   key: string,
 ): Promise<void> => {
   const baseName = key.replace(/\.md$/, "");
@@ -208,6 +209,6 @@ export const deleteFile = async (
   }
 
   // 3. Vectorize から削除
-  await deleteKnowledgeBySource(vectorize, mdKey);
+  await removeKnowledgeSource(mdKey, { d1, vectorize });
   logger.info(`[Delete] Deleted ${mdKey} from Vectorize`);
 };

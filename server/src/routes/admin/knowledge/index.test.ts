@@ -17,6 +17,17 @@ vi.mock("~/services/knowledge", () => ({
   reconvertFromOriginal: vi.fn(),
 }));
 
+vi.mock("~/repository/knowledge-source-repository", () => ({
+  APPROVAL_STATUSES: ["pending", "approved", "rejected", "disabled"],
+  knowledgeSourceRepository: {
+    findByPath: vi.fn(),
+    list: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+    markAllRemoved: vi.fn(),
+  },
+}));
+
 vi.mock("~/repository/admin-session-repository", () => ({
   adminSessionRepository: {
     findValid: vi.fn(),
@@ -241,6 +252,7 @@ describe("knowledge routes 統合テスト", () => {
           { file: "b.md", chunks: 5 },
         ],
         editedCount: 0,
+        skippedCount: 0,
       });
 
       const res = await app.request(
@@ -330,7 +342,12 @@ describe("knowledge routes 統合テスト", () => {
     });
 
     it("正常系: bucket.put → syncFile → 200", async () => {
-      vi.mocked(knowledgeService.syncFile).mockResolvedValue({ chunks: 4 });
+      vi.mocked(knowledgeService.syncFile).mockResolvedValue({
+        indexed: true,
+        status: "approved",
+        chunks: 4,
+        error: undefined,
+      });
 
       const res = await app.request(
         authedRequest("/files/doc.md", jsonBody({ content: "# c" })),

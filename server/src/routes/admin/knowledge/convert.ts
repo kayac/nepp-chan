@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
+import { requireAdminUser } from "~/lib/principal";
 import {
   convertAndUpload,
   reconvertFromOriginal,
@@ -73,6 +74,7 @@ knowledgeConvertRoutes.openapi(uploadFileRoute, async (c) => {
     vectorize: c.env.VECTORIZE,
     apiKey,
     d1: c.env.DB,
+    approveAs: requireAdminUser(c.get("principal")).id,
   });
 
   return c.json(
@@ -148,6 +150,7 @@ knowledgeConvertRoutes.openapi(convertFileRoute, async (c) => {
     vectorize: c.env.VECTORIZE,
     apiKey,
     d1: c.env.DB,
+    approveAs: requireAdminUser(c.get("principal")).id,
   });
 
   return c.json(
@@ -219,6 +222,7 @@ knowledgeConvertRoutes.openapi(reconvertFileRoute, async (c) => {
     vectorize: c.env.VECTORIZE,
     apiKey,
     d1: c.env.DB,
+    approveAs: requireAdminUser(c.get("principal")).id,
   });
 
   return c.json(

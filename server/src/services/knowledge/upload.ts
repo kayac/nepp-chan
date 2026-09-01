@@ -9,7 +9,8 @@ type UploadDeps = {
   bucket: R2Bucket;
   vectorize: VectorizeIndex;
   apiKey: string;
-  d1?: D1Database;
+  d1: D1Database;
+  approveAs: string;
 };
 
 type UploadResult = {
@@ -55,6 +56,7 @@ export const uploadMarkdownFile = async (
     vectorize: deps.vectorize,
     apiKey: deps.apiKey,
     d1: deps.d1,
+    approveAs: deps.approveAs,
   });
 
   return { key, chunks: result.chunks, error: result.error };
@@ -110,6 +112,7 @@ export const convertAndUpload = async (
     vectorize: deps.vectorize,
     apiKey: deps.apiKey,
     d1: deps.d1,
+    approveAs: deps.approveAs,
   });
 
   return {
@@ -159,6 +162,7 @@ export const reconvertFromOriginal = async (
     vectorize: deps.vectorize,
     apiKey: deps.apiKey,
     d1: deps.d1,
+    approveAs: deps.approveAs,
   });
 
   return {

@@ -1,9 +1,9 @@
 import * as Sentry from "@sentry/cloudflare";
 import { logger } from "~/lib/logger";
 import {
-  deleteKnowledgeBySource,
-  processKnowledgeFile,
-} from "~/services/knowledge/embedding";
+  indexKnowledgeSource,
+  removeKnowledgeSource,
+} from "~/services/knowledge/indexing";
 
 type R2EventType =
   | "PutObject"
@@ -30,8 +30,14 @@ const isMarkdownFile = (key: string) => key.endsWith(".md");
 
 const handleObjectCreate = async (
   key: string,
+  eTag: string,
   env: CloudflareBindings,
-): Promise<{ success: boolean; chunks?: number; error?: string }> => {
+): Promise<{
+  success: boolean;
+  chunks?: number;
+  skipped?: string;
+  error?: string;
+}> => {
   const file = await env.KNOWLEDGE_BUCKET.get(key);
   if (!file) {
     return { success: false, error: `File not found: ${key}` };
@@ -39,15 +45,20 @@ const handleObjectCreate = async (
 
   const content = await file.text();
 
-  // 既存データを削除してから再登録
-  await deleteKnowledgeBySource(env.VECTORIZE, key);
-
-  const result = await processKnowledgeFile(
+  const result = await indexKnowledgeSource(
     key,
     content,
-    env.VECTORIZE,
-    env.GOOGLE_GENERATIVE_AI_API_KEY,
+    {
+      d1: env.DB,
+      vectorize: env.VECTORIZE,
+      apiKey: env.GOOGLE_GENERATIVE_AI_API_KEY,
+    },
+    { r2Etag: eTag, skipUnchanged: true },
   );
+
+  if (!result.indexed) {
+    return { success: true, skipped: result.status };
+  }
 
   if (result.error) {
     return { success: false, error: result.error };
@@ -61,7 +72,10 @@ const handleObjectDelete = async (
   env: CloudflareBindings,
 ): Promise<{ success: boolean; deleted?: number; error?: string }> => {
   try {
-    const result = await deleteKnowledgeBySource(env.VECTORIZE, key);
+    const result = await removeKnowledgeSource(key, {
+      d1: env.DB,
+      vectorize: env.VECTORIZE,
+    });
     return { success: true, deleted: result.deleted };
   } catch (error) {
     return {
@@ -94,8 +108,10 @@ export const handleR2Event = async (
         case "PutObject":
         case "CompleteMultipartUpload":
         case "CopyObject": {
-          const result = await handleObjectCreate(key, env);
-          if (result.success) {
+          const result = await handleObjectCreate(key, object.eTag, env);
+          if (result.success && result.skipped) {
+            logger.info(`Skipped ${key}: approval status is ${result.skipped}`);
+          } else if (result.success) {
             logger.info(`Synced ${key}: ${result.chunks} chunks`);
           } else {
             logger.error(`Failed to sync ${key}`, result.error);

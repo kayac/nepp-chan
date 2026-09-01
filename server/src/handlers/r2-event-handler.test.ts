@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("~/services/knowledge/embedding", () => ({
-  deleteKnowledgeBySource: vi.fn(),
-  processKnowledgeFile: vi.fn(),
+vi.mock("~/services/knowledge/indexing", () => ({
+  indexKnowledgeSource: vi.fn(),
+  removeKnowledgeSource: vi.fn(),
 }));
 
-const { deleteKnowledgeBySource, processKnowledgeFile } = await import(
-  "~/services/knowledge/embedding"
+const { indexKnowledgeSource, removeKnowledgeSource } = await import(
+  "~/services/knowledge/indexing"
 );
 const { handleR2Event } = await import("./r2-event-handler");
 
@@ -15,6 +15,7 @@ const r2Bucket = {
 };
 
 const env = {
+  DB: {} as D1Database,
   KNOWLEDGE_BUCKET: r2Bucket,
   VECTORIZE: {} as VectorizeIndex,
   GOOGLE_GENERATIVE_AI_API_KEY: "key",
@@ -56,8 +57,12 @@ describe("handleR2Event", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     r2Bucket.get.mockResolvedValue({ text: vi.fn().mockResolvedValue("md") });
-    vi.mocked(deleteKnowledgeBySource).mockResolvedValue({ deleted: 3 });
-    vi.mocked(processKnowledgeFile).mockResolvedValue({ chunks: 5 });
+    vi.mocked(indexKnowledgeSource).mockResolvedValue({
+      indexed: true,
+      status: "approved",
+      chunks: 5,
+    });
+    vi.mocked(removeKnowledgeSource).mockResolvedValue({ deleted: 3 });
   });
 
   it(".md 以外は ack して何もしない", async () => {
@@ -66,34 +71,56 @@ describe("handleR2Event", () => {
     await handleR2Event(buildBatch([m]), env);
 
     expect(m.ack).toHaveBeenCalled();
-    expect(processKnowledgeFile).not.toHaveBeenCalled();
+    expect(indexKnowledgeSource).not.toHaveBeenCalled();
   });
 
   it.each(["PutObject", "CompleteMultipartUpload", "CopyObject"] as const)(
-    "%s は delete + processKnowledgeFile を順に呼ぶ",
+    "%s は indexKnowledgeSource に eTag 付きで委譲する",
     async (action) => {
       const m = buildMessage(action, "doc.md");
 
       await handleR2Event(buildBatch([m]), env);
 
-      expect(deleteKnowledgeBySource).toHaveBeenCalledWith(
-        env.VECTORIZE,
+      expect(indexKnowledgeSource).toHaveBeenCalledWith(
         "doc.md",
+        "md",
+        {
+          d1: env.DB,
+          vectorize: env.VECTORIZE,
+          apiKey: "key",
+        },
+        { r2Etag: "etag", skipUnchanged: true },
       );
-      expect(processKnowledgeFile).toHaveBeenCalled();
       expect(m.ack).toHaveBeenCalled();
     },
   );
 
+  it("未承認で index が skip されても ack する", async () => {
+    vi.mocked(indexKnowledgeSource).mockResolvedValue({
+      indexed: false,
+      status: "pending",
+      chunks: 0,
+    });
+    const m = buildMessage("PutObject", "doc.md");
+
+    await handleR2Event(buildBatch([m]), env);
+
+    expect(m.ack).toHaveBeenCalled();
+    expect(m.retry).not.toHaveBeenCalled();
+  });
+
   it.each(["DeleteObject", "LifecycleDeletion"] as const)(
-    "%s は deleteKnowledgeBySource のみ",
+    "%s は removeKnowledgeSource のみ",
     async (action) => {
       const m = buildMessage(action, "doc.md");
 
       await handleR2Event(buildBatch([m]), env);
 
-      expect(deleteKnowledgeBySource).toHaveBeenCalled();
-      expect(processKnowledgeFile).not.toHaveBeenCalled();
+      expect(removeKnowledgeSource).toHaveBeenCalledWith("doc.md", {
+        d1: env.DB,
+        vectorize: env.VECTORIZE,
+      });
+      expect(indexKnowledgeSource).not.toHaveBeenCalled();
       expect(m.ack).toHaveBeenCalled();
     },
   );
@@ -107,10 +134,12 @@ describe("handleR2Event", () => {
     expect(m.retry).toHaveBeenCalled();
   });
 
-  it("processKnowledgeFile がエラーを返したら retry", async () => {
-    vi.mocked(processKnowledgeFile).mockResolvedValue({
-      error: "embed failed",
+  it("index がエラーを返したら retry", async () => {
+    vi.mocked(indexKnowledgeSource).mockResolvedValue({
+      indexed: true,
+      status: "approved",
       chunks: 0,
+      error: "embed failed",
     });
     const m = buildMessage("PutObject", "doc.md");
 
@@ -120,7 +149,7 @@ describe("handleR2Event", () => {
   });
 
   it("例外が起きたら retry", async () => {
-    vi.mocked(processKnowledgeFile).mockRejectedValue(new Error("boom"));
+    vi.mocked(indexKnowledgeSource).mockRejectedValue(new Error("boom"));
     const m = buildMessage("PutObject", "doc.md");
 
     await handleR2Event(buildBatch([m]), env);

@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
+import { knowledgeSourceRepository } from "~/repository/knowledge-source-repository";
 import { deleteAllKnowledge, syncAll } from "~/services/knowledge";
 import { requireApiKey, SuccessResponseSchema } from "./schemas";
 
@@ -29,6 +30,7 @@ const deleteAllRoute = createRoute({
 
 knowledgeSyncRoutes.openapi(deleteAllRoute, async (c) => {
   const result = await deleteAllKnowledge(c.env.VECTORIZE);
+  await knowledgeSourceRepository.markAllRemoved(c.env.DB);
   return c.json(
     {
       message: `${result.deleted}件のベクトルを削除しました`,
