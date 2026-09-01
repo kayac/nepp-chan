@@ -6,6 +6,7 @@ import {
   ChartBarIcon,
   ChatBubbleLeftIcon,
   ChatBubbleLeftRightIcon,
+  ClipboardDocumentCheckIcon,
   EnvelopeIcon,
   GlobeAltIcon,
   HandThumbUpIcon,
@@ -29,6 +30,7 @@ import {
   type MayorRequest,
 } from "~/app/dashboard/components/mayor/MayorChatPanel";
 import { PollPanel } from "~/app/dashboard/components/PollPanel";
+import { ReviewPanel } from "~/app/dashboard/components/ReviewPanel";
 import { UsagePanel } from "~/app/dashboard/components/UsagePanel";
 import { VoicesPanel } from "~/app/dashboard/components/VoicesPanel";
 import type { VoiceFilter } from "~/app/dashboard/components/voices/helpers";
@@ -45,6 +47,7 @@ export type Tab =
   | "poll"
   | "knowledge"
   | "feedback"
+  | "review"
   | "invitations"
   | "widget-sites"
   | "usage";
@@ -102,6 +105,13 @@ const tabs: {
     icon: <BookOpenIcon className="w-5 h-5" aria-hidden="true" />,
     group: "system",
     minRole: "super_admin",
+  },
+  {
+    id: "review",
+    label: "回答レビュー",
+    icon: <ClipboardDocumentCheckIcon className="w-5 h-5" aria-hidden="true" />,
+    group: "watch",
+    minRole: "admin",
   },
   {
     id: "feedback",
@@ -334,6 +344,7 @@ export const App = () => {
             {activeTab === "broadcast" && <BroadcastPanel />}
             {activeTab === "poll" && <PollPanel />}
             {activeTab === "knowledge" && <KnowledgePanel />}
+            {activeTab === "review" && <ReviewPanel />}
             {activeTab === "feedback" && <FeedbackPanel />}
             {activeTab === "invitations" && <InvitationsPanel />}
             {activeTab === "widget-sites" && <WidgetSitesPanel />}
