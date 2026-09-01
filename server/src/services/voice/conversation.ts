@@ -2,7 +2,7 @@ import { Mastra } from "@mastra/core/mastra";
 import type { ModelMessage } from "ai";
 import { primaryModelId, voiceModelConfig } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
-import { toVoiceIds } from "~/lib/principal";
+import { toVoiceIds, voiceTurnMessageId } from "~/lib/principal";
 import { getStorage } from "~/lib/storage";
 import { sanitizeForSpeech } from "~/lib/voice-text";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
@@ -202,7 +202,7 @@ export const createVoiceConversation = async ({
     };
     const messages = [
       {
-        id: `${threadId}:turn:${turnIndex}:user`,
+        id: voiceTurnMessageId(threadId, turnIndex, "user"),
         role: "user" as const,
         createdAt: now,
         threadId,
@@ -210,7 +210,7 @@ export const createVoiceConversation = async ({
         content: textContent(userText),
       },
       {
-        id: `${threadId}:turn:${turnIndex}:assistant`,
+        id: voiceTurnMessageId(threadId, turnIndex, "assistant"),
         role: "assistant" as const,
         createdAt: assistantCreatedAt,
         threadId,

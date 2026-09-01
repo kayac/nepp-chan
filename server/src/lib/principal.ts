@@ -46,6 +46,12 @@ export const toLineIds = async (p: LinePrincipal, secret: string) => {
 
 // 発信元は resourceId、通話は threadId に対応させる。どちらも平文を
 // 永続化しないよう HMAC でハッシュ化し、voice 名前空間を分ける。
+export const voiceTurnMessageId = (
+  threadId: string,
+  turnIndex: number,
+  role: "user" | "assistant",
+) => `${threadId}:turn:${turnIndex}:${role}`;
+
 export const toVoiceIds = async (
   from: string,
   callSid: string,
