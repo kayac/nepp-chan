@@ -4090,6 +4090,14 @@ export interface paths {
                                 question: string | null;
                                 answer: string;
                             } | null;
+                            archivedEvidence: {
+                                question: string | null;
+                                answer: string | null;
+                                runs: {
+                                    query: string;
+                                    sources: string[];
+                                }[];
+                            } | null;
                             feedbacks: {
                                 id: string;
                                 threadId: string;
@@ -4328,6 +4336,8 @@ export interface paths {
                                 relatedFeedbackId: string | null;
                                 answerRunId: string | null;
                                 needsReviewAt: string | null;
+                                /** @enum {string|null} */
+                                needsReviewReason: "source_updated" | "source_unavailable" | null;
                                 createdAt: string;
                                 updatedAt: string | null;
                             }[];
@@ -4406,6 +4416,8 @@ export interface paths {
                                 relatedFeedbackId: string | null;
                                 answerRunId: string | null;
                                 needsReviewAt: string | null;
+                                /** @enum {string|null} */
+                                needsReviewReason: "source_updated" | "source_unavailable" | null;
                                 createdAt: string;
                                 updatedAt: string | null;
                             };
@@ -4519,6 +4531,8 @@ export interface paths {
                                 relatedFeedbackId: string | null;
                                 answerRunId: string | null;
                                 needsReviewAt: string | null;
+                                /** @enum {string|null} */
+                                needsReviewReason: "source_updated" | "source_unavailable" | null;
                                 createdAt: string;
                                 updatedAt: string | null;
                             };
@@ -4618,6 +4632,8 @@ export interface paths {
                                 relatedFeedbackId: string | null;
                                 answerRunId: string | null;
                                 needsReviewAt: string | null;
+                                /** @enum {string|null} */
+                                needsReviewReason: "source_updated" | "source_unavailable" | null;
                                 createdAt: string;
                                 updatedAt: string | null;
                             };
@@ -4731,6 +4747,8 @@ export interface paths {
                                 relatedFeedbackId: string | null;
                                 answerRunId: string | null;
                                 needsReviewAt: string | null;
+                                /** @enum {string|null} */
+                                needsReviewReason: "source_updated" | "source_unavailable" | null;
                                 createdAt: string;
                                 updatedAt: string | null;
                             };

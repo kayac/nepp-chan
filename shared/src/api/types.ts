@@ -143,6 +143,11 @@ export type ReviewDecisionType = "no_issue" | "incorrect" | "source_missing";
 export type CorrectionsResponse = GetOk<"/admin/corrections">;
 export type KnowledgeCorrection = CorrectionsResponse["corrections"][number];
 
+// 情報源
+export type KnowledgeSourcesResponse = GetOk<"/admin/knowledge/sources">;
+export type KnowledgeSource = KnowledgeSourcesResponse["sources"][number];
+export type ApprovalStatus = KnowledgeSource["approvalStatus"];
+
 // 情報源候補
 export type SourceCandidatesResponse = GetOk<"/admin/source-candidates">;
 export type SourceCandidate = SourceCandidatesResponse["candidates"][number];

@@ -90,6 +90,32 @@ export const createKnowledgeRepository = (
     return data;
   },
 
+  fetchSources: async () => {
+    const { data, error } = await client.GET("/admin/knowledge/sources");
+    if (error) throw error;
+    return data;
+  },
+
+  updateSourceStatus: async (params: {
+    sourcePath: string;
+    action: "approve" | "reject" | "disable";
+  }) => {
+    const { data, error } = await client.PATCH(
+      "/admin/knowledge/sources/status",
+      { body: params },
+    );
+    if (error) throw error;
+    return data;
+  },
+
+  backfillSources: async () => {
+    const { data, error } = await client.POST(
+      "/admin/knowledge/sources/backfill",
+    );
+    if (error) throw error;
+    return data;
+  },
+
   getOriginalFileUrl: (key: string) => {
     const encodedKey = encodeURIComponent(key.replace("originals/", ""));
     return `${baseUrl}/admin/knowledge/originals/${encodedKey}`;
