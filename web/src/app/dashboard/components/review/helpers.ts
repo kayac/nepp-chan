@@ -19,4 +19,9 @@ export const flagLabels = (flags: ReviewQueueItem["flags"]) => {
   return labels;
 };
 
+export const CORRECTION_SOURCE_PREFIX = "curated/corrections/";
+
+export const isCorrectionSource = (source: string) =>
+  source.startsWith(CORRECTION_SOURCE_PREFIX);
+
 export const primaryQuery = (queries: readonly string[]) => queries[0] ?? "";

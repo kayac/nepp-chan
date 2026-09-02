@@ -16,7 +16,10 @@ import {
   withUsageRecording,
 } from "~/services/analytics/llm-usage";
 import { applyCorrections } from "~/services/knowledge/corrections";
-import { recordRetrievalRunInBackground } from "~/services/knowledge/retrieval-trace";
+import {
+  type RetrievalHit,
+  recordRetrievalRunInBackground,
+} from "~/services/knowledge/retrieval-trace";
 
 const EMBEDDING_DIMENSIONS = 1536;
 
@@ -165,24 +168,42 @@ export const searchKnowledge = async (
       dateType: r.result.metadata?.dateType as string | undefined,
     }));
 
-    recordRetrievalRunInBackground(requestContext, {
-      query,
-      hits: knowledgeResults.map((result, i) => ({
+    const searchHits: RetrievalHit[] = knowledgeResults.map((result, i) => ({
+      source: result.source,
+      title: result.title,
+      section: result.section,
+      score: rerankedResults[i].result.score,
+      rerankScore: result.score,
+      contentHash: rerankedResults[i].result.metadata?.contentHash as
+        | string
+        | undefined,
+    }));
+
+    const d1 = getRequestDb(requestContext);
+    const finalResults = d1
+      ? await applyCorrections(d1, knowledgeResults)
+      : knowledgeResults;
+
+    const searchedSources = new Set(
+      knowledgeResults.map((result) => result.source),
+    );
+    const correctionHits: RetrievalHit[] = finalResults
+      .filter((result) => !searchedSources.has(result.source))
+      .map((result) => ({
         source: result.source,
         title: result.title,
-        section: result.section,
-        score: rerankedResults[i].result.score,
-        rerankScore: result.score,
-        contentHash: rerankedResults[i].result.metadata?.contentHash as
-          | string
-          | undefined,
-      })),
+        score: result.score,
+      }));
+
+    recordRetrievalRunInBackground(requestContext, {
+      query,
+      hits: [...searchHits, ...correctionHits],
       durationMs: Date.now() - startedAt,
     });
 
     logger.info("[Knowledge] search result", {
       query,
-      hits: knowledgeResults
+      hits: finalResults
         .map(
           (r) =>
             `${r.source}${r.section ? `#${r.section}` : ""}(${r.score.toFixed(2)})`,
@@ -190,12 +211,7 @@ export const searchKnowledge = async (
         .join(", "),
     });
 
-    const d1 = getRequestDb(requestContext);
-    return {
-      results: d1
-        ? await applyCorrections(d1, knowledgeResults)
-        : knowledgeResults,
-    };
+    return { results: finalResults };
   } catch (error) {
     logger.error("Knowledge search error", error);
     return {

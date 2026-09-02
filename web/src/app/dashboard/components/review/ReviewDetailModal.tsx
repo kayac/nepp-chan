@@ -3,14 +3,20 @@ import { CorrectionForm } from "~/app/dashboard/components/review/CorrectionForm
 import {
   useReviewDetail,
   useSubmitReviewDecision,
+  useUndoReviewDecision,
 } from "~/app/dashboard/hooks/useReview";
 import { Dialog } from "~/components/ui/Dialog";
 import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
 import { ModalHeader } from "~/components/ui/ModalHeader";
+import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 import type { ReviewDecisionType } from "~/types";
 import { ArchivedEvidence } from "./ArchivedEvidence";
-import { flagLabels, REVIEW_DECISION_LABELS } from "./helpers";
+import {
+  flagLabels,
+  isCorrectionSource,
+  REVIEW_DECISION_LABELS,
+} from "./helpers";
 
 type Props = {
   answerRunId: string;
@@ -29,6 +35,7 @@ const DECISION_OPTIONS: Array<{
 export const ReviewDetailModal = ({ answerRunId, onClose }: Props) => {
   const { data, isLoading, error } = useReviewDetail(answerRunId);
   const decisionMutation = useSubmitReviewDecision();
+  const undoMutation = useUndoReviewDecision();
   const [comment, setComment] = useState("");
   const [showCorrectionForm, setShowCorrectionForm] = useState(false);
 
@@ -36,7 +43,7 @@ export const ReviewDetailModal = ({ answerRunId, onClose }: Props) => {
     ...new Set(
       (data?.runs ?? [])
         .flatMap((run) => run.hits.map((hit) => hit.source))
-        .filter((source) => !source.startsWith("curated/corrections/")),
+        .filter((source) => !isCorrectionSource(source)),
     ),
   ];
 
@@ -138,6 +145,11 @@ export const ReviewDetailModal = ({ answerRunId, onClose }: Props) => {
                             >
                               <span className="font-mono">{hit.source}</span>
                               {hit.section && <span>#{hit.section}</span>}
+                              {isCorrectionSource(hit.source) && (
+                                <span className="inline-flex px-1.5 py-0.5 bg-teal-100 text-teal-700 rounded font-medium">
+                                  訂正が反映されました
+                                </span>
+                              )}
                               <span className="text-stone-400">
                                 score {hit.score.toFixed(2)}
                                 {hit.rerankScore !== undefined &&
@@ -177,9 +189,30 @@ export const ReviewDetailModal = ({ answerRunId, onClose }: Props) => {
 
             {data.decisions.length > 0 && (
               <div>
-                <h3 className="text-sm font-medium text-stone-700 mb-2">
-                  判断履歴
-                </h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-stone-700">
+                    判断履歴
+                  </h3>
+                  <button
+                    type="button"
+                    disabled={undoMutation.isPending}
+                    onClick={() => {
+                      if (
+                        confirmDialog(
+                          "直近の判断を取り消しますか？未判断に戻ります。",
+                        )
+                      ) {
+                        undoMutation.mutate(answerRunId);
+                      }
+                    }}
+                    className="px-3 py-1 bg-stone-100 text-stone-600 text-xs font-medium rounded-lg hover:bg-stone-200 disabled:opacity-50 transition-colors"
+                  >
+                    直近の判断を取り消す
+                  </button>
+                </div>
+                {undoMutation.isError && (
+                  <ErrorBanner>{formatError(undoMutation.error)}</ErrorBanner>
+                )}
                 <ul className="space-y-1">
                   {data.decisions.map((decision) => (
                     <li key={decision.id} className="text-sm text-stone-600">

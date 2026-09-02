@@ -1,7 +1,7 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { setAuthToken } from "~/lib/auth-token";
 import { server } from "~/test/msw-server";
@@ -69,9 +69,42 @@ beforeEach(() => {
 
 afterEach(() => {
   localStorage.clear();
+  vi.restoreAllMocks();
 });
 
 describe("ReviewDetailModal", () => {
+  it("注入された訂正には反映済みのバッジを出す", async () => {
+    server.use(
+      http.get(`${API}/admin/review/ar-1`, () =>
+        HttpResponse.json(
+          detail({
+            runs: [
+              {
+                query: "村営バスの時刻",
+                hits: [
+                  { source: "bus/index.md", score: 0.82, rerankScore: 0.9 },
+                  {
+                    source: "curated/corrections/cor-1.md",
+                    title: "村による訂正",
+                    score: 1,
+                  },
+                ],
+                durationMs: 120,
+                createdAt: "2026-09-01T00:00:00.000Z",
+              },
+            ],
+          }),
+        ),
+      ),
+    );
+
+    renderWithQuery(
+      <ReviewDetailModal answerRunId="ar-1" onClose={() => {}} />,
+    );
+
+    expect(await screen.findByText("訂正が反映されました")).toBeInTheDocument();
+  });
+
   it("会話も検索記録も消えていれば判断時のスナップショットを表示する", async () => {
     server.use(
       http.get(`${API}/admin/review/ar-1`, () =>
@@ -192,5 +225,41 @@ describe("ReviewDetailModal", () => {
     );
 
     expect(await screen.findByText(/誤り — 時刻が古い/)).toBeInTheDocument();
+  });
+
+  it("直近の判断を取り消せる", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    let called = false;
+    server.use(
+      http.get(`${API}/admin/review/ar-1`, () =>
+        HttpResponse.json(
+          detail({
+            decisions: [
+              {
+                id: "dec-1",
+                decision: "no_issue",
+                comment: null,
+                reviewedBy: "user-1",
+                createdAt: "2026-09-02T00:00:00.000Z",
+              },
+            ],
+          }),
+        ),
+      ),
+      http.delete(`${API}/admin/review/ar-1/decision`, () => {
+        called = true;
+        return HttpResponse.json({ message: "ok", undecided: true });
+      }),
+    );
+
+    renderWithQuery(
+      <ReviewDetailModal answerRunId="ar-1" onClose={() => {}} />,
+    );
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "直近の判断を取り消す" }),
+    );
+
+    await waitFor(() => expect(called).toBe(true));
   });
 });
