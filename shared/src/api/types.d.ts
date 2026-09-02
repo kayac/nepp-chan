@@ -4292,7 +4292,77 @@ export interface paths {
                 };
             };
         };
-        delete?: never;
+        /**
+         * 最後の判断を取り消す
+         * @description 直近の判断を削除して未判断に戻します。bad 評価の解決済みも取り消します
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    answerRunId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 取り消し成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            undecided: boolean;
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -4486,6 +4556,127 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/admin/corrections/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 訂正の本文を修正
+         * @description 本文を書き換え、確認日を更新して R2 と検索へ再反映します
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        body: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 修正成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            correction: {
+                                id: string;
+                                correctsSourcePath: string;
+                                body: string;
+                                /** @enum {string} */
+                                status: "draft" | "published" | "retired";
+                                verifiedAt: string;
+                                approvedBy: string;
+                                relatedFeedbackId: string | null;
+                                answerRunId: string | null;
+                                needsReviewAt: string | null;
+                                /** @enum {string|null} */
+                                needsReviewReason: "source_updated" | "source_unavailable" | null;
+                                createdAt: string;
+                                updatedAt: string | null;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description サーバーエラー */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/admin/corrections/{id}/retire": {
@@ -4999,7 +5190,7 @@ export interface paths {
         head?: never;
         /**
          * 情報源候補の承認状態を変更
-         * @description 承認・却下の判断を記録します。承認済み候補の収集は通常の取り込み手順で行います
+         * @description 承認・却下の判断を記録します。reset で未判断に戻します。承認済み候補の収集は通常の取り込み手順で行います
          */
         patch: {
             parameters: {
@@ -5014,7 +5205,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        action: "approve" | "reject";
+                        action: "approve" | "reject" | "reset";
                     };
                 };
             };

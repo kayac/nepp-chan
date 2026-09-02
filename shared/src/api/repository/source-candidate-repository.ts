@@ -9,7 +9,7 @@ export const createSourceCandidateRepository = (client: ApiClient) => ({
 
   updateSourceCandidateStatus: async (params: {
     id: string;
-    action: "approve" | "reject";
+    action: "approve" | "reject" | "reset";
   }) => {
     const { data, error } = await client.PATCH(
       "/admin/source-candidates/{id}/status",

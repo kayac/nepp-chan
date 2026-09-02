@@ -51,6 +51,15 @@ export const createReviewRepository = (client: ApiClient) => ({
     if (error) throw error;
     return data;
   },
+
+  undoDecision: async (answerRunId: string) => {
+    const { data, error } = await client.DELETE(
+      "/admin/review/{answerRunId}/decision",
+      { params: { path: { answerRunId } } },
+    );
+    if (error) throw error;
+    return data;
+  },
 });
 
 export type ReviewRepository = ReturnType<typeof createReviewRepository>;
