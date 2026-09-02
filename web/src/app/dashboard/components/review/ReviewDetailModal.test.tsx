@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -164,5 +164,46 @@ describe("ReviewDetailModal", () => {
     );
 
     expect(await screen.findByText(/誤り — 時刻が古い/)).toBeInTheDocument();
+  });
+
+  it("参照したナレッジから訂正を発行できる", async () => {
+    let capturedBody: unknown = null;
+    server.use(
+      http.get(`${API}/admin/review/ar-1`, () => HttpResponse.json(detail())),
+      http.post(`${API}/admin/corrections`, async ({ request }) => {
+        capturedBody = await request.json();
+        return HttpResponse.json({
+          message: "ok",
+          correction: { id: "cor-1" },
+        });
+      }),
+    );
+
+    renderWithQuery(<ReviewDetailModal answerRunId="ar-1" onClose={vi.fn()} />);
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "訂正を作成する" }),
+    );
+
+    expect(
+      screen.getByRole("combobox", { name: "訂正する情報源" }),
+    ).toHaveValue("bus/index.md");
+
+    await userEvent.type(
+      screen.getByPlaceholderText(/正しい内容/),
+      "土曜は運休です",
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "訂正を発行する" }),
+    );
+
+    await waitFor(() =>
+      expect(capturedBody).toEqual({
+        correctsSourcePath: "bus/index.md",
+        body: "土曜は運休です",
+        answerRunId: "ar-1",
+      }),
+    );
+    expect(await screen.findByText(/訂正を発行しました/)).toBeInTheDocument();
   });
 });
