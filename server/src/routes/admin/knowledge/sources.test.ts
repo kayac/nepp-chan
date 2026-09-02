@@ -137,6 +137,64 @@ describe("GET /sources", () => {
   });
 });
 
+describe("ロール", () => {
+  beforeEach(() => {
+    vi.mocked(adminUserRepository.findById).mockResolvedValue({
+      ...testUser,
+      role: "admin",
+    });
+  });
+
+  it("admin は情報源一覧を閲覧できる", async () => {
+    vi.mocked(knowledgeSourceRepository.list).mockResolvedValue([baseRow]);
+
+    const res = await app.request(
+      authedRequest("/sources"),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(200);
+  });
+
+  it("admin は承認状態を変更できる", async () => {
+    vi.mocked(knowledgeSourceRepository.findByPath).mockResolvedValue({
+      ...baseRow,
+      approvalStatus: "approved",
+    });
+
+    const res = await app.request(
+      authedRequest("/sources/status", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sourcePath: "bus/index.md", action: "disable" }),
+      }),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(removeKnowledgeSource).toHaveBeenCalled();
+  });
+
+  it("admin は backfill できず 403", async () => {
+    const res = await app.request(
+      authedRequest("/sources/backfill", { method: "POST" }),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(403);
+    expect(listMarkdownObjects).not.toHaveBeenCalled();
+  });
+
+  it("admin はファイル一覧を取得できず 403", async () => {
+    const res = await app.request(authedRequest("/files"), undefined, mockEnv);
+
+    expect(res.status).toBe(403);
+  });
+});
+
 describe("POST /sources/backfill", () => {
   it("未登録の情報源だけを approved で登録する", async () => {
     vi.mocked(listMarkdownObjects).mockResolvedValue({

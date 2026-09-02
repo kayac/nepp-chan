@@ -4,6 +4,7 @@ import { HTTPException } from "hono/http-exception";
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
 import { requireAdminUser } from "~/lib/principal";
+import { requireRole } from "~/middleware/require-role";
 import {
   deleteFile,
   getFile,
@@ -32,6 +33,7 @@ export const knowledgeFilesRoutes = new OpenAPIHono<{
 const listFilesRoute = createRoute({
   method: "get",
   path: "/files",
+  middleware: [requireRole("super_admin")] as const,
   summary: "ファイル一覧を取得",
   description: "R2バケット内のファイル一覧を取得します",
   tags: ["Admin - Knowledge"],
@@ -54,6 +56,7 @@ knowledgeFilesRoutes.openapi(listFilesRoute, async (c) => {
 const getFileRoute = createRoute({
   method: "get",
   path: "/files/{key}",
+  middleware: [requireRole("super_admin")] as const,
   summary: "ファイル内容を取得",
   description: "指定したファイルの内容を取得します",
   tags: ["Admin - Knowledge"],
@@ -84,6 +87,7 @@ knowledgeFilesRoutes.openapi(getFileRoute, async (c) => {
 const saveFileRoute = createRoute({
   method: "put",
   path: "/files/{key}",
+  middleware: [requireRole("super_admin")] as const,
   summary: "ファイルを保存",
   description: "ファイルを作成または更新し、自動でVectorizeに同期します",
   tags: ["Admin - Knowledge"],
@@ -144,6 +148,7 @@ knowledgeFilesRoutes.openapi(saveFileRoute, async (c) => {
 const deleteFileRoute = createRoute({
   method: "delete",
   path: "/files/{key}",
+  middleware: [requireRole("super_admin")] as const,
   summary: "ファイルを完全削除",
   description:
     "Markdown、元ファイル（originals/）、Vectorizeのデータをすべて削除します",
@@ -172,6 +177,7 @@ knowledgeFilesRoutes.openapi(deleteFileRoute, async (c) => {
 const listUnifiedFilesRoute = createRoute({
   method: "get",
   path: "/unified",
+  middleware: [requireRole("super_admin")] as const,
   summary: "統合ファイル一覧を取得",
   description:
     "元ファイル（originals/）とMarkdownファイルを統合した一覧を取得します",
@@ -197,6 +203,7 @@ knowledgeFilesRoutes.openapi(listUnifiedFilesRoute, async (c) => {
 const getOriginalFileRoute = createRoute({
   method: "get",
   path: "/originals/{key}",
+  middleware: [requireRole("super_admin")] as const,
   summary: "元ファイルを取得",
   description: "originals/ 配下の元ファイルを取得します（画像/PDF）",
   tags: ["Admin - Knowledge"],

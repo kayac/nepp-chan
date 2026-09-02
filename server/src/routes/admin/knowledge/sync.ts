@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
+import { requireRole } from "~/middleware/require-role";
 import { knowledgeSourceRepository } from "~/repository/knowledge-source-repository";
 import { deleteAllKnowledge, syncAll } from "~/services/knowledge";
 import { requireApiKey, SuccessResponseSchema } from "./schemas";
@@ -15,6 +16,7 @@ export const knowledgeSyncRoutes = new OpenAPIHono<{
 const deleteAllRoute = createRoute({
   method: "delete",
   path: "/",
+  middleware: [requireRole("super_admin")] as const,
   summary: "全ナレッジを削除",
   description: "Vectorizeの全ベクトルを削除します",
   tags: ["Admin - Knowledge"],
@@ -44,6 +46,7 @@ knowledgeSyncRoutes.openapi(deleteAllRoute, async (c) => {
 const syncAllRoute = createRoute({
   method: "post",
   path: "/sync",
+  middleware: [requireRole("super_admin")] as const,
   summary: "全ナレッジを同期",
   description:
     "R2バケットの全Markdownファイルを読み込み、Vectorizeに同期します",

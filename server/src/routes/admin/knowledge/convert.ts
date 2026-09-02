@@ -4,6 +4,7 @@ import { HTTPException } from "hono/http-exception";
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
 import { requireAdminUser } from "~/lib/principal";
+import { requireRole } from "~/middleware/require-role";
 import {
   convertAndUpload,
   reconvertFromOriginal,
@@ -20,6 +21,7 @@ export const knowledgeConvertRoutes = new OpenAPIHono<{
 const uploadFileRoute = createRoute({
   method: "post",
   path: "/upload",
+  middleware: [requireRole("super_admin")] as const,
   summary: "ファイルをアップロード",
   description:
     "Markdownファイルをアップロードし、R2に保存してVectorizeに同期します",
@@ -91,6 +93,7 @@ knowledgeConvertRoutes.openapi(uploadFileRoute, async (c) => {
 const convertFileRoute = createRoute({
   method: "post",
   path: "/convert",
+  middleware: [requireRole("super_admin")] as const,
   summary: "画像/PDFをMarkdownに変換",
   description:
     "画像またはPDFファイルをLLMで読み取り、Markdown形式に変換してR2に保存します",
@@ -168,6 +171,7 @@ knowledgeConvertRoutes.openapi(convertFileRoute, async (c) => {
 const reconvertFileRoute = createRoute({
   method: "post",
   path: "/reconvert",
+  middleware: [requireRole("super_admin")] as const,
   summary: "元ファイルからMarkdownを再生成",
   description: "originals/ 配下の元ファイルからMarkdownを再生成します",
   tags: ["Admin - Knowledge"],

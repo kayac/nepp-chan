@@ -4,6 +4,7 @@ import { HTTPException } from "hono/http-exception";
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
 import { requireAdminUser } from "~/lib/principal";
+import { requireRole } from "~/middleware/require-role";
 import {
   APPROVAL_STATUSES,
   type ApprovalStatus,
@@ -58,6 +59,7 @@ const toSourceResponse = (row: KnowledgeSource) => ({
 const listSourcesRoute = createRoute({
   method: "get",
   path: "/sources",
+  middleware: [requireRole("admin")] as const,
   summary: "情報源一覧を取得",
   description: "ナレッジ情報源の承認状態を一覧します",
   tags: ["Admin - Knowledge"],
@@ -83,6 +85,7 @@ knowledgeSourcesRoutes.openapi(listSourcesRoute, async (c) => {
 const backfillRoute = createRoute({
   method: "post",
   path: "/sources/backfill",
+  middleware: [requireRole("super_admin")] as const,
   summary: "既存ナレッジを承認済み情報源として登録",
   description:
     "R2 の Markdown のうち情報源未登録のものを approved で一括登録します",
@@ -150,6 +153,7 @@ knowledgeSourcesRoutes.openapi(backfillRoute, async (c) => {
 const updateStatusRoute = createRoute({
   method: "patch",
   path: "/sources/status",
+  middleware: [requireRole("admin")] as const,
   summary: "情報源の承認状態を変更",
   description:
     "approve は再インデックス、reject / disable は検索対象からの削除まで行います",
