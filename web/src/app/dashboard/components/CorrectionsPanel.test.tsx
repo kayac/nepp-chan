@@ -203,4 +203,134 @@ describe("CorrectionsPanel", () => {
       expect(capturedBody).toEqual({ body: "日曜も運休です" }),
     );
   });
+
+  it("取得に失敗したらエラーを表示する", async () => {
+    server.use(
+      http.get(`${API}/admin/corrections`, () =>
+        HttpResponse.json(
+          { error: { code: 500, message: "訂正の取得に失敗しました" } },
+          { status: 500 },
+        ),
+      ),
+    );
+
+    renderWithQuery(<CorrectionsPanel />);
+
+    expect(
+      await screen.findByText(/訂正の取得に失敗しました/),
+    ).toBeInTheDocument();
+  });
+
+  it("未反映の訂正は件数付きタブから再発行できる", async () => {
+    let published = false;
+    server.use(
+      http.get(`${API}/admin/corrections`, () =>
+        HttpResponse.json({
+          corrections: [correction({ status: "draft", body: "未反映の訂正" })],
+        }),
+      ),
+      http.post(`${API}/admin/corrections/cor-1/publish`, () => {
+        published = true;
+        return HttpResponse.json({
+          message: "ok",
+          correction: correction({ status: "published" }),
+        });
+      }),
+    );
+
+    renderWithQuery(<CorrectionsPanel />);
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "未反映 (1)" }),
+    );
+    expect(
+      screen.getByText("未反映（回答に反映されていません）"),
+    ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "再発行する" }));
+    await waitFor(() => expect(published).toBe(true));
+  });
+
+  it("要再確認は件数付きタブから維持できる", async () => {
+    let reverified = false;
+    server.use(
+      http.get(`${API}/admin/corrections`, () =>
+        HttpResponse.json({
+          corrections: [
+            correction({
+              needsReviewAt: "2026-09-02T00:00:00.000Z",
+              needsReviewReason: "source_updated",
+            }),
+          ],
+        }),
+      ),
+      http.post(`${API}/admin/corrections/cor-1/reverify`, () => {
+        reverified = true;
+        return HttpResponse.json({
+          message: "ok",
+          correction: correction(),
+        });
+      }),
+    );
+
+    renderWithQuery(<CorrectionsPanel />);
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "要再確認 (1)" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "内容を確認した（維持する）" }),
+    );
+
+    await waitFor(() => expect(reverified).toBe(true));
+  });
+
+  it("廃止に失敗したらエラーを表示する", async () => {
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => true),
+    );
+    server.use(
+      http.get(`${API}/admin/corrections`, () =>
+        HttpResponse.json({ corrections: [correction()] }),
+      ),
+      http.post(`${API}/admin/corrections/cor-1/retire`, () =>
+        HttpResponse.json(
+          { error: { code: 500, message: "廃止に失敗しました" } },
+          { status: 500 },
+        ),
+      ),
+    );
+
+    renderWithQuery(<CorrectionsPanel />);
+    await screen.findByText("土曜は運休です");
+
+    await userEvent.click(screen.getByRole("button", { name: "廃止する" }));
+
+    expect(await screen.findByText(/廃止に失敗しました/)).toBeInTheDocument();
+  });
+
+  it("確認ダイアログをキャンセルしたら廃止しない", async () => {
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => false),
+    );
+    let retired = false;
+    server.use(
+      http.get(`${API}/admin/corrections`, () =>
+        HttpResponse.json({ corrections: [correction()] }),
+      ),
+      http.post(`${API}/admin/corrections/cor-1/retire`, () => {
+        retired = true;
+        return HttpResponse.json({ message: "ok", correction: correction() });
+      }),
+    );
+
+    renderWithQuery(<CorrectionsPanel />);
+    await screen.findByText("土曜は運休です");
+
+    await userEvent.click(screen.getByRole("button", { name: "廃止する" }));
+
+    expect(retired).toBe(false);
+  });
 });
