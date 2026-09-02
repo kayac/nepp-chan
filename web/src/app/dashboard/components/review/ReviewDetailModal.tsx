@@ -201,16 +201,18 @@ export const ReviewDetailModal = ({ answerRunId, onClose }: Props) => {
                     sourceOptions={correctionSourceOptions}
                   />
                 </div>
+              ) : correctionSourceOptions.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setShowCorrectionForm(true)}
+                  className="text-teal-600 hover:text-teal-700 hover:underline text-sm"
+                >
+                  訂正を作成する
+                </button>
               ) : (
-                correctionSourceOptions.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowCorrectionForm(true)}
-                    className="text-teal-600 hover:text-teal-700 hover:underline text-sm"
-                  >
-                    訂正を作成する
-                  </button>
-                )
+                <p className="text-sm text-stone-500">
+                  参照したナレッジが無いため訂正は作成できません。情報自体が不足している場合は「情報源不足」を選んでください
+                </p>
               )}
               <textarea
                 value={comment}
