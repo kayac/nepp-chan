@@ -92,6 +92,12 @@ throw new HTTPException(404, { message: "Not found" });
 - temperature を効かせたい決定的な処理は `deterministicModelConfig` を使う（reasoning を有効にすると temperature が無効化される）
 - 動的 instructions: 現在日時が必要な場合のみ関数化（`lib/date.ts` の `getCurrentDateInfo()` を使用）
 
+### データアクセス
+
+SQL（`createDb` / drizzle / `sql` テンプレート）を書くのは `repository/` だけ。service・routes・handlers・mastra は repository のメソッドを呼ぶ。呼び出しの階層（repository → service → routes / repository → routes / service → routes）は自由。
+
+置き場は「返す行が 1 つのテーブルなら（JOIN 有無を問わず）そのテーブルの repository、複数テーブルにまたがる / 主テーブルが無いなら service が各 repository を呼んで組み立てる」。詳細は `.claude/rules/data-access.md`。
+
 ### ルート規約
 
 - エラー: `throw new HTTPException(code, { message })` でスロー（グローバルエラーハンドラーが `{ error: { code, message } }` 形式に変換）
