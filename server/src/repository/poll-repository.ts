@@ -7,6 +7,7 @@ import {
   pollSubmissions,
   polls,
 } from "~/db";
+import { deleteWithCount } from "./delete-with-count";
 
 type PollStatus = Poll["status"];
 
@@ -176,6 +177,16 @@ export const pollRepository = {
     const db = createDb(d1);
     await db.insert(pollSubmissions).values(input);
     return input.id;
+  },
+
+  async deleteSubmissionsCreatedBefore(d1: D1Database, cutoff: string) {
+    const db = createDb(d1);
+
+    return deleteWithCount(
+      db,
+      pollSubmissions,
+      sql`datetime(${pollSubmissions.createdAt}) < datetime(${cutoff})`,
+    );
   },
 
   async findSubmissionsByPoll(d1: D1Database, pollId: string) {

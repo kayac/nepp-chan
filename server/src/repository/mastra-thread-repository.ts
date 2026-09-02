@@ -1,6 +1,7 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 
 import { createDb, mastraThreads } from "~/db";
+import { deleteWithCount } from "./delete-with-count";
 
 export const mastraThreadRepository = {
   async findAll(d1: D1Database) {
@@ -29,5 +30,16 @@ export const mastraThreadRepository = {
       .get();
 
     return result ?? null;
+  },
+
+  async deleteEmptyCreatedBefore(d1: D1Database, cutoff: string) {
+    const db = createDb(d1);
+
+    return deleteWithCount(
+      db,
+      mastraThreads,
+      sql`${mastraThreads.id} NOT IN (SELECT DISTINCT thread_id FROM mastra_messages)
+        AND datetime(${mastraThreads.createdAt}) < datetime(${cutoff})`,
+    );
   },
 };

@@ -222,4 +222,19 @@ describe("llmUsageRepository", () => {
       expect(rows.map((r) => Number(r.turnIndex))).toEqual([1, 2]);
     });
   });
+
+  describe("deleteCreatedBefore", () => {
+    it("期限より前の行を削除する", async () => {
+      await insert(db, { createdAt: "2026-01-01T00:00:00.000Z" });
+      await insert(db, { createdAt: "2026-06-01T00:00:00.000Z" });
+
+      const deleted = await llmUsageRepository.deleteCreatedBefore(
+        d1,
+        "2026-03-01T00:00:00.000Z",
+      );
+
+      expect(deleted).toBe(1);
+      expect(await db.select().from(llmUsage).all()).toHaveLength(1);
+    });
+  });
 });

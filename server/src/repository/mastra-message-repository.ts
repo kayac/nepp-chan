@@ -1,6 +1,7 @@
 import { count, sql } from "drizzle-orm";
 
 import { createDb, mastraMessages } from "~/db";
+import { deleteWithCount } from "./delete-with-count";
 
 type Period = { from: string; to: string };
 
@@ -103,5 +104,15 @@ export const mastraMessageRepository = {
       .from(mastraMessages)
       .groupBy(mastraMessages.threadId)
       .all();
+  },
+
+  async deleteCreatedBefore(d1: D1Database, cutoff: string) {
+    const db = createDb(d1);
+
+    return deleteWithCount(
+      db,
+      mastraMessages,
+      sql`datetime(${mastraMessages.createdAt}) < datetime(${cutoff})`,
+    );
   },
 };

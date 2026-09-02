@@ -298,4 +298,25 @@ describe("feedbackRepository", () => {
       expect(found?.resolvedAt).toBeNull();
     });
   });
+
+  describe("deleteCreatedBefore", () => {
+    it("期限より前のフィードバックを削除する", async () => {
+      await feedbackRepository.create(
+        fakeD1,
+        baseInput({ id: "f-old", createdAt: "2029-01-01T00:00:00Z" }),
+      );
+      await feedbackRepository.create(
+        fakeD1,
+        baseInput({ id: "f-new", createdAt: "2031-01-01T00:00:00Z" }),
+      );
+
+      const deleted = await feedbackRepository.deleteCreatedBefore(
+        fakeD1,
+        "2030-01-01T00:00:00Z",
+      );
+
+      expect(deleted).toBe(1);
+      expect(await feedbackRepository.findById(fakeD1, "f-old")).toBeNull();
+    });
+  });
 });

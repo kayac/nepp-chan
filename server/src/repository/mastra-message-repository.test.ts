@@ -265,4 +265,30 @@ describe("mastraMessageRepository", () => {
       ).toEqual({ "t-1": 2, "t-2": 1 });
     });
   });
+
+  describe("deleteCreatedBefore", () => {
+    it("期限より前のメッセージを役割を問わず削除する", async () => {
+      await insertMessage(db, {
+        threadId: "t-1",
+        createdAt: "2026-01-01T00:00:00.000Z",
+      });
+      await insertMessage(db, {
+        threadId: "t-1",
+        role: "assistant",
+        createdAt: "2026-01-01T00:00:00.000Z",
+      });
+      await insertMessage(db, {
+        threadId: "t-1",
+        createdAt: "2026-06-01T00:00:00.000Z",
+      });
+
+      const deleted = await mastraMessageRepository.deleteCreatedBefore(
+        d1,
+        "2026-03-01T00:00:00.000Z",
+      );
+
+      expect(deleted).toBe(2);
+      expect(await db.select().from(mastraMessages).all()).toHaveLength(1);
+    });
+  });
 });

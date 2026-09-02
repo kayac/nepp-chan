@@ -1,6 +1,7 @@
 import { and, count, eq, sql } from "drizzle-orm";
 
 import { createDb, llmUsage, type NewLlmUsage } from "~/db";
+import { deleteWithCount } from "./delete-with-count";
 
 type Period = { from: string; to: string };
 
@@ -157,5 +158,15 @@ export const llmUsageRepository = {
       GROUP BY turn_index, agent, model
       ORDER BY turn_index, agent
     `);
+  },
+
+  async deleteCreatedBefore(d1: D1Database, cutoff: string) {
+    const db = createDb(d1);
+
+    return deleteWithCount(
+      db,
+      llmUsage,
+      sql`datetime(${llmUsage.createdAt}) < datetime(${cutoff})`,
+    );
   },
 };
