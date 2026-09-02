@@ -62,6 +62,15 @@ const route = createRoute({
 app.openapi(route, async (c) => { ... });
 ```
 
+### データアクセス
+
+SQL を書けるのは `repository/` だけ。`services/` と `routes/` は repository のメソッドを呼ぶ。
+
+- どの repository に置くかは、結合したテーブル数ではなく **返す行・変更する行がどのテーブルのものか** で決める。JOIN の相手は問わない
+- 主テーブルが無い横断処理（ユーザーデータ一括削除・保管期間削除など）は service に置き、service が各 repository を順に呼ぶ
+- repository のメソッド名は意図で名付ける（`deleteCreatedBefore` など）。`SQL` 断片を引数で受け取ると SQL が service に戻るので禁止
+- 単純な CRUD は routes → repository の直呼びでよい。転送するだけの service は挟まない
+
 ### エラーハンドリング
 
 ```typescript
