@@ -276,6 +276,7 @@ export const knowledgeCorrections = sqliteTable("knowledge_corrections", {
   relatedFeedbackId: text("related_feedback_id"),
   answerRunId: text("answer_run_id"),
   needsReviewAt: text("needs_review_at"),
+  needsReviewReason: text("needs_review_reason"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at"),
 });
@@ -286,9 +287,11 @@ export type NewKnowledgeCorrection = typeof knowledgeCorrections.$inferInsert;
 export const reviewDecisions = sqliteTable("review_decisions", {
   id: text("id").primaryKey(),
   answerRunId: text("answer_run_id").notNull(),
+  threadId: text("thread_id"),
   feedbackId: text("feedback_id"),
   decision: text("decision").notNull(),
   comment: text("comment"),
+  evidence: text("evidence"),
   reviewedBy: text("reviewed_by").notNull(),
   createdAt: text("created_at").notNull(),
 });

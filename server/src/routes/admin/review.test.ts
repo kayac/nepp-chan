@@ -24,6 +24,10 @@ vi.mock("~/services/review", () => ({
   getAnswerConversation: vi.fn(),
 }));
 
+vi.mock("~/services/review-evidence", () => ({
+  buildDecisionEvidence: vi.fn(),
+}));
+
 vi.mock("~/repository/admin-session-repository", () => ({
   adminSessionRepository: { findValid: vi.fn() },
 }));
@@ -39,6 +43,7 @@ vi.mock("~/services/auth/anonymous-session", () => ({
 const { reviewRepository } = await import("~/repository/review-repository");
 const { feedbackRepository } = await import("~/repository/feedback-repository");
 const { getAnswerConversation } = await import("~/services/review");
+const { buildDecisionEvidence } = await import("~/services/review-evidence");
 const { adminSessionRepository } = await import(
   "~/repository/admin-session-repository"
 );
@@ -99,6 +104,19 @@ const run = (over: Record<string, unknown> = {}) => ({
   hits: '[{"source":"a.md","score":0.9}]',
   durationMs: 100,
   createdAt: "2026-09-01T00:00:00.000Z",
+  ...over,
+});
+
+const decisionRow = (over: Record<string, unknown> = {}) => ({
+  id: "dec-1",
+  answerRunId: "ar-1",
+  threadId: "thread-1",
+  feedbackId: null,
+  decision: "no_issue",
+  comment: null,
+  evidence: null,
+  reviewedBy: "user-1",
+  createdAt: "2026-09-02T00:00:00.000Z",
   ...over,
 });
 
@@ -172,8 +190,9 @@ describe("GET /", () => {
 });
 
 describe("GET /{answerRunId}", () => {
-  it("runs が無ければ 404", async () => {
+  it("runs も判断履歴も無ければ 404", async () => {
     vi.mocked(reviewRepository.listRunsByAnswerRunId).mockResolvedValue([]);
+    vi.mocked(reviewRepository.listDecisions).mockResolvedValue([]);
 
     const res = await app.request(
       authedRequest("/ar-missing"),
@@ -181,6 +200,30 @@ describe("GET /{answerRunId}", () => {
       mockEnv,
     );
     expect(res.status).toBe(404);
+  });
+
+  it("runs が保管期限で消えても判断履歴とスナップショットを返す", async () => {
+    vi.mocked(reviewRepository.listRunsByAnswerRunId).mockResolvedValue([]);
+    vi.mocked(reviewRepository.listDecisions).mockResolvedValue([
+      decisionRow({
+        evidence: JSON.stringify({
+          question: "[NAME]さんの家の水道",
+          answer: "窓口に連絡してね",
+          runs: [{ query: "水道 故障", sources: ["water.md"] }],
+        }),
+      }),
+    ]);
+
+    const res = await app.request(authedRequest("/ar-1"), undefined, mockEnv);
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body).toMatchObject({
+      runs: [],
+      conversation: null,
+      archivedEvidence: { question: "[NAME]さんの家の水道" },
+    });
+    expect((body.decisions as unknown[]).length).toBe(1);
   });
 
   it("詳細（根拠・会話・評価・判断履歴）を返す", async () => {
@@ -249,6 +292,11 @@ describe("POST /{answerRunId}/decision", () => {
     vi.mocked(reviewRepository.insertDecision).mockImplementation(
       async (_d1, values) => values as never,
     );
+    vi.mocked(buildDecisionEvidence).mockResolvedValue({
+      question: "バスの時刻は？",
+      answer: "8時だよ",
+      runs: [{ query: "q1", sources: ["a.md"] }],
+    });
 
     const res = await app.request(
       authedRequest(
@@ -268,6 +316,12 @@ describe("POST /{answerRunId}/decision", () => {
         decision: "incorrect",
         comment: "時刻が古い",
         reviewedBy: "user-1",
+        threadId: "thread-1",
+        evidence: JSON.stringify({
+          question: "バスの時刻は？",
+          answer: "8時だよ",
+          runs: [{ query: "q1", sources: ["a.md"] }],
+        }),
       }),
     );
     expect(feedbackRepository.resolve).toHaveBeenCalledWith(mockEnv.DB, "fb-1");
@@ -277,6 +331,11 @@ describe("POST /{answerRunId}/decision", () => {
     vi.mocked(reviewRepository.listRunsByAnswerRunId).mockResolvedValue([
       run(),
     ]);
+    vi.mocked(buildDecisionEvidence).mockResolvedValue({
+      question: null,
+      answer: null,
+      runs: [],
+    });
     vi.mocked(reviewRepository.findBadFeedbackByMessageId).mockResolvedValue([
       { ...badFeedback, resolvedAt: "2026-09-01T01:00:00.000Z" },
     ]);

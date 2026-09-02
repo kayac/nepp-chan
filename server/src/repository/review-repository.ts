@@ -170,4 +170,28 @@ export const reviewRepository = {
     const db = createDb(d1);
     return await db.insert(reviewDecisions).values(values).returning().get();
   },
+
+  async deleteRunsByThreadId(d1: D1Database, threadId: string) {
+    const db = createDb(d1);
+    const where = eq(retrievalRuns.threadId, threadId);
+    const row = await db
+      .select({ c: sql<number>`COUNT(*)` })
+      .from(retrievalRuns)
+      .where(where)
+      .get();
+    await db.delete(retrievalRuns).where(where);
+    return Number(row?.c ?? 0);
+  },
+
+  async deleteDecisionsByThreadId(d1: D1Database, threadId: string) {
+    const db = createDb(d1);
+    const where = eq(reviewDecisions.threadId, threadId);
+    const row = await db
+      .select({ c: sql<number>`COUNT(*)` })
+      .from(reviewDecisions)
+      .where(where)
+      .get();
+    await db.delete(reviewDecisions).where(where);
+    return Number(row?.c ?? 0);
+  },
 };

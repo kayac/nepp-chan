@@ -9,6 +9,8 @@ import {
   persona,
   pollSubmissions,
   polls,
+  retrievalRuns,
+  reviewDecisions,
   threadPersonaStatus,
   userBroadcastState,
   userPollState,
@@ -138,6 +140,43 @@ const insertFixtures = async (
     { userId: hashedTarget, lastInjectedAt: "2025-01-01T00:00:00Z" },
     { userId: hashedOther, lastInjectedAt: "2025-01-01T00:00:00Z" },
   ]);
+  await db.insert(retrievalRuns).values([
+    {
+      id: "rr1",
+      answerRunId: "ar1",
+      threadId: targetThreadId,
+      query: "水道 故障",
+      hits: "[]",
+      createdAt: "2025-01-01T00:00:00Z",
+    },
+    {
+      id: "rr2",
+      answerRunId: "ar2",
+      threadId: otherThreadId,
+      query: "ゴミ 分別",
+      hits: "[]",
+      createdAt: "2025-01-01T00:00:00Z",
+    },
+  ]);
+  await db.insert(reviewDecisions).values([
+    {
+      id: "rd1",
+      answerRunId: "ar1",
+      threadId: targetThreadId,
+      decision: "no_issue",
+      evidence: '{"question":"水道の相談"}',
+      reviewedBy: "admin-1",
+      createdAt: "2025-01-01T00:00:00Z",
+    },
+    {
+      id: "rd2",
+      answerRunId: "ar2",
+      threadId: otherThreadId,
+      decision: "no_issue",
+      reviewedBy: "admin-1",
+      createdAt: "2025-01-01T00:00:00Z",
+    },
+  ]);
   // persona は削除対象外（個人データ非該当）
   await db.insert(persona).values({
     id: "pe1",
@@ -214,6 +253,18 @@ describe("deleteAllByLineUserId", () => {
         .from(userPollState)
         .where(eq(userPollState.userId, hashedTarget)),
     ).toHaveLength(0);
+    expect(
+      await db
+        .select()
+        .from(retrievalRuns)
+        .where(eq(retrievalRuns.threadId, targetThreadId)),
+    ).toHaveLength(0);
+    expect(
+      await db
+        .select()
+        .from(reviewDecisions)
+        .where(eq(reviewDecisions.threadId, targetThreadId)),
+    ).toHaveLength(0);
   });
 
   it("他ユーザーのレコードは残る", async () => {
@@ -272,6 +323,18 @@ describe("deleteAllByLineUserId", () => {
         .from(userPollState)
         .where(eq(userPollState.userId, hashedOther)),
     ).toHaveLength(1);
+    expect(
+      await db
+        .select()
+        .from(retrievalRuns)
+        .where(eq(retrievalRuns.threadId, otherThreadId)),
+    ).toHaveLength(1);
+    expect(
+      await db
+        .select()
+        .from(reviewDecisions)
+        .where(eq(reviewDecisions.threadId, otherThreadId)),
+    ).toHaveLength(1);
   });
 
   it("persona テーブルは削除されない（個人データ非該当）", async () => {
@@ -307,6 +370,8 @@ describe("deleteAllByLineUserId", () => {
         poll_submissions_deleted: 1,
         user_broadcast_state_deleted: 1,
         user_poll_state_deleted: 1,
+        retrieval_runs_deleted: 1,
+        review_decisions_deleted: 1,
       }),
     );
   });

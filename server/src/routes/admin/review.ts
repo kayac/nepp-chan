@@ -15,6 +15,10 @@ import { feedbackFullSchema } from "~/schemas/feedback-schema";
 import { parseFeedback } from "~/services/feedback";
 import type { RetrievalHit } from "~/services/knowledge/retrieval-trace";
 import { getAnswerConversation } from "~/services/review";
+import {
+  buildDecisionEvidence,
+  type DecisionEvidence,
+} from "~/services/review-evidence";
 
 export const reviewAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -49,6 +53,12 @@ const toDecisionResponse = (decision: ReviewDecision) => ({
   reviewedBy: decision.reviewedBy,
   createdAt: decision.createdAt,
 });
+
+const parseEvidence = (decisions: ReviewDecision[]) => {
+  const stored = decisions.find((decision) => decision.evidence);
+  if (!stored?.evidence) return null;
+  return JSON.parse(stored.evidence) as DecisionEvidence;
+};
 
 const toQueueItem = (row: ReviewQueueRow) => ({
   answerRunId: row.answerRunId,
@@ -145,6 +155,12 @@ const DecisionSchema = z.object({
   createdAt: z.string(),
 });
 
+const EvidenceSchema = z.object({
+  question: z.string().nullable(),
+  answer: z.string().nullable(),
+  runs: z.array(z.object({ query: z.string(), sources: z.array(z.string()) })),
+});
+
 const DetailSchema = z.object({
   answerRunId: z.string(),
   threadId: z.string().nullable(),
@@ -159,6 +175,7 @@ const DetailSchema = z.object({
       answer: z.string(),
     })
     .nullable(),
+  archivedEvidence: EvidenceSchema.nullable(),
   feedbacks: z.array(feedbackFullSchema),
   decisions: z.array(DecisionSchema),
 });
@@ -186,12 +203,40 @@ const detailRoute = createRoute({
 reviewAdminRoutes.openapi(detailRoute, async (c) => {
   const { answerRunId } = c.req.valid("param");
 
-  const runs = await reviewRepository.listRunsByAnswerRunId(
-    c.env.DB,
-    answerRunId,
-  );
-  if (runs.length === 0) {
+  const [runs, decisions] = await Promise.all([
+    reviewRepository.listRunsByAnswerRunId(c.env.DB, answerRunId),
+    reviewRepository.listDecisions(c.env.DB, answerRunId),
+  ]);
+  if (runs.length === 0 && decisions.length === 0) {
     throw new HTTPException(404, { message: "回答が見つかりません" });
+  }
+
+  const archivedEvidence = parseEvidence(decisions);
+
+  if (runs.length === 0) {
+    const decided = decisions[0];
+    return c.json(
+      {
+        answerRunId,
+        threadId: decided.threadId,
+        messageId: null,
+        turnIndex: null,
+        createdAt: decided.createdAt,
+        flags: {
+          zeroHit:
+            archivedEvidence?.runs.every((run) => run.sources.length === 0) ??
+            false,
+          webFallback: false,
+          badFeedback: decisions.some((decision) => decision.feedbackId),
+        },
+        runs: [],
+        conversation: null,
+        archivedEvidence,
+        feedbacks: [],
+        decisions: decisions.map(toDecisionResponse),
+      },
+      200,
+    );
   }
 
   const threadId = runs[0].threadId;
@@ -205,14 +250,13 @@ reviewAdminRoutes.openapi(detailRoute, async (c) => {
     createdAt: run.createdAt,
   }));
 
-  const [webFallback, feedbacks, decisions, conversation] = await Promise.all([
+  const [webFallback, feedbacks, conversation] = await Promise.all([
     threadId
       ? reviewRepository.hasWebFallback(c.env.DB, threadId, turnIndex)
       : false,
     messageId
       ? reviewRepository.findBadFeedbackByMessageId(c.env.DB, messageId)
       : [],
-    reviewRepository.listDecisions(c.env.DB, answerRunId),
     getAnswerConversation(c.env.DB, { threadId, messageId, turnIndex }),
   ]);
 
@@ -230,6 +274,7 @@ reviewAdminRoutes.openapi(detailRoute, async (c) => {
       },
       runs: parsedRuns,
       conversation,
+      archivedEvidence: conversation ? null : archivedEvidence,
       feedbacks: feedbacks.map(parseFeedback),
       decisions: decisions.map(toDecisionResponse),
     },
@@ -286,6 +331,7 @@ reviewAdminRoutes.openapi(decideRoute, async (c) => {
     throw new HTTPException(404, { message: "回答が見つかりません" });
   }
 
+  const threadId = runs[0].threadId;
   const messageId = runs.find((run) => run.messageId)?.messageId ?? null;
   const badFeedback = messageId
     ? (
@@ -293,12 +339,27 @@ reviewAdminRoutes.openapi(decideRoute, async (c) => {
       ).find((f) => f.rating === "bad")
     : undefined;
 
+  const conversation = await getAnswerConversation(c.env.DB, {
+    threadId,
+    messageId,
+    turnIndex: runs[0].turnIndex,
+  });
+  const evidence = await buildDecisionEvidence({
+    conversation,
+    runs: runs.map((run) => ({
+      query: run.query,
+      hits: JSON.parse(run.hits) as RetrievalHit[],
+    })),
+  });
+
   const inserted = await reviewRepository.insertDecision(c.env.DB, {
     id: crypto.randomUUID(),
     answerRunId,
+    threadId,
     feedbackId: badFeedback?.id,
     decision,
     comment,
+    evidence: JSON.stringify(evidence),
     reviewedBy: adminUser.id,
     createdAt: new Date().toISOString(),
   });

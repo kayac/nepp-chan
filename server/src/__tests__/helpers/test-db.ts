@@ -183,6 +183,7 @@ export const createTestDb = async () => {
       related_feedback_id TEXT,
       answer_run_id TEXT,
       needs_review_at TEXT,
+      needs_review_reason TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT
     );
@@ -190,9 +191,11 @@ export const createTestDb = async () => {
     CREATE TABLE IF NOT EXISTS review_decisions (
       id TEXT PRIMARY KEY,
       answer_run_id TEXT NOT NULL,
+      thread_id TEXT,
       feedback_id TEXT,
       decision TEXT NOT NULL,
       comment TEXT,
+      evidence TEXT,
       reviewed_by TEXT NOT NULL,
       created_at TEXT NOT NULL
     );

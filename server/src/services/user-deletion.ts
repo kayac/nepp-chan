@@ -17,6 +17,7 @@ import {
 import { hmacSha256 } from "~/lib/crypto";
 import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
+import { reviewRepository } from "~/repository/review-repository";
 
 const countAndDelete = async (db: DbClient, table: SQLiteTable, where: SQL) => {
   const row = await db
@@ -84,9 +85,17 @@ export const deleteAllByLineUserId = async (
       userPollState,
       eq(userPollState.userId, hashedUserId),
     );
+    const retrievalRunsDeleted = await reviewRepository.deleteRunsByThreadId(
+      env.DB,
+      lineThreadId,
+    );
+    const reviewDecisionsDeleted =
+      await reviewRepository.deleteDecisionsByThreadId(env.DB, lineThreadId);
 
     logger.info("user_data_deleted", {
       event: "user_data_deleted",
+      retrieval_runs_deleted: retrievalRunsDeleted,
+      review_decisions_deleted: reviewDecisionsDeleted,
       mastra_threads_deleted: mastraThreadsDeleted,
       mastra_messages_deleted: mastraMessagesDeleted,
       mastra_resources_deleted: mastraResourcesDeleted,

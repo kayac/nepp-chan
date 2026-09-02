@@ -139,9 +139,13 @@ SQL（`createDb` / drizzle / `sql` テンプレート）を書くのは `reposit
 | `message_feedback`        | 180日    | `created_at`                                                              |
 | `llm_usage`               | 180日    | `created_at`（週次レポートに集計が恒久保存されるため raw は短期）         |
 | `poll_submissions`        | 365日    | `created_at`                                                              |
+| `retrieval_runs`          | 90日     | `created_at`（生のユーザー質問を含むため短期）                            |
+| `review_decisions`        | 1095日   | `created_at`                                                              |
 | `data_retention_logs`     | 1095日   | `executed_at`                                                             |
 
 `mastra_messages` 削除後は `thread_persona_status.last_message_count` を残メッセージ数に再計算する（persona-extractor が新規メッセージを取りこぼさないように）。
+
+`review_decisions` は参照先（`mastra_messages` 30日 / `retrieval_runs` 90日）より長く残るため、判断時に質問・回答・根拠 source を `evidence` へスナップショットする。`services/review-evidence.ts` が Mastra の `PIIDetector` で氏名・住所・電話番号等を伏せてから保存し、`thread_id` を持たせてユーザー削除依頼で消せるようにしている。
 
 ## デプロイ環境
 
