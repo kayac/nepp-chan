@@ -9,6 +9,7 @@ import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
 import { ModalHeader } from "~/components/ui/ModalHeader";
 import { formatDateTime } from "~/lib/format";
 import type { ReviewDecisionType } from "~/types";
+import { ArchivedEvidence } from "./ArchivedEvidence";
 import { flagLabels, REVIEW_DECISION_LABELS } from "./helpers";
 
 type Props = {
@@ -104,49 +105,53 @@ export const ReviewDetailModal = ({ answerRunId, onClose }: Props) => {
                   </div>
                 </div>
               </div>
+            ) : data.archivedEvidence ? (
+              <ArchivedEvidence evidence={data.archivedEvidence} />
             ) : (
               <div className="text-sm text-stone-400">
                 会話は保管期限切れなどで表示できません
               </div>
             )}
 
-            <div>
-              <h3 className="text-sm font-medium text-stone-700 mb-2">
-                ナレッジ検索の根拠
-              </h3>
-              <div className="space-y-2">
-                {data.runs.map((run) => (
-                  <div
-                    key={`${run.createdAt}-${run.query}`}
-                    className="bg-stone-50 rounded-lg p-3 text-sm"
-                  >
-                    <div className="font-medium text-stone-700 mb-1">
-                      検索: {run.query}
+            {data.runs.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-stone-700 mb-2">
+                  ナレッジ検索の根拠
+                </h3>
+                <div className="space-y-2">
+                  {data.runs.map((run) => (
+                    <div
+                      key={`${run.createdAt}-${run.query}`}
+                      className="bg-stone-50 rounded-lg p-3 text-sm"
+                    >
+                      <div className="font-medium text-stone-700 mb-1">
+                        検索: {run.query}
+                      </div>
+                      {run.hits.length === 0 ? (
+                        <div className="text-xs text-red-600">ヒットなし</div>
+                      ) : (
+                        <ul className="space-y-1">
+                          {run.hits.map((hit) => (
+                            <li
+                              key={`${hit.source}#${hit.section ?? ""}`}
+                              className="text-xs text-stone-600 flex items-baseline gap-2"
+                            >
+                              <span className="font-mono">{hit.source}</span>
+                              {hit.section && <span>#{hit.section}</span>}
+                              <span className="text-stone-400">
+                                score {hit.score.toFixed(2)}
+                                {hit.rerankScore !== undefined &&
+                                  ` / rerank ${hit.rerankScore.toFixed(2)}`}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
-                    {run.hits.length === 0 ? (
-                      <div className="text-xs text-red-600">ヒットなし</div>
-                    ) : (
-                      <ul className="space-y-1">
-                        {run.hits.map((hit) => (
-                          <li
-                            key={`${hit.source}#${hit.section ?? ""}`}
-                            className="text-xs text-stone-600 flex items-baseline gap-2"
-                          >
-                            <span className="font-mono">{hit.source}</span>
-                            {hit.section && <span>#{hit.section}</span>}
-                            <span className="text-stone-400">
-                              score {hit.score.toFixed(2)}
-                              {hit.rerankScore !== undefined &&
-                                ` / rerank ${hit.rerankScore.toFixed(2)}`}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {data.feedbacks.length > 0 && (
               <div>

@@ -39,6 +39,7 @@ const detail = (over: Record<string, unknown> = {}) => ({
     },
   ],
   conversation: { question: "バスは何時？", answer: "8時と17時だよ" },
+  archivedEvidence: null,
   feedbacks: [
     {
       id: "fb-1",
@@ -71,6 +72,33 @@ afterEach(() => {
 });
 
 describe("ReviewDetailModal", () => {
+  it("会話も検索記録も消えていれば判断時のスナップショットを表示する", async () => {
+    server.use(
+      http.get(`${API}/admin/review/ar-1`, () =>
+        HttpResponse.json(
+          detail({
+            runs: [],
+            conversation: null,
+            archivedEvidence: {
+              question: "[NAME]さんの家の水道",
+              answer: "窓口に連絡してね",
+              runs: [{ query: "水道 故障", sources: ["water.md#連絡先"] }],
+            },
+            feedbacks: [],
+          }),
+        ),
+      ),
+    );
+
+    renderWithQuery(
+      <ReviewDetailModal answerRunId="ar-1" onClose={() => {}} />,
+    );
+
+    expect(await screen.findByText("[NAME]さんの家の水道")).toBeInTheDocument();
+    expect(screen.getByText("water.md#連絡先")).toBeInTheDocument();
+    expect(screen.queryByText("ナレッジ検索の根拠")).not.toBeInTheDocument();
+  });
+
   it("会話・根拠・評価を表示する", async () => {
     server.use(
       http.get(`${API}/admin/review/ar-1`, () => HttpResponse.json(detail())),

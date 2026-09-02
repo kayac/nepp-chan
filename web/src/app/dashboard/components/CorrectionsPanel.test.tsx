@@ -20,6 +20,7 @@ const correction = (over: Record<string, unknown> = {}) => ({
   relatedFeedbackId: null,
   answerRunId: null,
   needsReviewAt: null,
+  needsReviewReason: null,
   createdAt: "2026-09-01T00:00:00.000Z",
   updatedAt: null,
   ...over,
@@ -55,7 +56,10 @@ describe("CorrectionsPanel", () => {
       http.get(`${API}/admin/corrections`, () =>
         HttpResponse.json({
           corrections: [
-            correction({ needsReviewAt: "2026-09-02T00:00:00.000Z" }),
+            correction({
+              needsReviewAt: "2026-09-02T00:00:00.000Z",
+              needsReviewReason: "source_updated",
+            }),
           ],
         }),
       ),
@@ -68,6 +72,27 @@ describe("CorrectionsPanel", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "内容を確認した（維持する）" }),
+    ).toBeInTheDocument();
+  });
+
+  it("元の情報源が外れた訂正は理由を区別して表示する", async () => {
+    server.use(
+      http.get(`${API}/admin/corrections`, () =>
+        HttpResponse.json({
+          corrections: [
+            correction({
+              needsReviewAt: "2026-09-02T00:00:00.000Z",
+              needsReviewReason: "source_unavailable",
+            }),
+          ],
+        }),
+      ),
+    );
+
+    renderWithQuery(<CorrectionsPanel />);
+
+    expect(
+      await screen.findByText("要再確認（元の情報源が検索対象から外れました）"),
     ).toBeInTheDocument();
   });
 

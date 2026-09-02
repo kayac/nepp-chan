@@ -14,6 +14,7 @@ import {
   HomeIcon,
   MegaphoneIcon,
   PencilSquareIcon,
+  ShieldCheckIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
@@ -35,6 +36,7 @@ import {
 import { PollPanel } from "~/app/dashboard/components/PollPanel";
 import { ReviewPanel } from "~/app/dashboard/components/ReviewPanel";
 import { SourceCandidatesPanel } from "~/app/dashboard/components/SourceCandidatesPanel";
+import { SourcesPanel } from "~/app/dashboard/components/SourcesPanel";
 import { UsagePanel } from "~/app/dashboard/components/UsagePanel";
 import { VoicesPanel } from "~/app/dashboard/components/VoicesPanel";
 import type { VoiceFilter } from "~/app/dashboard/components/voices/helpers";
@@ -53,6 +55,7 @@ export type Tab =
   | "feedback"
   | "review"
   | "corrections"
+  | "sources"
   | "source-candidates"
   | "invitations"
   | "widget-sites"
@@ -123,6 +126,13 @@ const tabs: {
     id: "corrections",
     label: "訂正",
     icon: <PencilSquareIcon className="w-5 h-5" aria-hidden="true" />,
+    group: "watch",
+    minRole: "admin",
+  },
+  {
+    id: "sources",
+    label: "情報源の承認",
+    icon: <ShieldCheckIcon className="w-5 h-5" aria-hidden="true" />,
     group: "watch",
     minRole: "admin",
   },
@@ -366,6 +376,7 @@ export const App = () => {
             {activeTab === "knowledge" && <KnowledgePanel />}
             {activeTab === "review" && <ReviewPanel />}
             {activeTab === "corrections" && <CorrectionsPanel />}
+            {activeTab === "sources" && <SourcesPanel />}
             {activeTab === "source-candidates" && <SourceCandidatesPanel />}
             {activeTab === "feedback" && <FeedbackPanel />}
             {activeTab === "invitations" && <InvitationsPanel />}

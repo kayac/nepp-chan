@@ -30,6 +30,7 @@ export const dashboardKeys = {
   reviewQueue: ["dashboard", "review", "queue"] as const,
   reviewDetail: (answerRunId: string) =>
     ["dashboard", "review", "detail", answerRunId] as const,
+  knowledgeSources: ["dashboard", "knowledge", "sources"] as const,
   knowledgeFiles: ["dashboard", "knowledge", "files"] as const,
   knowledgeUnifiedFiles: ["dashboard", "knowledge", "unified"] as const,
   knowledgeFile: (key: string) =>

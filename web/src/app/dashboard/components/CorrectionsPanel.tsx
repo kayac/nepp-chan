@@ -14,6 +14,11 @@ import { formatDateTime } from "~/lib/format";
 
 type StatusFilter = "published" | "needs_review" | "draft" | "retired" | "all";
 
+const NEEDS_REVIEW_LABELS = {
+  source_updated: "要再確認（元ページが更新されました）",
+  source_unavailable: "要再確認（元の情報源が検索対象から外れました）",
+} as const;
+
 const FILTERS: Array<{ value: StatusFilter; label: string }> = [
   { value: "published", label: "公開中" },
   { value: "needs_review", label: "要再確認" },
@@ -109,8 +114,18 @@ export const CorrectionsPanel = () => {
                     未反映（回答に反映されていません）
                   </span>
                 ) : correction.needsReviewAt ? (
-                  <span className="inline-flex px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded">
-                    要再確認（元ページが更新されました）
+                  <span
+                    className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${
+                      correction.needsReviewReason === "source_unavailable"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-amber-100 text-amber-700"
+                    }`}
+                  >
+                    {
+                      NEEDS_REVIEW_LABELS[
+                        correction.needsReviewReason ?? "source_updated"
+                      ]
+                    }
                   </span>
                 ) : (
                   <span className="inline-flex px-2 py-0.5 text-xs font-medium bg-teal-100 text-teal-700 rounded">
