@@ -44,4 +44,23 @@ describe("userPollStateRepository", () => {
     const result = await userPollStateRepository.findByUserId(fakeD1, "u1");
     expect(result?.lastInjectedAt).toBe("2025-01-02T00:00:00Z");
   });
+
+  it("deleteByUserId: 指定ユーザーの状態だけを削除して件数を返す", async () => {
+    await userPollStateRepository.upsert(fakeD1, "u1", "2025-01-01T00:00:00Z");
+    await userPollStateRepository.upsert(fakeD1, "u2", "2025-01-01T00:00:00Z");
+
+    const deleted = await userPollStateRepository.deleteByUserId(fakeD1, "u1");
+
+    expect(deleted).toBe(1);
+    expect(await userPollStateRepository.findByUserId(fakeD1, "u1")).toBeNull();
+    expect(
+      await userPollStateRepository.findByUserId(fakeD1, "u2"),
+    ).not.toBeNull();
+  });
+
+  it("deleteByUserId: 該当が無ければ 0 件を返す", async () => {
+    expect(await userPollStateRepository.deleteByUserId(fakeD1, "ghost")).toBe(
+      0,
+    );
+  });
 });

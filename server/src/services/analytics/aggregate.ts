@@ -5,12 +5,15 @@ import {
   personaAttributes,
   TOPICS,
 } from "@nepp-chan/shared/lib/persona-attributes";
-import { and, gte, isNotNull, lt, sql } from "drizzle-orm";
-import { createDb, persona } from "~/db";
 import { calcCostUsd } from "~/lib/llm-pricing";
+import {
+  llmUsageRepository,
+  type UsageSumRow,
+} from "~/repository/llm-usage-repository";
+import { mastraMessageRepository } from "~/repository/mastra-message-repository";
+import { personaRepository } from "~/repository/persona-repository";
 
-// D1 の createdAt は UTC ISO 文字列。集計はすべて JST（+9 hours）で行い、
-// API は JST ラベル済みのデータを返す（フロントでは変換しない）。
+// API は JST ラベル済みのデータを返す（フロントでは変換しない）
 
 type Period = { from: string; to: string };
 
@@ -43,49 +46,13 @@ const AGE_GROUPS = [
 const RESIDENCES = ["村内", "村外"] as const;
 
 export const getConversationStats = async (d1: D1Database, period: Period) => {
-  const db = createDb(d1);
-
   const [hourlyRows, weekdayRows, daily, platforms, totalsRow] =
     await Promise.all([
-      db.all<{ hour: number; count: number }>(sql`
-      SELECT CAST(strftime('%H', createdAt, '+9 hours') AS INTEGER) AS hour,
-             COUNT(*) AS count
-      FROM mastra_messages
-      WHERE role = 'user' AND createdAt >= ${period.from} AND createdAt < ${period.to}
-      GROUP BY hour
-    `),
-      db.all<{ dow: number; count: number }>(sql`
-      SELECT CAST(strftime('%w', createdAt, '+9 hours') AS INTEGER) AS dow,
-             COUNT(*) AS count
-      FROM mastra_messages
-      WHERE role = 'user' AND createdAt >= ${period.from} AND createdAt < ${period.to}
-      GROUP BY dow
-    `),
-      db.all<{ date: string; conversations: number; messages: number }>(sql`
-      SELECT strftime('%Y-%m-%d', createdAt, '+9 hours') AS date,
-             COUNT(DISTINCT thread_id) AS conversations,
-             COUNT(*) AS messages
-      FROM mastra_messages
-      WHERE role = 'user' AND createdAt >= ${period.from} AND createdAt < ${period.to}
-      GROUP BY date
-      ORDER BY date
-    `),
-      db.all<{ platform: string; count: number }>(sql`
-      SELECT CASE WHEN t.resourceId LIKE 'line:%' THEN 'line'
-                  WHEN t.resourceId LIKE 'admin:%' THEN 'admin'
-                  WHEN t.resourceId LIKE 'widget-%' THEN 'widget'
-                  ELSE 'web' END AS platform,
-             COUNT(*) AS count
-      FROM mastra_messages m
-      JOIN mastra_threads t ON m.thread_id = t.id
-      WHERE m.role = 'user' AND m.createdAt >= ${period.from} AND m.createdAt < ${period.to}
-      GROUP BY platform
-    `),
-      db.get<{ conversations: number; messages: number }>(sql`
-      SELECT COUNT(DISTINCT thread_id) AS conversations, COUNT(*) AS messages
-      FROM mastra_messages
-      WHERE role = 'user' AND createdAt >= ${period.from} AND createdAt < ${period.to}
-    `),
+      mastraMessageRepository.countUserMessagesByHour(d1, period),
+      mastraMessageRepository.countUserMessagesByWeekday(d1, period),
+      mastraMessageRepository.countUserMessagesByDate(d1, period),
+      mastraMessageRepository.countUserMessagesByPlatform(d1, period),
+      mastraMessageRepository.countUserMessageTotals(d1, period),
     ]);
 
   return {
@@ -106,34 +73,6 @@ export const getConversationStats = async (d1: D1Database, period: Period) => {
     },
   };
 };
-
-type UsageSumRow = {
-  model: string;
-  inputTokens: number;
-  outputTokens: number;
-  reasoningTokens: number;
-  cachedInputTokens: number;
-  totalTokens: number;
-  persistedCostUsd: number;
-  legacyInputTokens: number;
-  legacyOutputTokens: number;
-  legacyCachedInputTokens: number;
-};
-
-// トークン合算と costUsd 算出用の SELECT 列。
-// cost_usd は記録時点の単価で永続化されるが、永続化開始前の行（NULL）は
-// legacy* のトークン数から現行単価で概算して合算する
-const usageSumColumns = sql`
-  SUM(input_tokens) AS inputTokens,
-  SUM(output_tokens) AS outputTokens,
-  SUM(reasoning_tokens) AS reasoningTokens,
-  SUM(cached_input_tokens) AS cachedInputTokens,
-  SUM(total_tokens) AS totalTokens,
-  SUM(COALESCE(cost_usd, 0)) AS persistedCostUsd,
-  SUM(CASE WHEN cost_usd IS NULL THEN input_tokens ELSE 0 END) AS legacyInputTokens,
-  SUM(CASE WHEN cost_usd IS NULL THEN output_tokens ELSE 0 END) AS legacyOutputTokens,
-  SUM(CASE WHEN cost_usd IS NULL THEN cached_input_tokens ELSE 0 END) AS legacyCachedInputTokens
-`;
 
 const usageCostUsd = (row: UsageSumRow) =>
   Number(row.persistedCostUsd) +
@@ -157,41 +96,15 @@ export const getDailyUsage = async (
   d1: D1Database,
   params: { from: string },
 ) => {
-  const db = createDb(d1);
-
-  const rows = await db.all<UsageSumRow & { date: string }>(sql`
-    SELECT date(created_at, '+9 hours') AS date,
-           model,
-           ${usageSumColumns}
-    FROM llm_usage
-    WHERE created_at >= ${params.from}
-    GROUP BY date, model
-    ORDER BY date, model
-  `);
+  const rows = await llmUsageRepository.sumByDateAndModel(d1, params);
 
   return rows.map((row) => ({ date: row.date, ...withCost(row) }));
 };
 
 export const getUsageByModel = async (d1: D1Database, period: Period) => {
-  const db = createDb(d1);
-
-  const rows = await db.all<UsageSumRow>(sql`
-    SELECT model,
-           ${usageSumColumns}
-    FROM llm_usage
-    WHERE created_at >= ${period.from} AND created_at < ${period.to}
-    GROUP BY model
-    ORDER BY model
-  `);
+  const rows = await llmUsageRepository.sumByModel(d1, period);
 
   return rows.map(withCost);
-};
-
-type ThreadUsageRow = UsageSumRow & {
-  threadId: string;
-  agent: string | null;
-  platform: string | null;
-  chatCalls: number;
 };
 
 type AgentTotals = {
@@ -216,17 +129,6 @@ const addAgentTotals = (
 
 const sortedAgentTotals = (map: Map<string | null, AgentTotals>) =>
   [...map.values()].sort((a, b) => b.costUsd - a.costUsd);
-
-// 会話に直接かかった費用と、それ以外の運用費を分けて見るための区分。
-// embedding は検索クエリ分（スレッドに紐づく）が会話、ナレッジ同期分が基盤
-const usageCategoryExpr = sql`
-  CASE
-    WHEN source IN ('chat', 'subagent', 'intent-classify', 'rerank') THEN 'conversation'
-    WHEN source = 'embedding' AND thread_id IS NOT NULL THEN 'conversation'
-    WHEN source = 'embedding' THEN 'knowledge-base'
-    ELSE 'batch'
-  END
-`;
 
 // 請求元の突き合わせ用。モデル ID からプロバイダを判定する
 const providerOf = (model: string) => {
@@ -257,27 +159,9 @@ const addProviderTotals = (
 };
 
 export const getOperationCost = async (d1: D1Database, period: Period) => {
-  const db = createDb(d1);
-
   const [rows, dailyRows] = await Promise.all([
-    db.all<UsageSumRow & { category: string; agent: string | null }>(sql`
-      SELECT ${usageCategoryExpr} AS category,
-             agent,
-             model,
-             ${usageSumColumns}
-      FROM llm_usage
-      WHERE created_at >= ${period.from} AND created_at < ${period.to}
-      GROUP BY category, agent, model
-    `),
-    db.all<UsageSumRow & { date: string }>(sql`
-      SELECT date(created_at, '+9 hours') AS date,
-             model,
-             ${usageSumColumns}
-      FROM llm_usage
-      WHERE created_at >= ${period.from} AND created_at < ${period.to}
-      GROUP BY date, model
-      ORDER BY date
-    `),
+    llmUsageRepository.sumByCategory(d1, period),
+    llmUsageRepository.sumByDateAndModel(d1, period),
   ]);
 
   const dailyTotals = new Map<string, number>();
@@ -333,39 +217,9 @@ export const getThreadUsage = async (
   period: Period,
   params: { limit: number },
 ) => {
-  const db = createDb(d1);
-
   const [threadModelRows, messageRows] = await Promise.all([
-    db.all<ThreadUsageRow>(sql`
-      SELECT thread_id AS threadId,
-             agent,
-             model,
-             MAX(platform) AS platform,
-             SUM(CASE WHEN source = 'chat' THEN 1 ELSE 0 END) AS chatCalls,
-             ${usageSumColumns}
-      FROM llm_usage
-      WHERE created_at >= ${period.from} AND created_at < ${period.to}
-        AND thread_id IS NOT NULL
-        AND ${usageCategoryExpr} = 'conversation'
-      GROUP BY thread_id, agent, model
-    `),
-    db.all<{
-      threadId: string;
-      firstMessageAt: string;
-      lastMessageAt: string;
-    }>(sql`
-      SELECT thread_id AS threadId,
-             MIN(createdAt) AS firstMessageAt,
-             MAX(createdAt) AS lastMessageAt
-      FROM mastra_messages
-      WHERE createdAt >= ${period.from} AND createdAt < ${period.to}
-        AND thread_id IN (
-          SELECT DISTINCT thread_id FROM llm_usage
-          WHERE created_at >= ${period.from} AND created_at < ${period.to}
-            AND thread_id IS NOT NULL
-        )
-      GROUP BY thread_id
-    `),
+    llmUsageRepository.sumConversationByThread(d1, period),
+    mastraMessageRepository.findMessageSpansForThreadsWithUsage(d1, period),
   ]);
 
   const messagesByThread = new Map(
@@ -463,30 +317,7 @@ export const getThreadUsage = async (
 };
 
 export const getThreadTurnUsage = async (d1: D1Database, threadId: string) => {
-  const db = createDb(d1);
-
-  const rows = await db.all<
-    UsageSumRow & {
-      turnIndex: number | null;
-      agent: string | null;
-      durationMs: number | null;
-      answeredAt: string;
-      intent: string | null;
-    }
-  >(sql`
-    SELECT turn_index AS turnIndex,
-           agent,
-           model,
-           MAX(CASE WHEN source = 'chat' THEN duration_ms END) AS durationMs,
-           MAX(CASE WHEN source = 'chat' THEN created_at END) AS answeredAt,
-           MAX(CASE WHEN source = 'chat' THEN intent END) AS intent,
-           ${usageSumColumns}
-    FROM llm_usage
-    WHERE thread_id = ${threadId}
-      AND ${usageCategoryExpr} = 'conversation'
-    GROUP BY turn_index, agent, model
-    ORDER BY turn_index, agent
-  `);
+  const rows = await llmUsageRepository.sumConversationByTurn(d1, threadId);
 
   type TurnTotals = {
     turnIndex: number | null;
@@ -556,55 +387,11 @@ export const getPersonaAnalytics = async (
   d1: D1Database,
   params: { from?: string; to?: string },
 ) => {
-  const db = createDb(d1);
-
-  // 期間はすべて会話終了時刻（conversationEndedAt）基準。
-  // createdAt は抽出バッチの実行時刻で、会話のあった期間を表さないため
-  const periodConditions = [
-    params.from ? gte(persona.conversationEndedAt, params.from) : undefined,
-    params.to ? lt(persona.conversationEndedAt, params.to) : undefined,
-  ].filter((c) => c !== undefined);
-
-  const hourExpr = sql<number>`CAST(strftime('%H', ${persona.conversationEndedAt}, '+9 hours') AS INTEGER)`;
-  const dowExpr = sql<number>`CAST(strftime('%w', ${persona.conversationEndedAt}, '+9 hours') AS INTEGER)`;
-  // 開庁 = 平日（月〜金）の 8〜17 時 JST。それ以外は閉庁
-  const isOpenExpr = sql<number>`CASE WHEN ${dowExpr} BETWEEN 1 AND 5 AND ${hourExpr} BETWEEN 8 AND 16 THEN 1 ELSE 0 END`;
-  const hourlyConditions = [
-    isNotNull(persona.conversationEndedAt),
-    ...periodConditions,
-  ];
-
   const [rows, hourlyRows, weekdayRows, officeRow] = await Promise.all([
-    db
-      .select({
-        tags: persona.tags,
-        demographicSummary: persona.demographicSummary,
-        topic: persona.topic,
-        sentiment: persona.sentiment,
-      })
-      .from(persona)
-      .where(periodConditions.length > 0 ? and(...periodConditions) : undefined)
-      .all(),
-    db
-      .select({ hour: hourExpr, count: sql<number>`COUNT(*)` })
-      .from(persona)
-      .where(and(...hourlyConditions))
-      .groupBy(hourExpr)
-      .all(),
-    db
-      .select({ dow: dowExpr, count: sql<number>`COUNT(*)` })
-      .from(persona)
-      .where(and(...hourlyConditions))
-      .groupBy(dowExpr)
-      .all(),
-    db
-      .select({
-        open: sql<number>`SUM(${isOpenExpr})`,
-        total: sql<number>`COUNT(*)`,
-      })
-      .from(persona)
-      .where(and(...hourlyConditions))
-      .get(),
+    personaRepository.listAttributes(d1, params),
+    personaRepository.countByConversationHour(d1, params),
+    personaRepository.countByConversationWeekday(d1, params),
+    personaRepository.countOfficeHours(d1, params),
   ]);
 
   const ageSentiment = new Map(
