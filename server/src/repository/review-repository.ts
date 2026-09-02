@@ -171,6 +171,11 @@ export const reviewRepository = {
     return await db.insert(reviewDecisions).values(values).returning().get();
   },
 
+  async deleteDecision(d1: D1Database, id: string) {
+    const db = createDb(d1);
+    await db.delete(reviewDecisions).where(eq(reviewDecisions.id, id));
+  },
+
   async deleteRunsByThreadId(d1: D1Database, threadId: string) {
     const db = createDb(d1);
     const where = eq(retrievalRuns.threadId, threadId);

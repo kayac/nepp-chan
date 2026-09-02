@@ -276,6 +276,95 @@ describe("GET /", () => {
   });
 });
 
+describe("PATCH /{id}", () => {
+  const patchBody = (data: Record<string, unknown>): RequestInit => ({
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  it("本文を書き換えて再反映し、要再確認を解除する", async () => {
+    vi.mocked(knowledgeCorrectionRepository.findById).mockResolvedValue({
+      ...correction,
+      needsReviewAt: "2026-09-02T00:00:00.000Z",
+      needsReviewReason: "source_updated",
+    });
+    vi.mocked(knowledgeSourceRepository.findByPath).mockResolvedValue(
+      sourceRow,
+    );
+    vi.mocked(publishCorrection).mockResolvedValue({
+      indexed: true,
+      status: "approved",
+      chunks: 1,
+    });
+    vi.mocked(knowledgeCorrectionRepository.update).mockResolvedValue(
+      correction,
+    );
+
+    const res = await app.request(
+      authedRequest("/cor-1", patchBody({ body: "日曜も運休です" })),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(publishCorrection).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ body: "日曜も運休です" }),
+      expect.anything(),
+    );
+    expect(knowledgeCorrectionRepository.update).toHaveBeenCalledWith(
+      mockEnv.DB,
+      "cor-1",
+      expect.objectContaining({
+        body: "日曜も運休です",
+        status: "published",
+        needsReviewAt: null,
+        needsReviewReason: null,
+      }),
+    );
+  });
+
+  it("反映に失敗したら 500 で DB を更新しない", async () => {
+    vi.mocked(knowledgeCorrectionRepository.findById).mockResolvedValue(
+      correction,
+    );
+    vi.mocked(knowledgeSourceRepository.findByPath).mockResolvedValue(
+      sourceRow,
+    );
+    vi.mocked(publishCorrection).mockResolvedValue({
+      indexed: true,
+      status: "approved",
+      chunks: 0,
+      error: "embedding failed",
+    });
+
+    const res = await app.request(
+      authedRequest("/cor-1", patchBody({ body: "新しい本文" })),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(500);
+    expect(knowledgeCorrectionRepository.update).not.toHaveBeenCalled();
+  });
+
+  it("廃止済みの訂正は 404", async () => {
+    vi.mocked(knowledgeCorrectionRepository.findById).mockResolvedValue({
+      ...correction,
+      status: "retired",
+    });
+
+    const res = await app.request(
+      authedRequest("/cor-1", patchBody({ body: "新しい本文" })),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(404);
+  });
+});
+
 describe("POST /{id}/retire", () => {
   it("訂正が無ければ 404", async () => {
     vi.mocked(knowledgeCorrectionRepository.findById).mockResolvedValue(null);

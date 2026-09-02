@@ -12,12 +12,13 @@ vi.mock("~/repository/review-repository", async (importOriginal) => {
       findBadFeedbackByMessageId: vi.fn(),
       listDecisions: vi.fn(),
       insertDecision: vi.fn(),
+      deleteDecision: vi.fn(),
     },
   };
 });
 
 vi.mock("~/repository/feedback-repository", () => ({
-  feedbackRepository: { resolve: vi.fn() },
+  feedbackRepository: { resolve: vi.fn(), unresolve: vi.fn() },
 }));
 
 vi.mock("~/services/review", () => ({
@@ -351,5 +352,61 @@ describe("POST /{answerRunId}/decision", () => {
 
     expect(res.status).toBe(200);
     expect(feedbackRepository.resolve).not.toHaveBeenCalled();
+  });
+});
+
+describe("DELETE /{answerRunId}/decision", () => {
+  const del: RequestInit = { method: "DELETE" };
+
+  it("判断が無ければ 404", async () => {
+    vi.mocked(reviewRepository.listDecisions).mockResolvedValue([]);
+
+    const res = await app.request(
+      authedRequest("/ar-1/decision", del),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(404);
+  });
+
+  it("直近の判断を削除し、bad 評価の解決済みを取り消す", async () => {
+    vi.mocked(reviewRepository.listDecisions).mockResolvedValue([
+      decisionRow({ id: "dec-2", feedbackId: "fb-1" }),
+    ]);
+
+    const res = await app.request(
+      authedRequest("/ar-1/decision", del),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ undecided: true });
+    expect(reviewRepository.deleteDecision).toHaveBeenCalledWith(
+      mockEnv.DB,
+      "dec-2",
+    );
+    expect(feedbackRepository.unresolve).toHaveBeenCalledWith(
+      mockEnv.DB,
+      "fb-1",
+    );
+  });
+
+  it("前の判断が同じ bad 評価を参照していれば解決済みは維持する", async () => {
+    vi.mocked(reviewRepository.listDecisions).mockResolvedValue([
+      decisionRow({ id: "dec-2", feedbackId: "fb-1" }),
+      decisionRow({ id: "dec-1", feedbackId: "fb-1" }),
+    ]);
+
+    const res = await app.request(
+      authedRequest("/ar-1/decision", del),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ undecided: false });
+    expect(feedbackRepository.unresolve).not.toHaveBeenCalled();
   });
 });

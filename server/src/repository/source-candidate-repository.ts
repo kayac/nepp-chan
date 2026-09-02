@@ -85,7 +85,7 @@ export const sourceCandidateRepository = {
   async updateStatus(
     d1: D1Database,
     id: string,
-    input: { status: SourceCandidateStatus; decidedBy: string },
+    input: { status: SourceCandidateStatus; decidedBy: string | null },
   ) {
     const db = createDb(d1);
     const now = new Date().toISOString();
@@ -94,7 +94,7 @@ export const sourceCandidateRepository = {
       .set({
         status: input.status,
         decidedBy: input.decidedBy,
-        decidedAt: now,
+        decidedAt: input.status === "pending" ? null : now,
         updatedAt: now,
       })
       .where(eq(sourceCandidates.id, id))

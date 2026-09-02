@@ -155,4 +155,29 @@ describe("PATCH /{id}/status", () => {
       { status, decidedBy: "user-1" },
     );
   });
+
+  it("reset で未判断に戻し、判断者を消す", async () => {
+    vi.mocked(sourceCandidateRepository.findById).mockResolvedValue({
+      ...candidate,
+      status: "approved",
+      decidedBy: "user-1",
+      decidedAt: "2026-09-01T00:00:00.000Z",
+    });
+    vi.mocked(sourceCandidateRepository.updateStatus).mockResolvedValue(
+      candidate,
+    );
+
+    const res = await app.request(
+      authedRequest("/cand-1/status", patchBody("reset")),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(sourceCandidateRepository.updateStatus).toHaveBeenCalledWith(
+      mockEnv.DB,
+      "cand-1",
+      { status: "pending", decidedBy: null },
+    );
+  });
 });

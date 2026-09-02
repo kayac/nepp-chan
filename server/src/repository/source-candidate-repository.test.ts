@@ -104,4 +104,21 @@ describe("sourceCandidateRepository", () => {
     });
     expect(updated.decidedAt).not.toBeNull();
   });
+
+  it("pending へ戻すと決定日時を消す", async () => {
+    await sourceCandidateRepository.insert(d1, baseCandidate);
+    await sourceCandidateRepository.updateStatus(d1, "cand-1", {
+      status: "approved",
+      decidedBy: "admin-1",
+    });
+
+    const reset = await sourceCandidateRepository.updateStatus(d1, "cand-1", {
+      status: "pending",
+      decidedBy: null,
+    });
+
+    expect(reset.status).toBe("pending");
+    expect(reset.decidedAt).toBeNull();
+    expect(reset.decidedBy).toBeNull();
+  });
 });

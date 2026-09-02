@@ -206,6 +206,78 @@ correctionsAdminRoutes.openapi(createRoute_, async (c) => {
   );
 });
 
+const updateRoute = createRoute({
+  method: "patch",
+  path: "/{id}",
+  summary: "訂正の本文を修正",
+  description: "本文を書き換え、確認日を更新して R2 と検索へ再反映します",
+  tags: ["Admin - Corrections"],
+  request: {
+    params: z.object({ id: z.string().min(1) }),
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({ body: z.string().min(1).max(4000) }),
+        },
+      },
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      description: "修正成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string(),
+            correction: CorrectionSchema,
+          }),
+        },
+      },
+    },
+    401: errorResponse(401),
+    403: errorResponse(403),
+    404: errorResponse(404),
+    500: errorResponse(500),
+  },
+});
+
+correctionsAdminRoutes.openapi(updateRoute, async (c) => {
+  const { id } = c.req.valid("param");
+  const { body } = c.req.valid("json");
+  const adminUser = requireAdminUser(c.get("principal"));
+
+  const correction = await knowledgeCorrectionRepository.findById(c.env.DB, id);
+  if (!correction || correction.status === "retired") {
+    throw new HTTPException(404, { message: "訂正が見つかりません" });
+  }
+
+  const verifiedAt = new Date().toISOString().slice(0, 10);
+  await publishOrFail(c.env, {
+    ...correction,
+    body,
+    verifiedAt,
+    approvedBy: adminUser.id,
+  });
+
+  const updated = await knowledgeCorrectionRepository.update(c.env.DB, id, {
+    body,
+    verifiedAt,
+    approvedBy: adminUser.id,
+    status: "published",
+    needsReviewAt: null,
+    needsReviewReason: null,
+  });
+
+  return c.json(
+    {
+      message: "訂正を修正しました",
+      correction: toCorrectionResponse(updated),
+    },
+    200,
+  );
+});
+
 const retireRoute = createRoute({
   method: "post",
   path: "/{id}/retire",

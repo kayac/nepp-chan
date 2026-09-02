@@ -376,3 +376,53 @@ reviewAdminRoutes.openapi(decideRoute, async (c) => {
     200,
   );
 });
+
+const undoDecisionRoute = createRoute({
+  method: "delete",
+  path: "/{answerRunId}/decision",
+  summary: "最後の判断を取り消す",
+  description:
+    "直近の判断を削除して未判断に戻します。bad 評価の解決済みも取り消します",
+  tags: ["Admin - Review"],
+  request: {
+    params: z.object({ answerRunId: z.string().min(1) }),
+  },
+  responses: {
+    200: {
+      description: "取り消し成功",
+      content: {
+        "application/json": {
+          schema: z.object({ message: z.string(), undecided: z.boolean() }),
+        },
+      },
+    },
+    401: errorResponse(401),
+    403: errorResponse(403),
+    404: errorResponse(404),
+  },
+});
+
+reviewAdminRoutes.openapi(undoDecisionRoute, async (c) => {
+  const { answerRunId } = c.req.valid("param");
+
+  const decisions = await reviewRepository.listDecisions(c.env.DB, answerRunId);
+  const latest = decisions[0];
+  if (!latest) {
+    throw new HTTPException(404, { message: "判断が見つかりません" });
+  }
+
+  await reviewRepository.deleteDecision(c.env.DB, latest.id);
+
+  const remaining = decisions.slice(1);
+  if (latest.feedbackId && !remaining.some((d) => d.feedbackId)) {
+    await feedbackRepository.unresolve(c.env.DB, latest.feedbackId);
+  }
+
+  return c.json(
+    {
+      message: "判断を取り消しました",
+      undecided: remaining.length === 0,
+    },
+    200,
+  );
+});

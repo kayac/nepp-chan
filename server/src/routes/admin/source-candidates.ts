@@ -75,14 +75,16 @@ const updateStatusRoute = createRoute({
   path: "/{id}/status",
   summary: "情報源候補の承認状態を変更",
   description:
-    "承認・却下の判断を記録します。承認済み候補の収集は通常の取り込み手順で行います",
+    "承認・却下の判断を記録します。reset で未判断に戻します。承認済み候補の収集は通常の取り込み手順で行います",
   tags: ["Admin - Source Candidates"],
   request: {
     params: z.object({ id: z.string().min(1) }),
     body: {
       content: {
         "application/json": {
-          schema: z.object({ action: z.enum(["approve", "reject"]) }),
+          schema: z.object({
+            action: z.enum(["approve", "reject", "reset"]),
+          }),
         },
       },
       required: true,
@@ -116,17 +118,28 @@ sourceCandidatesAdminRoutes.openapi(updateStatusRoute, async (c) => {
     throw new HTTPException(404, { message: "情報源候補が見つかりません" });
   }
 
+  const status =
+    action === "approve"
+      ? "approved"
+      : action === "reject"
+        ? "rejected"
+        : "pending";
+
   const updated = await sourceCandidateRepository.updateStatus(c.env.DB, id, {
-    status: action === "approve" ? "approved" : "rejected",
-    decidedBy: adminUser.id,
+    status,
+    decidedBy: action === "reset" ? null : adminUser.id,
   });
+
+  const messages = {
+    approve:
+      "承認しました。収集対象への追加は通常の取り込み手順で行ってください",
+    reject: "却下しました",
+    reset: "未判断に戻しました",
+  } as const;
 
   return c.json(
     {
-      message:
-        action === "approve"
-          ? "承認しました。収集対象への追加は通常の取り込み手順で行ってください"
-          : "却下しました",
+      message: messages[action],
       candidate: toCandidateResponse(updated),
     },
     200,
