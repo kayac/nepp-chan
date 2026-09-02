@@ -1,9 +1,8 @@
 import type { RequestContext } from "@mastra/core/request-context";
-import { and, eq, isNull } from "drizzle-orm";
-import { createDb, retrievalRuns } from "~/db";
 import { logger } from "~/lib/logger";
 import { waitUntilInBackground } from "~/lib/wait-until";
 import { getRequestDb } from "~/mastra/request-context";
+import { reviewRepository } from "~/repository/review-repository";
 
 export type RetrievalHit = {
   source: string;
@@ -27,8 +26,7 @@ export const recordRetrievalRun = async (
   const d1 = getRequestDb(requestContext);
   if (!d1) return;
   try {
-    const db = createDb(d1);
-    await db.insert(retrievalRuns).values({
+    await reviewRepository.insertRun(d1, {
       id: crypto.randomUUID(),
       answerRunId: requestContext?.get("answerRunId") as string | undefined,
       threadId: requestContext?.get("usageThreadId") as string | undefined,
@@ -71,16 +69,7 @@ export const linkRetrievalRunsToMessage = async (
     await Promise.allSettled(pending);
   }
   try {
-    const db = createDb(d1);
-    await db
-      .update(retrievalRuns)
-      .set({ messageId })
-      .where(
-        and(
-          eq(retrievalRuns.answerRunId, answerRunId),
-          isNull(retrievalRuns.messageId),
-        ),
-      );
+    await reviewRepository.linkRunsToMessage(d1, answerRunId, messageId);
   } catch (error) {
     logger.warn("[RetrievalTrace] failed to link message", {
       error: String(error),

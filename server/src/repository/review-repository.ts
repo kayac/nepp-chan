@@ -1,7 +1,8 @@
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import {
   createDb,
   messageFeedback,
+  type NewRetrievalRun,
   type NewReviewDecision,
   retrievalRuns,
   reviewDecisions,
@@ -92,6 +93,28 @@ export const reviewRepository = {
       hasMore,
       nextCursor: hasMore ? (items.at(-1)?.createdAt ?? null) : null,
     };
+  },
+
+  async insertRun(d1: D1Database, values: NewRetrievalRun) {
+    const db = createDb(d1);
+    await db.insert(retrievalRuns).values(values);
+  },
+
+  async linkRunsToMessage(
+    d1: D1Database,
+    answerRunId: string,
+    messageId: string,
+  ) {
+    const db = createDb(d1);
+    await db
+      .update(retrievalRuns)
+      .set({ messageId })
+      .where(
+        and(
+          eq(retrievalRuns.answerRunId, answerRunId),
+          isNull(retrievalRuns.messageId),
+        ),
+      );
   },
 
   async listRunsByAnswerRunId(d1: D1Database, answerRunId: string) {
