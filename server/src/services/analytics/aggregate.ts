@@ -13,8 +13,7 @@ import {
 import { mastraMessageRepository } from "~/repository/mastra-message-repository";
 import { personaRepository } from "~/repository/persona-repository";
 
-// D1 の createdAt は UTC ISO 文字列。集計はすべて JST（+9 hours）で行い、
-// API は JST ラベル済みのデータを返す（フロントでは変換しない）。
+// API は JST ラベル済みのデータを返す（フロントでは変換しない）
 
 type Period = { from: string; to: string };
 
@@ -220,7 +219,7 @@ export const getThreadUsage = async (
 ) => {
   const [threadModelRows, messageRows] = await Promise.all([
     llmUsageRepository.sumConversationByThread(d1, period),
-    mastraMessageRepository.findSpansOfUsedThreads(d1, period),
+    mastraMessageRepository.findMessageSpansForThreadsWithUsage(d1, period),
   ]);
 
   const messagesByThread = new Map(

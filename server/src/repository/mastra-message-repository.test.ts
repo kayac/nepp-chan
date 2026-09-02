@@ -183,7 +183,7 @@ describe("mastraMessageRepository", () => {
     });
   });
 
-  describe("findSpansOfUsedThreads", () => {
+  describe("findMessageSpansForThreadsWithUsage", () => {
     it("llm_usage に記録のあるスレッドだけ最初と最後の時刻を返す", async () => {
       await db.insert(llmUsage).values({
         id: "u-1",
@@ -205,10 +205,11 @@ describe("mastraMessageRepository", () => {
         createdAt: "2026-06-02T00:00:00.000Z",
       });
 
-      const rows = await mastraMessageRepository.findSpansOfUsedThreads(
-        d1,
-        period,
-      );
+      const rows =
+        await mastraMessageRepository.findMessageSpansForThreadsWithUsage(
+          d1,
+          period,
+        );
 
       expect(rows).toEqual([
         {
@@ -233,10 +234,11 @@ describe("mastraMessageRepository", () => {
         createdAt: "2026-06-02T05:00:00.000Z",
       });
 
-      const rows = await mastraMessageRepository.findSpansOfUsedThreads(
-        d1,
-        period,
-      );
+      const rows =
+        await mastraMessageRepository.findMessageSpansForThreadsWithUsage(
+          d1,
+          period,
+        );
 
       expect(rows[0]?.lastMessageAt).toBe("2026-06-02T05:00:00.000Z");
     });

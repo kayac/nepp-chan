@@ -54,7 +54,7 @@ const personaFilters = (options: PersonaFilter): SQL[] => {
 // 集計は正規化後の話題で行う（NULL と未知の値は その他 に寄せる）
 const normalizedTopic = sql`CASE WHEN ${inArray(persona.topic, NAMED_TOPICS)} THEN ${persona.topic} ELSE ${OTHER_TOPIC} END`;
 
-// 会話のあった時刻での集計。createdAt は抽出バッチの実行時刻で会話の期間を表さない
+// sortDate と違い conversationEndedAt が NULL の声は期間に含めない
 type ConversationPeriod = { from?: string; to?: string };
 
 const conversationPeriodFilters = (period: ConversationPeriod): SQL[] =>
@@ -448,7 +448,7 @@ export const personaRepository = {
       .all();
   },
 
-  async listAttributes(d1: D1Database, period: ConversationPeriod = {}) {
+  async listAttributes(d1: D1Database, period: ConversationPeriod) {
     const db = createDb(d1);
 
     const conditions = conversationPeriodFilters(period);
@@ -465,7 +465,7 @@ export const personaRepository = {
       .all();
   },
 
-  async listAttributesWithEntities(d1: D1Database) {
+  async listAllAttributesWithEntities(d1: D1Database) {
     const db = createDb(d1);
 
     return db
@@ -480,10 +480,7 @@ export const personaRepository = {
       .all();
   },
 
-  async countByConversationHour(
-    d1: D1Database,
-    period: ConversationPeriod = {},
-  ) {
+  async countByConversationHour(d1: D1Database, period: ConversationPeriod) {
     const db = createDb(d1);
 
     return db
@@ -494,10 +491,7 @@ export const personaRepository = {
       .all();
   },
 
-  async countByConversationWeekday(
-    d1: D1Database,
-    period: ConversationPeriod = {},
-  ) {
+  async countByConversationWeekday(d1: D1Database, period: ConversationPeriod) {
     const db = createDb(d1);
 
     return db
@@ -508,7 +502,7 @@ export const personaRepository = {
       .all();
   },
 
-  async countOfficeHours(d1: D1Database, period: ConversationPeriod = {}) {
+  async countOfficeHours(d1: D1Database, period: ConversationPeriod) {
     const db = createDb(d1);
 
     return db

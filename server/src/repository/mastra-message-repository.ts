@@ -74,7 +74,7 @@ export const mastraMessageRepository = {
     `);
   },
 
-  async findSpansOfUsedThreads(d1: D1Database, period: Period) {
+  async findMessageSpansForThreadsWithUsage(d1: D1Database, period: Period) {
     const db = createDb(d1);
 
     return db.all<{

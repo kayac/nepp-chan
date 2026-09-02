@@ -153,7 +153,7 @@ type EntityAgg = {
 };
 
 export const getOntology = async (d1: D1Database): Promise<OntologyData> => {
-  const rows = await personaRepository.listAttributesWithEntities(d1);
+  const rows = await personaRepository.listAllAttributesWithEntities(d1);
 
   const segmentCounts = new Map<Segment, number>();
   const topicAgg = new Map<

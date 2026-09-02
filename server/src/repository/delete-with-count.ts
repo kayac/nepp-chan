@@ -4,6 +4,7 @@ import type { SQLiteTable } from "drizzle-orm/sqlite-core";
 
 import type { DbClient } from "~/db";
 
+// DELETE の戻り値は D1 が meta.changes、libsql が rowsAffected で形が違う
 export const deleteWithCount = async (
   db: DbClient,
   table: SQLiteTable,

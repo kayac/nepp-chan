@@ -641,7 +641,9 @@ describe("personaRepository", () => {
         baseInput({ id: "p-1", conversationEndedAt: null }),
       );
 
-      expect(await personaRepository.listAttributes(fakeD1)).toHaveLength(1);
+      expect(await personaRepository.listAttributes(fakeD1, {})).toHaveLength(
+        1,
+      );
     });
 
     it("会話終了時刻で期間を絞る", async () => {
@@ -670,9 +672,9 @@ describe("personaRepository", () => {
         baseInput({ id: "p-1", conversationEndedAt: "2030-01-02T00:30:00Z" }),
       );
 
-      expect(await personaRepository.countByConversationHour(fakeD1)).toEqual([
-        { hour: 9, count: 1 },
-      ]);
+      expect(
+        await personaRepository.countByConversationHour(fakeD1, {}),
+      ).toEqual([{ hour: 9, count: 1 }]);
     });
 
     it("会話終了時刻が無い声は数えない", async () => {
@@ -681,9 +683,9 @@ describe("personaRepository", () => {
         baseInput({ id: "p-1", conversationEndedAt: null }),
       );
 
-      expect(await personaRepository.countByConversationHour(fakeD1)).toEqual(
-        [],
-      );
+      expect(
+        await personaRepository.countByConversationHour(fakeD1, {}),
+      ).toEqual([]);
     });
   });
 
@@ -695,7 +697,7 @@ describe("personaRepository", () => {
       );
 
       expect(
-        await personaRepository.countByConversationWeekday(fakeD1),
+        await personaRepository.countByConversationWeekday(fakeD1, {}),
       ).toEqual([{ dow: 0, count: 1 }]);
     });
   });
@@ -707,7 +709,7 @@ describe("personaRepository", () => {
         baseInput({ id: "p-1", conversationEndedAt: "2030-01-02T00:00:00Z" }),
       );
 
-      expect(await personaRepository.countOfficeHours(fakeD1)).toEqual({
+      expect(await personaRepository.countOfficeHours(fakeD1, {})).toEqual({
         open: 1,
         total: 1,
       });
@@ -719,7 +721,7 @@ describe("personaRepository", () => {
         baseInput({ id: "p-1", conversationEndedAt: "2030-01-02T08:00:00Z" }),
       );
 
-      expect(await personaRepository.countOfficeHours(fakeD1)).toEqual({
+      expect(await personaRepository.countOfficeHours(fakeD1, {})).toEqual({
         open: 0,
         total: 1,
       });
@@ -731,7 +733,7 @@ describe("personaRepository", () => {
         baseInput({ id: "p-1", conversationEndedAt: "2030-01-06T00:00:00Z" }),
       );
 
-      expect(await personaRepository.countOfficeHours(fakeD1)).toEqual({
+      expect(await personaRepository.countOfficeHours(fakeD1, {})).toEqual({
         open: 0,
         total: 1,
       });
