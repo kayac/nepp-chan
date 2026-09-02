@@ -8,6 +8,13 @@ import {
 
 type UpdateInput = Partial<Omit<KnowledgeCorrection, "id" | "createdAt">>;
 
+export const NEEDS_REVIEW_REASONS = [
+  "source_updated",
+  "source_unavailable",
+] as const;
+
+export type NeedsReviewReason = (typeof NEEDS_REVIEW_REASONS)[number];
+
 export const knowledgeCorrectionRepository = {
   async findById(d1: D1Database, id: string) {
     const db = createDb(d1);
@@ -71,12 +78,16 @@ export const knowledgeCorrectionRepository = {
       .get();
   },
 
-  async markNeedsReviewByCorrects(d1: D1Database, sourcePath: string) {
+  async markNeedsReviewByCorrects(
+    d1: D1Database,
+    sourcePath: string,
+    reason: NeedsReviewReason,
+  ) {
     const db = createDb(d1);
     const now = new Date().toISOString();
     await db
       .update(knowledgeCorrections)
-      .set({ needsReviewAt: now, updatedAt: now })
+      .set({ needsReviewAt: now, needsReviewReason: reason, updatedAt: now })
       .where(
         and(
           eq(knowledgeCorrections.correctsSourcePath, sourcePath),

@@ -231,6 +231,7 @@ describe("indexKnowledgeSource", () => {
       "cor-1",
     );
     expect(correction?.needsReviewAt).not.toBeNull();
+    expect(correction?.needsReviewReason).toBe("source_updated");
   });
 
   it("初回登録では訂正を要再確認にしない", async () => {
@@ -273,6 +274,32 @@ describe("indexKnowledgeSource", () => {
     const row = await knowledgeSourceRepository.findByPath(d1, "bus/index.md");
     expect(row?.chunkCount).toBe(0);
     expect(row?.indexedAt).toBeNull();
+  });
+
+  it("承認が外れて検索対象から消えたら紐づく訂正を要再確認にする", async () => {
+    await knowledgeSourceRepository.insert(d1, {
+      sourcePath: "bus/index.md",
+      approvalStatus: "disabled",
+      chunkCount: 8,
+      indexedAt: "2026-09-01T00:00:00.000Z",
+      createdAt: "2026-09-01T00:00:00.000Z",
+    });
+    await knowledgeCorrectionRepository.insert(d1, {
+      id: "cor-1",
+      correctsSourcePath: "bus/index.md",
+      body: "訂正本文",
+      verifiedAt: "2026-09-01",
+      approvedBy: "admin-1",
+      createdAt: "2026-09-01T00:00:00.000Z",
+    });
+
+    await indexKnowledgeSource("bus/index.md", content, deps);
+
+    const correction = await knowledgeCorrectionRepository.findById(
+      d1,
+      "cor-1",
+    );
+    expect(correction?.needsReviewReason).toBe("source_unavailable");
   });
 
   it("index が失敗したら chunk_count を更新せず error を返す", async () => {
@@ -365,5 +392,24 @@ describe("removeKnowledgeSource", () => {
       vectorize,
       "unknown.md",
     );
+  });
+
+  it("紐づく訂正を要再確認にする", async () => {
+    await knowledgeCorrectionRepository.insert(d1, {
+      id: "cor-1",
+      correctsSourcePath: "bus/index.md",
+      body: "訂正本文",
+      verifiedAt: "2026-09-01",
+      approvedBy: "admin-1",
+      createdAt: "2026-09-01T00:00:00.000Z",
+    });
+
+    await removeKnowledgeSource("bus/index.md", { d1, vectorize });
+
+    const correction = await knowledgeCorrectionRepository.findById(
+      d1,
+      "cor-1",
+    );
+    expect(correction?.needsReviewReason).toBe("source_unavailable");
   });
 });

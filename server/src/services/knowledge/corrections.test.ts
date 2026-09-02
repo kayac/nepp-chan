@@ -38,6 +38,7 @@ const correction = {
   relatedFeedbackId: null,
   answerRunId: null,
   needsReviewAt: null,
+  needsReviewReason: null,
   createdAt: "2026-09-01T00:00:00.000Z",
   updatedAt: null,
 };

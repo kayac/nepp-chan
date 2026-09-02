@@ -67,6 +67,7 @@ export const indexKnowledgeSource = async (
       await knowledgeCorrectionRepository.markNeedsReviewByCorrects(
         deps.d1,
         key,
+        "source_updated",
       );
     }
     if (promoted && existing.approvalStatus === "pending") {
@@ -82,6 +83,11 @@ export const indexKnowledgeSource = async (
     if (existing?.indexedAt) {
       await deleteKnowledgeBySource(deps.vectorize, key);
       await knowledgeSourceRepository.markRemoved(deps.d1, key);
+      await knowledgeCorrectionRepository.markNeedsReviewByCorrects(
+        deps.d1,
+        key,
+        "source_unavailable",
+      );
     }
     logger.info(`[Knowledge] skip indexing (${status}): ${key}`);
     return { indexed: false, status, chunks: 0 };
@@ -124,5 +130,10 @@ export const removeKnowledgeSource = async (
   if (await knowledgeSourceRepository.findByPath(deps.d1, key)) {
     await knowledgeSourceRepository.markRemoved(deps.d1, key);
   }
+  await knowledgeCorrectionRepository.markNeedsReviewByCorrects(
+    deps.d1,
+    key,
+    "source_unavailable",
+  );
   return result;
 };

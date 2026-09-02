@@ -8,6 +8,8 @@ import { requireRole } from "~/middleware/require-role";
 import {
   type KnowledgeCorrection,
   knowledgeCorrectionRepository,
+  NEEDS_REVIEW_REASONS,
+  type NeedsReviewReason,
 } from "~/repository/knowledge-correction-repository";
 import { knowledgeSourceRepository } from "~/repository/knowledge-source-repository";
 import {
@@ -34,6 +36,7 @@ const CorrectionSchema = z.object({
   relatedFeedbackId: z.string().nullable(),
   answerRunId: z.string().nullable(),
   needsReviewAt: z.string().nullable(),
+  needsReviewReason: z.enum(NEEDS_REVIEW_REASONS).nullable(),
   createdAt: z.string(),
   updatedAt: z.string().nullable(),
 });
@@ -48,6 +51,7 @@ const toCorrectionResponse = (correction: KnowledgeCorrection) => ({
   relatedFeedbackId: correction.relatedFeedbackId,
   answerRunId: correction.answerRunId,
   needsReviewAt: correction.needsReviewAt,
+  needsReviewReason: correction.needsReviewReason as NeedsReviewReason | null,
   createdAt: correction.createdAt,
   updatedAt: correction.updatedAt,
 });
@@ -163,6 +167,12 @@ correctionsAdminRoutes.openapi(createRoute_, async (c) => {
       message: "訂正対象の情報源が見つかりません",
     });
   }
+  if (source.approvalStatus !== "approved") {
+    throw new HTTPException(400, {
+      message:
+        "訂正対象の情報源が検索対象から外れています。情報源を承認し直してください",
+    });
+  }
 
   const now = new Date();
   const draft = await knowledgeCorrectionRepository.insert(c.env.DB, {
@@ -241,6 +251,7 @@ correctionsAdminRoutes.openapi(retireRoute, async (c) => {
   const updated = await knowledgeCorrectionRepository.update(c.env.DB, id, {
     status: "retired",
     needsReviewAt: null,
+    needsReviewReason: null,
   });
 
   return c.json(
@@ -303,6 +314,7 @@ correctionsAdminRoutes.openapi(reverifyRoute, async (c) => {
     verifiedAt,
     approvedBy: adminUser.id,
     needsReviewAt: null,
+    needsReviewReason: null,
   });
 
   return c.json(

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("~/repository/knowledge-correction-repository", () => ({
+  NEEDS_REVIEW_REASONS: ["source_updated", "source_unavailable"] as const,
   knowledgeCorrectionRepository: {
     findById: vi.fn(),
     list: vi.fn(),
@@ -103,6 +104,7 @@ const correction = {
   relatedFeedbackId: null,
   answerRunId: null,
   needsReviewAt: null,
+  needsReviewReason: null,
   createdAt: "2026-09-01T00:00:00.000Z",
   updatedAt: null,
 };
@@ -163,6 +165,25 @@ describe("POST /", () => {
       mockEnv,
     );
     expect(res.status).toBe(404);
+  });
+
+  it("情報源が検索対象から外れていたら 400", async () => {
+    vi.mocked(knowledgeSourceRepository.findByPath).mockResolvedValue({
+      ...sourceRow,
+      approvalStatus: "disabled",
+    });
+
+    const res = await app.request(
+      authedRequest(
+        "/",
+        jsonBody({ correctsSourcePath: "bus/index.md", body: "訂正" }),
+      ),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(400);
+    expect(knowledgeCorrectionRepository.insert).not.toHaveBeenCalled();
   });
 
   it("draft で保存し、発行成功後に published へ更新する", async () => {
@@ -286,7 +307,7 @@ describe("POST /{id}/retire", () => {
     expect(knowledgeCorrectionRepository.update).toHaveBeenCalledWith(
       mockEnv.DB,
       "cor-1",
-      { status: "retired", needsReviewAt: null },
+      { status: "retired", needsReviewAt: null, needsReviewReason: null },
     );
     expect(r2Bucket.delete).toHaveBeenCalledWith(
       "curated/corrections/cor-1.md",

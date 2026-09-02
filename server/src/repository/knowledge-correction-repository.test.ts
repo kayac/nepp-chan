@@ -84,6 +84,7 @@ describe("knowledgeCorrectionRepository", () => {
     await knowledgeCorrectionRepository.markNeedsReviewByCorrects(
       d1,
       "bus/index.md",
+      "source_updated",
     );
 
     const flagged = await knowledgeCorrectionRepository.findById(d1, "cor-1");
@@ -100,12 +101,14 @@ describe("knowledgeCorrectionRepository", () => {
     await knowledgeCorrectionRepository.markNeedsReviewByCorrects(
       d1,
       "bus/index.md",
+      "source_updated",
     );
     const first = await knowledgeCorrectionRepository.findById(d1, "cor-1");
 
     await knowledgeCorrectionRepository.markNeedsReviewByCorrects(
       d1,
       "bus/index.md",
+      "source_updated",
     );
     const second = await knowledgeCorrectionRepository.findById(d1, "cor-1");
     expect(second?.needsReviewAt).toBe(first?.needsReviewAt);
