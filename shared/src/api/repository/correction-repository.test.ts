@@ -76,6 +76,29 @@ describe("createCorrection", () => {
   });
 });
 
+describe("publishCorrection", () => {
+  it("path に id を埋め込む", async () => {
+    server.use(
+      http.post(`${API}/admin/corrections/c-1/publish`, () =>
+        HttpResponse.json({ message: "ok" }),
+      ),
+    );
+
+    const result = await repo.publishCorrection("c-1");
+    expect(result?.message).toBe("ok");
+  });
+
+  it("5xx は throw する", async () => {
+    server.use(
+      http.post(`${API}/admin/corrections/c-1/publish`, () =>
+        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+      ),
+    );
+
+    await expect(repo.publishCorrection("c-1")).rejects.toBeDefined();
+  });
+});
+
 describe("retireCorrection", () => {
   it("path に id を埋め込む", async () => {
     server.use(
