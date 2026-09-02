@@ -7,6 +7,7 @@ import {
   retrievalRuns,
   reviewDecisions,
 } from "~/db";
+import { deleteWithCount } from "./delete-with-count";
 
 export const REVIEW_DECISIONS = [
   "no_issue",
@@ -178,25 +179,31 @@ export const reviewRepository = {
 
   async deleteRunsByThreadId(d1: D1Database, threadId: string) {
     const db = createDb(d1);
-    const where = eq(retrievalRuns.threadId, threadId);
-    const row = await db
-      .select({ c: sql<number>`COUNT(*)` })
-      .from(retrievalRuns)
-      .where(where)
-      .get();
-    await db.delete(retrievalRuns).where(where);
-    return Number(row?.c ?? 0);
+
+    return deleteWithCount(
+      db,
+      retrievalRuns,
+      eq(retrievalRuns.threadId, threadId),
+    );
   },
 
   async deleteDecisionsByThreadId(d1: D1Database, threadId: string) {
     const db = createDb(d1);
-    const where = eq(reviewDecisions.threadId, threadId);
-    const row = await db
-      .select({ c: sql<number>`COUNT(*)` })
-      .from(reviewDecisions)
-      .where(where)
-      .get();
-    await db.delete(reviewDecisions).where(where);
-    return Number(row?.c ?? 0);
+
+    return deleteWithCount(
+      db,
+      reviewDecisions,
+      eq(reviewDecisions.threadId, threadId),
+    );
+  },
+
+  async deleteDecisionsCreatedBefore(d1: D1Database, cutoff: string) {
+    const db = createDb(d1);
+
+    return deleteWithCount(
+      db,
+      reviewDecisions,
+      sql`datetime(${reviewDecisions.createdAt}) < datetime(${cutoff})`,
+    );
   },
 };

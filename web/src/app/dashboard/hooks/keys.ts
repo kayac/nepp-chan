@@ -3,8 +3,8 @@ export const dashboardKeys = {
     ["dashboard", "analytics", "persona", from, to] as const,
   analyticsConversations: (days: number) =>
     ["dashboard", "analytics", "conversations", days] as const,
-  analyticsUsage: (weeks: number) =>
-    ["dashboard", "analytics", "usage", weeks] as const,
+  analyticsUsage: (days: number) =>
+    ["dashboard", "analytics", "usage", days] as const,
   analyticsThreadUsage: (days: number, limit: number) =>
     ["dashboard", "analytics", "usage", "threads", days, limit] as const,
   analyticsOperationCost: (days: number) =>

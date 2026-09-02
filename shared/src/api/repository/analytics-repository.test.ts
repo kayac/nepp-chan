@@ -99,16 +99,16 @@ describe("fetchConversationAnalytics", () => {
 });
 
 describe("fetchUsageAnalytics", () => {
-  it("weeks を渡せる", async () => {
+  it("days を渡せる", async () => {
     server.use(
       http.get(`${API}/admin/analytics/usage`, ({ request }) => {
-        expect(new URL(request.url).searchParams.get("weeks")).toBe("4");
-        return HttpResponse.json({ weekly: [] });
+        expect(new URL(request.url).searchParams.get("days")).toBe("7");
+        return HttpResponse.json({ daily: [] });
       }),
     );
 
-    const result = await repo.fetchUsageAnalytics(4);
-    expect(result?.weekly).toEqual([]);
+    const result = await repo.fetchUsageAnalytics(7);
+    expect(result?.daily).toEqual([]);
   });
 });
 

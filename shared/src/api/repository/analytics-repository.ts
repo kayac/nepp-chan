@@ -25,9 +25,9 @@ export const createAnalyticsRepository = (client: ApiClient) => ({
     return data;
   },
 
-  fetchUsageAnalytics: async (weeks = 12) => {
+  fetchUsageAnalytics: async (days = 30) => {
     const { data, error } = await client.GET("/admin/analytics/usage", {
-      params: { query: { weeks } },
+      params: { query: { days } },
     });
     if (error) throw error;
     return data;

@@ -300,4 +300,62 @@ describe("pollRepository", () => {
       ).rejects.toThrow();
     });
   });
+
+  describe("deleteSubmissionsCreatedBefore", () => {
+    it("期限より前の回答を削除する", async () => {
+      await pollRepository.create(fakeD1, baseInput);
+      await db.insert(pollSubmissions).values({
+        id: "s-old",
+        pollId: "p-1",
+        userId: "u-1",
+        selectedChoice: "春",
+        createdAt: "2024-01-01T00:00:00Z",
+      });
+      await db.insert(pollSubmissions).values({
+        id: "s-new",
+        pollId: "p-1",
+        userId: "u-2",
+        selectedChoice: "夏",
+        createdAt: "2026-01-01T00:00:00Z",
+      });
+
+      const deleted = await pollRepository.deleteSubmissionsCreatedBefore(
+        fakeD1,
+        "2025-01-01T00:00:00Z",
+      );
+
+      expect(deleted).toBe(1);
+      const remaining = await db.select().from(pollSubmissions).all();
+      expect(remaining.map((r) => r.id)).toEqual(["s-new"]);
+    });
+  });
+
+  describe("deleteSubmissionsByUserId", () => {
+    it("指定ユーザーの回答だけを削除して件数を返す", async () => {
+      await pollRepository.create(fakeD1, baseInput);
+      await db.insert(pollSubmissions).values({
+        id: "s-1",
+        pollId: "p-1",
+        userId: "u-1",
+        selectedChoice: "春",
+        createdAt: "2025-01-01T00:00:00Z",
+      });
+      await db.insert(pollSubmissions).values({
+        id: "s-2",
+        pollId: "p-1",
+        userId: "u-2",
+        selectedChoice: "夏",
+        createdAt: "2025-01-01T00:00:00Z",
+      });
+
+      const deleted = await pollRepository.deleteSubmissionsByUserId(
+        fakeD1,
+        "u-1",
+      );
+
+      expect(deleted).toBe(1);
+      const remaining = await db.select().from(pollSubmissions).all();
+      expect(remaining.map((r) => r.id)).toEqual(["s-2"]);
+    });
+  });
 });

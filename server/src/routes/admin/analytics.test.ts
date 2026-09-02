@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("~/services/analytics/aggregate", () => ({
   getConversationStats: vi.fn(),
-  getWeeklyUsage: vi.fn(),
+  getDailyUsage: vi.fn(),
   getThreadUsage: vi.fn(),
   getThreadTurnUsage: vi.fn(),
   getOperationCost: vi.fn(),
@@ -34,7 +34,7 @@ vi.mock("~/services/analytics/ontology", () => ({
 
 const {
   getConversationStats,
-  getWeeklyUsage,
+  getDailyUsage,
   getThreadUsage,
   getThreadTurnUsage,
   getOperationCost,
@@ -416,27 +416,36 @@ describe("GET /usage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useAuth("super_admin");
-    vi.mocked(getWeeklyUsage).mockResolvedValue([]);
+    vi.mocked(getDailyUsage).mockResolvedValue([]);
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-06-10T02:00:00.000Z")); // JST 水曜
+    vi.setSystemTime(new Date("2026-06-10T02:00:00.000Z"));
   });
 
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  it("weeks 週分を今週月曜起点で遡って集計する", async () => {
+  it("days 日分を当日起点で遡って集計する", async () => {
     const res = await routes.request(
-      authedGet("/usage?weeks=2"),
+      authedGet("/usage?days=3"),
       undefined,
       mockEnv,
     );
 
     expect(res.status).toBe(200);
-    // 今週月曜 = JST 06-08、2 週分 = 先週月曜 JST 06-01 から
-    expect(getWeeklyUsage).toHaveBeenCalledWith(mockEnv.DB, {
-      from: "2026-05-31T15:00:00.000Z",
+    // JST 06-10 を含む 3 日分 = JST 06-08 00:00 から
+    expect(getDailyUsage).toHaveBeenCalledWith(mockEnv.DB, {
+      from: "2026-06-07T15:00:00.000Z",
     });
+  });
+
+  it("days > 180 は 400（保持期間を超える）", async () => {
+    const res = await routes.request(
+      authedGet("/usage?days=181"),
+      undefined,
+      mockEnv,
+    );
+    expect(res.status).toBe(400);
   });
 });
 
