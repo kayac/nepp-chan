@@ -8,6 +8,10 @@ import {
 import { and, gte, isNotNull, lt, sql } from "drizzle-orm";
 import { createDb, persona } from "~/db";
 import { calcCostUsd } from "~/lib/llm-pricing";
+import {
+  llmUsageRepository,
+  type UsageSumRow,
+} from "~/repository/llm-usage-repository";
 
 // D1 の createdAt は UTC ISO 文字列。集計はすべて JST（+9 hours）で行い、
 // API は JST ラベル済みのデータを返す（フロントでは変換しない）。
@@ -107,34 +111,6 @@ export const getConversationStats = async (d1: D1Database, period: Period) => {
   };
 };
 
-type UsageSumRow = {
-  model: string;
-  inputTokens: number;
-  outputTokens: number;
-  reasoningTokens: number;
-  cachedInputTokens: number;
-  totalTokens: number;
-  persistedCostUsd: number;
-  legacyInputTokens: number;
-  legacyOutputTokens: number;
-  legacyCachedInputTokens: number;
-};
-
-// トークン合算と costUsd 算出用の SELECT 列。
-// cost_usd は記録時点の単価で永続化されるが、永続化開始前の行（NULL）は
-// legacy* のトークン数から現行単価で概算して合算する
-const usageSumColumns = sql`
-  SUM(input_tokens) AS inputTokens,
-  SUM(output_tokens) AS outputTokens,
-  SUM(reasoning_tokens) AS reasoningTokens,
-  SUM(cached_input_tokens) AS cachedInputTokens,
-  SUM(total_tokens) AS totalTokens,
-  SUM(COALESCE(cost_usd, 0)) AS persistedCostUsd,
-  SUM(CASE WHEN cost_usd IS NULL THEN input_tokens ELSE 0 END) AS legacyInputTokens,
-  SUM(CASE WHEN cost_usd IS NULL THEN output_tokens ELSE 0 END) AS legacyOutputTokens,
-  SUM(CASE WHEN cost_usd IS NULL THEN cached_input_tokens ELSE 0 END) AS legacyCachedInputTokens
-`;
-
 const usageCostUsd = (row: UsageSumRow) =>
   Number(row.persistedCostUsd) +
   calcCostUsd(row.model, {
@@ -157,41 +133,15 @@ export const getDailyUsage = async (
   d1: D1Database,
   params: { from: string },
 ) => {
-  const db = createDb(d1);
-
-  const rows = await db.all<UsageSumRow & { date: string }>(sql`
-    SELECT date(created_at, '+9 hours') AS date,
-           model,
-           ${usageSumColumns}
-    FROM llm_usage
-    WHERE created_at >= ${params.from}
-    GROUP BY date, model
-    ORDER BY date, model
-  `);
+  const rows = await llmUsageRepository.sumByDateAndModel(d1, params);
 
   return rows.map((row) => ({ date: row.date, ...withCost(row) }));
 };
 
 export const getUsageByModel = async (d1: D1Database, period: Period) => {
-  const db = createDb(d1);
-
-  const rows = await db.all<UsageSumRow>(sql`
-    SELECT model,
-           ${usageSumColumns}
-    FROM llm_usage
-    WHERE created_at >= ${period.from} AND created_at < ${period.to}
-    GROUP BY model
-    ORDER BY model
-  `);
+  const rows = await llmUsageRepository.sumByModel(d1, period);
 
   return rows.map(withCost);
-};
-
-type ThreadUsageRow = UsageSumRow & {
-  threadId: string;
-  agent: string | null;
-  platform: string | null;
-  chatCalls: number;
 };
 
 type AgentTotals = {
@@ -216,17 +166,6 @@ const addAgentTotals = (
 
 const sortedAgentTotals = (map: Map<string | null, AgentTotals>) =>
   [...map.values()].sort((a, b) => b.costUsd - a.costUsd);
-
-// 会話に直接かかった費用と、それ以外の運用費を分けて見るための区分。
-// embedding は検索クエリ分（スレッドに紐づく）が会話、ナレッジ同期分が基盤
-const usageCategoryExpr = sql`
-  CASE
-    WHEN source IN ('chat', 'subagent', 'intent-classify', 'rerank') THEN 'conversation'
-    WHEN source = 'embedding' AND thread_id IS NOT NULL THEN 'conversation'
-    WHEN source = 'embedding' THEN 'knowledge-base'
-    ELSE 'batch'
-  END
-`;
 
 // 請求元の突き合わせ用。モデル ID からプロバイダを判定する
 const providerOf = (model: string) => {
@@ -257,27 +196,9 @@ const addProviderTotals = (
 };
 
 export const getOperationCost = async (d1: D1Database, period: Period) => {
-  const db = createDb(d1);
-
   const [rows, dailyRows] = await Promise.all([
-    db.all<UsageSumRow & { category: string; agent: string | null }>(sql`
-      SELECT ${usageCategoryExpr} AS category,
-             agent,
-             model,
-             ${usageSumColumns}
-      FROM llm_usage
-      WHERE created_at >= ${period.from} AND created_at < ${period.to}
-      GROUP BY category, agent, model
-    `),
-    db.all<UsageSumRow & { date: string }>(sql`
-      SELECT date(created_at, '+9 hours') AS date,
-             model,
-             ${usageSumColumns}
-      FROM llm_usage
-      WHERE created_at >= ${period.from} AND created_at < ${period.to}
-      GROUP BY date, model
-      ORDER BY date
-    `),
+    llmUsageRepository.sumByCategory(d1, period),
+    llmUsageRepository.sumByDateAndModel(d1, period),
   ]);
 
   const dailyTotals = new Map<string, number>();
@@ -336,19 +257,7 @@ export const getThreadUsage = async (
   const db = createDb(d1);
 
   const [threadModelRows, messageRows] = await Promise.all([
-    db.all<ThreadUsageRow>(sql`
-      SELECT thread_id AS threadId,
-             agent,
-             model,
-             MAX(platform) AS platform,
-             SUM(CASE WHEN source = 'chat' THEN 1 ELSE 0 END) AS chatCalls,
-             ${usageSumColumns}
-      FROM llm_usage
-      WHERE created_at >= ${period.from} AND created_at < ${period.to}
-        AND thread_id IS NOT NULL
-        AND ${usageCategoryExpr} = 'conversation'
-      GROUP BY thread_id, agent, model
-    `),
+    llmUsageRepository.sumConversationByThread(d1, period),
     db.all<{
       threadId: string;
       firstMessageAt: string;
@@ -463,30 +372,7 @@ export const getThreadUsage = async (
 };
 
 export const getThreadTurnUsage = async (d1: D1Database, threadId: string) => {
-  const db = createDb(d1);
-
-  const rows = await db.all<
-    UsageSumRow & {
-      turnIndex: number | null;
-      agent: string | null;
-      durationMs: number | null;
-      answeredAt: string;
-      intent: string | null;
-    }
-  >(sql`
-    SELECT turn_index AS turnIndex,
-           agent,
-           model,
-           MAX(CASE WHEN source = 'chat' THEN duration_ms END) AS durationMs,
-           MAX(CASE WHEN source = 'chat' THEN created_at END) AS answeredAt,
-           MAX(CASE WHEN source = 'chat' THEN intent END) AS intent,
-           ${usageSumColumns}
-    FROM llm_usage
-    WHERE thread_id = ${threadId}
-      AND ${usageCategoryExpr} = 'conversation'
-    GROUP BY turn_index, agent, model
-    ORDER BY turn_index, agent
-  `);
+  const rows = await llmUsageRepository.sumConversationByTurn(d1, threadId);
 
   type TurnTotals = {
     turnIndex: number | null;
