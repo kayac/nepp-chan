@@ -90,18 +90,18 @@ describe("useConversationAnalytics", () => {
 });
 
 describe("useUsageAnalytics", () => {
-  it("weeks を送って週次 usage を取得する", async () => {
+  it("days を送って日次 usage を取得する", async () => {
     server.use(
       http.get(`${API}/admin/analytics/usage`, ({ request }) => {
-        expect(new URL(request.url).searchParams.get("weeks")).toBe("4");
-        return HttpResponse.json({ weekly: [] });
+        expect(new URL(request.url).searchParams.get("days")).toBe("7");
+        return HttpResponse.json({ daily: [] });
       }),
     );
 
-    const { result } = renderHookWithQuery(() => useUsageAnalytics(4));
+    const { result } = renderHookWithQuery(() => useUsageAnalytics(7));
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.weekly).toEqual([]);
+    expect(result.current.data?.daily).toEqual([]);
   });
 });
 

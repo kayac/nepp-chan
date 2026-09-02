@@ -20,7 +20,7 @@ vi.mock("~/lib/logger", () => ({
 
 const {
   getConversationStats,
-  getWeeklyUsage,
+  getDailyUsage,
   getUsageByModel,
   getThreadUsage,
   getThreadTurnUsage,
@@ -245,7 +245,7 @@ describe("getConversationStats", () => {
   });
 });
 
-describe("getWeeklyUsage", () => {
+describe("getDailyUsage", () => {
   let db: TestDb;
 
   const insertUsage = async (params: {
@@ -271,33 +271,33 @@ describe("getWeeklyUsage", () => {
     testDbHolder.db = db;
   });
 
-  it("JST 基準で「その週の月曜」に正規化して週次集計する", async () => {
-    // JST 2026-06-08(月) 00:00 ちょうど → 週初め 06-08
+  it("JST の日付ごとに集計する", async () => {
+    // JST 2026-06-08 00:00 ちょうど
     await insertUsage({
       id: "u1",
       inputTokens: 100,
       createdAt: "2026-06-07T15:00:00.000Z",
     });
-    // JST 2026-06-14(日) 23:59 → 同じ週
+    // JST 2026-06-08 23:59 → 同じ日
     await insertUsage({
       id: "u2",
       inputTokens: 200,
-      createdAt: "2026-06-14T14:59:59.000Z",
+      createdAt: "2026-06-08T14:59:59.000Z",
     });
-    // JST 2026-06-15(月) 00:00 → 翌週
+    // JST 2026-06-09 00:00 → 翌日
     await insertUsage({
       id: "u3",
       inputTokens: 400,
-      createdAt: "2026-06-14T15:00:00.000Z",
+      createdAt: "2026-06-08T15:00:00.000Z",
     });
 
-    const weekly = await getWeeklyUsage(d1, {
+    const daily = await getDailyUsage(d1, {
       from: "2026-06-01T00:00:00.000Z",
     });
 
-    expect(weekly).toEqual([
-      expect.objectContaining({ weekStart: "2026-06-08", inputTokens: 300 }),
-      expect.objectContaining({ weekStart: "2026-06-15", inputTokens: 400 }),
+    expect(daily).toEqual([
+      expect.objectContaining({ date: "2026-06-08", inputTokens: 300 }),
+      expect.objectContaining({ date: "2026-06-09", inputTokens: 400 }),
     ]);
   });
 
@@ -317,19 +317,19 @@ describe("getWeeklyUsage", () => {
       createdAt: "2026-06-09T01:00:00.000Z",
     });
 
-    const weekly = await getWeeklyUsage(d1, {
+    const daily = await getDailyUsage(d1, {
       from: "2026-06-01T00:00:00.000Z",
     });
 
-    expect(weekly).toHaveLength(2);
-    const flash = weekly.find((w) => w.model === "gemini-2.5-flash");
-    const lite = weekly.find((w) => w.model === "gemini-2.5-flash-lite");
+    expect(daily).toHaveLength(2);
+    const flash = daily.find((d) => d.model === "gemini-2.5-flash");
+    const lite = daily.find((d) => d.model === "gemini-2.5-flash-lite");
     expect(flash?.costUsd).toBeCloseTo(2.8, 10);
     expect(lite?.costUsd).toBeCloseTo(0.1, 10);
   });
 });
 
-describe("getWeeklyUsage（costUsd 永続化との併用）", () => {
+describe("getDailyUsage（costUsd 永続化との併用）", () => {
   let db: TestDb;
 
   beforeEach(async () => {
@@ -361,12 +361,12 @@ describe("getWeeklyUsage（costUsd 永続化との併用）", () => {
       },
     ]);
 
-    const weekly = await getWeeklyUsage(d1, {
+    const daily = await getDailyUsage(d1, {
       from: "2026-06-01T00:00:00.000Z",
     });
 
     // 永続 0.5 + NULL 行の概算（1M input × $0.20/1M = 0.2）
-    expect(weekly[0]?.costUsd).toBeCloseTo(0.7, 10);
+    expect(daily[0]?.costUsd).toBeCloseTo(0.7, 10);
   });
 });
 

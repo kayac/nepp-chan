@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { createDb, type ThreadPersonaStatus, threadPersonaStatus } from "~/db";
+import { deleteWithCount } from "./delete-with-count";
 
 type UpsertInput = {
   threadId: string;
@@ -46,12 +47,36 @@ export const threadPersonaStatusRepository = {
       });
   },
 
+  async syncMessageCounts(d1: D1Database) {
+    const db = createDb(d1);
+
+    await db.run(sql`
+      UPDATE thread_persona_status
+      SET last_message_count = COALESCE((
+        SELECT COUNT(*) FROM mastra_messages
+        WHERE mastra_messages.thread_id = thread_persona_status.thread_id
+      ), 0)
+    `);
+  },
+
+  async deleteOrphaned(d1: D1Database) {
+    const db = createDb(d1);
+
+    return deleteWithCount(
+      db,
+      threadPersonaStatus,
+      sql`${threadPersonaStatus.threadId} NOT IN (SELECT id FROM mastra_threads)`,
+    );
+  },
+
   async delete(d1: D1Database, threadId: string) {
     const db = createDb(d1);
 
-    await db
-      .delete(threadPersonaStatus)
-      .where(eq(threadPersonaStatus.threadId, threadId));
+    return deleteWithCount(
+      db,
+      threadPersonaStatus,
+      eq(threadPersonaStatus.threadId, threadId),
+    );
   },
 };
 

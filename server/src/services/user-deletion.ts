@@ -1,32 +1,14 @@
-import type { SQL } from "drizzle-orm";
-import { eq, sql } from "drizzle-orm";
-import type { SQLiteTable } from "drizzle-orm/sqlite-core";
-
-import {
-  createDb,
-  type DbClient,
-  mastraMessages,
-  mastraResources,
-  mastraThreads,
-  messageFeedback,
-  pollSubmissions,
-  threadPersonaStatus,
-  userBroadcastState,
-  userPollState,
-} from "~/db";
 import { hmacSha256 } from "~/lib/crypto";
 import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
-
-const countAndDelete = async (db: DbClient, table: SQLiteTable, where: SQL) => {
-  const row = await db
-    .select({ c: sql<number>`COUNT(*)` })
-    .from(table)
-    .where(where)
-    .get();
-  await db.delete(table).where(where);
-  return Number(row?.c ?? 0);
-};
+import { feedbackRepository } from "~/repository/feedback-repository";
+import { mastraMessageRepository } from "~/repository/mastra-message-repository";
+import { mastraResourceRepository } from "~/repository/mastra-resource-repository";
+import { mastraThreadRepository } from "~/repository/mastra-thread-repository";
+import { pollRepository } from "~/repository/poll-repository";
+import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
+import { userBroadcastStateRepository } from "~/repository/user-broadcast-state-repository";
+import { userPollStateRepository } from "~/repository/user-poll-state-repository";
 
 export const deleteAllByLineUserId = async (
   env: CloudflareBindings,
@@ -36,53 +18,35 @@ export const deleteAllByLineUserId = async (
   const lineThreadId = `line-thread:${hashedUserId}`;
   const lineResourceId = `line:${hashedUserId}`;
 
-  const db = createDb(env.DB);
-
   try {
     // Mastra テーブルは drizzle の migration 対象外（tablesFilter で除外）。
     // 未初期化の D1 に対して unfollow が最初に届くと "no such table" になるため、
     // D1Store.init() を経由してテーブルの存在を保証する。
     await getStorage(env.DB);
 
-    const mastraMessagesDeleted = await countAndDelete(
-      db,
-      mastraMessages,
-      eq(mastraMessages.threadId, lineThreadId),
+    const mastraMessagesDeleted =
+      await mastraMessageRepository.deleteByThreadId(env.DB, lineThreadId);
+    const messageFeedbackDeleted = await feedbackRepository.deleteByThreadId(
+      env.DB,
+      lineThreadId,
     );
-    const messageFeedbackDeleted = await countAndDelete(
-      db,
-      messageFeedback,
-      eq(messageFeedback.threadId, lineThreadId),
+    const threadPersonaStatusDeleted =
+      await threadPersonaStatusRepository.delete(env.DB, lineThreadId);
+    const mastraThreadsDeleted = await mastraThreadRepository.deleteById(
+      env.DB,
+      lineThreadId,
     );
-    const threadPersonaStatusDeleted = await countAndDelete(
-      db,
-      threadPersonaStatus,
-      eq(threadPersonaStatus.threadId, lineThreadId),
+    const mastraResourcesDeleted = await mastraResourceRepository.deleteById(
+      env.DB,
+      lineResourceId,
     );
-    const mastraThreadsDeleted = await countAndDelete(
-      db,
-      mastraThreads,
-      eq(mastraThreads.id, lineThreadId),
-    );
-    const mastraResourcesDeleted = await countAndDelete(
-      db,
-      mastraResources,
-      eq(mastraResources.id, lineResourceId),
-    );
-    const pollSubmissionsDeleted = await countAndDelete(
-      db,
-      pollSubmissions,
-      eq(pollSubmissions.userId, hashedUserId),
-    );
-    const userBroadcastStateDeleted = await countAndDelete(
-      db,
-      userBroadcastState,
-      eq(userBroadcastState.userId, hashedUserId),
-    );
-    const userPollStateDeleted = await countAndDelete(
-      db,
-      userPollState,
-      eq(userPollState.userId, hashedUserId),
+    const pollSubmissionsDeleted =
+      await pollRepository.deleteSubmissionsByUserId(env.DB, hashedUserId);
+    const userBroadcastStateDeleted =
+      await userBroadcastStateRepository.deleteByUserId(env.DB, hashedUserId);
+    const userPollStateDeleted = await userPollStateRepository.deleteByUserId(
+      env.DB,
+      hashedUserId,
     );
 
     logger.info("user_data_deleted", {

@@ -4,8 +4,11 @@ import {
   count,
   desc,
   eq,
+  gte,
   inArray,
+  isNotNull,
   like,
+  lt,
   or,
   type SQL,
   sql,
@@ -50,6 +53,26 @@ const personaFilters = (options: PersonaFilter): SQL[] => {
 
 // 集計は正規化後の話題で行う（NULL と未知の値は その他 に寄せる）
 const normalizedTopic = sql`CASE WHEN ${inArray(persona.topic, NAMED_TOPICS)} THEN ${persona.topic} ELSE ${OTHER_TOPIC} END`;
+
+// sortDate と違い conversationEndedAt が NULL の声は期間に含めない
+type ConversationPeriod = { from?: string; to?: string };
+
+const conversationPeriodFilters = (period: ConversationPeriod): SQL[] =>
+  [
+    period.from ? gte(persona.conversationEndedAt, period.from) : undefined,
+    period.to ? lt(persona.conversationEndedAt, period.to) : undefined,
+  ].filter((c) => c !== undefined);
+
+const conversationHour = sql<number>`CAST(strftime('%H', ${persona.conversationEndedAt}, '+9 hours') AS INTEGER)`;
+const conversationWeekday = sql<number>`CAST(strftime('%w', ${persona.conversationEndedAt}, '+9 hours') AS INTEGER)`;
+// 開庁 = 平日（月〜金）の 8〜17 時 JST。それ以外は閉庁
+const isOfficeOpen = sql<number>`CASE WHEN ${conversationWeekday} BETWEEN 1 AND 5 AND ${conversationHour} BETWEEN 8 AND 16 THEN 1 ELSE 0 END`;
+
+const endedInPeriod = (period: ConversationPeriod) =>
+  and(
+    isNotNull(persona.conversationEndedAt),
+    ...conversationPeriodFilters(period),
+  );
 
 const TOP_TAGS_LIMIT = 3;
 
@@ -400,6 +423,96 @@ export const personaRepository = {
         topTags: topTagsByTopic.get(row.topic) ?? [],
       }))
       .sort((a, b) => b.total - a.total);
+  },
+
+  async listCreatedBetween(
+    d1: D1Database,
+    period: { from: string; to: string },
+  ) {
+    const db = createDb(d1);
+
+    return db
+      .select({
+        category: persona.category,
+        topic: persona.topic,
+        sentiment: persona.sentiment,
+        content: persona.content,
+      })
+      .from(persona)
+      .where(
+        and(
+          gte(persona.createdAt, period.from),
+          lt(persona.createdAt, period.to),
+        ),
+      )
+      .all();
+  },
+
+  async listAttributes(d1: D1Database, period: ConversationPeriod) {
+    const db = createDb(d1);
+
+    const conditions = conversationPeriodFilters(period);
+
+    return db
+      .select({
+        tags: persona.tags,
+        demographicSummary: persona.demographicSummary,
+        topic: persona.topic,
+        sentiment: persona.sentiment,
+      })
+      .from(persona)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .all();
+  },
+
+  async listAllAttributesWithEntities(d1: D1Database) {
+    const db = createDb(d1);
+
+    return db
+      .select({
+        tags: persona.tags,
+        demographicSummary: persona.demographicSummary,
+        topic: persona.topic,
+        sentiment: persona.sentiment,
+        entities: persona.entities,
+      })
+      .from(persona)
+      .all();
+  },
+
+  async countByConversationHour(d1: D1Database, period: ConversationPeriod) {
+    const db = createDb(d1);
+
+    return db
+      .select({ hour: conversationHour, count: sql<number>`COUNT(*)` })
+      .from(persona)
+      .where(endedInPeriod(period))
+      .groupBy(conversationHour)
+      .all();
+  },
+
+  async countByConversationWeekday(d1: D1Database, period: ConversationPeriod) {
+    const db = createDb(d1);
+
+    return db
+      .select({ dow: conversationWeekday, count: sql<number>`COUNT(*)` })
+      .from(persona)
+      .where(endedInPeriod(period))
+      .groupBy(conversationWeekday)
+      .all();
+  },
+
+  async countOfficeHours(d1: D1Database, period: ConversationPeriod) {
+    const db = createDb(d1);
+
+    return db
+      .select({
+        open: sql<number>`SUM(${isOfficeOpen})`,
+        total: sql<number>`COUNT(*)`,
+      })
+      .from(persona)
+      .where(endedInPeriod(period))
+      .get();
   },
 
   async getStats(d1: D1Database) {

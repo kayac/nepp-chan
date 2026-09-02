@@ -1,15 +1,15 @@
 import { Mastra } from "@mastra/core/mastra";
 import { Memory } from "@mastra/memory";
-import { count, desc, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
-import { createDb, mastraMessages, mastraThreads } from "~/db";
 import type { LlmServiceTier } from "~/lib/llm-pricing";
 import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
 import { getPersonaAgent } from "~/mastra/agents/persona-agent";
 import { getWorkingMemoryByThread } from "~/mastra/memory";
 import { createRequestContext } from "~/mastra/request-context";
+import { mastraMessageRepository } from "~/repository/mastra-message-repository";
+import { mastraThreadRepository } from "~/repository/mastra-thread-repository";
 import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
 
 type ExtractResult =
@@ -131,33 +131,15 @@ export const extractPersonaFromThread = async (
 type ThreadInfo = { id: string; resourceId: string };
 
 const getAllThreads = async (d1: D1Database): Promise<ThreadInfo[]> => {
-  const db = createDb(d1);
+  const threads = await mastraThreadRepository.findAll(d1);
 
-  const results = await db
-    .select({
-      id: mastraThreads.id,
-      resourceId: mastraThreads.resourceId,
-    })
-    .from(mastraThreads)
-    .orderBy(desc(mastraThreads.id))
-    .all();
-
-  return results.filter((t): t is ThreadInfo => t.resourceId !== null);
+  return threads.filter((t): t is ThreadInfo => t.resourceId !== null);
 };
 
 const getMessageCountsByThread = async (
   d1: D1Database,
 ): Promise<Map<string, number>> => {
-  const db = createDb(d1);
-
-  const results = await db
-    .select({
-      threadId: mastraMessages.threadId,
-      count: count(),
-    })
-    .from(mastraMessages)
-    .groupBy(mastraMessages.threadId)
-    .all();
+  const results = await mastraMessageRepository.countByThread(d1);
 
   return new Map(results.map((r) => [r.threadId, r.count]));
 };
@@ -218,16 +200,7 @@ const findThreadById = async (
   d1: D1Database,
   threadId: string,
 ): Promise<ThreadInfo> => {
-  const db = createDb(d1);
-
-  const thread = await db
-    .select({
-      id: mastraThreads.id,
-      resourceId: mastraThreads.resourceId,
-    })
-    .from(mastraThreads)
-    .where(eq(mastraThreads.id, threadId))
-    .get();
+  const thread = await mastraThreadRepository.findById(d1, threadId);
 
   if (!thread?.resourceId) {
     throw new HTTPException(404, { message: "スレッドが見つかりません" });

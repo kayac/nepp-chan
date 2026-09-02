@@ -14,6 +14,7 @@ vi.mock("~/db", async (importOriginal) => {
   };
 });
 
+const { mastraMessages, mastraThreads } = await import("~/db");
 const { threadPersonaStatusRepository } = await import(
   "./thread-persona-status-repository"
 );
@@ -116,10 +117,82 @@ describe("threadPersonaStatusRepository", () => {
       expect(all.map((r) => r.threadId)).toEqual(["t-2"]);
     });
 
-    it("冪等: 存在しない threadId の削除はエラーにならない", async () => {
+    it("冪等: 存在しない threadId の削除は 0 件を返す", async () => {
       await expect(
         threadPersonaStatusRepository.delete(fakeD1, "ghost"),
-      ).resolves.toBeUndefined();
+      ).resolves.toBe(0);
+    });
+  });
+
+  describe("syncMessageCounts", () => {
+    it("残っているメッセージ数で処理済み件数を再計算する", async () => {
+      await threadPersonaStatusRepository.upsert(fakeD1, {
+        threadId: "t-1",
+        lastExtractedAt: "2025-01-01T00:00:00Z",
+        lastMessageCount: 10,
+      });
+      const db = testDbHolder.db;
+      if (!db) throw new Error("test db is not initialized");
+      await db.insert(mastraMessages).values({
+        id: "m-1",
+        threadId: "t-1",
+        role: "user",
+        createdAt: "2025-01-01T00:00:00Z",
+      });
+
+      await threadPersonaStatusRepository.syncMessageCounts(fakeD1);
+
+      const found = await threadPersonaStatusRepository.findByThreadId(
+        fakeD1,
+        "t-1",
+      );
+      expect(found?.lastMessageCount).toBe(1);
+    });
+
+    it("メッセージが残っていなければ 0 にする", async () => {
+      await threadPersonaStatusRepository.upsert(fakeD1, {
+        threadId: "t-1",
+        lastExtractedAt: "2025-01-01T00:00:00Z",
+        lastMessageCount: 10,
+      });
+
+      await threadPersonaStatusRepository.syncMessageCounts(fakeD1);
+
+      const found = await threadPersonaStatusRepository.findByThreadId(
+        fakeD1,
+        "t-1",
+      );
+      expect(found?.lastMessageCount).toBe(0);
+    });
+  });
+
+  describe("deleteOrphaned", () => {
+    it("スレッドが消えた状態だけを削除する", async () => {
+      const db = testDbHolder.db;
+      if (!db) throw new Error("test db is not initialized");
+      await db.insert(mastraThreads).values({
+        id: "t-alive",
+        resourceId: "web:a",
+        createdAt: "2025-01-01T00:00:00Z",
+      });
+      for (const threadId of ["t-alive", "t-gone"]) {
+        await threadPersonaStatusRepository.upsert(fakeD1, {
+          threadId,
+          lastExtractedAt: "2025-01-01T00:00:00Z",
+          lastMessageCount: 1,
+        });
+      }
+
+      const deleted =
+        await threadPersonaStatusRepository.deleteOrphaned(fakeD1);
+
+      expect(deleted).toBe(1);
+      expect(
+        await threadPersonaStatusRepository.findByThreadId(fakeD1, "t-alive"),
+      ).not.toBeNull();
+      expect(
+        await threadPersonaStatusRepository.findByThreadId(fakeD1, "t-gone"),
+      ).toBeNull();
     });
   });
 });

@@ -3,7 +3,7 @@ import {
   normalizeTopic,
   personaAttributes,
 } from "@nepp-chan/shared/lib/persona-attributes";
-import { createDb, persona } from "~/db";
+import { personaRepository } from "~/repository/persona-repository";
 import { personaEntitiesSchema } from "~/schemas/persona-entity-schema";
 import { emptySentimentCounts } from "./aggregate";
 
@@ -153,18 +153,7 @@ type EntityAgg = {
 };
 
 export const getOntology = async (d1: D1Database): Promise<OntologyData> => {
-  const db = createDb(d1);
-
-  const rows = await db
-    .select({
-      tags: persona.tags,
-      demographicSummary: persona.demographicSummary,
-      topic: persona.topic,
-      sentiment: persona.sentiment,
-      entities: persona.entities,
-    })
-    .from(persona)
-    .all();
+  const rows = await personaRepository.listAllAttributesWithEntities(d1);
 
   const segmentCounts = new Map<Segment, number>();
   const topicAgg = new Map<
