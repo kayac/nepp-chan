@@ -21,13 +21,13 @@ export const conversationAnalyticsQuerySchema = z.object({
 });
 
 export const usageAnalyticsQuerySchema = z.object({
-  weeks: z.coerce
+  days: z.coerce
     .number()
     .int()
     .min(1)
-    .max(26)
-    .default(12)
-    .describe("集計対象の直近週数"),
+    .max(180)
+    .default(30)
+    .describe("集計対象の直近日数（llm_usage の保持期間 180 日が上限）"),
 });
 
 export const weeklyReportsQuerySchema = z.object({
@@ -130,7 +130,7 @@ const modelUsageShape = {
 };
 
 export const usageAnalyticsResponseSchema = z.object({
-  weekly: z.array(z.object({ weekStart: z.string(), ...modelUsageShape })),
+  daily: z.array(z.object({ date: z.string(), ...modelUsageShape })),
 });
 
 export const threadUsageQuerySchema = z.object({

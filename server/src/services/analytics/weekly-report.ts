@@ -1,6 +1,4 @@
 import { Mastra } from "@mastra/core/mastra";
-import { and, gte, lt } from "drizzle-orm";
-import { createDb, persona } from "~/db";
 import { DAY_MS, jstDateLabel, startOfJstWeek, WEEK_MS } from "~/lib/date";
 import { OPENAI_LITE } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
@@ -10,6 +8,7 @@ import {
   weeklyReportAgent,
 } from "~/mastra/agents/weekly-report-agent";
 import { createRequestContext } from "~/mastra/request-context";
+import { personaRepository } from "~/repository/persona-repository";
 import { weeklyReportRepository } from "~/repository/weekly-report-repository";
 import type { WeeklyStats } from "~/schemas/analytics-schema";
 import {
@@ -42,23 +41,7 @@ const generateWeeklySummary = async (
   env: CloudflareBindings,
   period: { from: string; to: string },
 ) => {
-  const db = createDb(env.DB);
-
-  const voices = await db
-    .select({
-      category: persona.category,
-      topic: persona.topic,
-      sentiment: persona.sentiment,
-      content: persona.content,
-    })
-    .from(persona)
-    .where(
-      and(
-        gte(persona.createdAt, period.from),
-        lt(persona.createdAt, period.to),
-      ),
-    )
-    .all();
+  const voices = await personaRepository.listCreatedBetween(env.DB, period);
 
   if (voices.length === 0) {
     return NO_VOICE_SUMMARY;

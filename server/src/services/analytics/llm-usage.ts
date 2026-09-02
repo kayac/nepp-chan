@@ -1,10 +1,9 @@
 import type { RequestContext } from "@mastra/core/request-context";
 import type { MastraOnFinishCallbackArgs } from "@mastra/core/stream";
-import { and, count, eq } from "drizzle-orm";
-import { createDb, llmUsage } from "~/db";
 import { calcCostUsd, type LlmServiceTier } from "~/lib/llm-pricing";
 import { logger } from "~/lib/logger";
 import { waitUntilInBackground } from "~/lib/wait-until";
+import { llmUsageRepository } from "~/repository/llm-usage-repository";
 
 export type LlmUsagePlatform = "web" | "line" | "lp" | "widget" | "voice";
 
@@ -51,12 +50,11 @@ export const recordLlmUsage = async (
   params: LlmUsageParams,
 ) => {
   try {
-    const db = createDb(d1);
     const inputTokens = finiteOrZero(params.usage?.inputTokens);
     const outputTokens = finiteOrZero(params.usage?.outputTokens);
     const reasoningTokens = finiteOrZero(params.usage?.reasoningTokens);
     const cachedInputTokens = finiteOrZero(params.usage?.cachedInputTokens);
-    await db.insert(llmUsage).values({
+    await llmUsageRepository.create(d1, {
       id: crypto.randomUUID(),
       model: params.model,
       inputTokens,
@@ -96,13 +94,8 @@ export const recordLlmUsage = async (
  */
 export const nextTurnIndex = async (d1: D1Database, threadId: string) => {
   try {
-    const db = createDb(d1);
-    const row = await db
-      .select({ value: count() })
-      .from(llmUsage)
-      .where(and(eq(llmUsage.threadId, threadId), eq(llmUsage.source, "chat")))
-      .get();
-    return Number(row?.value ?? 0) + 1;
+    const chatCalls = await llmUsageRepository.countChatByThread(d1, threadId);
+    return chatCalls + 1;
   } catch (error) {
     logger.warn("[LlmUsage] failed to resolve turn index", {
       error: String(error),

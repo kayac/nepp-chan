@@ -5,7 +5,7 @@ import {
   useWeeklyReports,
 } from "~/app/dashboard/hooks/useAnalytics";
 import { HourlyChart } from "./HourlyChart";
-import { formatCostUsd } from "./helpers";
+import { formatCostJpy } from "./helpers";
 import {
   SectionCard,
   SectionEmpty,
@@ -69,7 +69,7 @@ const ReportDetail = ({ id }: { id: string }) => {
                     {u.totalTokens.toLocaleString()}
                   </td>
                   <td className="px-3 py-2 text-right text-stone-700">
-                    {formatCostUsd(u.costUsd)}
+                    {formatCostJpy(u.costUsd)}
                   </td>
                 </tr>
               ))}
