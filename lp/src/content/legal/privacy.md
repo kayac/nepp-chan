@@ -121,14 +121,14 @@ LINE 公式アカウントを「友だち追加」いただき、または Web �
 | 委託先 | 所在国 | 委託業務 |
 | --- | --- | --- |
 | Cloudflare, Inc. | 米国 | 本サービスのクラウド基盤の提供 |
-| Google LLC | 米国 | AI による応答生成、ウェブ情報検索の提供 |
-| OpenAI, L.L.C. | 米国 | AI による応答生成 |
+| OpenAI, L.L.C. | 米国 | AI による応答生成、資料検索のためのテキスト解析 |
+| Google LLC | 米国 | AI による応答生成、資料検索のためのテキスト解析、ウェブ情報検索の提供 |
 | Functional Software, Inc. (Sentry) | 米国 | エラー監視・通知 |
 
 2. 弊社は、本サービスの応答生成、応答品質の評価および改善のため、以下の AI サービスを利用し、個人情報を含むデータを処理する場合があります。
 
-- Google LLC が提供する Gemini
 - OpenAI, L.L.C. が提供する GPT
+- Google LLC が提供する Gemini
 
 これらのサービスを利用する際は、各社のプライバシーポリシーおよびセキュリティ基準を確認し、個人情報の適切な取り扱いを確保します。なお、これらのサービスにおいて、お客様の個人情報が AI モデルの学習データとして利用されることはありません。
 
@@ -157,8 +157,8 @@ LINE 公式アカウントを「友だち追加」いただき、または Web �
 | 提供先 | 所在国 | 個人情報保護に関する制度の概要 |
 | --- | --- | --- |
 | Cloudflare, Inc. | 米国 | 米国は個人情報保護委員会の十分性認定を受けていない国です。米国には日本の個人情報保護法に相当する包括的な連邦法は存在せず、州法および分野別の連邦法により規律されます。 |
-| Google LLC | 米国 | 同上 |
 | OpenAI, L.L.C. | 米国 | 同上 |
+| Google LLC | 米国 | 同上 |
 | Functional Software, Inc. (Sentry) | 米国 | 同上 |
 
 詳細につきましては、第１１条記載の窓口までお問い合わせください。
@@ -196,7 +196,8 @@ LINE 公式アカウントを「友だち追加」いただき、または Web �
 
 | サービス名 | 提供者・所在国 | 送信される情報の概要 | 利用目的 | プライバシーポリシー |
 | --- | --- | --- | --- | --- |
-| Gemini | Google LLC（米国） | お客様が本サービスに送信されたご質問・メッセージ | 音威子府村に関するご質問に対する AI 応答の生成 | [https://policies.google.com/privacy](https://policies.google.com/privacy) |
+| GPT（OpenAI API） | OpenAI, L.L.C.（米国） | お客様が本サービスに送信されたご質問・メッセージ | 音威子府村に関するご質問に対する AI 応答の生成、資料検索のためのテキスト解析 | [https://openai.com/policies/privacy-policy/](https://openai.com/policies/privacy-policy/) |
+| Gemini | Google LLC（米国） | お客様が本サービスに送信されたご質問・メッセージ | 音威子府村に関するご質問に対する AI 応答の生成、資料検索のためのテキスト解析 | [https://policies.google.com/privacy](https://policies.google.com/privacy) |
 | Google 検索 | Google LLC（米国） | ご質問内容から弊社が生成した検索キーワード | 公開情報の補足取得 | [https://policies.google.com/privacy](https://policies.google.com/privacy) |
 
 なお、本サービスでは、ユーザーの行動を追跡する第三者 Cookie や広告計測タグ等は使用しておりません。
