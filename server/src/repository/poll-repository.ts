@@ -179,6 +179,16 @@ export const pollRepository = {
     return input.id;
   },
 
+  async deleteSubmissionsByUserId(d1: D1Database, userId: string) {
+    const db = createDb(d1);
+
+    return deleteWithCount(
+      db,
+      pollSubmissions,
+      eq(pollSubmissions.userId, userId),
+    );
+  },
+
   async deleteSubmissionsCreatedBefore(d1: D1Database, cutoff: string) {
     const db = createDb(d1);
 

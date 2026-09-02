@@ -72,9 +72,11 @@ export const threadPersonaStatusRepository = {
   async delete(d1: D1Database, threadId: string) {
     const db = createDb(d1);
 
-    await db
-      .delete(threadPersonaStatus)
-      .where(eq(threadPersonaStatus.threadId, threadId));
+    return deleteWithCount(
+      db,
+      threadPersonaStatus,
+      eq(threadPersonaStatus.threadId, threadId),
+    );
   },
 };
 

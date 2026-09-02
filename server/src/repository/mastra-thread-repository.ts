@@ -32,6 +32,12 @@ export const mastraThreadRepository = {
     return result ?? null;
   },
 
+  async deleteById(d1: D1Database, id: string) {
+    const db = createDb(d1);
+
+    return deleteWithCount(db, mastraThreads, eq(mastraThreads.id, id));
+  },
+
   async deleteEmptyCreatedBefore(d1: D1Database, cutoff: string) {
     const db = createDb(d1);
 

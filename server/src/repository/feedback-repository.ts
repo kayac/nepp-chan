@@ -170,9 +170,11 @@ export const feedbackRepository = {
   async deleteByThreadId(d1: D1Database, threadId: string) {
     const db = createDb(d1);
 
-    await db
-      .delete(messageFeedback)
-      .where(eq(messageFeedback.threadId, threadId));
+    return deleteWithCount(
+      db,
+      messageFeedback,
+      eq(messageFeedback.threadId, threadId),
+    );
   },
 
   async delete(d1: D1Database, id: string) {

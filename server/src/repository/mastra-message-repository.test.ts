@@ -291,4 +291,23 @@ describe("mastraMessageRepository", () => {
       expect(await db.select().from(mastraMessages).all()).toHaveLength(1);
     });
   });
+
+  describe("deleteByThreadId", () => {
+    it("指定スレッドのメッセージだけを削除して件数を返す", async () => {
+      await insertMessage(db, {
+        threadId: "t-1",
+        createdAt: "2026-06-01T00:00:00.000Z",
+      });
+      await insertMessage(db, {
+        threadId: "t-2",
+        createdAt: "2026-06-01T00:00:00.000Z",
+      });
+
+      const deleted = await mastraMessageRepository.deleteByThreadId(d1, "t-1");
+
+      expect(deleted).toBe(1);
+      const rows = await db.select().from(mastraMessages).all();
+      expect(rows.map((r) => r.threadId)).toEqual(["t-2"]);
+    });
+  });
 });

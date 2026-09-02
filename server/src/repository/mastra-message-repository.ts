@@ -1,4 +1,4 @@
-import { count, sql } from "drizzle-orm";
+import { count, eq, sql } from "drizzle-orm";
 
 import { createDb, mastraMessages } from "~/db";
 import { deleteWithCount } from "./delete-with-count";
@@ -104,6 +104,16 @@ export const mastraMessageRepository = {
       .from(mastraMessages)
       .groupBy(mastraMessages.threadId)
       .all();
+  },
+
+  async deleteByThreadId(d1: D1Database, threadId: string) {
+    const db = createDb(d1);
+
+    return deleteWithCount(
+      db,
+      mastraMessages,
+      eq(mastraMessages.threadId, threadId),
+    );
   },
 
   async deleteCreatedBefore(d1: D1Database, cutoff: string) {

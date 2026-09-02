@@ -244,10 +244,10 @@ describe("feedbackRepository", () => {
       expect(await feedbackRepository.findById(fakeD1, "f-3")).not.toBeNull();
     });
 
-    it("該当が無くてもエラーにならない", async () => {
+    it("該当が無ければ 0 件を返す", async () => {
       await expect(
         feedbackRepository.deleteByThreadId(fakeD1, "ghost"),
-      ).resolves.toBeUndefined();
+      ).resolves.toBe(0);
     });
   });
 

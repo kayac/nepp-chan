@@ -123,4 +123,17 @@ describe("mastraThreadRepository", () => {
       expect(await db.select().from(mastraThreads).all()).toHaveLength(0);
     });
   });
+
+  describe("deleteById", () => {
+    it("指定スレッドだけを削除して件数を返す", async () => {
+      await insertThread(db, "t-1", "web:a");
+      await insertThread(db, "t-2", "web:b");
+
+      const deleted = await mastraThreadRepository.deleteById(d1, "t-1");
+
+      expect(deleted).toBe(1);
+      const rows = await db.select().from(mastraThreads).all();
+      expect(rows.map((r) => r.id)).toEqual(["t-2"]);
+    });
+  });
 });

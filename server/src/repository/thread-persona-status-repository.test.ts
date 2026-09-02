@@ -117,10 +117,10 @@ describe("threadPersonaStatusRepository", () => {
       expect(all.map((r) => r.threadId)).toEqual(["t-2"]);
     });
 
-    it("冪等: 存在しない threadId の削除はエラーにならない", async () => {
+    it("冪等: 存在しない threadId の削除は 0 件を返す", async () => {
       await expect(
         threadPersonaStatusRepository.delete(fakeD1, "ghost"),
-      ).resolves.toBeUndefined();
+      ).resolves.toBe(0);
     });
   });
 
