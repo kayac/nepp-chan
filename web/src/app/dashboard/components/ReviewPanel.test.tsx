@@ -120,4 +120,58 @@ describe("ReviewPanel", () => {
     renderWithQuery(<ReviewPanel />);
     expect(await screen.findByText("誤り")).toBeInTheDocument();
   });
+  it("取得に失敗したらエラーを表示する", async () => {
+    server.use(
+      http.get(`${API}/admin/review`, () =>
+        HttpResponse.json(
+          { error: { code: 500, message: "一覧の取得に失敗しました" } },
+          { status: 500 },
+        ),
+      ),
+    );
+
+    renderWithQuery(<ReviewPanel />);
+
+    expect(
+      await screen.findByText(/一覧の取得に失敗しました/),
+    ).toBeInTheDocument();
+  });
+
+  it("詳細を開いて閉じられる", async () => {
+    server.use(
+      http.get(`${API}/admin/review`, () =>
+        HttpResponse.json({
+          items: [queueItem()],
+          nextCursor: null,
+          hasMore: false,
+        }),
+      ),
+      http.get(`${API}/admin/review/ar-1`, () =>
+        HttpResponse.json({
+          answerRunId: "ar-1",
+          threadId: "thread-1",
+          messageId: "msg-1",
+          turnIndex: 1,
+          createdAt: "2026-09-01T00:00:00.000Z",
+          flags: { zeroHit: true, webFallback: false, badFeedback: true },
+          runs: [],
+          conversation: { question: "村営バスの時刻は？", answer: "9時です" },
+          archivedEvidence: null,
+          feedbacks: [],
+          decisions: [],
+        }),
+      ),
+    );
+
+    renderWithQuery(<ReviewPanel />);
+    await screen.findByText("村営バスの時刻");
+
+    await userEvent.click(screen.getByRole("button", { name: "詳細" }));
+    expect(await screen.findByText("村営バスの時刻は？")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "閉じる" }));
+    await waitFor(() =>
+      expect(screen.queryByText("村営バスの時刻は？")).not.toBeInTheDocument(),
+    );
+  });
 });
