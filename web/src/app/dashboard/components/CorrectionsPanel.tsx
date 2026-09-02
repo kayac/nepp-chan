@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   useCorrections,
+  usePublishCorrection,
   useRetireCorrection,
   useReverifyCorrection,
 } from "~/app/dashboard/hooks/useCorrections";
@@ -11,11 +12,12 @@ import { PanelLoading } from "~/components/ui/PanelLoading";
 import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 
-type StatusFilter = "published" | "needs_review" | "retired" | "all";
+type StatusFilter = "published" | "needs_review" | "draft" | "retired" | "all";
 
 const FILTERS: Array<{ value: StatusFilter; label: string }> = [
   { value: "published", label: "公開中" },
   { value: "needs_review", label: "要再確認" },
+  { value: "draft", label: "未反映" },
   { value: "retired", label: "廃止済み" },
   { value: "all", label: "すべて" },
 ];
@@ -25,6 +27,7 @@ export const CorrectionsPanel = () => {
   const { data, isLoading, error } = useCorrections();
   const retireMutation = useRetireCorrection();
   const reverifyMutation = useReverifyCorrection();
+  const publishMutation = usePublishCorrection();
 
   if (isLoading) {
     return <PanelLoading />;
@@ -45,6 +48,7 @@ export const CorrectionsPanel = () => {
   const needsReviewCount = all.filter(
     (c) => c.status === "published" && c.needsReviewAt,
   ).length;
+  const draftCount = all.filter((c) => c.status === "draft").length;
 
   const handleRetire = (id: string) => {
     if (!confirmDialog("この訂正を廃止しますか？検索対象から外れます。")) {
@@ -61,15 +65,23 @@ export const CorrectionsPanel = () => {
           label:
             option.value === "needs_review" && needsReviewCount > 0
               ? `${option.label} (${needsReviewCount})`
-              : option.label,
+              : option.value === "draft" && draftCount > 0
+                ? `${option.label} (${draftCount})`
+                : option.label,
         }))}
         value={filter}
         onChange={setFilter}
       />
 
-      {(retireMutation.isError || reverifyMutation.isError) && (
+      {(retireMutation.isError ||
+        reverifyMutation.isError ||
+        publishMutation.isError) && (
         <ErrorBanner>
-          {formatError(retireMutation.error ?? reverifyMutation.error)}
+          {formatError(
+            retireMutation.error ??
+              reverifyMutation.error ??
+              publishMutation.error,
+          )}
         </ErrorBanner>
       )}
 
@@ -92,6 +104,10 @@ export const CorrectionsPanel = () => {
                   <span className="inline-flex px-2 py-0.5 text-xs font-medium bg-stone-100 text-stone-500 rounded">
                     廃止済み
                   </span>
+                ) : correction.status === "draft" ? (
+                  <span className="inline-flex px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded">
+                    未反映（回答に反映されていません）
+                  </span>
                 ) : correction.needsReviewAt ? (
                   <span className="inline-flex px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded">
                     要再確認（元ページが更新されました）
@@ -109,6 +125,26 @@ export const CorrectionsPanel = () => {
               <p className="text-sm text-stone-700 whitespace-pre-wrap">
                 {correction.body}
               </p>
+              {correction.status === "draft" && (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={publishMutation.isPending}
+                    onClick={() => publishMutation.mutate(correction.id)}
+                    className="px-3 py-1.5 bg-stone-800 text-white text-xs font-medium rounded-lg hover:bg-stone-700 disabled:opacity-50 transition-colors"
+                  >
+                    再発行する
+                  </button>
+                  <button
+                    type="button"
+                    disabled={retireMutation.isPending}
+                    onClick={() => handleRetire(correction.id)}
+                    className="px-3 py-1.5 bg-stone-100 text-stone-600 text-xs font-medium rounded-lg hover:bg-stone-200 disabled:opacity-50 transition-colors"
+                  >
+                    廃止する
+                  </button>
+                </div>
+              )}
               {correction.status === "published" && (
                 <div className="flex gap-2">
                   {correction.needsReviewAt && (

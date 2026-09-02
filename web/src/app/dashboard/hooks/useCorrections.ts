@@ -25,6 +25,14 @@ export const useCreateCorrection = () => {
   });
 };
 
+export const usePublishCorrection = () => {
+  const invalidate = useInvalidateCorrections();
+  return useMutation({
+    mutationFn: correctionRepository.publishCorrection,
+    onSuccess: invalidate,
+  });
+};
+
 export const useRetireCorrection = () => {
   const invalidate = useInvalidateCorrections();
   return useMutation({

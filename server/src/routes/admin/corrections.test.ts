@@ -165,11 +165,15 @@ describe("POST /", () => {
     expect(res.status).toBe(404);
   });
 
-  it("訂正を published で保存し発行する", async () => {
+  it("draft で保存し、発行成功後に published へ更新する", async () => {
     vi.mocked(knowledgeSourceRepository.findByPath).mockResolvedValue(
       sourceRow,
     );
-    vi.mocked(knowledgeCorrectionRepository.insert).mockResolvedValue(
+    vi.mocked(knowledgeCorrectionRepository.insert).mockResolvedValue({
+      ...correction,
+      status: "draft",
+    });
+    vi.mocked(knowledgeCorrectionRepository.update).mockResolvedValue(
       correction,
     );
 
@@ -192,15 +196,20 @@ describe("POST /", () => {
       expect.objectContaining({
         correctsSourcePath: "bus/index.md",
         body: "土曜は運休です",
-        status: "published",
+        status: "draft",
         approvedBy: "user-1",
         answerRunId: "ar-1",
       }),
     );
     expect(publishCorrection).toHaveBeenCalledWith(
       expect.objectContaining({ d1: mockEnv.DB }),
-      correction,
+      expect.objectContaining({ status: "draft" }),
       { canonicalUrl: "https://example.com/bus" },
+    );
+    expect(knowledgeCorrectionRepository.update).toHaveBeenCalledWith(
+      mockEnv.DB,
+      "cor-1",
+      { status: "published" },
     );
   });
 
@@ -208,9 +217,10 @@ describe("POST /", () => {
     vi.mocked(knowledgeSourceRepository.findByPath).mockResolvedValue(
       sourceRow,
     );
-    vi.mocked(knowledgeCorrectionRepository.insert).mockResolvedValue(
-      correction,
-    );
+    vi.mocked(knowledgeCorrectionRepository.insert).mockResolvedValue({
+      ...correction,
+      status: "draft",
+    });
     vi.mocked(publishCorrection).mockResolvedValue({
       indexed: true,
       status: "approved",
@@ -227,6 +237,7 @@ describe("POST /", () => {
       mockEnv,
     );
     expect(res.status).toBe(500);
+    expect(knowledgeCorrectionRepository.update).not.toHaveBeenCalled();
   });
 });
 
@@ -287,6 +298,68 @@ describe("POST /{id}/retire", () => {
   });
 });
 
+describe("POST /{id}/publish", () => {
+  it("retired の訂正は 404", async () => {
+    vi.mocked(knowledgeCorrectionRepository.findById).mockResolvedValue({
+      ...correction,
+      status: "retired",
+    });
+
+    const res = await app.request(
+      authedRequest("/cor-1/publish", { method: "POST" }),
+      undefined,
+      mockEnv,
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it("draft を再発行して published にする", async () => {
+    vi.mocked(knowledgeCorrectionRepository.findById).mockResolvedValue({
+      ...correction,
+      status: "draft",
+    });
+    vi.mocked(knowledgeCorrectionRepository.update).mockResolvedValue(
+      correction,
+    );
+
+    const res = await app.request(
+      authedRequest("/cor-1/publish", { method: "POST" }),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(publishCorrection).toHaveBeenCalled();
+    expect(knowledgeCorrectionRepository.update).toHaveBeenCalledWith(
+      mockEnv.DB,
+      "cor-1",
+      { status: "published" },
+    );
+  });
+
+  it("発行に失敗したら published にしない", async () => {
+    vi.mocked(knowledgeCorrectionRepository.findById).mockResolvedValue({
+      ...correction,
+      status: "draft",
+    });
+    vi.mocked(publishCorrection).mockResolvedValue({
+      indexed: true,
+      status: "approved",
+      chunks: 0,
+      error: "embed failed",
+    });
+
+    const res = await app.request(
+      authedRequest("/cor-1/publish", { method: "POST" }),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(500);
+    expect(knowledgeCorrectionRepository.update).not.toHaveBeenCalled();
+  });
+});
+
 describe("POST /{id}/reverify", () => {
   it("retired の訂正は 404", async () => {
     vi.mocked(knowledgeCorrectionRepository.findById).mockResolvedValue({
@@ -321,6 +394,11 @@ describe("POST /{id}/reverify", () => {
     );
 
     expect(res.status).toBe(200);
+    expect(publishCorrection).toHaveBeenCalledWith(
+      expect.objectContaining({ d1: mockEnv.DB }),
+      expect.objectContaining({ approvedBy: "user-1" }),
+      expect.anything(),
+    );
     expect(knowledgeCorrectionRepository.update).toHaveBeenCalledWith(
       mockEnv.DB,
       "cor-1",
@@ -330,7 +408,6 @@ describe("POST /{id}/reverify", () => {
         verifiedAt: expect.any(String),
       }),
     );
-    expect(publishCorrection).toHaveBeenCalled();
   });
 });
 

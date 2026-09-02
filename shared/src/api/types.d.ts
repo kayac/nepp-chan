@@ -2495,6 +2495,7 @@ export interface paths {
                                 edited?: boolean;
                             }[];
                             editedCount?: number;
+                            skippedCount?: number;
                         };
                     };
                 };
@@ -4321,7 +4322,7 @@ export interface paths {
                                 correctsSourcePath: string;
                                 body: string;
                                 /** @enum {string} */
-                                status: "published" | "retired";
+                                status: "draft" | "published" | "retired";
                                 verifiedAt: string;
                                 approvedBy: string;
                                 relatedFeedbackId: string | null;
@@ -4399,7 +4400,7 @@ export interface paths {
                                 correctsSourcePath: string;
                                 body: string;
                                 /** @enum {string} */
-                                status: "published" | "retired";
+                                status: "draft" | "published" | "retired";
                                 verifiedAt: string;
                                 approvedBy: string;
                                 relatedFeedbackId: string | null;
@@ -4512,7 +4513,7 @@ export interface paths {
                                 correctsSourcePath: string;
                                 body: string;
                                 /** @enum {string} */
-                                status: "published" | "retired";
+                                status: "draft" | "published" | "retired";
                                 verifiedAt: string;
                                 approvedBy: string;
                                 relatedFeedbackId: string | null;
@@ -4611,7 +4612,120 @@ export interface paths {
                                 correctsSourcePath: string;
                                 body: string;
                                 /** @enum {string} */
-                                status: "published" | "retired";
+                                status: "draft" | "published" | "retired";
+                                verifiedAt: string;
+                                approvedBy: string;
+                                relatedFeedbackId: string | null;
+                                answerRunId: string | null;
+                                needsReviewAt: string | null;
+                                createdAt: string;
+                                updatedAt: string | null;
+                            };
+                        };
+                    };
+                };
+                /** @description 認証エラー */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description 権限エラー */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description リソースが見つかりません */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description サーバーエラー */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: number;
+                                message: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/corrections/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 未反映の訂正を再発行
+         * @description 発行に失敗して未反映のままの訂正を、R2 と検索へ再反映します
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 再発行成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            correction: {
+                                id: string;
+                                correctsSourcePath: string;
+                                body: string;
+                                /** @enum {string} */
+                                status: "draft" | "published" | "retired";
                                 verifiedAt: string;
                                 approvedBy: string;
                                 relatedFeedbackId: string | null;
@@ -4867,7 +4981,7 @@ export interface paths {
         head?: never;
         /**
          * 情報源候補の承認状態を変更
-         * @description 承認した候補はナレッジ収集の対象として scraper パイプラインに追加します
+         * @description 承認・却下の判断を記録します。承認済み候補の収集は通常の取り込み手順で行います
          */
         patch: {
             parameters: {

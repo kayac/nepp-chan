@@ -20,6 +20,15 @@ export const createCorrectionRepository = (client: ApiClient) => ({
     return data;
   },
 
+  publishCorrection: async (id: string) => {
+    const { data, error } = await client.POST(
+      "/admin/corrections/{id}/publish",
+      { params: { path: { id } } },
+    );
+    if (error) throw error;
+    return data;
+  },
+
   retireCorrection: async (id: string) => {
     const { data, error } = await client.POST(
       "/admin/corrections/{id}/retire",

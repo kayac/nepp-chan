@@ -28,7 +28,7 @@ const CorrectionSchema = z.object({
   id: z.string(),
   correctsSourcePath: z.string(),
   body: z.string(),
-  status: z.enum(["published", "retired"]),
+  status: z.enum(["draft", "published", "retired"]),
   verifiedAt: z.string(),
   approvedBy: z.string(),
   relatedFeedbackId: z.string().nullable(),
@@ -42,7 +42,7 @@ const toCorrectionResponse = (correction: KnowledgeCorrection) => ({
   id: correction.id,
   correctsSourcePath: correction.correctsSourcePath,
   body: correction.body,
-  status: correction.status as "published" | "retired",
+  status: correction.status as "draft" | "published" | "retired",
   verifiedAt: correction.verifiedAt,
   approvedBy: correction.approvedBy,
   relatedFeedbackId: correction.relatedFeedbackId,
@@ -165,11 +165,11 @@ correctionsAdminRoutes.openapi(createRoute_, async (c) => {
   }
 
   const now = new Date();
-  const correction = await knowledgeCorrectionRepository.insert(c.env.DB, {
+  const draft = await knowledgeCorrectionRepository.insert(c.env.DB, {
     id: crypto.randomUUID(),
     correctsSourcePath,
     body,
-    status: "published",
+    status: "draft",
     verifiedAt: now.toISOString().slice(0, 10),
     approvedBy: adminUser.id,
     relatedFeedbackId,
@@ -177,14 +177,20 @@ correctionsAdminRoutes.openapi(createRoute_, async (c) => {
     createdAt: now.toISOString(),
   });
 
-  await publishOrFail(c.env, correction, {
+  await publishOrFail(c.env, draft, {
     canonicalUrl: source.canonicalUrl ?? undefined,
   });
+
+  const published = await knowledgeCorrectionRepository.update(
+    c.env.DB,
+    draft.id,
+    { status: "published" },
+  );
 
   return c.json(
     {
       message: "訂正を発行しました",
-      correction: toCorrectionResponse(correction),
+      correction: toCorrectionResponse(published),
     },
     200,
   );
@@ -286,17 +292,73 @@ correctionsAdminRoutes.openapi(reverifyRoute, async (c) => {
     });
   }
 
+  const verifiedAt = new Date().toISOString().slice(0, 10);
+  await publishOrFail(c.env, {
+    ...correction,
+    verifiedAt,
+    approvedBy: adminUser.id,
+  });
+
   const updated = await knowledgeCorrectionRepository.update(c.env.DB, id, {
-    verifiedAt: new Date().toISOString().slice(0, 10),
+    verifiedAt,
     approvedBy: adminUser.id,
     needsReviewAt: null,
   });
 
-  await publishOrFail(c.env, updated);
-
   return c.json(
     {
       message: "訂正を再確認済みにしました",
+      correction: toCorrectionResponse(updated),
+    },
+    200,
+  );
+});
+
+const publishRoute = createRoute({
+  method: "post",
+  path: "/{id}/publish",
+  summary: "未反映の訂正を再発行",
+  description: "発行に失敗して未反映のままの訂正を、R2 と検索へ再反映します",
+  tags: ["Admin - Corrections"],
+  request: {
+    params: z.object({ id: z.string().min(1) }),
+  },
+  responses: {
+    200: {
+      description: "再発行成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string(),
+            correction: CorrectionSchema,
+          }),
+        },
+      },
+    },
+    401: errorResponse(401),
+    403: errorResponse(403),
+    404: errorResponse(404),
+    500: errorResponse(500),
+  },
+});
+
+correctionsAdminRoutes.openapi(publishRoute, async (c) => {
+  const { id } = c.req.valid("param");
+
+  const correction = await knowledgeCorrectionRepository.findById(c.env.DB, id);
+  if (!correction || correction.status === "retired") {
+    throw new HTTPException(404, { message: "訂正が見つかりません" });
+  }
+
+  await publishOrFail(c.env, correction);
+
+  const updated = await knowledgeCorrectionRepository.update(c.env.DB, id, {
+    status: "published",
+  });
+
+  return c.json(
+    {
+      message: "訂正を再発行しました",
       correction: toCorrectionResponse(updated),
     },
     200,
