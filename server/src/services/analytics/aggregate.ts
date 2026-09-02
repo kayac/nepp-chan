@@ -5,14 +5,13 @@ import {
   personaAttributes,
   TOPICS,
 } from "@nepp-chan/shared/lib/persona-attributes";
-import { and, gte, isNotNull, lt, sql } from "drizzle-orm";
-import { createDb, persona } from "~/db";
 import { calcCostUsd } from "~/lib/llm-pricing";
 import {
   llmUsageRepository,
   type UsageSumRow,
 } from "~/repository/llm-usage-repository";
 import { mastraMessageRepository } from "~/repository/mastra-message-repository";
+import { personaRepository } from "~/repository/persona-repository";
 
 // D1 の createdAt は UTC ISO 文字列。集計はすべて JST（+9 hours）で行い、
 // API は JST ラベル済みのデータを返す（フロントでは変換しない）。
@@ -389,55 +388,11 @@ export const getPersonaAnalytics = async (
   d1: D1Database,
   params: { from?: string; to?: string },
 ) => {
-  const db = createDb(d1);
-
-  // 期間はすべて会話終了時刻（conversationEndedAt）基準。
-  // createdAt は抽出バッチの実行時刻で、会話のあった期間を表さないため
-  const periodConditions = [
-    params.from ? gte(persona.conversationEndedAt, params.from) : undefined,
-    params.to ? lt(persona.conversationEndedAt, params.to) : undefined,
-  ].filter((c) => c !== undefined);
-
-  const hourExpr = sql<number>`CAST(strftime('%H', ${persona.conversationEndedAt}, '+9 hours') AS INTEGER)`;
-  const dowExpr = sql<number>`CAST(strftime('%w', ${persona.conversationEndedAt}, '+9 hours') AS INTEGER)`;
-  // 開庁 = 平日（月〜金）の 8〜17 時 JST。それ以外は閉庁
-  const isOpenExpr = sql<number>`CASE WHEN ${dowExpr} BETWEEN 1 AND 5 AND ${hourExpr} BETWEEN 8 AND 16 THEN 1 ELSE 0 END`;
-  const hourlyConditions = [
-    isNotNull(persona.conversationEndedAt),
-    ...periodConditions,
-  ];
-
   const [rows, hourlyRows, weekdayRows, officeRow] = await Promise.all([
-    db
-      .select({
-        tags: persona.tags,
-        demographicSummary: persona.demographicSummary,
-        topic: persona.topic,
-        sentiment: persona.sentiment,
-      })
-      .from(persona)
-      .where(periodConditions.length > 0 ? and(...periodConditions) : undefined)
-      .all(),
-    db
-      .select({ hour: hourExpr, count: sql<number>`COUNT(*)` })
-      .from(persona)
-      .where(and(...hourlyConditions))
-      .groupBy(hourExpr)
-      .all(),
-    db
-      .select({ dow: dowExpr, count: sql<number>`COUNT(*)` })
-      .from(persona)
-      .where(and(...hourlyConditions))
-      .groupBy(dowExpr)
-      .all(),
-    db
-      .select({
-        open: sql<number>`SUM(${isOpenExpr})`,
-        total: sql<number>`COUNT(*)`,
-      })
-      .from(persona)
-      .where(and(...hourlyConditions))
-      .get(),
+    personaRepository.listAttributes(d1, params),
+    personaRepository.countByConversationHour(d1, params),
+    personaRepository.countByConversationWeekday(d1, params),
+    personaRepository.countOfficeHours(d1, params),
   ]);
 
   const ageSentiment = new Map(

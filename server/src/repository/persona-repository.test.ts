@@ -612,4 +612,129 @@ describe("personaRepository", () => {
       expect(result[0].topTags).toEqual([]);
     });
   });
+
+  describe("listCreatedBetween", () => {
+    it("createdAt が期間内の声だけを返す", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-1", createdAt: "2030-01-01T00:00:00Z" }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-2", createdAt: "2030-01-08T00:00:00Z" }),
+      );
+
+      const result = await personaRepository.listCreatedBetween(fakeD1, {
+        from: "2030-01-01T00:00:00Z",
+        to: "2030-01-08T00:00:00Z",
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].content).toBe("好きな食べ物はラーメン");
+    });
+  });
+
+  describe("listAttributes", () => {
+    it("期間指定が無ければ会話終了時刻が無い声も含める", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-1", conversationEndedAt: null }),
+      );
+
+      expect(await personaRepository.listAttributes(fakeD1)).toHaveLength(1);
+    });
+
+    it("会話終了時刻で期間を絞る", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-1", conversationEndedAt: "2030-01-02T00:00:00Z" }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-2", conversationEndedAt: "2030-01-09T00:00:00Z" }),
+      );
+
+      const result = await personaRepository.listAttributes(fakeD1, {
+        from: "2030-01-01T00:00:00Z",
+        to: "2030-01-08T00:00:00Z",
+      });
+
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe("countByConversationHour", () => {
+    it("JST の時刻で集計する", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-1", conversationEndedAt: "2030-01-02T00:30:00Z" }),
+      );
+
+      expect(await personaRepository.countByConversationHour(fakeD1)).toEqual([
+        { hour: 9, count: 1 },
+      ]);
+    });
+
+    it("会話終了時刻が無い声は数えない", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-1", conversationEndedAt: null }),
+      );
+
+      expect(await personaRepository.countByConversationHour(fakeD1)).toEqual(
+        [],
+      );
+    });
+  });
+
+  describe("countByConversationWeekday", () => {
+    it("JST の曜日で集計する", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-1", conversationEndedAt: "2030-01-05T15:00:00Z" }),
+      );
+
+      expect(
+        await personaRepository.countByConversationWeekday(fakeD1),
+      ).toEqual([{ dow: 0, count: 1 }]);
+    });
+  });
+
+  describe("countOfficeHours", () => {
+    it("平日 8〜17 時 JST を開庁として数える", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-1", conversationEndedAt: "2030-01-02T00:00:00Z" }),
+      );
+
+      expect(await personaRepository.countOfficeHours(fakeD1)).toEqual({
+        open: 1,
+        total: 1,
+      });
+    });
+
+    it("平日でも 17 時以降は閉庁として数える", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-1", conversationEndedAt: "2030-01-02T08:00:00Z" }),
+      );
+
+      expect(await personaRepository.countOfficeHours(fakeD1)).toEqual({
+        open: 0,
+        total: 1,
+      });
+    });
+
+    it("土日は開庁時間帯でも閉庁として数える", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-1", conversationEndedAt: "2030-01-06T00:00:00Z" }),
+      );
+
+      expect(await personaRepository.countOfficeHours(fakeD1)).toEqual({
+        open: 0,
+        total: 1,
+      });
+    });
+  });
 });
