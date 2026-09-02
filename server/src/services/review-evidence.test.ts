@@ -1,32 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const processInput = vi.fn();
-
-vi.mock("@mastra/core/processors", () => ({
-  PIIDetector: class {
-    processInput = processInput;
-  },
+vi.mock("~/lib/pii", () => ({
+  redactPii: vi.fn(),
 }));
 
+const { redactPii } = await import("~/lib/pii");
 const { buildDecisionEvidence } = await import("./review-evidence");
-
-const textMessage = (text: string) => ({
-  id: "0",
-  role: "user" as const,
-  createdAt: new Date(),
-  content: { format: 2 as const, parts: [{ type: "text" as const, text }] },
-});
 
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
 describe("buildDecisionEvidence", () => {
-  it("質問・回答・検索クエリを redact し、根拠は source#section で残す", async () => {
-    processInput.mockImplementation(async ({ messages }) =>
-      messages.map((message: { content: { parts: [{ text: string }] } }) =>
-        textMessage(message.content.parts[0].text.replace("田中", "[NAME]")),
-      ),
+  it("質問・回答・検索クエリを伏せ、根拠は source#section で残す", async () => {
+    vi.mocked(redactPii).mockImplementation(async (texts) =>
+      texts.map((text) => text.replace("田中", "[NAME]")),
     );
 
     const evidence = await buildDecisionEvidence({
@@ -55,7 +43,7 @@ describe("buildDecisionEvidence", () => {
   });
 
   it("会話が取得できなければ question / answer は null", async () => {
-    processInput.mockImplementation(async ({ messages }) => messages);
+    vi.mocked(redactPii).mockImplementation(async (texts) => texts);
 
     const evidence = await buildDecisionEvidence({
       conversation: null,
@@ -67,8 +55,8 @@ describe("buildDecisionEvidence", () => {
     expect(evidence.runs).toEqual([{ query: "ゴミ 分別", sources: [] }]);
   });
 
-  it("redact に失敗したら本文を落として根拠だけ残す", async () => {
-    processInput.mockRejectedValue(new Error("model unavailable"));
+  it("伏せる処理に失敗したら本文を落として根拠だけ残す", async () => {
+    vi.mocked(redactPii).mockRejectedValue(new Error("model unavailable"));
 
     const evidence = await buildDecisionEvidence({
       conversation: { question: "田中さんの家", answer: "窓口へ" },
