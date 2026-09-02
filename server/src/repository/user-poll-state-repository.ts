@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 
 import { createDb, userPollState } from "~/db";
+import { deleteWithCount } from "./delete-with-count";
 
 export const userPollStateRepository = {
   async findByUserId(d1: D1Database, userId: string) {
@@ -25,5 +26,11 @@ export const userPollStateRepository = {
         target: userPollState.userId,
         set: { lastInjectedAt },
       });
+  },
+
+  async deleteByUserId(d1: D1Database, userId: string) {
+    const db = createDb(d1);
+
+    return deleteWithCount(db, userPollState, eq(userPollState.userId, userId));
   },
 };

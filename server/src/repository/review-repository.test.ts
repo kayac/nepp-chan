@@ -212,4 +212,30 @@ describe("reviewRepository decisions", () => {
       false,
     );
   });
+
+  it("deleteDecisionsCreatedBefore は期限より前の判断だけ削除する", async () => {
+    await reviewRepository.insertDecision(d1, {
+      id: "dec-old",
+      answerRunId: "ar-1",
+      decision: "no_issue",
+      reviewedBy: "admin-1",
+      createdAt: "2029-01-01T00:00:00.000Z",
+    });
+    await reviewRepository.insertDecision(d1, {
+      id: "dec-new",
+      answerRunId: "ar-1",
+      decision: "no_issue",
+      reviewedBy: "admin-1",
+      createdAt: "2031-01-01T00:00:00.000Z",
+    });
+
+    const deleted = await reviewRepository.deleteDecisionsCreatedBefore(
+      d1,
+      "2030-01-01T00:00:00.000Z",
+    );
+
+    expect(deleted).toBe(1);
+    const decisions = await reviewRepository.listDecisions(d1, "ar-1");
+    expect(decisions.map((d) => d.id)).toEqual(["dec-new"]);
+  });
 });
