@@ -14,7 +14,7 @@
       "!**/.astro",
       "!**/.mastra",
       "!**/.wrangler",
-      "!**/.claude",
+      "!.claude",
       "!**/.brain",
       "!**/.design-sync",
       "!**/.ds-sync",
