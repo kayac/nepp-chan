@@ -52,26 +52,22 @@ export const indexKnowledgeSource = async (
 
   if (!existing) {
     await knowledgeSourceRepository.insert(deps.d1, {
-      ...record,
-      r2Etag: options.r2Etag,
+      sourcePath: key,
+      canonicalUrl: record.canonicalUrl,
+      sourceType: record.sourceType,
+      sourceAuthority: record.sourceAuthority,
+      verifiedAt: record.verifiedAt,
       approvalStatus: status,
       approvedBy: promoted ? options.approveAs : undefined,
       approvedAt: promoted ? now : undefined,
       createdAt: now,
     });
   } else {
-    if (existing.sourceHash !== record.sourceHash) {
-      const { sourcePath: _, ...meta } = record;
-      await knowledgeSourceRepository.update(deps.d1, key, {
-        ...meta,
-        ...(options.r2Etag && { r2Etag: options.r2Etag }),
-      });
-      if (existing.sourceHash) {
-        await knowledgeCorrectionRepository.markNeedsReviewByCorrects(
-          deps.d1,
-          key,
-        );
-      }
+    if (existing.sourceHash !== record.sourceHash && existing.sourceHash) {
+      await knowledgeCorrectionRepository.markNeedsReviewByCorrects(
+        deps.d1,
+        key,
+      );
     }
     if (promoted && existing.approvalStatus === "pending") {
       await knowledgeSourceRepository.update(deps.d1, key, {
@@ -100,8 +96,16 @@ export const indexKnowledgeSource = async (
     deps.d1,
   );
 
-  if (!result.error) {
-    await knowledgeSourceRepository.markIndexed(deps.d1, key, result.chunks);
+  if (result.error) {
+    await knowledgeSourceRepository.markRemoved(deps.d1, key);
+  } else {
+    const { sourcePath: _, ...meta } = record;
+    await knowledgeSourceRepository.update(deps.d1, key, {
+      ...meta,
+      ...(options.r2Etag && { r2Etag: options.r2Etag }),
+      chunkCount: result.chunks,
+      indexedAt: new Date().toISOString(),
+    });
   }
 
   return {

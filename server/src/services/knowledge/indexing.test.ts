@@ -65,7 +65,7 @@ describe("indexKnowledgeSource", () => {
       approvalStatus: "pending",
       canonicalUrl: "https://example.com/bus",
     });
-    expect(row?.sourceHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(row?.sourceHash).toBeNull();
   });
 
   it("approved の情報源は index して chunk_count を記録する", async () => {
@@ -94,7 +94,7 @@ describe("indexKnowledgeSource", () => {
     expect(row?.indexedAt).not.toBeNull();
   });
 
-  it("rejected / disabled は index せずメタデータだけ更新する", async () => {
+  it("rejected / disabled は index せず frontmatter だけ反映する", async () => {
     await knowledgeSourceRepository.insert(d1, {
       sourcePath: "bus/index.md",
       approvalStatus: "rejected",
@@ -105,9 +105,6 @@ describe("indexKnowledgeSource", () => {
 
     expect(result).toEqual({ indexed: false, status: "rejected", chunks: 0 });
     expect(processKnowledgeFile).not.toHaveBeenCalled();
-
-    const row = await knowledgeSourceRepository.findByPath(d1, "bus/index.md");
-    expect(row?.canonicalUrl).toBe("https://example.com/bus");
   });
 
   it("approveAs 指定で未登録の情報源を approved として登録し index する", async () => {
@@ -196,19 +193,18 @@ describe("indexKnowledgeSource", () => {
     expect(processKnowledgeFile).toHaveBeenCalled();
   });
 
-  it("内容不変なら再 index はしてもメタデータは書き換えない", async () => {
+  it("index 成功時は frontmatter のメタデータを最新に更新する", async () => {
     await knowledgeSourceRepository.insert(d1, {
       sourcePath: "bus/index.md",
       approvalStatus: "approved",
-      sourceHash: await sha256Hex(content),
-      canonicalUrl: "https://example.com/manual",
+      canonicalUrl: "https://example.com/old",
       createdAt: "2026-09-01T00:00:00.000Z",
     });
 
     await indexKnowledgeSource("bus/index.md", content, deps);
 
     const row = await knowledgeSourceRepository.findByPath(d1, "bus/index.md");
-    expect(row?.canonicalUrl).toBe("https://example.com/manual");
+    expect(row?.canonicalUrl).toBe("https://example.com/bus");
     expect(row?.chunkCount).toBe(3);
   });
 
@@ -296,6 +292,46 @@ describe("indexKnowledgeSource", () => {
 
     const row = await knowledgeSourceRepository.findByPath(d1, "bus/index.md");
     expect(row?.indexedAt).toBeNull();
+  });
+
+  it("index が失敗したら sourceHash を更新せず、再試行が skipUnchanged で握り潰されない", async () => {
+    await knowledgeSourceRepository.insert(d1, {
+      sourcePath: "bus/index.md",
+      approvalStatus: "approved",
+      sourceHash: "old-hash",
+      chunkCount: 12,
+      indexedAt: "2026-09-01T00:00:00.000Z",
+      createdAt: "2026-09-01T00:00:00.000Z",
+    });
+    vi.mocked(processKnowledgeFile).mockResolvedValueOnce({
+      chunks: 0,
+      error: "embedding failed",
+    });
+
+    await indexKnowledgeSource("bus/index.md", content, deps, {
+      skipUnchanged: true,
+    });
+
+    const failed = await knowledgeSourceRepository.findByPath(
+      d1,
+      "bus/index.md",
+    );
+    expect(failed?.sourceHash).toBe("old-hash");
+    expect(failed?.indexedAt).toBeNull();
+    expect(failed?.chunkCount).toBe(0);
+
+    const retried = await indexKnowledgeSource("bus/index.md", content, deps, {
+      skipUnchanged: true,
+    });
+
+    expect(retried).toMatchObject({ indexed: true, chunks: 3 });
+    expect(processKnowledgeFile).toHaveBeenCalledTimes(2);
+    const recovered = await knowledgeSourceRepository.findByPath(
+      d1,
+      "bus/index.md",
+    );
+    expect(recovered?.indexedAt).not.toBeNull();
+    expect(recovered?.sourceHash).toBe(await sha256Hex(content));
   });
 });
 
