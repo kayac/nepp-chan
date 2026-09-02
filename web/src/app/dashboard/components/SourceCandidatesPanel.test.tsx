@@ -105,4 +105,71 @@ describe("SourceCandidatesPanel", () => {
       screen.queryByText("https://vill.example.jp/garbage"),
     ).not.toBeInTheDocument();
   });
+
+  it("取得に失敗したらエラーを表示する", async () => {
+    server.use(
+      http.get(`${API}/admin/source-candidates`, () =>
+        HttpResponse.json(
+          { error: { code: 500, message: "候補の取得に失敗しました" } },
+          { status: 500 },
+        ),
+      ),
+    );
+
+    renderWithQuery(<SourceCandidatesPanel />);
+
+    expect(
+      await screen.findByText(/候補の取得に失敗しました/),
+    ).toBeInTheDocument();
+  });
+
+  it("却下で PATCH を送る", async () => {
+    let capturedBody: unknown = null;
+    server.use(
+      http.get(`${API}/admin/source-candidates`, () =>
+        HttpResponse.json({ candidates: [candidate()] }),
+      ),
+      http.patch(
+        `${API}/admin/source-candidates/cand-1/status`,
+        async ({ request }) => {
+          capturedBody = await request.json();
+          return HttpResponse.json({
+            message: "ok",
+            candidate: candidate({ status: "rejected" }),
+          });
+        },
+      ),
+    );
+
+    renderWithQuery(<SourceCandidatesPanel />);
+    await screen.findByText("https://vill.example.jp/garbage");
+
+    await userEvent.click(screen.getByRole("button", { name: "却下" }));
+    await waitFor(() => expect(capturedBody).toEqual({ action: "reject" }));
+  });
+
+  it("判断に失敗したらエラーを表示する", async () => {
+    server.use(
+      http.get(`${API}/admin/source-candidates`, () =>
+        HttpResponse.json({ candidates: [candidate()] }),
+      ),
+      http.patch(`${API}/admin/source-candidates/cand-1/status`, () =>
+        HttpResponse.json(
+          { error: { code: 500, message: "判断の保存に失敗しました" } },
+          { status: 500 },
+        ),
+      ),
+    );
+
+    renderWithQuery(<SourceCandidatesPanel />);
+    await screen.findByText("https://vill.example.jp/garbage");
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "収集対象として承認" }),
+    );
+
+    expect(
+      await screen.findByText(/判断の保存に失敗しました/),
+    ).toBeInTheDocument();
+  });
 });
