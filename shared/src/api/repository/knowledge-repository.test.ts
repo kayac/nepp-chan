@@ -232,3 +232,78 @@ describe("knowledge-repository", () => {
     });
   });
 });
+
+describe("情報源の承認", () => {
+  it("fetchSources: 一覧を返す", async () => {
+    server.use(
+      http.get(`${API}/admin/knowledge/sources`, () =>
+        HttpResponse.json({ sources: [{ sourcePath: "knowledge/a.md" }] }),
+      ),
+    );
+
+    const result = await repo.fetchSources();
+    expect(result?.sources[0]?.sourcePath).toBe("knowledge/a.md");
+  });
+
+  it("updateSourceStatus: sourcePath と action を body に送る", async () => {
+    server.use(
+      http.patch(
+        `${API}/admin/knowledge/sources/status`,
+        async ({ request }) => {
+          const body = (await request.json()) as Record<string, unknown>;
+          expect(body).toEqual({
+            sourcePath: "knowledge/a.md",
+            action: "approve",
+          });
+          return HttpResponse.json({ message: "ok" });
+        },
+      ),
+    );
+
+    const result = await repo.updateSourceStatus({
+      sourcePath: "knowledge/a.md",
+      action: "approve",
+    });
+    expect(result?.message).toBe("ok");
+  });
+
+  it("backfillSources: POST /admin/knowledge/sources/backfill", async () => {
+    server.use(
+      http.post(`${API}/admin/knowledge/sources/backfill`, () =>
+        HttpResponse.json({ message: "ok" }),
+      ),
+    );
+
+    const result = await repo.backfillSources();
+    expect(result?.message).toBe("ok");
+  });
+
+  it("fetchSources: 5xx は throw", async () => {
+    server.use(
+      http.get(`${API}/admin/knowledge/sources`, () =>
+        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+      ),
+    );
+    await expect(repo.fetchSources()).rejects.toBeDefined();
+  });
+
+  it("updateSourceStatus: 5xx は throw", async () => {
+    server.use(
+      http.patch(`${API}/admin/knowledge/sources/status`, () =>
+        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+      ),
+    );
+    await expect(
+      repo.updateSourceStatus({ sourcePath: "a.md", action: "disable" }),
+    ).rejects.toBeDefined();
+  });
+
+  it("backfillSources: 5xx は throw", async () => {
+    server.use(
+      http.post(`${API}/admin/knowledge/sources/backfill`, () =>
+        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+      ),
+    );
+    await expect(repo.backfillSources()).rejects.toBeDefined();
+  });
+});

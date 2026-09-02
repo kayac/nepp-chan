@@ -61,6 +61,21 @@ describe("updateSourceCandidateStatus", () => {
     expect(result?.message).toBe("ok");
   });
 
+  it("reset も送れる", async () => {
+    server.use(
+      http.patch(
+        `${API}/admin/source-candidates/sc-1/status`,
+        async ({ request }) => {
+          const body = (await request.json()) as Record<string, unknown>;
+          expect(body).toEqual({ action: "reset" });
+          return HttpResponse.json({ message: "ok" });
+        },
+      ),
+    );
+
+    await repo.updateSourceCandidateStatus({ id: "sc-1", action: "reset" });
+  });
+
   it("5xx は throw する", async () => {
     server.use(
       http.patch(`${API}/admin/source-candidates/sc-1/status`, () =>

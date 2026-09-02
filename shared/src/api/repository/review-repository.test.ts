@@ -135,3 +135,26 @@ describe("submitDecision", () => {
     ).rejects.toBeDefined();
   });
 });
+
+describe("undoDecision", () => {
+  it("DELETE で判断を取り消す", async () => {
+    server.use(
+      http.delete(`${API}/admin/review/run-1/decision`, () =>
+        HttpResponse.json({ message: "ok" }),
+      ),
+    );
+
+    const result = await repo.undoDecision("run-1");
+    expect(result?.message).toBe("ok");
+  });
+
+  it("5xx は throw する", async () => {
+    server.use(
+      http.delete(`${API}/admin/review/run-1/decision`, () =>
+        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+      ),
+    );
+
+    await expect(repo.undoDecision("run-1")).rejects.toBeDefined();
+  });
+});

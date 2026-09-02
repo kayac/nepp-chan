@@ -76,6 +76,33 @@ describe("createCorrection", () => {
   });
 });
 
+describe("updateCorrection", () => {
+  it("id は path、body だけを PATCH する", async () => {
+    server.use(
+      http.patch(`${API}/admin/corrections/c-1`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        expect(body).toEqual({ body: "修正後" });
+        return HttpResponse.json({ message: "ok" });
+      }),
+    );
+
+    const result = await repo.updateCorrection({ id: "c-1", body: "修正後" });
+    expect(result?.message).toBe("ok");
+  });
+
+  it("5xx は throw する", async () => {
+    server.use(
+      http.patch(`${API}/admin/corrections/c-1`, () =>
+        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
+      ),
+    );
+
+    await expect(
+      repo.updateCorrection({ id: "c-1", body: "x" }),
+    ).rejects.toBeDefined();
+  });
+});
+
 describe("publishCorrection", () => {
   it("path に id を埋め込む", async () => {
     server.use(
