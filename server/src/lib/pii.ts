@@ -10,6 +10,20 @@ export const piiDetectorConfig = (): PIIDetectorOptions => ({
   redactionMethod: "placeholder",
 });
 
+const STRUCTURED_PATTERNS: Array<{ type: string; pattern: RegExp }> = [
+  { type: "email", pattern: /[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,}/g },
+  { type: "phone", pattern: /0\d{1,4}-\d{1,4}-\d{4}/g },
+  { type: "phone", pattern: /(?<!\d)0\d{9,10}(?!\d)/g },
+  { type: "postal-code", pattern: /〒\s?\d{3}-\d{4}/g },
+];
+
+export const redactStructuredPii = (text: string) =>
+  STRUCTURED_PATTERNS.reduce(
+    (redacted, { type, pattern }) =>
+      redacted.replace(pattern, `[${type.toUpperCase()}]`),
+    text,
+  );
+
 const toMessage = (text: string, id: string): MastraDBMessage => ({
   id,
   role: "user",
@@ -42,7 +56,9 @@ export const redactPii = async (texts: string[]) => {
   const redactedById = new Map(
     processed.map((message) => [message.id, textOf(message)]),
   );
-  return texts.map((text, index) =>
-    text.trim().length === 0 ? text : (redactedById.get(String(index)) ?? ""),
-  );
+  return texts.map((text, index) => {
+    if (text.trim().length === 0) return text;
+    const redacted = redactedById.get(String(index));
+    return redacted === undefined ? "" : redactStructuredPii(redacted);
+  });
 };

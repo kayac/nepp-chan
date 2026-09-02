@@ -8,7 +8,7 @@ vi.mock("@mastra/core/processors", () => ({
   },
 }));
 
-const { redactPii } = await import("./pii");
+const { redactPii, redactStructuredPii } = await import("./pii");
 
 type InputMessage = {
   id: string;
@@ -76,5 +76,42 @@ describe("redactPii", () => {
       "",
       "窓口は役場です",
     ]);
+  });
+});
+
+describe("redactStructuredPii", () => {
+  it.each([
+    ["090-1234-5678", "[PHONE]"],
+    ["011-231-4111", "[PHONE]"],
+    ["01656-5-3311", "[PHONE]"],
+    ["09012345678", "[PHONE]"],
+    ["mura@example.jp", "[EMAIL]"],
+    ["〒098-2501", "[POSTAL-CODE]"],
+    ["〒 098-2501", "[POSTAL-CODE]"],
+  ])("%s を伏せる", (input, expected) => {
+    expect(redactStructuredPii(input)).toBe(expected);
+  });
+
+  it.each(["2026-09-02", "料金は 100-2000 円", "8時30分", "098-2501"])(
+    "%s は伏せない",
+    (input) => {
+      expect(redactStructuredPii(input)).toBe(input);
+    },
+  );
+
+  it("文中の電話番号だけを伏せる", () => {
+    expect(redactStructuredPii("役場は01656-5-3311です")).toBe(
+      "役場は[PHONE]です",
+    );
+  });
+});
+
+describe("redactPii と組み合わせたとき", () => {
+  it("PIIDetector が原文を返しても電話番号とメールは伏せる", async () => {
+    respondWith((text) => text);
+
+    expect(
+      await redactPii(["090-1234-5678 か mura@example.jp へ連絡"]),
+    ).toEqual(["[PHONE] か [EMAIL] へ連絡"]);
   });
 });
