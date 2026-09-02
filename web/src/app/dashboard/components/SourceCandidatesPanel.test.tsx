@@ -105,4 +105,62 @@ describe("SourceCandidatesPanel", () => {
       screen.queryByText("https://vill.example.jp/garbage"),
     ).not.toBeInTheDocument();
   });
+
+  it("判断済みの候補を未判断に戻せる", async () => {
+    let capturedBody: unknown = null;
+    server.use(
+      http.get(`${API}/admin/source-candidates`, () =>
+        HttpResponse.json({
+          candidates: [candidate({ status: "approved", decidedBy: "user-1" })],
+        }),
+      ),
+      http.patch(
+        `${API}/admin/source-candidates/cand-1/status`,
+        async ({ request }) => {
+          capturedBody = await request.json();
+          return HttpResponse.json({
+            message: "ok",
+            candidate: candidate(),
+          });
+        },
+      ),
+    );
+
+    renderWithQuery(<SourceCandidatesPanel />);
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "承認済み" }),
+    );
+    await userEvent.click(
+      await screen.findByRole("button", { name: "未判断に戻す" }),
+    );
+
+    await waitFor(() => expect(capturedBody).toEqual({ action: "reset" }));
+  });
+
+  it("URL を検索で絞り込める", async () => {
+    server.use(
+      http.get(`${API}/admin/source-candidates`, () =>
+        HttpResponse.json({
+          candidates: [
+            candidate(),
+            candidate({ id: "cand-2", url: "https://vill.example.jp/bus" }),
+          ],
+        }),
+      ),
+    );
+
+    renderWithQuery(<SourceCandidatesPanel />);
+    await screen.findByText("https://vill.example.jp/garbage");
+
+    await userEvent.type(
+      screen.getByRole("searchbox", { name: "情報源候補を検索" }),
+      "bus",
+    );
+
+    expect(screen.getByText("https://vill.example.jp/bus")).toBeInTheDocument();
+    expect(
+      screen.queryByText("https://vill.example.jp/garbage"),
+    ).not.toBeInTheDocument();
+  });
 });

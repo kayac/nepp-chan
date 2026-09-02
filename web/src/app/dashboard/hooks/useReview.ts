@@ -32,6 +32,26 @@ export const useReviewDetail = (answerRunId: string | null) =>
     enabled: !!answerRunId,
   });
 
+const useInvalidateReview = () => {
+  const queryClient = useQueryClient();
+  return (answerRunId: string) => {
+    queryClient.invalidateQueries({ queryKey: dashboardKeys.reviewQueue });
+    queryClient.invalidateQueries({
+      queryKey: dashboardKeys.reviewDetail(answerRunId),
+    });
+    queryClient.invalidateQueries({ queryKey: dashboardKeys.feedbacks });
+  };
+};
+
+export const useUndoReviewDecision = () => {
+  const invalidate = useInvalidateReview();
+  return useMutation({
+    mutationFn: (answerRunId: string) =>
+      reviewRepository.undoDecision(answerRunId),
+    onSuccess: (_data, answerRunId) => invalidate(answerRunId),
+  });
+};
+
 export const useSubmitReviewDecision = () => {
   const queryClient = useQueryClient();
   return useMutation({

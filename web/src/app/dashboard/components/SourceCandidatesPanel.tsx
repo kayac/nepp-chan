@@ -7,6 +7,7 @@ import { EmptyStateCard } from "~/components/ui/EmptyStateCard";
 import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
 import { FilterTabs } from "~/components/ui/FilterTabs";
 import { PanelLoading } from "~/components/ui/PanelLoading";
+import { SearchBox } from "~/components/ui/SearchBox";
 import { formatDateTime } from "~/lib/format";
 
 type StatusFilter = "pending" | "approved" | "rejected" | "all";
@@ -20,6 +21,7 @@ const FILTERS: Array<{ value: StatusFilter; label: string }> = [
 
 export const SourceCandidatesPanel = () => {
   const [filter, setFilter] = useState<StatusFilter>("pending");
+  const [keyword, setKeyword] = useState("");
   const { data, isLoading, error } = useSourceCandidates();
   const statusMutation = useUpdateSourceCandidateStatus();
 
@@ -31,13 +33,23 @@ export const SourceCandidatesPanel = () => {
     return <ErrorBanner>{formatError(error)}</ErrorBanner>;
   }
 
+  const needle = keyword.trim().toLowerCase();
   const candidates = (data?.candidates ?? []).filter(
-    (candidate) => filter === "all" || candidate.status === filter,
+    (candidate) =>
+      (filter === "all" || candidate.status === filter) &&
+      (!needle || candidate.url.toLowerCase().includes(needle)),
   );
 
   return (
     <div className="space-y-4">
       <FilterTabs options={FILTERS} value={filter} onChange={setFilter} />
+
+      <SearchBox
+        label="情報源候補を検索"
+        placeholder="URL で絞り込む"
+        value={keyword}
+        onChange={setKeyword}
+      />
 
       {statusMutation.isError && (
         <ErrorBanner>{formatError(statusMutation.error)}</ErrorBanner>
@@ -101,15 +113,30 @@ export const SourceCandidatesPanel = () => {
                   </button>
                 </div>
               ) : (
-                <span
-                  className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${
-                    candidate.status === "approved"
-                      ? "bg-teal-100 text-teal-700"
-                      : "bg-stone-100 text-stone-500"
-                  }`}
-                >
-                  {candidate.status === "approved" ? "承認済み" : "却下済み"}
-                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${
+                      candidate.status === "approved"
+                        ? "bg-teal-100 text-teal-700"
+                        : "bg-stone-100 text-stone-500"
+                    }`}
+                  >
+                    {candidate.status === "approved" ? "承認済み" : "却下済み"}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={statusMutation.isPending}
+                    onClick={() =>
+                      statusMutation.mutate({
+                        id: candidate.id,
+                        action: "reset",
+                      })
+                    }
+                    className="px-3 py-1.5 bg-stone-100 text-stone-600 text-xs font-medium rounded-lg hover:bg-stone-200 disabled:opacity-50 transition-colors"
+                  >
+                    未判断に戻す
+                  </button>
+                </div>
               )}
             </div>
           ))}

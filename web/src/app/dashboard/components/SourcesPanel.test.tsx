@@ -148,4 +148,28 @@ describe("SourcesPanel", () => {
 
     expect(await screen.findByText(/^エラー:/)).toBeInTheDocument();
   });
+
+  it("パスを検索で絞り込める", async () => {
+    server.use(
+      http.get(`${API}/admin/knowledge/sources`, () =>
+        HttpResponse.json({
+          sources: [
+            source(),
+            source({ sourcePath: "bus/index.md", canonicalUrl: null }),
+          ],
+        }),
+      ),
+    );
+
+    renderWithQuery(<SourcesPanel />);
+    await screen.findByText("garbage/index.md");
+
+    await userEvent.type(
+      screen.getByRole("searchbox", { name: "情報源を検索" }),
+      "bus",
+    );
+
+    expect(screen.getByText("bus/index.md")).toBeInTheDocument();
+    expect(screen.queryByText("garbage/index.md")).not.toBeInTheDocument();
+  });
 });

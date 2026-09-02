@@ -9,6 +9,7 @@ import { EmptyStateCard } from "~/components/ui/EmptyStateCard";
 import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
 import { FilterTabs } from "~/components/ui/FilterTabs";
 import { PanelLoading } from "~/components/ui/PanelLoading";
+import { SearchBox } from "~/components/ui/SearchBox";
 
 type StatusFilter = "pending" | "approved" | "disabled" | "rejected" | "all";
 
@@ -22,6 +23,7 @@ const FILTERS: Array<{ value: StatusFilter; label: string }> = [
 
 export const SourcesPanel = () => {
   const [filter, setFilter] = useState<StatusFilter>("pending");
+  const [keyword, setKeyword] = useState("");
   const { data, isLoading, error } = useKnowledgeSources();
   const statusMutation = useUpdateSourceStatus();
 
@@ -34,8 +36,14 @@ export const SourcesPanel = () => {
   }
 
   const all = data?.sources ?? [];
+  const needle = keyword.trim().toLowerCase();
   const sources = all.filter(
-    (source) => filter === "all" || source.approvalStatus === filter,
+    (source) =>
+      (filter === "all" || source.approvalStatus === filter) &&
+      (!needle ||
+        `${source.sourcePath}\n${source.canonicalUrl ?? ""}`
+          .toLowerCase()
+          .includes(needle)),
   );
   const pendingCount = countByStatus(all, "pending");
 
@@ -51,6 +59,13 @@ export const SourcesPanel = () => {
         }))}
         value={filter}
         onChange={setFilter}
+      />
+
+      <SearchBox
+        label="情報源を検索"
+        placeholder="パスや URL で絞り込む"
+        value={keyword}
+        onChange={setKeyword}
       />
 
       {statusMutation.isError && (

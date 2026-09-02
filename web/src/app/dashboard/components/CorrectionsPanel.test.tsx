@@ -142,4 +142,65 @@ describe("CorrectionsPanel", () => {
     await userEvent.click(screen.getByRole("button", { name: "廃止する" }));
     await waitFor(() => expect(retired).toBe(true));
   });
+
+  it("本文を検索で絞り込める", async () => {
+    server.use(
+      http.get(`${API}/admin/corrections`, () =>
+        HttpResponse.json({
+          corrections: [
+            correction(),
+            correction({
+              id: "cor-2",
+              correctsSourcePath: "garbage/index.md",
+              body: "粗大ごみは予約が必要です",
+            }),
+          ],
+        }),
+      ),
+    );
+
+    renderWithQuery(<CorrectionsPanel />);
+    await screen.findByText("土曜は運休です");
+
+    await userEvent.type(
+      screen.getByRole("searchbox", { name: "訂正を検索" }),
+      "粗大",
+    );
+
+    expect(screen.getByText("粗大ごみは予約が必要です")).toBeInTheDocument();
+    expect(screen.queryByText("土曜は運休です")).not.toBeInTheDocument();
+  });
+
+  it("本文を修正して PATCH を送る", async () => {
+    let capturedBody: unknown = null;
+    server.use(
+      http.get(`${API}/admin/corrections`, () =>
+        HttpResponse.json({ corrections: [correction()] }),
+      ),
+      http.patch(`${API}/admin/corrections/cor-1`, async ({ request }) => {
+        capturedBody = await request.json();
+        return HttpResponse.json({
+          message: "ok",
+          correction: correction({ body: "日曜も運休です" }),
+        });
+      }),
+    );
+
+    renderWithQuery(<CorrectionsPanel />);
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "本文を修正する" }),
+    );
+
+    const textarea = screen.getByRole("textbox", { name: "訂正の本文" });
+    await userEvent.clear(textarea);
+    await userEvent.type(textarea, "日曜も運休です");
+    await userEvent.click(
+      screen.getByRole("button", { name: "保存して再反映する" }),
+    );
+
+    await waitFor(() =>
+      expect(capturedBody).toEqual({ body: "日曜も運休です" }),
+    );
+  });
 });

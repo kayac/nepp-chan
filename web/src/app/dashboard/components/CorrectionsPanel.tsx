@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { CorrectionEditor } from "~/app/dashboard/components/corrections/CorrectionEditor";
 import {
   useCorrections,
   usePublishCorrection,
@@ -9,6 +10,7 @@ import { EmptyStateCard } from "~/components/ui/EmptyStateCard";
 import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
 import { FilterTabs } from "~/components/ui/FilterTabs";
 import { PanelLoading } from "~/components/ui/PanelLoading";
+import { SearchBox } from "~/components/ui/SearchBox";
 import { confirmDialog } from "~/lib/dialog";
 import { formatDateTime } from "~/lib/format";
 
@@ -29,6 +31,8 @@ const FILTERS: Array<{ value: StatusFilter; label: string }> = [
 
 export const CorrectionsPanel = () => {
   const [filter, setFilter] = useState<StatusFilter>("published");
+  const [keyword, setKeyword] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
   const { data, isLoading, error } = useCorrections();
   const retireMutation = useRetireCorrection();
   const reverifyMutation = useReverifyCorrection();
@@ -43,7 +47,16 @@ export const CorrectionsPanel = () => {
   }
 
   const all = data?.corrections ?? [];
+  const needle = keyword.trim().toLowerCase();
   const corrections = all.filter((correction) => {
+    if (
+      needle &&
+      !`${correction.correctsSourcePath}\n${correction.body}`
+        .toLowerCase()
+        .includes(needle)
+    ) {
+      return false;
+    }
     if (filter === "all") return true;
     if (filter === "needs_review") {
       return correction.status === "published" && !!correction.needsReviewAt;
@@ -76,6 +89,13 @@ export const CorrectionsPanel = () => {
         }))}
         value={filter}
         onChange={setFilter}
+      />
+
+      <SearchBox
+        label="訂正を検索"
+        placeholder="情報源のパスや本文で絞り込む"
+        value={keyword}
+        onChange={setKeyword}
       />
 
       {(retireMutation.isError ||
@@ -137,9 +157,16 @@ export const CorrectionsPanel = () => {
                   {formatDateTime(correction.createdAt)}
                 </span>
               </div>
-              <p className="text-sm text-stone-700 whitespace-pre-wrap">
-                {correction.body}
-              </p>
+              {editingId === correction.id ? (
+                <CorrectionEditor
+                  correction={correction}
+                  onClose={() => setEditingId(null)}
+                />
+              ) : (
+                <p className="text-sm text-stone-700 whitespace-pre-wrap">
+                  {correction.body}
+                </p>
+              )}
               {correction.status === "draft" && (
                 <div className="flex gap-2">
                   <button
@@ -160,28 +187,36 @@ export const CorrectionsPanel = () => {
                   </button>
                 </div>
               )}
-              {correction.status === "published" && (
-                <div className="flex gap-2">
-                  {correction.needsReviewAt && (
+              {correction.status === "published" &&
+                editingId !== correction.id && (
+                  <div className="flex gap-2">
                     <button
                       type="button"
-                      disabled={reverifyMutation.isPending}
-                      onClick={() => reverifyMutation.mutate(correction.id)}
-                      className="px-3 py-1.5 bg-teal-600 text-white text-xs font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 transition-colors"
+                      onClick={() => setEditingId(correction.id)}
+                      className="px-3 py-1.5 bg-stone-100 text-stone-600 text-xs font-medium rounded-lg hover:bg-stone-200 transition-colors"
                     >
-                      内容を確認した（維持する）
+                      本文を修正する
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    disabled={retireMutation.isPending}
-                    onClick={() => handleRetire(correction.id)}
-                    className="px-3 py-1.5 bg-stone-100 text-stone-600 text-xs font-medium rounded-lg hover:bg-stone-200 disabled:opacity-50 transition-colors"
-                  >
-                    廃止する
-                  </button>
-                </div>
-              )}
+                    {correction.needsReviewAt && (
+                      <button
+                        type="button"
+                        disabled={reverifyMutation.isPending}
+                        onClick={() => reverifyMutation.mutate(correction.id)}
+                        className="px-3 py-1.5 bg-teal-600 text-white text-xs font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 transition-colors"
+                      >
+                        内容を確認した（維持する）
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      disabled={retireMutation.isPending}
+                      onClick={() => handleRetire(correction.id)}
+                      className="px-3 py-1.5 bg-stone-100 text-stone-600 text-xs font-medium rounded-lg hover:bg-stone-200 disabled:opacity-50 transition-colors"
+                    >
+                      廃止する
+                    </button>
+                  </div>
+                )}
             </div>
           ))}
         </div>
