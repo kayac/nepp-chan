@@ -135,6 +135,36 @@ describe("CorrectionsPanel", () => {
     ).toBeInTheDocument();
   });
 
+  it("未反映の訂正は件数付きタブから再発行できる", async () => {
+    let published = false;
+    server.use(
+      http.get(`${API}/admin/corrections`, () =>
+        HttpResponse.json({
+          corrections: [correction({ status: "draft", body: "未反映の訂正" })],
+        }),
+      ),
+      http.post(`${API}/admin/corrections/cor-1/publish`, () => {
+        published = true;
+        return HttpResponse.json({
+          message: "ok",
+          correction: correction({ status: "published" }),
+        });
+      }),
+    );
+
+    renderWithQuery(<CorrectionsPanel />);
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "未反映 (1)" }),
+    );
+    expect(
+      screen.getByText("未反映（回答に反映されていません）"),
+    ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "再発行する" }));
+    await waitFor(() => expect(published).toBe(true));
+  });
+
   it("要再確認は件数付きタブから維持できる", async () => {
     let reverified = false;
     server.use(
