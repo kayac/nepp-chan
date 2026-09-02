@@ -4,8 +4,6 @@ import type { SQLiteTable } from "drizzle-orm/sqlite-core";
 
 import type { DbClient } from "~/db";
 
-// 削除件数は D1 のドライバ差を避けて COUNT で取る。
-// 0 件のときに DELETE を撃たないのは Cron の空振りで書き込みを発生させないため
 export const deleteWithCount = async (
   db: DbClient,
   table: SQLiteTable,

@@ -35,7 +35,6 @@ export const runDataRetention = async (
 ): Promise<DataRetentionResult[]> => {
   const now = options.now ?? new Date();
   const executedAt = now.toISOString();
-  const expiredAt = (days: number) => cutoff(now, days);
 
   try {
     // Mastra テーブルは drizzle の migration 対象外。未初期化の D1 に対して
@@ -48,7 +47,7 @@ export const runDataRetention = async (
       table: "mastra_messages",
       deletedCount: await mastraMessageRepository.deleteCreatedBefore(
         env.DB,
-        expiredAt(RETENTION_DAYS.mastra_messages),
+        cutoff(now, RETENTION_DAYS.mastra_messages),
       ),
     });
 
@@ -63,7 +62,7 @@ export const runDataRetention = async (
       table: "mastra_threads",
       deletedCount: await mastraThreadRepository.deleteEmptyCreatedBefore(
         env.DB,
-        expiredAt(RETENTION_DAYS.mastra_threads),
+        cutoff(now, RETENTION_DAYS.mastra_threads),
       ),
     });
 
@@ -76,7 +75,7 @@ export const runDataRetention = async (
       table: "mastra_resources",
       deletedCount: await mastraResourceRepository.deleteUpdatedBefore(
         env.DB,
-        expiredAt(RETENTION_DAYS.mastra_resources),
+        cutoff(now, RETENTION_DAYS.mastra_resources),
       ),
     });
 
@@ -84,7 +83,7 @@ export const runDataRetention = async (
       table: "message_feedback",
       deletedCount: await feedbackRepository.deleteCreatedBefore(
         env.DB,
-        expiredAt(RETENTION_DAYS.message_feedback),
+        cutoff(now, RETENTION_DAYS.message_feedback),
       ),
     });
 
@@ -92,7 +91,7 @@ export const runDataRetention = async (
       table: "llm_usage",
       deletedCount: await llmUsageRepository.deleteCreatedBefore(
         env.DB,
-        expiredAt(RETENTION_DAYS.llm_usage),
+        cutoff(now, RETENTION_DAYS.llm_usage),
       ),
     });
 
@@ -100,7 +99,7 @@ export const runDataRetention = async (
       table: "poll_submissions",
       deletedCount: await pollRepository.deleteSubmissionsCreatedBefore(
         env.DB,
-        expiredAt(RETENTION_DAYS.poll_submissions),
+        cutoff(now, RETENTION_DAYS.poll_submissions),
       ),
     });
 
@@ -108,7 +107,7 @@ export const runDataRetention = async (
       table: "data_retention_logs",
       deletedCount: await dataRetentionLogRepository.deleteExecutedBefore(
         env.DB,
-        expiredAt(RETENTION_DAYS.data_retention_logs),
+        cutoff(now, RETENTION_DAYS.data_retention_logs),
       ),
     });
 
