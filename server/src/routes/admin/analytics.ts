@@ -1,12 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
-import {
-  DAY_MS,
-  jstDateToUtc,
-  startOfJstDay,
-  startOfJstWeek,
-  WEEK_MS,
-} from "~/lib/date";
+import { DAY_MS, jstDateToUtc, startOfJstDay } from "~/lib/date";
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
 import { requireRole } from "~/middleware/require-role";
@@ -31,11 +25,11 @@ import {
 } from "~/schemas/analytics-schema";
 import {
   getConversationStats,
+  getDailyUsage,
   getOperationCost,
   getPersonaAnalytics,
   getThreadTurnUsage,
   getThreadUsage,
-  getWeeklyUsage,
 } from "~/services/analytics/aggregate";
 import { getOntology } from "~/services/analytics/ontology";
 
@@ -141,12 +135,12 @@ const usageRoute = createRoute({
   method: "get",
   path: "/usage",
   tags: ["Admin - Analytics"],
-  summary: "週×モデル別のトークン使用量とコスト",
+  summary: "日×モデル別のトークン使用量とコスト",
   middleware: [requireRole("super_admin")] as const,
   request: { query: usageAnalyticsQuerySchema },
   responses: {
     200: {
-      description: "週次トークン使用量（週初めは JST 月曜）",
+      description: "日次トークン使用量（日付は JST）",
       content: {
         "application/json": { schema: usageAnalyticsResponseSchema },
       },
@@ -158,16 +152,16 @@ const usageRoute = createRoute({
 });
 
 analyticsAdminRoutes.openapi(usageRoute, async (c) => {
-  const { weeks } = c.req.valid("query");
-  const currentWeekStart = startOfJstWeek(new Date());
+  const { days } = c.req.valid("query");
+  const now = new Date();
 
-  const weekly = await getWeeklyUsage(c.env.DB, {
-    from: new Date(
-      currentWeekStart.getTime() - (weeks - 1) * WEEK_MS,
+  const daily = await getDailyUsage(c.env.DB, {
+    from: startOfJstDay(
+      new Date(now.getTime() - (days - 1) * DAY_MS),
     ).toISOString(),
   });
 
-  return c.json({ weekly }, 200);
+  return c.json({ daily }, 200);
 });
 
 const threadUsageRoute = createRoute({

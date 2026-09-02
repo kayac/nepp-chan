@@ -23,10 +23,10 @@ export const useConversationAnalytics = (days = 30) =>
     queryFn: () => analyticsRepository.fetchConversationAnalytics(days),
   });
 
-export const useUsageAnalytics = (weeks = 12) =>
+export const useUsageAnalytics = (days = 30) =>
   useQuery({
-    queryKey: dashboardKeys.analyticsUsage(weeks),
-    queryFn: () => analyticsRepository.fetchUsageAnalytics(weeks),
+    queryKey: dashboardKeys.analyticsUsage(days),
+    queryFn: () => analyticsRepository.fetchUsageAnalytics(days),
   });
 
 export const useThreadUsage = (days = 30, limit = 50) =>

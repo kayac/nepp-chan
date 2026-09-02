@@ -6,6 +6,7 @@ import {
   retrievalRuns,
   reviewDecisions,
 } from "~/db";
+import { deleteWithCount } from "./delete-with-count";
 
 export const REVIEW_DECISIONS = [
   "no_issue",
@@ -146,5 +147,15 @@ export const reviewRepository = {
   async insertDecision(d1: D1Database, values: NewReviewDecision) {
     const db = createDb(d1);
     return await db.insert(reviewDecisions).values(values).returning().get();
+  },
+
+  async deleteDecisionsCreatedBefore(d1: D1Database, cutoff: string) {
+    const db = createDb(d1);
+
+    return deleteWithCount(
+      db,
+      reviewDecisions,
+      sql`datetime(${reviewDecisions.createdAt}) < datetime(${cutoff})`,
+    );
   },
 };

@@ -6,6 +6,7 @@ import {
   messageFeedback,
   type NewMessageFeedback,
 } from "~/db";
+import { deleteWithCount } from "./delete-with-count";
 
 type CreateInput = Omit<NewMessageFeedback, "id"> & { id: string };
 
@@ -156,12 +157,24 @@ export const feedbackRepository = {
     return result?.count ?? 0;
   },
 
+  async deleteCreatedBefore(d1: D1Database, cutoff: string) {
+    const db = createDb(d1);
+
+    return deleteWithCount(
+      db,
+      messageFeedback,
+      sql`datetime(${messageFeedback.createdAt}) < datetime(${cutoff})`,
+    );
+  },
+
   async deleteByThreadId(d1: D1Database, threadId: string) {
     const db = createDb(d1);
 
-    await db
-      .delete(messageFeedback)
-      .where(eq(messageFeedback.threadId, threadId));
+    return deleteWithCount(
+      db,
+      messageFeedback,
+      eq(messageFeedback.threadId, threadId),
+    );
   },
 
   async delete(d1: D1Database, id: string) {

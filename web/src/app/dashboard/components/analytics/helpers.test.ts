@@ -3,49 +3,110 @@ import {
   agentLabel,
   cacheRatePercent,
   formatCostJpy,
-  formatCostUsd,
   formatDurationSeconds,
   formatJstTime,
+  groupUsageByDate,
+  groupUsageByMonth,
+  jstCurrentMonth,
   jstDateRange,
-  pivotWeeklyUsage,
+  pivotDailyUsage,
   platformLabel,
 } from "./helpers";
 
-const row = (weekStart: string, model: string, totalTokens: number) => ({
-  weekStart,
+const row = (
+  date: string,
+  model: string,
+  totalTokens: number,
+  costUsd = 0,
+) => ({
+  date,
   model,
   totalTokens,
-  costUsd: 0,
+  costUsd,
 });
 
-describe("pivotWeeklyUsage", () => {
-  it("週ごとにモデルをキーにした行へ変換する", () => {
-    const { models, rows } = pivotWeeklyUsage([
+describe("pivotDailyUsage", () => {
+  it("日ごとにモデルをキーにした行へ変換する", () => {
+    const { models, rows } = pivotDailyUsage([
       row("2026-06-01", "gemini-2.5-flash", 100),
       row("2026-06-01", "gemini-2.5-flash-lite", 50),
-      row("2026-06-08", "gemini-2.5-flash", 200),
+      row("2026-06-02", "gemini-2.5-flash", 200),
     ]);
 
     expect(models).toEqual(["gemini-2.5-flash", "gemini-2.5-flash-lite"]);
     expect(rows).toEqual([
       {
-        weekStart: "2026-06-01",
+        date: "2026-06-01",
         "gemini-2.5-flash": 100,
         "gemini-2.5-flash-lite": 50,
       },
-      { weekStart: "2026-06-08", "gemini-2.5-flash": 200 },
+      { date: "2026-06-02", "gemini-2.5-flash": 200 },
     ]);
   });
 
   it("空配列は空の結果を返す", () => {
-    expect(pivotWeeklyUsage([])).toEqual({ models: [], rows: [] });
+    expect(pivotDailyUsage([])).toEqual({ models: [], rows: [] });
   });
 });
 
-describe("formatCostUsd", () => {
-  it("小数 4 桁の USD 表記にする", () => {
-    expect(formatCostUsd(0.01234)).toBe("$0.0123");
-    expect(formatCostUsd(0)).toBe("$0.0000");
+describe("groupUsageByMonth", () => {
+  it("月ごとに合計とモデル内訳をまとめ、新しい月から並べる", () => {
+    const result = groupUsageByMonth([
+      row("2026-05-31", "gemini-2.5-flash", 100, 0.5),
+      row("2026-06-01", "gemini-2.5-flash", 200, 1),
+      row("2026-06-01", "gemini-2.5-flash-lite", 50, 0.25),
+      row("2026-06-02", "gemini-2.5-flash", 300, 1.5),
+    ]);
+
+    expect(result.map((m) => m.month)).toEqual(["2026-06", "2026-05"]);
+    expect(result[0]).toMatchObject({ totalTokens: 550, costUsd: 2.75 });
+    expect(result[0]?.models).toEqual([
+      { model: "gemini-2.5-flash", totalTokens: 500 },
+      { model: "gemini-2.5-flash-lite", totalTokens: 50 },
+    ]);
+  });
+
+  it("月の中の日別行は新しい日付から並べる", () => {
+    const [june] = groupUsageByMonth([
+      row("2026-06-01", "gemini-2.5-flash", 200, 1),
+      row("2026-06-02", "gemini-2.5-flash", 300, 1.5),
+    ]);
+
+    expect(june?.days.map((d) => d.date)).toEqual(["2026-06-02", "2026-06-01"]);
+  });
+
+  it("空配列は空の結果を返す", () => {
+    expect(groupUsageByMonth([])).toEqual([]);
+  });
+});
+
+describe("jstCurrentMonth", () => {
+  it("UTC で前月末でも JST の月を返す", () => {
+    expect(jstCurrentMonth(new Date("2026-05-31T15:00:00.000Z"))).toBe(
+      "2026-06",
+    );
+  });
+});
+
+describe("groupUsageByDate", () => {
+  it("日ごとにモデル内訳と合計をまとめ、新しい日付から並べる", () => {
+    const result = groupUsageByDate([
+      row("2026-06-01", "gemini-2.5-flash", 100, 0.5),
+      row("2026-06-01", "gemini-2.5-flash-lite", 50, 0.25),
+      row("2026-06-02", "gemini-2.5-flash", 200, 1),
+    ]);
+
+    expect(result.map((d) => d.date)).toEqual(["2026-06-02", "2026-06-01"]);
+    expect(result[1]).toMatchObject({
+      date: "2026-06-01",
+      totalTokens: 150,
+      costUsd: 0.75,
+    });
+    expect(result[1]?.models).toHaveLength(2);
+  });
+
+  it("空配列は空の結果を返す", () => {
+    expect(groupUsageByDate([])).toEqual([]);
   });
 });
 

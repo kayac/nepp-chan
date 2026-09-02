@@ -1,23 +1,15 @@
-import type { SQL } from "drizzle-orm";
-import { sql } from "drizzle-orm";
-import type { SQLiteTable } from "drizzle-orm/sqlite-core";
-
-import {
-  createDb,
-  type DbClient,
-  dataRetentionLogs,
-  llmUsage,
-  mastraMessages,
-  mastraResources,
-  mastraThreads,
-  messageFeedback,
-  pollSubmissions,
-  retrievalRuns,
-  reviewDecisions,
-  threadPersonaStatus,
-} from "~/db";
 import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
+import { dataRetentionLogRepository } from "~/repository/data-retention-log-repository";
+import { feedbackRepository } from "~/repository/feedback-repository";
+import { llmUsageRepository } from "~/repository/llm-usage-repository";
+import { mastraMessageRepository } from "~/repository/mastra-message-repository";
+import { mastraResourceRepository } from "~/repository/mastra-resource-repository";
+import { mastraThreadRepository } from "~/repository/mastra-thread-repository";
+import { pollRepository } from "~/repository/poll-repository";
+import { retrievalRunRepository } from "~/repository/retrieval-run-repository";
+import { reviewRepository } from "~/repository/review-repository";
+import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
 
 const RETENTION_DAYS = {
   mastra_messages: 30,
@@ -41,30 +33,12 @@ export type DataRetentionResult = {
 const cutoff = (now: Date, days: number) =>
   new Date(now.getTime() - days * DAY_MS).toISOString();
 
-const countAndDelete = async (
-  db: DbClient,
-  table: SQLiteTable,
-  where: SQL,
-): Promise<number> => {
-  const row = await db
-    .select({ c: sql<number>`COUNT(*)` })
-    .from(table)
-    .where(where)
-    .get();
-  const count = Number(row?.c ?? 0);
-  if (count > 0) {
-    await db.delete(table).where(where);
-  }
-  return count;
-};
-
 export const runDataRetention = async (
   env: CloudflareBindings,
   options: { now?: Date } = {},
 ): Promise<DataRetentionResult[]> => {
   const now = options.now ?? new Date();
   const executedAt = now.toISOString();
-  const db = createDb(env.DB);
 
   try {
     // Mastra テーブルは drizzle の migration 対象外。未初期化の D1 に対して
@@ -75,110 +49,90 @@ export const runDataRetention = async (
 
     results.push({
       table: "mastra_messages",
-      deletedCount: await countAndDelete(
-        db,
-        mastraMessages,
-        sql`datetime(${mastraMessages.createdAt}) < datetime(${cutoff(now, RETENTION_DAYS.mastra_messages)})`,
+      deletedCount: await mastraMessageRepository.deleteCreatedBefore(
+        env.DB,
+        cutoff(now, RETENTION_DAYS.mastra_messages),
       ),
     });
 
     // mastra_messages 削除により thread_persona_status.last_message_count が
     // 現実より大きいまま残ると、persona-extractor が新規メッセージを抽出対象外と
     // 判定してしまう。残メッセージ数で再計算して整合性を取る。
-    await db.run(sql`
-      UPDATE thread_persona_status
-      SET last_message_count = COALESCE((
-        SELECT COUNT(*) FROM mastra_messages
-        WHERE mastra_messages.thread_id = thread_persona_status.thread_id
-      ), 0)
-    `);
+    await threadPersonaStatusRepository.syncMessageCounts(env.DB);
 
     // 紐づくメッセージが無く、かつ作成から猶予期間を超えたスレッドのみ削除。
     // 新規作成直後の空スレッドが Cron で消えると POST /threads → チャット投稿の間に 404 になる。
     results.push({
       table: "mastra_threads",
-      deletedCount: await countAndDelete(
-        db,
-        mastraThreads,
-        sql`${mastraThreads.id} NOT IN (SELECT DISTINCT thread_id FROM mastra_messages)
-          AND datetime(${mastraThreads.createdAt}) < datetime(${cutoff(now, RETENTION_DAYS.mastra_threads)})`,
+      deletedCount: await mastraThreadRepository.deleteEmptyCreatedBefore(
+        env.DB,
+        cutoff(now, RETENTION_DAYS.mastra_threads),
       ),
     });
 
     results.push({
       table: "thread_persona_status",
-      deletedCount: await countAndDelete(
-        db,
-        threadPersonaStatus,
-        sql`${threadPersonaStatus.threadId} NOT IN (SELECT id FROM mastra_threads)`,
-      ),
+      deletedCount: await threadPersonaStatusRepository.deleteOrphaned(env.DB),
     });
 
     results.push({
       table: "mastra_resources",
-      deletedCount: await countAndDelete(
-        db,
-        mastraResources,
-        sql`datetime(${mastraResources.updatedAt}) < datetime(${cutoff(now, RETENTION_DAYS.mastra_resources)})`,
+      deletedCount: await mastraResourceRepository.deleteUpdatedBefore(
+        env.DB,
+        cutoff(now, RETENTION_DAYS.mastra_resources),
       ),
     });
 
     results.push({
       table: "message_feedback",
-      deletedCount: await countAndDelete(
-        db,
-        messageFeedback,
-        sql`datetime(${messageFeedback.createdAt}) < datetime(${cutoff(now, RETENTION_DAYS.message_feedback)})`,
+      deletedCount: await feedbackRepository.deleteCreatedBefore(
+        env.DB,
+        cutoff(now, RETENTION_DAYS.message_feedback),
       ),
     });
 
     results.push({
       table: "llm_usage",
-      deletedCount: await countAndDelete(
-        db,
-        llmUsage,
-        sql`datetime(${llmUsage.createdAt}) < datetime(${cutoff(now, RETENTION_DAYS.llm_usage)})`,
+      deletedCount: await llmUsageRepository.deleteCreatedBefore(
+        env.DB,
+        cutoff(now, RETENTION_DAYS.llm_usage),
       ),
     });
 
     results.push({
       table: "poll_submissions",
-      deletedCount: await countAndDelete(
-        db,
-        pollSubmissions,
-        sql`datetime(${pollSubmissions.createdAt}) < datetime(${cutoff(now, RETENTION_DAYS.poll_submissions)})`,
+      deletedCount: await pollRepository.deleteSubmissionsCreatedBefore(
+        env.DB,
+        cutoff(now, RETENTION_DAYS.poll_submissions),
       ),
     });
 
     results.push({
       table: "retrieval_runs",
-      deletedCount: await countAndDelete(
-        db,
-        retrievalRuns,
-        sql`datetime(${retrievalRuns.createdAt}) < datetime(${cutoff(now, RETENTION_DAYS.retrieval_runs)})`,
+      deletedCount: await retrievalRunRepository.deleteCreatedBefore(
+        env.DB,
+        cutoff(now, RETENTION_DAYS.retrieval_runs),
       ),
     });
 
     results.push({
       table: "review_decisions",
-      deletedCount: await countAndDelete(
-        db,
-        reviewDecisions,
-        sql`datetime(${reviewDecisions.createdAt}) < datetime(${cutoff(now, RETENTION_DAYS.review_decisions)})`,
+      deletedCount: await reviewRepository.deleteDecisionsCreatedBefore(
+        env.DB,
+        cutoff(now, RETENTION_DAYS.review_decisions),
       ),
     });
 
     results.push({
       table: "data_retention_logs",
-      deletedCount: await countAndDelete(
-        db,
-        dataRetentionLogs,
-        sql`datetime(${dataRetentionLogs.executedAt}) < datetime(${cutoff(now, RETENTION_DAYS.data_retention_logs)})`,
+      deletedCount: await dataRetentionLogRepository.deleteExecutedBefore(
+        env.DB,
+        cutoff(now, RETENTION_DAYS.data_retention_logs),
       ),
     });
 
     for (const r of results) {
-      await db.insert(dataRetentionLogs).values({
+      await dataRetentionLogRepository.create(env.DB, {
         id: crypto.randomUUID(),
         executedAt,
         targetTable: r.table,
