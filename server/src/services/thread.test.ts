@@ -44,10 +44,8 @@ describe("deleteThreadWithRelatedData", () => {
 
   it("存在するスレッドの関連データを全て削除できる", async () => {
     mockGetThreadById.mockResolvedValue({ id: threadId });
-    vi.mocked(feedbackRepository.deleteByThreadId).mockResolvedValue(undefined);
-    vi.mocked(threadPersonaStatusRepository.delete).mockResolvedValue(
-      undefined,
-    );
+    vi.mocked(feedbackRepository.deleteByThreadId).mockResolvedValue(0);
+    vi.mocked(threadPersonaStatusRepository.delete).mockResolvedValue(0);
     mockDeleteThread.mockResolvedValue(undefined);
 
     await deleteThreadWithRelatedData(threadId, mockDb);
@@ -70,11 +68,13 @@ describe("deleteThreadWithRelatedData", () => {
     vi.mocked(feedbackRepository.deleteByThreadId).mockImplementation(
       async () => {
         callOrder.push("feedback");
+        return 0;
       },
     );
     vi.mocked(threadPersonaStatusRepository.delete).mockImplementation(
       async () => {
         callOrder.push("personaStatus");
+        return 0;
       },
     );
     mockDeleteThread.mockImplementation(async () => {

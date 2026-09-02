@@ -10,37 +10,72 @@ export const jstDateRange = (days: number, now: Date = new Date()) => ({
   to: toJstDate(now),
 });
 
-type WeeklyUsageRow = {
-  weekStart: string;
+type DailyUsageRow = {
+  date: string;
   model: string;
   totalTokens: number;
   costUsd: number;
 };
 
-export const pivotWeeklyUsage = (weekly: WeeklyUsageRow[]) => {
-  const models = [...new Set(weekly.map((w) => w.model))];
-  const weeks = [...new Set(weekly.map((w) => w.weekStart))];
+const monthOf = (date: string) => date.slice(0, 7);
 
-  const rows = weeks.map((weekStart) => ({
-    weekStart,
+export const jstCurrentMonth = (now: Date = new Date()) =>
+  monthOf(toJstDate(now));
+
+export const pivotDailyUsage = <T extends DailyUsageRow>(daily: T[]) => {
+  const models = [...new Set(daily.map((d) => d.model))];
+  const dates = [...new Set(daily.map((d) => d.date))];
+
+  const rows = dates.map((date) => ({
+    date,
     ...Object.fromEntries(
-      weekly
-        .filter((w) => w.weekStart === weekStart)
-        .map((w) => [w.model, w.totalTokens]),
+      daily.filter((d) => d.date === date).map((d) => [d.model, d.totalTokens]),
     ),
   }));
 
   return { models, rows };
 };
 
-const usdFormat = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 4,
-  maximumFractionDigits: 4,
-});
+export const groupUsageByDate = <T extends DailyUsageRow>(daily: T[]) => {
+  const dates = [...new Set(daily.map((d) => d.date))];
 
-export const formatCostUsd = (value: number) => usdFormat.format(value);
+  return dates
+    .map((date) => {
+      const models = daily.filter((d) => d.date === date);
+      return {
+        date,
+        models,
+        totalTokens: models.reduce((sum, m) => sum + m.totalTokens, 0),
+        costUsd: models.reduce((sum, m) => sum + m.costUsd, 0),
+      };
+    })
+    .sort((a, b) => b.date.localeCompare(a.date));
+};
+
+export const groupUsageByMonth = <T extends DailyUsageRow>(daily: T[]) => {
+  const months = [...new Set(daily.map((d) => monthOf(d.date)))];
+
+  return months
+    .map((month) => {
+      const days = groupUsageByDate(
+        daily.filter((d) => monthOf(d.date) === month),
+      );
+      const rows = days.flatMap((d) => d.models);
+      return {
+        month,
+        days,
+        models: [...new Set(rows.map((r) => r.model))].map((model) => ({
+          model,
+          totalTokens: rows
+            .filter((r) => r.model === model)
+            .reduce((sum, r) => sum + r.totalTokens, 0),
+        })),
+        totalTokens: days.reduce((sum, d) => sum + d.totalTokens, 0),
+        costUsd: days.reduce((sum, d) => sum + d.costUsd, 0),
+      };
+    })
+    .sort((a, b) => b.month.localeCompare(a.month));
+};
 
 // 表示用の目安レート。請求は USD で確定し、円表示は直感的な把握のための概算
 export const USD_JPY_RATE = 150;
