@@ -6,7 +6,7 @@ import {
   testApiClient,
 } from "../../test/api-client";
 import { server } from "../../test/msw-server";
-import { createKnowledgeRepository } from "./knowledge-repository";
+import { createKnowledgeRepository, toFormData } from "./knowledge-repository";
 
 const repo = createKnowledgeRepository(testApiClient, API);
 
@@ -16,6 +16,26 @@ beforeEach(() => {
 
 afterEach(() => {
   setTestAuthToken(null);
+});
+
+describe("toFormData", () => {
+  it("配列は同名フィールドで複数 append し、null / undefined は送らない", () => {
+    const file = new File(["a"], "a.png", { type: "image/png" });
+    const fd = toFormData({
+      urls: ["https://a.example/", "https://b.example/"],
+      files: [file],
+      text: undefined,
+      nothing: null,
+    });
+
+    expect(fd.getAll("urls")).toEqual([
+      "https://a.example/",
+      "https://b.example/",
+    ]);
+    expect(fd.getAll("files")).toHaveLength(1);
+    expect(fd.has("text")).toBe(false);
+    expect(fd.has("nothing")).toBe(false);
+  });
 });
 
 describe("knowledge-repository", () => {
@@ -101,6 +121,26 @@ describe("knowledge-repository", () => {
     );
 
     await repo.convertFile(new File(["x"], "in.pdf"), "in.pdf");
+  });
+
+  it("draftCurated: POST /admin/knowledge/curated-draft に multipart で送る", async () => {
+    server.use(
+      http.post(`${API}/admin/knowledge/curated-draft`, () =>
+        HttpResponse.json({
+          key: "curated/x.md",
+          content: "# x",
+          readUrls: [],
+          unreadable: [],
+        }),
+      ),
+    );
+
+    const result = await repo.draftCurated({
+      urls: ["https://a.example/"],
+      files: [new File(["a"], "a.png", { type: "image/png" })],
+    });
+
+    expect(result?.key).toBe("curated/x.md");
   });
 
   it("fetchUnifiedFiles", async () => {

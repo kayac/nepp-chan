@@ -108,6 +108,14 @@ export type SaveFileResponse = PutOk<"/admin/knowledge/files/{key}">;
 export type UnifiedFilesListResponse = GetOk<"/admin/knowledge/unified">;
 export type UnifiedFileInfo = UnifiedFilesListResponse["files"][number];
 
+export type CuratedDraft = PostOk<"/admin/knowledge/curated-draft">;
+// multipart なので生成型を使わず手書き
+export type CuratedDraftRequest = {
+  urls: string[];
+  text?: string;
+  files: File[];
+};
+
 // multipart レスポンス型（raw fetch で使用）
 export type ReconvertFileResponse = PostOk<"/admin/knowledge/reconvert">;
 
