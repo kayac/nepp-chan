@@ -38,7 +38,7 @@ const usageCategoryExpr = sql`
   CASE
     WHEN source IN ('chat', 'subagent', 'intent-classify', 'rerank') THEN 'conversation'
     WHEN source = 'embedding' AND thread_id IS NOT NULL THEN 'conversation'
-    WHEN source = 'embedding' THEN 'knowledge-base'
+    WHEN source IN ('embedding', 'curated-draft') THEN 'knowledge-base'
     ELSE 'batch'
   END
 `;

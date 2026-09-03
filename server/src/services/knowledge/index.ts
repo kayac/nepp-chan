@@ -1,4 +1,9 @@
 export {
+  CuratedDraftError,
+  type CuratedDraftInput,
+  draftCurated,
+} from "./curated-draft";
+export {
   deleteAllKnowledge,
   deleteKnowledgeBySource,
   processKnowledgeFile,
