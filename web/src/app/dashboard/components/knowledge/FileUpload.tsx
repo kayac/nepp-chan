@@ -1,4 +1,5 @@
 import { ArrowUpTrayIcon } from "@heroicons/react/24/outline";
+import { CONVERTIBLE_MIME_TYPES } from "@nepp-chan/shared/constants/knowledge";
 import { useCallback, useState } from "react";
 import {
   useConvertFile,
@@ -11,13 +12,8 @@ type Props = {
 };
 
 const ACCEPT_TYPES = ".md,.txt,.jpg,.jpeg,.png,.webp,.gif,.pdf";
-const IMAGE_PDF_TYPES = [
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-  "image/gif",
-  "application/pdf",
-];
+const isConvertibleFile = (file: File) =>
+  (CONVERTIBLE_MIME_TYPES as readonly string[]).includes(file.type);
 
 export const FileUpload = ({ onSuccess }: Props) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -35,7 +31,7 @@ export const FileUpload = ({ onSuccess }: Props) => {
       setMessage(null);
 
       // 画像/PDF の場合は変換ダイアログを表示
-      if (IMAGE_PDF_TYPES.includes(file.type)) {
+      if (isConvertibleFile(file)) {
         setConvertFile(file);
         return;
       }

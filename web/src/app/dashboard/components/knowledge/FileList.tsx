@@ -1,21 +1,18 @@
 import { knowledgeRepository } from "~/lib/api/repository";
 import { formatDateTime } from "~/lib/format";
 import type { UnifiedFileInfo } from "~/types";
+import { isCuratedKey } from "./helpers";
 
-/**
- * NOTE: onEdit, onReconvert は運用時に復活させる
- * 現在は閲覧・削除のみ可能
- */
 type Props = {
   files: UnifiedFileInfo[];
   onView?: (key: string) => void;
+  onEdit?: (key: string) => void;
   onDelete?: (baseName: string) => void;
   isDeleting?: boolean;
-  // TODO: 運用時に復活
-  // onEdit: (key: string) => void;
-  // onReconvert: (originalKey: string, baseName: string) => void;
-  // isReconverting: boolean;
 };
+
+const canEdit = (file: UnifiedFileInfo) =>
+  !!file.markdown && isCuratedKey(file.markdown.key);
 
 const formatFileSize = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`;
@@ -28,12 +25,9 @@ const isImageType = (contentType: string) => contentType.startsWith("image/");
 export const FileList = ({
   files,
   onView,
+  onEdit,
   onDelete,
   isDeleting,
-  // TODO: 運用時に復活
-  // onEdit,
-  // onReconvert,
-  // isReconverting,
 }: Props) => {
   if (files.length === 0) {
     return (
@@ -120,6 +114,17 @@ export const FileList = ({
                           閲覧
                         </button>
                       )}
+                      {onEdit && canEdit(file) && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            file.markdown && onEdit(file.markdown.key)
+                          }
+                          className="text-teal-600 hover:text-teal-800 font-medium"
+                        >
+                          編集
+                        </button>
+                      )}
                       {onDelete && (
                         <button
                           type="button"
@@ -183,6 +188,15 @@ export const FileList = ({
                     className="text-sm text-teal-600 hover:text-teal-800 font-medium"
                   >
                     閲覧
+                  </button>
+                )}
+                {onEdit && canEdit(file) && (
+                  <button
+                    type="button"
+                    onClick={() => file.markdown && onEdit(file.markdown.key)}
+                    className="text-sm text-teal-600 hover:text-teal-800 font-medium"
+                  >
+                    編集
                   </button>
                 )}
                 {onDelete && (

@@ -73,6 +73,11 @@ export const useConvertFile = () => {
   });
 };
 
+export const useDraftCurated = () =>
+  useMutation({
+    mutationFn: knowledgeRepository.draftCurated,
+  });
+
 export const useUnifiedFiles = () =>
   useQuery({
     queryKey: dashboardKeys.knowledgeUnifiedFiles,

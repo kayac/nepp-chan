@@ -74,4 +74,39 @@ describe("FileList", () => {
       expect(onDelete).toHaveBeenCalledWith("rm-me");
     }
   });
+
+  it("onEdit が渡されても curated/ 配下の行にだけ編集ボタンが出る", () => {
+    const onEdit = vi.fn();
+    render(
+      <FileList
+        files={[
+          mkFile({
+            baseName: "curated/usagi",
+            markdown: {
+              key: "curated/usagi.md",
+              size: 1,
+              lastModified: "2025-01-01T00:00:00Z",
+            },
+          }),
+          mkFile({
+            baseName: "villotoinep/index",
+            markdown: {
+              key: "villotoinep/index.md",
+              size: 1,
+              lastModified: "2025-01-01T00:00:00Z",
+            },
+          }),
+        ]}
+        onEdit={onEdit}
+      />,
+    );
+
+    const editButtons = screen
+      .getAllByRole("button")
+      .filter((b) => b.textContent === "編集");
+    // desktop と mobile の 2 レイアウト分
+    expect(editButtons).toHaveLength(2);
+    fireEvent.click(editButtons[0] as HTMLElement);
+    expect(onEdit).toHaveBeenCalledWith("curated/usagi.md");
+  });
 });
