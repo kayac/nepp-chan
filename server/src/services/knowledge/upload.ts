@@ -1,16 +1,9 @@
 import { convertToMarkdown, isSupportedMimeType } from "~/lib/image-converter";
 import { logger } from "~/lib/logger";
-import { syncFile } from "./sync";
+import { type SyncDeps, storeMarkdownAndSync } from "./sync";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB for Markdown
 const MAX_CONVERT_FILE_SIZE = 20 * 1024 * 1024; // 20MB for images/PDF
-
-type UploadDeps = {
-  bucket: R2Bucket;
-  vectorize: VectorizeIndex;
-  apiKey: string;
-  d1?: D1Database;
-};
 
 type UploadResult = {
   key: string;
@@ -18,35 +11,15 @@ type UploadResult = {
   error?: string;
 };
 
-type ConvertResult = {
-  key: string;
-  originalType: string;
-  chunks: number;
-  error?: string;
-};
+type ConvertResult = UploadResult & { originalType: string };
 
 const withMarkdownExtension = (name: string) =>
   name.endsWith(".md") ? name : `${name}.md`;
 
-const storeMarkdownAndSync = async (
-  key: string,
-  markdown: string,
-  deps: UploadDeps,
-) => {
-  await deps.bucket.put(key, markdown, {
-    httpMetadata: { contentType: "text/markdown" },
-  });
-  return syncFile(key, markdown, {
-    vectorize: deps.vectorize,
-    apiKey: deps.apiKey,
-    d1: deps.d1,
-  });
-};
-
 export const uploadMarkdownFile = async (
   file: File,
   customFilename: string | null,
-  deps: UploadDeps,
+  deps: SyncDeps,
 ): Promise<UploadResult> => {
   if (file.size > MAX_FILE_SIZE) {
     throw new Error(
@@ -65,7 +38,7 @@ export const uploadMarkdownFile = async (
 export const convertAndUpload = async (
   file: File,
   filename: string,
-  deps: UploadDeps,
+  deps: SyncDeps,
 ): Promise<ConvertResult> => {
   if (file.size > MAX_CONVERT_FILE_SIZE) {
     throw new Error(
@@ -106,7 +79,7 @@ export const convertAndUpload = async (
 export const reconvertFromOriginal = async (
   originalKey: string,
   filename: string,
-  deps: UploadDeps,
+  deps: SyncDeps,
 ): Promise<ConvertResult> => {
   const object = await deps.bucket.get(originalKey);
   if (!object) {

@@ -13,7 +13,7 @@ vi.mock("~/lib/logger", () => ({
 
 const { processKnowledgeFile } = await import("./embedding");
 const { deleteKnowledgeBySource } = await import("./vector-store");
-const { syncAll, syncFile } = await import("./sync");
+const { storeMarkdownAndSync, syncAll, syncFile } = await import("./sync");
 
 const buildR2Object = (
   key: string,
@@ -194,5 +194,24 @@ describe("syncFile", () => {
     });
     const result = await syncFile("x.md", "y", { vectorize, apiKey: "k" });
     expect(result.error).toBe("no-api-key");
+  });
+});
+
+describe("storeMarkdownAndSync", () => {
+  it("R2 に text/markdown で保存してから同期する", async () => {
+    const bucket = { put: vi.fn(async () => {}) } as unknown as R2Bucket;
+    vi.mocked(processKnowledgeFile).mockResolvedValueOnce({ chunks: 4 });
+
+    const result = await storeMarkdownAndSync("doc.md", "# c", {
+      bucket,
+      vectorize,
+      apiKey: "k",
+    });
+
+    expect(bucket.put).toHaveBeenCalledWith("doc.md", "# c", {
+      httpMetadata: { contentType: "text/markdown" },
+    });
+    expect(deleteKnowledgeBySource).toHaveBeenCalledWith(vectorize, "doc.md");
+    expect(result).toEqual({ chunks: 4 });
   });
 });

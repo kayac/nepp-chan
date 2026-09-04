@@ -1,6 +1,10 @@
 import { logger } from "~/lib/logger";
 import { processKnowledgeFile } from "./embedding";
-import { buildOriginalsMap, isEditedAfterOriginal } from "./utils";
+import {
+  buildOriginalsMap,
+  isEditedAfterOriginal,
+  markdownBaseName,
+} from "./utils";
 import { deleteKnowledgeBySource } from "./vector-store";
 
 type SyncResult = {
@@ -17,7 +21,7 @@ type SyncAllResult = {
   editedCount: number;
 };
 
-type SyncDeps = {
+export type SyncDeps = {
   bucket: R2Bucket;
   vectorize: VectorizeIndex;
   apiKey: string;
@@ -37,6 +41,17 @@ export const syncFile = async (
     deps.apiKey,
     deps.d1,
   );
+};
+
+export const storeMarkdownAndSync = async (
+  key: string,
+  markdown: string,
+  deps: SyncDeps,
+) => {
+  await deps.bucket.put(key, markdown, {
+    httpMetadata: { contentType: "text/markdown" },
+  });
+  return syncFile(key, markdown, deps);
 };
 
 export const syncAll = async ({
@@ -66,7 +81,7 @@ export const syncAll = async ({
 
     const edited = isEditedAfterOriginal(
       obj.uploaded,
-      originalsMap.get(obj.key.replace(/\.md$/, "")),
+      originalsMap.get(markdownBaseName(obj.key)),
     );
     const content = await file.text();
     logger.info(
