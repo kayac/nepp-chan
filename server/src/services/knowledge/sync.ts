@@ -1,6 +1,6 @@
 import { logger } from "~/lib/logger";
 import { processKnowledgeFile } from "./embedding";
-import { buildOriginalsMap, EDIT_THRESHOLD_MS } from "./utils";
+import { buildOriginalsMap, isEditedAfterOriginal } from "./utils";
 import { deleteKnowledgeBySource } from "./vector-store";
 
 type SyncResult = {
@@ -22,15 +22,6 @@ type SyncDeps = {
   vectorize: VectorizeIndex;
   apiKey: string;
   d1?: D1Database;
-};
-
-const isFileEdited = (mdFile: R2Object, originalsMap: Map<string, Date>) => {
-  const baseName = mdFile.key.replace(/\.md$/, "");
-  const originalUploaded = originalsMap.get(baseName);
-  if (!originalUploaded) return false;
-  return (
-    mdFile.uploaded.getTime() - originalUploaded.getTime() > EDIT_THRESHOLD_MS
-  );
 };
 
 /**
@@ -79,7 +70,10 @@ export const syncAll = async ({
       continue;
     }
 
-    const edited = isFileEdited(obj, originalsMap);
+    const edited = isEditedAfterOriginal(
+      obj.uploaded,
+      originalsMap.get(obj.key.replace(/\.md$/, "")),
+    );
     const content = await file.text();
     logger.info(
       `[Sync] Processing ${obj.key} (${content.length} bytes)${edited ? " [EDITED]" : ""}`,

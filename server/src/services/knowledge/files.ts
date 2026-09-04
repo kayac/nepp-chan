@@ -1,5 +1,10 @@
 import { logger } from "~/lib/logger";
-import { buildOriginalsMap, EDIT_THRESHOLD_MS, extractBaseName } from "./utils";
+import {
+  buildOriginalsMap,
+  extractBaseName,
+  isEditedAfterOriginal,
+  markdownBaseName,
+} from "./utils";
 import { deleteKnowledgeBySource } from "./vector-store";
 
 export type FileInfo = {
@@ -47,11 +52,10 @@ export const listFiles = async (
   const files = allObjects
     .filter((obj) => !obj.key.startsWith("originals/"))
     .map((obj) => {
-      const baseName = obj.key.replace(/\.md$/, "");
-      const originalUploaded = originalsMap.get(baseName);
-      const isEdited =
-        originalUploaded !== undefined &&
-        obj.uploaded.getTime() - originalUploaded.getTime() > EDIT_THRESHOLD_MS;
+      const isEdited = isEditedAfterOriginal(
+        obj.uploaded,
+        originalsMap.get(markdownBaseName(obj.key)),
+      );
 
       return {
         key: obj.key,
@@ -80,9 +84,8 @@ export const listUnifiedFiles = async (
   >();
   for (const obj of allObjects) {
     if (obj.key.startsWith("originals/")) {
-      const baseName = extractBaseName(obj.key);
       const file = await bucket.head(obj.key);
-      originalsMap.set(baseName, {
+      originalsMap.set(extractBaseName(obj.key), {
         key: obj.key,
         size: obj.size,
         uploaded: obj.uploaded,
@@ -98,8 +101,7 @@ export const listUnifiedFiles = async (
   >();
   for (const obj of allObjects) {
     if (obj.key.endsWith(".md") && !obj.key.startsWith("originals/")) {
-      const baseName = obj.key.replace(/\.md$/, "");
-      markdownMap.set(baseName, {
+      markdownMap.set(markdownBaseName(obj.key), {
         key: obj.key,
         size: obj.size,
         uploaded: obj.uploaded,
@@ -190,8 +192,8 @@ export const deleteFile = async (
   vectorize: VectorizeIndex,
   key: string,
 ): Promise<void> => {
-  const baseName = key.replace(/\.md$/, "");
-  const mdKey = baseName.endsWith(".md") ? baseName : `${baseName}.md`;
+  const baseName = markdownBaseName(key);
+  const mdKey = `${baseName}.md`;
 
   // 1. Markdownファイルを削除
   await bucket.delete(mdKey);

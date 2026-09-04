@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { buildOriginalsMap, EDIT_THRESHOLD_MS, extractBaseName } from "./utils";
+import {
+  buildOriginalsMap,
+  EDIT_THRESHOLD_MS,
+  extractBaseName,
+  isEditedAfterOriginal,
+  markdownBaseName,
+} from "./utils";
 
 describe("EDIT_THRESHOLD_MS", () => {
   it("5000 ミリ秒で定義されている", () => {
@@ -56,5 +62,30 @@ describe("buildOriginalsMap", () => {
 
   it("空配列なら空 Map", () => {
     expect(buildOriginalsMap([]).size).toBe(0);
+  });
+});
+
+describe("isEditedAfterOriginal", () => {
+  it("original が無ければ false", () => {
+    expect(isEditedAfterOriginal(new Date("2030-01-01"), undefined)).toBe(
+      false,
+    );
+  });
+
+  it("差が閾値以内なら false、超えたら true", () => {
+    const original = new Date("2030-01-01T00:00:00Z");
+    expect(
+      isEditedAfterOriginal(new Date(original.getTime() + 5000), original),
+    ).toBe(false);
+    expect(
+      isEditedAfterOriginal(new Date(original.getTime() + 5001), original),
+    ).toBe(true);
+  });
+});
+
+describe("markdownBaseName", () => {
+  it(".md を外す。無ければそのまま", () => {
+    expect(markdownBaseName("a/b.md")).toBe("a/b");
+    expect(markdownBaseName("a/b")).toBe("a/b");
   });
 });
