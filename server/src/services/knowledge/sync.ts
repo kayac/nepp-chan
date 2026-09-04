@@ -24,9 +24,6 @@ type SyncDeps = {
   d1?: D1Database;
 };
 
-/**
- * 単一ファイルを同期（保存 + Vectorize登録）
- */
 export const syncFile = async (
   key: string,
   content: string,
@@ -42,9 +39,6 @@ export const syncFile = async (
   );
 };
 
-/**
- * R2バケットの全Markdownファイルを読み込み、Vectorizeに同期
- */
 export const syncAll = async ({
   bucket,
   vectorize,

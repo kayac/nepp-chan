@@ -83,7 +83,6 @@ export const handleR2Event = async (
     const { action, object } = message.body;
     const key = object.key;
 
-    // Markdownファイル以外は無視
     if (!isMarkdownFile(key)) {
       message.ack();
       continue;

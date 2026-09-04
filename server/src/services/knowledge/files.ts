@@ -39,9 +39,6 @@ export type FileContent = {
   lastModified: string;
 };
 
-/**
- * ファイル一覧を取得（編集済み情報付き）
- */
 export const listFiles = async (
   bucket: R2Bucket,
 ): Promise<{ files: FileInfo[]; truncated: boolean }> => {
@@ -69,9 +66,6 @@ export const listFiles = async (
   return { files, truncated: listed.truncated };
 };
 
-/**
- * 統合ファイル一覧を取得（元ファイルとMarkdownを紐付け）
- */
 export const listUnifiedFiles = async (
   bucket: R2Bucket,
 ): Promise<{ files: UnifiedFileInfo[]; truncated: boolean }> => {
@@ -146,9 +140,6 @@ export const listUnifiedFiles = async (
   return { files, truncated: listed.truncated };
 };
 
-/**
- * ファイル内容を取得
- */
 export const getFile = async (
   bucket: R2Bucket,
   key: string,
@@ -166,9 +157,6 @@ export const getFile = async (
   };
 };
 
-/**
- * 元ファイル（バイナリ）を取得
- */
 export const getOriginalFile = async (
   bucket: R2Bucket,
   key: string,
@@ -184,9 +172,6 @@ export const getOriginalFile = async (
   };
 };
 
-/**
- * ファイルを完全削除（Markdown、元ファイル、Vectorize）
- */
 export const deleteFile = async (
   bucket: R2Bucket,
   vectorize: VectorizeIndex,
@@ -195,11 +180,9 @@ export const deleteFile = async (
   const baseName = markdownBaseName(key);
   const mdKey = `${baseName}.md`;
 
-  // 1. Markdownファイルを削除
   await bucket.delete(mdKey);
   logger.info(`[Delete] Deleted ${mdKey} from R2`);
 
-  // 2. 元ファイル（originals/）を検索して削除
   const listed = await bucket.list({ prefix: `originals/${baseName}` });
   for (const obj of listed.objects) {
     const objBaseName = extractBaseName(obj.key);
@@ -209,7 +192,6 @@ export const deleteFile = async (
     }
   }
 
-  // 3. Vectorize から削除
   await deleteKnowledgeBySource(vectorize, mdKey);
   logger.info(`[Delete] Deleted ${mdKey} from Vectorize`);
 };
