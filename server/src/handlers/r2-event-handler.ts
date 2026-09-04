@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/cloudflare";
 import { logger } from "~/lib/logger";
-import { processKnowledgeFile } from "~/services/knowledge/embedding";
+import { syncFile } from "~/services/knowledge/sync";
 import { deleteKnowledgeBySource } from "~/services/knowledge/vector-store";
 
 type R2EventType =
@@ -47,17 +47,11 @@ const handleObjectCreate = async (
     return { success: false, error: `File not found: ${key}` };
   }
 
-  const content = await file.text();
-
-  // 既存データを削除してから再登録
-  await deleteKnowledgeBySource(env.VECTORIZE, key);
-
-  const result = await processKnowledgeFile(
-    key,
-    content,
-    env.VECTORIZE,
-    env.GOOGLE_GENERATIVE_AI_API_KEY,
-  );
+  const result = await syncFile(key, await file.text(), {
+    vectorize: env.VECTORIZE,
+    apiKey: env.GOOGLE_GENERATIVE_AI_API_KEY,
+    d1: env.DB,
+  });
 
   if (result.error) {
     return { success: false, error: result.error };

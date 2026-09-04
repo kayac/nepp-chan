@@ -34,6 +34,24 @@ const isFileEdited = (mdFile: R2Object, originalsMap: Map<string, Date>) => {
 };
 
 /**
+ * 単一ファイルを同期（保存 + Vectorize登録）
+ */
+export const syncFile = async (
+  key: string,
+  content: string,
+  deps: Omit<SyncDeps, "bucket">,
+): Promise<{ chunks: number; error?: string }> => {
+  await deleteKnowledgeBySource(deps.vectorize, key);
+  return processKnowledgeFile(
+    key,
+    content,
+    deps.vectorize,
+    deps.apiKey,
+    deps.d1,
+  );
+};
+
+/**
  * R2バケットの全Markdownファイルを読み込み、Vectorizeに同期
  */
 export const syncAll = async ({
@@ -67,14 +85,7 @@ export const syncAll = async ({
       `[Sync] Processing ${obj.key} (${content.length} bytes)${edited ? " [EDITED]" : ""}`,
     );
 
-    await deleteKnowledgeBySource(vectorize, obj.key);
-    const result = await processKnowledgeFile(
-      obj.key,
-      content,
-      vectorize,
-      apiKey,
-      d1,
-    );
+    const result = await syncFile(obj.key, content, { vectorize, apiKey, d1 });
 
     results.push({
       file: obj.key,
@@ -90,22 +101,4 @@ export const syncAll = async ({
     totalChunks: results.reduce((sum, r) => sum + r.chunks, 0),
     editedCount: results.filter((r) => r.edited).length,
   };
-};
-
-/**
- * 単一ファイルを同期（保存 + Vectorize登録）
- */
-export const syncFile = async (
-  key: string,
-  content: string,
-  deps: Omit<SyncDeps, "bucket">,
-): Promise<{ chunks: number; error?: string }> => {
-  await deleteKnowledgeBySource(deps.vectorize, key);
-  return processKnowledgeFile(
-    key,
-    content,
-    deps.vectorize,
-    deps.apiKey,
-    deps.d1,
-  );
 };
