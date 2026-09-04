@@ -9,7 +9,10 @@ import { recordLlmUsage } from "~/services/analytics/llm-usage";
 const EMBEDDING_DIMENSIONS = 1536;
 const BATCH_SIZE = 100;
 const MIN_CHUNK_LENGTH = 50;
+const CHUNK_MAX_SIZE = 1000;
+const CHUNK_OVERLAP = 100;
 const MAX_DELETE_ITERATIONS = 1000;
+const DELETE_QUERY_TOP_K = 100;
 
 type EmbeddingModel = ReturnType<
   ReturnType<typeof createGoogleGenerativeAI>["textEmbeddingModel"]
@@ -64,6 +67,11 @@ const chunkDocument = async (
       ["##", "section"],
       ["###", "subsection"],
     ],
+  });
+  await doc.chunk({
+    strategy: "recursive",
+    maxSize: CHUNK_MAX_SIZE,
+    overlap: CHUNK_OVERLAP,
   });
 
   // MDocument のメソッドを活用してテキストとメタデータを取得
@@ -203,12 +211,10 @@ export const deleteAllKnowledge = async (
   const dummyVector = new Array(EMBEDDING_DIMENSIONS).fill(0);
   let totalDeleted = 0;
 
-  // returnMetadata: "all" の場合、topK は最大 50
-  // 繰り返し削除してすべてのベクトルを削除
   for (let i = 0; i < MAX_DELETE_ITERATIONS; i++) {
     const results = await vectorize.query(dummyVector, {
-      topK: 50,
-      returnMetadata: "all",
+      topK: DELETE_QUERY_TOP_K,
+      returnMetadata: "none",
     });
 
     if (results.matches.length === 0) break;
@@ -218,7 +224,7 @@ export const deleteAllKnowledge = async (
     totalDeleted += ids.length;
   }
 
-  if (totalDeleted >= MAX_DELETE_ITERATIONS * 50) {
+  if (totalDeleted >= MAX_DELETE_ITERATIONS * DELETE_QUERY_TOP_K) {
     logger.warn(
       `[Knowledge] deleteAllKnowledge reached iteration limit (${MAX_DELETE_ITERATIONS}), some vectors may remain`,
     );
@@ -239,8 +245,8 @@ export const deleteKnowledgeBySource = async (
 
   for (let i = 0; i < MAX_DELETE_ITERATIONS; i++) {
     const results = await vectorize.query(dummyVector, {
-      topK: 50,
-      returnMetadata: "all",
+      topK: DELETE_QUERY_TOP_K,
+      returnMetadata: "none",
       filter: { source: { $eq: source } },
     });
 
@@ -251,7 +257,7 @@ export const deleteKnowledgeBySource = async (
     totalDeleted += ids.length;
   }
 
-  if (totalDeleted >= MAX_DELETE_ITERATIONS * 50) {
+  if (totalDeleted >= MAX_DELETE_ITERATIONS * DELETE_QUERY_TOP_K) {
     logger.warn(
       `[Knowledge] deleteKnowledgeBySource(${source}) reached iteration limit (${MAX_DELETE_ITERATIONS}), some vectors may remain`,
     );
