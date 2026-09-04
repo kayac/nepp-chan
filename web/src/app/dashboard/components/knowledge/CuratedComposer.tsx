@@ -322,13 +322,11 @@ export const CuratedComposer = ({ existingKeys }: Props) => {
                 />
               )}
             </div>
-            <p
-              className={`text-xs ${urlError ? "text-red-600" : "text-stone-500"}`}
-            >
-              {urlError
-                ? "http:// か https:// で始まる URL を入力してください"
-                : `貼り付けるとすぐ追加されます。続けて貼れば複数のページを読みます（最大 ${CURATED_DRAFT_LIMITS.urls} 件）`}
-            </p>
+            {urlError && (
+              <p className="text-xs text-red-600">
+                http:// か https:// で始まる URL を入力してください
+              </p>
+            )}
           </div>
         )}
 
