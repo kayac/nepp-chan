@@ -57,7 +57,9 @@
           {
             "queue": "nepp-chan-knowledge-sync-local",
             "max_batch_size": 10,
-            "max_batch_timeout": 30
+            "max_batch_timeout": 30,
+            "max_retries": 5,
+            "dead_letter_queue": "nepp-chan-knowledge-sync-dlq-local"
           },
           {
             "queue": "nepp-chan-line-queue-local",
@@ -111,7 +113,9 @@
           {
             "queue": "nepp-chan-knowledge-sync-dev",
             "max_batch_size": 10,
-            "max_batch_timeout": 30
+            "max_batch_timeout": 30,
+            "max_retries": 5,
+            "dead_letter_queue": "nepp-chan-knowledge-sync-dlq-dev"
           },
           {
             "queue": "nepp-chan-line-queue-dev",
@@ -164,7 +168,9 @@
           {
             "queue": "nepp-chan-knowledge-sync-prd",
             "max_batch_size": 10,
-            "max_batch_timeout": 30
+            "max_batch_timeout": 30,
+            "max_retries": 5,
+            "dead_letter_queue": "nepp-chan-knowledge-sync-dlq-prd"
           },
           {
             "queue": "nepp-chan-line-queue-prd",

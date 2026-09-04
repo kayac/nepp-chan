@@ -28,6 +28,18 @@ export type R2EventMessage = {
 
 const isMarkdownFile = (key: string) => key.endsWith(".md");
 
+const RETRY_BASE_DELAY_SECONDS = 30;
+const RETRY_MAX_DELAY_SECONDS = 300;
+
+export const retryDelaySeconds = (attempts: number) =>
+  Math.min(
+    RETRY_MAX_DELAY_SECONDS,
+    RETRY_BASE_DELAY_SECONDS * 2 ** (attempts - 1),
+  );
+
+const retryWithBackoff = (message: Message<R2EventMessage>) =>
+  message.retry({ delaySeconds: retryDelaySeconds(message.attempts) });
+
 const handleObjectCreate = async (
   key: string,
   env: CloudflareBindings,
@@ -121,12 +133,12 @@ export const handleR2Event = async (
       if (success) {
         message.ack();
       } else {
-        message.retry();
+        retryWithBackoff(message);
       }
     } catch (error) {
       Sentry.captureException(error, { tags: { handler: "r2-event" } });
       logger.error(`Error processing ${key}`, error);
-      message.retry();
+      retryWithBackoff(message);
     }
   }
 };
