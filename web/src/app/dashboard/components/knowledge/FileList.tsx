@@ -1,7 +1,7 @@
 import { knowledgeRepository } from "~/lib/api/repository";
 import { formatDateTime } from "~/lib/format";
 import type { UnifiedFileInfo } from "~/types";
-import { isCuratedKey } from "./helpers";
+import { canDeleteFile, isCuratedFile } from "./helpers";
 
 type Props = {
   files: UnifiedFileInfo[];
@@ -9,10 +9,8 @@ type Props = {
   onEdit?: (key: string) => void;
   onDelete?: (baseName: string) => void;
   isDeleting?: boolean;
+  emptyMessage?: string;
 };
-
-const canEdit = (file: UnifiedFileInfo) =>
-  !!file.markdown && isCuratedKey(file.markdown.key);
 
 const formatFileSize = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`;
@@ -28,21 +26,20 @@ export const FileList = ({
   onEdit,
   onDelete,
   isDeleting,
+  emptyMessage = "ファイルがありません",
 }: Props) => {
   if (files.length === 0) {
     return (
-      <div className="text-center py-8 text-stone-500">
-        ファイルがありません
-      </div>
+      <div className="text-center py-8 text-stone-500">{emptyMessage}</div>
     );
   }
 
   return (
     <>
       {/* Desktop: Table View */}
-      <div className="hidden md:block overflow-x-auto">
+      <div className="hidden md:block overflow-auto max-h-[70dvh]">
         <table className="min-w-full divide-y divide-stone-200">
-          <thead className="bg-stone-50">
+          <thead className="bg-stone-50 sticky top-0">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
                 ファイル名
@@ -114,7 +111,7 @@ export const FileList = ({
                           閲覧
                         </button>
                       )}
-                      {onEdit && canEdit(file) && (
+                      {onEdit && isCuratedFile(file) && (
                         <button
                           type="button"
                           onClick={() =>
@@ -125,7 +122,7 @@ export const FileList = ({
                           編集
                         </button>
                       )}
-                      {onDelete && (
+                      {onDelete && canDeleteFile(file) && (
                         <button
                           type="button"
                           onClick={() => onDelete(file.baseName)}
@@ -145,7 +142,7 @@ export const FileList = ({
       </div>
 
       {/* Mobile: Card View */}
-      <div className="md:hidden space-y-3">
+      <div className="md:hidden space-y-3 overflow-y-auto max-h-[70dvh]">
         {files.map((file) => {
           const lastModified =
             file.markdown?.lastModified || file.original?.lastModified || "";
@@ -190,7 +187,7 @@ export const FileList = ({
                     閲覧
                   </button>
                 )}
-                {onEdit && canEdit(file) && (
+                {onEdit && isCuratedFile(file) && (
                   <button
                     type="button"
                     onClick={() => file.markdown && onEdit(file.markdown.key)}
@@ -199,7 +196,7 @@ export const FileList = ({
                     編集
                   </button>
                 )}
-                {onDelete && (
+                {onDelete && canDeleteFile(file) && (
                   <button
                     type="button"
                     onClick={() => onDelete(file.baseName)}

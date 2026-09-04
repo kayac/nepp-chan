@@ -1,5 +1,5 @@
 import { CONVERTIBLE_MIME_TYPES } from "@nepp-chan/shared/constants/knowledge";
-import type { CuratedDraftRequest } from "~/types";
+import type { CuratedDraftRequest, UnifiedFileInfo } from "~/types";
 
 export const CURATED_PREFIX = "curated/";
 export const DRAFT_FILE_ACCEPT = CONVERTIBLE_MIME_TYPES.join(",");
@@ -18,6 +18,17 @@ export type DraftFormFields = {
 };
 
 export const isCuratedKey = (key: string) => key.startsWith(CURATED_PREFIX);
+
+export const isCuratedFile = (file: UnifiedFileInfo) =>
+  !!file.markdown && isCuratedKey(file.markdown.key);
+
+export const canDeleteFile = (file: UnifiedFileInfo) =>
+  isCuratedFile(file) || !!file.original;
+
+export const partitionFiles = (files: UnifiedFileInfo[]) => ({
+  curated: files.filter(isCuratedFile),
+  base: files.filter((file) => !isCuratedFile(file)),
+});
 
 export const slugFromKey = (key: string) =>
   (key.startsWith(CURATED_PREFIX)

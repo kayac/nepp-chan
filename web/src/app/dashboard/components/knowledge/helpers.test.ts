@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   addUrls,
+  canDeleteFile,
   extractUrls,
   hasDraftInput,
   hostLabel,
@@ -8,6 +9,7 @@ import {
   isValidSlug,
   joinDraft,
   keyFromSlug,
+  partitionFiles,
   slugFromKey,
   splitDraft,
   toDraftRequest,
@@ -193,5 +195,64 @@ describe("hostLabel", () => {
 
   it("URL でなければそのまま返す", () => {
     expect(hostLabel("検索: 店名")).toBe("検索: 店名");
+  });
+});
+
+describe("partitionFiles", () => {
+  const md = (key: string) => ({
+    baseName: key.replace(/\.md$/, ""),
+    hasMarkdown: true,
+    markdown: { key, size: 1, lastModified: "2025-01-01T00:00:00Z" },
+    original: undefined,
+  });
+
+  it("curated/ 配下と、それ以外に分ける", () => {
+    const curated = md("curated/usagi.md");
+    const base = md("villotoinep/index.md");
+    const converted = {
+      ...md("chirashi.md"),
+      original: {
+        key: "originals/chirashi.pdf",
+        size: 1,
+        lastModified: "2025-01-01T00:00:00Z",
+        contentType: "application/pdf",
+      },
+    };
+    expect(partitionFiles([base, curated, converted])).toEqual({
+      curated: [curated],
+      base: [base, converted],
+    });
+  });
+});
+
+describe("canDeleteFile", () => {
+  const md = (key: string) => ({
+    baseName: key.replace(/\.md$/, ""),
+    hasMarkdown: true,
+    markdown: { key, size: 1, lastModified: "2025-01-01T00:00:00Z" },
+    original: undefined,
+  });
+  const original = {
+    key: "originals/x.pdf",
+    size: 1,
+    lastModified: "2025-01-01T00:00:00Z",
+    contentType: "application/pdf",
+  };
+
+  it("curated/ 配下か、元ファイルを持つ行だけ削除できる", () => {
+    expect(canDeleteFile(md("curated/usagi.md"))).toBe(true);
+    expect(canDeleteFile({ ...md("chirashi.md"), original })).toBe(true);
+    expect(canDeleteFile(md("villotoinep/index.md"))).toBe(false);
+  });
+
+  it("Markdown が無く元ファイルだけの行も削除できる", () => {
+    expect(
+      canDeleteFile({
+        baseName: "x",
+        hasMarkdown: false,
+        markdown: undefined,
+        original,
+      }),
+    ).toBe(true);
   });
 });
