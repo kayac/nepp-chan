@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./embedding", () => ({
+vi.mock("./vector-store", () => ({
   deleteKnowledgeBySource: vi.fn(),
 }));
 
@@ -8,7 +8,7 @@ vi.mock("~/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const { deleteKnowledgeBySource } = await import("./embedding");
+const { deleteKnowledgeBySource } = await import("./vector-store");
 const { deleteFile, getFile, getOriginalFile, listFiles, listUnifiedFiles } =
   await import("./files");
 

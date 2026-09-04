@@ -1,12 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("~/services/knowledge/embedding", () => ({
-  deleteKnowledgeBySource: vi.fn(),
   processKnowledgeFile: vi.fn(),
 }));
+vi.mock("~/services/knowledge/vector-store", () => ({
+  deleteKnowledgeBySource: vi.fn(),
+}));
 
-const { deleteKnowledgeBySource, processKnowledgeFile } = await import(
-  "~/services/knowledge/embedding"
+const { processKnowledgeFile } = await import("~/services/knowledge/embedding");
+const { deleteKnowledgeBySource } = await import(
+  "~/services/knowledge/vector-store"
 );
 const { handleR2Event, retryDelaySeconds } = await import("./r2-event-handler");
 

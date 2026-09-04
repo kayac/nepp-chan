@@ -1,17 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mdocumentHolder } = vi.hoisted(() => ({
-  mdocumentHolder: {
-    chunk: vi.fn(async () => {}),
-    getText: vi.fn(() => [] as string[]),
-    getMetadata: vi.fn(() => [] as Record<string, unknown>[]),
-  },
-}));
-
-vi.mock("@mastra/rag", () => ({
-  MDocument: {
-    fromMarkdown: vi.fn(() => mdocumentHolder),
-  },
+vi.mock("./chunk", () => ({
+  chunkDocument: vi.fn(),
 }));
 
 vi.mock("@ai-sdk/google", () => ({
@@ -30,17 +20,16 @@ vi.mock("~/lib/logger", () => ({
 
 const { embedMany } = await import("ai");
 const { createGoogleGenerativeAI } = await import("@ai-sdk/google");
-const { processKnowledgeFile, deleteAllKnowledge, deleteKnowledgeBySource } =
-  await import("./embedding");
+const { chunkDocument } = await import("./chunk");
+const { processKnowledgeFile } = await import("./embedding");
 
 const fakeEmbedding = (len = 1536) => new Array(len).fill(0).map((_, i) => i);
 
-const setChunks = (
-  texts: string[],
-  metas: Record<string, unknown>[] = texts.map(() => ({})),
-) => {
-  mdocumentHolder.getText.mockReturnValue(texts);
-  mdocumentHolder.getMetadata.mockReturnValue(metas);
+const setChunks = (texts: string[], source = "doc.md") => {
+  vi.mocked(chunkDocument).mockResolvedValue({
+    texts,
+    metadata: texts.map((content) => ({ source, content })),
+  });
 };
 
 const buildVectorize = () =>
@@ -53,9 +42,7 @@ const buildVectorize = () =>
 beforeEach(() => {
   vi.mocked(embedMany).mockReset();
   vi.mocked(createGoogleGenerativeAI).mockClear();
-  mdocumentHolder.chunk.mockClear().mockResolvedValue(undefined);
-  mdocumentHolder.getText.mockReset().mockReturnValue([]);
-  mdocumentHolder.getMetadata.mockReset().mockReturnValue([]);
+  vi.mocked(chunkDocument).mockReset();
 });
 
 describe("processKnowledgeFile", () => {
@@ -75,36 +62,8 @@ describe("processKnowledgeFile", () => {
     expect(vectorize.upsert).not.toHaveBeenCalled();
   });
 
-  it("MIN_CHUNK_LENGTH 未満のチャンクは embedding 対象から除外する", async () => {
-    setChunks(["short", "x".repeat(60)]);
-    vi.mocked(embedMany).mockResolvedValueOnce({
-      embeddings: [fakeEmbedding()],
-    } as never);
-
-    const vectorize = buildVectorize();
-    const result = await processKnowledgeFile(
-      "doc.md",
-      "# c",
-      vectorize,
-      "key",
-    );
-
-    expect(result).toEqual({ chunks: 1 });
-    expect(embedMany).toHaveBeenCalledTimes(1);
-    const call = vi.mocked(embedMany).mock.calls[0]?.[0] as {
-      values: string[];
-    };
-    expect(call.values).toHaveLength(1);
-  });
-
-  it("通常系: embedMany と vectorize.upsert を呼び chunks 数を返す", async () => {
-    setChunks(
-      ["a".repeat(100), "b".repeat(100)],
-      [
-        { title: "T1", section: "S1" },
-        { title: "T1", section: "S2", subsection: "Sub" },
-      ],
-    );
+  it("通常系: chunk ごとに embedding を付けて upsert し chunks 数を返す", async () => {
+    setChunks(["a".repeat(100), "b".repeat(100)], "guide.md");
     vi.mocked(embedMany).mockResolvedValueOnce({
       embeddings: [fakeEmbedding(), fakeEmbedding()],
     } as never);
@@ -112,13 +71,16 @@ describe("processKnowledgeFile", () => {
     const vectorize = buildVectorize();
     const result = await processKnowledgeFile(
       "guide.md",
-      "---\ncategory: faq\n---\n# Title\n## S1\nbody",
+      "# Title",
       vectorize,
       "key",
     );
 
     expect(result).toEqual({ chunks: 2 });
-    expect(vectorize.upsert).toHaveBeenCalledTimes(1);
+    const embedCall = vi.mocked(embedMany).mock.calls[0]?.[0] as {
+      values: string[];
+    };
+    expect(embedCall.values).toEqual(["a".repeat(100), "b".repeat(100)]);
     const upsertArg = vi.mocked(vectorize.upsert).mock.calls[0]?.[0] as Array<{
       id: string;
       values: number[];
@@ -126,79 +88,8 @@ describe("processKnowledgeFile", () => {
     }>;
     expect(upsertArg).toHaveLength(2);
     expect(upsertArg[0].metadata.source).toBe("guide.md");
-    expect(upsertArg[0].metadata.category).toBe("faq");
-    expect(upsertArg[0].metadata.title).toBe("T1");
-    expect(upsertArg[1].metadata.subsection).toBe("Sub");
-  });
-
-  it("strip されたヘッダー情報を embedding テキストの先頭にプレフィックスとして復元する", async () => {
-    const bodyA = "a".repeat(100);
-    const bodyB = "b".repeat(100);
-    setChunks(
-      [bodyA, bodyB],
-      [
-        { title: "広報おといねっぷ 2023年6月号", section: "診療所" },
-        {
-          title: "広報おといねっぷ 2023年6月号",
-          section: "診療所",
-          subsection: "整形外科",
-        },
-      ],
-    );
-    vi.mocked(embedMany).mockResolvedValueOnce({
-      embeddings: [fakeEmbedding(), fakeEmbedding()],
-    } as never);
-
-    const vectorize = buildVectorize();
-    await processKnowledgeFile("kouhou.md", "x", vectorize, "key");
-
-    const call = vi.mocked(embedMany).mock.calls[0]?.[0] as {
-      values: string[];
-    };
-    expect(call.values[0]).toBe(
-      `広報おといねっぷ 2023年6月号 > 診療所\n\n${bodyA}`,
-    );
-    expect(call.values[1]).toBe(
-      `広報おといねっぷ 2023年6月号 > 診療所 > 整形外科\n\n${bodyB}`,
-    );
-
-    const upsertArg = vi.mocked(vectorize.upsert).mock.calls[0]?.[0] as Array<{
-      metadata: Record<string, unknown>;
-    }>;
-    expect(upsertArg[0].metadata.content).toBe(call.values[0]);
-    expect(upsertArg[1].metadata.content).toBe(call.values[1]);
-  });
-
-  it("ヘッダーメタデータがないチャンクはプレフィックスなしで元テキストを使う", async () => {
-    const body = "c".repeat(100);
-    setChunks([body], [{}]);
-    vi.mocked(embedMany).mockResolvedValueOnce({
-      embeddings: [fakeEmbedding()],
-    } as never);
-
-    const vectorize = buildVectorize();
-    await processKnowledgeFile("plain.md", "x", vectorize, "key");
-
-    const call = vi.mocked(embedMany).mock.calls[0]?.[0] as {
-      values: string[];
-    };
-    expect(call.values[0]).toBe(body);
-  });
-
-  it("metadata から undefined を除外して upsert する", async () => {
-    setChunks(["a".repeat(100)], [{ title: undefined, section: "S1" }]);
-    vi.mocked(embedMany).mockResolvedValueOnce({
-      embeddings: [fakeEmbedding()],
-    } as never);
-
-    const vectorize = buildVectorize();
-    await processKnowledgeFile("doc.md", "x", vectorize, "key");
-
-    const upsertArg = vi.mocked(vectorize.upsert).mock.calls[0]?.[0] as Array<{
-      metadata: Record<string, unknown>;
-    }>;
-    expect(upsertArg[0].metadata).not.toHaveProperty("title");
-    expect(upsertArg[0].metadata.section).toBe("S1");
+    expect(upsertArg[0].metadata.content).toBe("a".repeat(100));
+    expect(upsertArg[0].values).toEqual(fakeEmbedding());
   });
 
   it("Error を catch して error フィールドに詰める", async () => {
@@ -227,10 +118,9 @@ describe("processKnowledgeFile", () => {
     expect(result.error).toBe("Unknown error");
   });
 
-  it("BATCH_SIZE を超える chunk は embedMany / upsert を複数バッチに分割する", async () => {
+  it("100 件を超える chunk は embedMany を複数バッチに分割する", async () => {
     const total = 150;
-    const texts = Array.from({ length: total }, () => "x".repeat(100));
-    setChunks(texts);
+    setChunks(Array.from({ length: total }, () => "x".repeat(100)));
 
     vi.mocked(embedMany)
       .mockResolvedValueOnce({
@@ -245,7 +135,6 @@ describe("processKnowledgeFile", () => {
 
     expect(result.chunks).toBe(total);
     expect(embedMany).toHaveBeenCalledTimes(2);
-    expect(vectorize.upsert).toHaveBeenCalledTimes(2);
   });
 
   it("API キーが同じならモデルキャッシュを再利用する", async () => {
@@ -255,7 +144,6 @@ describe("processKnowledgeFile", () => {
       .mockResolvedValueOnce({ embeddings: [fakeEmbedding()] } as never);
 
     await processKnowledgeFile("a.md", "x", buildVectorize(), "same-key");
-    setChunks(["a".repeat(100)]);
     await processKnowledgeFile("b.md", "x", buildVectorize(), "same-key");
 
     expect(createGoogleGenerativeAI).toHaveBeenCalledTimes(1);
@@ -268,69 +156,8 @@ describe("processKnowledgeFile", () => {
       .mockResolvedValueOnce({ embeddings: [fakeEmbedding()] } as never);
 
     await processKnowledgeFile("a.md", "x", buildVectorize(), "new-key-1");
-    setChunks(["a".repeat(100)]);
     await processKnowledgeFile("b.md", "x", buildVectorize(), "new-key-2");
 
     expect(createGoogleGenerativeAI).toHaveBeenCalledTimes(2);
-  });
-});
-
-describe("deleteAllKnowledge", () => {
-  it("matches が無いと即時 break して 0 件を返す", async () => {
-    const vectorize = buildVectorize();
-    vi.mocked(vectorize.query).mockResolvedValueOnce({ matches: [] } as never);
-
-    const result = await deleteAllKnowledge(vectorize);
-
-    expect(result).toEqual({ deleted: 0 });
-    expect(vectorize.deleteByIds).not.toHaveBeenCalled();
-  });
-
-  it("matches がある間ループして合計件数を返す", async () => {
-    const vectorize = buildVectorize();
-    vi.mocked(vectorize.query)
-      .mockResolvedValueOnce({
-        matches: [{ id: "1" }, { id: "2" }],
-      } as never)
-      .mockResolvedValueOnce({
-        matches: [{ id: "3" }],
-      } as never)
-      .mockResolvedValueOnce({ matches: [] } as never);
-
-    const result = await deleteAllKnowledge(vectorize);
-    expect(result.deleted).toBe(3);
-    expect(vectorize.deleteByIds).toHaveBeenCalledTimes(2);
-    expect(vi.mocked(vectorize.deleteByIds).mock.calls[0]?.[0]).toEqual([
-      "1",
-      "2",
-    ]);
-    expect(vi.mocked(vectorize.deleteByIds).mock.calls[1]?.[0]).toEqual(["3"]);
-  });
-});
-
-describe("deleteKnowledgeBySource", () => {
-  it("filter 付きで query しソース指定で削除する", async () => {
-    const vectorize = buildVectorize();
-    vi.mocked(vectorize.query)
-      .mockResolvedValueOnce({
-        matches: [{ id: "a" }],
-      } as never)
-      .mockResolvedValueOnce({ matches: [] } as never);
-
-    const result = await deleteKnowledgeBySource(vectorize, "doc.md");
-
-    expect(result.deleted).toBe(1);
-    const queryCall = vi.mocked(vectorize.query).mock.calls[0];
-    expect(queryCall?.[1]).toMatchObject({
-      filter: { source: { $eq: "doc.md" } },
-    });
-  });
-
-  it("該当無しなら 0 件", async () => {
-    const vectorize = buildVectorize();
-    vi.mocked(vectorize.query).mockResolvedValueOnce({ matches: [] } as never);
-
-    const result = await deleteKnowledgeBySource(vectorize, "ghost.md");
-    expect(result.deleted).toBe(0);
   });
 });

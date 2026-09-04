@@ -1,6 +1,6 @@
 import { logger } from "~/lib/logger";
-import { deleteKnowledgeBySource } from "./embedding";
 import { buildOriginalsMap, EDIT_THRESHOLD_MS, extractBaseName } from "./utils";
+import { deleteKnowledgeBySource } from "./vector-store";
 
 export type FileInfo = {
   key: string;

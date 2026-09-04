@@ -1,6 +1,7 @@
 import { logger } from "~/lib/logger";
-import { deleteKnowledgeBySource, processKnowledgeFile } from "./embedding";
+import { processKnowledgeFile } from "./embedding";
 import { buildOriginalsMap, EDIT_THRESHOLD_MS } from "./utils";
+import { deleteKnowledgeBySource } from "./vector-store";
 
 type SyncResult = {
   file: string;

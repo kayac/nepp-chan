@@ -14,8 +14,7 @@ import {
   recordUsageFromContext,
   withUsageRecording,
 } from "~/services/analytics/llm-usage";
-
-const EMBEDDING_DIMENSIONS = 1536;
+import { EMBEDDING_DIMENSIONS } from "./vector-store";
 
 const SEARCH_TOP_K = 10;
 

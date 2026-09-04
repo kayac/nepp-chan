@@ -1,17 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("./embedding", () => ({
-  deleteKnowledgeBySource: vi.fn(async () => ({ deleted: 0 })),
   processKnowledgeFile: vi.fn(),
+}));
+vi.mock("./vector-store", () => ({
+  deleteKnowledgeBySource: vi.fn(async () => ({ deleted: 0 })),
 }));
 
 vi.mock("~/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const { deleteKnowledgeBySource, processKnowledgeFile } = await import(
-  "./embedding"
-);
+const { processKnowledgeFile } = await import("./embedding");
+const { deleteKnowledgeBySource } = await import("./vector-store");
 const { syncAll, syncFile } = await import("./sync");
 
 const buildR2Object = (

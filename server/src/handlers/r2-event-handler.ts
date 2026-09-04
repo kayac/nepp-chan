@@ -1,9 +1,7 @@
 import * as Sentry from "@sentry/cloudflare";
 import { logger } from "~/lib/logger";
-import {
-  deleteKnowledgeBySource,
-  processKnowledgeFile,
-} from "~/services/knowledge/embedding";
+import { processKnowledgeFile } from "~/services/knowledge/embedding";
+import { deleteKnowledgeBySource } from "~/services/knowledge/vector-store";
 
 type R2EventType =
   | "PutObject"

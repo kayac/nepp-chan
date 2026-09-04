@@ -1,8 +1,4 @@
-export {
-  deleteAllKnowledge,
-  deleteKnowledgeBySource,
-  processKnowledgeFile,
-} from "./embedding";
+export { processKnowledgeFile } from "./embedding";
 export {
   deleteFile,
   type FileContent,
@@ -19,3 +15,4 @@ export {
   reconvertFromOriginal,
   uploadMarkdownFile,
 } from "./upload";
+export { deleteAllKnowledge, deleteKnowledgeBySource } from "./vector-store";
