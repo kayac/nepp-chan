@@ -25,9 +25,24 @@ type ConvertResult = {
   error?: string;
 };
 
-/**
- * Markdownファイルをアップロード
- */
+const withMarkdownExtension = (name: string) =>
+  name.endsWith(".md") ? name : `${name}.md`;
+
+const storeMarkdownAndSync = async (
+  key: string,
+  markdown: string,
+  deps: UploadDeps,
+) => {
+  await deps.bucket.put(key, markdown, {
+    httpMetadata: { contentType: "text/markdown" },
+  });
+  return syncFile(key, markdown, {
+    vectorize: deps.vectorize,
+    apiKey: deps.apiKey,
+    d1: deps.d1,
+  });
+};
+
 export const uploadMarkdownFile = async (
   file: File,
   customFilename: string | null,
@@ -39,30 +54,14 @@ export const uploadMarkdownFile = async (
     );
   }
 
-  let key = customFilename || file.name;
-  if (!key.endsWith(".md")) {
-    key = `${key}.md`;
-  }
-
+  const key = withMarkdownExtension(customFilename || file.name);
   const content = await file.text();
-  await deps.bucket.put(key, content, {
-    httpMetadata: { contentType: "text/markdown" },
-  });
-
   logger.info(`[Upload] Uploaded ${key} (${content.length} bytes)`);
 
-  const result = await syncFile(key, content, {
-    vectorize: deps.vectorize,
-    apiKey: deps.apiKey,
-    d1: deps.d1,
-  });
-
+  const result = await storeMarkdownAndSync(key, content, deps);
   return { key, chunks: result.chunks, error: result.error };
 };
 
-/**
- * 画像/PDFをMarkdownに変換してアップロード
- */
 export const convertAndUpload = async (
   file: File,
   filename: string,
@@ -81,19 +80,13 @@ export const convertAndUpload = async (
     );
   }
 
-  let key = filename;
-  if (!key.endsWith(".md")) {
-    key = `${key}.md`;
-  }
-
+  const key = withMarkdownExtension(filename);
   logger.info(`[Convert] Converting ${file.name} (${mimeType}) to ${key}`);
 
   const fileData = await file.arrayBuffer();
   const markdown = await convertToMarkdown(fileData, mimeType, deps.d1);
-
   logger.info(`[Convert] Generated ${markdown.length} bytes of markdown`);
 
-  // 元ファイルを originals/ に保存
   const originalExtension = file.name.split(".").pop() || "bin";
   const originalKey = `originals/${key.replace(/\.md$/, `.${originalExtension}`)}`;
   await deps.bucket.put(originalKey, fileData, {
@@ -101,17 +94,7 @@ export const convertAndUpload = async (
   });
   logger.info(`[Convert] Saved original to ${originalKey}`);
 
-  // Markdown を R2 に保存
-  await deps.bucket.put(key, markdown, {
-    httpMetadata: { contentType: "text/markdown" },
-  });
-
-  const result = await syncFile(key, markdown, {
-    vectorize: deps.vectorize,
-    apiKey: deps.apiKey,
-    d1: deps.d1,
-  });
-
+  const result = await storeMarkdownAndSync(key, markdown, deps);
   return {
     key,
     originalType: mimeType,
@@ -120,9 +103,6 @@ export const convertAndUpload = async (
   };
 };
 
-/**
- * 元ファイルからMarkdownを再生成
- */
 export const reconvertFromOriginal = async (
   originalKey: string,
   filename: string,
@@ -139,28 +119,14 @@ export const reconvertFromOriginal = async (
     throw new Error(`Unsupported file type: ${mimeType}`);
   }
 
-  let key = filename;
-  if (!key.endsWith(".md")) {
-    key = `${key}.md`;
-  }
-
+  const key = withMarkdownExtension(filename);
   logger.info(`[Reconvert] Converting ${originalKey} (${mimeType}) to ${key}`);
 
   const fileData = await object.arrayBuffer();
   const markdown = await convertToMarkdown(fileData, mimeType, deps.d1);
-
   logger.info(`[Reconvert] Generated ${markdown.length} bytes of markdown`);
 
-  await deps.bucket.put(key, markdown, {
-    httpMetadata: { contentType: "text/markdown" },
-  });
-
-  const result = await syncFile(key, markdown, {
-    vectorize: deps.vectorize,
-    apiKey: deps.apiKey,
-    d1: deps.d1,
-  });
-
+  const result = await storeMarkdownAndSync(key, markdown, deps);
   return {
     key,
     originalType: mimeType,
