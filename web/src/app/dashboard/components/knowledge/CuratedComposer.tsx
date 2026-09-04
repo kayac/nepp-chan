@@ -344,7 +344,7 @@ export const CuratedComposer = ({ existingKeys }: Props) => {
               onChange={(e) => setText(e.target.value)}
               disabled={busy}
               rows={6}
-              placeholder="例: 音威子府村に開業準備中の食事処。アスパラ農家が営む店で…"
+              placeholder="お知らせの文章、チラシの本文、聞いた話のメモなどをそのまま貼り付けてください"
               className={`${INPUT_CLASS} resize-y`}
             />
           </div>
