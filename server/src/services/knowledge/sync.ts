@@ -1,11 +1,20 @@
+import { GEMINI_EMBEDDING } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
-import { processKnowledgeFile } from "./embedding";
+import { recordLlmUsage } from "~/services/analytics/llm-usage";
+import { chunkDocument } from "./chunk";
+import { generateEmbeddings } from "./embedding";
 import {
   buildOriginalsMap,
   isEditedAfterOriginal,
   markdownBaseName,
 } from "./utils";
-import { deleteKnowledgeBySource } from "./vector-store";
+import {
+  deleteVectors,
+  readChunkCount,
+  sourceIdPrefix,
+  upsertVectors,
+  vectorId,
+} from "./vector-store";
 
 type SyncResult = {
   file: string;
@@ -31,16 +40,50 @@ export type SyncDeps = {
 export const syncFile = async (
   key: string,
   content: string,
-  deps: Omit<SyncDeps, "bucket">,
+  { vectorize, apiKey, d1 }: Omit<SyncDeps, "bucket">,
 ): Promise<{ chunks: number; error?: string }> => {
-  await deleteKnowledgeBySource(deps.vectorize, key);
-  return processKnowledgeFile(
-    key,
-    content,
-    deps.vectorize,
-    deps.apiKey,
-    deps.d1,
-  );
+  try {
+    const { texts, metadata } = await chunkDocument(key, content);
+    const prefix = await sourceIdPrefix(key);
+
+    const previousCount = await readChunkCount(vectorize, prefix);
+    if (previousCount > texts.length) {
+      await deleteVectors(
+        vectorize,
+        Array.from({ length: previousCount - texts.length }, (_, i) =>
+          vectorId(prefix, texts.length + i),
+        ),
+      );
+    }
+
+    if (texts.length === 0) {
+      return { chunks: 0 };
+    }
+
+    const { embeddings, tokens } = await generateEmbeddings(texts, apiKey);
+    if (d1) {
+      await recordLlmUsage(d1, {
+        model: GEMINI_EMBEDDING,
+        usage: { inputTokens: tokens },
+        source: "embedding",
+        agent: "embedding",
+      });
+    }
+
+    await upsertVectors(
+      vectorize,
+      texts.map((_, i) => ({
+        id: vectorId(prefix, i),
+        values: embeddings[i],
+        metadata: { ...metadata[i], chunkCount: texts.length },
+      })),
+    );
+
+    return { chunks: texts.length };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return { chunks: 0, error: message };
+  }
 };
 
 export const storeMarkdownAndSync = async (

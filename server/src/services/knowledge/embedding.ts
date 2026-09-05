@@ -1,9 +1,7 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { embedMany } from "ai";
 import { GEMINI_EMBEDDING } from "~/lib/llm-models";
-import { recordLlmUsage } from "~/services/analytics/llm-usage";
-import { chunkDocument } from "./chunk";
-import { EMBEDDING_DIMENSIONS, upsertVectors } from "./vector-store";
+import { EMBEDDING_DIMENSIONS } from "./vector-store";
 
 const EMBED_BATCH_SIZE = 100;
 
@@ -27,7 +25,7 @@ const getEmbeddingModel = (apiKey: string): EmbeddingModel => {
   return model;
 };
 
-const generateEmbeddings = async (texts: string[], apiKey: string) => {
+export const generateEmbeddings = async (texts: string[], apiKey: string) => {
   if (texts.length === 0) {
     return { embeddings: [], tokens: 0 };
   }
@@ -53,44 +51,4 @@ const generateEmbeddings = async (texts: string[], apiKey: string) => {
   }
 
   return { embeddings: allEmbeddings, tokens };
-};
-
-export const processKnowledgeFile = async (
-  filename: string,
-  content: string,
-  vectorize: VectorizeIndex,
-  apiKey: string,
-  d1?: D1Database,
-): Promise<{ chunks: number; error?: string }> => {
-  try {
-    const { texts, metadata } = await chunkDocument(filename, content);
-
-    if (texts.length === 0) {
-      return { chunks: 0 };
-    }
-
-    const { embeddings, tokens } = await generateEmbeddings(texts, apiKey);
-    if (d1) {
-      await recordLlmUsage(d1, {
-        model: GEMINI_EMBEDDING,
-        usage: { inputTokens: tokens },
-        source: "embedding",
-        agent: "embedding",
-      });
-    }
-
-    await upsertVectors(
-      vectorize,
-      texts.map((_, i) => ({
-        id: crypto.randomUUID(),
-        values: embeddings[i],
-        metadata: metadata[i],
-      })),
-    );
-
-    return { chunks: texts.length };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return { chunks: 0, error: message };
-  }
 };

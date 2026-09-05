@@ -55,12 +55,16 @@ Note:
 `);
 };
 
-const uploadToR2 = (target: Target, filepath: string, key: string): boolean => {
+const wrangler = (args: string) =>
+  execSync(`CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler ${args}`, {
+    stdio: "pipe",
+  }).toString();
+
+const uploadToR2 = (target: Target, filepath: string, key: string) => {
   try {
     console.log(`  Uploading to R2: ${key}`);
-    execSync(
-      `CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler r2 object put ${target.bucket}/${key} --file="${filepath}" --remote`,
-      { stdio: "pipe" },
+    wrangler(
+      `r2 object put ${target.bucket}/${key} --file="${filepath}" --remote`,
     );
     return true;
   } catch (error) {
@@ -72,23 +76,14 @@ const uploadToR2 = (target: Target, filepath: string, key: string): boolean => {
   }
 };
 
-const deleteVectorizeIndex = (target: Target): boolean => {
+const recreateVectorizeIndex = (target: Target) => {
   try {
     console.log(`  Deleting Vectorize index: ${target.index}`);
-
-    // wrangler vectorize delete でインデックスを削除
-    // -y フラグで確認をスキップ
-    execSync(
-      `CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler vectorize delete ${target.index} -y`,
-      { stdio: "pipe" },
-    );
+    wrangler(`vectorize delete ${target.index} -y`);
 
     console.log("  Index deleted. Recreating...");
-
-    // インデックスを再作成（1536次元、cosine類似度）
-    execSync(
-      `CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID} wrangler vectorize create ${target.index} --dimensions=1536 --metric=cosine`,
-      { stdio: "pipe" },
+    wrangler(
+      `vectorize create ${target.index} --dimensions=1536 --metric=cosine`,
     );
 
     console.log("  Index recreated successfully");
@@ -123,7 +118,7 @@ const main = async () => {
   if (args.clean) {
     console.log("=== Knowledge Clean Script ===\n");
 
-    const success = deleteVectorizeIndex(target);
+    const success = recreateVectorizeIndex(target);
     if (success) {
       console.log("\n=== Clean Complete ===");
     } else {

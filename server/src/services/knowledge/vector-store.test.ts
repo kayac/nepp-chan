@@ -4,13 +4,20 @@ vi.mock("~/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const { deleteAllKnowledge, deleteKnowledgeBySource, upsertVectors } =
-  await import("./vector-store");
+const {
+  deleteAllKnowledge,
+  deleteKnowledgeBySource,
+  readChunkCount,
+  sourceIdPrefix,
+  upsertVectors,
+  vectorId,
+} = await import("./vector-store");
 
 const buildVectorize = () =>
   ({
     upsert: vi.fn(async () => {}),
     query: vi.fn(),
+    getByIds: vi.fn(),
     deleteByIds: vi.fn(async () => {}),
   }) as unknown as VectorizeIndex;
 
@@ -81,29 +88,63 @@ describe("deleteAllKnowledge", () => {
   });
 });
 
-describe("deleteKnowledgeBySource", () => {
-  it("filter 付きで query しソース指定で削除する", async () => {
+describe("sourceIdPrefix / vectorId", () => {
+  it("同じ source からは同じ ID ができ、64 バイトに収まる", async () => {
+    const a = await sourceIdPrefix("villotoinep/pdf/parsed/kouhou/2025-05.md");
+    const b = await sourceIdPrefix("villotoinep/pdf/parsed/kouhou/2025-05.md");
+    expect(a).toBe(b);
+    expect(Buffer.byteLength(vectorId(a, 99999))).toBeLessThanOrEqual(64);
+  });
+
+  it("source が違えば prefix も違う", async () => {
+    expect(await sourceIdPrefix("a.md")).not.toBe(await sourceIdPrefix("b.md"));
+  });
+});
+
+describe("readChunkCount", () => {
+  it("先頭チャンクの metadata.chunkCount を返す", async () => {
     const vectorize = buildVectorize();
-    vi.mocked(vectorize.query)
-      .mockResolvedValueOnce({
-        matches: [{ id: "a" }],
-      } as never)
-      .mockResolvedValueOnce({ matches: [] } as never);
+    vi.mocked(vectorize.getByIds).mockResolvedValueOnce([
+      { id: "p#0", values: [], metadata: { chunkCount: 7 } },
+    ] as never);
+
+    expect(await readChunkCount(vectorize, "p")).toBe(7);
+    expect(vectorize.getByIds).toHaveBeenCalledWith(["p#0"]);
+  });
+
+  it("先頭チャンクが無ければ 0", async () => {
+    const vectorize = buildVectorize();
+    vi.mocked(vectorize.getByIds).mockResolvedValueOnce([]);
+
+    expect(await readChunkCount(vectorize, "p")).toBe(0);
+  });
+});
+
+describe("deleteKnowledgeBySource", () => {
+  it("先頭チャンクの chunkCount 分の ID を削除する", async () => {
+    const vectorize = buildVectorize();
+    vi.mocked(vectorize.getByIds).mockResolvedValueOnce([
+      { id: "x", values: [], metadata: { chunkCount: 3 } },
+    ] as never);
 
     const result = await deleteKnowledgeBySource(vectorize, "doc.md");
 
-    expect(result.deleted).toBe(1);
-    const queryCall = vi.mocked(vectorize.query).mock.calls[0];
-    expect(queryCall?.[1]).toMatchObject({
-      filter: { source: { $eq: "doc.md" } },
-    });
+    const prefix = await sourceIdPrefix("doc.md");
+    expect(vectorize.deleteByIds).toHaveBeenCalledWith([
+      `${prefix}#0`,
+      `${prefix}#1`,
+      `${prefix}#2`,
+    ]);
+    expect(result).toEqual({ deleted: 3 });
   });
 
-  it("該当無しなら 0 件", async () => {
+  it("登録が無ければ何も削除しない", async () => {
     const vectorize = buildVectorize();
-    vi.mocked(vectorize.query).mockResolvedValueOnce({ matches: [] } as never);
+    vi.mocked(vectorize.getByIds).mockResolvedValueOnce([]);
 
     const result = await deleteKnowledgeBySource(vectorize, "ghost.md");
-    expect(result.deleted).toBe(0);
+
+    expect(vectorize.deleteByIds).not.toHaveBeenCalled();
+    expect(result).toEqual({ deleted: 0 });
   });
 });

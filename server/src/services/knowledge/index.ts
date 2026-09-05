@@ -1,4 +1,3 @@
-export { processKnowledgeFile } from "./embedding";
 export {
   deleteFile,
   type FileContent,
