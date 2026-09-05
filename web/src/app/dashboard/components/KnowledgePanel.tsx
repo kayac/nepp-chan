@@ -50,34 +50,6 @@ export const KnowledgePanel = () => {
     });
   };
 
-  // const handleReconvert = (originalKey: string, baseName: string) => {
-  //   if (
-  //     !confirm(
-  //       `${baseName} のMarkdownを元ファイルから再生成しますか？\n（現在の編集内容は上書きされます）`,
-  //     )
-  //   ) {
-  //     return;
-  //   }
-  //   setMessage(null);
-  //   reconvertMutation.mutate(
-  //     { originalKey, filename: baseName },
-  //     {
-  //       onSuccess: (result) => {
-  //         setMessage({
-  //           type: "success",
-  //           text: `${result.key} を生成しました（${result.chunks}チャンク）`,
-  //         });
-  //       },
-  //       onError: (err) => {
-  //         setMessage({
-  //           type: "error",
-  //           text: `変換失敗: ${err instanceof Error ? err.message : "Unknown error"}`,
-  //         });
-  //       },
-  //     },
-  //   );
-  // };
-
   return (
     <div className="space-y-6">
       {/* TODO: 運用時に復活 - アップロードセクション */}

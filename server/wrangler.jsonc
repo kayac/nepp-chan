@@ -51,7 +51,11 @@
       ],
       "queues": {
         "producers": [
-          { "binding": "LINE_QUEUE", "queue": "nepp-chan-line-queue-local" }
+          { "binding": "LINE_QUEUE", "queue": "nepp-chan-line-queue-local" },
+          {
+            "binding": "KNOWLEDGE_SYNC_QUEUE",
+            "queue": "nepp-chan-knowledge-sync-local"
+          }
         ],
         "consumers": [
           {
@@ -107,7 +111,11 @@
       ],
       "queues": {
         "producers": [
-          { "binding": "LINE_QUEUE", "queue": "nepp-chan-line-queue-dev" }
+          { "binding": "LINE_QUEUE", "queue": "nepp-chan-line-queue-dev" },
+          {
+            "binding": "KNOWLEDGE_SYNC_QUEUE",
+            "queue": "nepp-chan-knowledge-sync-dev"
+          }
         ],
         "consumers": [
           {
@@ -162,7 +170,11 @@
       ],
       "queues": {
         "producers": [
-          { "binding": "LINE_QUEUE", "queue": "nepp-chan-line-queue-prd" }
+          { "binding": "LINE_QUEUE", "queue": "nepp-chan-line-queue-prd" },
+          {
+            "binding": "KNOWLEDGE_SYNC_QUEUE",
+            "queue": "nepp-chan-knowledge-sync-prd"
+          }
         ],
         "consumers": [
           {

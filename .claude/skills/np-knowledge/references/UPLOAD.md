@@ -25,10 +25,11 @@ R2 キーはディレクトリ構造を保持する（例: `villotoinep/kurashi/
 
 | エンドポイント | 説明 |
 |---------------|------|
-| `POST /admin/knowledge/sync` | R2 バケット全体を Vectorize に再同期 |
-| `DELETE /admin/knowledge` | Vectorize の全ナレッジを削除 |
-| `PUT /admin/knowledge/files/{key}` | 単一ファイルをアップロード→同期 |
-| `POST /admin/knowledge/convert` | PDF/画像 → Markdown 変換後アップロード |
+| `POST /admin/knowledge/sync` | R2 バケット全体を同期キューに投入（Vectorize への反映は非同期） |
+| `PUT /admin/knowledge/files/{key}` | 単一ファイルを R2 に保存（同期は R2 イベント経由） |
+| `POST /admin/knowledge/convert` | PDF/画像 → Markdown 変換後 R2 に保存（同期は R2 イベント経由） |
+
+Vectorize の全削除は `pnpm knowledge:upload:<env> --clean`（index の作り直し）で行う。
 
 ## 環境の向き先
 

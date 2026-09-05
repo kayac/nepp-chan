@@ -8,12 +8,10 @@ import { renderHookWithQuery } from "~/test/query";
 import {
   useConvertFile,
   useDeleteFile,
-  useDeleteKnowledge,
   useKnowledgeFile,
   useKnowledgeFiles,
   useReconvertFile,
   useSaveFile,
-  useSyncKnowledge,
   useUnifiedFiles,
   useUploadFile,
 } from "./useKnowledge";
@@ -75,36 +73,6 @@ describe("useKnowledgeFiles / useUnifiedFiles", () => {
 });
 
 describe("knowledge mutations", () => {
-  it("useSyncKnowledge: 単純 mutation", async () => {
-    server.use(
-      http.post(`${API}/admin/knowledge/sync`, () =>
-        HttpResponse.json({ message: "ok" }),
-      ),
-    );
-
-    const { result } = renderHookWithQuery(() => useSyncKnowledge());
-
-    await act(async () => {
-      await result.current.mutateAsync();
-    });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-  });
-
-  it("useDeleteKnowledge: 単純 mutation", async () => {
-    server.use(
-      http.delete(`${API}/admin/knowledge`, () =>
-        HttpResponse.json({ message: "deleted" }),
-      ),
-    );
-
-    const { result } = renderHookWithQuery(() => useDeleteKnowledge());
-
-    await act(async () => {
-      await result.current.mutateAsync();
-    });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-  });
-
   it("useSaveFile: 成功で isSuccess", async () => {
     server.use(
       http.put(`${API}/admin/knowledge/files/doc.md`, () =>

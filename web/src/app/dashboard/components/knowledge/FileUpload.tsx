@@ -47,7 +47,7 @@ export const FileUpload = ({ onSuccess }: Props) => {
           onSuccess: (result) => {
             setMessage({
               type: "success",
-              text: `${result.key} をアップロードしました（${result.chunks} チャンク）`,
+              text: `${result.key} をアップロードしました。検索への反映には数十秒かかります`,
             });
             onSuccess();
           },
@@ -76,7 +76,7 @@ export const FileUpload = ({ onSuccess }: Props) => {
       });
       setMessage({
         type: "success",
-        text: `${result.key} に変換しました（${result.chunks} チャンク）`,
+        text: `${result.key} に変換しました。検索への反映には数十秒かかります`,
       });
       setConvertFile(null);
       onSuccess();

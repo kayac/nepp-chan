@@ -5,7 +5,6 @@ import {
   isEditedAfterOriginal,
   markdownBaseName,
 } from "./utils";
-import { deleteKnowledgeBySource } from "./vector-store";
 
 export type FileInfo = {
   key: string;
@@ -172,11 +171,7 @@ export const getOriginalFile = async (
   };
 };
 
-export const deleteFile = async (
-  bucket: R2Bucket,
-  vectorize: VectorizeIndex,
-  key: string,
-): Promise<void> => {
+export const deleteFile = async (bucket: R2Bucket, key: string) => {
   const baseName = markdownBaseName(key);
   const mdKey = `${baseName}.md`;
 
@@ -191,7 +186,4 @@ export const deleteFile = async (
       logger.info(`[Delete] Deleted ${obj.key} from R2`);
     }
   }
-
-  await deleteKnowledgeBySource(vectorize, mdKey);
-  logger.info(`[Delete] Deleted ${mdKey} from Vectorize`);
 };

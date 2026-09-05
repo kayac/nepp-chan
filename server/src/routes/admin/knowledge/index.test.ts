@@ -1,7 +1,7 @@
 import { HTTPException } from "hono/http-exception";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { requireApiKey, validateFileKey } from "./schemas";
+import { validateFileKey } from "./schemas";
 
 vi.mock("~/services/knowledge", () => ({
   listFiles: vi.fn(),
@@ -10,7 +10,6 @@ vi.mock("~/services/knowledge", () => ({
   listUnifiedFiles: vi.fn(),
   deleteFile: vi.fn(),
   syncFile: vi.fn(),
-  deleteAllKnowledge: vi.fn(),
   syncAll: vi.fn(),
   uploadMarkdownFile: vi.fn(),
   convertAndUpload: vi.fn(),
@@ -62,6 +61,7 @@ const mockEnv = {
     put: vi.fn(),
   } as unknown as R2Bucket,
   VECTORIZE: {} as VectorizeIndex,
+  KNOWLEDGE_SYNC_QUEUE: { sendBatch: vi.fn() } as unknown as Queue,
   GOOGLE_GENERATIVE_AI_API_KEY: "test-api-key",
   JWT_SECRET: "test-secret-32-chars-long-enough",
 } as unknown as CloudflareBindings;
@@ -87,16 +87,6 @@ describe("knowledge schemas ユーティリティ", () => {
 
     it("/ で始まるキーで HTTPException を投げる", () => {
       expect(() => validateFileKey("/etc/passwd")).toThrow(HTTPException);
-    });
-  });
-
-  describe("requireApiKey", () => {
-    it("API キーがある場合はそのまま返す", () => {
-      expect(requireApiKey("test-key")).toBe("test-key");
-    });
-
-    it("undefined の場合は HTTPException を投げる", () => {
-      expect(() => requireApiKey(undefined)).toThrow(HTTPException);
     });
   });
 });
@@ -213,35 +203,9 @@ describe("knowledge routes 統合テスト", () => {
     });
   });
 
-  describe("DELETE /", () => {
-    it("全ナレッジを削除する", async () => {
-      vi.mocked(knowledgeService.deleteAllKnowledge).mockResolvedValue({
-        deleted: 5,
-      });
-
-      const res = await app.request(
-        authedRequest("/", { method: "DELETE" }),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(200);
-      const body = (await res.json()) as { count: number };
-      expect(body.count).toBe(5);
-    });
-  });
-
   describe("POST /sync", () => {
-    it("全ナレッジを同期する", async () => {
-      vi.mocked(knowledgeService.syncAll).mockResolvedValue({
-        totalFiles: 2,
-        totalChunks: 10,
-        results: [
-          { file: "a.md", chunks: 5 },
-          { file: "b.md", chunks: 5 },
-        ],
-        editedCount: 0,
-      });
+    it("全 md を同期キューに投入する", async () => {
+      vi.mocked(knowledgeService.syncAll).mockResolvedValue({ queued: 2 });
 
       const res = await app.request(
         authedRequest("/sync", { method: "POST" }),
@@ -250,8 +214,12 @@ describe("knowledge routes 統合テスト", () => {
       );
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { results: unknown[] };
-      expect(body.results).toHaveLength(2);
+      const body = (await res.json()) as { queued: number };
+      expect(body.queued).toBe(2);
+      expect(knowledgeService.syncAll).toHaveBeenCalledWith(
+        mockEnv.KNOWLEDGE_BUCKET,
+        mockEnv.KNOWLEDGE_SYNC_QUEUE,
+      );
     });
   });
 
@@ -317,21 +285,7 @@ describe("knowledge routes 統合テスト", () => {
       body: JSON.stringify(data),
     });
 
-    it("API キー未設定なら 500", async () => {
-      const res = await app.request(
-        authedRequest("/files/doc.md", jsonBody({ content: "x" })),
-        undefined,
-        {
-          ...mockEnv,
-          GOOGLE_GENERATIVE_AI_API_KEY: undefined,
-        } as never,
-      );
-      expect(res.status).toBe(500);
-    });
-
-    it("正常系: bucket.put → syncFile → 200", async () => {
-      vi.mocked(knowledgeService.syncFile).mockResolvedValue({ chunks: 4 });
-
+    it("正常系: bucket.put して 200 を返す", async () => {
       const res = await app.request(
         authedRequest("/files/doc.md", jsonBody({ content: "# c" })),
         undefined,
@@ -344,13 +298,7 @@ describe("knowledge routes 統合テスト", () => {
         "# c",
         { httpMetadata: { contentType: "text/markdown" } },
       );
-      expect(knowledgeService.syncFile).toHaveBeenCalledWith(
-        "doc.md",
-        "# c",
-        expect.objectContaining({ apiKey: "test-api-key" }),
-      );
-      const body = (await res.json()) as { chunks: number };
-      expect(body.chunks).toBe(4);
+      expect(knowledgeService.syncFile).not.toHaveBeenCalled();
     });
   });
 
@@ -391,23 +339,9 @@ describe("knowledge routes 統合テスト", () => {
       expect(res.status).toBe(400);
     });
 
-    it("API キー未設定なら 500", async () => {
-      const file = new File(["# c"], "doc.md", { type: "text/markdown" });
-      const res = await app.request(
-        authedRequest("/upload", {
-          method: "POST",
-          body: buildForm(file),
-        }),
-        undefined,
-        { ...mockEnv, GOOGLE_GENERATIVE_AI_API_KEY: undefined } as never,
-      );
-      expect(res.status).toBe(500);
-    });
-
     it("正常系: uploadMarkdownFile を呼び 200 を返す", async () => {
       vi.mocked(knowledgeService.uploadMarkdownFile).mockResolvedValue({
         key: "doc.md",
-        chunks: 4,
       });
       const file = new File(["# c"], "doc.md", { type: "text/markdown" });
 
@@ -421,20 +355,18 @@ describe("knowledge routes 統合テスト", () => {
       );
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { key: string; chunks: number };
+      const body = (await res.json()) as { key: string };
       expect(body.key).toBe("doc.md");
-      expect(body.chunks).toBe(4);
       expect(knowledgeService.uploadMarkdownFile).toHaveBeenCalledWith(
         expect.any(File),
         "doc.md",
-        expect.objectContaining({ apiKey: "test-api-key" }),
+        expect.objectContaining({ bucket: mockEnv.KNOWLEDGE_BUCKET }),
       );
     });
 
     it("filename 省略時は null を渡す", async () => {
       vi.mocked(knowledgeService.uploadMarkdownFile).mockResolvedValue({
         key: "x.md",
-        chunks: 1,
       });
       const file = new File(["# c"], "x.md", { type: "text/markdown" });
 
@@ -505,7 +437,6 @@ describe("knowledge routes 統合テスト", () => {
       vi.mocked(knowledgeService.convertAndUpload).mockResolvedValue({
         key: "out.md",
         originalType: "image/png",
-        chunks: 3,
       });
       const file = new File(["x"], "in.png", { type: "image/png" });
 
@@ -527,7 +458,6 @@ describe("knowledge routes 統合テスト", () => {
       expect(body).toMatchObject({
         key: "out.md",
         originalType: "image/png",
-        chunks: 3,
       });
     });
   });
@@ -570,7 +500,6 @@ describe("knowledge routes 統合テスト", () => {
       vi.mocked(knowledgeService.reconvertFromOriginal).mockResolvedValue({
         key: "out.md",
         originalType: "application/pdf",
-        chunks: 7,
       });
 
       const res = await app.request(
@@ -583,9 +512,8 @@ describe("knowledge routes 統合テスト", () => {
       );
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { key: string; chunks: number };
+      const body = (await res.json()) as { key: string };
       expect(body.key).toBe("out.md");
-      expect(body.chunks).toBe(7);
       expect(knowledgeService.reconvertFromOriginal).toHaveBeenCalledWith(
         "originals/x.pdf",
         "out",

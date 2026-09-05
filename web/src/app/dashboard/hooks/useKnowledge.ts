@@ -3,16 +3,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { knowledgeRepository } from "~/lib/api/repository";
 import { dashboardKeys } from "./keys";
 
-export const useSyncKnowledge = () =>
-  useMutation({
-    mutationFn: knowledgeRepository.syncKnowledge,
-  });
-
-export const useDeleteKnowledge = () =>
-  useMutation({
-    mutationFn: knowledgeRepository.deleteAllKnowledge,
-  });
-
 export const useKnowledgeFiles = () =>
   useQuery({
     queryKey: dashboardKeys.knowledgeFiles,

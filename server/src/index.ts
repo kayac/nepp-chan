@@ -2,7 +2,6 @@ import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import * as Sentry from "@sentry/cloudflare";
 import { handleLineEvent, handleR2Event, handleScheduled } from "~/handlers";
-import type { R2EventMessage } from "~/handlers/r2-event-handler";
 import { logger } from "~/lib/logger";
 import { getSentryOptions } from "~/lib/sentry";
 import {
@@ -32,6 +31,7 @@ import {
   widgetSiteAdminRoutes,
 } from "~/routes";
 import type { LineEventMessage } from "~/schemas/line-schema";
+import type { R2EventMessage } from "~/services/knowledge/sync";
 import { CallBridge, handleRelayUpgrade } from "~/services/voice/call-bridge";
 
 const app = new OpenAPIHono<{ Bindings: CloudflareBindings }>();

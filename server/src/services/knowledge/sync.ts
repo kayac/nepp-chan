@@ -4,11 +4,6 @@ import { recordLlmUsage } from "~/services/analytics/llm-usage";
 import { chunkDocument } from "./chunk";
 import { generateEmbeddings } from "./embedding";
 import {
-  buildOriginalsMap,
-  isEditedAfterOriginal,
-  markdownBaseName,
-} from "./utils";
-import {
   deleteVectors,
   readChunkCount,
   sourceIdPrefix,
@@ -16,31 +11,31 @@ import {
   vectorId,
 } from "./vector-store";
 
-type SyncResult = {
-  file: string;
-  chunks: number;
-  error?: string;
-  edited?: boolean;
+export type R2EventMessage = {
+  account: string;
+  bucket: string;
+  eventTime: string;
+  action:
+    | "PutObject"
+    | "CompleteMultipartUpload"
+    | "CopyObject"
+    | "DeleteObject"
+    | "LifecycleDeletion";
+  object: { key: string; size: number; eTag: string };
 };
 
-type SyncAllResult = {
-  results: SyncResult[];
-  totalFiles: number;
-  totalChunks: number;
-  editedCount: number;
-};
-
-export type SyncDeps = {
-  bucket: R2Bucket;
+type SyncDeps = {
   vectorize: VectorizeIndex;
   apiKey: string;
   d1?: D1Database;
 };
 
+const SEND_BATCH_SIZE = 100;
+
 export const syncFile = async (
   key: string,
   content: string,
-  { vectorize, apiKey, d1 }: Omit<SyncDeps, "bucket">,
+  { vectorize, apiKey, d1 }: SyncDeps,
 ): Promise<{ chunks: number; error?: string }> => {
   try {
     const { texts, metadata } = await chunkDocument(key, content);
@@ -86,65 +81,28 @@ export const syncFile = async (
   }
 };
 
-export const storeMarkdownAndSync = async (
-  key: string,
-  markdown: string,
-  deps: SyncDeps,
+export const syncAll = async (
+  bucket: R2Bucket,
+  queue: Queue<R2EventMessage>,
 ) => {
-  await deps.bucket.put(key, markdown, {
-    httpMetadata: { contentType: "text/markdown" },
-  });
-  return syncFile(key, markdown, deps);
-};
-
-export const syncAll = async ({
-  bucket,
-  vectorize,
-  apiKey,
-  d1,
-}: SyncDeps): Promise<SyncAllResult> => {
   const listed = await bucket.list();
-  const allObjects = listed.objects;
-
-  const mdFiles = allObjects.filter(
+  const targets = listed.objects.filter(
     (obj) => obj.key.endsWith(".md") && !obj.key.startsWith("originals/"),
   );
-  const originalsMap = buildOriginalsMap(allObjects);
 
-  logger.info(`[Sync] Found ${mdFiles.length} markdown files`);
-
-  const results: SyncResult[] = [];
-
-  for (const obj of mdFiles) {
-    const file = await bucket.get(obj.key);
-    if (!file) {
-      results.push({ file: obj.key, chunks: 0, error: "File not found" });
-      continue;
-    }
-
-    const edited = isEditedAfterOriginal(
-      obj.uploaded,
-      originalsMap.get(markdownBaseName(obj.key)),
-    );
-    const content = await file.text();
-    logger.info(
-      `[Sync] Processing ${obj.key} (${content.length} bytes)${edited ? " [EDITED]" : ""}`,
-    );
-
-    const result = await syncFile(obj.key, content, { vectorize, apiKey, d1 });
-
-    results.push({
-      file: obj.key,
-      chunks: result.chunks,
-      error: result.error,
-      edited,
-    });
+  const messages = targets.map((obj) => ({
+    body: {
+      account: "",
+      bucket: "",
+      eventTime: new Date().toISOString(),
+      action: "PutObject" as const,
+      object: { key: obj.key, size: obj.size, eTag: obj.etag },
+    },
+  }));
+  for (let i = 0; i < messages.length; i += SEND_BATCH_SIZE) {
+    await queue.sendBatch(messages.slice(i, i + SEND_BATCH_SIZE));
   }
 
-  return {
-    results,
-    totalFiles: mdFiles.length,
-    totalChunks: results.reduce((sum, r) => sum + r.chunks, 0),
-    editedCount: results.filter((r) => r.edited).length,
-  };
+  logger.info(`[Sync] Queued ${messages.length} markdown files`);
+  return { queued: messages.length };
 };
