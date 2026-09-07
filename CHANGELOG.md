@@ -1,5 +1,18 @@
 # Changelog
 
+## [v1.0.13](https://github.com/kayac/nepp-chan/compare/v1.0.12...v1.0.13) - 2026-09-07
+
+- LLM利用コストの計測・集計・管理画面を拡張する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1072
+- feat: メイン LLM を OpenAI GPT-5.6 へ切り替える（Gemini 併存） by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1019
+- モデルと reasoning effort をタスク相応に見直す by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1084
+- トークン消費・コストを日付単位のモデル内訳表示にする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1112
+- refactor(server): SQL を repository に集約する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1121
+- docs(lp): プライバシーポリシーを OpenAI API 切り替えに備えて更新 by @vesperworks in https://github.com/kayac/nepp-chan/pull/1110
+- chore(biome): .claude の除外をリポジトリ直下だけにする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1122
+- feat(knowledge): URL・文章・画像から curated ナレッジの下書きを作って保存する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1123
+- feat(server): ナレッジ同期を決定的 ID の upsert 上書きにする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1129
+- feat(server): ナレッジ同期の経路を R2 イベント → Queue に一本化する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1130
+
 ## [v1.0.12](https://github.com/kayac/nepp-chan/compare/v1.0.11...v1.0.12) - 2026-08-28
 
 - ウィジェットに設置サイトの文脈を持たせる by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1015
