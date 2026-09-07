@@ -12,7 +12,7 @@
     "deploy:prd": "PUBLIC_ENV=prd VITE_ENV=prd pnpm build && wrangler pages deploy --project-name nepp-chan-lp-prd --branch main"
   },
   "dependencies": {
-    "@ai-sdk/react": "^3.0.210",
+    "@ai-sdk/react": "^4.0.95",
     "@astrojs/check": "^0.9.10",
     "@astrojs/react": "^6.0.2",
     "@heroicons/react": "^2.2.0",
