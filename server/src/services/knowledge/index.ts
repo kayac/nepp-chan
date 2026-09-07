@@ -4,11 +4,6 @@ export {
   draftCurated,
 } from "./curated-draft";
 export {
-  deleteAllKnowledge,
-  deleteKnowledgeBySource,
-  processKnowledgeFile,
-} from "./embedding";
-export {
   deleteFile,
   type FileContent,
   type FileInfo,
@@ -24,3 +19,4 @@ export {
   reconvertFromOriginal,
   uploadMarkdownFile,
 } from "./upload";
+export { deleteAllKnowledge, deleteKnowledgeBySource } from "./vector-store";

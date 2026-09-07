@@ -14,8 +14,7 @@ import {
   recordUsageFromContext,
   withUsageRecording,
 } from "~/services/analytics/llm-usage";
-
-const EMBEDDING_DIMENSIONS = 1536;
+import { EMBEDDING_DIMENSIONS } from "./vector-store";
 
 const SEARCH_TOP_K = 10;
 
@@ -71,6 +70,21 @@ export type SearchOutput = {
   error?: string;
 };
 
+const toKnowledgeResult = (
+  metadata: Record<string, unknown> | undefined,
+  score: number,
+): KnowledgeResult => ({
+  content: (metadata?.content as string | undefined) ?? "",
+  score,
+  source: (metadata?.source as string | undefined) ?? "unknown",
+  title: metadata?.title as string | undefined,
+  section: metadata?.section as string | undefined,
+  subsection: metadata?.subsection as string | undefined,
+  url: metadata?.url as string | undefined,
+  date: metadata?.date as string | undefined,
+  dateType: metadata?.date_type as string | undefined,
+});
+
 export const searchKnowledge = async (
   query: string,
   vectorize: VectorizeIndex,
@@ -111,21 +125,14 @@ export const searchKnowledge = async (
     }
 
     const queryResults = results.matches.map((match) => {
-      const metadata = match.metadata as Record<string, unknown> | undefined;
+      const result = toKnowledgeResult(
+        match.metadata as Record<string, unknown> | undefined,
+        match.score,
+      );
       return {
         id: match.id,
         score: match.score,
-        metadata: {
-          text: (metadata?.content as string) || "",
-          content: (metadata?.content as string) || "",
-          source: (metadata?.source as string) || "unknown",
-          title: metadata?.title as string | undefined,
-          section: metadata?.section as string | undefined,
-          subsection: metadata?.subsection as string | undefined,
-          url: metadata?.url as string | undefined,
-          date: metadata?.date as string | undefined,
-          dateType: metadata?.date_type as string | undefined,
-        },
+        metadata: { ...result, text: result.content },
       };
     });
 
@@ -143,17 +150,12 @@ export const searchKnowledge = async (
       },
     });
 
-    const knowledgeResults: KnowledgeResult[] = rerankedResults.map((r) => ({
-      content: (r.result.metadata?.content as string) || "",
-      score: r.score,
-      source: (r.result.metadata?.source as string) || "unknown",
-      title: r.result.metadata?.title as string | undefined,
-      section: r.result.metadata?.section as string | undefined,
-      subsection: r.result.metadata?.subsection as string | undefined,
-      url: r.result.metadata?.url as string | undefined,
-      date: r.result.metadata?.date as string | undefined,
-      dateType: r.result.metadata?.dateType as string | undefined,
-    }));
+    const knowledgeResults = rerankedResults.map((r) => {
+      const { text: _, ...result } = r.result.metadata as KnowledgeResult & {
+        text: string;
+      };
+      return { ...result, score: r.score };
+    });
 
     logger.info("[Knowledge] search result", {
       query,

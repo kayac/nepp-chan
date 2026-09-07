@@ -6,7 +6,7 @@ vi.mock("~/lib/image-converter", () => ({
 }));
 
 vi.mock("./sync", () => ({
-  syncFile: vi.fn(),
+  storeMarkdownAndSync: vi.fn(),
 }));
 
 vi.mock("~/lib/logger", () => ({
@@ -16,7 +16,7 @@ vi.mock("~/lib/logger", () => ({
 const { convertToMarkdown, isSupportedMimeType } = await import(
   "~/lib/image-converter"
 );
-const { syncFile } = await import("./sync");
+const { storeMarkdownAndSync } = await import("./sync");
 const { convertAndUpload, reconvertFromOriginal, uploadMarkdownFile } =
   await import("./upload");
 
@@ -42,29 +42,24 @@ const buildFile = (
 };
 
 beforeEach(() => {
-  vi.mocked(syncFile).mockReset().mockResolvedValue({ chunks: 3 });
+  vi.mocked(storeMarkdownAndSync).mockReset().mockResolvedValue({ chunks: 3 });
   vi.mocked(convertToMarkdown).mockReset().mockResolvedValue("# converted");
   vi.mocked(isSupportedMimeType).mockReset().mockReturnValue(true);
 });
 
 describe("uploadMarkdownFile", () => {
-  it("正常系: R2 put + syncFile + 結果を返す", async () => {
+  it("正常系: 本文を保存・同期して結果を返す", async () => {
     const bucket = buildBucket();
     const file = buildFile("# hello", { name: "doc.md" });
+    const deps = { bucket, vectorize: {} as VectorizeIndex, apiKey: "k" };
 
-    const result = await uploadMarkdownFile(file, null, {
-      bucket,
-      vectorize: {} as VectorizeIndex,
-      apiKey: "k",
-    });
+    const result = await uploadMarkdownFile(file, null, deps);
 
-    expect(bucket.put).toHaveBeenCalledWith("doc.md", "# hello", {
-      httpMetadata: { contentType: "text/markdown" },
-    });
-    expect(syncFile).toHaveBeenCalledWith("doc.md", "# hello", {
-      vectorize: {},
-      apiKey: "k",
-    });
+    expect(storeMarkdownAndSync).toHaveBeenCalledWith(
+      "doc.md",
+      "# hello",
+      deps,
+    );
     expect(result).toEqual({ key: "doc.md", chunks: 3 });
   });
 
@@ -110,7 +105,10 @@ describe("uploadMarkdownFile", () => {
   });
 
   it("syncFile の error を伝播", async () => {
-    vi.mocked(syncFile).mockResolvedValueOnce({ chunks: 0, error: "boom" });
+    vi.mocked(storeMarkdownAndSync).mockResolvedValueOnce({
+      chunks: 0,
+      error: "boom",
+    });
     const bucket = buildBucket();
     const file = buildFile("x", { name: "doc.md" });
     const result = await uploadMarkdownFile(file, null, {
@@ -136,17 +134,16 @@ describe("convertAndUpload", () => {
       apiKey: "k",
     });
 
-    // originals/photo.png に元ファイル
     expect(bucket.put).toHaveBeenCalledWith(
       "originals/photo.png",
       expect.any(ArrayBuffer),
       { httpMetadata: { contentType: "image/png" } },
     );
-    // photo.md に Markdown
-    expect(bucket.put).toHaveBeenCalledWith("photo.md", "# converted", {
-      httpMetadata: { contentType: "text/markdown" },
-    });
-    expect(syncFile).toHaveBeenCalled();
+    expect(storeMarkdownAndSync).toHaveBeenCalledWith(
+      "photo.md",
+      "# converted",
+      expect.objectContaining({ bucket }),
+    );
     expect(result).toMatchObject({
       key: "photo.md",
       originalType: "image/png",
@@ -242,9 +239,11 @@ describe("reconvertFromOriginal", () => {
       apiKey: "k",
     });
 
-    expect(bucket.put).toHaveBeenCalledWith("x.md", "# converted", {
-      httpMetadata: { contentType: "text/markdown" },
-    });
+    expect(storeMarkdownAndSync).toHaveBeenCalledWith(
+      "x.md",
+      "# converted",
+      expect.objectContaining({ bucket }),
+    );
     expect(result).toMatchObject({
       key: "x.md",
       originalType: "image/png",

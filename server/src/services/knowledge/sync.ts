@@ -1,6 +1,20 @@
+import { GEMINI_EMBEDDING } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
-import { deleteKnowledgeBySource, processKnowledgeFile } from "./embedding";
-import { buildOriginalsMap, EDIT_THRESHOLD_MS } from "./utils";
+import { recordLlmUsage } from "~/services/analytics/llm-usage";
+import { chunkDocument } from "./chunk";
+import { generateEmbeddings } from "./embedding";
+import {
+  buildOriginalsMap,
+  isEditedAfterOriginal,
+  markdownBaseName,
+} from "./utils";
+import {
+  deleteVectors,
+  readChunkCount,
+  sourceIdPrefix,
+  upsertVectors,
+  vectorId,
+} from "./vector-store";
 
 type SyncResult = {
   file: string;
@@ -16,25 +30,73 @@ type SyncAllResult = {
   editedCount: number;
 };
 
-type SyncDeps = {
+export type SyncDeps = {
   bucket: R2Bucket;
   vectorize: VectorizeIndex;
   apiKey: string;
   d1?: D1Database;
 };
 
-const isFileEdited = (mdFile: R2Object, originalsMap: Map<string, Date>) => {
-  const baseName = mdFile.key.replace(/\.md$/, "");
-  const originalUploaded = originalsMap.get(baseName);
-  if (!originalUploaded) return false;
-  return (
-    mdFile.uploaded.getTime() - originalUploaded.getTime() > EDIT_THRESHOLD_MS
-  );
+export const syncFile = async (
+  key: string,
+  content: string,
+  { vectorize, apiKey, d1 }: Omit<SyncDeps, "bucket">,
+): Promise<{ chunks: number; error?: string }> => {
+  try {
+    const { texts, metadata } = await chunkDocument(key, content);
+    const prefix = await sourceIdPrefix(key);
+
+    const previousCount = await readChunkCount(vectorize, prefix);
+    if (previousCount > texts.length) {
+      await deleteVectors(
+        vectorize,
+        Array.from({ length: previousCount - texts.length }, (_, i) =>
+          vectorId(prefix, texts.length + i),
+        ),
+      );
+    }
+
+    if (texts.length === 0) {
+      return { chunks: 0 };
+    }
+
+    const { embeddings, tokens } = await generateEmbeddings(texts, apiKey);
+    if (d1) {
+      await recordLlmUsage(d1, {
+        model: GEMINI_EMBEDDING,
+        usage: { inputTokens: tokens },
+        source: "embedding",
+        agent: "embedding",
+      });
+    }
+
+    await upsertVectors(
+      vectorize,
+      texts.map((_, i) => ({
+        id: vectorId(prefix, i),
+        values: embeddings[i],
+        metadata: { ...metadata[i], chunkCount: texts.length },
+      })),
+    );
+
+    return { chunks: texts.length };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return { chunks: 0, error: message };
+  }
 };
 
-/**
- * R2バケットの全Markdownファイルを読み込み、Vectorizeに同期
- */
+export const storeMarkdownAndSync = async (
+  key: string,
+  markdown: string,
+  deps: SyncDeps,
+) => {
+  await deps.bucket.put(key, markdown, {
+    httpMetadata: { contentType: "text/markdown" },
+  });
+  return syncFile(key, markdown, deps);
+};
+
 export const syncAll = async ({
   bucket,
   vectorize,
@@ -60,20 +122,16 @@ export const syncAll = async ({
       continue;
     }
 
-    const edited = isFileEdited(obj, originalsMap);
+    const edited = isEditedAfterOriginal(
+      obj.uploaded,
+      originalsMap.get(markdownBaseName(obj.key)),
+    );
     const content = await file.text();
     logger.info(
       `[Sync] Processing ${obj.key} (${content.length} bytes)${edited ? " [EDITED]" : ""}`,
     );
 
-    await deleteKnowledgeBySource(vectorize, obj.key);
-    const result = await processKnowledgeFile(
-      obj.key,
-      content,
-      vectorize,
-      apiKey,
-      d1,
-    );
+    const result = await syncFile(obj.key, content, { vectorize, apiKey, d1 });
 
     results.push({
       file: obj.key,
@@ -89,22 +147,4 @@ export const syncAll = async ({
     totalChunks: results.reduce((sum, r) => sum + r.chunks, 0),
     editedCount: results.filter((r) => r.edited).length,
   };
-};
-
-/**
- * 単一ファイルを同期（保存 + Vectorize登録）
- */
-export const syncFile = async (
-  key: string,
-  content: string,
-  deps: Omit<SyncDeps, "bucket">,
-): Promise<{ chunks: number; error?: string }> => {
-  await deleteKnowledgeBySource(deps.vectorize, key);
-  return processKnowledgeFile(
-    key,
-    content,
-    deps.vectorize,
-    deps.apiKey,
-    deps.d1,
-  );
 };

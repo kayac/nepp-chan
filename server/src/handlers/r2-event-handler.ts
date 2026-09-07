@@ -1,9 +1,7 @@
 import * as Sentry from "@sentry/cloudflare";
 import { logger } from "~/lib/logger";
-import {
-  deleteKnowledgeBySource,
-  processKnowledgeFile,
-} from "~/services/knowledge/embedding";
+import { syncFile } from "~/services/knowledge/sync";
+import { deleteKnowledgeBySource } from "~/services/knowledge/vector-store";
 
 type R2EventType =
   | "PutObject"
@@ -28,6 +26,18 @@ export type R2EventMessage = {
 
 const isMarkdownFile = (key: string) => key.endsWith(".md");
 
+const RETRY_BASE_DELAY_SECONDS = 30;
+const RETRY_MAX_DELAY_SECONDS = 300;
+
+export const retryDelaySeconds = (attempts: number) =>
+  Math.min(
+    RETRY_MAX_DELAY_SECONDS,
+    RETRY_BASE_DELAY_SECONDS * 2 ** (attempts - 1),
+  );
+
+const retryWithBackoff = (message: Message<R2EventMessage>) =>
+  message.retry({ delaySeconds: retryDelaySeconds(message.attempts) });
+
 const handleObjectCreate = async (
   key: string,
   env: CloudflareBindings,
@@ -37,17 +47,11 @@ const handleObjectCreate = async (
     return { success: false, error: `File not found: ${key}` };
   }
 
-  const content = await file.text();
-
-  // 既存データを削除してから再登録
-  await deleteKnowledgeBySource(env.VECTORIZE, key);
-
-  const result = await processKnowledgeFile(
-    key,
-    content,
-    env.VECTORIZE,
-    env.GOOGLE_GENERATIVE_AI_API_KEY,
-  );
+  const result = await syncFile(key, await file.text(), {
+    vectorize: env.VECTORIZE,
+    apiKey: env.GOOGLE_GENERATIVE_AI_API_KEY,
+    d1: env.DB,
+  });
 
   if (result.error) {
     return { success: false, error: result.error };
@@ -79,7 +83,6 @@ export const handleR2Event = async (
     const { action, object } = message.body;
     const key = object.key;
 
-    // Markdownファイル以外は無視
     if (!isMarkdownFile(key)) {
       message.ack();
       continue;
@@ -121,12 +124,12 @@ export const handleR2Event = async (
       if (success) {
         message.ack();
       } else {
-        message.retry();
+        retryWithBackoff(message);
       }
     } catch (error) {
       Sentry.captureException(error, { tags: { handler: "r2-event" } });
       logger.error(`Error processing ${key}`, error);
-      message.retry();
+      retryWithBackoff(message);
     }
   }
 };

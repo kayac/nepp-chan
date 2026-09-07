@@ -1,6 +1,11 @@
 import { logger } from "~/lib/logger";
-import { deleteKnowledgeBySource } from "./embedding";
-import { buildOriginalsMap, EDIT_THRESHOLD_MS, extractBaseName } from "./utils";
+import {
+  buildOriginalsMap,
+  extractBaseName,
+  isEditedAfterOriginal,
+  markdownBaseName,
+} from "./utils";
+import { deleteKnowledgeBySource } from "./vector-store";
 
 export type FileInfo = {
   key: string;
@@ -34,9 +39,6 @@ export type FileContent = {
   lastModified: string;
 };
 
-/**
- * ファイル一覧を取得（編集済み情報付き）
- */
 export const listFiles = async (
   bucket: R2Bucket,
 ): Promise<{ files: FileInfo[]; truncated: boolean }> => {
@@ -47,11 +49,10 @@ export const listFiles = async (
   const files = allObjects
     .filter((obj) => !obj.key.startsWith("originals/"))
     .map((obj) => {
-      const baseName = obj.key.replace(/\.md$/, "");
-      const originalUploaded = originalsMap.get(baseName);
-      const isEdited =
-        originalUploaded !== undefined &&
-        obj.uploaded.getTime() - originalUploaded.getTime() > EDIT_THRESHOLD_MS;
+      const isEdited = isEditedAfterOriginal(
+        obj.uploaded,
+        originalsMap.get(markdownBaseName(obj.key)),
+      );
 
       return {
         key: obj.key,
@@ -65,9 +66,6 @@ export const listFiles = async (
   return { files, truncated: listed.truncated };
 };
 
-/**
- * 統合ファイル一覧を取得（元ファイルとMarkdownを紐付け）
- */
 export const listUnifiedFiles = async (
   bucket: R2Bucket,
 ): Promise<{ files: UnifiedFileInfo[]; truncated: boolean }> => {
@@ -80,9 +78,8 @@ export const listUnifiedFiles = async (
   >();
   for (const obj of allObjects) {
     if (obj.key.startsWith("originals/")) {
-      const baseName = extractBaseName(obj.key);
       const file = await bucket.head(obj.key);
-      originalsMap.set(baseName, {
+      originalsMap.set(extractBaseName(obj.key), {
         key: obj.key,
         size: obj.size,
         uploaded: obj.uploaded,
@@ -98,8 +95,7 @@ export const listUnifiedFiles = async (
   >();
   for (const obj of allObjects) {
     if (obj.key.endsWith(".md") && !obj.key.startsWith("originals/")) {
-      const baseName = obj.key.replace(/\.md$/, "");
-      markdownMap.set(baseName, {
+      markdownMap.set(markdownBaseName(obj.key), {
         key: obj.key,
         size: obj.size,
         uploaded: obj.uploaded,
@@ -144,9 +140,6 @@ export const listUnifiedFiles = async (
   return { files, truncated: listed.truncated };
 };
 
-/**
- * ファイル内容を取得
- */
 export const getFile = async (
   bucket: R2Bucket,
   key: string,
@@ -164,9 +157,6 @@ export const getFile = async (
   };
 };
 
-/**
- * 元ファイル（バイナリ）を取得
- */
 export const getOriginalFile = async (
   bucket: R2Bucket,
   key: string,
@@ -182,22 +172,17 @@ export const getOriginalFile = async (
   };
 };
 
-/**
- * ファイルを完全削除（Markdown、元ファイル、Vectorize）
- */
 export const deleteFile = async (
   bucket: R2Bucket,
   vectorize: VectorizeIndex,
   key: string,
 ): Promise<void> => {
-  const baseName = key.replace(/\.md$/, "");
-  const mdKey = baseName.endsWith(".md") ? baseName : `${baseName}.md`;
+  const baseName = markdownBaseName(key);
+  const mdKey = `${baseName}.md`;
 
-  // 1. Markdownファイルを削除
   await bucket.delete(mdKey);
   logger.info(`[Delete] Deleted ${mdKey} from R2`);
 
-  // 2. 元ファイル（originals/）を検索して削除
   const listed = await bucket.list({ prefix: `originals/${baseName}` });
   for (const obj of listed.objects) {
     const objBaseName = extractBaseName(obj.key);
@@ -207,7 +192,6 @@ export const deleteFile = async (
     }
   }
 
-  // 3. Vectorize から削除
   await deleteKnowledgeBySource(vectorize, mdKey);
   logger.info(`[Delete] Deleted ${mdKey} from Vectorize`);
 };

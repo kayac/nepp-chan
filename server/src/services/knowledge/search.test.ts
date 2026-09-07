@@ -149,17 +149,19 @@ describe("searchKnowledge", () => {
       matches: [{ id: "v1", score: 0.7, metadata: undefined }],
     } as never);
 
-    vi.mocked(rerankWithScorer).mockResolvedValueOnce([
+    vi.mocked(rerankWithScorer).mockImplementationOnce(async ({ results }) => [
       {
         score: 0.5,
-        result: { id: "v1", score: 0.7, metadata: {} },
+        result: results[0],
+        details: { semantic: 0, vector: 0, position: 0 },
       },
-    ] as never);
+    ]);
 
     const result = await searchKnowledge("q", vectorize, "key");
     expect(result.results[0]).toMatchObject({
       content: "",
       source: "unknown",
+      score: 0.5,
     });
   });
 

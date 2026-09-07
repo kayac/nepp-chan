@@ -1,14 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("~/services/knowledge/embedding", () => ({
+vi.mock("~/services/knowledge/sync", () => ({
+  syncFile: vi.fn(),
+}));
+vi.mock("~/services/knowledge/vector-store", () => ({
   deleteKnowledgeBySource: vi.fn(),
-  processKnowledgeFile: vi.fn(),
 }));
 
-const { deleteKnowledgeBySource, processKnowledgeFile } = await import(
-  "~/services/knowledge/embedding"
+const { syncFile } = await import("~/services/knowledge/sync");
+const { deleteKnowledgeBySource } = await import(
+  "~/services/knowledge/vector-store"
 );
-const { handleR2Event } = await import("./r2-event-handler");
+const { handleR2Event, retryDelaySeconds } = await import("./r2-event-handler");
 
 const r2Bucket = {
   get: vi.fn(),
@@ -57,7 +60,7 @@ describe("handleR2Event", () => {
     vi.clearAllMocks();
     r2Bucket.get.mockResolvedValue({ text: vi.fn().mockResolvedValue("md") });
     vi.mocked(deleteKnowledgeBySource).mockResolvedValue({ deleted: 3 });
-    vi.mocked(processKnowledgeFile).mockResolvedValue({ chunks: 5 });
+    vi.mocked(syncFile).mockResolvedValue({ chunks: 5 });
   });
 
   it(".md 以外は ack して何もしない", async () => {
@@ -66,21 +69,21 @@ describe("handleR2Event", () => {
     await handleR2Event(buildBatch([m]), env);
 
     expect(m.ack).toHaveBeenCalled();
-    expect(processKnowledgeFile).not.toHaveBeenCalled();
+    expect(syncFile).not.toHaveBeenCalled();
   });
 
   it.each(["PutObject", "CompleteMultipartUpload", "CopyObject"] as const)(
-    "%s は delete + processKnowledgeFile を順に呼ぶ",
+    "%s は R2 の内容で syncFile を呼ぶ",
     async (action) => {
       const m = buildMessage(action, "doc.md");
 
       await handleR2Event(buildBatch([m]), env);
 
-      expect(deleteKnowledgeBySource).toHaveBeenCalledWith(
-        env.VECTORIZE,
-        "doc.md",
-      );
-      expect(processKnowledgeFile).toHaveBeenCalled();
+      expect(syncFile).toHaveBeenCalledWith("doc.md", "md", {
+        vectorize: env.VECTORIZE,
+        apiKey: "key",
+        d1: env.DB,
+      });
       expect(m.ack).toHaveBeenCalled();
     },
   );
@@ -92,8 +95,11 @@ describe("handleR2Event", () => {
 
       await handleR2Event(buildBatch([m]), env);
 
-      expect(deleteKnowledgeBySource).toHaveBeenCalled();
-      expect(processKnowledgeFile).not.toHaveBeenCalled();
+      expect(deleteKnowledgeBySource).toHaveBeenCalledWith(
+        env.VECTORIZE,
+        "doc.md",
+      );
+      expect(syncFile).not.toHaveBeenCalled();
       expect(m.ack).toHaveBeenCalled();
     },
   );
@@ -107,8 +113,8 @@ describe("handleR2Event", () => {
     expect(m.retry).toHaveBeenCalled();
   });
 
-  it("processKnowledgeFile がエラーを返したら retry", async () => {
-    vi.mocked(processKnowledgeFile).mockResolvedValue({
+  it("syncFile がエラーを返したら retry", async () => {
+    vi.mocked(syncFile).mockResolvedValue({
       error: "embed failed",
       chunks: 0,
     });
@@ -120,12 +126,37 @@ describe("handleR2Event", () => {
   });
 
   it("例外が起きたら retry", async () => {
-    vi.mocked(processKnowledgeFile).mockRejectedValue(new Error("boom"));
+    vi.mocked(syncFile).mockRejectedValue(new Error("boom"));
     const m = buildMessage("PutObject", "doc.md");
 
     await handleR2Event(buildBatch([m]), env);
 
     expect(m.retry).toHaveBeenCalled();
     expect(m.ack).not.toHaveBeenCalled();
+  });
+
+  it("retry の遅延は attempts に応じて伸びる", async () => {
+    vi.mocked(syncFile).mockRejectedValue(new Error("boom"));
+    const m = { ...buildMessage("PutObject", "doc.md"), attempts: 3 };
+
+    await handleR2Event(buildBatch([m]), env);
+
+    expect(m.retry).toHaveBeenCalledWith({ delaySeconds: 120 });
+  });
+});
+
+describe("retryDelaySeconds", () => {
+  it("初回は 30 秒", () => {
+    expect(retryDelaySeconds(1)).toBe(30);
+  });
+
+  it("試行ごとに倍になる", () => {
+    expect(retryDelaySeconds(2)).toBe(60);
+    expect(retryDelaySeconds(4)).toBe(240);
+  });
+
+  it("300 秒で頭打ち", () => {
+    expect(retryDelaySeconds(5)).toBe(300);
+    expect(retryDelaySeconds(10)).toBe(300);
   });
 });
