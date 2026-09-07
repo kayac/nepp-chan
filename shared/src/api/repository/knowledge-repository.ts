@@ -1,9 +1,12 @@
 import type { ApiClient } from "../create-client";
+import type { CuratedDraftRequest } from "../types";
 
-const toFormData = (body: unknown) => {
+export const toFormData = (body: unknown) => {
   const fd = new FormData();
   for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
-    if (value != null) fd.append(key, value as string | Blob);
+    if (value == null) continue;
+    const values = Array.isArray(value) ? value : [value];
+    for (const v of values) fd.append(key, v as string | Blob);
   }
   return fd;
 };
@@ -60,6 +63,22 @@ export const createKnowledgeRepository = (
       body: { file: file as unknown as string, filename },
       bodySerializer: toFormData,
     });
+    if (error) throw error;
+    return data;
+  },
+
+  draftCurated: async (request: CuratedDraftRequest) => {
+    const { data, error } = await client.POST(
+      "/admin/knowledge/curated-draft",
+      {
+        body: {
+          urls: request.urls,
+          text: request.text,
+          files: request.files as unknown as string[],
+        },
+        bodySerializer: toFormData,
+      },
+    );
     if (error) throw error;
     return data;
   },

@@ -33,14 +33,6 @@ type PutOk<P extends keyof paths> = paths[P] extends {
   ? R
   : never;
 
-type DeleteOk<P extends keyof paths> = paths[P] extends {
-  delete: {
-    responses: { 200: { content: { "application/json": infer R } } };
-  };
-}
-  ? R
-  : never;
-
 type PutBody<P extends keyof paths> = paths[P] extends {
   put: {
     requestBody?: { content: { "application/json": infer B } };
@@ -100,13 +92,20 @@ export type Persona = PersonasResponse["personas"][number];
 
 // ナレッジ
 export type SyncResult = PostOk<"/admin/knowledge/sync">;
-export type DeleteResult = DeleteOk<"/admin/knowledge">;
 export type FilesListResponse = GetOk<"/admin/knowledge/files">;
 export type FileInfo = FilesListResponse["files"][number];
 export type FileContentResponse = GetOk<"/admin/knowledge/files/{key}">;
 export type SaveFileResponse = PutOk<"/admin/knowledge/files/{key}">;
 export type UnifiedFilesListResponse = GetOk<"/admin/knowledge/unified">;
 export type UnifiedFileInfo = UnifiedFilesListResponse["files"][number];
+
+export type CuratedDraft = PostOk<"/admin/knowledge/curated-draft">;
+// multipart なので生成型を使わず手書き
+export type CuratedDraftRequest = {
+  urls: string[];
+  text?: string;
+  files: File[];
+};
 
 // multipart レスポンス型（raw fetch で使用）
 export type ReconvertFileResponse = PostOk<"/admin/knowledge/reconvert">;

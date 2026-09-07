@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { validateFileKey } from "./schemas";
 
-vi.mock("~/services/knowledge", () => ({
+vi.mock("~/services/knowledge", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("~/services/knowledge")>()),
   listFiles: vi.fn(),
   getFile: vi.fn(),
   getOriginalFile: vi.fn(),
@@ -14,6 +15,7 @@ vi.mock("~/services/knowledge", () => ({
   uploadMarkdownFile: vi.fn(),
   convertAndUpload: vi.fn(),
   reconvertFromOriginal: vi.fn(),
+  draftCurated: vi.fn(),
 }));
 
 vi.mock("~/repository/admin-session-repository", () => ({
@@ -116,6 +118,7 @@ describe("knowledge routes 統合テスト", () => {
       { method: "POST", path: "/upload" },
       { method: "POST", path: "/convert" },
       { method: "POST", path: "/reconvert" },
+      { method: "POST", path: "/curated-draft" },
     ])("$method $path - 認証なしは 401", async ({ method, path }) => {
       const res = await app.request(
         new Request(`http://localhost${path}`, { method }),
@@ -520,5 +523,134 @@ describe("knowledge routes 統合テスト", () => {
         expect.any(Object),
       );
     });
+  });
+});
+
+describe("POST /curated-draft", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(adminSessionRepository.findValid).mockResolvedValue({
+      token: VALID_OPAQUE_TOKEN,
+      userId: "user-1",
+      expiresAt: new Date(Date.now() + 86400000).toISOString(),
+      createdAt: "2024-01-01T00:00:00Z",
+    });
+    vi.mocked(adminUserRepository.findById).mockResolvedValue(testUser);
+  });
+
+  const draftEnv = mockEnv;
+
+  const post = (form: FormData) =>
+    app.request(
+      authedRequest("/curated-draft", { method: "POST", body: form }),
+      undefined,
+      draftEnv,
+    );
+
+  const draft = {
+    key: "curated/otoineppu-tokyo.md",
+    content: "---\ntitle: x\n---\n# x\n",
+    readUrls: ["https://a.example/"],
+    unreadable: [],
+  };
+
+  it("urls・text・files を配列に正規化してサービスに渡す", async () => {
+    vi.mocked(knowledgeService.draftCurated).mockResolvedValue(draft);
+    const form = new FormData();
+    form.append("urls", " https://a.example/ ");
+    form.append("urls", "https://b.example/");
+    form.append("text", " 補足 ");
+    form.append("files", new File(["x"], "f.png", { type: "image/png" }));
+
+    const res = await post(form);
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual(draft);
+    const [input, deps] = vi.mocked(knowledgeService.draftCurated).mock
+      .calls[0] as [
+      Parameters<typeof knowledgeService.draftCurated>[0],
+      Parameters<typeof knowledgeService.draftCurated>[1],
+    ];
+    expect(input.urls).toEqual(["https://a.example/", "https://b.example/"]);
+    expect(input.text).toBe("補足");
+    expect(input.files.map((f) => f.name)).toEqual(["f.png"]);
+    expect(deps).toEqual({ d1: draftEnv.DB });
+  });
+
+  it("URL が 1 件だけでも配列として渡す", async () => {
+    vi.mocked(knowledgeService.draftCurated).mockResolvedValue(draft);
+    const form = new FormData();
+    form.append("urls", "https://a.example/");
+
+    await post(form);
+
+    const input = vi.mocked(knowledgeService.draftCurated).mock.calls[0]?.[0];
+    expect(input?.urls).toEqual(["https://a.example/"]);
+    expect(input?.files).toEqual([]);
+  });
+
+  it("全部空なら 400", async () => {
+    const form = new FormData();
+    form.append("urls", "   ");
+    form.append("text", "");
+
+    const res = await post(form);
+
+    expect(res.status).toBe(400);
+    expect(knowledgeService.draftCurated).not.toHaveBeenCalled();
+  });
+
+  it("未対応のファイル形式は 400", async () => {
+    const form = new FormData();
+    form.append("files", new File(["x"], "memo.txt", { type: "text/plain" }));
+
+    const res = await post(form);
+
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { error: { message: string } };
+    expect(body.error.message).toContain("memo.txt");
+  });
+
+  it("URL が 11 件以上なら 400", async () => {
+    const form = new FormData();
+    for (let i = 0; i < 11; i++) form.append("urls", `https://a.example/${i}`);
+
+    const res = await post(form);
+
+    expect(res.status).toBe(400);
+  });
+
+  it("どの資料も読めなければ 422 と案内文", async () => {
+    const { CuratedDraftError } = await vi.importActual<
+      typeof import("~/services/knowledge/curated-draft")
+    >("~/services/knowledge/curated-draft");
+    vi.mocked(knowledgeService.draftCurated).mockRejectedValue(
+      new CuratedDraftError([
+        { name: "https://www.instagram.com/usagi/", reason: "HTTP 429" },
+      ]),
+    );
+    const form = new FormData();
+    form.append("urls", "https://www.instagram.com/usagi/");
+
+    const res = await post(form);
+
+    expect(res.status).toBe(422);
+    const body = (await res.json()) as { error: { message: string } };
+    expect(body.error.message).toContain("個別投稿の URL");
+    expect(body.error.message).toContain(
+      "https://www.instagram.com/usagi/（HTTP 429）",
+    );
+  });
+
+  it("想定外のエラーは 500", async () => {
+    vi.mocked(knowledgeService.draftCurated).mockRejectedValue(
+      new Error("boom"),
+    );
+    const form = new FormData();
+    form.append("text", "本文");
+
+    const res = await post(form);
+
+    expect(res.status).toBe(500);
   });
 });
