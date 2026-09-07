@@ -1,4 +1,4 @@
-import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 
 import { errorResponse } from "~/lib/openapi-errors";
@@ -9,13 +9,11 @@ import {
   getOriginalFile,
   listFiles,
   listUnifiedFiles,
-  syncFile,
 } from "~/services/knowledge";
 import {
   FileContentResponseSchema,
   FileKeyParamSchema,
   FilesListResponseSchema,
-  requireApiKey,
   SaveFileRequestSchema,
   SuccessResponseSchema,
   UnifiedFilesListResponseSchema,
@@ -84,7 +82,8 @@ const saveFileRoute = createRoute({
   method: "put",
   path: "/files/{key}",
   summary: "ファイルを保存",
-  description: "ファイルを作成または更新し、自動でVectorizeに同期します",
+  description:
+    "ファイルを作成または更新します。Vectorize への同期は R2 イベント経由で非同期に行われます",
   tags: ["Admin - Knowledge"],
   request: {
     params: FileKeyParamSchema,
@@ -95,14 +94,7 @@ const saveFileRoute = createRoute({
   responses: {
     200: {
       description: "保存成功",
-      content: {
-        "application/json": {
-          schema: z.object({
-            message: z.string(),
-            chunks: z.number(),
-          }),
-        },
-      },
+      content: { "application/json": { schema: SuccessResponseSchema } },
     },
     400: errorResponse(400),
     401: errorResponse(401),
@@ -113,25 +105,14 @@ const saveFileRoute = createRoute({
 knowledgeFilesRoutes.openapi(saveFileRoute, async (c) => {
   const { key } = c.req.valid("param");
   const { content } = c.req.valid("json");
-  const apiKey = requireApiKey(c.env.GOOGLE_GENERATIVE_AI_API_KEY);
-
   validateFileKey(key);
 
   await c.env.KNOWLEDGE_BUCKET.put(key, content, {
     httpMetadata: { contentType: "text/markdown" },
   });
 
-  const result = await syncFile(key, content, {
-    vectorize: c.env.VECTORIZE,
-    apiKey,
-    d1: c.env.DB,
-  });
-
   return c.json(
-    {
-      message: `ファイルを保存し、${result.chunks}チャンクを同期しました`,
-      chunks: result.chunks,
-    },
+    { message: "ファイルを保存しました。検索への反映には数十秒かかります" },
     200,
   );
 });
@@ -142,7 +123,7 @@ const deleteFileRoute = createRoute({
   path: "/files/{key}",
   summary: "ファイルを完全削除",
   description:
-    "Markdown、元ファイル（originals/）、Vectorizeのデータをすべて削除します",
+    "Markdown と元ファイル（originals/）を削除します。Vectorize のデータは R2 イベント経由で削除されます",
   tags: ["Admin - Knowledge"],
   request: { params: FileKeyParamSchema },
   responses: {
@@ -159,7 +140,7 @@ knowledgeFilesRoutes.openapi(deleteFileRoute, async (c) => {
   const { key } = c.req.valid("param");
   validateFileKey(key);
 
-  await deleteFile(c.env.KNOWLEDGE_BUCKET, c.env.VECTORIZE, key);
+  await deleteFile(c.env.KNOWLEDGE_BUCKET, key);
   const baseName = key.replace(/\.md$/, "");
   return c.json({ message: `${baseName} を完全に削除しました` }, 200);
 });

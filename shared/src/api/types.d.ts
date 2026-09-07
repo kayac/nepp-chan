@@ -2388,76 +2388,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/knowledge": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * 全ナレッジを削除
-         * @description Vectorizeの全ベクトルを削除します
-         */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description 削除成功 */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                            count?: number;
-                        };
-                    };
-                };
-                /** @description 認証エラー */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: {
-                                code: number;
-                                message: string;
-                            };
-                        };
-                    };
-                };
-                /** @description サーバーエラー */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: {
-                                code: number;
-                                message: string;
-                            };
-                        };
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/knowledge/sync": {
         parameters: {
             query?: never;
@@ -2468,8 +2398,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 全ナレッジを同期
-         * @description R2バケットの全Markdownファイルを読み込み、Vectorizeに同期します
+         * 全ナレッジを再同期
+         * @description R2 バケットの全 Markdown ファイルを同期キューに投入します。Vectorize への反映は非同期に行われます
          */
         post: {
             parameters: {
@@ -2480,7 +2410,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description 同期成功 */
+                /** @description 投入成功 */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -2488,13 +2418,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             message: string;
-                            results: {
-                                file: string;
-                                chunks: number;
-                                error?: string;
-                                edited?: boolean;
-                            }[];
-                            editedCount?: number;
+                            queued: number;
                         };
                     };
                 };
@@ -2693,7 +2617,7 @@ export interface paths {
         };
         /**
          * ファイルを保存
-         * @description ファイルを作成または更新し、自動でVectorizeに同期します
+         * @description ファイルを作成または更新します。Vectorize への同期は R2 イベント経由で非同期に行われます
          */
         put: {
             parameters: {
@@ -2720,7 +2644,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             message: string;
-                            chunks: number;
+                            count?: number;
                         };
                     };
                 };
@@ -2771,7 +2695,7 @@ export interface paths {
         post?: never;
         /**
          * ファイルを完全削除
-         * @description Markdown、元ファイル（originals/）、Vectorizeのデータをすべて削除します
+         * @description Markdown と元ファイル（originals/）を削除します。Vectorize のデータは R2 イベント経由で削除されます
          */
         delete: {
             parameters: {
@@ -3035,7 +2959,6 @@ export interface paths {
                         "application/json": {
                             message: string;
                             key: string;
-                            chunks: number;
                         };
                     };
                 };
@@ -3130,7 +3053,6 @@ export interface paths {
                             message: string;
                             key: string;
                             originalType: string;
-                            chunks: number;
                         };
                     };
                 };
@@ -3224,7 +3146,6 @@ export interface paths {
                         "application/json": {
                             message: string;
                             key: string;
-                            chunks: number;
                         };
                     };
                 };
@@ -3289,7 +3210,7 @@ export interface paths {
         put?: never;
         /**
          * curated ナレッジの下書きを生成
-         * @description URL・貼り付けテキスト・画像/PDF・検索キーワードを資料として読み、curated 形式の Markdown 下書きを返します。R2 には保存しません
+         * @description URL・貼り付けテキスト・画像/PDF を資料として読み、curated 形式の Markdown 下書きを返します。R2 には保存しません
          */
         post: {
             parameters: {

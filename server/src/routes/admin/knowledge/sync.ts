@@ -2,67 +2,26 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
-import { deleteAllKnowledge, syncAll } from "~/services/knowledge";
-import { requireApiKey, SuccessResponseSchema } from "./schemas";
+import { syncAll } from "~/services/knowledge";
 
 export const knowledgeSyncRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
   Variables: Partial<PrincipalVariables>;
 }>();
 
-// DELETE /admin/knowledge - 全削除
-const deleteAllRoute = createRoute({
-  method: "delete",
-  path: "/",
-  summary: "全ナレッジを削除",
-  description: "Vectorizeの全ベクトルを削除します",
-  tags: ["Admin - Knowledge"],
-  responses: {
-    200: {
-      description: "削除成功",
-      content: { "application/json": { schema: SuccessResponseSchema } },
-    },
-    401: errorResponse(401),
-    500: errorResponse(500),
-  },
-});
-
-knowledgeSyncRoutes.openapi(deleteAllRoute, async (c) => {
-  const result = await deleteAllKnowledge(c.env.VECTORIZE);
-  return c.json(
-    {
-      message: `${result.deleted}件のベクトルを削除しました`,
-      count: result.deleted,
-    },
-    200,
-  );
-});
-
-// POST /admin/knowledge/sync - 全ナレッジを同期
 const syncAllRoute = createRoute({
   method: "post",
   path: "/sync",
-  summary: "全ナレッジを同期",
+  summary: "全ナレッジを再同期",
   description:
-    "R2バケットの全Markdownファイルを読み込み、Vectorizeに同期します",
+    "R2 バケットの全 Markdown ファイルを同期キューに投入します。Vectorize への反映は非同期に行われます",
   tags: ["Admin - Knowledge"],
   responses: {
     200: {
-      description: "同期成功",
+      description: "投入成功",
       content: {
         "application/json": {
-          schema: z.object({
-            message: z.string(),
-            results: z.array(
-              z.object({
-                file: z.string(),
-                chunks: z.number(),
-                error: z.string().optional(),
-                edited: z.boolean().optional(),
-              }),
-            ),
-            editedCount: z.number().optional(),
-          }),
+          schema: z.object({ message: z.string(), queued: z.number() }),
         },
       },
     },
@@ -72,20 +31,15 @@ const syncAllRoute = createRoute({
 });
 
 knowledgeSyncRoutes.openapi(syncAllRoute, async (c) => {
-  const apiKey = requireApiKey(c.env.GOOGLE_GENERATIVE_AI_API_KEY);
-
-  const result = await syncAll({
-    bucket: c.env.KNOWLEDGE_BUCKET,
-    vectorize: c.env.VECTORIZE,
-    apiKey,
-    d1: c.env.DB,
-  });
+  const result = await syncAll(
+    c.env.KNOWLEDGE_BUCKET,
+    c.env.KNOWLEDGE_SYNC_QUEUE,
+  );
 
   return c.json(
     {
-      message: `${result.totalFiles}ファイル、${result.totalChunks}チャンクを同期しました`,
-      results: result.results,
-      editedCount: result.editedCount,
+      message: `${result.queued}ファイルを同期キューに投入しました`,
+      queued: result.queued,
     },
     200,
   );

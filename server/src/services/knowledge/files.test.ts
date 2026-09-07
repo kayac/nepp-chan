@@ -1,14 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-vi.mock("./vector-store", () => ({
-  deleteKnowledgeBySource: vi.fn(),
-}));
+import { describe, expect, it, vi } from "vitest";
 
 vi.mock("~/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const { deleteKnowledgeBySource } = await import("./vector-store");
 const { deleteFile, getFile, getOriginalFile, listFiles, listUnifiedFiles } =
   await import("./files");
 
@@ -57,10 +52,6 @@ const buildBucket = (
   } as unknown as R2Bucket;
   return bucket;
 };
-
-beforeEach(() => {
-  vi.mocked(deleteKnowledgeBySource).mockReset();
-});
 
 describe("listFiles", () => {
   it("originals/ プレフィックスは除外し、Markdown のみ返す", async () => {
@@ -288,7 +279,7 @@ describe("getOriginalFile", () => {
 });
 
 describe("deleteFile", () => {
-  it("Markdown + originals + Vectorize を削除", async () => {
+  it("Markdown と originals を削除する", async () => {
     const bucket = buildBucket([
       {
         key: "originals/doc.pdf",
@@ -296,20 +287,15 @@ describe("deleteFile", () => {
         uploaded: new Date("2030-01-01T00:00:00Z"),
       },
     ]);
-    const vectorize = {} as VectorizeIndex;
-
-    await deleteFile(bucket, vectorize, "doc.md");
+    await deleteFile(bucket, "doc.md");
 
     expect(bucket.delete).toHaveBeenCalledWith("doc.md");
     expect(bucket.delete).toHaveBeenCalledWith("originals/doc.pdf");
-    expect(deleteKnowledgeBySource).toHaveBeenCalledWith(vectorize, "doc.md");
   });
 
   it("key に拡張子無しを渡しても .md を付けて削除", async () => {
     const bucket = buildBucket([]);
-    const vectorize = {} as VectorizeIndex;
-
-    await deleteFile(bucket, vectorize, "doc");
+    await deleteFile(bucket, "doc");
 
     expect(bucket.delete).toHaveBeenCalledWith("doc.md");
   });
@@ -322,13 +308,9 @@ describe("deleteFile", () => {
         uploaded: new Date(),
       },
     ]);
-    const vectorize = {} as VectorizeIndex;
+    await deleteFile(bucket, "doc.md");
 
-    await deleteFile(bucket, vectorize, "doc.md");
-
-    // doc.md は削除される
     expect(bucket.delete).toHaveBeenCalledWith("doc.md");
-    // originals/doc-other は basename が違うので削除しない
     expect(bucket.delete).not.toHaveBeenCalledWith("originals/doc-other.pdf");
   });
 });

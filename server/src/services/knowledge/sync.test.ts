@@ -19,7 +19,8 @@ vi.mock("~/lib/logger", () => ({
 const { chunkDocument } = await import("./chunk");
 const { generateEmbeddings } = await import("./embedding");
 const { recordLlmUsage } = await import("~/services/analytics/llm-usage");
-const { storeMarkdownAndSync, syncAll, syncFile } = await import("./sync");
+const { syncAll, syncFile } = await import("./sync");
+type R2EventMessage = import("./sync").R2EventMessage;
 
 const fakeEmbedding = () => [0.1, 0.2];
 
@@ -58,14 +59,8 @@ const upsertedIds = (vectorize: VectorizeIndex) => {
   return vectors.map((v) => v.id);
 };
 
-const buildR2Object = (
-  key: string,
-  uploadedAt: string | Date = "2030-01-01T00:00:00Z",
-): R2Object =>
-  ({
-    key,
-    uploaded: uploadedAt instanceof Date ? uploadedAt : new Date(uploadedAt),
-  }) as unknown as R2Object;
+const buildR2Object = (key: string): R2Object =>
+  ({ key, size: 1, etag: "e" }) as unknown as R2Object;
 
 const buildBucket = (
   objects: R2Object[],
@@ -193,122 +188,53 @@ describe("syncFile", () => {
   });
 });
 
-describe("storeMarkdownAndSync", () => {
-  it("R2 に text/markdown で保存してから同期する", async () => {
-    const bucket = buildBucket([], {});
-    const vectorize = buildVectorize();
-
-    const result = await storeMarkdownAndSync("doc.md", "# c", {
-      bucket,
-      vectorize,
-      apiKey: "k",
-    });
-
-    expect(bucket.put).toHaveBeenCalledWith("doc.md", "# c", {
-      httpMetadata: { contentType: "text/markdown" },
-    });
-    expect(chunkDocument).toHaveBeenCalledWith("doc.md", "# c");
-    expect(result).toEqual({ chunks: 2 });
-  });
-});
-
 describe("syncAll", () => {
-  const vectorize = () => buildVectorize();
+  const buildQueue = () =>
+    ({ sendBatch: vi.fn(async () => {}) }) as unknown as Queue<R2EventMessage>;
 
-  it("md ファイルが無ければ空結果", async () => {
-    const result = await syncAll({
-      bucket: buildBucket([], {}),
-      vectorize: vectorize(),
-      apiKey: "k",
-    });
-
-    expect(result).toEqual({
-      results: [],
-      totalFiles: 0,
-      totalChunks: 0,
-      editedCount: 0,
-    });
-  });
-
-  it("originals/ 配下は処理対象外", async () => {
-    const bucket = buildBucket(
-      [buildR2Object("originals/doc.pdf"), buildR2Object("doc.md")],
-      { "doc.md": "# hello" },
-    );
-
-    const result = await syncAll({
-      bucket,
-      vectorize: vectorize(),
-      apiKey: "k",
-    });
-
-    expect(result.totalFiles).toBe(1);
-    expect(chunkDocument).toHaveBeenCalledTimes(1);
-    expect(chunkDocument).toHaveBeenCalledWith("doc.md", "# hello");
-  });
-
-  it("bucket.get が null を返したら error 行を記録して続行", async () => {
-    const bucket = buildBucket(
-      [buildR2Object("missing.md"), buildR2Object("doc.md")],
-      { "missing.md": null, "doc.md": "# hello" },
-    );
-
-    const result = await syncAll({
-      bucket,
-      vectorize: vectorize(),
-      apiKey: "k",
-    });
-
-    expect(result.results[0]).toEqual({
-      file: "missing.md",
-      chunks: 0,
-      error: "File not found",
-    });
-    expect(result.results[1]).toMatchObject({ file: "doc.md", chunks: 2 });
-  });
-
-  it("originals より md が新しい場合 edited=true、閾値以内なら false", async () => {
-    const base = new Date("2030-01-01T00:00:00Z");
+  it("originals/ 以外の md ごとに PutObject 相当のメッセージを投入する", async () => {
     const bucket = buildBucket(
       [
-        buildR2Object("originals/a.pdf", base),
-        buildR2Object("a.md", new Date(base.getTime() + 60_000)),
-        buildR2Object("originals/b.pdf", base),
-        buildR2Object("b.md", new Date(base.getTime() + 1_000)),
+        buildR2Object("originals/doc.pdf"),
+        buildR2Object("doc.md"),
+        buildR2Object("dir/other.md"),
       ],
-      { "a.md": "# a", "b.md": "# b" },
+      {},
     );
+    const queue = buildQueue();
 
-    const result = await syncAll({
-      bucket,
-      vectorize: vectorize(),
-      apiKey: "k",
-    });
+    const result = await syncAll(bucket, queue);
 
-    expect(result.results.map((r) => r.edited)).toEqual([true, false]);
-    expect(result.editedCount).toBe(1);
+    expect(result).toEqual({ queued: 2 });
+    const batch = vi.mocked(queue.sendBatch).mock.calls[0]?.[0] as Array<{
+      body: R2EventMessage;
+    }>;
+    expect(batch.map((m) => m.body.object.key)).toEqual([
+      "doc.md",
+      "dir/other.md",
+    ]);
+    expect(batch[0].body.action).toBe("PutObject");
   });
 
-  it("複数 md を合計してチャンク数を返し、失敗したファイルの error を保持する", async () => {
-    vi.mocked(generateEmbeddings)
-      .mockRejectedValueOnce(new Error("quota"))
-      .mockResolvedValueOnce({
-        embeddings: [fakeEmbedding(), fakeEmbedding()],
-        tokens: 20,
-      });
-    const bucket = buildBucket([buildR2Object("a.md"), buildR2Object("b.md")], {
-      "a.md": "# a",
-      "b.md": "# b",
-    });
+  it("100 件を超えると複数バッチに分ける", async () => {
+    const objects = Array.from({ length: 150 }, (_, i) =>
+      buildR2Object(`f${i}.md`),
+    );
+    const queue = buildQueue();
 
-    const result = await syncAll({
-      bucket,
-      vectorize: vectorize(),
-      apiKey: "k",
-    });
+    const result = await syncAll(buildBucket(objects, {}), queue);
 
-    expect(result.results[0]).toMatchObject({ file: "a.md", error: "quota" });
-    expect(result.results[1]).toMatchObject({ file: "b.md", chunks: 2 });
-    expect(result.totalChunks).toBe(2);
+    expect(result.queued).toBe(150);
+    expect(queue.sendBatch).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(queue.sendBatch).mock.calls[1]?.[0]).toHaveLength(50);
+  });
+
+  it("md が無ければ何も投入しない", async () => {
+    const queue = buildQueue();
+
+    const result = await syncAll(buildBucket([], {}), queue);
+
+    expect(result).toEqual({ queued: 0 });
+    expect(queue.sendBatch).not.toHaveBeenCalled();
   });
 });

@@ -14,7 +14,6 @@ import {
 import {
   CuratedDraftRequestSchema,
   CuratedDraftResponseSchema,
-  requireApiKey,
   validateFileKey,
 } from "./schemas";
 
@@ -54,7 +53,6 @@ const uploadFileRoute = createRoute({
           schema: z.object({
             message: z.string(),
             key: z.string(),
-            chunks: z.number(),
           }),
         },
       },
@@ -66,8 +64,6 @@ const uploadFileRoute = createRoute({
 });
 
 knowledgeConvertRoutes.openapi(uploadFileRoute, async (c) => {
-  const apiKey = requireApiKey(c.env.GOOGLE_GENERATIVE_AI_API_KEY);
-
   const body = await c.req.parseBody();
   const file = body.file;
 
@@ -81,16 +77,14 @@ knowledgeConvertRoutes.openapi(uploadFileRoute, async (c) => {
 
   const result = await uploadMarkdownFile(file, customFilename, {
     bucket: c.env.KNOWLEDGE_BUCKET,
-    vectorize: c.env.VECTORIZE,
-    apiKey,
     d1: c.env.DB,
   });
 
   return c.json(
     {
-      message: `ファイルをアップロードし、${result.chunks}チャンクを同期しました`,
+      message:
+        "ファイルをアップロードしました。検索への反映には数十秒かかります",
       key: result.key,
-      chunks: result.chunks,
     },
     200,
   );
@@ -127,7 +121,6 @@ const convertFileRoute = createRoute({
             message: z.string(),
             key: z.string(),
             originalType: z.string(),
-            chunks: z.number(),
           }),
         },
       },
@@ -139,8 +132,6 @@ const convertFileRoute = createRoute({
 });
 
 knowledgeConvertRoutes.openapi(convertFileRoute, async (c) => {
-  const apiKey = requireApiKey(c.env.GOOGLE_GENERATIVE_AI_API_KEY);
-
   const body = await c.req.parseBody();
   const file = body.file;
   const filename = typeof body.filename === "string" ? body.filename : null;
@@ -156,17 +147,14 @@ knowledgeConvertRoutes.openapi(convertFileRoute, async (c) => {
 
   const result = await convertAndUpload(file, filename, {
     bucket: c.env.KNOWLEDGE_BUCKET,
-    vectorize: c.env.VECTORIZE,
-    apiKey,
     d1: c.env.DB,
   });
 
   return c.json(
     {
-      message: `ファイルを変換し、${result.chunks}チャンクを同期しました`,
+      message: "ファイルを変換しました。検索への反映には数十秒かかります",
       key: result.key,
       originalType: result.originalType,
-      chunks: result.chunks,
     },
     200,
   );
@@ -203,7 +191,6 @@ const reconvertFileRoute = createRoute({
           schema: z.object({
             message: z.string(),
             key: z.string(),
-            chunks: z.number(),
           }),
         },
       },
@@ -216,8 +203,6 @@ const reconvertFileRoute = createRoute({
 
 knowledgeConvertRoutes.openapi(reconvertFileRoute, async (c) => {
   const { originalKey, filename } = c.req.valid("json");
-  const apiKey = requireApiKey(c.env.GOOGLE_GENERATIVE_AI_API_KEY);
-
   if (!originalKey.startsWith("originals/")) {
     throw new HTTPException(400, {
       message: "originalKey must start with 'originals/'",
@@ -227,16 +212,13 @@ knowledgeConvertRoutes.openapi(reconvertFileRoute, async (c) => {
 
   const result = await reconvertFromOriginal(originalKey, filename, {
     bucket: c.env.KNOWLEDGE_BUCKET,
-    vectorize: c.env.VECTORIZE,
-    apiKey,
     d1: c.env.DB,
   });
 
   return c.json(
     {
-      message: `ファイルを再変換し、${result.chunks}チャンクを同期しました`,
+      message: "ファイルを再変換しました。検索への反映には数十秒かかります",
       key: result.key,
-      chunks: result.chunks,
     },
     200,
   );

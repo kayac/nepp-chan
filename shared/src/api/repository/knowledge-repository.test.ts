@@ -39,27 +39,6 @@ describe("toFormData", () => {
 });
 
 describe("knowledge-repository", () => {
-  it("syncKnowledge: POST /admin/knowledge/sync", async () => {
-    server.use(
-      http.post(`${API}/admin/knowledge/sync`, () =>
-        HttpResponse.json({ message: "ok" }),
-      ),
-    );
-
-    await repo.syncKnowledge();
-  });
-
-  it("deleteAllKnowledge: DELETE /admin/knowledge", async () => {
-    server.use(
-      http.delete(`${API}/admin/knowledge`, () =>
-        HttpResponse.json({ message: "ok", count: 100 }),
-      ),
-    );
-
-    const result = await repo.deleteAllKnowledge();
-    expect(result?.count).toBe(100);
-  });
-
   it("fetchFiles: ファイル一覧を返す", async () => {
     server.use(
       http.get(`${API}/admin/knowledge/files`, () =>
@@ -171,16 +150,6 @@ describe("knowledge-repository", () => {
     expect(url).not.toContain("originals/originals");
   });
 
-  it("失敗系: syncKnowledge 500 は throw", async () => {
-    server.use(
-      http.post(`${API}/admin/knowledge/sync`, () =>
-        HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
-      ),
-    );
-
-    await expect(repo.syncKnowledge()).rejects.toBeDefined();
-  });
-
   it("失敗系: fetchFileContent 404 は throw", async () => {
     server.use(
       http.get(`${API}/admin/knowledge/files/missing.md`, () =>
@@ -202,15 +171,6 @@ describe("knowledge-repository", () => {
   });
 
   describe("残りの失敗系", () => {
-    it("deleteAllKnowledge: 5xx は throw", async () => {
-      server.use(
-        http.delete(`${API}/admin/knowledge`, () =>
-          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
-        ),
-      );
-      await expect(repo.deleteAllKnowledge()).rejects.toBeDefined();
-    });
-
     it("fetchFiles: 5xx は throw", async () => {
       server.use(
         http.get(`${API}/admin/knowledge/files`, () =>

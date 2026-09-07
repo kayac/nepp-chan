@@ -15,18 +15,6 @@ export const createKnowledgeRepository = (
   client: ApiClient,
   baseUrl: string,
 ) => ({
-  syncKnowledge: async () => {
-    const { data, error } = await client.POST("/admin/knowledge/sync");
-    if (error) throw error;
-    return data;
-  },
-
-  deleteAllKnowledge: async () => {
-    const { data, error } = await client.DELETE("/admin/knowledge");
-    if (error) throw error;
-    return data;
-  },
-
   fetchFiles: async () => {
     const { data, error } = await client.GET("/admin/knowledge/files");
     if (error) throw error;

@@ -1,28 +1,7 @@
 import * as Sentry from "@sentry/cloudflare";
 import { logger } from "~/lib/logger";
-import { syncFile } from "~/services/knowledge/sync";
+import { type R2EventMessage, syncFile } from "~/services/knowledge/sync";
 import { deleteKnowledgeBySource } from "~/services/knowledge/vector-store";
-
-type R2EventType =
-  | "PutObject"
-  | "CompleteMultipartUpload"
-  | "CopyObject"
-  | "DeleteObject"
-  | "LifecycleDeletion";
-
-type R2EventObject = {
-  key: string;
-  size: number;
-  eTag: string;
-};
-
-export type R2EventMessage = {
-  account: string;
-  bucket: string;
-  eventTime: string;
-  action: R2EventType;
-  object: R2EventObject;
-};
 
 const isMarkdownFile = (key: string) => key.endsWith(".md");
 

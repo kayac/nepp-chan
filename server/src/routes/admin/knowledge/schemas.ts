@@ -92,12 +92,3 @@ export const validateFileKey = (key: string) => {
     throw new HTTPException(400, { message: "Invalid file key" });
   }
 };
-
-export const requireApiKey = (apiKey: string | undefined) => {
-  if (!apiKey) {
-    throw new HTTPException(500, {
-      message: "GOOGLE_GENERATIVE_AI_API_KEY is not configured",
-    });
-  }
-  return apiKey;
-};

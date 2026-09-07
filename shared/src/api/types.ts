@@ -33,14 +33,6 @@ type PutOk<P extends keyof paths> = paths[P] extends {
   ? R
   : never;
 
-type DeleteOk<P extends keyof paths> = paths[P] extends {
-  delete: {
-    responses: { 200: { content: { "application/json": infer R } } };
-  };
-}
-  ? R
-  : never;
-
 type PutBody<P extends keyof paths> = paths[P] extends {
   put: {
     requestBody?: { content: { "application/json": infer B } };
@@ -100,7 +92,6 @@ export type Persona = PersonasResponse["personas"][number];
 
 // ナレッジ
 export type SyncResult = PostOk<"/admin/knowledge/sync">;
-export type DeleteResult = DeleteOk<"/admin/knowledge">;
 export type FilesListResponse = GetOk<"/admin/knowledge/files">;
 export type FileInfo = FilesListResponse["files"][number];
 export type FileContentResponse = GetOk<"/admin/knowledge/files/{key}">;

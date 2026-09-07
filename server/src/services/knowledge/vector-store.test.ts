@@ -5,7 +5,6 @@ vi.mock("~/lib/logger", () => ({
 }));
 
 const {
-  deleteAllKnowledge,
   deleteKnowledgeBySource,
   readChunkCount,
   sourceIdPrefix,
@@ -52,39 +51,6 @@ describe("upsertVectors", () => {
 
     expect(vectorize.upsert).toHaveBeenCalledTimes(2);
     expect(vi.mocked(vectorize.upsert).mock.calls[1]?.[0]).toHaveLength(50);
-  });
-});
-
-describe("deleteAllKnowledge", () => {
-  it("matches が無いと即時 break して 0 件を返す", async () => {
-    const vectorize = buildVectorize();
-    vi.mocked(vectorize.query).mockResolvedValueOnce({ matches: [] } as never);
-
-    const result = await deleteAllKnowledge(vectorize);
-
-    expect(result).toEqual({ deleted: 0 });
-    expect(vectorize.deleteByIds).not.toHaveBeenCalled();
-  });
-
-  it("matches がある間ループして合計件数を返す", async () => {
-    const vectorize = buildVectorize();
-    vi.mocked(vectorize.query)
-      .mockResolvedValueOnce({
-        matches: [{ id: "1" }, { id: "2" }],
-      } as never)
-      .mockResolvedValueOnce({
-        matches: [{ id: "3" }],
-      } as never)
-      .mockResolvedValueOnce({ matches: [] } as never);
-
-    const result = await deleteAllKnowledge(vectorize);
-    expect(result.deleted).toBe(3);
-    expect(vectorize.deleteByIds).toHaveBeenCalledTimes(2);
-    expect(vi.mocked(vectorize.deleteByIds).mock.calls[0]?.[0]).toEqual([
-      "1",
-      "2",
-    ]);
-    expect(vi.mocked(vectorize.deleteByIds).mock.calls[1]?.[0]).toEqual(["3"]);
   });
 });
 

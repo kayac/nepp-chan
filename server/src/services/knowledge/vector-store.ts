@@ -1,11 +1,8 @@
-import { logger } from "~/lib/logger";
 import type { ChunkMetadata } from "./chunk";
 
 export const EMBEDDING_DIMENSIONS = 1536;
 const UPSERT_BATCH_SIZE = 100;
 const DELETE_BATCH_SIZE = 1000;
-const MAX_DELETE_ITERATIONS = 1000;
-const DELETE_QUERY_TOP_K = 100;
 
 type VectorData = {
   id: string;
@@ -32,32 +29,6 @@ export const upsertVectors = async (
       })),
     );
   }
-};
-
-export const deleteAllKnowledge = async (vectorize: VectorizeIndex) => {
-  const dummyVector = new Array(EMBEDDING_DIMENSIONS).fill(0);
-  let deleted = 0;
-
-  for (let i = 0; i < MAX_DELETE_ITERATIONS; i++) {
-    const results = await vectorize.query(dummyVector, {
-      topK: DELETE_QUERY_TOP_K,
-      returnMetadata: "none",
-    });
-
-    if (results.matches.length === 0) break;
-
-    const ids = results.matches.map((m) => m.id);
-    await vectorize.deleteByIds(ids);
-    deleted += ids.length;
-  }
-
-  if (deleted >= MAX_DELETE_ITERATIONS * DELETE_QUERY_TOP_K) {
-    logger.warn(
-      `[Knowledge] deleteAllKnowledge reached iteration limit (${MAX_DELETE_ITERATIONS}), some vectors may remain`,
-    );
-  }
-
-  return { deleted };
 };
 
 export const sourceIdPrefix = async (source: string) => {

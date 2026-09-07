@@ -13,10 +13,10 @@ export {
   listUnifiedFiles,
   type UnifiedFileInfo,
 } from "./files";
-export { syncAll, syncFile } from "./sync";
+export { type R2EventMessage, syncAll, syncFile } from "./sync";
 export {
   convertAndUpload,
   reconvertFromOriginal,
   uploadMarkdownFile,
 } from "./upload";
-export { deleteAllKnowledge, deleteKnowledgeBySource } from "./vector-store";
+export { deleteKnowledgeBySource } from "./vector-store";

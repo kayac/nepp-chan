@@ -216,7 +216,7 @@ describe("CuratedComposer", () => {
     server.use(
       http.put(`${API}/admin/knowledge/files/*`, async ({ request }) => {
         putBody = (await request.json()) as { content: string };
-        return HttpResponse.json({ message: "ok", chunks: 3 });
+        return HttpResponse.json({ message: "ok" });
       }),
     );
     renderComposer();
@@ -332,7 +332,7 @@ describe("CuratedComposer", () => {
     server.use(
       http.put(`${API}/admin/knowledge/files/*`, ({ request }) => {
         putUrl = request.url;
-        return HttpResponse.json({ message: "ok", chunks: 3 });
+        return HttpResponse.json({ message: "ok" });
       }),
     );
     renderComposer();
@@ -342,7 +342,7 @@ describe("CuratedComposer", () => {
 
     expect(
       await screen.findByText(
-        "curated/otoineppu-tokyo.md を保存しました（3 チャンクを同期）",
+        "curated/otoineppu-tokyo.md を保存しました。検索への反映には数十秒かかります",
       ),
     ).toBeDefined();
     expect(decodeURIComponent(putUrl)).toContain(

@@ -211,9 +211,9 @@ export const CuratedComposer = ({ existingKeys }: Props) => {
     saveMutation.mutate(
       { key, content: joinDraft(draft) },
       {
-        onSuccess: (result) => {
+        onSuccess: () => {
           setSavedMessage(
-            `${key} を保存しました（${result.chunks} チャンクを同期）`,
+            `${key} を保存しました。検索への反映には数十秒かかります`,
           );
           setUrls([]);
           setUrlInput("");
