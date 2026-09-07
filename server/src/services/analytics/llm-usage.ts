@@ -13,6 +13,7 @@ export type LlmUsageSource =
   | "persona-extract"
   | "weekly-report"
   | "image-convert"
+  | "curated-draft"
   | "embedding"
   | "rerank";
 

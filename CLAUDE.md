@@ -47,6 +47,10 @@ knowledge/ 配下を clean アップロードした場合の正しいベクタ�
 | 2026-03-09 | 329 | 2,891 | clean 後の正確な値 |
 | 2026-09-04 | 335 | 4,210 | source metadata index 作成、チャンク maxSize 1000 導入後の値 |
 
+### 管理画面から追加した curated ナレッジ
+
+ダッシュボードの「ナレッジを追加」は、URL・文章・画像/PDF から LLM が下書きを作り、確認後に R2 の `curated/<slug>.md` として保存する（frontmatter は `source_type: curated` / `source_authority: 2` / `verified_at` / `url`）。git 管理外なので `knowledge:upload` では投入されず、`--clean` 後は Vectorize 側だけ消える。clean したら `POST /admin/knowledge/sync` で R2 全体を再同期する。
+
 ## コーディング規約
 
 ### コメント

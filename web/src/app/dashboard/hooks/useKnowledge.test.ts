@@ -9,6 +9,7 @@ import {
   useConvertFile,
   useDeleteFile,
   useDeleteKnowledge,
+  useDraftCurated,
   useKnowledgeFile,
   useKnowledgeFiles,
   useReconvertFile,
@@ -187,5 +188,32 @@ describe("knowledge mutations", () => {
       });
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
+  });
+});
+
+describe("useDraftCurated", () => {
+  it("multipart POST して下書きを返す", async () => {
+    server.use(
+      http.post(`${API}/admin/knowledge/curated-draft`, () =>
+        HttpResponse.json({
+          key: "curated/x.md",
+          content: "# x",
+          readUrls: ["https://a.example/"],
+          unreadable: [],
+        }),
+      ),
+    );
+
+    const { result } = renderHookWithQuery(() => useDraftCurated());
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        urls: ["https://a.example/"],
+        files: [],
+      });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.key).toBe("curated/x.md");
   });
 });

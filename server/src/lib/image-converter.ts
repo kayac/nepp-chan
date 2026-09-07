@@ -1,19 +1,12 @@
 import { Buffer } from "node:buffer";
+import { CONVERTIBLE_MIME_TYPES } from "@nepp-chan/shared/constants/knowledge";
 import { OPENAI_LITE } from "~/lib/llm-models";
 import { converterAgent } from "~/mastra/agents/converter-agent";
 import { recordLlmUsage } from "~/services/analytics/llm-usage";
 
-const SUPPORTED_MIME_TYPES = [
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-  "image/gif",
-  "application/pdf",
-] as const;
-
 export const isSupportedMimeType = (mimeType: string) =>
-  SUPPORTED_MIME_TYPES.includes(
-    mimeType as (typeof SUPPORTED_MIME_TYPES)[number],
+  CONVERTIBLE_MIME_TYPES.includes(
+    mimeType as (typeof CONVERTIBLE_MIME_TYPES)[number],
   );
 
 export const convertToMarkdown = async (
@@ -23,7 +16,7 @@ export const convertToMarkdown = async (
 ) => {
   if (!isSupportedMimeType(mimeType)) {
     throw new Error(
-      `Unsupported mime type: ${mimeType}. Supported types: ${SUPPORTED_MIME_TYPES.join(", ")}`,
+      `Unsupported mime type: ${mimeType}. Supported types: ${CONVERTIBLE_MIME_TYPES.join(", ")}`,
     );
   }
 
