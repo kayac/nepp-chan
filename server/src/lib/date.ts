@@ -1,7 +1,7 @@
 const HOUR_MS = 60 * 60 * 1000;
 export const DAY_MS = 24 * HOUR_MS;
 export const WEEK_MS = 7 * DAY_MS;
-const JST_OFFSET_MS = 9 * HOUR_MS;
+export const JST_OFFSET_MS = 9 * HOUR_MS;
 
 /** JST の YYYY-MM-DD ラベルに変換する */
 export const jstDateLabel = (date: Date) =>

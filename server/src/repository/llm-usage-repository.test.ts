@@ -151,6 +151,13 @@ describe("llmUsageRepository", () => {
       );
     });
 
+    it("curated-draft はナレッジ基盤の費用として knowledge-base に分類する", async () => {
+      await insert(db, { source: "curated-draft" });
+
+      const [row] = await llmUsageRepository.sumByCategory(d1, period);
+      expect(row?.category).toBe("knowledge-base");
+    });
+
     it("会話にも埋め込みにも当たらない source は batch に分類する", async () => {
       await insert(db, { source: "weekly-report" });
 

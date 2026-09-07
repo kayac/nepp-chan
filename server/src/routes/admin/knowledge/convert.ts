@@ -1,14 +1,25 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { CURATED_DRAFT_LIMITS } from "@nepp-chan/shared/constants/knowledge";
 import { HTTPException } from "hono/http-exception";
-
+import { isSupportedMimeType } from "~/lib/image-converter";
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
 import {
+  CuratedDraftError,
   convertAndUpload,
+  draftCurated,
   reconvertFromOriginal,
   uploadMarkdownFile,
 } from "~/services/knowledge";
-import { requireApiKey, validateFileKey } from "./schemas";
+import {
+  CuratedDraftRequestSchema,
+  CuratedDraftResponseSchema,
+  requireApiKey,
+  validateFileKey,
+} from "./schemas";
+
+const toArray = (value: unknown) =>
+  value === undefined ? [] : Array.isArray(value) ? value : [value];
 
 export const knowledgeConvertRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -229,4 +240,87 @@ knowledgeConvertRoutes.openapi(reconvertFileRoute, async (c) => {
     },
     200,
   );
+});
+
+// POST /admin/knowledge/curated-draft - URL・テキスト・画像から curated 下書きを生成
+const curatedDraftRoute = createRoute({
+  method: "post",
+  path: "/curated-draft",
+  summary: "curated ナレッジの下書きを生成",
+  description:
+    "URL・貼り付けテキスト・画像/PDF を資料として読み、curated 形式の Markdown 下書きを返します。R2 には保存しません",
+  tags: ["Admin - Knowledge"],
+  request: {
+    body: {
+      content: {
+        "multipart/form-data": { schema: CuratedDraftRequestSchema },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "下書き",
+      content: { "application/json": { schema: CuratedDraftResponseSchema } },
+    },
+    400: errorResponse(400),
+    401: errorResponse(401),
+    422: errorResponse(422),
+    500: errorResponse(500),
+  },
+});
+
+knowledgeConvertRoutes.openapi(curatedDraftRoute, async (c) => {
+  const body = await c.req.parseBody({ all: true });
+
+  const urls = toArray(body.urls)
+    .filter((v): v is string => typeof v === "string")
+    .map((v) => v.trim())
+    .filter(Boolean);
+  const files = toArray(body.files).filter((v): v is File => v instanceof File);
+  const text = typeof body.text === "string" ? body.text.trim() : "";
+
+  if (!urls.length && !files.length && !text) {
+    throw new HTTPException(400, {
+      message: "URL・テキスト・画像のいずれかを入力してください",
+    });
+  }
+  if (urls.length > CURATED_DRAFT_LIMITS.urls) {
+    throw new HTTPException(400, {
+      message: `URL は ${CURATED_DRAFT_LIMITS.urls} 件までです`,
+    });
+  }
+  if (files.length > CURATED_DRAFT_LIMITS.files) {
+    throw new HTTPException(400, {
+      message: `画像・PDF は ${CURATED_DRAFT_LIMITS.files} 件までです`,
+    });
+  }
+  const unsupported = files.find((f) => !isSupportedMimeType(f.type));
+  if (unsupported) {
+    throw new HTTPException(400, {
+      message: `未対応のファイル形式です: ${unsupported.name}`,
+    });
+  }
+  const totalBytes = files.reduce((sum, f) => sum + f.size, 0);
+  if (totalBytes > CURATED_DRAFT_LIMITS.filesTotalBytes) {
+    throw new HTTPException(400, {
+      message: `画像・PDF の合計サイズは ${CURATED_DRAFT_LIMITS.filesTotalBytes / 1024 / 1024}MB までです`,
+    });
+  }
+
+  try {
+    const result = await draftCurated({ urls, text, files }, { d1: c.env.DB });
+    return c.json(result, 200);
+  } catch (error) {
+    if (error instanceof CuratedDraftError) {
+      const details = error.unreadable
+        .map((item) => `${item.name}（${item.reason}）`)
+        .join(" / ");
+      throw new HTTPException(422, {
+        message: details
+          ? `${error.message}。読めなかった資料: ${details}`
+          : error.message,
+      });
+    }
+    throw error;
+  }
 });

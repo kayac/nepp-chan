@@ -199,7 +199,7 @@ export const llmUsage = sqliteTable("llm_usage", {
   cachedInputTokens: integer("cached_input_tokens").notNull().default(0),
   totalTokens: integer("total_tokens").notNull().default(0),
   platform: text("platform"), // "web" | "line" | "lp" | "widget" | "voice" | null（バッチ系）
-  source: text("source").notNull(), // "chat" | "subagent" | "intent-classify" | "persona-extract" | "weekly-report" | "image-convert"
+  source: text("source").notNull(),
   agent: text("agent"), // 呼び出し元エージェント名（"nepp-chan" "knowledge" 等）。列追加前の行は null
   turnIndex: integer("turn_index"), // スレッド内の何往復目か（1 始まり）。列追加前の行は null
   durationMs: integer("duration_ms"), // 呼び出し 1 回の所要時間
