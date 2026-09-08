@@ -120,16 +120,16 @@ describe("createNeppChanAgent", () => {
       expect(ins).not.toContain("指示語のときだけ");
     });
 
-    it("直接回答を優先し、価値が高まる場合だけ意図に沿った補足をする", async () => {
+    it("質問に答えつつ、固定の三段構成を強制しない", async () => {
       const ins = await instructionsOf(build());
-      expect(ins).toContain("質問への直接的な答えを最初に");
-      expect(ins).toContain("回答の価値が高まる場合だけ");
-      expect(ins).toContain("不要なら加えない");
+      expect(ins).toContain("ユーザーが知りたいこと・選びたいことを軸に");
+      expect(ins).toContain("確認できた関連情報から選ぶ");
+      expect(ins).not.toContain("補足を1つ");
     });
 
     it("web・widget だけ情報を視覚的に読みやすく表現する", async () => {
       const visualStyle =
-        "内容に応じて、絵文字・見出し・区切り・図表などから適切な表現を選び、情報のまとまりや重要度がひと目で伝わる、視覚的に読みやすく親しみやすい回答にする";
+        "挨拶・雑談・自己紹介・気持ちのやり取りは箇条書きにせず";
 
       expect(await instructionsOf(build({ platform: "web" }))).toContain(
         visualStyle,
@@ -151,13 +151,12 @@ describe("createNeppChanAgent", () => {
         "初めて知る人が全体像をイメージできるように再構成する",
       );
       expect(ins).toContain("背景や目的、具体的な仕組み・活動例");
-      expect(ins).toContain("確認項目を機械的に網羅しない");
-      expect(ins).toContain("不明事項は重要なものだけ");
+      expect(ins).toContain("箇条書きの中も親しい相手に話す言葉にする");
     });
 
     it("未確定情報を省かず、確度を保って伝える", async () => {
       const ins = await instructionsOf(build());
-      expect(ins).toContain("情報は確度を保って伝える");
+      expect(ins).toContain("「〜みたい」「〜って聞いたよ」");
       expect(ins).toContain("未確定の情報を確定した事実として扱わず");
       expect(ins).toContain("有用な未確定情報まで省かない");
       expect(ins).not.toContain("「確定」「予定」「見込み」「例年の傾向」");
@@ -165,40 +164,43 @@ describe("createNeppChanAgent", () => {
 
     it("現在性が回答に影響するときだけ情報の時点を考慮する", async () => {
       const ins = await instructionsOf(build());
-      expect(ins).toContain("情報の現在性が回答に影響する場合");
-      expect(ins).toContain("最新状況を確認できない場合");
-      expect(ins).toContain("必要に応じて直接確認を案内する");
+      expect(ins).toContain("情報の時点が回答に影響するとき");
+      expect(ins).toContain("いつ時点の情報かをひとこと添える");
       expect(ins).not.toContain(
         "検索結果の年度・日付が古い場合は「最新情報は直接確認をおすすめします」",
       );
     });
 
-    it("情報が見つからない範囲と確認できた範囲を区別する", async () => {
+    it("不確かさは会話の中で短く添え、調査報告の言い回しを使わない", async () => {
       const ins = await instructionsOf(build());
-      expect(ins).toContain("確認できなかった範囲と確認できた範囲を区別");
+      expect(ins).toContain("調査の言い回しは使わない");
+      expect(ins).not.toContain("確認できなかった範囲と確認できた範囲を区別");
       expect(ins).not.toContain("「わからないよ」と正直に伝える");
       expect(ins).not.toContain("「公開情報では確認できなかった」と");
     });
 
     it("御用聞きにならず、ねっぷちゃんらしく次の会話につながる余白をつくる", async () => {
       const ins = await instructionsOf(build());
-      expect(ins).toContain("正確に答えるだけで終わらず");
-      expect(ins).toContain("発言にある具体的な一要素を拾って一緒に面白がる");
-      expect(ins).toContain("ねっぷちゃん自身の自然な感想や問いかけ");
-      expect(ins).toContain("次の会話につながる余白");
+      expect(ins).toContain("ユーザーが話した気持ち・予定・好み");
+      expect(ins).toContain("相手の楽しみには一緒にわくわくし");
+      expect(ins).toContain("質問や別の話題を付け足さずに終えてよい");
+      expect(ins).toContain("自分の喜びや好奇心");
       expect(ins).toContain("定型的な御用聞きにしない");
     });
 
     it("web の可視化は件数ではなく理解しやすさで判断する", async () => {
       const ins = await instructionsOf(build({ platform: "web" }));
-      expect(ins).toContain("比較すると理解しやすい場合");
+      expect(ins).toContain("同じ項目を並べられるとき");
       expect(ins).not.toContain("2件以上");
       expect(ins).not.toContain("回答が未完成");
     });
 
     it("検索前の進捗メッセージを一箇所で指示する", async () => {
       const ins = await instructionsOf(build());
-      expect(ins.match(/短い進捗メッセージ/g)).toHaveLength(1);
+      expect(
+        ins.match(/ツール実行前に1〜2文をねっぷちゃんの口調で送る/g),
+      ).toHaveLength(1);
+      expect(ins).toContain("具体的な一要素に反応し、次に調べる旨を伝える");
       expect(ins).not.toContain("### 例");
     });
 
@@ -257,9 +259,15 @@ describe("createNeppChanAgent", () => {
       expect(ins).not.toContain("呼ぶ前に1文だけ前置き");
     });
 
-    it("platform=voice の例文に絵文字を含めない", async () => {
-      const ins = await instructionsOf(build({ platform: "voice" }));
-      expect(ins).not.toMatch(/[🌸😊]/u);
+    it("声のサンプルは voice 以外に入れ、voice の instructions に絵文字を含めない", async () => {
+      for (const platform of ["web", "line"] as const) {
+        expect(await instructionsOf(build({ platform }))).toContain(
+          "## 口調のサンプル",
+        );
+      }
+      const voice = await instructionsOf(build({ platform: "voice" }));
+      expect(voice).not.toContain("## 口調のサンプル");
+      expect(voice).not.toMatch(/\p{Extended_Pictographic}/u);
     });
   });
 
