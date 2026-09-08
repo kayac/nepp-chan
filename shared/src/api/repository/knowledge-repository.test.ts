@@ -8,7 +8,7 @@ import {
 import { server } from "../../test/msw-server";
 import { createKnowledgeRepository, toFormData } from "./knowledge-repository";
 
-const repo = createKnowledgeRepository(testApiClient, API);
+const repo = createKnowledgeRepository(testApiClient);
 
 beforeEach(() => {
   setTestAuthToken("admin-token");
@@ -39,14 +39,29 @@ describe("toFormData", () => {
 });
 
 describe("knowledge-repository", () => {
-  it("fetchFiles: ファイル一覧を返す", async () => {
+  it("fetchFiles: prefix・limit・cursor をクエリに載せる", async () => {
+    let query = "";
     server.use(
-      http.get(`${API}/admin/knowledge/files`, () =>
-        HttpResponse.json({ files: [] }),
-      ),
+      http.get(`${API}/admin/knowledge/files`, ({ request }) => {
+        query = new URL(request.url).search;
+        return HttpResponse.json({
+          files: [],
+          nextCursor: null,
+          hasMore: false,
+        });
+      }),
     );
 
-    await repo.fetchFiles();
+    const result = await repo.fetchFiles({
+      prefix: "official/",
+      limit: 30,
+      cursor: "abc",
+    });
+
+    expect(new URLSearchParams(query).get("prefix")).toBe("official/");
+    expect(new URLSearchParams(query).get("limit")).toBe("30");
+    expect(new URLSearchParams(query).get("cursor")).toBe("abc");
+    expect(result).toEqual({ files: [], nextCursor: null, hasMore: false });
   });
 
   it("fetchFileContent: key を path に埋め込む", async () => {
@@ -82,14 +97,18 @@ describe("knowledge-repository", () => {
     await repo.deleteFile("doc.md");
   });
 
-  it("uploadFile: multipart に file + filename を入れる", async () => {
+  it("uploadFile: multipart で送って key を返す", async () => {
     server.use(
       http.post(`${API}/admin/knowledge/upload`, () =>
-        HttpResponse.json({ key: "k" }),
+        HttpResponse.json({ key: "official/dir/foo.md" }),
       ),
     );
 
-    await repo.uploadFile(new File(["x"], "foo.md"), "foo.md");
+    const result = await repo.uploadFile(
+      new File(["x"], "foo.md"),
+      "dir/foo.md",
+    );
+    expect(result?.key).toBe("official/dir/foo.md");
   });
 
   it("convertFile: multipart で送る", async () => {
@@ -100,6 +119,17 @@ describe("knowledge-repository", () => {
     );
 
     await repo.convertFile(new File(["x"], "in.pdf"), "in.pdf");
+  });
+
+  it("syncAll: POST /admin/knowledge/sync の結果を返す", async () => {
+    server.use(
+      http.post(`${API}/admin/knowledge/sync`, () =>
+        HttpResponse.json({ message: "queued", queued: 12 }),
+      ),
+    );
+
+    const result = await repo.syncAll();
+    expect(result?.queued).toBe(12);
   });
 
   it("draftCurated: POST /admin/knowledge/curated-draft に multipart で送る", async () => {
@@ -122,16 +152,6 @@ describe("knowledge-repository", () => {
     expect(result?.key).toBe("curated/x.md");
   });
 
-  it("fetchUnifiedFiles", async () => {
-    server.use(
-      http.get(`${API}/admin/knowledge/unified`, () =>
-        HttpResponse.json({ files: [] }),
-      ),
-    );
-
-    await repo.fetchUnifiedFiles();
-  });
-
   it("reconvertFile: originalKey を JSON 送信", async () => {
     server.use(
       http.post(`${API}/admin/knowledge/reconvert`, async ({ request }) => {
@@ -142,12 +162,6 @@ describe("knowledge-repository", () => {
     );
 
     await repo.reconvertFile("originals/x.pdf", "x.md");
-  });
-
-  it("getOriginalFileUrl: originals/ プレフィックスを除いて URL 生成", () => {
-    const url = repo.getOriginalFileUrl("originals/foo bar.pdf");
-    expect(url).toMatch(/foo%20bar\.pdf$/);
-    expect(url).not.toContain("originals/originals");
   });
 
   it("失敗系: fetchFileContent 404 は throw", async () => {
@@ -177,7 +191,9 @@ describe("knowledge-repository", () => {
           HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
         ),
       );
-      await expect(repo.fetchFiles()).rejects.toBeDefined();
+      await expect(
+        repo.fetchFiles({ prefix: "official/" }),
+      ).rejects.toBeDefined();
     });
 
     it("deleteFile: 5xx は throw", async () => {
@@ -209,15 +225,6 @@ describe("knowledge-repository", () => {
       await expect(
         repo.convertFile(new File(["x"], "f.pdf"), "f.pdf"),
       ).rejects.toBeDefined();
-    });
-
-    it("fetchUnifiedFiles: 5xx は throw", async () => {
-      server.use(
-        http.get(`${API}/admin/knowledge/unified`, () =>
-          HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
-        ),
-      );
-      await expect(repo.fetchUnifiedFiles()).rejects.toBeDefined();
     });
 
     it("reconvertFile: 5xx は throw", async () => {

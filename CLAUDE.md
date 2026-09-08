@@ -22,7 +22,7 @@ pnpm db:migrate:dev      # dev 環境 D1 適用
 pnpm db:migrate:prd      # prd 環境 D1 適用
 
 # ナレッジ
-pnpm knowledge:upload:local  # ローカル R2 → Vectorize 同期
+pnpm knowledge:upload:local  # knowledge/ を R2 の official/ に投入（初期投入・再構築用）
 pnpm knowledge:upload:dev    # dev 環境
 pnpm knowledge:upload:prd    # prd 環境
 ```
@@ -47,9 +47,18 @@ knowledge/ 配下を clean アップロードした場合の正しいベクタ�
 | 2026-03-09 | 329 | 2,891 | clean 後の正確な値 |
 | 2026-09-04 | 335 | 4,210 | source metadata index 作成、チャンク maxSize 1000 導入後の値 |
 
-### 管理画面から追加した curated ナレッジ
+### R2 のナレッジ配置
 
-ダッシュボードの「ナレッジを追加」は、URL・文章・画像/PDF から LLM が下書きを作り、確認後に R2 の `curated/<slug>.md` として保存する（frontmatter は `source_type: curated` / `source_authority: 2` / `verified_at` / `url`）。git 管理外なので `knowledge:upload` では投入されず、`--clean` 後は Vectorize 側だけ消える。clean したら `POST /admin/knowledge/sync` で R2 全体を再同期する。
+R2 のキーはプレフィクスで区分し、ルート直下には置かない。
+
+| プレフィクス | 内容 | 投入経路 |
+|---|---|---|
+| `official/` | 公式資料の Markdown。ディレクトリ階層をそのまま保つ | 管理画面ナレッジタブ「公式資料」の一括アップロード（`POST /admin/knowledge/upload`）、または `knowledge:upload`（`knowledge/<path>.md` → `official/<path>.md`） |
+| `curated/` | 管理画面から追加したナレッジ。`curated/<slug>.md` | 管理画面ナレッジタブ「追加したナレッジ」（URL・文章・画像/PDF から LLM が下書きを作り、確認後に保存。frontmatter は `source_type: curated` / `source_authority: 2` / `verified_at` / `url`） |
+
+`GET /admin/knowledge/files` は `prefix` と `cursor` でページングする。Vectorize への反映は R2 イベント経由で、削除も同様に伝播する。`knowledge:upload --clean` は Vectorize インデックスを作り直すだけで R2 は消えないので、clean 後は `POST /admin/knowledge/sync` で R2 全体を再同期する。
+
+`DELETE /admin/knowledge/legacy` は `official/` `curated/` 以外のオブジェクトを全削除する移行用の一時エンドポイントで、移行完了後に削除する。
 
 ## コーディング規約
 

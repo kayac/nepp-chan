@@ -2467,11 +2467,15 @@ export interface paths {
         };
         /**
          * ファイル一覧を取得
-         * @description R2バケット内のファイル一覧を取得します
+         * @description R2 バケット内のファイル一覧をプレフィクスで絞り込み、カーソルでページングして取得します
          */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    prefix?: "official/" | "curated/";
+                    limit?: number;
+                    cursor?: string;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -2489,10 +2493,9 @@ export interface paths {
                                 key: string;
                                 size: number;
                                 lastModified: string;
-                                etag: string;
-                                edited?: boolean;
                             }[];
-                            truncated: boolean;
+                            nextCursor: string | null;
+                            hasMore: boolean;
                         };
                     };
                 };
@@ -2755,18 +2758,21 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/knowledge/unified": {
+    "/admin/knowledge/legacy": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
+        get?: never;
+        put?: never;
+        post?: never;
         /**
-         * 統合ファイル一覧を取得
-         * @description 元ファイル（originals/）とMarkdownファイルを統合した一覧を取得します
+         * 旧配置のナレッジを全削除
+         * @description curated/ と official/ のどちらにも属さないオブジェクト（ルート直下の Markdown と originals/）を R2 から全て削除します。Vectorize のデータは R2 イベント経由で削除されます。official/ への移行後に 1 回だけ使う一時的なエンドポイントで、移行完了後に削除する予定です
          */
-        get: {
+        delete: {
             parameters: {
                 query?: never;
                 header?: never;
@@ -2775,29 +2781,14 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description 統合ファイル一覧 */
+                /** @description 削除成功 */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
                         "application/json": {
-                            files: {
-                                baseName: string;
-                                original?: {
-                                    key: string;
-                                    size: number;
-                                    lastModified: string;
-                                    contentType: string;
-                                };
-                                markdown?: {
-                                    key: string;
-                                    size: number;
-                                    lastModified: string;
-                                };
-                                hasMarkdown: boolean;
-                            }[];
-                            truncated: boolean;
+                            deleted: number;
                         };
                     };
                 };
@@ -2831,90 +2822,6 @@ export interface paths {
                 };
             };
         };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/knowledge/originals/{key}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 元ファイルを取得
-         * @description originals/ 配下の元ファイルを取得します（画像/PDF）
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    key: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description 元ファイル（バイナリ） */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description 認証エラー */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: {
-                                code: number;
-                                message: string;
-                            };
-                        };
-                    };
-                };
-                /** @description リソースが見つかりません */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: {
-                                code: number;
-                                message: string;
-                            };
-                        };
-                    };
-                };
-                /** @description サーバーエラー */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: {
-                                code: number;
-                                message: string;
-                            };
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2930,8 +2837,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * ファイルをアップロード
-         * @description Markdownファイルをアップロードし、R2に保存してVectorizeに同期します
+         * 公式資料の Markdown をアップロード
+         * @description Markdown ファイルを R2 の official/ 配下に保存します。Vectorize への同期は R2 イベント経由で非同期に行われます
          */
         post: {
             parameters: {
@@ -2945,6 +2852,7 @@ export interface paths {
                     "multipart/form-data": {
                         /** Format: binary */
                         file?: string;
+                        /** @description official/ からの相対パス。省略時はファイル名をそのまま使う */
                         filename?: string;
                     };
                 };

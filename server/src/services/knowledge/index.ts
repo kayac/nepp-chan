@@ -5,13 +5,11 @@ export {
 } from "./curated-draft";
 export {
   deleteFile,
+  deleteLegacyFiles,
   type FileContent,
   type FileInfo,
   getFile,
-  getOriginalFile,
   listFiles,
-  listUnifiedFiles,
-  type UnifiedFileInfo,
 } from "./files";
 export { type R2EventMessage, syncAll, syncFile } from "./sync";
 export {

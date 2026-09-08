@@ -42,36 +42,29 @@ beforeEach(() => {
 });
 
 describe("uploadMarkdownFile", () => {
-  it("正常系: 本文を text/markdown として R2 に保存し key を返す", async () => {
+  it("正常系: 渡された key で本文を text/markdown として R2 に保存する", async () => {
     const bucket = buildBucket();
-    const file = buildFile("# hello", { name: "doc.md" });
+    const file = buildFile("# hello", { name: "ignored.md" });
 
-    const result = await uploadMarkdownFile(file, null, { bucket });
+    const result = await uploadMarkdownFile(file, "official/doc.md", {
+      bucket,
+    });
 
-    expect(bucket.put).toHaveBeenCalledWith("doc.md", "# hello", {
+    expect(bucket.put).toHaveBeenCalledWith("official/doc.md", "# hello", {
       httpMetadata: { contentType: "text/markdown" },
     });
-    expect(result).toEqual({ key: "doc.md" });
+    expect(result).toEqual({ key: "official/doc.md" });
   });
 
-  it("customFilename が指定されたらそちらを使う", async () => {
+  it(".md が無ければ付ける", async () => {
     const bucket = buildBucket();
     const file = buildFile("x", { name: "any.md" });
 
-    const result = await uploadMarkdownFile(file, "custom", {
+    const result = await uploadMarkdownFile(file, "official/custom", {
       bucket,
     });
 
-    expect(result.key).toBe("custom.md");
-  });
-
-  it("既に .md 付きならそのまま", async () => {
-    const bucket = buildBucket();
-    const file = buildFile("x", { name: "ignored" });
-    const result = await uploadMarkdownFile(file, "ready.md", {
-      bucket,
-    });
-    expect(result.key).toBe("ready.md");
+    expect(result.key).toBe("official/custom.md");
   });
 
   it("file.size が上限超過なら throw", async () => {
@@ -82,7 +75,7 @@ describe("uploadMarkdownFile", () => {
     });
 
     await expect(
-      uploadMarkdownFile(file, null, {
+      uploadMarkdownFile(file, "official/huge.md", {
         bucket,
       }),
     ).rejects.toThrow(/exceeds limit/);

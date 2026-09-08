@@ -1,5 +1,8 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { CURATED_DRAFT_LIMITS } from "@nepp-chan/shared/constants/knowledge";
+import {
+  CURATED_DRAFT_LIMITS,
+  OFFICIAL_PREFIX,
+} from "@nepp-chan/shared/constants/knowledge";
 import { HTTPException } from "hono/http-exception";
 import { isSupportedMimeType } from "~/lib/image-converter";
 import { errorResponse } from "~/lib/openapi-errors";
@@ -25,13 +28,12 @@ export const knowledgeConvertRoutes = new OpenAPIHono<{
   Variables: Partial<PrincipalVariables>;
 }>();
 
-// POST /admin/knowledge/upload - ファイルアップロード
 const uploadFileRoute = createRoute({
   method: "post",
   path: "/upload",
-  summary: "ファイルをアップロード",
+  summary: "公式資料の Markdown をアップロード",
   description:
-    "Markdownファイルをアップロードし、R2に保存してVectorizeに同期します",
+    "Markdown ファイルを R2 の official/ 配下に保存します。Vectorize への同期は R2 イベント経由で非同期に行われます",
   tags: ["Admin - Knowledge"],
   request: {
     body: {
@@ -39,7 +41,10 @@ const uploadFileRoute = createRoute({
         "multipart/form-data": {
           schema: z.object({
             file: z.any().openapi({ type: "string", format: "binary" }),
-            filename: z.string().optional(),
+            filename: z.string().optional().openapi({
+              description:
+                "official/ からの相対パス。省略時はファイル名をそのまま使う",
+            }),
           }),
         },
       },
@@ -71,14 +76,17 @@ knowledgeConvertRoutes.openapi(uploadFileRoute, async (c) => {
     throw new HTTPException(400, { message: "File is required" });
   }
 
-  const customFilename =
-    typeof body.filename === "string" ? body.filename : null;
-  if (customFilename) validateFileKey(customFilename);
+  const relativePath =
+    typeof body.filename === "string" && body.filename
+      ? body.filename
+      : file.name;
+  validateFileKey(relativePath);
 
-  const result = await uploadMarkdownFile(file, customFilename, {
-    bucket: c.env.KNOWLEDGE_BUCKET,
-    d1: c.env.DB,
-  });
+  const result = await uploadMarkdownFile(
+    file,
+    `${OFFICIAL_PREFIX}${relativePath}`,
+    { bucket: c.env.KNOWLEDGE_BUCKET, d1: c.env.DB },
+  );
 
   return c.json(
     {
@@ -90,7 +98,6 @@ knowledgeConvertRoutes.openapi(uploadFileRoute, async (c) => {
   );
 });
 
-// POST /admin/knowledge/convert - 画像/PDF → Markdown 変換
 const convertFileRoute = createRoute({
   method: "post",
   path: "/convert",
@@ -160,7 +167,6 @@ knowledgeConvertRoutes.openapi(convertFileRoute, async (c) => {
   );
 });
 
-// POST /admin/knowledge/reconvert - 元ファイルからMarkdownを再生成
 const reconvertFileRoute = createRoute({
   method: "post",
   path: "/reconvert",
@@ -224,7 +230,6 @@ knowledgeConvertRoutes.openapi(reconvertFileRoute, async (c) => {
   );
 });
 
-// POST /admin/knowledge/curated-draft - URL・テキスト・画像から curated 下書きを生成
 const curatedDraftRoute = createRoute({
   method: "post",
   path: "/curated-draft",

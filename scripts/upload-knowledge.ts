@@ -40,16 +40,17 @@ const printUsage = () => {
 Usage: pnpm knowledge:upload:<local|dev|prd> [options]
 
 Options:
-  --clean           Vectorizeのナレッジを全削除（wrangler経由）
+  --clean           Vectorize インデックスを再作成する（wrangler 経由）
   --file=<filename> 特定のファイルのみアップロード
   --help, -h        ヘルプを表示
 
 Examples:
-  pnpm knowledge:upload:dev                    # 全ファイルをR2にアップロード
+  pnpm knowledge:upload:dev                    # 全ファイルを R2 の official/ にアップロード
   pnpm knowledge:upload:dev --file=foo.md      # 特定ファイルのみ
-  pnpm knowledge:upload:dev --clean            # 全ナレッジを削除
+  pnpm knowledge:upload:dev --clean            # Vectorize インデックスを再作成
 
 Note:
+  knowledge/<path>.md は official/<path>.md として保存されます。
   R2へのアップロード後、R2 Event Notificationsにより
   自動的にVectorizeへの同期が行われます。
 `);
@@ -146,7 +147,7 @@ const main = async () => {
 
   let uploadedCount = 0;
   for (const filepath of files) {
-    const key = filepath.replace("knowledge/", "");
+    const key = `official/${filepath.replace("knowledge/", "")}`;
     if (uploadToR2(target, filepath, key)) {
       uploadedCount++;
     }

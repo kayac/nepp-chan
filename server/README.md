@@ -232,21 +232,20 @@ pnpm knowledge:upload:dev --file=mayor-interview.md
 pnpm knowledge:upload:dev --clean --file=mayor-interview.md
 ```
 
-アップロード先は `--env` で決まり、バケット名と Vectorize インデックス名は `scripts/upload-knowledge.ts` の定数。
+アップロード先は `--env` で決まり、バケット名と Vectorize インデックス名は `scripts/upload-knowledge.ts` の定数。`knowledge/<path>.md` は R2 の `official/<path>.md` として保存され、`--clean` は Vectorize インデックスの再作成だけを行う。
 
 ### 管理API
 
 | パス                              | メソッド   | 説明                           |
 | --------------------------------- | ---------- | ------------------------------ |
-| `/admin/knowledge`                | DELETE     | 全ナレッジを削除               |
-| `/admin/knowledge/sync`           | POST       | 全ナレッジを同期               |
-| `/admin/knowledge/files`          | GET        | ファイル一覧取得               |
+| `/admin/knowledge/sync`           | POST       | R2 の全 Markdown を同期キューに投入 |
+| `/admin/knowledge/files`          | GET        | ファイル一覧取得。`prefix`・`limit`・`cursor` でページング |
 | `/admin/knowledge/files/:key`     | GET/PUT/DELETE | ファイル取得・保存・削除   |
-| `/admin/knowledge/upload`         | POST       | Markdown アップロード          |
+| `/admin/knowledge/upload`         | POST       | Markdown を `official/` 配下にアップロード |
+| `/admin/knowledge/legacy`         | DELETE     | `official/` `curated/` 以外を全削除する移行用の一時エンドポイント |
 | `/admin/knowledge/convert`        | POST       | 画像/PDF → Markdown 変換       |
-| `/admin/knowledge/unified`        | GET        | 統合ファイル一覧取得           |
-| `/admin/knowledge/originals/:key` | GET        | 元ファイル取得                 |
 | `/admin/knowledge/reconvert`      | POST       | 元ファイルから Markdown 再生成 |
+| `/admin/knowledge/curated-draft`  | POST       | URL・文章・画像/PDF から curated 下書きを生成 |
 | `/admin/persona`                  | GET/DELETE | ペルソナ一覧・全削除           |
 | `/admin/persona/extract`          | POST       | ペルソナ抽出                   |
 | `/admin/persona/extract/:threadId`| POST       | 特定スレッドのペルソナ抽出     |

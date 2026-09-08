@@ -58,8 +58,22 @@ const captureRequest = () => {
   return captured;
 };
 
-const renderComposer = (existingKeys: string[] = []) =>
-  renderWithQuery(<CuratedComposer existingKeys={existingKeys} />);
+const renderComposer = () => renderWithQuery(<CuratedComposer />);
+
+const existingKeys = (keys: string[]) =>
+  server.use(
+    http.get(`${API}/admin/knowledge/files/*`, ({ request }) => {
+      const key = decodeURIComponent(
+        new URL(request.url).pathname.replace("/admin/knowledge/files/", ""),
+      );
+      return keys.includes(key)
+        ? HttpResponse.json({ key, content: "# x" })
+        : HttpResponse.json(
+            { error: { message: "File not found" } },
+            { status: 404 },
+          );
+    }),
+  );
 
 const generateFrom = async (text: string) => {
   fireEvent.change(openText(), { target: { value: text } });
@@ -70,6 +84,7 @@ const generateFrom = async (text: string) => {
 beforeEach(() => {
   localStorage.clear();
   setAuthToken("admin-token");
+  existingKeys([]);
 });
 
 afterEach(() => {
@@ -304,20 +319,22 @@ describe("CuratedComposer", () => {
     expect(generateButton()).toBeDisabled();
   });
 
-  it("保存先は自動で決まり、「変更」で編集でき、既存キーなら上書き警告、/ は不可", async () => {
+  it("保存先は自動で決まり、「変更」で編集でき、同名ファイルがサーバーにあれば上書き警告、/ は不可", async () => {
     captureRequest();
-    renderComposer(["curated/otoineppu-tokyo.md"]);
+    existingKeys(["curated/otoineppu-tokyo.md"]);
+    renderComposer();
     await generateFrom("メモ");
 
-    expect(screen.getByText(OVERWRITE_WARNING)).toBeDefined();
+    expect(await screen.findByText(OVERWRITE_WARNING)).toBeDefined();
     expect(saveButton()).toHaveTextContent("上書きして保存");
 
     fireEvent.click(screen.getByRole("button", { name: "変更" }));
     fireEvent.change(screen.getByLabelText("保存先"), {
       target: { value: "otoineppu-tokyo-2" },
     });
+    await waitFor(() => expect(saveButton()).toBeEnabled());
     expect(screen.queryByText(OVERWRITE_WARNING)).toBeNull();
-    expect(saveButton()).toBeEnabled();
+    expect(saveButton()).toHaveTextContent("保存");
 
     fireEvent.change(screen.getByLabelText("保存先"), {
       target: { value: "a/b" },
@@ -338,6 +355,7 @@ describe("CuratedComposer", () => {
     renderComposer();
     await generateFrom("メモ");
 
+    await waitFor(() => expect(saveButton()).toBeEnabled());
     fireEvent.click(saveButton());
 
     expect(

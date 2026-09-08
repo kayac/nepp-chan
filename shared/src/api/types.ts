@@ -96,8 +96,6 @@ export type FilesListResponse = GetOk<"/admin/knowledge/files">;
 export type FileInfo = FilesListResponse["files"][number];
 export type FileContentResponse = GetOk<"/admin/knowledge/files/{key}">;
 export type SaveFileResponse = PutOk<"/admin/knowledge/files/{key}">;
-export type UnifiedFilesListResponse = GetOk<"/admin/knowledge/unified">;
-export type UnifiedFileInfo = UnifiedFilesListResponse["files"][number];
 
 export type CuratedDraft = PostOk<"/admin/knowledge/curated-draft">;
 // multipart なので生成型を使わず手書き
