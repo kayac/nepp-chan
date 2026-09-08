@@ -1,3 +1,4 @@
+import type { KnowledgePrefix } from "../../constants/knowledge";
 import type { ApiClient } from "../create-client";
 import type { CuratedDraftRequest } from "../types";
 
@@ -11,12 +12,17 @@ export const toFormData = (body: unknown) => {
   return fd;
 };
 
-export const createKnowledgeRepository = (
-  client: ApiClient,
-  baseUrl: string,
-) => ({
-  fetchFiles: async () => {
-    const { data, error } = await client.GET("/admin/knowledge/files");
+export type FetchFilesParams = {
+  prefix: KnowledgePrefix;
+  limit?: number;
+  cursor?: string;
+};
+
+export const createKnowledgeRepository = (client: ApiClient) => ({
+  fetchFiles: async (params: FetchFilesParams) => {
+    const { data, error } = await client.GET("/admin/knowledge/files", {
+      params: { query: params },
+    });
     if (error) throw error;
     return data;
   },
@@ -49,7 +55,7 @@ export const createKnowledgeRepository = (
     return data;
   },
 
-  uploadFile: async (file: File, filename?: string) => {
+  uploadFile: async (file: File, filename: string) => {
     const { data, error } = await client.POST("/admin/knowledge/upload", {
       body: { file: file as unknown as string, filename },
       bodySerializer: toFormData,
@@ -63,6 +69,12 @@ export const createKnowledgeRepository = (
       body: { file: file as unknown as string, filename },
       bodySerializer: toFormData,
     });
+    if (error) throw error;
+    return data;
+  },
+
+  syncAll: async () => {
+    const { data, error } = await client.POST("/admin/knowledge/sync");
     if (error) throw error;
     return data;
   },
@@ -83,23 +95,12 @@ export const createKnowledgeRepository = (
     return data;
   },
 
-  fetchUnifiedFiles: async () => {
-    const { data, error } = await client.GET("/admin/knowledge/unified");
-    if (error) throw error;
-    return data;
-  },
-
   reconvertFile: async (originalKey: string, filename: string) => {
     const { data, error } = await client.POST("/admin/knowledge/reconvert", {
       body: { originalKey, filename },
     });
     if (error) throw error;
     return data;
-  },
-
-  getOriginalFileUrl: (key: string) => {
-    const encodedKey = encodeURIComponent(key.replace("originals/", ""));
-    return `${baseUrl}/admin/knowledge/originals/${encodedKey}`;
   },
 });
 
