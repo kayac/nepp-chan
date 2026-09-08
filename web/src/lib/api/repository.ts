@@ -10,7 +10,7 @@ import { createPollRepository } from "@nepp-chan/shared/api/repository/poll-repo
 import { createThreadRepository } from "@nepp-chan/shared/api/repository/thread-repository";
 import { createWidgetSiteRepository } from "@nepp-chan/shared/api/repository/widget-site-repository";
 
-import { API_BASE, client } from "./client";
+import { client } from "./client";
 
 /**
  * shared/api/repository の factory を web の client で合成した repository 群。
@@ -22,7 +22,7 @@ export const broadcastRepository = createBroadcastRepository(client);
 export const emergencyRepository = createEmergencyRepository(client);
 export const feedbackRepository = createFeedbackRepository(client);
 export const invitationRepository = createInvitationRepository(client);
-export const knowledgeRepository = createKnowledgeRepository(client, API_BASE);
+export const knowledgeRepository = createKnowledgeRepository(client);
 export const personaRepository = createPersonaRepository(client);
 export const pollRepository = createPollRepository(client);
 export const threadRepository = createThreadRepository(client);

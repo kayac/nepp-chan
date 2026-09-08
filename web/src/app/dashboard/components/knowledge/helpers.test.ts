@@ -1,27 +1,52 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   addUrls,
   canDeleteFile,
+  collectMarkdownFiles,
   extractUrls,
   hasDraftInput,
   hostLabel,
   isCuratedKey,
+  isOfficialKey,
+  isUploadableMarkdown,
   isValidSlug,
   joinDraft,
   keyFromSlug,
-  partitionFiles,
+  pickedFilesToCandidates,
+  readAllEntries,
+  runWithConcurrency,
   slugFromKey,
   splitDraft,
+  splitKey,
+  stripTopFolder,
   toDraftRequest,
+  toRelativePath,
 } from "./helpers";
 
 const file = new File(["x"], "f.png", { type: "image/png" });
+const info = (key: string) => ({
+  key,
+  size: 1,
+  lastModified: "2025-01-01T00:00:00Z",
+});
 
-describe("isCuratedKey", () => {
-  it("curated/ 配下だけ真", () => {
+describe("isCuratedKey / isOfficialKey", () => {
+  it("それぞれのプレフィクス配下だけ真", () => {
     expect(isCuratedKey("curated/usagi.md")).toBe(true);
-    expect(isCuratedKey("villotoinep/index.md")).toBe(false);
-    expect(isCuratedKey("welcome-guide.md")).toBe(false);
+    expect(isCuratedKey("official/usagi.md")).toBe(false);
+    expect(isOfficialKey("official/kurashi/gomi.md")).toBe(true);
+    expect(isOfficialKey("curated/usagi.md")).toBe(false);
+    expect(isOfficialKey("official.md")).toBe(false);
+  });
+});
+
+describe("splitKey", () => {
+  it("最後の / でディレクトリ部分とファイル名に分ける", () => {
+    expect(splitKey("official/kurashi/gomi.md")).toEqual({
+      dir: "official/kurashi/",
+      name: "gomi.md",
+    });
+    expect(splitKey("welcome.md")).toEqual({ dir: "", name: "welcome.md" });
   });
 });
 
@@ -198,61 +223,215 @@ describe("hostLabel", () => {
   });
 });
 
-describe("partitionFiles", () => {
-  const md = (key: string) => ({
-    baseName: key.replace(/\.md$/, ""),
-    hasMarkdown: true,
-    markdown: { key, size: 1, lastModified: "2025-01-01T00:00:00Z" },
-    original: undefined,
-  });
-
-  it("curated/ 配下と、それ以外に分ける", () => {
-    const curated = md("curated/usagi.md");
-    const base = md("villotoinep/index.md");
-    const converted = {
-      ...md("chirashi.md"),
-      original: {
-        key: "originals/chirashi.pdf",
-        size: 1,
-        lastModified: "2025-01-01T00:00:00Z",
-        contentType: "application/pdf",
-      },
-    };
-    expect(partitionFiles([base, curated, converted])).toEqual({
-      curated: [curated],
-      base: [base, converted],
-    });
+describe("canDeleteFile", () => {
+  it("curated/ か official/ 配下だけ削除できる", () => {
+    expect(canDeleteFile(info("curated/usagi.md"))).toBe(true);
+    expect(canDeleteFile(info("official/villotoinep/index.md"))).toBe(true);
+    expect(canDeleteFile(info("villotoinep/index.md"))).toBe(false);
+    expect(canDeleteFile(info("chirashi.md"))).toBe(false);
   });
 });
 
-describe("canDeleteFile", () => {
-  const md = (key: string) => ({
-    baseName: key.replace(/\.md$/, ""),
-    hasMarkdown: true,
-    markdown: { key, size: 1, lastModified: "2025-01-01T00:00:00Z" },
-    original: undefined,
+describe("toRelativePath", () => {
+  it("先頭の / を落とし、それ以外は変えない", () => {
+    expect(toRelativePath("/kurashi/gomi.md")).toBe("kurashi/gomi.md");
+    expect(toRelativePath("//a.md")).toBe("a.md");
+    expect(toRelativePath("kurashi/gomi.md")).toBe("kurashi/gomi.md");
   });
-  const original = {
-    key: "originals/x.pdf",
-    size: 1,
-    lastModified: "2025-01-01T00:00:00Z",
-    contentType: "application/pdf",
+});
+
+describe("stripTopFolder", () => {
+  it("先頭のフォルダ名だけを落とし、フォルダが無ければそのまま", () => {
+    expect(stripTopFolder("knowledge/kurashi/gomi.md")).toBe("kurashi/gomi.md");
+    expect(stripTopFolder("knowledge/index.md")).toBe("index.md");
+    expect(stripTopFolder("top.md")).toBe("top.md");
+  });
+});
+
+describe("isUploadableMarkdown", () => {
+  it(".md だけを受け付ける", () => {
+    expect(isUploadableMarkdown("kurashi/gomi.md")).toBe(true);
+    expect(isUploadableMarkdown("gomi.md")).toBe(true);
+    expect(isUploadableMarkdown("gomi.txt")).toBe(false);
+    expect(isUploadableMarkdown("gomi.MD")).toBe(false);
+    expect(isUploadableMarkdown("gomi.md.bak")).toBe(false);
+  });
+
+  it("dotfile は除外する。ディレクトリ名の . は見ない", () => {
+    expect(isUploadableMarkdown(".DS_Store")).toBe(false);
+    expect(isUploadableMarkdown("kurashi/.hidden.md")).toBe(false);
+    expect(isUploadableMarkdown(".obsidian/note.md")).toBe(true);
+  });
+});
+
+describe("pickedFilesToCandidates", () => {
+  const picked = (name: string, webkitRelativePath = "") => {
+    const f = new File(["x"], name);
+    Object.defineProperty(f, "webkitRelativePath", {
+      value: webkitRelativePath,
+    });
+    return f;
   };
 
-  it("curated/ 配下か、元ファイルを持つ行だけ削除できる", () => {
-    expect(canDeleteFile(md("curated/usagi.md"))).toBe(true);
-    expect(canDeleteFile({ ...md("chirashi.md"), original })).toBe(true);
-    expect(canDeleteFile(md("villotoinep/index.md"))).toBe(false);
+  it("フォルダ選択では選んだフォルダを root として先頭のフォルダ名を落とし、ファイル選択ではファイル名を使う", () => {
+    const result = pickedFilesToCandidates([
+      picked("gomi.md", "knowledge/kurashi/gomi.md"),
+      picked("index.md", "knowledge/index.md"),
+      picked("top.md"),
+    ]);
+    expect(result.map((c) => c.relativePath)).toEqual([
+      "kurashi/gomi.md",
+      "index.md",
+      "top.md",
+    ]);
   });
 
-  it("Markdown が無く元ファイルだけの行も削除できる", () => {
-    expect(
-      canDeleteFile({
-        baseName: "x",
-        hasMarkdown: false,
-        markdown: undefined,
-        original,
-      }),
-    ).toBe(true);
+  it(".md 以外と dotfile は落とす", () => {
+    const result = pickedFilesToCandidates([
+      picked("memo.txt"),
+      picked(".DS_Store", "kurashi/.DS_Store"),
+      picked("ok.md"),
+    ]);
+    expect(result.map((c) => c.relativePath)).toEqual(["ok.md"]);
+  });
+});
+
+describe("readAllEntries", () => {
+  const entry = (name: string) => ({ name }) as unknown as FileSystemEntry;
+
+  it("空配列が返るまで readEntries を繰り返して結合する", async () => {
+    const batches = [[entry("a"), entry("b")], [entry("c")], []];
+    const readEntries = vi.fn(
+      (resolve: (entries: FileSystemEntry[]) => void) => {
+        resolve(batches.shift() ?? []);
+      },
+    );
+
+    const result = await readAllEntries({ readEntries });
+
+    expect(result.map((e) => e.name)).toEqual(["a", "b", "c"]);
+    expect(readEntries).toHaveBeenCalledTimes(3);
+  });
+
+  it("読み取りエラーは reject する", async () => {
+    const readEntries = (
+      _resolve: (entries: FileSystemEntry[]) => void,
+      reject?: (error: DOMException) => void,
+    ) => reject?.(new DOMException("denied"));
+
+    await expect(readAllEntries({ readEntries })).rejects.toThrow("denied");
+  });
+});
+
+describe("collectMarkdownFiles", () => {
+  type Node =
+    | { kind: "file"; fullPath: string }
+    | { kind: "dir"; fullPath: string; children: Node[] };
+
+  const toEntry = (node: Node) =>
+    ({
+      isFile: node.kind === "file",
+      isDirectory: node.kind === "dir",
+      fullPath: node.fullPath,
+      name: node.fullPath.split("/").pop(),
+      children: node.kind === "dir" ? node.children : undefined,
+    }) as unknown as FileSystemEntry;
+
+  const deps = {
+    readDirectory: vi.fn(async (dir: FileSystemDirectoryEntry) =>
+      ((dir as unknown as { children: Node[] }).children ?? []).map(toEntry),
+    ),
+    readFile: vi.fn(
+      async (entry: FileSystemFileEntry) =>
+        new File([entry.fullPath], entry.name),
+    ),
+  };
+
+  it("ドロップしたフォルダを root として再帰的に走査し、.md だけをフォルダからの相対パスで返す", async () => {
+    const tree: Node[] = [
+      { fullPath: "/single.md", kind: "file" },
+      {
+        fullPath: "/knowledge",
+        kind: "dir",
+        children: [
+          { fullPath: "/knowledge/top.md", kind: "file" },
+          { fullPath: "/knowledge/readme.txt", kind: "file" },
+          {
+            fullPath: "/knowledge/kurashi",
+            kind: "dir",
+            children: [
+              { fullPath: "/knowledge/kurashi/gomi.md", kind: "file" },
+              { fullPath: "/knowledge/kurashi/.DS_Store", kind: "file" },
+              {
+                fullPath: "/knowledge/kurashi/deep",
+                kind: "dir",
+                children: [
+                  {
+                    fullPath: "/knowledge/kurashi/deep/suido.md",
+                    kind: "file",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    const result = await collectMarkdownFiles(tree.map(toEntry), deps);
+
+    expect(result.map((c) => c.relativePath)).toEqual([
+      "single.md",
+      "top.md",
+      "kurashi/gomi.md",
+      "kurashi/deep/suido.md",
+    ]);
+    expect(result.map((c) => c.file.name)).toEqual([
+      "single.md",
+      "top.md",
+      "gomi.md",
+      "suido.md",
+    ]);
+    expect(deps.readFile).toHaveBeenCalledTimes(4);
+  });
+
+  it("空のディレクトリは何も返さない", async () => {
+    const result = await collectMarkdownFiles(
+      [toEntry({ fullPath: "/empty", kind: "dir", children: [] })],
+      deps,
+    );
+    expect(result).toEqual([]);
+  });
+});
+
+describe("runWithConcurrency", () => {
+  it("同時実行数を上限に抑えつつ、結果を元の順序で返す", async () => {
+    let running = 0;
+    let peak = 0;
+    const tasks = [5, 1, 3, 2, 4].map((n) => async () => {
+      running += 1;
+      peak = Math.max(peak, running);
+      await new Promise((r) => setTimeout(r, n));
+      running -= 1;
+      return n;
+    });
+
+    const results = await runWithConcurrency(tasks, 2);
+
+    expect(results).toEqual([5, 1, 3, 2, 4]);
+    expect(peak).toBe(2);
+  });
+
+  it("タスクが空なら空配列", async () => {
+    expect(await runWithConcurrency([], 3)).toEqual([]);
+  });
+
+  it("1 つが reject したら全体が reject する", async () => {
+    await expect(
+      runWithConcurrency(
+        [async () => 1, async () => Promise.reject(new Error("x"))],
+        3,
+      ),
+    ).rejects.toThrow("x");
   });
 });

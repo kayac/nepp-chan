@@ -22,6 +22,7 @@ import {
 } from "react";
 import {
   useDraftCurated,
+  useKnowledgeFileExists,
   useSaveFile,
 } from "~/app/dashboard/hooks/useKnowledge";
 import { MarkdownText } from "~/components/chat/MarkdownText";
@@ -44,10 +45,6 @@ import {
   splitDraft,
   toDraftRequest,
 } from "./helpers";
-
-type Props = {
-  existingKeys: string[];
-};
 
 const SOURCE_TABS = [
   { kind: "url", label: "URL から作る", icon: LinkIcon },
@@ -104,7 +101,7 @@ const FileThumb = ({
   );
 };
 
-export const CuratedComposer = ({ existingKeys }: Props) => {
+export const CuratedComposer = () => {
   const [urls, setUrls] = useState<string[]>([]);
   const [urlInput, setUrlInput] = useState("");
   const [urlError, setUrlError] = useState(false);
@@ -132,12 +129,14 @@ export const CuratedComposer = ({ existingKeys }: Props) => {
   const busy = draftMutation.isPending || saveMutation.isPending;
   const canGenerate = hasDraftInput(fields) && !busy;
   const key = keyFromSlug(slug);
-  const exists = slug.trim().length > 0 && existingKeys.includes(key);
+  const existing = useKnowledgeFileExists(isValidSlug(slug) ? key : null);
+  const exists = existing.data === true;
   const canSave =
     draft !== null &&
     isValidSlug(slug) &&
     draft.title.trim().length > 0 &&
     draft.body.trim().length > 0 &&
+    !existing.isLoading &&
     !busy;
 
   const commitUrl = (input: string) => {
@@ -353,7 +352,7 @@ export const CuratedComposer = ({ existingKeys }: Props) => {
             <p className="text-sm text-stone-600">
               チラシや写真、PDF の文字を読み取って下書きを作ります
             </p>
-            <div className="flex flex-wrap items-start gap-3">
+            <div className="space-y-3">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -365,7 +364,7 @@ export const CuratedComposer = ({ existingKeys }: Props) => {
                 onDrop={onDrop}
                 onPaste={onPaste}
                 disabled={busy || files.length >= CURATED_DRAFT_LIMITS.files}
-                className={`min-w-[240px] min-h-[96px] flex flex-col items-center justify-center gap-1 px-6 rounded-lg border-2 border-dashed text-sm transition-colors disabled:opacity-50 ${
+                className={`w-full min-h-[96px] flex flex-col items-center justify-center gap-1 px-6 rounded-lg border-2 border-dashed text-sm transition-colors disabled:opacity-50 ${
                   dragging
                     ? "border-teal-500 bg-teal-50 text-teal-700"
                     : "border-stone-300 text-stone-600 hover:border-teal-400 hover:text-teal-700"

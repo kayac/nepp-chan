@@ -26,9 +26,13 @@ export const dashboardKeys = {
   feedbacks: ["dashboard", "feedbacks"] as const,
   feedbackDetail: (id: string) => ["dashboard", "feedback", id] as const,
   knowledgeFiles: ["dashboard", "knowledge", "files"] as const,
-  knowledgeUnifiedFiles: ["dashboard", "knowledge", "unified"] as const,
+  knowledgeFilesByPrefix: (prefix: string) =>
+    ["dashboard", "knowledge", "files", prefix] as const,
+  knowledgeFileContents: ["dashboard", "knowledge", "file"] as const,
   knowledgeFile: (key: string) =>
     ["dashboard", "knowledge", "file", key] as const,
+  knowledgeFileExists: (key: string) =>
+    ["dashboard", "knowledge", "file", key, "exists"] as const,
   polls: ["dashboard", "polls"] as const,
   pollResults: (id: string) => ["dashboard", "poll", "results", id] as const,
   invitations: ["dashboard", "invitations"] as const,
