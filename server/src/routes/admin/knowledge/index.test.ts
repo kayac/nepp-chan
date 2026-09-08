@@ -7,9 +7,8 @@ vi.mock("~/services/knowledge", async (importOriginal) => ({
   ...(await importOriginal<typeof import("~/services/knowledge")>()),
   listFiles: vi.fn(),
   getFile: vi.fn(),
-  getOriginalFile: vi.fn(),
-  listUnifiedFiles: vi.fn(),
   deleteFile: vi.fn(),
+  deleteLegacyFiles: vi.fn(),
   syncFile: vi.fn(),
   syncAll: vi.fn(),
   uploadMarkdownFile: vi.fn(),
@@ -111,9 +110,7 @@ describe("knowledge routes 統合テスト", () => {
       { method: "GET", path: "/files/test.md" },
       { method: "PUT", path: "/files/test.md" },
       { method: "DELETE", path: "/files/test.md" },
-      { method: "GET", path: "/unified" },
-      { method: "GET", path: "/originals/test.pdf" },
-      { method: "DELETE", path: "/" },
+      { method: "DELETE", path: "/legacy" },
       { method: "POST", path: "/sync" },
       { method: "POST", path: "/upload" },
       { method: "POST", path: "/convert" },
@@ -130,29 +127,51 @@ describe("knowledge routes 統合テスト", () => {
   });
 
   describe("GET /files", () => {
-    it("ファイル一覧を返す", async () => {
-      const mockFiles = {
-        files: [
-          {
-            key: "test.md",
-            size: 100,
-            lastModified: "2024-01-01",
-            etag: "abc",
-          },
-        ],
-        truncated: false,
-      };
+    const mockFiles = {
+      files: [
+        { key: "official/test.md", size: 100, lastModified: "2024-01-01" },
+      ],
+      nextCursor: "next",
+      hasMore: true,
+    };
+
+    it("prefix・limit・cursor をサービスに渡し、ページ応答をそのまま返す", async () => {
       vi.mocked(knowledgeService.listFiles).mockResolvedValue(mockFiles);
 
       const res = await app.request(
-        authedRequest("/files"),
+        authedRequest("/files?prefix=official%2F&limit=10&cursor=abc"),
         undefined,
         mockEnv,
       );
 
       expect(res.status).toBe(200);
-      const body = await res.json();
-      expect(body).toEqual(mockFiles);
+      expect(await res.json()).toEqual(mockFiles);
+      expect(knowledgeService.listFiles).toHaveBeenCalledWith(
+        mockEnv.KNOWLEDGE_BUCKET,
+        { prefix: "official/", limit: 10, cursor: "abc" },
+      );
+    });
+
+    it("limit 省略時は 30、prefix と cursor は undefined", async () => {
+      vi.mocked(knowledgeService.listFiles).mockResolvedValue(mockFiles);
+
+      await app.request(authedRequest("/files"), undefined, mockEnv);
+
+      expect(knowledgeService.listFiles).toHaveBeenCalledWith(
+        mockEnv.KNOWLEDGE_BUCKET,
+        { prefix: undefined, limit: 30, cursor: undefined },
+      );
+    });
+
+    it("curated/ official/ 以外の prefix は 400", async () => {
+      const res = await app.request(
+        authedRequest("/files?prefix=originals%2F"),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(400);
+      expect(knowledgeService.listFiles).not.toHaveBeenCalled();
     });
   });
 
@@ -226,58 +245,23 @@ describe("knowledge routes 統合テスト", () => {
     });
   });
 
-  describe("GET /unified", () => {
-    it("統合ファイル一覧を返す", async () => {
-      const mockFiles = {
-        files: [{ baseName: "test", hasMarkdown: true }],
-        truncated: false,
-      };
-      vi.mocked(knowledgeService.listUnifiedFiles).mockResolvedValue(mockFiles);
-
-      const res = await app.request(
-        authedRequest("/unified"),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(200);
-      const body = await res.json();
-      expect(body).toEqual(mockFiles);
-    });
-  });
-
-  describe("GET /originals/:key", () => {
-    it("元ファイルが見つからない場合は 404 を返す", async () => {
-      vi.mocked(knowledgeService.getOriginalFile).mockResolvedValue(null);
-
-      const res = await app.request(
-        authedRequest("/originals/notfound.pdf"),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(404);
-    });
-
-    it("正常系: body と Content-Type を返す", async () => {
-      const bytes = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
-      vi.mocked(knowledgeService.getOriginalFile).mockResolvedValue({
-        body: bytes.buffer,
-        contentType: "application/pdf",
-        size: 8,
+  describe("DELETE /legacy", () => {
+    it("旧配置の削除件数を返す", async () => {
+      vi.mocked(knowledgeService.deleteLegacyFiles).mockResolvedValue({
+        deleted: 12,
       });
 
       const res = await app.request(
-        authedRequest("/originals/doc.pdf"),
+        authedRequest("/legacy", { method: "DELETE" }),
         undefined,
         mockEnv,
       );
 
       expect(res.status).toBe(200);
-      expect(res.headers.get("Content-Type")).toBe("application/pdf");
-      expect(res.headers.get("Content-Length")).toBe("8");
-      const returned = new Uint8Array(await res.arrayBuffer());
-      expect(Array.from(returned)).toEqual(Array.from(bytes));
+      expect(await res.json()).toEqual({ deleted: 12 });
+      expect(knowledgeService.deleteLegacyFiles).toHaveBeenCalledWith(
+        mockEnv.KNOWLEDGE_BUCKET,
+      );
     });
   });
 
@@ -342,16 +326,16 @@ describe("knowledge routes 統合テスト", () => {
       expect(res.status).toBe(400);
     });
 
-    it("正常系: uploadMarkdownFile を呼び 200 を返す", async () => {
+    it("正常系: filename の相対パスに official/ を前置して保存する", async () => {
       vi.mocked(knowledgeService.uploadMarkdownFile).mockResolvedValue({
-        key: "doc.md",
+        key: "official/kurashi/gomi.md",
       });
-      const file = new File(["# c"], "doc.md", { type: "text/markdown" });
+      const file = new File(["# c"], "gomi.md", { type: "text/markdown" });
 
       const res = await app.request(
         authedRequest("/upload", {
           method: "POST",
-          body: buildForm(file, "doc.md"),
+          body: buildForm(file, "kurashi/gomi.md"),
         }),
         undefined,
         mockEnv,
@@ -359,17 +343,17 @@ describe("knowledge routes 統合テスト", () => {
 
       expect(res.status).toBe(200);
       const body = (await res.json()) as { key: string };
-      expect(body.key).toBe("doc.md");
+      expect(body.key).toBe("official/kurashi/gomi.md");
       expect(knowledgeService.uploadMarkdownFile).toHaveBeenCalledWith(
         expect.any(File),
-        "doc.md",
+        "official/kurashi/gomi.md",
         expect.objectContaining({ bucket: mockEnv.KNOWLEDGE_BUCKET }),
       );
     });
 
-    it("filename 省略時は null を渡す", async () => {
+    it("filename 省略時はファイル名を official/ 直下に置く", async () => {
       vi.mocked(knowledgeService.uploadMarkdownFile).mockResolvedValue({
-        key: "x.md",
+        key: "official/x.md",
       });
       const file = new File(["# c"], "x.md", { type: "text/markdown" });
 
@@ -384,7 +368,7 @@ describe("knowledge routes 統合テスト", () => {
 
       expect(knowledgeService.uploadMarkdownFile).toHaveBeenCalledWith(
         expect.any(File),
-        null,
+        "official/x.md",
         expect.any(Object),
       );
     });

@@ -4,16 +4,24 @@ vi.mock("~/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const { deleteFile, getFile, getOriginalFile, listFiles, listUnifiedFiles } =
-  await import("./files");
+const { deleteFile, deleteLegacyFiles, getFile, listFiles } = await import(
+  "./files"
+);
 
 type ObjStub = {
   key: string;
   size: number;
   uploaded: Date;
-  etag?: string;
-  contentType?: string;
 };
+
+type ListPage = { objects: ObjStub[]; cursor?: string };
+
+const toR2Object = (o: ObjStub) => ({
+  key: o.key,
+  size: o.size,
+  uploaded: o.uploaded,
+  etag: "etag",
+});
 
 const buildBucket = (
   objects: ObjStub[],
@@ -22,185 +30,134 @@ const buildBucket = (
   const matchPrefix = (prefix: string | undefined) =>
     objects
       .filter((o) => (prefix ? o.key.startsWith(prefix) : true))
-      .map((o) => ({
-        key: o.key,
-        size: o.size,
-        uploaded: o.uploaded,
-        etag: o.etag ?? "etag",
-        httpMetadata: o.contentType
-          ? { contentType: o.contentType }
-          : undefined,
-      }));
+      .map(toR2Object);
 
-  const bucket = {
+  return {
     list: vi.fn(async (opts?: { prefix?: string; limit?: number }) => ({
       objects: matchPrefix(opts?.prefix),
       truncated: false,
     })),
     get: vi.fn(async (key: string) => getMap[key] ?? null),
-    head: vi.fn(async (key: string) => {
-      const o = objects.find((obj) => obj.key === key);
-      if (!o) return null;
-      return {
-        httpMetadata: o.contentType
-          ? { contentType: o.contentType }
-          : undefined,
-      };
-    }),
-    delete: vi.fn(async (_key: string) => {}),
+    delete: vi.fn(async (_keys: string | string[]) => {}),
     put: vi.fn(),
   } as unknown as R2Bucket;
-  return bucket;
 };
 
+const buildPagedBucket = (pages: ListPage[]) => {
+  const byCursor = new Map(
+    pages.map((page, i) => [i === 0 ? undefined : `c${i}`, { page, i }]),
+  );
+  return {
+    list: vi.fn(async (opts?: { cursor?: string }) => {
+      const found = byCursor.get(opts?.cursor);
+      if (!found) throw new Error(`unknown cursor: ${opts?.cursor}`);
+      const isLast = found.i === pages.length - 1;
+      return {
+        objects: found.page.objects.map(toR2Object),
+        truncated: !isLast,
+        ...(isLast ? {} : { cursor: `c${found.i + 1}` }),
+      };
+    }),
+    delete: vi.fn(async (_keys: string | string[]) => {}),
+  } as unknown as R2Bucket;
+};
+
+const obj = (key: string, uploaded = "2030-01-01T00:00:00Z") => ({
+  key,
+  size: 1,
+  uploaded: new Date(uploaded),
+});
+
 describe("listFiles", () => {
-  it("originals/ プレフィックスは除外し、Markdown のみ返す", async () => {
+  it("prefix・limit・cursor を R2 にそのまま渡し、key/size/lastModified に写す", async () => {
     const bucket = buildBucket([
       {
-        key: "originals/doc.pdf",
-        size: 100,
-        uploaded: new Date("2030-01-01T00:00:00Z"),
-      },
-      {
-        key: "doc.md",
+        key: "official/a.md",
         size: 200,
         uploaded: new Date("2030-01-01T00:00:01Z"),
       },
+      obj("curated/b.md"),
     ]);
 
-    const { files, truncated } = await listFiles(bucket);
-    expect(files.map((f) => f.key)).toEqual(["doc.md"]);
-    expect(truncated).toBe(false);
+    const result = await listFiles(bucket, {
+      prefix: "official/",
+      limit: 30,
+      cursor: "abc",
+    });
+
+    expect(bucket.list).toHaveBeenCalledWith({
+      prefix: "official/",
+      limit: 30,
+      cursor: "abc",
+    });
+    expect(result).toEqual({
+      files: [
+        {
+          key: "official/a.md",
+          size: 200,
+          lastModified: "2030-01-01T00:00:01.000Z",
+        },
+      ],
+      nextCursor: null,
+      hasMore: false,
+    });
   });
 
-  it("Markdown が original より EDIT_THRESHOLD_MS 以上後ろなら edited=true", async () => {
-    const bucket = buildBucket([
-      {
-        key: "originals/x.pdf",
-        size: 100,
-        uploaded: new Date("2030-01-01T00:00:00Z"),
-      },
-      {
-        key: "x.md",
-        size: 50,
-        uploaded: new Date("2030-01-01T00:01:00Z"), // 60 秒後
-      },
+  it("truncated なら nextCursor と hasMore を返す", async () => {
+    const bucket = buildPagedBucket([
+      { objects: [obj("official/a.md")] },
+      { objects: [obj("official/b.md")] },
     ]);
 
-    const { files } = await listFiles(bucket);
-    expect(files[0].edited).toBe(true);
-  });
+    const result = await listFiles(bucket, { limit: 1 });
 
-  it("EDIT_THRESHOLD_MS 以内なら edited は undefined", async () => {
-    const bucket = buildBucket([
-      {
-        key: "originals/x.pdf",
-        size: 100,
-        uploaded: new Date("2030-01-01T00:00:00Z"),
-      },
-      {
-        key: "x.md",
-        size: 50,
-        uploaded: new Date("2030-01-01T00:00:01Z"), // 1 秒後
-      },
-    ]);
-
-    const { files } = await listFiles(bucket);
-    expect(files[0].edited).toBeUndefined();
-  });
-
-  it("originals に対応する元ファイルがなければ edited は undefined", async () => {
-    const bucket = buildBucket([
-      {
-        key: "lonely.md",
-        size: 50,
-        uploaded: new Date("2030-01-01T00:00:00Z"),
-      },
-    ]);
-
-    const { files } = await listFiles(bucket);
-    expect(files[0].edited).toBeUndefined();
+    expect(result.nextCursor).toBe("c1");
+    expect(result.hasMore).toBe(true);
   });
 });
 
-describe("listUnifiedFiles", () => {
-  it("original と markdown を baseName で紐付け", async () => {
-    const bucket = buildBucket([
+describe("deleteLegacyFiles", () => {
+  it("curated/ official/ 以外をページごとにまとめて削除し、件数を返す", async () => {
+    const bucket = buildPagedBucket([
       {
-        key: "originals/doc.pdf",
-        size: 100,
-        uploaded: new Date("2030-01-01T00:00:00Z"),
-        contentType: "application/pdf",
+        objects: [
+          obj("welcome.md"),
+          obj("curated/keep.md"),
+          obj("originals/chirashi.pdf"),
+        ],
       },
       {
-        key: "doc.md",
-        size: 50,
-        uploaded: new Date("2030-01-02T00:00:00Z"),
+        objects: [
+          obj("villotoinep/index.md"),
+          obj("official/keep.md"),
+          obj("official.md"),
+        ],
       },
     ]);
 
-    const { files } = await listUnifiedFiles(bucket);
-    expect(files).toHaveLength(1);
-    expect(files[0]).toMatchObject({
-      baseName: "doc",
-      hasMarkdown: true,
-      original: { contentType: "application/pdf", size: 100 },
-      markdown: { size: 50 },
-    });
+    const result = await deleteLegacyFiles(bucket);
+
+    expect(bucket.delete).toHaveBeenCalledTimes(2);
+    expect(bucket.delete).toHaveBeenNthCalledWith(1, [
+      "welcome.md",
+      "originals/chirashi.pdf",
+    ]);
+    expect(bucket.delete).toHaveBeenNthCalledWith(2, [
+      "villotoinep/index.md",
+      "official.md",
+    ]);
+    expect(result).toEqual({ deleted: 4 });
   });
 
-  it("markdown だけのファイルは original undefined", async () => {
-    const bucket = buildBucket([
-      {
-        key: "md-only.md",
-        size: 50,
-        uploaded: new Date("2030-01-01T00:00:00Z"),
-      },
+  it("消す対象が無いページでは delete を呼ばない", async () => {
+    const bucket = buildPagedBucket([
+      { objects: [obj("curated/a.md"), obj("official/b.md")] },
     ]);
-    const { files } = await listUnifiedFiles(bucket);
-    expect(files[0]).toMatchObject({
-      baseName: "md-only",
-      hasMarkdown: true,
-      original: undefined,
-    });
-  });
 
-  it("original だけのファイルは hasMarkdown=false", async () => {
-    const bucket = buildBucket([
-      {
-        key: "originals/orphan.pdf",
-        size: 100,
-        uploaded: new Date("2030-01-01T00:00:00Z"),
-      },
-    ]);
-    const { files } = await listUnifiedFiles(bucket);
-    expect(files[0]).toMatchObject({
-      baseName: "orphan",
-      hasMarkdown: false,
-      markdown: undefined,
-    });
-  });
+    const result = await deleteLegacyFiles(bucket);
 
-  it("contentType 不明なら application/octet-stream にフォールバック", async () => {
-    const bucket = buildBucket([
-      {
-        key: "originals/unknown.bin",
-        size: 100,
-        uploaded: new Date("2030-01-01T00:00:00Z"),
-      },
-    ]);
-    const { files } = await listUnifiedFiles(bucket);
-    expect(files[0].original?.contentType).toBe("application/octet-stream");
-  });
-
-  it("最終更新日 (markdown 優先) の新しい順でソート", async () => {
-    const bucket = buildBucket([
-      { key: "a.md", size: 1, uploaded: new Date("2030-01-01T00:00:00Z") },
-      { key: "b.md", size: 1, uploaded: new Date("2030-03-01T00:00:00Z") },
-      { key: "c.md", size: 1, uploaded: new Date("2030-02-01T00:00:00Z") },
-    ]);
-    const { files } = await listUnifiedFiles(bucket);
-    expect(files.map((f) => f.baseName)).toEqual(["b", "c", "a"]);
+    expect(bucket.delete).not.toHaveBeenCalled();
+    expect(result).toEqual({ deleted: 0 });
   });
 });
 
@@ -239,42 +196,6 @@ describe("getFile", () => {
     });
     const result = await getFile(bucket, "x.md");
     expect(result?.contentType).toBe("text/markdown");
-  });
-});
-
-describe("getOriginalFile", () => {
-  it("originals/<key> から取得", async () => {
-    const buf = new ArrayBuffer(8);
-    const bucket = buildBucket([], {
-      "originals/doc.pdf": {
-        arrayBuffer: async () => buf,
-        size: 8,
-        httpMetadata: { contentType: "application/pdf" },
-      },
-    });
-    const result = await getOriginalFile(bucket, "doc.pdf");
-    expect(result).toMatchObject({
-      body: buf,
-      contentType: "application/pdf",
-      size: 8,
-    });
-  });
-
-  it("存在しなければ null", async () => {
-    const bucket = buildBucket([]);
-    expect(await getOriginalFile(bucket, "ghost")).toBeNull();
-  });
-
-  it("contentType 未指定は application/octet-stream", async () => {
-    const bucket = buildBucket([], {
-      "originals/x.bin": {
-        arrayBuffer: async () => new ArrayBuffer(1),
-        size: 1,
-        httpMetadata: undefined,
-      },
-    });
-    const result = await getOriginalFile(bucket, "x.bin");
-    expect(result?.contentType).toBe("application/octet-stream");
   });
 });
 

@@ -17,7 +17,7 @@ const withMarkdownExtension = (name: string) =>
 
 export const uploadMarkdownFile = async (
   file: File,
-  customFilename: string | null,
+  key: string,
   deps: UploadDeps,
 ) => {
   if (file.size > MAX_FILE_SIZE) {
@@ -26,12 +26,12 @@ export const uploadMarkdownFile = async (
     );
   }
 
-  const key = withMarkdownExtension(customFilename || file.name);
+  const markdownKey = withMarkdownExtension(key);
   const content = await file.text();
-  logger.info(`[Upload] Uploaded ${key} (${content.length} bytes)`);
+  logger.info(`[Upload] Uploaded ${markdownKey} (${content.length} bytes)`);
 
-  await storeMarkdown(deps.bucket, key, content);
-  return { key };
+  await storeMarkdown(deps.bucket, markdownKey, content);
+  return { key: markdownKey };
 };
 
 export const convertAndUpload = async (

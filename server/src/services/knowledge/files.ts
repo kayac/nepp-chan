@@ -1,33 +1,11 @@
+import { KNOWLEDGE_PREFIXES } from "@nepp-chan/shared/constants/knowledge";
 import { logger } from "~/lib/logger";
-import {
-  buildOriginalsMap,
-  extractBaseName,
-  isEditedAfterOriginal,
-  markdownBaseName,
-} from "./utils";
+import { extractBaseName, markdownBaseName } from "./utils";
 
 export type FileInfo = {
   key: string;
   size: number;
   lastModified: string;
-  etag: string;
-  edited?: boolean;
-};
-
-export type UnifiedFileInfo = {
-  baseName: string;
-  original?: {
-    key: string;
-    size: number;
-    lastModified: string;
-    contentType: string;
-  };
-  markdown?: {
-    key: string;
-    size: number;
-    lastModified: string;
-  };
-  hasMarkdown: boolean;
 };
 
 export type FileContent = {
@@ -38,105 +16,50 @@ export type FileContent = {
   lastModified: string;
 };
 
-export const listFiles = async (
-  bucket: R2Bucket,
-): Promise<{ files: FileInfo[]; truncated: boolean }> => {
-  const listed = await bucket.list({ limit: 1000 });
-  const allObjects = listed.objects;
-  const originalsMap = buildOriginalsMap(allObjects);
-
-  const files = allObjects
-    .filter((obj) => !obj.key.startsWith("originals/"))
-    .map((obj) => {
-      const isEdited = isEditedAfterOriginal(
-        obj.uploaded,
-        originalsMap.get(markdownBaseName(obj.key)),
-      );
-
-      return {
-        key: obj.key,
-        size: obj.size,
-        lastModified: obj.uploaded.toISOString(),
-        etag: obj.etag,
-        edited: isEdited || undefined,
-      };
-    });
-
-  return { files, truncated: listed.truncated };
+type ListFilesOptions = {
+  prefix?: string;
+  limit: number;
+  cursor?: string;
 };
 
-export const listUnifiedFiles = async (
+export const listFiles = async (
   bucket: R2Bucket,
-): Promise<{ files: UnifiedFileInfo[]; truncated: boolean }> => {
-  const listed = await bucket.list({ limit: 1000 });
-  const allObjects = listed.objects;
+  { prefix, limit, cursor }: ListFilesOptions,
+) => {
+  const listed = await bucket.list({ prefix, limit, cursor });
+  const files: FileInfo[] = listed.objects.map((obj) => ({
+    key: obj.key,
+    size: obj.size,
+    lastModified: obj.uploaded.toISOString(),
+  }));
 
-  const originalsMap = new Map<
-    string,
-    { key: string; size: number; uploaded: Date; contentType: string }
-  >();
-  for (const obj of allObjects) {
-    if (obj.key.startsWith("originals/")) {
-      const file = await bucket.head(obj.key);
-      originalsMap.set(extractBaseName(obj.key), {
-        key: obj.key,
-        size: obj.size,
-        uploaded: obj.uploaded,
-        contentType:
-          file?.httpMetadata?.contentType || "application/octet-stream",
-      });
+  return {
+    files,
+    nextCursor: listed.truncated ? listed.cursor : null,
+    hasMore: listed.truncated,
+  };
+};
+
+const isManagedKey = (key: string) =>
+  KNOWLEDGE_PREFIXES.some((prefix) => key.startsWith(prefix));
+
+export const deleteLegacyFiles = async (bucket: R2Bucket) => {
+  let deleted = 0;
+  let cursor: string | undefined;
+  do {
+    const listed = await bucket.list({ cursor });
+    const targets = listed.objects
+      .map((obj) => obj.key)
+      .filter((key) => !isManagedKey(key));
+    if (targets.length > 0) {
+      await bucket.delete(targets);
+      deleted += targets.length;
     }
-  }
+    cursor = listed.truncated ? listed.cursor : undefined;
+  } while (cursor);
 
-  const markdownMap = new Map<
-    string,
-    { key: string; size: number; uploaded: Date }
-  >();
-  for (const obj of allObjects) {
-    if (obj.key.endsWith(".md") && !obj.key.startsWith("originals/")) {
-      markdownMap.set(markdownBaseName(obj.key), {
-        key: obj.key,
-        size: obj.size,
-        uploaded: obj.uploaded,
-      });
-    }
-  }
-
-  const allBaseNames = new Set([...originalsMap.keys(), ...markdownMap.keys()]);
-  const files: UnifiedFileInfo[] = [];
-
-  for (const baseName of allBaseNames) {
-    const original = originalsMap.get(baseName);
-    const markdown = markdownMap.get(baseName);
-
-    files.push({
-      baseName,
-      original: original
-        ? {
-            key: original.key,
-            size: original.size,
-            lastModified: original.uploaded.toISOString(),
-            contentType: original.contentType,
-          }
-        : undefined,
-      markdown: markdown
-        ? {
-            key: markdown.key,
-            size: markdown.size,
-            lastModified: markdown.uploaded.toISOString(),
-          }
-        : undefined,
-      hasMarkdown: !!markdown,
-    });
-  }
-
-  files.sort((a, b) => {
-    const aDate = a.markdown?.lastModified || a.original?.lastModified || "";
-    const bDate = b.markdown?.lastModified || b.original?.lastModified || "";
-    return bDate.localeCompare(aDate);
-  });
-
-  return { files, truncated: listed.truncated };
+  logger.info(`[Delete] Deleted ${deleted} legacy objects from R2`);
+  return { deleted };
 };
 
 export const getFile = async (
@@ -153,21 +76,6 @@ export const getFile = async (
     contentType: object.httpMetadata?.contentType || "text/markdown",
     size: object.size,
     lastModified: object.uploaded.toISOString(),
-  };
-};
-
-export const getOriginalFile = async (
-  bucket: R2Bucket,
-  key: string,
-): Promise<{ body: ArrayBuffer; contentType: string; size: number } | null> => {
-  const fullKey = `originals/${key}`;
-  const object = await bucket.get(fullKey);
-  if (!object) return null;
-
-  return {
-    body: await object.arrayBuffer(),
-    contentType: object.httpMetadata?.contentType || "application/octet-stream",
-    size: object.size,
   };
 };
 

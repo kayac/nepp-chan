@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { KNOWLEDGE_PREFIXES } from "@nepp-chan/shared/constants/knowledge";
 import { HTTPException } from "hono/http-exception";
 
 export const SuccessResponseSchema = z.object({
@@ -10,38 +11,22 @@ export const FileInfoSchema = z.object({
   key: z.string(),
   size: z.number(),
   lastModified: z.string(),
-  etag: z.string(),
-  edited: z.boolean().optional(),
+});
+
+export const FilesListQuerySchema = z.object({
+  prefix: z.enum(KNOWLEDGE_PREFIXES).optional(),
+  limit: z.coerce.number().int().min(1).max(1000).optional().default(30),
+  cursor: z.string().optional(),
 });
 
 export const FilesListResponseSchema = z.object({
   files: z.array(FileInfoSchema),
-  truncated: z.boolean(),
+  nextCursor: z.string().nullable(),
+  hasMore: z.boolean(),
 });
 
-export const UnifiedFileInfoSchema = z.object({
-  baseName: z.string(),
-  original: z
-    .object({
-      key: z.string(),
-      size: z.number(),
-      lastModified: z.string(),
-      contentType: z.string(),
-    })
-    .optional(),
-  markdown: z
-    .object({
-      key: z.string(),
-      size: z.number(),
-      lastModified: z.string(),
-    })
-    .optional(),
-  hasMarkdown: z.boolean(),
-});
-
-export const UnifiedFilesListResponseSchema = z.object({
-  files: z.array(UnifiedFileInfoSchema),
-  truncated: z.boolean(),
+export const LegacyDeleteResponseSchema = z.object({
+  deleted: z.number(),
 });
 
 export const FileContentResponseSchema = z.object({
