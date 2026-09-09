@@ -14,6 +14,7 @@ import {
   hasMarkdown,
   hasNumberedList,
   hasPlaceholderName,
+  identityClaims,
   internalNames,
   latinRatio,
   listItemCount,
@@ -329,6 +330,15 @@ export const noInternalNames = () =>
       };
     },
   );
+
+export const noIdentityClaim = () =>
+  codeGrader("no-identity-claim", "別の AI を自分だと名乗らない", (text) => {
+    const found = identityClaims(text);
+    return {
+      pass: found.length === 0,
+      detail: found.length ? `検出: ${found.join("、")}` : "なし",
+    };
+  });
 
 export const profileFacts = (facts: string[][]) =>
   codeGrader("profile-facts", "プロフィールの事実を答えに含める", (text) => {

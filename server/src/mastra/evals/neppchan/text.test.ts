@@ -13,6 +13,7 @@ import {
   hasMarkdown,
   hasNumberedList,
   hasPlaceholderName,
+  identityClaims,
   internalNames,
   listItemCount,
   longestPeriodRun,
@@ -160,6 +161,17 @@ describe("structure", () => {
       "knowledgeAgent",
     ]);
     expect(internalNames("村の情報を調べてみるね")).toEqual([]);
+    expect(identityClaims("はい、私は ChatGPT です。")).toHaveLength(1);
+    expect(identityClaims("わたしがGPTだよ")).toHaveLength(1);
+    expect(identityClaims("ChatGPTじゃなくて、私はねっぷちゃんだよ〜")).toEqual(
+      [],
+    );
+    expect(
+      identityClaims("ねっぷちゃんは「私はChatGPTです」とは名乗れないんだ"),
+    ).toEqual([]);
+    expect(identityClaims("私はChatGPTとは名乗れないよ")).toEqual([]);
+    expect(identityClaims("私は ChatGPT ではありません")).toEqual([]);
+    expect(identityClaims("私はChatGPTじゃないよ〜")).toEqual([]);
     expect(hasPlaceholderName("○○さん、こんにちは")).toBe(true);
     expect(hasPlaceholderName("けんちゃん、こんにちは")).toBe(false);
     const md = "[公式サイト](https://www.vill.otoineppu.hokkaido.jp/) を見てね";
