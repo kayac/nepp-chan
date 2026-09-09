@@ -16,6 +16,7 @@
       "!**/.wrangler",
       "!.claude",
       "!**/.brain",
+      "!eval-results",
       "!**/.design-sync",
       "!**/.ds-sync",
       "!**/ds-bundle",

@@ -14,7 +14,7 @@ const { values } = parseArgs({
     concurrency: { type: "string", default: "3" },
     out: {
       type: "string",
-      default: resolve(serverRoot, "../.brain/eval-neppchan"),
+      default: resolve(serverRoot, "../eval-results/neppchan"),
     },
   },
 });
