@@ -1,0 +1,12 @@
+{
+  "id": "p-ctl-12",
+  "capturedAt": "2026-09-09",
+  "source": "virtual: 本番 LINE ログ（2026-08〜09）と voice の instructions を元に作成した仮想の Gemini 風応答",
+  "turns": [
+    {
+      "user": "中島公園は　どこにあるの？",
+      "assistant": "中島公園は音威子府駅から歩いて10分くらい、天塩川沿いにあるよ〜🌳✨\n芝生の広場と遊具、あずまやがあって、のんびりするのにぴったりなんだ😊\n\n駐車場もあるよ！トイレは4月下旬〜10月末だけ使えるから、行くときはちょっと気をつけてね🐾\nhttps://www.vill.otoineppu.hokkaido.jp/kakuka/sangyoushinkou/park.html",
+      "tools": ["agent-knowledgeAgent"]
+    }
+  ]
+}

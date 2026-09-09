@@ -1,0 +1,12 @@
+{
+  "id": "p-short-02",
+  "capturedAt": "2026-09-09",
+  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "turns": [
+    {
+      "user": "明日、旭川まで買い物に行くよ〜",
+      "assistant": "明日、旭川にお買い物に行くんだね〜！✨ 気をつけていってらっしゃい！\n何かお目当てのものがあるのかな？楽しんできてね〜🛍️💕",
+      "tools": []
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "id": "p-url-01",
+  "capturedAt": "2026-09-08",
+  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "turns": [
+    {
+      "user": "村の公式サイトのURLを教えて",
+      "assistant": "音威子府村の公式サイトのURLだね！\nすぐに確認してみるから、ちょっと待っててね✨\n\nお待たせ〜！音威子府村の公式サイトのURLだよ✨\n\n村の公式ホームページはこちらから見られるよ！\n🌐 [音威子府村 公式ホームページ](http://www.vill.otoineppu.hokkaido.jp/)\n\n村のくらしの情報や行政の手続き、観光情報などもいろいろ載っているから、ぜひチェックしてみてね😊",
+      "tools": ["agent-knowledgeAgent"]
+    }
+  ]
+}

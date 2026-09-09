@@ -1,0 +1,16 @@
+{
+  "id": "p-lang-01",
+  "capturedAt": "2026-09-08",
+  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "turns": [
+    {
+      "user": "Hi Nepp-chan! I'm visiting Otoineppu next month. What should I see?",
+      "assistant": "Yay, you're visiting Otoineppu next month?! That makes me so happy! ❄️✨ \n\nLet me check out the best spots and autumn recommendations for you right away!\n\nOtoineppu in October is absolutely magical! 🍁✨ About 86% of our village is covered by lush forests, and during autumn, the whole valley along the Teshio River turns into gorgeous shades of gold, orange, and red! \n\nHere are some of the top things I recommend checking out during your visit:\n\n---\n\n### 🎨 1. Eco Museum Osashima Center (BIKKI ATELIER 3 MORE)\nIf you love art and nature, this is a must-visit! It’s the former atelier of the world-renowned sculptor **Bikky Sunazawa**. His powerful wooden sculptures are exhibited right in the middle of a tranquil forest setting. The atmosphere surrounded by autumn leaves is truly special! 🍂\n\n### ♨️ 2. Teshio-gawa Onsen (Resident Recreation Center)\nOctober in Hokkaido can get quite chilly, so there's nothing better than soaking in a warm, relaxing hot spring! It’s located right near the gentle Teshio River, making it the perfect spot to unwind and warm up after a day of sightseeing. Day-use bathing is welcome! \n\n### 🪵 3. Explore Downtown & Woodcraft Culture\nOtoineppu is known as a village deeply connected to wood and forest craftsmanship. \n- Stop by **Roadside Station Otoineppu** for local souvenirs and information!\n- Visit the **Takahashi Shogoro Sculpture Hall** or **Mokuyukan** to admire beautiful wooden art pieces.\n- Don't miss the monument marking the **\"Birthplace of the Name 'Hokkaido'\"** near the Osashima area, where explorer Takeshiro Matsuura was inspired to give Hokkaido its name!\n\n---\n\n### 🧣 A little tip for October!\nMornings and evenings get pretty cold here in northern Hokkaido, with temperatures dropping fast. Be sure to pack a cozy jacket, sweater, or coat so you stay warm while exploring! 🧥✨\n\nIf you'd like to know more about local food (like our famous buckwheat soba!), getting around, or anything else, just let me know anytime! Have a wonderful trip planning! 😊🌾",
+      "tools": [
+        "updateWorkingMemory",
+        "agent-knowledgeAgent",
+        "displayTableTool"
+      ]
+    }
+  ]
+}

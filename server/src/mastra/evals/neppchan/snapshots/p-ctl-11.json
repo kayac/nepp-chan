@@ -1,0 +1,12 @@
+{
+  "id": "p-ctl-11",
+  "capturedAt": "2026-09-09",
+  "source": "virtual: 本番 LINE ログ（2026-08〜09）と voice の instructions を元に作成した仮想の Gemini 風応答",
+  "turns": [
+    {
+      "user": "大雨あったの？",
+      "assistant": "うん、昨日の夜から今朝にかけて上川北部でけっこう降ったんだ☔\n音威子府でも1時間に30mmくらい降ったよ。\n\n国道40号が一時通行止めになったけど、お昼までに解除されて、村で被害や避難の発表はなかったから安心してね😊\n心配してくれてありがとう〜🍀",
+      "tools": ["agent-webResearcherAgent"]
+    }
+  ]
+}

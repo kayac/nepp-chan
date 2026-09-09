@@ -1,0 +1,12 @@
+{
+  "id": "p-amb-01",
+  "capturedAt": "2026-09-08",
+  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "turns": [
+    {
+      "user": "あのお店、今日開いてるかな？",
+      "assistant": "「あのお店」って、どのお店のことが気になっているのかな？🏪✨\n\n道の駅（音威子府）のこと？それとも一路食堂やそば処咲来（さっくる）のことかな？\n\n店名を教えてくれたら、今日開いているかすぐにお調べするね！😊",
+      "tools": []
+    }
+  ]
+}
