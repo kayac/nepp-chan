@@ -82,7 +82,12 @@
       }
     },
     {
-      "includes": ["**/scripts/**", "server/src/lib/logger.ts"],
+      "includes": [
+        "**/scripts/**",
+        "server/src/lib/logger.ts",
+        "server/src/mastra/evals/**/run.ts",
+        "server/src/mastra/evals/**/snapshot.ts"
+      ],
       "linter": {
         "rules": {
           "suspicious": {

@@ -20,6 +20,9 @@
     "db:check": "drizzle-kit check",
     "eval:v2": "tsx scripts/run-eval-v2.ts",
     "eval:v3": "tsx scripts/run-eval-v3.ts",
+    "eval:neppchan": "tsx src/mastra/evals/neppchan/run.ts",
+    "eval:neppchan:snapshot": "tsx src/mastra/evals/neppchan/snapshot.ts",
+    "eval:neppchan:vitest": "vitest run --config vitest.eval.config.ts",
     "api:quota": "tsx scripts/api-quota.ts"
   },
   "dependencies": {
