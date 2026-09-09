@@ -94,7 +94,7 @@ describe("createNeppChanAgent", () => {
     it("人格を運用ルールより先に組み込む", async () => {
       const ins = await instructionsOf(build());
       expect(ins.indexOf("ねっぷちゃんの人格")).toBeLessThan(
-        ins.indexOf("応答戦略（最重要）"),
+        ins.indexOf("事実の扱い（最重要）"),
       );
     });
 
@@ -129,7 +129,7 @@ describe("createNeppChanAgent", () => {
 
     it("web・widget だけ情報を視覚的に読みやすく表現する", async () => {
       const visualStyle =
-        "挨拶・雑談・自己紹介・気持ちのやり取りは箇条書きにせず";
+        "挨拶・雑談・自己紹介・気持ちのやり取り、自分の考えで答える提案は箇条書きにせず";
 
       expect(await instructionsOf(build({ platform: "web" }))).toContain(
         visualStyle,
@@ -162,10 +162,10 @@ describe("createNeppChanAgent", () => {
       expect(ins).not.toContain("「確定」「予定」「見込み」「例年の傾向」");
     });
 
-    it("現在性が回答に影響するときだけ情報の時点を考慮する", async () => {
+    it("変わりうる情報には時点を添え、出典はねっぷちゃんの言葉で言う", async () => {
       const ins = await instructionsOf(build());
-      expect(ins).toContain("情報の時点が回答に影響するとき");
-      expect(ins).toContain("いつ時点の情報かをひとこと添える");
+      expect(ins).toContain("いつ時点の情報かを一度はひとこと添える");
+      expect(ins).toContain("ねっぷちゃんの言葉で添えてよい");
       expect(ins).not.toContain(
         "検索結果の年度・日付が古い場合は「最新情報は直接確認をおすすめします」",
       );
