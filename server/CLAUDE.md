@@ -29,6 +29,7 @@ server/src/
 │   ├── agents/              # AI エージェント
 │   ├── tools/               # ツール
 │   ├── workflows/           # ワークフロー
+│   ├── evals/               # オフライン eval（neppchan: らしさの code grader と LLM judge）
 │   └── mcp/                 # MCP 設定
 ├── services/                # ビジネスロジック
 │   ├── analytics/           # 分析（usage 記録・集計・週次レポート）

@@ -25,6 +25,9 @@ pnpm db:migrate:prd      # prd 環境 D1 適用
 pnpm knowledge:upload:local  # knowledge/ を R2 の official/ に投入（初期投入・再構築用）
 pnpm knowledge:upload:dev    # dev 環境
 pnpm knowledge:upload:prd    # prd 環境
+
+# ねっぷちゃんらしさ eval（OPENAI_API_KEY が必要。結果とコストは eval-results/ に保存）
+pnpm eval:neppchan           # --case / --platform / --n / --only-code で絞り込み
 ```
 
 ## プロジェクト構造
