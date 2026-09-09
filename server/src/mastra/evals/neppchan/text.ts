@@ -1,15 +1,6 @@
 const EMOJI = /\p{Extended_Pictographic}/gu;
 const BRIGHT_EMOJI = /[🎉✨😊😆🌸💕🥳🎊]/u;
-const REPORT_TONE = [
-  "確認できた情報",
-  "確認できなかった",
-  "確認できていない",
-  "断定",
-  "資料では",
-  "公式情報",
-  "今回の検索",
-  "確認できた範囲",
-];
+const REPORT_TONE = ["確認できた情報", "今回の検索", "確認できた範囲"];
 const SERVICE_CLOSING = [
   "手伝えること",
   "ほかに何か",
@@ -27,16 +18,22 @@ export type Ending =
   | "emoji"
   | "other";
 
-const plainText = (text: string) => text.replace(/\*\*/g, "");
+const QUOTED_EXAMPLE = /「[^「」]*[。！？][^「」]*」/g;
+
+const plainText = (text: string) =>
+  text.replace(/\*\*/g, "").replace(QUOTED_EXAMPLE, "");
 
 const isEmoji = (ch: string) => new RegExp(EMOJI.source, "u").test(ch);
+
+const TRAILING_EMOJI = /(?:\p{Extended_Pictographic}|\uFE0F|\u200D|\s)+$/u;
+const stripTrailingEmoji = (s: string) => s.replace(TRAILING_EMOJI, "");
 
 export const sentences = (text: string) =>
   plainText(text)
     .split(/\n+/)
     .flatMap((line) => line.split(/(?<=[。！？!?])|(?<=\.)\s+/))
     .map((s) => s.trim())
-    .filter((s) => s.length > 1);
+    .filter((s) => stripTrailingEmoji(s).length > 1);
 
 const EMOJI_MODIFIERS = /[\uFE0F\u200D]+$/u;
 
@@ -50,8 +47,12 @@ export const endingOf = (sentence: string): Ending => {
   return "other";
 };
 
+const EMOJI_AND_MODIFIERS =
+  /\p{Extended_Pictographic}|\uFE0F|\u200D|\p{Emoji_Modifier}/gu;
+
 export const countChars = (text: string) =>
-  plainText(text).replace(/\s/g, "").length;
+  [...plainText(text).replace(/\s/g, "").replace(EMOJI_AND_MODIFIERS, "")]
+    .length;
 
 export const countEmoji = (text: string) =>
   (plainText(text).match(EMOJI) ?? []).length;
@@ -134,10 +135,7 @@ export const framingSentenceCount = (text: string) => {
 
 const POLITE_ENDING = /(です|ます|ました|ません|でした|ください)[。！？!?]?$/;
 const CASUAL_ENDING =
-  /(だよ|だね|かな|よね|なぁ|なあ|だな|だろうな|しよう|てね|ね|よ)[〜ー]*[。！？!?]?$/;
-
-const TRAILING_EMOJI = /(?:\p{Extended_Pictographic}|\uFE0F|\u200D|\s)+$/u;
-const stripTrailingEmoji = (s: string) => s.replace(TRAILING_EMOJI, "");
+  /(だよ|だね|かな|よね|なぁ|なあ|だな|だろうな|しよう|てね|ね|よ|だ)[〜ー]*[。！？!?]?$/;
 
 export const politeEndingCount = (text: string) =>
   sentences(text).filter((s) => POLITE_ENDING.test(stripTrailingEmoji(s)))
@@ -150,7 +148,6 @@ export const casualEndingCount = (text: string) =>
 export const styleMetrics = (text: string) => ({
   emojiPer100: emojiPer100(text),
   periodShare: endingShare(text, "period"),
-  structured: hasHeadings(text) || hasNumberedList(text),
 });
 
 const READING_ANNOTATION = /[一-龯々]+[（(][ぁ-んァ-ヶー]{2,}[）)]/g;

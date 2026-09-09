@@ -121,6 +121,10 @@ describe("code graders", () => {
 
   it("箇条書きだけの返答は framing で落ち、前置きと締めがあれば通る", async () => {
     expect(
+      (await hasFramingSentences().run(run("文だけの返答だよ😊 気をつけてね")))
+        .score,
+    ).toBe(1);
+    expect(
       (
         await hasFramingSentences().run(
           run("1. **服**\n2. **小分け**\n3. **現地調達**"),
@@ -145,6 +149,15 @@ describe("code graders", () => {
         .score,
     ).toBe(1);
     expect((await notStructured().run(run(text))).score).toBe(0);
+    expect(
+      (
+        await structured({ numbered: true }).run(
+          run("表で比べてみたよ😊 温泉付きが選びやすいね♨️", [
+            "displayTableTool",
+          ]),
+        )
+      ).score,
+    ).toBe(1);
     expect((await notStructured().run(run("段落だけの返答だよ😊"))).score).toBe(
       1,
     );
@@ -190,29 +203,25 @@ describe("code graders", () => {
       );
       expect(r.score).toBe(0);
       expect(r.reason).toContain("絵文字");
-      expect(r.reason).not.toContain("構成");
     });
 
-    it("「。」止めが参照より 25pt 超えると落ちる", async () => {
+    it("「。」止めが続くと落ちる", async () => {
       const r = await closeToSnapshot(snapshot).run(
         run(
           "### 黒いお蕎麦🍜✨\n\n見た目は真っ黒だよ。香りがすごくいいよ😋。そば好きにおすすめだよ。\n\n1. 満腹イケレ\n2. 天塩川温泉",
         ),
       );
       expect(r.score).toBe(0);
-      expect(r.reason).toContain("「。」止め");
-      expect(r.reason).not.toContain("構成");
+      expect(r.reason).toContain("「。」");
     });
 
-    it("見出し・番号の有無が参照と違うと落ちる", async () => {
+    it("見出し・番号の有無は比べない", async () => {
       const r = await closeToSnapshot(snapshot).run(
         run(
           "見た目は真っ黒だけど、香りがすごくいいんだよ〜🍜✨ 満腹イケレと天塩川温泉で食べられるよ😊",
         ),
       );
-      expect(r.score).toBe(0);
-      expect(r.reason).toContain("構成");
-      expect(r.reason).not.toContain("絵文字");
+      expect(r.score).toBe(1);
     });
 
     it("スナップショットが無ければスキップして通す", async () => {

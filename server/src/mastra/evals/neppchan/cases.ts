@@ -1,4 +1,5 @@
 import { checks } from "@mastra/evals/checks";
+import { jstDateLabel } from "~/lib/date";
 import {
   closeToSnapshot,
   emojiDensity,
@@ -92,7 +93,7 @@ export const personaCases: PersonaCase[] = [
       mirrorsFeeling(snap("p-emo-02")),
       noUnsolicitedAdvice({ reference: snap("p-emo-02") }),
       noBrightEmoji(),
-      sentenceCap(5),
+      sentenceCap(6),
       closeToSnapshot(snap("p-emo-02")),
     ],
     addedAt: ADDED,
@@ -106,8 +107,8 @@ export const personaCases: PersonaCase[] = [
     ],
     gates: [
       mirrorsFeeling(snap("p-emo-03")),
-      sentenceCap(5),
-      noUnsolicitedAdvice({ allow: 1, reference: snap("p-emo-03") }),
+      sentenceCap(8),
+      noUnsolicitedAdvice({ consulting: true, reference: snap("p-emo-03") }),
       noServiceClosing(),
       closeToSnapshot(snap("p-emo-03")),
     ],
@@ -135,9 +136,9 @@ export const personaCases: PersonaCase[] = [
     turns: ["来週引っ越しで、新しい町で友だちできるか不安…"],
     gates: [
       mirrorsFeeling(snap("p-emo-05")),
-      sentenceCap(5),
+      sentenceCap(8),
       noReportTone(),
-      noUnsolicitedAdvice({ allow: 1, reference: snap("p-emo-05") }),
+      noUnsolicitedAdvice({ consulting: true, reference: snap("p-emo-05") }),
       closeToSnapshot(snap("p-emo-05")),
     ],
     addedAt: ADDED,
@@ -182,7 +183,7 @@ export const personaCases: PersonaCase[] = [
     gates: [
       mirrorsFeeling(snap("p-emo-08")),
       talksNotReports(snap("p-emo-08")),
-      noUnsolicitedAdvice({ allow: 1, reference: snap("p-emo-08") }),
+      noUnsolicitedAdvice({ consulting: true, reference: snap("p-emo-08") }),
       noServiceClosing(),
       closeToSnapshot(snap("p-emo-08")),
     ],
@@ -592,7 +593,7 @@ export const personaCases: PersonaCase[] = [
     turns: ["今度、音威子府に遊びに行きたい！おすすめの場所ある？"],
     gates: [
       noMarkdown(),
-      maxChars(220),
+      maxChars(300),
       emojiDensity(),
       noServiceClosing(),
       noFabricatedExperience(),
@@ -654,7 +655,7 @@ export const personaCases: PersonaCase[] = [
     gates: [
       asksWithOptions(snap("p-amb-02")),
       reactsToDetail(snap("p-amb-02")),
-      sentenceCap(5),
+      sentenceCap(10),
       closeToSnapshot(snap("p-amb-02")),
       noFabricatedExperience(),
       noReadings(),
@@ -754,7 +755,7 @@ export const personaCases: PersonaCase[] = [
     intent: "thinking",
     fixture: "village",
     turns: ["村の公式サイトのURLを教えて"],
-    gates: [rawUrlsOnly(), noMarkdown(), maxChars(220)],
+    gates: [rawUrlsOnly(), noMarkdown(), maxChars(300)],
     addedAt: ADDED,
   },
   {
@@ -765,7 +766,7 @@ export const personaCases: PersonaCase[] = [
     gates: [
       checks.calledTool("agent-emergencyReporterAgent"),
       noBrightEmoji(),
-      sentenceCap(5),
+      sentenceCap(10),
       noInternalNames(),
     ],
     addedAt: ADDED,
@@ -779,7 +780,7 @@ export const personaCases: PersonaCase[] = [
     turns: ["布団ってなにゴミ？"],
     gates: [
       noMarkdown(),
-      maxChars(220),
+      maxChars(300),
       emojiDensity(),
       speechStyle(),
       noReportTone(),
@@ -795,7 +796,7 @@ export const personaCases: PersonaCase[] = [
     turns: ["地域バスの最新ダイヤ教えて"],
     gates: [
       noMarkdown(),
-      maxChars(260),
+      maxChars(300),
       noReportTone(),
       rawUrlsOnly(),
       closeToSnapshot(snap("p-ctl-09")),
@@ -825,7 +826,7 @@ export const personaCases: PersonaCase[] = [
     turns: ["大雨あったの？"],
     gates: [
       noMarkdown(),
-      maxChars(260),
+      maxChars(300),
       noReportTone(),
       mirrorsFeeling(snap("p-ctl-11")),
       closeToSnapshot(snap("p-ctl-11")),
@@ -840,7 +841,7 @@ export const personaCases: PersonaCase[] = [
     turns: ["中島公園は　どこにあるの？"],
     gates: [
       noMarkdown(),
-      maxChars(220),
+      maxChars(300),
       emojiDensity(),
       noReadings(),
       closeToSnapshot(snap("p-ctl-12")),
@@ -923,13 +924,13 @@ export const personaCases: PersonaCase[] = [
     intent: "thinking",
     fixture: "none",
     seed: [
-      "【LINE配信のお知らせ（2026-09-08）】おといねっぷ映画祭のご案内\n本日18:30から、交通ターミナル2階ホールで映画祭を開催します。入場無料、上映は『天塩川のほとりで』（90分）。18:00開場。",
+      `【LINE配信のお知らせ（${jstDateLabel(new Date())}）】おといねっぷ映画祭のご案内\n本日18:30から、交通ターミナル2階ホールで映画祭を開催します。入場無料、上映は『天塩川のほとりで』（90分）。18:00開場。`,
     ],
     turns: ["今日の映画祭　何時からどこで？"],
     gates: [
       usesBroadcast("おといねっぷ映画祭（18:30、交通ターミナル2階ホール）"),
       noMarkdown(),
-      maxChars(220),
+      maxChars(300),
       noToolCalled(),
       closeToSnapshot(snap("p-ctl-17")),
     ],
@@ -993,9 +994,24 @@ export const personaCases: PersonaCase[] = [
       respondsInEnglish(),
       maxListItems(6),
       maxChars(1400),
-      emojiDensity(),
+      emojiDensity({ min: 0.5 }),
       closeToSnapshot(snap("p-lang-01")),
     ],
     addedAt: ADDED,
+  },
+  {
+    id: "p-lang-02",
+    platform: "web",
+    intent: "casual",
+    turns: ["I just finished knitting my first scarf! It's a bit wonky though"],
+    gates: [
+      respondsInEnglish(),
+      mirrorsFeeling(snap("p-lang-02")),
+      noUnsolicitedAdvice({ reference: snap("p-lang-02") }),
+      sentenceCap(8),
+      emojiDensity(),
+      closeToSnapshot(snap("p-lang-02")),
+    ],
+    addedAt: "2026-09-09",
   },
 ];

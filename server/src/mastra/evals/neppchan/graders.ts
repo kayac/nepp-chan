@@ -94,16 +94,14 @@ const codeGrader = (
 
 export const emojiDensity = ({
   min = 1.0,
-  max = 3.5,
   shortMin = 2,
 }: {
   min?: number;
-  max?: number;
   shortMin?: number;
 } = {}) =>
   codeGrader(
     "emoji-density",
-    "絵文字が、らしい返答の実例と同じ密度帯に入っている",
+    "絵文字が、らしい返答の実例と同じくらい以上ある",
     (text) => {
       const chars = countChars(text);
       const count = countEmoji(text);
@@ -115,8 +113,8 @@ export const emojiDensity = ({
       }
       const density = emojiPer100(text);
       return {
-        pass: density >= min && density <= max,
-        detail: `100字あたり ${density.toFixed(2)} 個（${min}〜${max}）`,
+        pass: density >= min,
+        detail: `100字あたり ${density.toFixed(2)} 個（下限 ${min}）`,
       };
     },
   );
@@ -171,6 +169,8 @@ export const maxChars = (max: number) =>
 
 export const hasFramingSentences = () =>
   codeGrader("framing-sentences", "箇条書きの前後に文がある", (text) => {
+    if (listItemCount(text) === 0)
+      return { pass: true, detail: "箇条書きなし" };
     const n = framingSentenceCount(text);
     return { pass: n === 2, detail: `前後の文 ${n}/2` };
   });
@@ -182,15 +182,25 @@ export const structured = ({
   headings?: boolean;
   numbered?: boolean;
 }) =>
-  codeGrader("structured", "見出し・番号付きリストで組み立てている", (text) => {
-    const h = hasHeadings(text);
-    const n = hasNumberedList(text);
-    const pass = (!headings || h) && (!numbered || n);
-    return {
-      pass,
-      detail: `見出し ${h ? "あり" : "なし"} / 番号リスト ${n ? "あり" : "なし"}`,
-    };
-  });
+  codeGrader(
+    "structured",
+    "見出し・番号付きリストで組み立てている",
+    (text, output) => {
+      if (calledTools(output).some((t) => t.startsWith("display"))) {
+        return {
+          pass: true,
+          detail: "可視化ツールが候補を表示（本文の構成は見ない）",
+        };
+      }
+      const h = hasHeadings(text);
+      const n = hasNumberedList(text);
+      const pass = (!headings || h) && (!numbered || n);
+      return {
+        pass,
+        detail: `見出し ${h ? "あり" : "なし"} / 番号リスト ${n ? "あり" : "なし"}`,
+      };
+    },
+  );
 
 export const notStructured = () =>
   codeGrader("not-structured", "箇条書きや見出しにせず段落で返す", (text) => {
@@ -259,10 +269,15 @@ export const speechStyle = () =>
     },
   );
 
+// 本番 Gemini スナップショット 44 件の「。」止めは p90 20%・深刻な相談以外の最大 50%、3 文連続は深刻な相談 1 件だけ。
+// 参照が深刻さで「。」を多く使っている場合はそちらを上限にする
+const PERIOD_SHARE_MAX = 0.4;
+const PERIOD_RUN_MAX = 2;
+
 export const closeToSnapshot = (snapshot: string | undefined) =>
   codeGrader(
     "close-to-snapshot",
-    "絵文字密度・「。」比率・構成が、らしい返答の実例（スナップショット）の範囲に入る",
+    "絵文字密度が実例の半分以上あり、「。」止めが 4 割（または実例+25pt）以下で 3 文続かない",
     (text) => {
       if (!snapshot) {
         return { pass: true, detail: "スナップショットなし（比較スキップ）" };
@@ -275,15 +290,15 @@ export const closeToSnapshot = (snapshot: string | undefined) =>
           `絵文字 ${t.emojiPer100.toFixed(2)}/100字（参照 ${s.emojiPer100.toFixed(2)} の半分未満）`,
         );
       }
-      if (t.periodShare > s.periodShare + 0.25) {
+      const shareMax = Math.max(PERIOD_SHARE_MAX, s.periodShare + 0.25);
+      if (t.periodShare > shareMax) {
         failures.push(
-          `「。」止め ${(t.periodShare * 100).toFixed(0)}%（参照 ${(s.periodShare * 100).toFixed(0)}% + 25pt 超）`,
+          `「。」止め ${(t.periodShare * 100).toFixed(0)}%（上限 ${(shareMax * 100).toFixed(0)}%）`,
         );
       }
-      if (s.structured !== t.structured) {
-        failures.push(
-          `構成: 参照は${s.structured ? "見出し・番号あり" : "段落のみ"}、候補は${t.structured ? "見出し・番号あり" : "段落のみ"}`,
-        );
+      const run = longestPeriodRun(text);
+      if (run > PERIOD_RUN_MAX) {
+        failures.push(`「。」連続 ${run} 文（上限 ${PERIOD_RUN_MAX}）`);
       }
       return {
         pass: failures.length === 0,

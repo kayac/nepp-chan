@@ -73,6 +73,7 @@ describe("emoji", () => {
   it("太字記号と空白を除いた文字数で密度を出す", () => {
     expect(countEmoji(gemini)).toBe(3);
     expect(countChars("**太字** です")).toBe(4);
+    expect(countChars("嬉しいな✨🧑‍🎨 やったね☀️")).toBe(8);
     expect(emojiPer100(gemini)).toBeGreaterThan(2.5);
     expect(emojiPer100("")).toBe(0);
   });
@@ -85,7 +86,12 @@ describe("emoji", () => {
 
 describe("phrases", () => {
   it("調査報告調の語を列挙し、国勢調査のような一般語は拾わない", () => {
-    expect(reportTonePhrases(flat)).toEqual(["断定", "今回の検索"]);
+    expect(reportTonePhrases(flat)).toEqual(["今回の検索"]);
+    expect(
+      reportTonePhrases(
+        "詳しい作り方までは公開されてないみたいで、断定はできないんだ",
+      ),
+    ).toEqual([]);
     expect(reportTonePhrases("国勢調査では706人だよ")).toEqual([]);
   });
 
@@ -118,6 +124,21 @@ describe("structure", () => {
       framingSentenceCount("1. **服**\n2. **小分け**\n3. **現地調達**"),
     ).toBe(0);
     expect(framingSentenceCount("文だけの返答だよ")).toBe(0);
+  });
+
+  it("「」で囲まれた例文の中は文に数えない", () => {
+    const withExample =
+      "こんな感じでいいよ😊\n\n「〇〇です。今回初めて参加します。よろしくお願いします。」\n\nこれで十分だね✨";
+    expect(sentences(withExample)).toHaveLength(2);
+    expect(sentences("「ありがとう」って言われたよ！嬉しいな😊")).toHaveLength(
+      2,
+    );
+  });
+
+  it("絵文字だけの断片は文に数えない", () => {
+    expect(
+      sentences("今日もよく頑張ったね！🌸  \nひと息つこう🍵"),
+    ).toHaveLength(2);
   });
 
   it("時刻トークンを数える", () => {
