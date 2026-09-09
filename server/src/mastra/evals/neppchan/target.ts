@@ -5,7 +5,11 @@ import { Memory } from "@mastra/memory";
 import { simulateReadableStream } from "ai";
 import { MockLanguageModelV3 } from "ai/test";
 import { z } from "zod";
-import { resolveModelTier, voiceModelConfig } from "~/lib/llm-models";
+import {
+  primaryModelId,
+  resolveModelTier,
+  voiceModelConfig,
+} from "~/lib/llm-models";
 import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
 import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import {
@@ -124,5 +128,6 @@ export const createEvalTarget = (c: PersonaCase) => {
       memory,
     }),
     memory,
+    modelId: primaryModelId(modelConfig),
   };
 };

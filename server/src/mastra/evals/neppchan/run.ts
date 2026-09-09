@@ -3,7 +3,9 @@ import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { personaCases } from "./cases";
 import { loadDevVars, serverRoot } from "./dev-vars";
+import { JUDGE_MODEL_ID, judgeUsage } from "./judges";
 import { type CaseOutcome, evaluateCase } from "./runner";
+import { costUsd, formatCost, formatUsd, sumUsage } from "./usage";
 
 const { values } = parseArgs({
   options: {
@@ -99,6 +101,24 @@ const main = async () => {
       console.log(`  ${count}× ${id}`);
   }
 
+  const targetModel = outcomes.find((o) => o.model)?.model ?? "";
+  const targetUsage = sumUsage(outcomes.map((o) => o.usage));
+  const cost = {
+    target: {
+      model: targetModel,
+      ...targetUsage,
+      usd: costUsd(targetModel, targetUsage),
+    },
+    judge: {
+      model: JUDGE_MODEL_ID,
+      ...judgeUsage,
+      usd: costUsd(JUDGE_MODEL_ID, judgeUsage),
+    },
+  };
+  console.log(
+    `\ncost: ${formatUsd(cost.target.usd + cost.judge.usd)}\n  ${formatCost("target", targetModel, targetUsage)}\n  ${formatCost("judge ", JUDGE_MODEL_ID, judgeUsage)}`,
+  );
+
   mkdirSync(values.out, { recursive: true });
   const file = join(
     values.out,
@@ -106,7 +126,11 @@ const main = async () => {
   );
   writeFileSync(
     file,
-    JSON.stringify({ n, onlyCode: values["only-code"], outcomes }, null, 2),
+    JSON.stringify(
+      { n, onlyCode: values["only-code"], cost, outcomes },
+      null,
+      2,
+    ),
   );
   console.log(`saved: ${file}`);
   process.exit(passRate === 1 ? 0 : 1);

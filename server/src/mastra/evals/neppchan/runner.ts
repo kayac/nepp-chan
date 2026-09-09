@@ -10,6 +10,7 @@ import { buildGateRun } from "./gate-run";
 import { calledTools, finalResponseText } from "./graders";
 import type { PersonaCase } from "./schema";
 import { createEvalTarget } from "./target";
+import { addUsage, emptyUsage, type UsageTotals } from "./usage";
 
 export { loadDevVars, serverRoot } from "./dev-vars";
 
@@ -22,6 +23,8 @@ export type CaseOutcome = {
   text: string;
   tools: string[];
   ms: number;
+  model: string;
+  usage: UsageTotals;
   error?: string;
 };
 
@@ -84,6 +87,18 @@ const seedOnFirstTurn = (
   }) as Agent["generate"];
 };
 
+const trackUsage = (agent: Agent, totals: UsageTotals) => {
+  const generate = agent.generate.bind(agent);
+  agent.generate = (async (
+    input: Parameters<Agent["generate"]>[0],
+    options?: AgentExecutionOptions,
+  ) => {
+    const result = await generate(input, options ?? {});
+    addUsage(totals, result.totalUsage);
+    return result;
+  }) as Agent["generate"];
+};
+
 const isCodeGate = (id: string) =>
   id.startsWith("code:") || id.startsWith("check-");
 
@@ -93,6 +108,8 @@ export const evaluateCase = async (
   onlyCode: boolean,
 ): Promise<CaseOutcome> => {
   const started = Date.now();
+  const usage = emptyUsage();
+  let model = "";
   const fail = (e: unknown): CaseOutcome => ({
     id: c.id,
     iteration,
@@ -101,6 +118,8 @@ export const evaluateCase = async (
     text: "",
     tools: [],
     ms: Date.now() - started,
+    model,
+    usage,
     error: e instanceof Error ? e.message : String(e),
   });
 
@@ -111,8 +130,11 @@ export const evaluateCase = async (
   let stepTools: string[] = [];
   let output: ScorerRunOutputForAgent | undefined;
   try {
-    const { agent, memory } = createEvalTarget(c);
+    const target = createEvalTarget(c);
+    const { agent, memory } = target;
+    model = target.modelId;
     const resource = `eval-${c.id}-${randomUUID()}`;
+    trackUsage(agent, usage);
     if (c.seed) seedOnFirstTurn(agent, memory, resource, c.seed);
     await runEvals({
       target: agent,
@@ -178,5 +200,7 @@ export const evaluateCase = async (
     text,
     tools,
     ms: Date.now() - started,
+    model,
+    usage,
   };
 };

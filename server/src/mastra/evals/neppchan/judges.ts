@@ -5,22 +5,56 @@ import {
   type ScorerRunOutputForAgent,
 } from "@mastra/core/evals";
 import { getTextContentFromMastraDBMessage } from "@mastra/evals/scorers/utils";
-import { defaultSettingsMiddleware, wrapLanguageModel } from "ai";
+import {
+  defaultSettingsMiddleware,
+  type LanguageModelMiddleware,
+  wrapLanguageModel,
+} from "ai";
 import { z } from "zod";
 import { OPENAI_LITE } from "~/lib/llm-models";
 import { loadDevVars } from "./dev-vars";
 import { responseText } from "./graders";
+import { addProviderUsage, emptyUsage } from "./usage";
 
 loadDevVars();
 
+export const JUDGE_MODEL_ID = process.env.NEPPCHAN_JUDGE_MODEL ?? OPENAI_LITE;
+
+export const judgeUsage = emptyUsage();
+
+const tallyUsage: LanguageModelMiddleware = {
+  specificationVersion: "v3",
+  wrapGenerate: async ({ doGenerate }) => {
+    const result = await doGenerate();
+    addProviderUsage(judgeUsage, result.usage);
+    return result;
+  },
+  wrapStream: async ({ doStream }) => {
+    const { stream, ...rest } = await doStream();
+    return {
+      ...rest,
+      stream: stream.pipeThrough(
+        new TransformStream({
+          transform(part, controller) {
+            if (part.type === "finish")
+              addProviderUsage(judgeUsage, part.usage);
+            controller.enqueue(part);
+          },
+        }),
+      ),
+    };
+  },
+};
+
 // Mastra の judge 設定は providerOptions を受けないため、モデル側に既定値として埋め込む
 export const JUDGE_MODEL = wrapLanguageModel({
-  model: openai(
-    (process.env.NEPPCHAN_JUDGE_MODEL ?? OPENAI_LITE).replace(/^openai\//, ""),
-  ),
-  middleware: defaultSettingsMiddleware({
-    settings: { providerOptions: { openai: { reasoningEffort: "none" } } },
-  }),
+  model: openai(JUDGE_MODEL_ID.replace(/^openai\//, "")),
+  middleware: [
+    defaultSettingsMiddleware({
+      settings: { providerOptions: { openai: { reasoningEffort: "none" } } },
+    }),
+    tallyUsage,
+  ],
 });
 
 const verdictSchema = z.object({
