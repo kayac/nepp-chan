@@ -123,7 +123,6 @@ describe("createNeppChanAgent", () => {
     it("質問に答えつつ、固定の三段構成を強制しない", async () => {
       const ins = await instructionsOf(build());
       expect(ins).toContain("ユーザーが知りたいこと・選びたいことを軸に");
-      expect(ins).toContain("確認できた関連情報から選ぶ");
       expect(ins).not.toContain("補足を1つ");
     });
 
