@@ -1,7 +1,7 @@
 {
   "id": "p-exp-03",
   "capturedAt": "2026-09-09",
-  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "source": "web gemini",
   "turns": [
     {
       "user": "砂澤ビッキ記念館ってどんなところ？",

@@ -1,7 +1,7 @@
 {
   "id": "p-ctl-17",
   "capturedAt": "2026-09-09",
-  "source": "virtual: 本番 LINE ログ（2026-08〜09）の傾向を元に作成した仮想の Gemini 風応答",
+  "source": "virtual gemini",
   "turns": [
     {
       "user": "今日の映画祭　何時からどこで？",

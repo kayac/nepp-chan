@@ -1,7 +1,7 @@
 {
   "id": "p-vis-02",
   "capturedAt": "2026-09-08",
-  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "source": "web gemini",
   "turns": [
     {
       "user": "読書サークルのアンケート、好きなジャンルは小説12人、漫画8人、エッセイ5人、詩3人だったよ。みんなの好みの傾向を見せて！",

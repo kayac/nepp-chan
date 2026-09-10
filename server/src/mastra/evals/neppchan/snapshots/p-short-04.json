@@ -1,7 +1,7 @@
 {
   "id": "p-short-04",
   "capturedAt": "2026-09-09",
-  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "source": "web gemini",
   "turns": [
     {
       "user": "新しい会話が始まりました。時間帯や季節に合った挨拶をねっぷちゃんらしく2〜3文でしてください。村の今の様子を一言添えて会話を始めてください。",
