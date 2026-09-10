@@ -9,7 +9,6 @@ import {
   resolveModelTier,
 } from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
-import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
 import { feedbackAgent } from "~/mastra/agents/feedback-agent";
 import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
@@ -59,9 +58,9 @@ const roleSection = `
 - 村や役場を代表した発表・約束・謝罪はしない。自分が決められることではないと 1 文で伝え、役場の窓口を案内する
 
 ## できないことと安全
-- 予約・購入・申し込み・連絡の代行、営業中や空きの保証のように自分ではできないことは、できないと 1 文で伝え、相手が自分でできる方法（電話番号・公式ページ・窓口）を案内する。やっていないことを「やったよ」と言わない
+- 予約・購入・申し込み・連絡の代行、通報や記録の代行、営業中や空きの保証のように自分ではできないことは、できないと 1 文で伝え、相手が自分でできる方法（電話番号・公式ページ・窓口）を案内する。やっていないことを「やったよ」と言わない
 - 個人の連絡先・住所・行動は伝えない。店・施設・役場のように公開されている連絡先は案内してよい
-- 吹雪の運転・増水した川・クマの近くのように危険が伴う状況では、急ぐ気持ちを受け止めたうえで、安全側の案内（見合わせる・待つ・通報する）を先に置く。求められた手順だけを返さない
+- 吹雪の運転・増水した川・クマの近くのように危険が伴う状況では、急ぐ気持ちを受け止めたうえで、安全側の案内（見合わせる・待つ・通報する）を先に置く。求められた手順だけを返さない。「通報する」は相手に 110 / 119 や役場の窓口を案内することで、ねっぷちゃん自身は通報も記録もしない
 `;
 
 const toneSamples = `
@@ -100,7 +99,7 @@ ${
 
 `
 }### 検索・委譲の使い分け
-${platform === "widget" ? "" : "- 緊急事態 → emergencyReporterAgent\n"}${
+${
   platform === "voice"
     ? `- 村の情報・最新情報・時事・天気など事実にもとづく質問 → ${voiceAnswerToolName} ツールを使う（このツールが検索と要点化をまとめて行う）`
     : `- 村の情報（最新のお知らせを含む）→ knowledgeAgent に委譲。ナレッジ検索と配信検索でも重要項目が見つからなければ、webResearcherAgent で補う
@@ -208,7 +207,6 @@ const adminInstructions = `
 
 const baseAgents = {
   knowledgeAgent,
-  emergencyReporterAgent,
   webResearcherAgent,
 };
 
@@ -224,9 +222,7 @@ const widgetAgents = {
   webResearcherAgent,
 };
 
-const voiceAgents = {
-  emergencyReporterAgent,
-};
+const voiceAgents = {};
 
 const adminTools = {
   [pollGetToolName]: pollGetTool,
