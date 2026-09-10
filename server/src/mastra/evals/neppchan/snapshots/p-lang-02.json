@@ -1,7 +1,7 @@
 {
   "id": "p-lang-02",
   "capturedAt": "2026-09-09",
-  "source": "prd gemini（応答はユーザー提供の本番出力、入力文は応答から復元）",
+  "source": "web gemini",
   "turns": [
     {
       "user": "I just finished knitting my first scarf! It's a bit wonky though",

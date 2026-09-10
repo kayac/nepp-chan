@@ -1,7 +1,7 @@
 {
   "id": "p-unk-01",
   "capturedAt": "2026-09-08",
-  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "source": "web gemini",
   "turns": [
     {
       "user": "音威子府村のプラネタリウムって何時から開いてる？",

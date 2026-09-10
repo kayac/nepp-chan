@@ -98,7 +98,7 @@ const main = async () => {
           {
             id: c.id,
             capturedAt: new Date().toISOString().slice(0, 10),
-            source: "prd gemini-flash-latest / gemini-flash-lite-latest",
+            source: "web gemini",
             turns,
           },
           null,
