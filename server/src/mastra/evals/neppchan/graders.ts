@@ -1,6 +1,6 @@
 import type { ScorerRunOutputForAgent } from "@mastra/core/evals";
 import { createScorer } from "@mastra/core/evals";
-import { getTextContentFromMastraDBMessage } from "@mastra/evals/scorers/utils";
+import { roundToTwoDecimals } from "@mastra/evals/scorers/utils";
 import {
   casualEndingCount,
   countChars,
@@ -30,23 +30,29 @@ import {
   timeTokenCount,
 } from "./text";
 
-const assistantTexts = (output: ScorerRunOutputForAgent) =>
-  output
-    .filter((m) => m.role === "assistant")
-    .map((m) => getTextContentFromMastraDBMessage(m))
-    .filter(Boolean);
-
-export const responseText = (output: ScorerRunOutputForAgent) =>
-  assistantTexts(output).join("\n\n");
-
-export const finalResponseText = (output: ScorerRunOutputForAgent) =>
-  assistantTexts(output).at(-1) ?? "";
-
 type PartLike = { type?: string; toolInvocation?: { toolName?: string } };
 type ContentLike = {
   parts?: PartLike[];
   toolInvocations?: { toolName?: string }[];
 };
+
+// 検索前の前置きと最終回答は 1 つの assistant メッセージ内の別 text part に入る。
+// getTextContentFromMastraDBMessage は最後の part しか返さないので、part 単位で集める
+const assistantTextParts = (output: ScorerRunOutputForAgent) =>
+  output
+    .filter((m) => m.role === "assistant")
+    .flatMap((m) => m.content.parts ?? [])
+    .flatMap((p) => (p.type === "text" ? [p.text.trim()] : []))
+    .filter(Boolean);
+
+export const responseText = (output: ScorerRunOutputForAgent) =>
+  assistantTextParts(output).join("\n\n");
+
+export const finalResponseText = (output: ScorerRunOutputForAgent) =>
+  assistantTextParts(output).at(-1) ?? "";
+
+export const preambleText = (output: ScorerRunOutputForAgent) =>
+  assistantTextParts(output).slice(0, -1).join("\n\n");
 
 export const calledTools = (output: ScorerRunOutputForAgent) => {
   const names = new Set<string>();
@@ -115,7 +121,7 @@ export const emojiDensity = ({
       const density = emojiPer100(text);
       return {
         pass: density >= min,
-        detail: `100字あたり ${density.toFixed(2)} 個（下限 ${min}）`,
+        detail: `100字あたり ${roundToTwoDecimals(density)} 個（下限 ${min}）`,
       };
     },
   );
@@ -288,7 +294,7 @@ export const closeToSnapshot = (snapshot: string | undefined) =>
       const failures: string[] = [];
       if (s.emojiPer100 > 0 && t.emojiPer100 < s.emojiPer100 * 0.5) {
         failures.push(
-          `絵文字 ${t.emojiPer100.toFixed(2)}/100字（参照 ${s.emojiPer100.toFixed(2)} の半分未満）`,
+          `絵文字 ${roundToTwoDecimals(t.emojiPer100)}/100字（参照 ${roundToTwoDecimals(s.emojiPer100)} の半分未満）`,
         );
       }
       const shareMax = Math.max(PERIOD_SHARE_MAX, s.periodShare + 0.25);

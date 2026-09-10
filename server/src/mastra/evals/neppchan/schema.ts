@@ -1,7 +1,4 @@
-import type {
-  ScorerRunInputForAgent,
-  ScorerRunOutputForAgent,
-} from "@mastra/core/evals";
+import type { EvalTurn } from "@mastra/core/evals";
 import { z } from "zod";
 import { type FixtureKey, fixtures } from "./fixtures";
 
@@ -111,12 +108,6 @@ export const personaCaseMetaSchema = z.object({
 
 export type PersonaCaseMeta = z.infer<typeof personaCaseMetaSchema>;
 
-export type Gate = {
-  id: string;
-  run: (args: {
-    input: ScorerRunInputForAgent;
-    output: ScorerRunOutputForAgent;
-  }) => Promise<{ score: number; reason?: string }>;
-};
+export type GateScorer = NonNullable<EvalTurn["gates"]>[number];
 
-export type PersonaCase = PersonaCaseMeta & { gates: Gate[] };
+export type PersonaCase = PersonaCaseMeta & { gates: GateScorer[] };

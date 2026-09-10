@@ -1,20 +1,15 @@
 import { randomUUID } from "node:crypto";
 import type { Agent, AgentExecutionOptions } from "@mastra/core/agent";
-import {
-  createScorer,
-  runEvals,
-  type ScorerRunOutputForAgent,
-} from "@mastra/core/evals";
+import { runEvals } from "@mastra/core/evals";
 import type { Memory } from "@mastra/memory";
-import { buildGateRun } from "./gate-run";
-import { calledTools, finalResponseText } from "./graders";
+import { conversationGates, type GateOutcome } from "./conversation-gate";
+import { calledTools, responseText } from "./graders";
 import type { PersonaCase } from "./schema";
 import { createEvalTarget } from "./target";
 import { addUsage, emptyUsage, type UsageTotals } from "./usage";
 
 export { loadDevVars, serverRoot } from "./dev-vars";
 
-export type GateOutcome = { id: string; passed: boolean; reason?: string };
 export type CaseOutcome = {
   id: string;
   iteration: number;
@@ -26,27 +21,6 @@ export type CaseOutcome = {
   model: string;
   usage: UsageTotals;
   error?: string;
-};
-
-type StepLike = { text?: string; toolCalls?: unknown[] };
-type ToolCallLike = { payload?: { toolName?: string }; toolName?: string };
-
-const toolName = (tc: unknown) => {
-  const t = tc as ToolCallLike;
-  return t.payload?.toolName ?? t.toolName;
-};
-
-const captureScorer = () => {
-  let captured: ScorerRunOutputForAgent | undefined;
-  const scorer = createScorer({
-    id: "code:capture",
-    description: "最終ターンの出力を gate 実行用に保持する",
-    type: "agent",
-  }).generateScore(({ run }) => {
-    captured = run.output;
-    return 1;
-  });
-  return { scorer, get: () => captured };
 };
 
 // runEvals の turns は呼び出し側の thread を無視して毎回 randomUUID の thread を作るため、
@@ -124,11 +98,9 @@ export const evaluateCase = async (
   });
 
   const gates = onlyCode ? c.gates.filter((g) => isCodeGate(g.id)) : c.gates;
-  const capture = captureScorer();
+  const { scorers, outcomes, output } = conversationGates(gates, c.turns);
   const last = c.turns.length - 1;
-  let stepTexts: string[] = [];
-  let stepTools: string[] = [];
-  let output: ScorerRunOutputForAgent | undefined;
+  let passed: boolean;
   try {
     const target = createEvalTarget(c);
     const { agent, memory } = target;
@@ -136,69 +108,32 @@ export const evaluateCase = async (
     const resource = `eval-${c.id}-${randomUUID()}`;
     trackUsage(agent, usage);
     if (c.seed) seedOnFirstTurn(agent, memory, resource, c.seed);
-    await runEvals({
+    const result = await runEvals({
       target: agent,
       scorers: [],
       data: [
         {
           turns: c.turns.map((input, i) =>
-            i === last ? { input, scorers: [capture.scorer] } : { input },
+            i === last ? { input, gates: scorers } : { input },
           ),
         },
       ],
       targetOptions: { memory: { resource } },
       concurrency: 1,
-      onItemComplete: async ({ targetResult }) => {
-        const steps = ((await targetResult.steps) ?? []) as StepLike[];
-        stepTexts = steps.map((s) => s.text?.trim() ?? "").filter(Boolean);
-        stepTools = [
-          ...new Set(
-            steps
-              .flatMap((s) => s.toolCalls ?? [])
-              .map(toolName)
-              .filter((n): n is string => Boolean(n)),
-          ),
-        ];
-      },
     });
-    output = capture.get();
-    if (!output) throw new Error("最終ターンの出力を取得できなかった");
+    passed = result.verdict !== "failed";
   } catch (e) {
     return fail(e);
   }
 
-  const tools = [...new Set([...calledTools(output), ...stepTools])];
-  const { run, text } = buildGateRun({
-    turns: c.turns,
-    stepTexts,
-    finalText: finalResponseText(output),
-    tools,
-  });
-  const gateOutcomes: GateOutcome[] = [];
-  for (const gate of gates) {
-    try {
-      const r = await gate.run(run);
-      gateOutcomes.push({
-        id: gate.id,
-        passed: r.score === 1,
-        reason: r.reason,
-      });
-    } catch (e) {
-      gateOutcomes.push({
-        id: gate.id,
-        passed: false,
-        reason: `scorer error: ${e instanceof Error ? e.message : String(e)}`,
-      });
-    }
-  }
-
+  const out = output();
   return {
     id: c.id,
     iteration,
-    passed: gateOutcomes.every((g) => g.passed),
-    gates: gateOutcomes,
-    text,
-    tools,
+    passed,
+    gates: outcomes,
+    text: responseText(out),
+    tools: calledTools(out),
     ms: Date.now() - started,
     model,
     usage,
