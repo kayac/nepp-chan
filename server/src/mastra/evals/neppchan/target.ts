@@ -10,7 +10,6 @@ import {
   resolveModelTier,
   voiceModelConfig,
 } from "~/lib/llm-models";
-import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
 import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import {
   createNeppChanAgent,
@@ -81,18 +80,11 @@ export const createEvalTarget = (c: PersonaCase) => {
 
   const knowledge = fixtureAgent(knowledgeAgent, memo);
   const web = fixtureAgent(webResearcherAgent, memo);
-  const emergency = fixtureAgent(emergencyReporterAgent, fixtures.emergency);
 
   const agents: Record<string, Agent> =
-    platform === "widget"
-      ? { knowledgeAgent: knowledge, webResearcherAgent: web }
-      : platform === "voice"
-        ? { emergencyReporterAgent: emergency }
-        : {
-            knowledgeAgent: knowledge,
-            emergencyReporterAgent: emergency,
-            webResearcherAgent: web,
-          };
+    platform === "voice"
+      ? {}
+      : { knowledgeAgent: knowledge, webResearcherAgent: web };
 
   const tools =
     platform === "voice"

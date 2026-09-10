@@ -243,13 +243,14 @@ describe("createNeppChanAgent", () => {
       expect(ins).toContain("調査メモの文面をそのまま言い換えない");
     });
 
-    it("widget だけ緊急エージェントへの委譲を指示しない", async () => {
-      const widgetIns = await instructionsOf(build({ platform: "widget" }));
-      expect(widgetIns).not.toContain("emergencyReporterAgent");
-
-      const webIns = await instructionsOf(build({ platform: "web" }));
-      expect(webIns).toContain("emergencyReporterAgent");
-    });
+    it.each(["web", "line", "widget", "voice"] as const)(
+      "platform=%s で緊急エージェントへの委譲を指示せず、通報は案内にとどめる",
+      async (platform) => {
+        const ins = await instructionsOf(build({ platform }));
+        expect(ins).not.toContain("emergencyReporterAgent");
+        expect(ins).toContain("通報や記録の代行");
+      },
+    );
 
     it("LINE の質問全般に検索を強制しない", async () => {
       const ins = await instructionsOf(build({ platform: "line" }));

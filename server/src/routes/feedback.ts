@@ -1,5 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-
+import type { PrincipalVariables } from "~/lib/principal";
+import { requireAuth } from "~/middleware/auth";
+import { findOwnedThread } from "~/middleware/require-thread-access";
 import { feedbackRepository } from "~/repository/feedback-repository";
 import {
   conversationContextSchema,
@@ -8,6 +10,7 @@ import {
 
 export const feedbackRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
+  Variables: Partial<PrincipalVariables>;
 }>();
 
 const FeedbackCreateRequestSchema = z.object({
@@ -35,6 +38,7 @@ const FeedbackResponseSchema = z.object({
 const createFeedbackRoute = createRoute({
   method: "post",
   path: "/",
+  middleware: [requireAuth] as const,
   summary: "フィードバック送信",
   description: "ねっぷちゃんの回答に対するフィードバックを送信",
   tags: ["Feedback"],
@@ -62,6 +66,12 @@ const createFeedbackRoute = createRoute({
 
 feedbackRoutes.openapi(createFeedbackRoute, async (c) => {
   const body = c.req.valid("json");
+  await findOwnedThread(
+    c.env.DB,
+    body.threadId,
+    c.get("principal"),
+    c.env.RESOURCE_ID_HASH_SECRET,
+  );
 
   const id = crypto.randomUUID();
   const createdAt = new Date().toISOString();
