@@ -1,7 +1,7 @@
 import { Memory } from "@mastra/memory";
 import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
-import type { PrincipalVariables } from "~/lib/principal";
+import type { Principal, PrincipalVariables } from "~/lib/principal";
 import { toLineResourceId, toResourceId } from "~/lib/principal";
 import { getStorage } from "~/lib/storage";
 
@@ -14,6 +14,33 @@ export type ThreadVariables = {
     updatedAt: Date;
     metadata: Record<string, unknown> | null;
   };
+};
+
+const resolveExpectedResourceId = async (
+  principal: Principal,
+  hashSecret: string,
+) =>
+  principal.type === "line"
+    ? toLineResourceId(principal, hashSecret)
+    : toResourceId(principal);
+
+export const findOwnedThread = async (
+  db: D1Database,
+  threadId: string,
+  principal: Principal,
+  hashSecret: string,
+) => {
+  const storage = await getStorage(db);
+  const memory = new Memory({ storage });
+  const thread = await memory.getThreadById({ threadId });
+  const expectedResourceId = await resolveExpectedResourceId(
+    principal,
+    hashSecret,
+  );
+  if (!thread || thread.resourceId !== expectedResourceId) {
+    throw new HTTPException(404, { message: "スレッドが見つかりません" });
+  }
+  return thread;
 };
 
 export const requireThreadAccess = createMiddleware<{
@@ -30,21 +57,12 @@ export const requireThreadAccess = createMiddleware<{
     throw new HTTPException(400, { message: "threadId が必要です" });
   }
 
-  const storage = await getStorage(c.env.DB);
-  const memory = new Memory({ storage });
-  const thread = await memory.getThreadById({ threadId });
-
-  if (!thread) {
-    throw new HTTPException(404, { message: "スレッドが見つかりません" });
-  }
-
-  const expectedResourceId =
-    principal.type === "line"
-      ? await toLineResourceId(principal, c.env.RESOURCE_ID_HASH_SECRET)
-      : toResourceId(principal);
-  if (thread.resourceId !== expectedResourceId) {
-    throw new HTTPException(404, { message: "スレッドが見つかりません" });
-  }
+  const thread = await findOwnedThread(
+    c.env.DB,
+    threadId,
+    principal,
+    c.env.RESOURCE_ID_HASH_SECRET,
+  );
 
   c.set("thread", {
     id: thread.id,
