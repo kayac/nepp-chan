@@ -87,3 +87,6 @@ ds-bundle/
 
 # eval の実行結果
 eval-results/
+
+# mastra ローカル DB
+server/mastra.db*
