@@ -84,3 +84,6 @@ ds-bundle/
 .design-sync/.cache/
 .design-sync/learnings/
 .design-sync/node_modules
+
+# eval の実行結果
+eval-results/

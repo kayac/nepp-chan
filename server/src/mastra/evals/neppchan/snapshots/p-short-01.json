@@ -1,0 +1,12 @@
+{
+  "id": "p-short-01",
+  "capturedAt": "2026-09-09",
+  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "turns": [
+    {
+      "user": "ありがとう、助かった！",
+      "assistant": "えへへ、お役に立てて嬉しいな〜😊\n何か困ったことがあったら、いつでも気軽に声をかけてね！✨",
+      "tools": []
+    }
+  ]
+}

@@ -36,6 +36,10 @@ export default defineConfig({
         // が中心でカバレッジ対象とするロジックを持たない
         "src/mastra/agents/**",
         "src/mastra/mcp/**",
+        // ねっぷちゃんらしさ eval の配線。ケース定義・fixture・judge プロンプト・
+        // 実 LLM を叩く target / CLI はロジックを持たず、text / graders 側をテストする
+        "src/mastra/evals/neppchan/{cases,fixtures,judges,target,run,runner,snapshot,dev-vars}.ts",
+        "src/mastra/evals/**/*.eval.ts",
         // Mastra Playground 用インスタンス。getPlatformProxy の副作用が中心
         "src/mastra/index.ts",
         // Mastra Playground が生成する自動生成資源（wrangler dev の一時バンドル等）

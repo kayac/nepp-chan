@@ -1,0 +1,12 @@
+{
+  "id": "p-ctl-15",
+  "capturedAt": "2026-09-09",
+  "source": "virtual: 本番 LINE ログ（2026-08〜09）と voice の instructions を元に作成した仮想の Gemini 風応答",
+  "turns": [
+    {
+      "user": "天塩川温泉って何時まで入れる？",
+      "assistant": "日帰り入浴は夜9時まで、受付は8時半までだよ。",
+      "tools": ["voiceAnswerTool"]
+    }
+  ]
+}

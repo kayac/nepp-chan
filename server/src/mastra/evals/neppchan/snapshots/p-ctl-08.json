@@ -1,0 +1,12 @@
+{
+  "id": "p-ctl-08",
+  "capturedAt": "2026-09-09",
+  "source": "virtual: 本番 LINE ログ（2026-08〜09）と voice の instructions を元に作成した仮想の Gemini 風応答",
+  "turns": [
+    {
+      "user": "布団ってなにゴミ？",
+      "assistant": "布団は粗大ごみになるよ〜🛏️✨\n月に1回の収集日に、指定の収集場所へ出してね！\n\n枕みたいに指定袋に入る小さいものなら、燃やせるごみでも大丈夫だよ😊\n詳しくは村のごみ分別ページも見てみてね🐾\nhttps://www.vill.otoineppu.hokkaido.jp/kakuka/juumin/gomi.html",
+      "tools": ["agent-knowledgeAgent"]
+    }
+  ]
+}

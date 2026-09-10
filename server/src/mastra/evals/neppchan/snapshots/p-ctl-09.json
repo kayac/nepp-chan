@@ -1,0 +1,12 @@
+{
+  "id": "p-ctl-09",
+  "capturedAt": "2026-09-09",
+  "source": "virtual: 本番 LINE ログ（2026-08〜09）と voice の instructions を元に作成した仮想の Gemini 風応答",
+  "turns": [
+    {
+      "user": "地域バスの最新ダイヤ教えて",
+      "assistant": "村営バス（駅〜天塩川温泉）のダイヤだよ〜🚌✨\n\n・駅発：9:10／11:40／14:10／16:40\n・温泉発：9:40／12:10／14:40／17:10\n\n平日だけの運行で、土日祝と年末年始はお休みだから気をつけてね！\n冬は雪で遅れることもあるから、時間に余裕を持って出かけてね😊\nhttps://www.vill.otoineppu.hokkaido.jp/kakuka/soumu/bus.html",
+      "tools": ["agent-knowledgeAgent"]
+    }
+  ]
+}
