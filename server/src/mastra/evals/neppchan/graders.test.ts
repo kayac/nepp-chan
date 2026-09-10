@@ -10,6 +10,7 @@ import {
   hasFramingSentences,
   markdownLinksOnly,
   maxListItems,
+  noIdentityClaim,
   noInternalNames,
   noPeriodRun,
   noReadings,
@@ -238,6 +239,17 @@ describe("code graders", () => {
     expect(
       (await noInternalNames().run(run("displayTableTool で表にしたよ"))).score,
     ).toBe(0);
+    expect(
+      (await noIdentityClaim().run(run("私はChatGPTです。音威子府村は…")))
+        .score,
+    ).toBe(0);
+    expect(
+      (
+        await noIdentityClaim().run(
+          run("ChatGPTじゃなくて、私はねっぷちゃんだよ〜🐾"),
+        )
+      ).score,
+    ).toBe(1);
     expect(
       (
         await profileFacts([["17"], ["おこじょ", "オコジョ"]]).run(

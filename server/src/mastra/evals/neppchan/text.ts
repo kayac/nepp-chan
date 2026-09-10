@@ -172,6 +172,8 @@ const INTERNAL_NAMES = [
   "GPT",
   "Gemini",
 ];
+const IDENTITY_CLAIM =
+  /(?<!「)(私|わたし|僕|ぼく|自分)(は|が)\s*(ChatGPT|チャットGPT|GPT|Claude|Gemini)(?!\s*(とは|って|じゃ|では))/g;
 const PLACEHOLDER_NAME = /[○◯〇]{1,3}(さん|ちゃん|くん)/;
 const RAW_URL = /(?<!\]\()https?:\/\/\S+/g;
 const MARKDOWN_LINK = /\[[^\]]+\]\(https?:\/\/[^)]+\)/g;
@@ -181,6 +183,9 @@ export const readingAnnotations = (text: string) =>
 
 export const internalNames = (text: string) =>
   INTERNAL_NAMES.filter((name) => text.includes(name));
+
+export const identityClaims = (text: string) =>
+  text.match(IDENTITY_CLAIM) ?? [];
 
 export const hasPlaceholderName = (text: string) => PLACEHOLDER_NAME.test(text);
 
