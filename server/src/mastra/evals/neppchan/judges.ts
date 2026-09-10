@@ -4,7 +4,7 @@ import {
   type ScorerRunInputForAgent,
   type ScorerRunOutputForAgent,
 } from "@mastra/core/evals";
-import { getTextContentFromMastraDBMessage } from "@mastra/evals/scorers/utils";
+import { extractInputMessages } from "@mastra/evals/scorers/utils";
 import {
   defaultSettingsMiddleware,
   type LanguageModelMiddleware,
@@ -13,7 +13,7 @@ import {
 import { z } from "zod";
 import { OPENAI_LITE } from "~/lib/llm-models";
 import { loadDevVars } from "./dev-vars";
-import { responseText } from "./graders";
+import { preambleText, responseText } from "./graders";
 import { addProviderUsage, emptyUsage } from "./usage";
 
 loadDevVars();
@@ -72,10 +72,7 @@ type Run = {
   output: ScorerRunOutputForAgent;
 };
 
-const userTexts = (run: Run) =>
-  (run.input?.inputMessages ?? [])
-    .filter((m) => m.role === "user")
-    .map((m) => getTextContentFromMastraDBMessage(m));
+const userTexts = (run: Run) => extractInputMessages(run.input);
 
 const verdictScorer = ({
   id,
@@ -273,11 +270,7 @@ export const searchPreamble = (reference?: string) =>
     description:
       "観点24: 検索前の前置きが 1〜2 文で、発言の一要素に反応している",
     prompt: (run) => {
-      const assistants = run.output.filter((m) => m.role === "assistant");
-      const preamble =
-        assistants.length >= 2
-          ? getTextContentFromMastraDBMessage(assistants[0])
-          : "";
+      const preamble = preambleText(run.output);
       return `## 観点
 検索の前に送る前置きは、1〜2 文で、ユーザーの発言にある具体的な一要素に反応してから、これから調べることを伝える（「調べてくるね」「確認してみるね」など言い回しは自由で、絵文字が付いていてよい）。前置きが無い、3 文以上、または発言の中身に触れずに調べる旨だけなら false。
 

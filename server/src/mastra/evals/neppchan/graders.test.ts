@@ -18,6 +18,7 @@ import {
   noServiceClosing,
   noToolCalled,
   notStructured,
+  preambleText,
   profileFacts,
   rawUrlsOnly,
   respondsInEnglish,
@@ -69,21 +70,44 @@ describe("responseText / calledTools", () => {
 
 describe("前置きがあるとき", () => {
   const withPreamble = (): ScorerRunOutputForAgent => [
-    createTestMessage({
-      content: "気になるよね！調べてくるね🍜",
+    {
+      id: "a1",
       role: "assistant",
-    }),
-    createTestMessage({
-      content: "本文だよ。二文目だよ。三文目だよ。",
-      role: "assistant",
-    }),
+      createdAt: new Date(),
+      content: {
+        format: 2,
+        parts: [
+          { type: "text", text: "気になるよね！調べてくるね🍜" },
+          {
+            type: "tool-invocation",
+            toolInvocation: {
+              toolCallId: "call-0",
+              toolName: "agent-knowledgeAgent",
+              args: {},
+              result: {},
+              state: "result",
+            },
+          },
+          { type: "step-start" },
+          { type: "text", text: "本文だよ。二文目だよ。三文目だよ。\n" },
+        ],
+      },
+    },
   ];
 
-  it("finalResponseText は本文だけ、responseText は前置きも含む", () => {
+  it("finalResponseText は本文だけ、preambleText は前置きだけ、responseText は両方を含む", () => {
     expect(finalResponseText(withPreamble())).toBe(
       "本文だよ。二文目だよ。三文目だよ。",
     );
-    expect(responseText(withPreamble())).toContain("調べてくるね");
+    expect(preambleText(withPreamble())).toBe("気になるよね！調べてくるね🍜");
+    expect(responseText(withPreamble())).toBe(
+      "気になるよね！調べてくるね🍜\n\n本文だよ。二文目だよ。三文目だよ。",
+    );
+    expect(calledTools(withPreamble())).toEqual(["agent-knowledgeAgent"]);
+  });
+
+  it("前置きが無ければ preambleText は空", () => {
+    expect(preambleText(run("本文だよ").output)).toBe("");
   });
 
   it("文数の上限は本文だけで数える", async () => {
