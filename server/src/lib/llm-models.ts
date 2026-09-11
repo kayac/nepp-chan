@@ -128,7 +128,7 @@ const thinkingTier = (
     primary: OPENAI_LITE,
     fallback: OPENAI_MAIN,
     effort,
-    textVerbosity: platform === "web" ? "high" : undefined,
+    textVerbosity: platform === "web" ? "high" : "medium",
     promptCacheKey: `nepp-chan-${platform}-thinking`,
   }),
   defaultOptions: { maxSteps: MAX_STEPS.thinking },

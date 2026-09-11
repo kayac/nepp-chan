@@ -174,6 +174,12 @@ export const maxChars = (max: number) =>
     return { pass: n <= max, detail: `${n} 字（上限 ${max}）` };
   });
 
+export const minChars = (min: number) =>
+  codeGrader("min-chars", `${min} 字以上`, (text) => {
+    const n = countChars(text);
+    return { pass: n >= min, detail: `${n} 字（下限 ${min}）` };
+  });
+
 export const hasFramingSentences = () =>
   codeGrader("framing-sentences", "箇条書きの前後に文がある", (text) => {
     if (listItemCount(text) === 0)
