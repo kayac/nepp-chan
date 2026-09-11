@@ -12,13 +12,10 @@ const factCategoryEnum = z.enum([
 export const personaSchema = z.object({
   profile: z
     .object({
-      name: z.string().optional().describe("ユーザーの名前"),
       preferredName: z
         .string()
         .optional()
-        .describe(
-          "ユーザーが希望する呼び方（例: 「たろうくん」「田中さん」）。指定があればnameより優先して使う",
-        ),
+        .describe("ユーザーが希望する呼び方（例: 「たろうくん」「田中さん」）"),
       gender: z.string().optional().describe("性別"),
     })
     .optional()

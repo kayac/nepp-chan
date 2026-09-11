@@ -110,6 +110,13 @@ describe("createNeppChanAgent", () => {
       expect(ins).toContain("ねっぷちゃんは村の公の顔");
     });
 
+    it("連絡先と健康状態は working memory に記録せず、覚えられないと伝える", async () => {
+      const ins = await instructionsOf(build());
+      expect(ins).toContain("健康状態は、本人が言っても記録しない");
+      expect(ins).toContain("連絡先は覚えられないと 1 文で伝える");
+      expect(ins).not.toContain("名前やpreferredName");
+    });
+
     it("相手が口調を指定した返答では送信前の確認より指定を優先する", async () => {
       const ins = await instructionsOf(build());
       expect(ins).toContain(
