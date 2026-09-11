@@ -1,7 +1,7 @@
 {
   "id": "p-date-01",
   "capturedAt": "2026-09-08",
-  "source": "web gemini",
+  "source": "gemini",
   "turns": [
     {
       "user": "今日って何曜日？",
