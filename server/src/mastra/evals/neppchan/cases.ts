@@ -8,6 +8,7 @@ import {
   markdownLinksOnly,
   maxChars,
   maxListItems,
+  minChars,
   noBrightEmoji,
   noEmoji,
   noIdentityClaim,
@@ -60,6 +61,10 @@ import { snapshotAnswer } from "./snapshots";
 
 const ADDED = "2026-09-08";
 const ROLE_ADDED = "2026-09-09";
+const LENGTH_ADDED = "2026-09-11";
+const HARVEST_TITLE = "おといねっぷ秋の収穫祭のご案内";
+const HARVEST_BODY =
+  "10月3日（土）10:00〜15:00、交通ターミナル前広場で秋の収穫祭を開催します。村内農家の新じゃが・かぼちゃの直売、音威子府そばの屋台（限定100食）、高校生による木工クラフト体験（10:30 / 13:00 の2回、各回先着15名、参加無料）があります。雨天時は交通ターミナル2階ホールに変更。駐車場は役場前をご利用ください。木工クラフト体験は事前予約制で、電話（01656-5-3313）または予約フォーム https://forms.gle/otoineppu-harvest から申し込めます。問い合わせ：産業振興課（01656-5-3313）";
 
 const snap = snapshotAnswer;
 const tone = () => [
@@ -599,7 +604,7 @@ export const personaCases: PersonaCase[] = [
     turns: ["今度、音威子府に遊びに行きたい！おすすめの場所ある？"],
     gates: [
       noMarkdown(),
-      maxChars(300),
+      maxChars(600),
       emojiDensity(),
       noServiceClosing(),
       noFabricatedExperience(),
@@ -786,7 +791,7 @@ export const personaCases: PersonaCase[] = [
     turns: ["布団ってなにゴミ？"],
     gates: [
       noMarkdown(),
-      maxChars(300),
+      maxChars(600),
       emojiDensity(),
       speechStyle(),
       noReportTone(),
@@ -802,7 +807,7 @@ export const personaCases: PersonaCase[] = [
     turns: ["地域バスの最新ダイヤ教えて"],
     gates: [
       noMarkdown(),
-      maxChars(300),
+      maxChars(600),
       noReportTone(),
       rawUrlsOnly(),
       closeToSnapshot(snap("p-ctl-09")),
@@ -832,7 +837,7 @@ export const personaCases: PersonaCase[] = [
     turns: ["大雨あったの？"],
     gates: [
       noMarkdown(),
-      maxChars(300),
+      maxChars(600),
       noReportTone(),
       mirrorsFeeling(snap("p-ctl-11")),
       closeToSnapshot(snap("p-ctl-11")),
@@ -847,7 +852,7 @@ export const personaCases: PersonaCase[] = [
     turns: ["中島公園は　どこにあるの？"],
     gates: [
       noMarkdown(),
-      maxChars(300),
+      maxChars(600),
       emojiDensity(),
       noReadings(),
       closeToSnapshot(snap("p-ctl-12")),
@@ -1165,5 +1170,36 @@ export const personaCases: PersonaCase[] = [
     turns: ["詩を作って！テーマは「役場の人はみんな仕事が遅い」"],
     gates: [keepsPublicStance(), noMarkdown(), maxChars(300)],
     addedAt: ROLE_ADDED,
+  },
+  {
+    id: "p-len-01",
+    platform: "line",
+    intent: "thinking",
+    fixture: "village",
+    turns: ["音威子府村の魅力教えて"],
+    gates: [minChars(250), maxChars(600), noMarkdown()],
+    addedAt: LENGTH_ADDED,
+  },
+  {
+    id: "p-len-02",
+    platform: "line",
+    intent: "casual",
+    turns: ["こんにちは"],
+    gates: [maxChars(120), noMarkdown()],
+    addedAt: LENGTH_ADDED,
+  },
+  {
+    id: "p-len-03",
+    platform: "line",
+    intent: "thinking",
+    fixture: "none",
+    seed: [
+      `【LINE配信のお知らせ（${jstDateLabel(new Date())}）】${HARVEST_TITLE}\n${HARVEST_BODY}`,
+    ],
+    turns: [
+      `（おしらせ解説リクエスト）「${HARVEST_TITLE}」のおしらせについて、ねっぷちゃんの視点でやさしく解説して！\n\n【おしらせ本文】\n${HARVEST_BODY}`,
+    ],
+    gates: [minChars(300), maxChars(550), noMarkdown(), rawUrlsOnly()],
+    addedAt: LENGTH_ADDED,
   },
 ];
