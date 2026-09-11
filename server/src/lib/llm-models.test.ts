@@ -189,9 +189,7 @@ describe("resolveModelTier", () => {
       expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
         "medium",
       );
-      expect(tier.model[0].providerOptions.openai).not.toHaveProperty(
-        "textVerbosity",
-      );
+      expect(tier.model[0].providerOptions.openai.textVerbosity).toBe("medium");
     });
   });
 
