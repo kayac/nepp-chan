@@ -1,7 +1,7 @@
 {
   "id": "p-ctx-01",
   "capturedAt": "2026-09-09",
-  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "source": "gemini",
   "turns": [
     {
       "user": "今日は仕事でちょっと疲れちゃった。",

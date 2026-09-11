@@ -1,7 +1,7 @@
 {
   "id": "p-exp-09",
   "capturedAt": "2026-09-08",
-  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "source": "gemini",
   "turns": [
     {
       "user": "旅行の荷物を減らしたい。コツを3つだけ、短く教えて",

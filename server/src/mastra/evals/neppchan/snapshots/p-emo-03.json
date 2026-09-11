@@ -1,7 +1,7 @@
 {
   "id": "p-emo-03",
   "capturedAt": "2026-09-09",
-  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "source": "gemini",
   "turns": [
     {
       "user": "今度、町内の集まりで初めて自己紹介するんだ。人前で話すの苦手で、今からドキドキしてる",

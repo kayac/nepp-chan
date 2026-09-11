@@ -1,7 +1,7 @@
 {
   "id": "p-exp-05",
   "capturedAt": "2026-09-08",
-  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "source": "gemini",
   "turns": [
     {
       "user": "週末の過ごし方で迷ってる。図書館は無料で静か、映画は2000円で2時間、散歩は無料だけど雨だと難しい。少し疲れてるけど気分転換したいな。どれがよさそう？",

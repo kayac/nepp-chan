@@ -14,8 +14,15 @@ const { values } = parseArgs({
   options: {
     case: { type: "string" },
     force: { type: "boolean", default: false },
+    source: { type: "string" },
   },
 });
+
+if (!values.source)
+  throw new Error(
+    "--source で参照にするモデル世代を指定する（例: --source gemini）",
+  );
+const source = values.source;
 
 const json = async (res: Response) => {
   if (!res.ok) throw new Error(`${res.status} ${res.url} ${await res.text()}`);
@@ -98,7 +105,7 @@ const main = async () => {
           {
             id: c.id,
             capturedAt: new Date().toISOString().slice(0, 10),
-            source: "prd gemini-flash-latest / gemini-flash-lite-latest",
+            source,
             turns,
           },
           null,

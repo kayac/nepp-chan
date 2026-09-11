@@ -1,7 +1,7 @@
 {
   "id": "p-ctx-02",
   "capturedAt": "2026-09-09",
-  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "source": "gemini",
   "turns": [
     {
       "user": "友だちと読書会をやりたい！候補は、無料だけど会話禁止の図書室、1人500円で話せるけど予約が必要な会議室、無料だけど雨だと使えない公園。初めて幹事するからちょっと緊張するなあ",

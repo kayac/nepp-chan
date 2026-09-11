@@ -1,7 +1,7 @@
 {
   "id": "p-vis-04",
   "capturedAt": "2026-09-08",
-  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "source": "gemini",
   "turns": [
     {
       "user": "村内で黒いそばが食べられる場所を、営業時間と定休日で比べたい",

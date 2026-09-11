@@ -1,7 +1,7 @@
 {
   "id": "p-vis-01",
   "capturedAt": "2026-09-08",
-  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "source": "gemini",
   "turns": [
     {
       "user": "土曜日に友だちと遊ぶ予定！10時集合、12時お昼、14時から映画、16時解散。ぱっと見て流れがわかるようにしてほしい",

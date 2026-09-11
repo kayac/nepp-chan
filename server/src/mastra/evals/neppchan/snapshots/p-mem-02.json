@@ -1,7 +1,7 @@
 {
   "id": "p-mem-02",
   "capturedAt": "2026-09-08",
-  "source": "prd gemini-flash-latest / gemini-flash-lite-latest",
+  "source": "gemini",
   "turns": [
     {
       "user": "はじめまして！私のこと、けんちゃんって呼んで！",
