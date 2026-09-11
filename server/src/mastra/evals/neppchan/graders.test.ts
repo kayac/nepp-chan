@@ -9,7 +9,9 @@ import {
   finalResponseText,
   hasFramingSentences,
   markdownLinksOnly,
+  maxChars,
   maxListItems,
+  minChars,
   noIdentityClaim,
   noInternalNames,
   noPeriodRun,
@@ -142,6 +144,18 @@ describe("code graders", () => {
     const result = await sentenceCap(3).run(run(gemini));
     expect(result.score).toBe(0);
     expect(result.reason).toContain("4 文");
+  });
+
+  it("文字数の下限は未満なら 0、以上なら 1、reason に文字数を書く", async () => {
+    const short = await minChars(250).run(run(gemini));
+    expect(short.score).toBe(0);
+    expect(short.reason).toContain("字（下限 250）");
+    expect((await minChars(50).run(run(gemini))).score).toBe(1);
+  });
+
+  it("文字数の上限は超えたら 0、以内なら 1", async () => {
+    expect((await maxChars(50).run(run(gemini))).score).toBe(0);
+    expect((await maxChars(300).run(run(gemini))).score).toBe(1);
   });
 
   it("箇条書きだけの返答は framing で落ち、前置きと締めがあれば通る", async () => {
