@@ -1,5 +1,28 @@
 # Changelog
 
+## [v1.0.13](https://github.com/kayac/nepp-chan/compare/v1.0.12...v1.0.13) - 2026-09-11
+
+- LLM利用コストの計測・集計・管理画面を拡張する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1072
+- feat: メイン LLM を OpenAI GPT-5.6 へ切り替える（Gemini 併存） by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1019
+- モデルと reasoning effort をタスク相応に見直す by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1084
+- トークン消費・コストを日付単位のモデル内訳表示にする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1112
+- refactor(server): SQL を repository に集約する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1121
+- docs(lp): プライバシーポリシーを OpenAI API 切り替えに備えて更新 by @vesperworks in https://github.com/kayac/nepp-chan/pull/1110
+- chore(biome): .claude の除外をリポジトリ直下だけにする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1122
+- feat(knowledge): URL・文章・画像から curated ナレッジの下書きを作って保存する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1123
+- feat(server): ナレッジ同期を決定的 ID の upsert 上書きにする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1129
+- feat(server): ナレッジ同期の経路を R2 イベント → Queue に一本化する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1130
+- build(deps): bump 24 dependencies across workspaces by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1163
+- build(deps-dev): bump vitest and coverage providers to 5.0.0 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1164
+- ナレッジ画面に公式資料の一括アップロードを追加し、R2 を official/ と curated/ に区分する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1165
+- feat: ねっぷちゃんの口調を GPT-5.6 向けに立て直し、らしさ eval を追加する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1166
+- feat(server): ねっぷちゃんに役割の維持と公の顔の線引きを入れ、インジェクション eval を追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1167
+- feat(server): PII 対策 PR 2 ― POST /feedback の認証 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1168
+- refactor(server): ねっぷちゃん eval の gate を runEvals の turns gates で実行する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1169
+- test(server): 安全性ケースの入力文を穏やかにし、snapshot の source 表記を簡潔にする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1171
+- feat(server): LINE 返答の長さを相手の投げかけの型で変える by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1172
+- feat(server): 連絡先を working memory に記録しない by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1170
+
 ## [v1.0.12](https://github.com/kayac/nepp-chan/compare/v1.0.11...v1.0.12) - 2026-08-28
 
 - ウィジェットに設置サイトの文脈を持たせる by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1015
