@@ -249,7 +249,13 @@ describe("GET /usage/operation", () => {
       { category: "knowledge-base", costUsd: 0.04, agents: [] },
     ],
     byProvider: [{ provider: "openai", totalTokens: 100, costUsd: 0.11 }],
-    daily: [{ date: "2026-06-09", costUsd: 0.11 }],
+    daily: [
+      {
+        date: "2026-06-09",
+        costUsd: 0.11,
+        purposes: [{ purpose: "conversation", costUsd: 0.11 }],
+      },
+    ],
   };
 
   beforeEach(() => {
@@ -294,7 +300,7 @@ describe("GET /usage/threads/{threadId}", () => {
   const turnUsage = {
     turns: [
       {
-        turnIndex: 1,
+        turnId: "turn-1",
         answeredAt: "2026-06-09T00:00:00.000Z",
         totalTokens: 1000,
         costUsd: 0.05,

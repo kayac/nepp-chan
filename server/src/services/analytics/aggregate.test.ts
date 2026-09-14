@@ -788,6 +788,34 @@ describe("getOperationCost", () => {
     ]);
   });
 
+  it("日ごとに用途別の内訳を返し、会話はまとめる", async () => {
+    await insertUsage({
+      id: "u1",
+      source: "chat",
+      costUsd: 0.02,
+      createdAt: "2026-06-09T01:00:00.000Z",
+    });
+    await insertUsage({
+      id: "u2",
+      source: "subagent",
+      costUsd: 0.03,
+      createdAt: "2026-06-09T02:00:00.000Z",
+    });
+    await insertUsage({
+      id: "u3",
+      source: "persona-extract",
+      costUsd: 0.01,
+      createdAt: "2026-06-09T03:00:00.000Z",
+    });
+
+    const result = await getOperationCost(d1, period);
+
+    expect(result.daily[0]?.purposes).toEqual([
+      { purpose: "conversation", costUsd: expect.closeTo(0.05, 10) },
+      { purpose: "persona-extract", costUsd: 0.01 },
+    ]);
+  });
+
   it("JST の日付ごとの推移を古い順に返す", async () => {
     await insertUsage({
       id: "u1",
@@ -811,8 +839,18 @@ describe("getOperationCost", () => {
     const result = await getOperationCost(d1, period);
 
     expect(result.daily).toEqual([
-      { date: "2026-06-09", costUsd: 0.03 },
-      { date: "2026-06-10", costUsd: expect.closeTo(0.03, 10) },
+      {
+        date: "2026-06-09",
+        costUsd: 0.03,
+        purposes: [{ purpose: "conversation", costUsd: 0.03 }],
+      },
+      {
+        date: "2026-06-10",
+        costUsd: expect.closeTo(0.03, 10),
+        purposes: [
+          { purpose: "conversation", costUsd: expect.closeTo(0.03, 10) },
+        ],
+      },
     ]);
   });
 
@@ -837,7 +875,7 @@ describe("getThreadTurnUsage", () => {
 
   const insertUsage = async (params: {
     id: string;
-    turnIndex?: number | null;
+    turnId?: string | null;
     agent?: string | null;
     source?: string;
     model?: string;
@@ -845,6 +883,7 @@ describe("getThreadTurnUsage", () => {
     totalTokens?: number;
     costUsd?: number | null;
     durationMs?: number | null;
+    createdAt?: string;
   }) => {
     await db.insert(llmUsage).values({
       id: params.id,
@@ -853,11 +892,11 @@ describe("getThreadTurnUsage", () => {
       source: params.source ?? "chat",
       agent: params.agent,
       intent: params.intent,
-      turnIndex: params.turnIndex,
+      turnId: params.turnId,
       durationMs: params.durationMs,
       threadId: "t1",
       costUsd: params.costUsd,
-      createdAt: "2026-06-09T00:00:00.000Z",
+      createdAt: params.createdAt ?? "2026-06-09T00:00:00.000Z",
     });
   };
 
@@ -869,31 +908,33 @@ describe("getThreadTurnUsage", () => {
   it("往復ごとにコスト・エージェント内訳・所要時間を返す", async () => {
     await insertUsage({
       id: "u1",
-      turnIndex: 1,
+      turnId: "turn-1",
       agent: "nepp-chan",
       costUsd: 0.01,
       durationMs: 18_000,
     });
     await insertUsage({
       id: "u2",
-      turnIndex: 1,
+      turnId: "turn-1",
       agent: "knowledge",
       source: "subagent",
       costUsd: 0.05,
+      createdAt: "2026-06-09T00:00:01.000Z",
     });
     await insertUsage({
       id: "u3",
-      turnIndex: 2,
+      turnId: "turn-2",
       agent: "nepp-chan",
       costUsd: 0.002,
       durationMs: 3_000,
+      createdAt: "2026-06-09T00:01:00.000Z",
     });
 
     const { turns } = await getThreadTurnUsage(d1, "t1");
 
     expect(turns).toHaveLength(2);
     expect(turns[0]).toMatchObject({
-      turnIndex: 1,
+      turnId: "turn-1",
       durationMs: 18_000,
       answeredAt: "2026-06-09T00:00:00.000Z",
     });
@@ -902,19 +943,45 @@ describe("getThreadTurnUsage", () => {
       expect.objectContaining({ agent: "knowledge", costUsd: 0.05 }),
       expect.objectContaining({ agent: "nepp-chan", costUsd: 0.01 }),
     ]);
-    expect(turns[1]).toMatchObject({ turnIndex: 2, durationMs: 3_000 });
+    expect(turns[1]).toMatchObject({ turnId: "turn-2", durationMs: 3_000 });
+  });
+
+  it("ターン内の委譲が次のターンより後に記録されてもターン順は崩れない", async () => {
+    await insertUsage({
+      id: "u1",
+      turnId: "turn-1",
+      agent: "nepp-chan",
+      createdAt: "2026-06-09T00:00:00.000Z",
+    });
+    await insertUsage({
+      id: "u2",
+      turnId: "turn-2",
+      agent: "nepp-chan",
+      createdAt: "2026-06-09T00:00:30.000Z",
+    });
+    await insertUsage({
+      id: "u3",
+      turnId: "turn-1",
+      agent: "knowledge",
+      source: "subagent",
+      createdAt: "2026-06-09T00:01:00.000Z",
+    });
+
+    const { turns } = await getThreadTurnUsage(d1, "t1");
+
+    expect(turns.map((t) => t.turnId)).toEqual(["turn-1", "turn-2"]);
   });
 
   it("本体の応答行から intent を取り出す", async () => {
     await insertUsage({
       id: "u1",
-      turnIndex: 1,
+      turnId: "turn-1",
       agent: "nepp-chan",
       intent: "thinking",
     });
     await insertUsage({
       id: "u2",
-      turnIndex: 1,
+      turnId: "turn-1",
       agent: "knowledge",
       source: "subagent",
     });
@@ -924,13 +991,30 @@ describe("getThreadTurnUsage", () => {
     expect(turns[0]?.intent).toBe("thinking");
   });
 
-  it("turn_index 記録前の行は turnIndex: null として末尾にまとめる", async () => {
-    await insertUsage({ id: "u1", turnIndex: null, costUsd: 0.03 });
-    await insertUsage({ id: "u2", turnIndex: 1, costUsd: 0.01 });
+  it("turn_id 記録前の行は turnId: null の 1 件にまとめる", async () => {
+    await insertUsage({
+      id: "u1",
+      turnId: null,
+      costUsd: 0.03,
+      createdAt: "2026-06-09T00:00:00.000Z",
+    });
+    await insertUsage({
+      id: "u2",
+      turnId: null,
+      costUsd: 0.02,
+      createdAt: "2026-06-09T00:00:30.000Z",
+    });
+    await insertUsage({
+      id: "u3",
+      turnId: "turn-1",
+      costUsd: 0.01,
+      createdAt: "2026-06-09T00:01:00.000Z",
+    });
 
     const { turns } = await getThreadTurnUsage(d1, "t1");
 
-    expect(turns.map((t) => t.turnIndex)).toEqual([1, null]);
+    expect(turns.map((t) => t.turnId)).toEqual([null, "turn-1"]);
+    expect(turns[0]?.costUsd).toBeCloseTo(0.05, 10);
   });
 
   it("記録が無ければ空配列を返す", async () => {

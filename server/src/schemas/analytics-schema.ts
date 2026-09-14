@@ -178,8 +178,8 @@ const threadUsageItemSchema = z.object({
 export const threadTurnUsageResponseSchema = z.object({
   turns: z.array(
     z.object({
-      // turn_index 記録前の行は null
-      turnIndex: z.number().nullable(),
+      // turn_id 記録前の行は null
+      turnId: z.string().nullable(),
       // 応答を記録した時刻。会話ログとの突き合わせに使う
       answeredAt: z.string().nullable(),
       totalTokens: z.number(),
@@ -230,6 +230,8 @@ export const operationCostResponseSchema = z.object({
       // JST の日付（YYYY-MM-DD）
       date: z.string(),
       costUsd: z.number(),
+      // 会話はまとめ、運用側は source がそのまま用途になる
+      purposes: z.array(z.object({ purpose: z.string(), costUsd: z.number() })),
     }),
   ),
 });

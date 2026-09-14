@@ -1,4 +1,4 @@
-import { and, count, eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
 import { createDb, llmUsage, type NewLlmUsage } from "~/db";
 import { deleteWithCount } from "./delete-with-count";
@@ -32,15 +32,25 @@ const usageSumColumns = sql`
   SUM(CASE WHEN cost_usd IS NULL THEN cached_input_tokens ELSE 0 END) AS legacyCachedInputTokens
 `;
 
-// 会話に直接かかった費用と、それ以外の運用費を分けて見るための区分。
-// embedding は検索クエリ分（スレッドに紐づく）が会話、ナレッジ同期分が基盤
+// embedding は検索クエリ分（スレッドに紐づく）が会話、ナレッジ同期分はそれ以外
+const conversationExpr = sql`(
+  source IN ('chat', 'subagent', 'intent-classify', 'rerank')
+  OR (source = 'embedding' AND thread_id IS NOT NULL)
+)`;
+
+// 会話に直接かかった費用と、それ以外の運用費を分けて見るための区分
 const usageCategoryExpr = sql`
   CASE
-    WHEN source IN ('chat', 'subagent', 'intent-classify', 'rerank') THEN 'conversation'
-    WHEN source = 'embedding' AND thread_id IS NOT NULL THEN 'conversation'
+    WHEN ${conversationExpr} THEN 'conversation'
     WHEN source IN ('embedding', 'curated-draft') THEN 'knowledge-base'
     ELSE 'batch'
   END
+`;
+
+// 「その日どの用途に使ったか」の軸。会話はまとめ、運用側は source がそのまま用途になる。
+// agent は列追加前の行が NULL なので使わない
+const usagePurposeExpr = sql`
+  CASE WHEN ${conversationExpr} THEN 'conversation' ELSE source END
 `;
 
 export const llmUsageRepository = {
@@ -48,18 +58,6 @@ export const llmUsageRepository = {
     const db = createDb(d1);
 
     await db.insert(llmUsage).values(input);
-  },
-
-  async countChatByThread(d1: D1Database, threadId: string) {
-    const db = createDb(d1);
-
-    const row = await db
-      .select({ value: count() })
-      .from(llmUsage)
-      .where(and(eq(llmUsage.threadId, threadId), eq(llmUsage.source, "chat")))
-      .get();
-
-    return Number(row?.value ?? 0);
   },
 
   async sumByDateAndModel(
@@ -78,6 +76,26 @@ export const llmUsageRepository = {
       WHERE created_at >= ${params.from} ${until}
       GROUP BY date, model
       ORDER BY date, model
+    `);
+  },
+
+  async sumByDateAndPurpose(
+    d1: D1Database,
+    params: { from: string; to?: string },
+  ) {
+    const db = createDb(d1);
+
+    const until = params.to ? sql`AND created_at < ${params.to}` : sql``;
+
+    return db.all<UsageSumRow & { date: string; purpose: string }>(sql`
+      SELECT date(created_at, '+9 hours') AS date,
+             ${usagePurposeExpr} AS purpose,
+             model,
+             ${usageSumColumns}
+      FROM llm_usage
+      WHERE created_at >= ${params.from} ${until}
+      GROUP BY date, purpose, model
+      ORDER BY date, purpose
     `);
   },
 
@@ -138,25 +156,27 @@ export const llmUsageRepository = {
 
     return db.all<
       UsageSumRow & {
-        turnIndex: number | null;
+        turnId: string | null;
         agent: string | null;
         durationMs: number | null;
-        answeredAt: string;
+        answeredAt: string | null;
         intent: string | null;
+        firstAt: string;
       }
     >(sql`
-      SELECT turn_index AS turnIndex,
+      SELECT turn_id AS turnId,
              agent,
              model,
              MAX(CASE WHEN source = 'chat' THEN duration_ms END) AS durationMs,
              MAX(CASE WHEN source = 'chat' THEN created_at END) AS answeredAt,
              MAX(CASE WHEN source = 'chat' THEN intent END) AS intent,
+             MIN(created_at) AS firstAt,
              ${usageSumColumns}
       FROM llm_usage
       WHERE thread_id = ${threadId}
         AND ${usageCategoryExpr} = 'conversation'
-      GROUP BY turn_index, agent, model
-      ORDER BY turn_index, agent
+      GROUP BY turn_id, agent, model
+      ORDER BY firstAt, agent
     `);
   },
 

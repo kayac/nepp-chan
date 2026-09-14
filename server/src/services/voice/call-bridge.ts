@@ -213,7 +213,6 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     try {
       for await (const delta of conversation.runTurn({
         text,
-        turnIndex: this.turnIndex + 1,
         signal: controller.signal,
         onToolCall: cover.onToolCall,
         onEndCall: () => {

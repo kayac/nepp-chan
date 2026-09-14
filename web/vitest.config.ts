@@ -79,6 +79,7 @@ export default defineConfig({
         // recharts の描画ラッパー。tickFormatter / labelFormatter / Cell の
         // 配色コールバックは jsdom では発火せず E2E 領域。集計データは
         // server 側でテスト済み
+        "src/app/dashboard/components/analytics/DailyPurposeChart.tsx",
         "src/app/dashboard/components/analytics/HourlyChart.tsx",
         "src/app/dashboard/components/analytics/WeekdayChart.tsx",
         "src/app/dashboard/components/home/WeekTrendChart.tsx",
