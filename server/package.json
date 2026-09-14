@@ -38,7 +38,7 @@
     "@mastra/libsql": "1.17.0",
     "@mastra/loggers": "1.2.0",
     "@mastra/mcp": "1.17.3",
-    "@mastra/memory": "1.26.2",
+    "@mastra/memory": "1.29.0",
     "@mastra/observability": "1.17.7",
     "@mastra/rag": "2.6.2",
     "@nepp-chan/shared": "workspace:*",
