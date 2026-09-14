@@ -282,8 +282,8 @@ importers:
         specifier: ^5.102.8
         version: 5.102.8(react@19.2.8)
       '@twilio/voice-sdk':
-        specifier: ^2.18.4
-        version: 2.18.4
+        specifier: ^2.18.5
+        version: 2.18.5
       ai:
         specifier: ^6.0.208
         version: 6.0.208(zod@4.5.4)
@@ -3248,8 +3248,8 @@ packages:
   '@twilio/voice-errors@1.7.0':
     resolution: {integrity: sha512-9TvniWpzU0iy6SYFAcDP+HG+/mNz2yAHSs7+m0DZk86lE+LoTB6J/ZONTPuxXrXWi4tso/DulSHuA0w7nIQtGg==}
 
-  '@twilio/voice-sdk@2.18.4':
-    resolution: {integrity: sha512-QadgK72joYT+ZbWpWJpGqbzHHfvCieF5vpT+0CkclvfJZFgzGlbtGQ0wMETnrbDJLRMYBtgxm2ZskiLOvDeYMQ==}
+  '@twilio/voice-sdk@2.18.5':
+    resolution: {integrity: sha512-2/tw1IDAIn7j6yFDOln8p93v3aHIxNIN93JwL98cHIlbkSNeU/Jt9zGM/0TvDpNjo+k88lvAew4jgOjKlc9/KA==}
     engines: {node: '>= 12'}
 
   '@tybys/wasm-util@0.10.3':
@@ -9582,7 +9582,7 @@ snapshots:
 
   '@twilio/voice-errors@1.7.0': {}
 
-  '@twilio/voice-sdk@2.18.4':
+  '@twilio/voice-sdk@2.18.5':
     dependencies:
       '@twilio/voice-errors': 1.7.0
       '@types/events': 3.0.3
