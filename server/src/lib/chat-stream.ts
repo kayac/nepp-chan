@@ -14,12 +14,9 @@ type RespondWithChatStreamArgs = {
 };
 
 /**
- * handleChatStream を AI SDK v6 で実行し、UI message stream の Response を返す。
- *
- * @mastra/ai-sdk は ai v6 型のスナップショットを vendor しておりアプリの ai@6 と
- * 宣言が一部異なるうえ、zod スキーマ（looseObject）由来の message はどちらの
- * UIMessage 宣言にも構造一致しないため、handleChatStream のシグネチャ由来の型へ
- * キャストして渡す（値は v6 UIMessage 形式の JSON）。
+ * @mastra/ai-sdk が vendor する UIMessage 宣言はアプリの ai と一致せず、zod
+ * スキーマ（looseObject）由来の message はどちらにも構造一致しないため、
+ * handleChatStream のシグネチャ由来の型へキャストして渡す。
  */
 export const respondWithChatStream = async ({
   mastra,
@@ -32,7 +29,7 @@ export const respondWithChatStream = async ({
   const stream = await handleChatStream({
     mastra,
     agentId,
-    version: "v6",
+    version: "v7",
     params: {
       messages: messages as ChatStreamParams["messages"],
       requestContext,
