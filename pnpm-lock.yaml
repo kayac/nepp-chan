@@ -127,8 +127,8 @@ importers:
         specifier: 1.17.7
         version: 1.17.7(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)
       '@mastra/rag':
-        specifier: 2.6.1
-        version: 2.6.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)
+        specifier: 2.6.2
+        version: 2.6.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)
       '@nepp-chan/shared':
         specifier: workspace:*
         version: link:../shared
@@ -2231,8 +2231,8 @@ packages:
       '@mastra/core': '>=1.16.0-0 <2.0.0-0'
       zod: ^3.25.0 || ^4.0.0
 
-  '@mastra/rag@2.6.1':
-    resolution: {integrity: sha512-ixT1iebjVRiaAoTbSgumtatLY9r4MYwFuUJXwUgIOcaZuGc+uEa28iGW9NwZn8khvVM17nONWUwI4MvuLz1WOA==}
+  '@mastra/rag@2.6.2':
+    resolution: {integrity: sha512-vXMzXprbW95BdbKSchHcNpGscsgS7LNU6/ilHKu5fdCtvBF3lt9+pP0WEV3fJStVAFrvlgmxpQ7ir1m5zlVelw==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.0.0-0 <2.0.0-0'
@@ -8544,7 +8544,7 @@ snapshots:
       '@mastra/core': 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
       zod: 4.6.2
 
-  '@mastra/rag@2.6.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)':
+  '@mastra/rag@2.6.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)':
     dependencies:
       '@aws-sdk/client-bedrock-agent-runtime': 3.1127.0
       '@mastra/core': 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
