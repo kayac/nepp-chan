@@ -788,6 +788,34 @@ describe("getOperationCost", () => {
     ]);
   });
 
+  it("日ごとに用途別の内訳を返し、会話はまとめる", async () => {
+    await insertUsage({
+      id: "u1",
+      source: "chat",
+      costUsd: 0.02,
+      createdAt: "2026-06-09T01:00:00.000Z",
+    });
+    await insertUsage({
+      id: "u2",
+      source: "subagent",
+      costUsd: 0.03,
+      createdAt: "2026-06-09T02:00:00.000Z",
+    });
+    await insertUsage({
+      id: "u3",
+      source: "persona-extract",
+      costUsd: 0.01,
+      createdAt: "2026-06-09T03:00:00.000Z",
+    });
+
+    const result = await getOperationCost(d1, period);
+
+    expect(result.daily[0]?.purposes).toEqual([
+      { purpose: "conversation", costUsd: expect.closeTo(0.05, 10) },
+      { purpose: "persona-extract", costUsd: 0.01 },
+    ]);
+  });
+
   it("JST の日付ごとの推移を古い順に返す", async () => {
     await insertUsage({
       id: "u1",
@@ -811,8 +839,18 @@ describe("getOperationCost", () => {
     const result = await getOperationCost(d1, period);
 
     expect(result.daily).toEqual([
-      { date: "2026-06-09", costUsd: 0.03 },
-      { date: "2026-06-10", costUsd: expect.closeTo(0.03, 10) },
+      {
+        date: "2026-06-09",
+        costUsd: 0.03,
+        purposes: [{ purpose: "conversation", costUsd: 0.03 }],
+      },
+      {
+        date: "2026-06-10",
+        costUsd: expect.closeTo(0.03, 10),
+        purposes: [
+          { purpose: "conversation", costUsd: expect.closeTo(0.03, 10) },
+        ],
+      },
     ]);
   });
 

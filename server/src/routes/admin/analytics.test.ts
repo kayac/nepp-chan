@@ -249,7 +249,13 @@ describe("GET /usage/operation", () => {
       { category: "knowledge-base", costUsd: 0.04, agents: [] },
     ],
     byProvider: [{ provider: "openai", totalTokens: 100, costUsd: 0.11 }],
-    daily: [{ date: "2026-06-09", costUsd: 0.11 }],
+    daily: [
+      {
+        date: "2026-06-09",
+        costUsd: 0.11,
+        purposes: [{ purpose: "conversation", costUsd: 0.11 }],
+      },
+    ],
   };
 
   beforeEach(() => {

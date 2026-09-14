@@ -9,6 +9,7 @@ import {
   groupUsageByMonth,
   jstCurrentMonth,
   jstDateRange,
+  pivotDailyPurposes,
   pivotDailyUsage,
   platformLabel,
 } from "./helpers";
@@ -173,5 +174,33 @@ describe("jstDateRange", () => {
       from: "2026-06-12",
       to: "2026-06-12",
     });
+  });
+});
+
+describe("pivotDailyPurposes", () => {
+  it("日ごとの内訳を用途を列にした行に畳み、用途は合計の多い順に返す", () => {
+    const { purposes, rows } = pivotDailyPurposes([
+      {
+        date: "2026-06-09",
+        purposes: [
+          { purpose: "embedding", costUsd: 0.05 },
+          { purpose: "conversation", costUsd: 0.01 },
+        ],
+      },
+      {
+        date: "2026-06-10",
+        purposes: [{ purpose: "conversation", costUsd: 0.2 }],
+      },
+    ]);
+
+    expect(purposes).toEqual(["conversation", "embedding"]);
+    expect(rows).toEqual([
+      { date: "2026-06-09", embedding: 0.05, conversation: 0.01 },
+      { date: "2026-06-10", conversation: 0.2 },
+    ]);
+  });
+
+  it("記録が無ければ用途も行も空で返す", () => {
+    expect(pivotDailyPurposes([])).toEqual({ purposes: [], rows: [] });
   });
 });

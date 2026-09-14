@@ -32,15 +32,25 @@ const usageSumColumns = sql`
   SUM(CASE WHEN cost_usd IS NULL THEN cached_input_tokens ELSE 0 END) AS legacyCachedInputTokens
 `;
 
-// 会話に直接かかった費用と、それ以外の運用費を分けて見るための区分。
-// embedding は検索クエリ分（スレッドに紐づく）が会話、ナレッジ同期分が基盤
+// embedding は検索クエリ分（スレッドに紐づく）が会話、ナレッジ同期分はそれ以外
+const conversationExpr = sql`(
+  source IN ('chat', 'subagent', 'intent-classify', 'rerank')
+  OR (source = 'embedding' AND thread_id IS NOT NULL)
+)`;
+
+// 会話に直接かかった費用と、それ以外の運用費を分けて見るための区分
 const usageCategoryExpr = sql`
   CASE
-    WHEN source IN ('chat', 'subagent', 'intent-classify', 'rerank') THEN 'conversation'
-    WHEN source = 'embedding' AND thread_id IS NOT NULL THEN 'conversation'
+    WHEN ${conversationExpr} THEN 'conversation'
     WHEN source IN ('embedding', 'curated-draft') THEN 'knowledge-base'
     ELSE 'batch'
   END
+`;
+
+// 「その日どの用途に使ったか」の軸。会話はまとめ、運用側は source がそのまま用途になる。
+// agent は列追加前の行が NULL なので使わない
+const usagePurposeExpr = sql`
+  CASE WHEN ${conversationExpr} THEN 'conversation' ELSE source END
 `;
 
 export const llmUsageRepository = {
@@ -66,6 +76,26 @@ export const llmUsageRepository = {
       WHERE created_at >= ${params.from} ${until}
       GROUP BY date, model
       ORDER BY date, model
+    `);
+  },
+
+  async sumByDateAndPurpose(
+    d1: D1Database,
+    params: { from: string; to?: string },
+  ) {
+    const db = createDb(d1);
+
+    const until = params.to ? sql`AND created_at < ${params.to}` : sql``;
+
+    return db.all<UsageSumRow & { date: string; purpose: string }>(sql`
+      SELECT date(created_at, '+9 hours') AS date,
+             ${usagePurposeExpr} AS purpose,
+             model,
+             ${usageSumColumns}
+      FROM llm_usage
+      WHERE created_at >= ${params.from} ${until}
+      GROUP BY date, purpose, model
+      ORDER BY date, purpose
     `);
   },
 

@@ -1036,6 +1036,10 @@ export interface paths {
                             daily: {
                                 date: string;
                                 costUsd: number;
+                                purposes: {
+                                    purpose: string;
+                                    costUsd: number;
+                                }[];
                             }[];
                         };
                     };

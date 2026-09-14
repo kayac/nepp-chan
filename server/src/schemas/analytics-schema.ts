@@ -230,6 +230,8 @@ export const operationCostResponseSchema = z.object({
       // JST の日付（YYYY-MM-DD）
       date: z.string(),
       costUsd: z.number(),
+      // 会話はまとめ、運用側は source がそのまま用途になる
+      purposes: z.array(z.object({ purpose: z.string(), costUsd: z.number() })),
     }),
   ),
 });
