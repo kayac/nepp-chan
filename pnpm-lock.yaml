@@ -42,8 +42,8 @@ importers:
         specifier: workspace:*
         version: link:../shared
       ai:
-        specifier: ^6.0.208
-        version: 6.0.208(zod@4.6.2)
+        specifier: ^7.0.97
+        version: 7.0.97(zod@4.6.2)
       astro:
         specifier: ^7.3.2
         version: 7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.5.1)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0)
@@ -101,34 +101,34 @@ importers:
         version: 11.2.0
       '@mastra/ai-sdk':
         specifier: ^1.6.2
-        version: 1.6.3(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)
+        version: 1.6.3(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)
       '@mastra/cloudflare-d1':
         specifier: 1.1.1
-        version: 1.1.1(@cloudflare/workers-types@4.20260702.1)(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))
+        version: 1.1.1(@cloudflare/workers-types@4.20260702.1)(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))
       '@mastra/core':
         specifier: 1.52.1
-        version: 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
+        version: 1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
       '@mastra/evals':
         specifier: 1.10.1
-        version: 1.10.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(vitest@5.0.0)
+        version: 1.10.1(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(vitest@5.0.0)
       '@mastra/libsql':
         specifier: 1.17.0
-        version: 1.17.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))
+        version: 1.17.0(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))
       '@mastra/loggers':
         specifier: 1.2.0
-        version: 1.2.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))
+        version: 1.2.0(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))
       '@mastra/mcp':
         specifier: 1.17.2
-        version: 1.17.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(hono@4.13.7)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(supports-color@10.2.2)(zod@4.6.2)
+        version: 1.17.2(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(hono@4.13.7)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(supports-color@10.2.2)(zod@4.6.2)
       '@mastra/memory':
         specifier: 1.26.2
-        version: 1.26.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(supports-color@10.2.2)
+        version: 1.26.2(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(supports-color@10.2.2)
       '@mastra/observability':
         specifier: 1.17.7
-        version: 1.17.7(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)
+        version: 1.17.7(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)
       '@mastra/rag':
         specifier: 2.6.2
-        version: 2.6.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)
+        version: 2.6.2(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)
       '@nepp-chan/shared':
         specifier: workspace:*
         version: link:../shared
@@ -136,8 +136,8 @@ importers:
         specifier: ^10.74.0
         version: 10.74.0(@cloudflare/workers-types@4.20260702.1)(wrangler@4.131.0(@cloudflare/workers-types@4.20260702.1)(@types/node@26.5.1))
       ai:
-        specifier: ^6.0.208
-        version: 6.0.208(zod@4.6.2)
+        specifier: ^7.0.97
+        version: 7.0.97(zod@4.6.2)
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@cloudflare/workers-types@4.20260702.1)(@libsql/client@0.18.0)(@opentelemetry/api@1.9.1)
@@ -168,7 +168,7 @@ importers:
         version: 0.31.10
       mastra:
         specifier: 1.29.0
-        version: 1.29.0(@hono/node-server@1.19.17(hono@4.13.7))(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(supports-color@10.2.2)(typescript@6.0.3)(zod@4.6.2)
+        version: 1.29.0(@hono/node-server@1.19.17(hono@4.13.7))(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(supports-color@10.2.2)(typescript@6.0.3)(zod@4.6.2)
       tsx:
         specifier: ^4.23.13
         version: 4.23.13
@@ -194,8 +194,8 @@ importers:
         specifier: ^1.3.3
         version: 1.3.3(@types/react@19.3.0)(react@19.3.0)
       ai:
-        specifier: ^6.0.208
-        version: 6.0.208(zod@4.6.2)
+        specifier: ^7.0.97
+        version: 7.0.97(zod@4.6.2)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -285,8 +285,8 @@ importers:
         specifier: ^2.18.5
         version: 2.18.5
       ai:
-        specifier: ^6.0.208
-        version: 6.0.208(zod@4.6.2)
+        specifier: ^7.0.97
+        version: 7.0.97(zod@4.6.2)
       astro:
         specifier: ^7.3.2
         version: 7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.5.1)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0)
@@ -388,8 +388,8 @@ importers:
         specifier: workspace:*
         version: link:../shared
       ai:
-        specifier: ^6.0.208
-        version: 6.0.208(zod@4.6.2)
+        specifier: ^7.0.97
+        version: 7.0.97(zod@4.6.2)
       react:
         specifier: ^19.3.0
         version: 19.3.0
@@ -463,6 +463,12 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  '@ai-sdk/gateway@4.0.78':
+    resolution: {integrity: sha512-fcamzmFlcy+c/tIc7QcATLe/kArgSVGQ1QxaddMjhOSX8zypc2hmD5sHB2bp1DSFcSxDD32d6usF9a7xLCTULg==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   '@ai-sdk/google@3.0.83':
     resolution: {integrity: sha512-Pz7aCX0dy+5x+r4K/37HbLZNaPtPL4q2NduzJW64VffLv5sI9Nb478wAd7PlH2r2asiypJsz/Jerf9draTciUA==}
     engines: {node: '>=18'}
@@ -505,6 +511,12 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  '@ai-sdk/provider-utils@5.0.39':
+    resolution: {integrity: sha512-VIFp4Qv3j+V941crFB1y2VG5yeGbeLOFRxiPaZJETkkpo1H5WviLx6H5yRkFkrXIGxnTGygKsPgCAJG0X61Auw==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   '@ai-sdk/provider@1.1.3':
     resolution: {integrity: sha512-qZMxYJ0qqX/RfnuIaab+zp8UAeJn/ygXXAffR5I4N0n1IrvA6qBsjc8hXLmBiMV2zoXlifkacF7sEFnYnjBcqg==}
     engines: {node: '>=18'}
@@ -520,6 +532,10 @@ packages:
   '@ai-sdk/provider@3.0.14':
     resolution: {integrity: sha512-5X1k57JBJ4H7H1QjX7CnJYAB1I19r/trVZTMcSms7/kLNZ8RaU4Nt2agcwZzv82Hfx6Q7/TOLU7agAKeFfc8cA==}
     engines: {node: '>=18'}
+
+  '@ai-sdk/provider@4.0.13':
+    resolution: {integrity: sha512-sJvnbFIFLzmKFXIjfwS8XCOAj6puHCawItwvA9PBZgk2f/l/TiC4OSfK3ueDbUVXfRCOn5eJN97EIF10toIOmQ==}
+    engines: {node: '>=22'}
 
   '@ai-sdk/provider@4.0.3':
     resolution: {integrity: sha512-e0CpNWJUY7OxAFAnCZkw+ri9QOHWwTs1tXP42782KFGCU07qt8NiXCrCVowyCB5dP2r5/Uls+g2oPd8kOJn9dw==}
@@ -3367,6 +3383,12 @@ packages:
   ai@6.0.208:
     resolution: {integrity: sha512-STz+AaZqJ4ZjH7UkpXkbHx+bjgIDOsE8fIUoZjkZ2whoZcfVmG9K/TqEKouJZ03SuZuD7lagntlU3zBhAEkRpQ==}
     engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  ai@7.0.97:
+    resolution: {integrity: sha512-tQGZ234p/bk5X/LNQdB43a5/z1Bve7wK0EOR1AwN6xrosZih4MIC/3pXhcnytcpBJHMbhLISW6J1dFTd/tnwPA==}
+    engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
@@ -6728,6 +6750,13 @@ snapshots:
       '@vercel/oidc': 3.2.0
       zod: 4.6.2
 
+  '@ai-sdk/gateway@4.0.78(zod@4.6.2)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.13
+      '@ai-sdk/provider-utils': 5.0.39(zod@4.6.2)
+      '@vercel/oidc': 3.2.0
+      zod: 4.6.2
+
   '@ai-sdk/google@3.0.83(zod@4.6.2)':
     dependencies:
       '@ai-sdk/provider': 3.0.10
@@ -6776,6 +6805,15 @@ snapshots:
       eventsource-parser: 3.1.1
       zod: 4.6.2
 
+  '@ai-sdk/provider-utils@5.0.39(zod@4.6.2)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.13
+      '@standard-schema/spec': 1.1.0
+      '@workflow/serde': 4.1.0
+      eventsource-parser: 3.1.1
+      undici: 7.29.0
+      zod: 4.6.2
+
   '@ai-sdk/provider@1.1.3':
     dependencies:
       json-schema: 0.4.0
@@ -6789,6 +6827,10 @@ snapshots:
       json-schema: 0.4.0
 
   '@ai-sdk/provider@3.0.14':
+    dependencies:
+      json-schema: 0.4.0
+
+  '@ai-sdk/provider@4.0.13':
     dependencies:
       json-schema: 0.4.0
 
@@ -8205,20 +8247,20 @@ snapshots:
     dependencies:
       '@lukeed/csprng': 1.1.0
 
-  '@mastra/ai-sdk@1.6.3(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)':
+  '@mastra/ai-sdk@1.6.3(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)':
     dependencies:
-      '@mastra/core': 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
+      '@mastra/core': 1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
       zod: 4.6.2
 
-  '@mastra/cloudflare-d1@1.1.1(@cloudflare/workers-types@4.20260702.1)(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))':
+  '@mastra/cloudflare-d1@1.1.1(@cloudflare/workers-types@4.20260702.1)(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))':
     dependencies:
       '@cloudflare/workers-types': 4.20260702.1
-      '@mastra/core': 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
+      '@mastra/core': 1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
       cloudflare: 5.2.0
     transitivePeerDependencies:
       - encoding
 
-  '@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)':
+  '@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)':
     dependencies:
       '@a2a-js/sdk': 0.3.14(express@5.2.1(supports-color@10.2.2))
       '@ai-sdk/provider-utils-v5': '@ai-sdk/provider-utils@3.0.30(zod@4.6.2)'
@@ -8235,7 +8277,7 @@ snapshots:
       '@sindresorhus/slugify': 2.2.1
       '@standard-schema/spec': 1.1.0
       ajv: 8.20.0
-      chat: 4.34.0(ai@6.0.208(zod@4.6.2))(supports-color@10.2.2)(zod@4.6.2)
+      chat: 4.34.0(ai@7.0.97(zod@4.6.2))(supports-color@10.2.2)(zod@4.6.2)
       croner: 10.0.1
       dotenv: 17.4.2
       execa: 9.6.1
@@ -8264,14 +8306,14 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@mastra/deployer@1.66.0(@hono/node-server@1.19.17(hono@4.13.7))(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(supports-color@10.2.2)(typescript@6.0.3)(zod@4.6.2)':
+  '@mastra/deployer@1.66.0(@hono/node-server@1.19.17(hono@4.13.7))(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(supports-color@10.2.2)(typescript@6.0.3)(zod@4.6.2)':
     dependencies:
       '@babel/core': 8.0.1
       '@babel/preset-typescript': 8.0.1(@babel/core@8.0.1)
       '@babel/traverse': 8.0.4
       '@hono/node-ws': 1.3.1(@hono/node-server@1.19.17(hono@4.13.7))(hono@4.13.7)
-      '@mastra/core': 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
-      '@mastra/server': 1.66.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)
+      '@mastra/core': 1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
+      '@mastra/server': 1.66.0(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)
       '@optimize-lodash/rollup-plugin': 5.1.0(rollup@4.62.2)
       '@rollup/plugin-commonjs': 29.0.2(rollup@4.62.2)
       '@rollup/plugin-esm-shim': 0.1.8(rollup@4.62.2)
@@ -8302,9 +8344,9 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@mastra/evals@1.10.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(vitest@5.0.0)':
+  '@mastra/evals@1.10.1(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(vitest@5.0.0)':
     dependencies:
-      '@mastra/core': 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
+      '@mastra/core': 1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
       compromise: 14.16.0
       keyword-extractor: 0.0.28
       sentiment: 5.0.2
@@ -8312,29 +8354,29 @@ snapshots:
     optionalDependencies:
       vitest: 5.0.0(@opentelemetry/api@1.9.1)(@types/node@26.5.1)(@vitest/coverage-istanbul@5.0.0)(@vitest/coverage-v8@5.0.0)(jsdom@29.1.1(@noble/hashes@1.8.0))(msw@2.15.0(@types/node@26.5.1)(typescript@6.0.3))(vite@8.3.0(@types/node@26.5.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))
 
-  '@mastra/libsql@1.17.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))':
+  '@mastra/libsql@1.17.0(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))':
     dependencies:
       '@libsql/client': 0.17.4
-      '@mastra/core': 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
+      '@mastra/core': 1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@mastra/loggers@1.2.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))':
+  '@mastra/loggers@1.2.0(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))':
     dependencies:
-      '@mastra/core': 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
+      '@mastra/core': 1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
       pino: 10.3.1
       pino-pretty: 13.1.3
 
-  '@mastra/loggers@1.3.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))':
+  '@mastra/loggers@1.3.1(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))':
     dependencies:
-      '@mastra/core': 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
+      '@mastra/core': 1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
       pino: 10.3.1
       pino-pretty: 13.1.3
 
-  '@mastra/mcp@1.17.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(hono@4.13.7)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(supports-color@10.2.2)(zod@4.6.2)':
+  '@mastra/mcp@1.17.2(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(hono@4.13.7)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(supports-color@10.2.2)(zod@4.6.2)':
     dependencies:
-      '@mastra/core': 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
+      '@mastra/core': 1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
       '@modelcontextprotocol/client': 2.0.0
       '@modelcontextprotocol/core': 2.0.0
       '@modelcontextprotocol/ext-apps': 1.7.5(@modelcontextprotocol/sdk@1.30.0(supports-color@10.2.2)(zod@4.6.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(zod@4.6.2)
@@ -8353,9 +8395,9 @@ snapshots:
       - supports-color
       - zod
 
-  '@mastra/memory@1.26.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(supports-color@10.2.2)':
+  '@mastra/memory@1.26.2(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(supports-color@10.2.2)':
     dependencies:
-      '@mastra/core': 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
+      '@mastra/core': 1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
       '@mastra/schema-compat': 1.3.7(zod@4.6.2)
       async-mutex: 0.5.0
       diff: 8.0.4
@@ -8368,15 +8410,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@mastra/observability@1.17.7(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)':
+  '@mastra/observability@1.17.7(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)':
     dependencies:
-      '@mastra/core': 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
+      '@mastra/core': 1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
       zod: 4.6.2
 
-  '@mastra/rag@2.6.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)':
+  '@mastra/rag@2.6.2(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)':
     dependencies:
       '@aws-sdk/client-bedrock-agent-runtime': 3.1127.0
-      '@mastra/core': 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
+      '@mastra/core': 1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
       big.js: 7.0.1
       js-tiktoken: 1.0.21
       node-html-better-parser: 1.5.9
@@ -8399,9 +8441,9 @@ snapshots:
       zod: 4.6.2
       zod-from-json-schema: 0.5.6
 
-  '@mastra/server@1.66.0(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)':
+  '@mastra/server@1.66.0(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)':
     dependencies:
-      '@mastra/core': 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
+      '@mastra/core': 1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
       hono: 4.13.7
       zod: 4.6.2
 
@@ -9456,6 +9498,13 @@ snapshots:
       '@opentelemetry/api': 1.9.1
       zod: 4.6.2
 
+  ai@7.0.97(zod@4.6.2):
+    dependencies:
+      '@ai-sdk/gateway': 4.0.78(zod@4.6.2)
+      '@ai-sdk/provider': 4.0.13
+      '@ai-sdk/provider-utils': 5.0.39(zod@4.6.2)
+      zod: 4.6.2
+
   ajv-draft-04@1.0.0(ajv@8.20.0):
     optionalDependencies:
       ajv: 8.20.0
@@ -9781,7 +9830,7 @@ snapshots:
 
   character-reference-invalid@2.0.1: {}
 
-  chat@4.34.0(ai@6.0.208(zod@4.6.2))(supports-color@10.2.2)(zod@4.6.2):
+  chat@4.34.0(ai@7.0.97(zod@4.6.2))(supports-color@10.2.2)(zod@4.6.2):
     dependencies:
       '@workflow/serde': 4.1.0-beta.2
       mdast-util-to-string: 4.0.0
@@ -9791,7 +9840,7 @@ snapshots:
       remend: 1.3.0
       unified: 11.0.5
     optionalDependencies:
-      ai: 6.0.208(zod@4.6.2)
+      ai: 7.0.97(zod@4.6.2)
       zod: 4.6.2
     transitivePeerDependencies:
       - supports-color
@@ -11015,15 +11064,15 @@ snapshots:
 
   markdown-table@3.0.4: {}
 
-  mastra@1.29.0(@hono/node-server@1.19.17(hono@4.13.7))(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(supports-color@10.2.2)(typescript@6.0.3)(zod@4.6.2):
+  mastra@1.29.0(@hono/node-server@1.19.17(hono@4.13.7))(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(supports-color@10.2.2)(typescript@6.0.3)(zod@4.6.2):
     dependencies:
       '@babel/parser': 8.0.4
       '@babel/types': 8.0.4
       '@clack/prompts': 1.7.0
       '@expo/devcert': 1.2.1(supports-color@10.2.2)
-      '@mastra/core': 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
-      '@mastra/deployer': 1.66.0(@hono/node-server@1.19.17(hono@4.13.7))(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(supports-color@10.2.2)(typescript@6.0.3)(zod@4.6.2)
-      '@mastra/loggers': 1.3.1(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))
+      '@mastra/core': 1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
+      '@mastra/deployer': 1.66.0(@hono/node-server@1.19.17(hono@4.13.7))(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(supports-color@10.2.2)(typescript@6.0.3)(zod@4.6.2)
+      '@mastra/loggers': 1.3.1(@mastra/core@1.52.1(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))
       archiver: 8.0.0
       commander: 14.0.3
       dotenv: 17.4.2
