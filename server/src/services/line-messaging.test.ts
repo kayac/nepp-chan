@@ -56,7 +56,7 @@ vi.mock("~/lib/split-message", () => ({
 
 vi.mock("~/services/analytics/llm-usage", () => ({
   recordLlmUsage: vi.fn(async () => undefined),
-  nextTurnIndex: vi.fn(async () => 1),
+  newTurnId: vi.fn(() => "turn-1"),
 }));
 
 vi.mock("~/lib/logger", () => ({
@@ -224,7 +224,7 @@ describe("generateReply", () => {
         agent: "nepp-chan",
         intent: "casual",
         threadId: "thr-1",
-        turnIndex: 1,
+        turnId: "turn-1",
       }),
     );
   });

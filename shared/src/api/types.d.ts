@@ -1119,7 +1119,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             turns: {
-                                turnIndex: number | null;
+                                turnId: string | null;
                                 answeredAt: string | null;
                                 totalTokens: number;
                                 costUsd: number;

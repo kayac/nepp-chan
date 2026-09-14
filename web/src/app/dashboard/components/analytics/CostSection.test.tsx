@@ -140,7 +140,7 @@ describe("CostSection", () => {
         HttpResponse.json({
           turns: [
             {
-              turnIndex: null,
+              turnId: null,
               answeredAt: null,
               totalTokens: 1_000,
               costUsd: 0.01,
@@ -155,7 +155,7 @@ describe("CostSection", () => {
               ],
             },
             {
-              turnIndex: 1,
+              turnId: "turn-1",
               answeredAt: "2026-08-25T08:24:00.000Z",
               totalTokens: 12_000,
               costUsd: 0.072,

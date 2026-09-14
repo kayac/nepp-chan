@@ -1,4 +1,4 @@
-import { and, count, eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
 import { createDb, llmUsage, type NewLlmUsage } from "~/db";
 import { deleteWithCount } from "./delete-with-count";
@@ -48,18 +48,6 @@ export const llmUsageRepository = {
     const db = createDb(d1);
 
     await db.insert(llmUsage).values(input);
-  },
-
-  async countChatByThread(d1: D1Database, threadId: string) {
-    const db = createDb(d1);
-
-    const row = await db
-      .select({ value: count() })
-      .from(llmUsage)
-      .where(and(eq(llmUsage.threadId, threadId), eq(llmUsage.source, "chat")))
-      .get();
-
-    return Number(row?.value ?? 0);
   },
 
   async sumByDateAndModel(
@@ -138,25 +126,27 @@ export const llmUsageRepository = {
 
     return db.all<
       UsageSumRow & {
-        turnIndex: number | null;
+        turnId: string | null;
         agent: string | null;
         durationMs: number | null;
-        answeredAt: string;
+        answeredAt: string | null;
         intent: string | null;
+        firstAt: string;
       }
     >(sql`
-      SELECT turn_index AS turnIndex,
+      SELECT turn_id AS turnId,
              agent,
              model,
              MAX(CASE WHEN source = 'chat' THEN duration_ms END) AS durationMs,
              MAX(CASE WHEN source = 'chat' THEN created_at END) AS answeredAt,
              MAX(CASE WHEN source = 'chat' THEN intent END) AS intent,
+             MIN(created_at) AS firstAt,
              ${usageSumColumns}
       FROM llm_usage
       WHERE thread_id = ${threadId}
         AND ${usageCategoryExpr} = 'conversation'
-      GROUP BY turn_index, agent, model
-      ORDER BY turn_index, agent
+      GROUP BY turn_id, agent, model
+      ORDER BY firstAt, agent
     `);
   },
 

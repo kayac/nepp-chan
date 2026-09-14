@@ -201,7 +201,7 @@ export const llmUsage = sqliteTable("llm_usage", {
   platform: text("platform"), // "web" | "line" | "lp" | "widget" | "voice" | null（バッチ系）
   source: text("source").notNull(),
   agent: text("agent"), // 呼び出し元エージェント名（"nepp-chan" "knowledge" 等）。列追加前の行は null
-  turnIndex: integer("turn_index"), // スレッド内の何往復目か（1 始まり）。列追加前の行は null
+  turnId: text("turn_id"), // 1 往復で生じた全行に共通の ID。列追加前の行は null
   durationMs: integer("duration_ms"), // 呼び出し 1 回の所要時間
   intent: text("intent"), // "casual" | "thinking"
   threadId: text("thread_id"),

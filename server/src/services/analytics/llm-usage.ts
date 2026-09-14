@@ -31,7 +31,7 @@ type LlmUsageParams = {
   agent?: string;
   intent?: "casual" | "thinking";
   threadId?: string;
-  turnIndex?: number;
+  turnId?: string;
   durationMs?: number;
   serviceTier?: LlmServiceTier;
 };
@@ -73,7 +73,7 @@ export const recordLlmUsage = async (
       agent: params.agent,
       intent: params.intent,
       threadId: params.threadId,
-      turnIndex: params.turnIndex,
+      turnId: params.turnId,
       durationMs: params.durationMs,
       costUsd: calcCostUsd(
         params.model,
@@ -87,29 +87,14 @@ export const recordLlmUsage = async (
   }
 };
 
-/**
- * スレッド内の何往復目かを返す（1 始まり）。
- * source='chat' が 1 往復に 1 行なので、その件数 + 1 が今回のターン。
- * 記録失敗時も応答は止めないため、取得できなければ undefined を返す。
- */
-export const nextTurnIndex = async (d1: D1Database, threadId: string) => {
-  try {
-    const chatCalls = await llmUsageRepository.countChatByThread(d1, threadId);
-    return chatCalls + 1;
-  } catch (error) {
-    logger.warn("[LlmUsage] failed to resolve turn index", {
-      error: String(error),
-    });
-    return undefined;
-  }
-};
+export const newTurnId = () => crypto.randomUUID();
 
 const contextAttributes = (requestContext: RequestContext | undefined) => ({
   platform: requestContext?.get("usagePlatform") as
     | LlmUsagePlatform
     | undefined,
   threadId: requestContext?.get("usageThreadId") as string | undefined,
-  turnIndex: requestContext?.get("usageTurnIndex") as number | undefined,
+  turnId: requestContext?.get("usageTurnId") as string | undefined,
 });
 
 /** requestContext から db・チャネル・スレッドを取り出して記録する（db 不在なら何もしない） */

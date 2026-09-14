@@ -294,7 +294,7 @@ describe("GET /usage/threads/{threadId}", () => {
   const turnUsage = {
     turns: [
       {
-        turnIndex: 1,
+        turnId: "turn-1",
         answeredAt: "2026-06-09T00:00:00.000Z",
         totalTokens: 1000,
         costUsd: 0.05,

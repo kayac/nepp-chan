@@ -320,7 +320,7 @@ export const getThreadTurnUsage = async (d1: D1Database, threadId: string) => {
   const rows = await llmUsageRepository.sumConversationByTurn(d1, threadId);
 
   type TurnTotals = {
-    turnIndex: number | null;
+    turnId: string | null;
     totalTokens: number;
     costUsd: number;
     durationMs: number | null;
@@ -328,11 +328,13 @@ export const getThreadTurnUsage = async (d1: D1Database, threadId: string) => {
     intent: string | null;
     agentTotals: Map<string | null, AgentTotals>;
   };
-  const turns = new Map<number | null, TurnTotals>();
+  // sumConversationByTurn が最初の記録時刻順に返すので、Map の挿入順がそのままターン順になる。
+  // 発話順ではなく記録順なので、同一スレッドへの並行リクエストでは前後しうる
+  const turns = new Map<string | null, TurnTotals>();
   for (const row of rows) {
-    const key = row.turnIndex === null ? null : Number(row.turnIndex);
+    const key = row.turnId ?? null;
     const current = turns.get(key) ?? {
-      turnIndex: key,
+      turnId: key,
       totalTokens: 0,
       costUsd: 0,
       durationMs: null,
@@ -350,17 +352,10 @@ export const getThreadTurnUsage = async (d1: D1Database, threadId: string) => {
   }
 
   return {
-    // turn_index 記録前の行は turnIndex: null にまとまり、末尾に並ぶ
-    turns: [...turns.values()]
-      .sort(
-        (a, b) =>
-          (a.turnIndex ?? Number.MAX_SAFE_INTEGER) -
-          (b.turnIndex ?? Number.MAX_SAFE_INTEGER),
-      )
-      .map(({ agentTotals, ...turn }) => ({
-        ...turn,
-        agents: sortedAgentTotals(agentTotals),
-      })),
+    turns: [...turns.values()].map(({ agentTotals, ...turn }) => ({
+      ...turn,
+      agents: sortedAgentTotals(agentTotals),
+    })),
   };
 };
 

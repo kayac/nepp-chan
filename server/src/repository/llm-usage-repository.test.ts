@@ -57,21 +57,6 @@ describe("llmUsageRepository", () => {
     });
   });
 
-  describe("countChatByThread", () => {
-    it("同一スレッドの source='chat' だけを数える", async () => {
-      await insert(db, { threadId: "t-1", source: "chat" });
-      await insert(db, { threadId: "t-1", source: "chat" });
-      await insert(db, { threadId: "t-1", source: "subagent" });
-      await insert(db, { threadId: "t-2", source: "chat" });
-
-      expect(await llmUsageRepository.countChatByThread(d1, "t-1")).toBe(2);
-    });
-
-    it("該当行が無ければ 0 を返す", async () => {
-      expect(await llmUsageRepository.countChatByThread(d1, "none")).toBe(0);
-    });
-  });
-
   describe("sumByDateAndModel", () => {
     it("JST の日付でグループ化する", async () => {
       await insert(db, { createdAt: "2026-06-01T14:59:00.000Z" });
@@ -202,14 +187,14 @@ describe("llmUsageRepository", () => {
       await insert(db, {
         threadId: "t-1",
         source: "chat",
-        turnIndex: 1,
+        turnId: "turn-1",
         durationMs: 100,
         createdAt: "2026-06-01T00:00:00.000Z",
       });
       await insert(db, {
         threadId: "t-1",
         source: "subagent",
-        turnIndex: 1,
+        turnId: "turn-1",
         durationMs: 9999,
         createdAt: "2026-06-01T01:00:00.000Z",
       });
@@ -220,13 +205,23 @@ describe("llmUsageRepository", () => {
       expect(row?.answeredAt).toBe("2026-06-01T00:00:00.000Z");
     });
 
-    it("ターン順に並べる", async () => {
-      await insert(db, { threadId: "t-1", source: "chat", turnIndex: 2 });
-      await insert(db, { threadId: "t-1", source: "chat", turnIndex: 1 });
+    it("最初の記録が早いターンから順に並べる", async () => {
+      await insert(db, {
+        threadId: "t-1",
+        source: "chat",
+        turnId: "turn-2",
+        createdAt: "2026-06-01T01:00:00.000Z",
+      });
+      await insert(db, {
+        threadId: "t-1",
+        source: "chat",
+        turnId: "turn-1",
+        createdAt: "2026-06-01T00:00:00.000Z",
+      });
 
       const rows = await llmUsageRepository.sumConversationByTurn(d1, "t-1");
 
-      expect(rows.map((r) => Number(r.turnIndex))).toEqual([1, 2]);
+      expect(rows.map((r) => r.turnId)).toEqual(["turn-1", "turn-2"]);
     });
   });
 
