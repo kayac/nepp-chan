@@ -100,8 +100,8 @@ importers:
         specifier: ^11.2.0
         version: 11.2.0
       '@mastra/ai-sdk':
-        specifier: ^1.6.2
-        version: 1.6.3(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)
+        specifier: ^1.10.2
+        version: 1.10.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)
       '@mastra/cloudflare-d1':
         specifier: 1.1.1
         version: 1.1.1(@cloudflare/workers-types@4.20260702.1)(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))
@@ -2164,8 +2164,8 @@ packages:
     resolution: {integrity: sha512-qC72D4+CDdjGqJvkFMMEAtancHUQ7/d/tAiHf64z8MopFDmcrtbcJuerDtFceuAfQJ2pDSfCKCtbqoGBNnwg0w==}
     engines: {node: '>=8'}
 
-  '@mastra/ai-sdk@1.6.3':
-    resolution: {integrity: sha512-PK4qaZ9ut3vnh8car8WlmqSoT+at3wg73Mi+HXwiHV6+Z/KABf0XjHNuGa2euRI1LweH60vL8pyvI3J8M6O4KQ==}
+  '@mastra/ai-sdk@1.10.2':
+    resolution: {integrity: sha512-i+oLTw+QyV11KfnMdxi8meYpCdVL2oc7fF+n9XY56s/zx3pTrS1JolPFslxr/rRFLP3ofMBami5mtaHAVC6NPw==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.5.0-0 <2.0.0-0'
@@ -8205,7 +8205,7 @@ snapshots:
     dependencies:
       '@lukeed/csprng': 1.1.0
 
-  '@mastra/ai-sdk@1.6.3(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)':
+  '@mastra/ai-sdk@1.10.2(@mastra/core@1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(zod@4.6.2)':
     dependencies:
       '@mastra/core': 1.52.1(ai@6.0.208(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
       zod: 4.6.2
