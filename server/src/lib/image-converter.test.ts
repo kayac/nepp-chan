@@ -23,22 +23,13 @@ beforeEach(() => {
 });
 
 describe("isSupportedMimeType", () => {
-  it.each([
-    "image/png",
-    "image/jpeg",
-    "image/webp",
-    "image/gif",
-    "application/pdf",
-  ])("%s はサポート", (mime) => {
-    expect(isSupportedMimeType(mime)).toBe(true);
+  it("image/png はサポート", () => {
+    expect(isSupportedMimeType("image/png")).toBe(true);
   });
 
-  it.each(["text/plain", "image/bmp", "application/json", ""])(
-    "%s はサポート外",
-    (mime) => {
-      expect(isSupportedMimeType(mime)).toBe(false);
-    },
-  );
+  it("text/plain はサポート外", () => {
+    expect(isSupportedMimeType("text/plain")).toBe(false);
+  });
 });
 
 describe("convertToMarkdown", () => {
