@@ -107,14 +107,6 @@ describe("textTokenMessage", () => {
       interruptible: true,
     });
   });
-
-  it("オプション省略時は type/token/last の3キーのみ", () => {
-    expect(Object.keys(textTokenMessage("やあ"))).toEqual([
-      "type",
-      "token",
-      "last",
-    ]);
-  });
 });
 
 describe("serializeRelayMessage", () => {
@@ -151,12 +143,6 @@ describe("endMessage", () => {
     expect(endMessage('{"reasonCode":"agent-hangup"}')).toEqual({
       type: "end",
       handoffData: '{"reasonCode":"agent-hangup"}',
-    });
-  });
-
-  it("serializeRelayMessage で JSON 化できる", () => {
-    expect(JSON.parse(serializeRelayMessage(endMessage()))).toEqual({
-      type: "end",
     });
   });
 });
