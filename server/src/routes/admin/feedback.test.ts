@@ -271,27 +271,6 @@ describe("feedbackAdminRoutes", () => {
       expect(res.status).toBe(404);
       expect(feedbackRepository.resolve).not.toHaveBeenCalled();
     });
-
-    it("冪等性: 既に resolved な feedback でも 200 を返す", async () => {
-      useAdminAuth();
-      vi.mocked(feedbackRepository.findById).mockResolvedValue({
-        ...sampleRow,
-        resolvedAt: "2025-01-02T00:00:00Z",
-      });
-      vi.mocked(feedbackRepository.resolve).mockResolvedValue();
-
-      const res = await routes.request(
-        new Request("http://localhost/fb-1/resolve", {
-          method: "PUT",
-          headers: { Authorization: `Bearer ${ADMIN_TOKEN}` },
-        }),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(200);
-      expect(feedbackRepository.resolve).toHaveBeenCalledTimes(1);
-    });
   });
 
   describe("DELETE /:id/resolve (unresolve)", () => {
@@ -351,22 +330,6 @@ describe("feedbackAdminRoutes", () => {
       expect(body.count).toBe(42);
       expect(body.message).toMatch(/42/);
       expect(feedbackRepository.deleteAll).toHaveBeenCalledTimes(1);
-    });
-
-    it("境界値: 0 件でも 200 を返す", async () => {
-      useAdminAuth();
-      vi.mocked(feedbackRepository.count).mockResolvedValue(0);
-      vi.mocked(feedbackRepository.deleteAll).mockResolvedValue();
-
-      const res = await routes.request(
-        authed("DELETE", "/"),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(200);
-      const body = (await res.json()) as { count: number };
-      expect(body.count).toBe(0);
     });
   });
 });

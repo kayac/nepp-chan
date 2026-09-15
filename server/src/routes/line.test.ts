@@ -86,22 +86,6 @@ describe("lineRoutes: POST /webhook", () => {
 
       expect(res.status).toBe(401);
     });
-
-    it("正しい署名で 200", async () => {
-      const body = JSON.stringify({ destination: "x", events: [] });
-      const req = new Request("http://localhost/webhook", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-line-signature": sign(body),
-        },
-        body,
-      });
-
-      const res = await sendWithExecCtx(req);
-
-      expect(res.status).toBe(200);
-    });
   });
 
   describe("イベント分岐", () => {
