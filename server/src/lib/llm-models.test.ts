@@ -70,9 +70,11 @@ describe("modelWithReasoning", () => {
     );
   });
 });
+
 describe("resolveModelTier", () => {
   describe("Admin は thinking の reasoning と casual の maxSteps を引き上げる", () => {
     const platform = "web" as const;
+
     it("casual は effort=none のまま maxSteps だけ thinking と揃える", () => {
       const tier = resolveModelTier({
         intent: "casual",
