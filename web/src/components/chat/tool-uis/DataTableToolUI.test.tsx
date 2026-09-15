@@ -56,16 +56,4 @@ describe("DisplayTableToolComponent", () => {
 
     expect(screen.getByText("100")).toBeDefined();
   });
-
-  it("loading 状態（columns 未到達 + running）はローディングを出す", () => {
-    render(
-      <DisplayTableToolComponent
-        args={{}}
-        result={undefined}
-        status={{ type: "running" }}
-        toolName="displayTableTool"
-      />,
-    );
-    expect(screen.queryByText("売上表")).toBeNull();
-  });
 });

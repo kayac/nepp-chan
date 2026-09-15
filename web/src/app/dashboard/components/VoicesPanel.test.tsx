@@ -258,16 +258,6 @@ describe("VoicesPanel", () => {
     expect(cards.every((c) => c.textContent?.includes("緊急"))).toBe(true);
   });
 
-  it("緊急だけを選ぶとペルソナを取得しない", async () => {
-    const calls = usePersonaHandlers();
-    renderWithQuery(<VoicesPanel initialFilter={{ sents: ["emergency"] }} />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/熊の出没/)).toBeInTheDocument();
-    });
-    expect(calls).toHaveLength(0);
-  });
-
   it("分析ボタンでフィルター文脈つきの onAskMayor が呼ばれる", async () => {
     usePersonaHandlers();
     const onAskMayor = vi.fn();

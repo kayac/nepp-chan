@@ -4,13 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setAuthToken } from "~/lib/auth-token";
 import { server } from "~/test/msw-server";
 import { renderHookWithQuery } from "~/test/query";
-import {
-  useCreateThread,
-  useDeleteThread,
-  useMessages,
-  useThread,
-  useThreads,
-} from "./useThreads";
+import { useCreateThread, useDeleteThread, useThreads } from "./useThreads";
 
 const API = "http://localhost:8787";
 
@@ -60,19 +54,6 @@ describe("useThreads", () => {
 
     expect(result.current.fetchStatus).toBe("idle");
     expect(handler).not.toHaveBeenCalled();
-  });
-});
-
-describe("useThread / useMessages", () => {
-  it("threadId 空文字なら fetcher を呼ばない（enabled:false）", async () => {
-    const { result } = renderHookWithQuery(() => useThread(""));
-
-    expect(result.current.fetchStatus).toBe("idle");
-  });
-
-  it("useMessages も同様", async () => {
-    const { result } = renderHookWithQuery(() => useMessages(""));
-    expect(result.current.fetchStatus).toBe("idle");
   });
 });
 

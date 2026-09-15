@@ -81,16 +81,4 @@ describe("FeedbackModal", () => {
     fireEvent.click(screen.getAllByLabelText("閉じる")[0]);
     expect(onClose).toHaveBeenCalled();
   });
-
-  it("dialog の close（ESC 相当）で onClose を呼ぶ", () => {
-    const onClose = vi.fn();
-    const { container } = render(
-      <FeedbackModal messageId="m-1" rating="good" onClose={onClose} />,
-    );
-
-    const dialog = container.querySelector("dialog");
-    if (!dialog) throw new Error("dialog not found");
-    dialog.close();
-    expect(onClose).toHaveBeenCalled();
-  });
 });

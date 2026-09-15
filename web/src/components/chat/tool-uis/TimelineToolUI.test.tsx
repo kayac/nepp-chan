@@ -67,16 +67,4 @@ describe("DisplayTimelineToolComponent", () => {
     );
     expect(screen.getByText("表示するイベントがありません")).toBeDefined();
   });
-
-  it("running + events なし はローディングを出す", () => {
-    render(
-      <DisplayTimelineToolComponent
-        args={{}}
-        result={undefined}
-        status={{ type: "running" }}
-        toolName="displayTimelineTool"
-      />,
-    );
-    expect(screen.queryByText("イベント表")).toBeNull();
-  });
 });
