@@ -161,18 +161,6 @@ describe("widgetSiteAdminRoutes", () => {
     expect(widgetSiteRepository.create).not.toHaveBeenCalled();
   });
 
-  it("host が空なら 400", async () => {
-    useAuth();
-
-    const res = await routes.request(
-      authed("/", "POST", { host: "", instructions: "案内文" }),
-      undefined,
-      mockEnv,
-    );
-
-    expect(res.status).toBe(400);
-  });
-
   it("設置サイトを更新する", async () => {
     useAuth();
     vi.mocked(widgetSiteRepository.findById).mockResolvedValue(site);

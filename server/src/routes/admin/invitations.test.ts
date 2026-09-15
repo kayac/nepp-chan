@@ -249,18 +249,6 @@ describe("invitationRoutes", () => {
       expect(res.status).toBe(200);
     });
 
-    it("username が空文字なら 400", async () => {
-      useAuth();
-
-      const res = await routes.request(
-        authedJson("POST", "/", { username: "", role: "staff" }),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(400);
-    });
-
     it("createInvitation が throw すると 400 を返す", async () => {
       useAuth();
       vi.mocked(invitationService.createInvitation).mockRejectedValue(

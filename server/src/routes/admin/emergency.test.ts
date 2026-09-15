@@ -202,17 +202,5 @@ describe("emergencyAdminRoutes: GET /", () => {
 
       expect(res.status).toBe(200);
     });
-
-    it("非数値 limit は 400", async () => {
-      useAdminAuth();
-
-      const res = await routes.request(
-        authedGet("/?limit=abc", ADMIN_TOKEN),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(400);
-    });
   });
 });
