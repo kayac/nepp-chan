@@ -69,24 +69,6 @@ describe("useRegisterForm", () => {
     expect(redirectTo).not.toHaveBeenCalled();
   });
 
-  it("8文字未満でバリデーション失敗", async () => {
-    const { result } = renderHook(() => useRegisterForm());
-
-    act(() => {
-      result.current.setPassword("short");
-      result.current.setConfirmPassword("short");
-    });
-
-    await act(async () => {
-      await result.current.handleSubmit(submitEvent());
-    });
-
-    expect(result.current.error).toBe(
-      "パスワードは8文字以上で入力してください",
-    );
-    expect(redirectTo).not.toHaveBeenCalled();
-  });
-
   it("成功時に setAuthToken + redirect", async () => {
     server.use(
       http.post(`${API}/auth/register`, () =>

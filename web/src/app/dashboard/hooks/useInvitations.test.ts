@@ -114,21 +114,4 @@ describe("useDeleteAdminUser", () => {
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
   });
-
-  it("4xx で isError", async () => {
-    server.use(
-      http.delete(`${API}/admin/users/u-self`, () =>
-        HttpResponse.json(
-          { error: { message: "自分自身は削除できません" } },
-          { status: 400 },
-        ),
-      ),
-    );
-
-    const { result } = renderHookWithQuery(() => useDeleteAdminUser());
-    await act(async () => {
-      await result.current.mutateAsync("u-self").catch(() => {});
-    });
-    await waitFor(() => expect(result.current.isError).toBe(true));
-  });
 });

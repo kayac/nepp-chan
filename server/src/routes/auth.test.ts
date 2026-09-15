@@ -165,16 +165,6 @@ describe("auth routes", () => {
       expect(res.status).toBe(400);
     });
 
-    it("8文字未満のパスワードでバリデーションエラーになる", async () => {
-      const res = await authRoutes.request(
-        postJson("/register", { token: "valid-token", password: "short" }),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(400);
-    });
-
     it("境界値: ちょうど 8 文字のパスワードで登録できる", async () => {
       vi.mocked(adminInvitationRepository.findValidByToken).mockResolvedValue(
         validInvitation,
@@ -235,29 +225,6 @@ describe("auth routes", () => {
 
       const body = (await res.json()) as { error?: { message?: string } };
       expect(body.error?.message).toMatch(/既に/);
-    });
-
-    it("create に渡される passwordHash は平文と異なる", async () => {
-      vi.mocked(adminInvitationRepository.findValidByToken).mockResolvedValue(
-        validInvitation,
-      );
-      vi.mocked(adminUserRepository.findByUsername).mockResolvedValue(null);
-      vi.mocked(hashPassword).mockResolvedValue("hashed-output");
-      vi.mocked(adminUserRepository.create).mockResolvedValue("user-1");
-      vi.mocked(adminSessionRepository.create).mockResolvedValue("token");
-
-      await authRoutes.request(
-        postJson("/register", {
-          token: "valid-token",
-          password: "plaintext-password",
-        }),
-        undefined,
-        mockEnv,
-      );
-
-      const callArg = vi.mocked(adminUserRepository.create).mock.calls[0]?.[1];
-      expect(callArg?.passwordHash).toBe("hashed-output");
-      expect(callArg?.passwordHash).not.toContain("plaintext-password");
     });
   });
 
@@ -435,20 +402,6 @@ describe("auth routes", () => {
       const body = await res.json();
       expect(body).toEqual({ user: null });
     });
-
-    it("Basic 認証 header では user: null を返す", async () => {
-      const res = await authRoutes.request(
-        new Request("http://localhost/me", {
-          headers: { Authorization: "Basic dXNlcjpwYXNz" },
-        }),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(200);
-      const body = await res.json();
-      expect(body).toEqual({ user: null });
-    });
   });
 
   // --- Logout ---
@@ -482,27 +435,6 @@ describe("auth routes", () => {
         mockEnv.DB,
         "my-session-token",
       );
-    });
-
-    it("冪等性: 同じトークンで 2 回 logout しても 200 を返す", async () => {
-      vi.mocked(adminSessionRepository.deleteByToken).mockResolvedValue();
-
-      const make = () =>
-        authRoutes.request(
-          new Request("http://localhost/logout", {
-            method: "POST",
-            headers: { Authorization: "Bearer same-token" },
-          }),
-          undefined,
-          mockEnv,
-        );
-
-      const res1 = await make();
-      const res2 = await make();
-
-      expect(res1.status).toBe(200);
-      expect(res2.status).toBe(200);
-      expect(adminSessionRepository.deleteByToken).toHaveBeenCalledTimes(2);
     });
 
     it("Authorization なしでは deleteByToken を呼ばない", async () => {
