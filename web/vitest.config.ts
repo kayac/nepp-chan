@@ -69,6 +69,10 @@ export default defineConfig({
         "src/components/chat/types.ts",
         // barrel（knowledge 配下コンポーネントの re-export のみ）
         "src/app/dashboard/components/knowledge/index.ts",
+        // window.confirm への 1 行委譲と、分岐を持たない静的ラッパー
+        "src/lib/dialog.ts",
+        "src/components/ui/EmptyStateCard.tsx",
+        "src/components/ui/PanelLoading.tsx",
         // d3-force シミュレーション + SVG のドラッグ/パン/ズーム操作が中心で E2E 領域。
         // 役割分類・集計・スナップショットのマージ等の本質ロジックは server 側
         // （services/analytics/ontology*）に抽出済みで、描画・選択の振る舞いは
