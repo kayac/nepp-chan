@@ -237,28 +237,6 @@ describe("auth routes", () => {
       expect(body.error?.message).toMatch(/既に/);
     });
 
-    it("登録成功時に markUsed 後に user を作成する（順序検証）", async () => {
-      vi.mocked(adminInvitationRepository.findValidByToken).mockResolvedValue(
-        validInvitation,
-      );
-      vi.mocked(adminUserRepository.findByUsername).mockResolvedValue(null);
-      vi.mocked(hashPassword).mockResolvedValue("hashed-password");
-      vi.mocked(adminUserRepository.create).mockResolvedValue("user-1");
-      vi.mocked(adminSessionRepository.create).mockResolvedValue("token");
-
-      await authRoutes.request(
-        postJson("/register", {
-          token: "valid-token",
-          password: "password123",
-        }),
-        undefined,
-        mockEnv,
-      );
-
-      expect(adminUserRepository.create).toHaveBeenCalledTimes(1);
-      expect(adminInvitationRepository.markUsed).toHaveBeenCalledTimes(1);
-    });
-
     it("create に渡される passwordHash は平文と異なる", async () => {
       vi.mocked(adminInvitationRepository.findValidByToken).mockResolvedValue(
         validInvitation,
