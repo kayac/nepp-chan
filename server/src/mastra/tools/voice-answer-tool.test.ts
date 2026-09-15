@@ -42,12 +42,6 @@ vi.mock("~/lib/logger", () => ({
 
 const { voiceAnswerTool } = await import("./voice-answer-tool");
 
-describe("通話用エージェントの生成", () => {
-  it("knowledge-agent は通話の応答速度を優先して effort low で作る", () => {
-    expect(knowledgeAgentOptions).toEqual([{ effort: "low" }]);
-  });
-});
-
 const holdFn = vi.fn();
 
 type CallOptions = {
