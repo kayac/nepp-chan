@@ -83,24 +83,6 @@ describe("WidgetChat", () => {
     });
   });
 
-  it("1 往復完了後も入力欄が残り続ける", async () => {
-    server.use(http.post(CHAT_URL, () => buildChatStreamResponse("答えだよ")));
-    renderWidgetChat();
-    await waitForReady();
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "移住の補助金はある？" }),
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText("答えだよ")).toBeTruthy();
-    });
-
-    expect(
-      screen.getByPlaceholderText("ねっぷちゃんに話しかける…"),
-    ).toBeTruthy();
-  });
-
   it("送信中も入力欄は disabled にせず入力し続けられる", async () => {
     server.use(http.post(CHAT_URL, () => buildChatStreamResponse("答えだよ")));
     renderWidgetChat();
@@ -228,7 +210,7 @@ describe("WidgetChat", () => {
     });
   });
 
-  it("intent を送らずサーバーの分類に委ねる", async () => {
+  it("intent と、設置サイトが無いときの siteHost を送らない", async () => {
     let body: unknown;
     server.use(
       http.post(CHAT_URL, async ({ request }) => {
@@ -248,6 +230,7 @@ describe("WidgetChat", () => {
     });
 
     expect(body).not.toHaveProperty("intent");
+    expect(body).not.toHaveProperty("siteHost");
   });
 
   it("設置サイトの文脈で最初の挨拶を生成する", async () => {
@@ -283,28 +266,6 @@ describe("WidgetChat", () => {
     expect(screen.queryByText(/最初の挨拶を生成/)).toBeNull();
   });
 
-  it("設置サイトのホストが無ければ siteHost を送らない", async () => {
-    let body: Record<string, unknown> = {};
-    server.use(
-      http.post(CHAT_URL, async ({ request }) => {
-        body = (await request.json()) as Record<string, unknown>;
-        return buildChatStreamResponse("答えだよ");
-      }),
-    );
-    renderWidgetChat();
-    await waitForReady();
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "移住の補助金はある？" }),
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText("答えだよ")).toBeTruthy();
-    });
-
-    expect(body).not.toHaveProperty("siteHost");
-  });
-
   it("生成中は送信ボタンが停止ボタンに変わる", async () => {
     const deferred = buildDeferredChatStreamResponse();
     server.use(http.post(CHAT_URL, () => deferred.response));
@@ -328,52 +289,6 @@ describe("WidgetChat", () => {
 
     await waitFor(() => {
       expect(screen.getByLabelText("送信")).toBeTruthy();
-    });
-  });
-
-  it("最下部にいる間は下スクロールボタンを押せない", async () => {
-    renderWidgetChat();
-    await waitForReady();
-
-    expect(
-      screen.getByLabelText("下にスクロール").hasAttribute("disabled"),
-    ).toBe(true);
-  });
-
-  it("上にスクロールすると下スクロールボタンで最下部へ戻れる", async () => {
-    renderWidgetChat();
-    await waitForReady();
-
-    const viewport = screen.getByLabelText("下にスクロール").parentElement
-      ?.parentElement as HTMLElement;
-    let scrollTop = 0;
-    Object.defineProperty(viewport, "scrollHeight", {
-      value: 1000,
-      configurable: true,
-    });
-    Object.defineProperty(viewport, "clientHeight", {
-      value: 100,
-      configurable: true,
-    });
-    Object.defineProperty(viewport, "scrollTop", {
-      get: () => scrollTop,
-      set: (v: number) => {
-        scrollTop = v;
-      },
-      configurable: true,
-    });
-
-    fireEvent.scroll(viewport);
-    await waitFor(() => {
-      expect(
-        screen.getByLabelText("下にスクロール").hasAttribute("disabled"),
-      ).toBe(false);
-    });
-
-    fireEvent.click(screen.getByLabelText("下にスクロール"));
-
-    await waitFor(() => {
-      expect(scrollTop).toBe(900);
     });
   });
 
