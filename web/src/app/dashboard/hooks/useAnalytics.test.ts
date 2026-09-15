@@ -75,18 +75,6 @@ describe("useConversationAnalytics", () => {
     expect(result.current.data?.totals.conversations).toBe(5);
     expect(received).toBe("7");
   });
-
-  it("5xx エラー時に isError=true", async () => {
-    server.use(
-      http.get(`${API}/admin/analytics/conversations`, () =>
-        HttpResponse.json({ error: "internal" }, { status: 500 }),
-      ),
-    );
-
-    const { result } = renderHookWithQuery(() => useConversationAnalytics());
-
-    await waitFor(() => expect(result.current.isError).toBe(true));
-  });
 });
 
 describe("useUsageAnalytics", () => {

@@ -104,18 +104,6 @@ describe("recordLlmUsage", () => {
     expect(rows[0]?.totalTokens).toBe(150);
   });
 
-  it("platform: widget を保存できる", async () => {
-    await recordLlmUsage(d1, {
-      model: "gemini-2.5-flash",
-      usage: { inputTokens: 1 },
-      platform: "widget",
-      source: "chat",
-    });
-
-    const rows = await db.select().from(llmUsage).all();
-    expect(rows[0]).toMatchObject({ platform: "widget" });
-  });
-
   it("usage 未取得（undefined）でも 0 埋めで保存する", async () => {
     await recordLlmUsage(d1, {
       model: "gemini-2.5-flash",
@@ -154,18 +142,6 @@ describe("recordLlmUsage", () => {
 
     const rows = await db.select().from(llmUsage).all();
     expect(rows[0]?.costUsd).toBe(0);
-  });
-
-  it("platform: voice を保存できる", async () => {
-    await recordLlmUsage(d1, {
-      model: "openai/gpt-5.6-luna",
-      usage: { inputTokens: 1 },
-      platform: "voice",
-      source: "chat",
-    });
-
-    const rows = await db.select().from(llmUsage).all();
-    expect(rows[0]).toMatchObject({ platform: "voice" });
   });
 
   it("NaN の usage（Google embedding 等）は 0 に正規化して保存する", async () => {

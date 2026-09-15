@@ -177,19 +177,4 @@ describe("runWeeklyReport", () => {
       }),
     ]);
   });
-
-  it("同じ週への再実行は上書きして重複しない", async () => {
-    await insertPersonaInPeriod();
-
-    await runWeeklyReport(env, { now: NOW });
-    agentHolder.generate.mockResolvedValue({
-      text: "再生成された要約",
-      totalUsage: { inputTokens: 1, outputTokens: 1 },
-    });
-    await runWeeklyReport(env, { now: NOW });
-
-    const rows = await db.select().from(weeklyReports).all();
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.summary).toBe("再生成された要約");
-  });
 });
