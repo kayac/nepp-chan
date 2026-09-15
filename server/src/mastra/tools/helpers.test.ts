@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  getAdminUser,
   getConversationEndedAt,
-  getDb,
   getEnv,
   requireAdmin,
   requireDb,
@@ -16,23 +14,6 @@ const createMockContext = (values: Record<string, unknown>) => ({
 });
 
 describe("ツールヘルパー関数", () => {
-  describe("getDb", () => {
-    it("context から db を取得できる", () => {
-      const mockDb = { prepare: () => {} };
-      const context = createMockContext({ db: mockDb });
-      expect(getDb(context as never)).toBe(mockDb);
-    });
-
-    it("context が undefined の場合は undefined を返す", () => {
-      expect(getDb(undefined)).toBeUndefined();
-    });
-
-    it("db が設定されていない場合は undefined を返す", () => {
-      const context = createMockContext({});
-      expect(getDb(context as never)).toBeUndefined();
-    });
-  });
-
   describe("getEnv", () => {
     it("context から env を取得できる", () => {
       const mockEnv = { GOOGLE_GENERATIVE_AI_API_KEY: "test-key" };
@@ -42,23 +23,6 @@ describe("ツールヘルパー関数", () => {
 
     it("context が undefined の場合は undefined を返す", () => {
       expect(getEnv(undefined)).toBeUndefined();
-    });
-  });
-
-  describe("getAdminUser", () => {
-    it("context から adminUser を取得できる", () => {
-      const mockUser = {
-        id: "admin-1",
-        username: "admin01",
-        name: null,
-        role: "admin" as const,
-      };
-      const context = createMockContext({ adminUser: mockUser });
-      expect(getAdminUser(context as never)).toBe(mockUser);
-    });
-
-    it("context が undefined の場合は undefined を返す", () => {
-      expect(getAdminUser(undefined)).toBeUndefined();
     });
   });
 
