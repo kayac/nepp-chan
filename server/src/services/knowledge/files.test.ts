@@ -4,9 +4,7 @@ vi.mock("~/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const { deleteFile, deleteLegacyFiles, getFile, listFiles } = await import(
-  "./files"
-);
+const { deleteFile, getFile, listFiles } = await import("./files");
 
 type ObjStub = {
   key: string;
@@ -113,51 +111,6 @@ describe("listFiles", () => {
 
     expect(result.nextCursor).toBe("c1");
     expect(result.hasMore).toBe(true);
-  });
-});
-
-describe("deleteLegacyFiles", () => {
-  it("curated/ official/ 以外をページごとにまとめて削除し、件数を返す", async () => {
-    const bucket = buildPagedBucket([
-      {
-        objects: [
-          obj("welcome.md"),
-          obj("curated/keep.md"),
-          obj("originals/chirashi.pdf"),
-        ],
-      },
-      {
-        objects: [
-          obj("villotoinep/index.md"),
-          obj("official/keep.md"),
-          obj("official.md"),
-        ],
-      },
-    ]);
-
-    const result = await deleteLegacyFiles(bucket);
-
-    expect(bucket.delete).toHaveBeenCalledTimes(2);
-    expect(bucket.delete).toHaveBeenNthCalledWith(1, [
-      "welcome.md",
-      "originals/chirashi.pdf",
-    ]);
-    expect(bucket.delete).toHaveBeenNthCalledWith(2, [
-      "villotoinep/index.md",
-      "official.md",
-    ]);
-    expect(result).toEqual({ deleted: 4 });
-  });
-
-  it("消す対象が無いページでは delete を呼ばない", async () => {
-    const bucket = buildPagedBucket([
-      { objects: [obj("curated/a.md"), obj("official/b.md")] },
-    ]);
-
-    const result = await deleteLegacyFiles(bucket);
-
-    expect(bucket.delete).not.toHaveBeenCalled();
-    expect(result).toEqual({ deleted: 0 });
   });
 });
 

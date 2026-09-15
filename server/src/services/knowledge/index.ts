@@ -5,7 +5,6 @@ export {
 } from "./curated-draft";
 export {
   deleteFile,
-  deleteLegacyFiles,
   type FileContent,
   type FileInfo,
   getFile,

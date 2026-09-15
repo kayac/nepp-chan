@@ -25,10 +25,6 @@ export const FilesListResponseSchema = z.object({
   hasMore: z.boolean(),
 });
 
-export const LegacyDeleteResponseSchema = z.object({
-  deleted: z.number(),
-});
-
 export const FileContentResponseSchema = z.object({
   key: z.string(),
   content: z.string(),
