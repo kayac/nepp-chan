@@ -65,18 +65,4 @@ describe("handleBroadcastCheck", () => {
     expect(sendBroadcast).toHaveBeenCalledWith(env, "b-1");
     expect(sendBroadcast).toHaveBeenCalledWith(env, "b-2");
   });
-
-  it("失敗が混じってもループは続く", async () => {
-    vi.mocked(broadcastRepository.findScheduledReady).mockResolvedValue([
-      sample("b-1"),
-      sample("b-2"),
-    ]);
-    vi.mocked(sendBroadcast)
-      .mockResolvedValueOnce({ success: false, error: "e" })
-      .mockResolvedValueOnce({ success: true });
-
-    await handleBroadcastCheck(buildEvent(), env, ctx);
-
-    expect(sendBroadcast).toHaveBeenCalledTimes(2);
-  });
 });

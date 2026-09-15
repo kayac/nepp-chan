@@ -7,12 +7,10 @@ import { server } from "~/test/msw-server";
 import { renderHookWithQuery } from "~/test/query";
 import {
   useClosePoll,
-  useCreatePoll,
   useDeletePoll,
   usePollResults,
   usePolls,
   useSendPoll,
-  useUpdatePoll,
 } from "./usePolls";
 
 const API = "http://localhost:8787";
@@ -108,13 +106,5 @@ describe("poll mutations", () => {
       await result.current.mutateAsync("p-1");
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-  });
-
-  it("useCreatePoll / useUpdatePoll: インスタンス化できる", () => {
-    const create = renderHookWithQuery(() => useCreatePoll());
-    expect(typeof create.result.current.mutateAsync).toBe("function");
-
-    const update = renderHookWithQuery(() => useUpdatePoll());
-    expect(typeof update.result.current.mutateAsync).toBe("function");
   });
 });

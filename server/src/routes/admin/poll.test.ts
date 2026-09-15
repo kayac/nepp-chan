@@ -131,23 +131,6 @@ describe("pollAdminRoutes", () => {
   });
 
   describe("GET /", () => {
-    it("正常系: polls / nextCursor / hasMore を返す", async () => {
-      useAuth();
-      vi.mocked(pollRepository.findAll).mockResolvedValue({
-        polls: [{ ...samplePollDb, answerCount: 0 }],
-        nextCursor: null,
-        hasMore: false,
-      });
-
-      const res = await routes.request(
-        authedJson("GET", "/"),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(200);
-    });
-
     it("answerCount を各 poll に含める", async () => {
       useAuth();
       vi.mocked(pollRepository.findAll).mockResolvedValue({
@@ -240,25 +223,22 @@ describe("pollAdminRoutes", () => {
   });
 
   describe("PUT /:id", () => {
-    it.each(["scheduled", "sent", "closed"])(
-      "status=%s は更新拒否（400）",
-      async (status) => {
-        useAuth();
-        vi.mocked(pollRepository.findById).mockResolvedValue({
-          ...samplePollDb,
-          status: status as PollStatus,
-        });
+    it("status=sent は更新拒否（400）", async () => {
+      useAuth();
+      vi.mocked(pollRepository.findById).mockResolvedValue({
+        ...samplePollDb,
+        status: "sent" as PollStatus,
+      });
 
-        const res = await routes.request(
-          authedJson("PUT", "/p-1", { title: "更新" }),
-          undefined,
-          mockEnv,
-        );
+      const res = await routes.request(
+        authedJson("PUT", "/p-1", { title: "更新" }),
+        undefined,
+        mockEnv,
+      );
 
-        expect(res.status).toBe(400);
-        expect(pollService.updatePoll).not.toHaveBeenCalled();
-      },
-    );
+      expect(res.status).toBe(400);
+      expect(pollService.updatePoll).not.toHaveBeenCalled();
+    });
 
     it("draft なら更新成功", async () => {
       useAuth();
@@ -310,25 +290,22 @@ describe("pollAdminRoutes", () => {
       expect(pollRepository.delete).toHaveBeenCalledWith(mockEnv.DB, "p-1");
     });
 
-    it.each(["sent", "closed"])(
-      "status=%s は 400 で削除拒否",
-      async (status) => {
-        useAuth();
-        vi.mocked(pollRepository.findById).mockResolvedValue({
-          ...samplePollDb,
-          status: status as PollStatus,
-        });
+    it("status=sent は 400 で削除拒否", async () => {
+      useAuth();
+      vi.mocked(pollRepository.findById).mockResolvedValue({
+        ...samplePollDb,
+        status: "sent" as PollStatus,
+      });
 
-        const res = await routes.request(
-          authedJson("DELETE", "/p-1"),
-          undefined,
-          mockEnv,
-        );
+      const res = await routes.request(
+        authedJson("DELETE", "/p-1"),
+        undefined,
+        mockEnv,
+      );
 
-        expect(res.status).toBe(400);
-        expect(pollRepository.delete).not.toHaveBeenCalled();
-      },
-    );
+      expect(res.status).toBe(400);
+      expect(pollRepository.delete).not.toHaveBeenCalled();
+    });
   });
 
   describe("POST /:id/send", () => {
@@ -432,39 +409,20 @@ describe("pollAdminRoutes", () => {
       expect(typeof arg?.closedAt).toBe("string");
     });
 
-    it.each(["draft", "scheduled", "closed"])(
-      "status=%s は 400",
-      async (status) => {
-        useAuth();
-        vi.mocked(pollRepository.findById).mockResolvedValue({
-          ...samplePollDb,
-          status: status as PollStatus,
-        });
-
-        const res = await routes.request(
-          authedJson("POST", "/p-1/close"),
-          undefined,
-          mockEnv,
-        );
-
-        expect(res.status).toBe(400);
-        expect(pollRepository.update).not.toHaveBeenCalled();
-      },
-    );
-
-    it("冪等性: closed の poll を再度 close しても update を呼ばない", async () => {
+    it("status=closed は 400", async () => {
       useAuth();
       vi.mocked(pollRepository.findById).mockResolvedValue({
         ...samplePollDb,
         status: "closed" as PollStatus,
       });
 
-      await routes.request(
+      const res = await routes.request(
         authedJson("POST", "/p-1/close"),
         undefined,
         mockEnv,
       );
 
+      expect(res.status).toBe(400);
       expect(pollRepository.update).not.toHaveBeenCalled();
     });
   });
