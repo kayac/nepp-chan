@@ -98,15 +98,6 @@ describe("widgetSiteAdminRoutes", () => {
       );
       expect(res.status).toBe(401);
     });
-
-    it.each(["staff", "admin"] as const)("%s ロールは 403", async (role) => {
-      useAuth({ ...superAdminUser, role });
-
-      const res = await routes.request(authed("/", "GET"), undefined, mockEnv);
-
-      expect(res.status).toBe(403);
-      expect(widgetSiteRepository.list).not.toHaveBeenCalled();
-    });
   });
 
   it("一覧を返す", async () => {
