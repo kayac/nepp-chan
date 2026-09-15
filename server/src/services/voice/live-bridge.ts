@@ -40,6 +40,9 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
   private closeRequested = false;
   private resolveClosed: (() => void) | null = null;
   private droppedInboundFrames = 0;
+  private sentInboundFrames = 0;
+  private outputFrames = 0;
+  private nonSilentOutputFrames = 0;
   private delegationCount = 0;
 
   async fetch() {
@@ -82,6 +85,12 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
       if (!this.live || !this.sessionStarted) {
         this.droppedInboundFrames++;
         return;
+      }
+      this.sentInboundFrames++;
+      if (this.sentInboundFrames === 1) {
+        logger.info("[LiveBridge] first audio frame sent", {
+          payloadLength: msg.media.payload.length,
+        });
       }
       this.live.send(
         serializeLiveMessage(inputAudioAppendMessage(msg.media.payload)),
@@ -172,11 +181,18 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
 
   private onLiveMessage(event: MessageEvent) {
     if (typeof event.data !== "string") return;
+    if (!event.data.includes('"session.output_audio.delta"')) {
+      logger.info("[LiveBridge] raw live event", {
+        raw: event.data.slice(0, 2500),
+      });
+    }
     const msg = parseLiveEvent(event.data);
     if (!msg) return;
 
     if (msg.type === "session.output_audio.delta") {
       if (!this.streamSid) return;
+      this.outputFrames++;
+      if (/[^/=]/.test(msg.delta)) this.nonSilentOutputFrames++;
       this.twilio?.send(
         serializeStreamMessage(streamMediaMessage(this.streamSid, msg.delta)),
       );
@@ -209,6 +225,9 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
       logger.info("[LiveBridge] session closed", {
         usage: JSON.stringify(msg.usage ?? null),
         delegationCount: this.delegationCount,
+        sentInboundFrames: this.sentInboundFrames,
+        outputFrames: this.outputFrames,
+        nonSilentOutputFrames: this.nonSilentOutputFrames,
       });
       this.resolveClosed?.();
       this.shutdown();
