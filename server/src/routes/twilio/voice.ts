@@ -117,7 +117,8 @@ twilioVoiceRoutes.post("/incoming", twilioSignatureVerify, async (c) => {
   if (c.get("twilioParams").engine === "live") {
     const xml = buildMediaStreamTwiml({
       wsUrl: `wss://${host}/twilio/voice/live`,
-      parameters: { token: relayToken },
+      // Media Streams の start は発信者を含まないため、TwiML の Parameter で渡す。
+      parameters: { token: relayToken, from: c.get("twilioParams").From ?? "" },
     });
     return c.body(xml, 200, { "Content-Type": "text/xml; charset=utf-8" });
   }

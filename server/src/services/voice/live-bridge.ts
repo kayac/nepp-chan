@@ -1,5 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 import { logger } from "~/lib/logger";
+import { createVoiceConversation } from "./conversation";
 import { LIVE_MODEL, LIVE_VOICE, liveInstructions } from "./live-instructions";
 import {
   commentaryAppendMessage,
@@ -12,6 +13,10 @@ import {
   sessionStartMessage,
   streamMediaMessage,
 } from "./live-protocol";
+import {
+  reconstructQuestion,
+  type TranscriptFragment,
+} from "./live-transcript";
 import { verifySetupToken } from "./twilio-token";
 
 const SETUP_TIMEOUT_MS = 15_000;
@@ -19,7 +24,7 @@ const SETUP_TIMEOUT_MS = 15_000;
 // Workers の fetch は wss: スキームを受け付けないため https: に Upgrade ヘッダを添える。
 const LIVE_ENDPOINT = "https://api.openai.com/v1/live/sessions";
 
-const DELEGATION_STUB = "ごめんね、それは今ちょっと分からないや。";
+const DELEGATION_FALLBACK = "うまく調べられなかった。";
 
 const CLOSE_GRACE_MS = 3_000;
 
@@ -35,6 +40,8 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
   private twilio: WebSocket | null = null;
   private live: WebSocket | null = null;
   private streamSid = "";
+  private from = "";
+  private callSid = "";
   private sessionStarted = false;
   private closing = false;
   private closeRequested = false;
@@ -44,6 +51,13 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
   private outputFrames = 0;
   private nonSilentOutputFrames = 0;
   private delegationCount = 0;
+  private inputFragments: TranscriptFragment[] = [];
+  private lastOutputEndMs = 0;
+  private lastDelegationOffsetMs = 0;
+  private currentTurn: AbortController | null = null;
+  private conversationPromise: ReturnType<
+    typeof createVoiceConversation
+  > | null = null;
 
   async fetch() {
     const { 0: client, 1: server } = new WebSocketPair();
@@ -112,6 +126,8 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
         return;
       }
       this.streamSid = msg.streamSid;
+      this.callSid = msg.start.callSid;
+      this.from = msg.start.customParameters?.from ?? "";
       logger.info("[LiveBridge] stream started", {
         callSid: msg.start.callSid,
         customParameterKeys: Object.keys(msg.start.customParameters ?? {}).join(
@@ -206,19 +222,25 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
       });
     } else if (msg.type === "session.input_transcript.delta") {
       logger.info("[LiveBridge] user transcript", { delta: msg.delta });
+      this.inputFragments.push({
+        text: msg.delta,
+        startMs: msg.start_ms,
+        endMs: msg.end_ms,
+      });
     } else if (msg.type === "session.output_transcript.delta") {
       logger.info("[LiveBridge] nepp transcript", { delta: msg.delta });
+      const end = msg.end_ms ?? msg.start_ms;
+      if (end !== undefined) {
+        this.lastOutputEndMs = Math.max(this.lastOutputEndMs, end);
+      }
     } else if (msg.type === "session.delegation.created") {
       this.delegationCount++;
-      logger.info("[LiveBridge] delegation created", {
-        id: msg.delegation.id,
-        target: msg.delegation.target ?? "",
-        offsetMs: msg.offset_ms ?? -1,
-        count: this.delegationCount,
-      });
-      this.live?.send(
-        serializeLiveMessage(
-          commentaryAppendMessage(msg.delegation.id, DELEGATION_STUB),
+      const offsetMs = msg.offset_ms ?? Number.POSITIVE_INFINITY;
+      this.ctx.waitUntil(
+        this.handleDelegation(msg.delegation.id, offsetMs).catch((e) =>
+          logger.error("[LiveBridge] delegation failed", {
+            error: e instanceof Error ? e.message : String(e),
+          }),
         ),
       );
     } else if (msg.type === "session.closed") {
@@ -236,6 +258,86 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
         raw: event.data.slice(0, 500),
       });
     }
+  }
+
+  private async handleDelegation(delegationId: string, offsetMs: number) {
+    const startedAt = Date.now();
+    // 自分の直前の発話より後、かつ前回の委譲より後の断片だけを質問文とみなす。
+    const sinceMs = Math.max(this.lastOutputEndMs, this.lastDelegationOffsetMs);
+    const text = reconstructQuestion({
+      fragments: this.inputFragments,
+      sinceMs,
+      untilMs: offsetMs,
+    });
+    this.lastDelegationOffsetMs = Number.isFinite(offsetMs)
+      ? offsetMs
+      : this.lastDelegationOffsetMs;
+
+    logger.info("[LiveBridge] delegation created", {
+      id: delegationId,
+      count: this.delegationCount,
+      offsetMs,
+      sinceMs,
+      lastInputEndMs: this.inputFragments.at(-1)?.endMs ?? -1,
+      question: text,
+    });
+
+    if (!text) {
+      logger.warn("[LiveBridge] delegation question empty");
+      this.sendCommentary(delegationId, DELEGATION_FALLBACK, startedAt);
+      return;
+    }
+
+    this.currentTurn?.abort();
+    const controller = new AbortController();
+    this.currentTurn = controller;
+
+    this.conversationPromise ??= createVoiceConversation({
+      env: this.env,
+      from: this.from,
+      callSid: this.callSid,
+    });
+
+    try {
+      const conversation = await this.conversationPromise;
+      let answer = "";
+      for await (const delta of conversation.runTurn({
+        text,
+        signal: controller.signal,
+      })) {
+        answer += delta;
+      }
+      if (controller.signal.aborted) return;
+      this.sendCommentary(
+        delegationId,
+        answer || DELEGATION_FALLBACK,
+        startedAt,
+      );
+    } catch (e) {
+      logger.error("[LiveBridge] delegation turn failed", {
+        error: e instanceof Error ? e.message : String(e),
+      });
+      if (!controller.signal.aborted) {
+        this.sendCommentary(delegationId, DELEGATION_FALLBACK, startedAt);
+      }
+    } finally {
+      if (this.currentTurn === controller) this.currentTurn = null;
+    }
+  }
+
+  private sendCommentary(
+    delegationId: string,
+    answer: string,
+    startedAt: number,
+  ) {
+    logger.info("[LiveBridge] commentary sent", {
+      id: delegationId,
+      contentChars: answer.length,
+      delegationMs: Date.now() - startedAt,
+    });
+    this.live?.send(
+      serializeLiveMessage(commentaryAppendMessage(delegationId, answer)),
+    );
   }
 
   // Twilio 側が閉じても session.closed の usage を取りこぼさないよう、
@@ -258,6 +360,7 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
   private shutdown() {
     if (this.closing) return;
     this.closing = true;
+    this.currentTurn?.abort();
     this.live?.close(1000, "bridge shutdown");
     this.twilio?.close(1000, "bridge shutdown");
   }
