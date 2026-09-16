@@ -1,9 +1,15 @@
+import {
+  DEFAULT_LIVE_VOICE,
+  LIVE_VOICES,
+} from "@nepp-chan/shared/constants/live-voices";
 import { neppChanSoul } from "~/mastra/agents/nepp-chan-soul";
 
 export const LIVE_MODEL = "gpt-live-1";
-export const LIVE_VOICE = "marin";
 
-export const liveInstructions = `${neppChanSoul}
+export const parseLiveVoice = (value: string | undefined) =>
+  LIVE_VOICES.find((voice) => voice === value) ?? DEFAULT_LIVE_VOICE;
+
+const baseInstructions = `${neppChanSoul}
 ## 音声通話の制約
 
 ### 通話の開始
@@ -29,8 +35,9 @@ export const liveInstructions = `${neppChanSoul}
 - 絵文字・記号・マークアップは読み上げられないので使わない
 - URL・メールアドレスは読み上げず「ホームページで確認してね」と口頭で案内する
 - 数字や記号は、読み上げて自然な日本語の言い回しにする
+`;
 
-### 調べ物
+const delegatedResearch = `### 調べ物
 事実を問われたら、自分の記憶で答えず必ずバックエンドに問い合わせる。対象は次の通り。
 - 音威子府村ローカルのこと（施設・観光・行政・歴史・イベント・村の店・そば）
 - 天気・ニュース・時事など最新の情報
@@ -42,3 +49,12 @@ export const liveInstructions = `${neppChanSoul}
 
 雑談・相槌・気持ちのやりとりは問い合わせず自分で返す。
 `;
+
+const selfContainedResearch = `### 調べ物
+- 外部に問い合わせず、自分が知っていることだけで答える
+- 知らないこと・最新の情報は「ごめん、それは分からないや」と正直に短く返す
+`;
+
+export const buildLiveInstructions = (knowledgeEnabled: boolean) =>
+  `${baseInstructions}
+${knowledgeEnabled ? delegatedResearch : selfContainedResearch}`;

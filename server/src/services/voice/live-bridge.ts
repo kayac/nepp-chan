@@ -1,7 +1,11 @@
 import { DurableObject } from "cloudflare:workers";
 import { logger } from "~/lib/logger";
 import { createVoiceConversation } from "./conversation";
-import { LIVE_MODEL, LIVE_VOICE, liveInstructions } from "./live-instructions";
+import {
+  buildLiveInstructions,
+  LIVE_MODEL,
+  parseLiveVoice,
+} from "./live-instructions";
 import {
   commentaryAppendMessage,
   inputAudioAppendMessage,
@@ -26,6 +30,8 @@ const LIVE_ENDPOINT = "https://api.openai.com/v1/live/sessions";
 
 const DELEGATION_FALLBACK = "うまく調べられなかった。";
 
+const DELEGATION_STUB = "ごめんね、それは今ちょっと分からないや。";
+
 const CLOSE_GRACE_MS = 3_000;
 
 export const handleLiveUpgrade = (
@@ -42,6 +48,8 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
   private streamSid = "";
   private from = "";
   private callSid = "";
+  private knowledgeEnabled = true;
+  private voice = parseLiveVoice(undefined);
   private sessionStarted = false;
   private closing = false;
   private closeRequested = false;
@@ -128,8 +136,12 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
       this.streamSid = msg.streamSid;
       this.callSid = msg.start.callSid;
       this.from = msg.start.customParameters?.from ?? "";
+      this.knowledgeEnabled = msg.start.customParameters?.knowledge !== "false";
+      this.voice = parseLiveVoice(msg.start.customParameters?.liveVoice);
       logger.info("[LiveBridge] stream started", {
         callSid: msg.start.callSid,
+        knowledgeEnabled: this.knowledgeEnabled,
+        voice: this.voice,
         customParameterKeys: Object.keys(msg.start.customParameters ?? {}).join(
           ",",
         ),
@@ -188,8 +200,8 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
       serializeLiveMessage(
         sessionStartMessage({
           model: LIVE_MODEL,
-          instructions: liveInstructions,
-          voice: LIVE_VOICE,
+          instructions: buildLiveInstructions(this.knowledgeEnabled),
+          voice: this.voice,
         }),
       ),
     );
@@ -262,6 +274,15 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
 
   private async handleDelegation(delegationId: string, offsetMs: number) {
     const startedAt = Date.now();
+    if (!this.knowledgeEnabled) {
+      logger.info("[LiveBridge] delegation suppressed", {
+        id: delegationId,
+        count: this.delegationCount,
+      });
+      this.sendCommentary(delegationId, DELEGATION_STUB, startedAt);
+      return;
+    }
+
     // 自分の直前の発話より後、かつ前回の委譲より後の断片だけを質問文とみなす。
     const sinceMs = Math.max(this.lastOutputEndMs, this.lastDelegationOffsetMs);
     const text = reconstructQuestion({
