@@ -1,3 +1,4 @@
+import type { Segment } from "@nepp-chan/shared/lib/persona-attributes";
 import {
   forceCenter,
   forceCollide,
@@ -45,7 +46,7 @@ const SEGMENT_ICONS: Record<string, string> = {
   帰省者: "🎒",
   村外: "🌏",
   不明セグメント: "👤",
-};
+} satisfies Record<Segment, string>;
 
 const SENTIMENT_META: Record<string, { label: string; color: string }> = {
   positive: { label: "ポジティブ", color: "#5cb7bb" },
