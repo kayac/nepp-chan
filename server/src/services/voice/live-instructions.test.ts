@@ -27,17 +27,17 @@ describe("buildLiveInstructions", () => {
 });
 
 describe("parseLiveVoice", () => {
-  it("女声リストに載っている声はそのまま通す", () => {
+  it("リストに載っている声はそのまま通す", () => {
     expect(parseLiveVoice("shimmer")).toBe("shimmer");
     expect(parseLiveVoice("coral")).toBe("coral");
   });
 
-  it("リストに無い声は既定の marin に落とす", () => {
-    expect(parseLiveVoice("ash")).toBe("marin");
+  it("リストに無い声は既定の sage に落とす", () => {
+    expect(parseLiveVoice("nova")).toBe("sage");
   });
 
-  it("未指定なら既定の marin を使う", () => {
-    expect(parseLiveVoice(undefined)).toBe("marin");
-    expect(parseLiveVoice("")).toBe("marin");
+  it("未指定なら既定の sage を使う", () => {
+    expect(parseLiveVoice(undefined)).toBe("sage");
+    expect(parseLiveVoice("")).toBe("sage");
   });
 });
