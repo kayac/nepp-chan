@@ -8,7 +8,7 @@ export const LIVE_MODEL = "gpt-live-1";
 
 // GPT-Live は instructions で指示しても自分から話し始めないことがあるため、
 // つながったことを DTMF トーンで知らせる。
-export const LIVE_CONNECT_TONE = "1";
+export const LIVE_CONNECT_TONE = "3311";
 
 export const parseLiveVoice = (value: string | undefined) =>
   LIVE_VOICES.find((voice) => voice === value) ?? DEFAULT_LIVE_VOICE;
