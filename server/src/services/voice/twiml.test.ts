@@ -175,31 +175,16 @@ describe("buildMediaStreamTwiml", () => {
     );
   });
 
-  it("greeting を渡すと Connect の前に Say を置く", () => {
+  it("connectTone を渡すと Connect の前に DTMF を鳴らす", () => {
     const xml = buildMediaStreamTwiml({
       wsUrl: "wss://x/twilio/voice/live",
-      greeting: {
-        text: "もしもし、ねっぷちゃんだよ。",
-        voice: "Google.ja-JP-Chirp3-HD-Leda",
-        language: "ja-JP",
-      },
+      connectTone: "1",
     });
-    expect(xml).toContain(
-      '<Response><Say language="ja-JP" voice="Google.ja-JP-Chirp3-HD-Leda">' +
-        "もしもし、ねっぷちゃんだよ。</Say><Connect>",
-    );
+    expect(xml).toContain('<Response><Play digits="1"/><Connect>');
   });
 
-  it("greeting のテキストの特殊文字をエスケープする", () => {
-    const xml = buildMediaStreamTwiml({
-      wsUrl: "wss://x/live",
-      greeting: { text: "A & B < C", voice: "v", language: "ja-JP" },
-    });
-    expect(xml).toContain("A &amp; B &lt; C");
-  });
-
-  it("greeting 未指定なら Say を出さない", () => {
+  it("connectTone 未指定なら Play を出さない", () => {
     const xml = buildMediaStreamTwiml({ wsUrl: "wss://x/live" });
-    expect(xml).not.toContain("<Say");
+    expect(xml).not.toContain("<Play");
   });
 });

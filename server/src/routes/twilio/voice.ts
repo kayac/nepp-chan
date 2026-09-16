@@ -5,7 +5,7 @@ import { errorResponse } from "~/lib/openapi-errors";
 import { requireRole } from "~/middleware/require-role";
 import { twilioSignatureVerify } from "~/middleware/twilio-signature";
 import { serializeBridgeConfig } from "~/services/voice/bridge-config";
-import { LIVE_GREETING } from "~/services/voice/live-instructions";
+import { LIVE_CONNECT_TONE } from "~/services/voice/live-instructions";
 import {
   parseVoiceTuning,
   VOICE_PRESETS,
@@ -118,7 +118,7 @@ twilioVoiceRoutes.post("/incoming", twilioSignatureVerify, async (c) => {
   if (c.get("twilioParams").engine === "live") {
     const xml = buildMediaStreamTwiml({
       wsUrl: `wss://${host}/twilio/voice/live`,
-      greeting: LIVE_GREETING,
+      connectTone: LIVE_CONNECT_TONE,
       // Media Streams の start は発信者を含まないため、TwiML の Parameter で渡す。
       parameters: {
         token: relayToken,

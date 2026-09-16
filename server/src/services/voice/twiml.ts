@@ -37,9 +37,6 @@ const escapeXmlAttr = (value: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
 
-const escapeXmlText = (value: string) =>
-  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
 const attr = (name: string, value: string | undefined) =>
   value === undefined ? "" : ` ${name}="${escapeXmlAttr(value)}"`;
 
@@ -123,22 +120,18 @@ export const buildConversationRelayTwiml = ({
 
 type MediaStreamConfig = {
   wsUrl: string;
-  greeting?: { text: string; voice: string; language: string };
+  connectTone?: string;
   parameters?: Record<string, string>;
 };
 
 export const buildMediaStreamTwiml = ({
   wsUrl,
-  greeting,
+  connectTone,
   parameters,
-}: MediaStreamConfig) => {
-  const say = greeting
-    ? `<Say${attr("language", greeting.language)}${attr("voice", greeting.voice)}>${escapeXmlText(greeting.text)}</Say>`
-    : "";
-  return connectTwiml(
+}: MediaStreamConfig) =>
+  connectTwiml(
     "Stream",
     attr("url", wsUrl),
     parameterTags(parameters),
-    say,
+    connectTone ? `<Play${attr("digits", connectTone)}/>` : "",
   );
-};
