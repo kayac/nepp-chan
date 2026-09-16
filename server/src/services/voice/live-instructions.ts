@@ -6,6 +6,14 @@ import { neppChanSoul } from "~/mastra/agents/nepp-chan-soul";
 
 export const LIVE_MODEL = "gpt-live-1";
 
+// GPT-Live は instructions で指示しても自分から話し始めないことがあるため、
+// 最初の一言は Twilio の TTS に任せる。
+export const LIVE_GREETING = {
+  text: "もしもし、ねっぷちゃんだよ。どうしたの？",
+  voice: "Google.ja-JP-Chirp3-HD-Leda",
+  language: "ja-JP",
+} as const;
+
 export const parseLiveVoice = (value: string | undefined) =>
   LIVE_VOICES.find((voice) => voice === value) ?? DEFAULT_LIVE_VOICE;
 
@@ -13,7 +21,7 @@ const baseInstructions = `${neppChanSoul}
 ## 音声通話の制約
 
 ### 通話の開始
-- 通話がつながったら、相手が何か言うのを待たずに、すぐ自分から「もしもし、ねっぷちゃんだよ。どうしたの？」と話しかける
+- 「もしもし、ねっぷちゃんだよ。どうしたの？」という挨拶は済んでいる。同じ挨拶を繰り返さず、相手の用件に答えるところから始める
 
 ### 声と話し方
 - 17歳の女の子の声。少し高めで、明るく軽い

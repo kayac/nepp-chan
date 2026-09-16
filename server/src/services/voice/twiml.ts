@@ -37,6 +37,9 @@ const escapeXmlAttr = (value: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
 
+const escapeXmlText = (value: string) =>
+  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 const attr = (name: string, value: string | undefined) =>
   value === undefined ? "" : ` ${name}="${escapeXmlAttr(value)}"`;
 
@@ -51,11 +54,16 @@ const parameterTags = (parameters: Record<string, string> | undefined) =>
     )
     .join("");
 
-const connectTwiml = (tag: string, attrs: string, params: string) => {
+const connectTwiml = (
+  tag: string,
+  attrs: string,
+  params: string,
+  before = "",
+) => {
   const element = params
     ? `<${tag}${attrs}>${params}</${tag}>`
     : `<${tag}${attrs}/>`;
-  return `<?xml version="1.0" encoding="UTF-8"?><Response><Connect>${element}</Connect></Response>`;
+  return `<?xml version="1.0" encoding="UTF-8"?><Response>${before}<Connect>${element}</Connect></Response>`;
 };
 
 export const buildConversationRelayTwiml = ({
@@ -115,11 +123,22 @@ export const buildConversationRelayTwiml = ({
 
 type MediaStreamConfig = {
   wsUrl: string;
+  greeting?: { text: string; voice: string; language: string };
   parameters?: Record<string, string>;
 };
 
 export const buildMediaStreamTwiml = ({
   wsUrl,
+  greeting,
   parameters,
-}: MediaStreamConfig) =>
-  connectTwiml("Stream", attr("url", wsUrl), parameterTags(parameters));
+}: MediaStreamConfig) => {
+  const say = greeting
+    ? `<Say${attr("language", greeting.language)}${attr("voice", greeting.voice)}>${escapeXmlText(greeting.text)}</Say>`
+    : "";
+  return connectTwiml(
+    "Stream",
+    attr("url", wsUrl),
+    parameterTags(parameters),
+    say,
+  );
+};
