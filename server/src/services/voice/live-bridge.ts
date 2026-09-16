@@ -157,7 +157,7 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
     const response = await fetch(LIVE_ENDPOINT, {
       headers: {
         Upgrade: "websocket",
-        Authorization: `Bearer ${this.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${this.env.OPENAI_LIVE_API_KEY}`,
         "User-Agent": "nepp-chan-live-spike/1.0",
       },
     });

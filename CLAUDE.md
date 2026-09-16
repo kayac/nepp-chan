@@ -103,6 +103,7 @@ web / lp / widget の接続先は `PUBLIC_ENV`（widget は `VITE_ENV`）で選�
 | 変数名                         | 用途                                  |
 | ------------------------------ | ------------------------------------- |
 | `OPENAI_API_KEY`               | メイン LLM（GPT-5.6）・Eval スコアラー |
+| `OPENAI_LIVE_API_KEY`          | GPT-Live（通話の音声モデル）           |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API（embedding・Web 検索・eval）・Custom Search |
 | `GOOGLE_SEARCH_ENGINE_ID`      | Custom Search                         |
 | `LINE_CHANNEL_SECRET`          | LINE 署名検証                         |
@@ -123,6 +124,7 @@ web / lp / widget の接続先は `PUBLIC_ENV`（widget は `VITE_ENV`）で選�
 ```bash
 # Workers シークレット
 wrangler secret put OPENAI_API_KEY
+wrangler secret put OPENAI_LIVE_API_KEY
 wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
 
 # Pages 環境変数は Cloudflare Dashboard で設定
