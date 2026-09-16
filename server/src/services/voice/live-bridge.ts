@@ -1,6 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { logger } from "~/lib/logger";
 import { createVoiceConversation } from "./conversation";
+import { buildChimeFrames } from "./live-chime";
 import {
   buildLiveInstructions,
   LIVE_MODEL,
@@ -147,10 +148,23 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
           ",",
         ),
       });
+      this.sendChime();
       await this.connectLive();
     } else if (msg.event === "stop") {
       await this.finishLiveSession();
     }
+  }
+
+  // GPT-Live は指示があっても自分から挨拶しないことがあるため、つながったことを
+  // 音で知らせて相手が話し始められるようにする。
+  private sendChime() {
+    const frames = buildChimeFrames();
+    for (const frame of frames) {
+      this.twilio?.send(
+        serializeStreamMessage(streamMediaMessage(this.streamSid, frame)),
+      );
+    }
+    logger.info("[LiveBridge] chime sent", { frames: frames.length });
   }
 
   private async connectLive() {
