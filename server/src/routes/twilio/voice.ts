@@ -14,7 +14,10 @@ import {
   createRelayToken,
   createVoiceAccessToken,
 } from "~/services/voice/twilio-token";
-import { buildConversationRelayTwiml } from "~/services/voice/twiml";
+import {
+  buildConversationRelayTwiml,
+  buildMediaStreamTwiml,
+} from "~/services/voice/twiml";
 
 export const twilioVoiceRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -110,6 +113,15 @@ twilioVoiceRoutes.post("/incoming", twilioSignatureVerify, async (c) => {
     ttlSeconds: RELAY_TOKEN_TTL_SECONDS,
   });
   const host = new URL(c.req.url).host;
+
+  if (c.get("twilioParams").engine === "live") {
+    const xml = buildMediaStreamTwiml({
+      wsUrl: `wss://${host}/twilio/voice/live`,
+      parameters: { token: relayToken },
+    });
+    return c.body(xml, 200, { "Content-Type": "text/xml; charset=utf-8" });
+  }
+
   const wsUrl = `wss://${host}/twilio/voice/relay`;
 
   const { relay, bridge, invalidKeys } = parseVoiceTuning(

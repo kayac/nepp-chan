@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { fetchVoicePresets } from "./api";
 import { TuningPanel } from "./TuningPanel";
 import { toConnectParams } from "./tuning";
@@ -19,6 +19,8 @@ export const CallDevPage = () => {
   const [presetsData, setPresetsData] = useState<PresetsResponse | null>(null);
   const [loadError, setLoadError] = useState(false);
   const { values, update, reset } = useTuning(presetsData?.defaults);
+  const [useLiveEngine, setUseLiveEngine] = useState(false);
+  const engineToggleId = useId();
   const active = status === "connecting" || status === "connected";
 
   useEffect(() => {
@@ -50,9 +52,11 @@ export const CallDevPage = () => {
           type="button"
           onClick={() =>
             startCall(
-              values && presetsData
-                ? toConnectParams(values, presetsData.defaults)
-                : undefined,
+              useLiveEngine
+                ? { engine: "live" }
+                : values && presetsData
+                  ? toConnectParams(values, presetsData.defaults)
+                  : {},
             )
           }
           className="rounded-full bg-emerald-500 px-8 py-3 text-white"
@@ -60,6 +64,19 @@ export const CallDevPage = () => {
           かける
         </button>
       )}
+      <label
+        htmlFor={engineToggleId}
+        className="flex items-center gap-2 text-sm"
+      >
+        <input
+          id={engineToggleId}
+          type="checkbox"
+          checked={useLiveEngine}
+          disabled={active}
+          onChange={(e) => setUseLiveEngine(e.target.checked)}
+        />
+        GPT-Live で通話する（チューニング設定は無効）
+      </label>
       {values && presetsData && (
         <TuningPanel
           values={values}
