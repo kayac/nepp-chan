@@ -42,11 +42,14 @@ describe("classifySegment", () => {
     expect(classifySegment("帰省中,20代")).toBe("帰省者");
   });
 
-  it("村人・村内・移住者・在住を村内住民に寄せる", () => {
+  it("村人・村内・移住者を村内住民に寄せる", () => {
     expect(classifySegment("村人")).toBe("村内住民");
     expect(classifySegment("60代,村内")).toBe("村内住民");
     expect(classifySegment("移住者,子育て")).toBe("村内住民");
-    expect(classifySegment("音威子府在住")).toBe("村内住民");
+  });
+
+  it("居住地を特定しない在住だけでは分類しない", () => {
+    expect(classifySegment("札幌在住")).toBe("不明セグメント");
   });
 
   it("村外は村外", () => {
