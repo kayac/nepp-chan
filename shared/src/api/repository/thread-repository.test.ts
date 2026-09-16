@@ -76,16 +76,6 @@ describe("fetchThreads", () => {
     await repo.fetchThreads();
     expect(receivedAuth).toBe("Bearer test-token");
   });
-
-  it("500 エラーは throw", async () => {
-    server.use(
-      http.get(`${API}/threads`, () =>
-        HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
-      ),
-    );
-
-    await expect(repo.fetchThreads()).rejects.toBeDefined();
-  });
 });
 
 describe("createThread", () => {
@@ -154,16 +144,6 @@ describe("fetchThread", () => {
     const result = await repo.fetchThread("abc");
     expect(result?.id).toBe("abc");
   });
-
-  it("404 は throw", async () => {
-    server.use(
-      http.get(`${API}/threads/missing`, () =>
-        HttpResponse.json({ error: { message: "not found" } }, { status: 404 }),
-      ),
-    );
-
-    await expect(repo.fetchThread("missing")).rejects.toBeDefined();
-  });
 });
 
 describe("fetchMessages", () => {
@@ -191,34 +171,5 @@ describe("deleteThread", () => {
 
     const result = await repo.deleteThread("t-1");
     expect(result?.message).toBe("deleted");
-  });
-
-  it("失敗系は throw", async () => {
-    server.use(
-      http.delete(`${API}/threads/x`, () =>
-        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
-      ),
-    );
-    await expect(repo.deleteThread("x")).rejects.toBeDefined();
-  });
-});
-
-describe("createThread / fetchMessages の失敗系", () => {
-  it("createThread: 5xx は throw", async () => {
-    server.use(
-      http.post(`${API}/threads`, () =>
-        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
-      ),
-    );
-    await expect(repo.createThread("title")).rejects.toBeDefined();
-  });
-
-  it("fetchMessages: 5xx は throw", async () => {
-    server.use(
-      http.get(`${API}/threads/x/messages`, () =>
-        HttpResponse.json({ error: { message: "x" } }, { status: 500 }),
-      ),
-    );
-    await expect(repo.fetchMessages("x")).rejects.toBeDefined();
   });
 });

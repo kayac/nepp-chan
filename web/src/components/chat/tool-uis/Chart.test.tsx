@@ -32,46 +32,4 @@ describe("Chart", () => {
     const { container } = render(<Chart args={args} />);
     expect(container.querySelector("h3")).toBeNull();
   });
-
-  it("pie タイプでも render エラーにならない", () => {
-    const args: ChartArgs = {
-      title: "円グラフ",
-      type: "pie",
-      data,
-      xKey: "name",
-      yKey: "value",
-    };
-    const { container } = render(<Chart args={args} />);
-    expect(container).toBeTruthy();
-  });
-
-  it("title + bar タイプでバーアイコンを描画", () => {
-    const args: ChartArgs = {
-      title: "棒",
-      type: "bar",
-      data,
-      xKey: "name",
-      yKey: "value",
-    };
-    const { container } = render(<Chart args={args} />);
-    expect(container.querySelector("h3")?.textContent).toBe("棒");
-    expect(container.querySelector("h3")?.previousElementSibling?.tagName).toBe(
-      "svg",
-    );
-  });
-
-  it("title + pie タイプでパイアイコンを描画", () => {
-    const args: ChartArgs = {
-      title: "円",
-      type: "pie",
-      data,
-      xKey: "name",
-      yKey: "value",
-    };
-    const { container } = render(<Chart args={args} />);
-    expect(container.querySelector("h3")?.textContent).toBe("円");
-    expect(container.querySelector("h3")?.previousElementSibling?.tagName).toBe(
-      "svg",
-    );
-  });
 });

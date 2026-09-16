@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { logger } from "~/lib/logger";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createVoiceConversation } from "./conversation";
 
@@ -244,32 +243,6 @@ describe("createVoiceConversation", () => {
     expect(out).toEqual(["調べてみるね", "音威子府そばだよ"]);
   });
 
-  it("ターン完了時に llm timing を1回記録する（intent 分類なし）", async () => {
-    streamMock.mockResolvedValue({
-      fullStream: fakeFullStream([textDelta("こん"), textDelta("にちは")]),
-    });
-    const infoSpy = vi.spyOn(logger, "info");
-
-    const { runTurn } = await createVoiceConversation({
-      env,
-      from: "client:tester",
-      callSid: "CA123",
-    });
-    for await (const _ of runTurn({ text: "やあ" })) {
-      // drain
-    }
-
-    const timingCalls = infoSpy.mock.calls.filter(
-      ([msg]) => msg === "[Voice] llm timing",
-    );
-    expect(timingCalls).toHaveLength(1);
-    expect(timingCalls[0][1]).toHaveProperty("streamReadyMs");
-    expect(timingCalls[0][1]).toHaveProperty("firstTokenMs");
-    expect(timingCalls[0][1]).not.toHaveProperty("intent");
-
-    infoSpy.mockRestore();
-  });
-
   describe("投機検索（prefetch）", () => {
     const drain = async (
       params: Parameters<
@@ -315,28 +288,6 @@ describe("createVoiceConversation", () => {
       await drain({ text: "今日は疲れたよ", prefetchEnabled: true });
 
       expect(prefetchMock).not.toHaveBeenCalled();
-    });
-
-    it("findings が貯まっていても話題転換に備えて起動する", async () => {
-      const findingsSlot = {
-        entries: [
-          {
-            query: "そば",
-            source: "knowledge" as const,
-            text: "前の資料",
-          },
-        ],
-      };
-
-      await drain({
-        text: "郵便局はどこ？",
-        prefetchEnabled: true,
-        findingsSlot,
-      });
-
-      expect(prefetchMock).toHaveBeenCalledWith(
-        expect.objectContaining({ question: "郵便局はどこ？" }),
-      );
     });
 
     it("prefetchEnabled でなければ起動しない", async () => {

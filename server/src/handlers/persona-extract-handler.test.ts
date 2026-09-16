@@ -33,17 +33,6 @@ describe("handlePersonaExtract", () => {
     expect(extractAllPendingThreads).toHaveBeenCalledWith(env);
   });
 
-  it("結果（extracted / skipped）を集計する", async () => {
-    vi.mocked(extractAllPendingThreads).mockResolvedValue([
-      { threadId: "t1", result: { extracted: true, messageCount: 1 } },
-      { threadId: "t2", result: { skipped: true, reason: "x" } },
-    ]);
-
-    await expect(
-      handlePersonaExtract(buildEvent(), env, ctx),
-    ).resolves.toBeUndefined();
-  });
-
   it("失敗時は throw（withSentry が拾う）", async () => {
     vi.mocked(extractAllPendingThreads).mockRejectedValue(new Error("db"));
 

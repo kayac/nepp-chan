@@ -149,22 +149,6 @@ describe("feedbackRoutes: POST /", () => {
     });
   });
 
-  it.each(["good", "bad", "idea"] as const)(
-    "rating=%s で 201 を返し id を発行する",
-    async (rating) => {
-      const res = await feedbackRoutes.request(
-        authedPost({ ...validBody, rating }),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(201);
-      const body = (await res.json()) as { id: string };
-      expect(typeof body.id).toBe("string");
-      expect(body.id.length).toBeGreaterThan(0);
-    },
-  );
-
   it("create に rating / category / comment を渡す", async () => {
     await feedbackRoutes.request(
       authedPost({

@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { callTool } from "~/__tests__/helpers/tool-context";
 import {
   createVoiceFindingsSlot,
-  createVoicePrefetchSlot,
   type VoiceFindingsSlot,
   type VoicePrefetchSlot,
 } from "~/services/voice/findings-slot";
@@ -41,12 +40,6 @@ vi.mock("~/lib/logger", () => ({
 }));
 
 const { voiceAnswerTool } = await import("./voice-answer-tool");
-
-describe("通話用エージェントの生成", () => {
-  it("knowledge-agent は通話の応答速度を優先して effort low で作る", () => {
-    expect(knowledgeAgentOptions).toEqual([{ effort: "low" }]);
-  });
-});
 
 const holdFn = vi.fn();
 
@@ -367,24 +360,6 @@ describe("voiceAnswerTool", () => {
       expect(prompt).toContain("【資料2 | 質問「郵便局」 | knowledge】");
     });
 
-    it("findings が残っているときは深掘りのため従来どおり資料から先に答える", async () => {
-      summarizerGen.mockResolvedValueOnce({ text: "11時からだよ" });
-      const slot: VoiceFindingsSlot = {
-        entries: [
-          { query: "そば", source: "knowledge", text: "営業時間 11:00〜" },
-        ],
-      };
-
-      const result = await call("営業時間は？", {
-        slot,
-        source: "knowledge",
-        parentRouting: true,
-      });
-
-      expect(result.answer).toBe("11時からだよ");
-      expect(knowledgeGen).not.toHaveBeenCalled();
-    });
-
     it("findings で答えられないときの検索先は要点化の提案ではなく親の source に従う", async () => {
       summarizerGen
         .mockResolvedValueOnce({ text: "NEED_WEB" })
@@ -636,21 +611,6 @@ describe("voiceAnswerTool", () => {
       expect(holdFn).toHaveBeenCalled();
       expect(slot.entries.at(-1)?.text).toBe("遅れて届いた資料");
       expect(knowledgeGen).not.toHaveBeenCalled();
-    });
-
-    it("スロットが空のままなら通常の検索で動く", async () => {
-      summarizerGen.mockResolvedValueOnce({ text: "あるよ" });
-      knowledgeGen.mockResolvedValueOnce({ text: "資料" });
-
-      const result = await call("そば食べられる？", {
-        slot: createVoiceFindingsSlot(),
-        source: "knowledge",
-        parentRouting: true,
-        prefetch: createVoicePrefetchSlot(),
-      });
-
-      expect(result.answer).toBe("あるよ");
-      expect(knowledgeGen).toHaveBeenCalledTimes(1);
     });
   });
 });

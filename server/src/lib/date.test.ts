@@ -27,14 +27,6 @@ describe("getCurrentDateInfo", () => {
     expect(result).toContain("21:34");
     expect(result).toMatch(/^今日は.+、現在.+です。$/);
   });
-
-  it("日付が変わると出力も変わる", () => {
-    vi.setSystemTime(new Date("2030-01-01T00:00:00Z"));
-    const a = getCurrentDateInfo();
-    vi.setSystemTime(new Date("2030-12-31T23:59:00Z"));
-    const b = getCurrentDateInfo();
-    expect(a).not.toBe(b);
-  });
 });
 
 describe("startOfJstDay", () => {

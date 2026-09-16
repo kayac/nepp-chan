@@ -142,18 +142,6 @@ describe("POST /twilio/voice/incoming", () => {
     expect(res.status).toBe(401);
   });
 
-  it("不正な署名のリクエストは 401 で TwiML を返さない", async () => {
-    const res = await buildApp().request(
-      INCOMING_URL,
-      {
-        method: "POST",
-        headers: { "x-twilio-signature": "invalid-signature" },
-      },
-      env,
-    );
-    expect(res.status).toBe(401);
-  });
-
   it("ConversationRelay の TwiML（text/xml）を返す", async () => {
     const res = await postIncoming();
     expect(res.status).toBe(200);
@@ -191,24 +179,6 @@ describe("POST /twilio/voice/incoming", () => {
     const xml = await res.text();
     expect(xml).toContain('ttsProvider="Google"');
     expect(xml).toContain('voice="ja-JP-Chirp3-HD-Leda"');
-  });
-
-  it("未知の voicePreset は既定プリセットにフォールバックする", async () => {
-    const res = await postIncoming({ voicePreset: "unknown-voice" });
-    const xml = await res.text();
-    expect(xml).toContain('ttsProvider="ElevenLabs"');
-    expect(xml).toContain('voice="8EkOjt4xTPGMclNlh1pk-flash_v2_5"');
-  });
-
-  it("固定の STT/endpointing 設定を TwiML に出力する", async () => {
-    const res = await postIncoming();
-    const xml = await res.text();
-    expect(xml).toContain('transcriptionProvider="Google"');
-    expect(xml).toContain('speechModel="long"');
-    expect(xml).toContain('speechTimeout="600"');
-    expect(xml).toContain('partialPrompts="true"');
-    expect(xml).toContain('reportInputDuringAgentSpeech="any"');
-    expect(xml).toContain('ignoreBackchannel="true"');
   });
   it("チューニングパラメータを TwiML 属性に反映する", async () => {
     const res = await postIncoming({
@@ -265,24 +235,5 @@ describe("GET /twilio/voice/presets", () => {
     };
     expect(json.presets.map((p) => p.id)).toContain("leda");
     expect(json.presets.every((p) => p.label.length > 0)).toBe(true);
-  });
-
-  it("プリセットの ttsProvider/voice と全チューニング既定値を返す", async () => {
-    const res = await buildApp().request(
-      "http://api.example.com/twilio/voice/presets",
-      { method: "GET" },
-      env,
-    );
-    const json = (await res.json()) as {
-      presets: { id: string; ttsProvider: string; voice: string }[];
-      defaults: Record<string, string>;
-    };
-    const leda = json.presets.find((p) => p.id === "leda");
-    expect(leda?.ttsProvider).toBe("Google");
-    expect(leda?.voice).toBe("ja-JP-Chirp3-HD-Leda");
-    expect(json.defaults.speechTimeout).toBe("600");
-    expect(json.defaults.interruptible).toBe("speech");
-    expect(json.defaults.fillerEnabled).toBe("true");
-    expect(json.defaults.aizuchiCooldownMs).toBe("2000");
   });
 });

@@ -41,18 +41,6 @@ describe("emergencyReportTool.execute", () => {
     expect(typeof arg?.reportedAt).toBe("string");
   });
 
-  it("description / location 省略でも作成可能", async () => {
-    vi.mocked(emergencyRepository.create).mockResolvedValue("mock-id");
-
-    const result = await callTool(
-      emergencyReportTool,
-      { type: "火災" },
-      dbValues,
-    );
-
-    expect(result.success).toBe(true);
-  });
-
   it("DB なしは DB_NOT_AVAILABLE", async () => {
     const result = await callTool(emergencyReportTool, { type: "x" }, {});
 

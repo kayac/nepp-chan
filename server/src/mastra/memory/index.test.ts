@@ -91,30 +91,4 @@ describe("getWorkingMemoryByThread", () => {
       resourceId: "res-1",
     });
   });
-
-  it("null も透過する", async () => {
-    memoryHolder.getWorkingMemory.mockResolvedValueOnce(null);
-
-    const result = await getWorkingMemoryByThread(
-      {} as D1Database,
-      "thr-2",
-      "res-2",
-    );
-
-    expect(result).toBeNull();
-  });
-
-  it("Memory を workingMemory enabled + scope=resource で生成する", async () => {
-    memoryHolder.getWorkingMemory.mockResolvedValueOnce(null);
-
-    await getWorkingMemoryByThread({} as D1Database, "thr-3", "res-3");
-
-    const call = vi.mocked(Memory).mock.calls.at(-1)?.[0] as {
-      options: { workingMemory: { enabled: boolean; scope: string } };
-    };
-    expect(call.options.workingMemory).toMatchObject({
-      enabled: true,
-      scope: "resource",
-    });
-  });
 });

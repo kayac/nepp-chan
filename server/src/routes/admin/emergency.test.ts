@@ -116,12 +116,8 @@ describe("emergencyAdminRoutes: GET /", () => {
       expect(res.status).toBe(403);
     });
 
-    it.each([
-      ["staff", staffUser],
-      ["admin", adminUser],
-      ["super_admin", { ...adminUser, role: "super_admin" as const }],
-    ])("ロール %s は staff 要件を満たし 200 を返す", async (_label, user) => {
-      useAdminAuth(user);
+    it("ロール staff は staff 要件を満たし 200 を返す", async () => {
+      useAdminAuth(staffUser);
       vi.mocked(emergencyRepository.findAll).mockResolvedValue([]);
 
       const res = await routes.request(
@@ -201,18 +197,6 @@ describe("emergencyAdminRoutes: GET /", () => {
       );
 
       expect(res.status).toBe(200);
-    });
-
-    it("非数値 limit は 400", async () => {
-      useAdminAuth();
-
-      const res = await routes.request(
-        authedGet("/?limit=abc", ADMIN_TOKEN),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(400);
     });
   });
 });

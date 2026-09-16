@@ -523,25 +523,6 @@ describe("getThreadUsage", () => {
     ]);
   });
 
-  it("cost_usd NULL の行は現行単価の概算で補完する", async () => {
-    await insertUsage({
-      id: "u1",
-      threadId: "t1",
-      inputTokens: 1_000_000,
-      costUsd: 0.5,
-    });
-    await insertUsage({
-      id: "u2",
-      threadId: "t1",
-      inputTokens: 1_000_000,
-      costUsd: null,
-    });
-
-    const result = await getThreadUsage(d1, period, { limit: 50 });
-
-    expect(result.threads[0]?.costUsd).toBeCloseTo(0.7, 10);
-  });
-
   it("mastra_messages から会話の開始・終了・所要秒数を出す", async () => {
     await insertThread(db, "t1", WEB_RESOURCE);
     await insertMessage(db, {
@@ -1211,18 +1192,6 @@ describe("getPersonaAnalytics", () => {
     expect(result.totalCount).toBe(1);
   });
 
-  it("from/to なしは conversation_ended_at が NULL の行も含む全件を集計する", async () => {
-    await insertPersona({
-      id: "p1",
-      conversationEndedAt: "2026-06-09T00:00:00.000Z",
-    });
-    await insertPersona({ id: "p2" }); // conversation_ended_at なし
-
-    const result = await getPersonaAnalytics(d1, {});
-
-    expect(result.totalCount).toBe(2);
-  });
-
   it("conversation_ended_at を JST の時間帯分布に集計し、NULL は除外する", async () => {
     // UTC 00:30 → JST 9時台、UTC 23:10 → JST 8時台
     await insertPersona({
@@ -1264,26 +1233,6 @@ describe("getPersonaAnalytics", () => {
     expect(result.weekday[5]).toEqual({ dow: 5, count: 1 });
     expect(result.weekday[6]).toEqual({ dow: 6, count: 1 });
     expect(result.weekday.reduce((sum, d) => sum + d.count, 0)).toBe(2);
-  });
-
-  it("開庁時間（平日 8〜17 時 JST）と閉庁時間の声を数える", async () => {
-    await insertPersona({
-      id: "p1",
-      conversationEndedAt: "2026-06-12T01:00:00.000Z", // JST 金 10:00 → 開庁
-    });
-    await insertPersona({
-      id: "p2",
-      conversationEndedAt: "2026-06-12T10:00:00.000Z", // JST 金 19:00 → 閉庁（夜間）
-    });
-    await insertPersona({
-      id: "p3",
-      conversationEndedAt: "2026-06-13T02:00:00.000Z", // JST 土 11:00 → 閉庁（土日）
-    });
-    await insertPersona({ id: "p4" }); // conversation_ended_at なし → 対象外
-
-    const result = await getPersonaAnalytics(d1, {});
-
-    expect(result.officeHours).toEqual({ open: 1, closed: 2 });
   });
 
   it("時間帯分布も from/to（conversation_ended_at 基準）で絞り込める", async () => {

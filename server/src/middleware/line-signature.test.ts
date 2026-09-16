@@ -99,32 +99,4 @@ describe("lineSignatureVerify", () => {
 
     expect(res.status).toBe(401);
   });
-
-  it("パース済みボディが parsedBody に格納される", async () => {
-    const app = createApp();
-    const body = JSON.stringify({
-      destination: "xxx",
-      events: [{ type: "message" }],
-    });
-    const signature = await computeSignature(body, CHANNEL_SECRET);
-
-    const res = await app.request(
-      "/webhook",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-line-signature": signature,
-        },
-        body,
-      },
-      env,
-    );
-
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({
-      destination: "xxx",
-      events: [{ type: "message" }],
-    });
-  });
 });

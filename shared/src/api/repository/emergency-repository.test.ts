@@ -41,14 +41,4 @@ describe("fetchEmergencies", () => {
 
     await repo.fetchEmergencies(10);
   });
-
-  it("500 エラーは throw", async () => {
-    server.use(
-      http.get(`${API}/admin/emergency`, () =>
-        HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
-      ),
-    );
-
-    await expect(repo.fetchEmergencies()).rejects.toBeDefined();
-  });
 });

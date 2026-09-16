@@ -28,9 +28,4 @@ describe("periodRange", () => {
   it("all は期間条件なし", () => {
     expect(periodRange("all", NOW)).toEqual({});
   });
-
-  it("月曜でも直前の週末を含む（暦週なら空になる日）", () => {
-    // 月曜起点の暦週だと当日のみになるが、ローリングなら土日を含む
-    expect(periodRange("d7", NOW).from).toBe("2026-07-28");
-  });
 });

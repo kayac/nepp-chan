@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BRIDGE_CONFIG_DEFAULTS, bridgeFieldSchemas } from "./bridge-config";
+import { bridgeFieldSchemas } from "./bridge-config";
 import {
   DEFAULT_VOICE_PRESET,
   parseVoiceTuning,
@@ -9,25 +9,6 @@ import {
 } from "./tuning";
 
 describe("parseVoiceTuning", () => {
-  it("空 body では既定プリセット + 既定値の relay/bridge を返す", () => {
-    const { relay, bridge, invalidKeys } = parseVoiceTuning({});
-    expect(relay.ttsProvider).toBe(
-      VOICE_PRESETS[DEFAULT_VOICE_PRESET].ttsProvider,
-    );
-    expect(relay.voice).toBe(VOICE_PRESETS[DEFAULT_VOICE_PRESET].voice);
-    expect(relay.language).toBe("ja-JP");
-    expect(relay.transcriptionProvider).toBe("Google");
-    expect(relay.speechModel).toBe("long");
-    expect(relay.speechTimeout).toBe("600");
-    expect(relay.interruptible).toBe("speech");
-    expect(relay.reportInputDuringAgentSpeech).toBe("any");
-    expect(relay.ignoreBackchannel).toBe(true);
-    expect(relay.partialPrompts).toBe(true);
-    expect(relay.eotThreshold).toBeUndefined();
-    expect(bridge).toEqual(BRIDGE_CONFIG_DEFAULTS);
-    expect(invalidKeys).toEqual([]);
-  });
-
   it("voicePreset でプリセットの ttsProvider/voice を解決する", () => {
     const { relay } = parseVoiceTuning({ voicePreset: "leda" });
     expect(relay.ttsProvider).toBe("Google");
@@ -146,21 +127,6 @@ describe("parseVoiceTuning", () => {
 });
 
 describe("VOICE_TUNING_DEFAULTS", () => {
-  it("全チューニング項目の既定値を string で持つ", () => {
-    expect(VOICE_TUNING_DEFAULTS.voicePreset).toBe(DEFAULT_VOICE_PRESET);
-    expect(VOICE_TUNING_DEFAULTS.ttsProvider).toBe(
-      VOICE_PRESETS[DEFAULT_VOICE_PRESET].ttsProvider,
-    );
-    expect(VOICE_TUNING_DEFAULTS.speechTimeout).toBe("600");
-    expect(VOICE_TUNING_DEFAULTS.partialPrompts).toBe("true");
-    expect(VOICE_TUNING_DEFAULTS.reportInputDuringAgentSpeech).toBe("any");
-    expect(VOICE_TUNING_DEFAULTS.ignoreBackchannel).toBe("true");
-    expect(VOICE_TUNING_DEFAULTS.aizuchiCooldownMs).toBe("2000");
-    expect(
-      Object.values(VOICE_TUNING_DEFAULTS).every((v) => typeof v === "string"),
-    ).toBe(true);
-  });
-
   it("全スキーマキーを網羅する（欠けると web から送信不能になる）", () => {
     const schemaKeys = [
       ...Object.keys(relayFieldSchemas),

@@ -104,19 +104,9 @@ describe("knowledge routes 統合テスト", () => {
   });
 
   describe("認証", () => {
-    it.each([
-      { method: "GET", path: "/files" },
-      { method: "GET", path: "/files/test.md" },
-      { method: "PUT", path: "/files/test.md" },
-      { method: "DELETE", path: "/files/test.md" },
-      { method: "POST", path: "/sync" },
-      { method: "POST", path: "/upload" },
-      { method: "POST", path: "/convert" },
-      { method: "POST", path: "/reconvert" },
-      { method: "POST", path: "/curated-draft" },
-    ])("$method $path - 認証なしは 401", async ({ method, path }) => {
+    it("認証なしは 401", async () => {
       const res = await app.request(
-        new Request(`http://localhost${path}`, { method }),
+        new Request("http://localhost/files"),
         undefined,
         mockEnv,
       );

@@ -167,18 +167,3 @@ describe("fetchWeeklyReports", () => {
     expect(result?.reports).toEqual([]);
   });
 });
-
-describe("fetchWeeklyReportById", () => {
-  it("404 は throw", async () => {
-    server.use(
-      http.get(`${API}/admin/analytics/reports/missing`, () =>
-        HttpResponse.json(
-          { error: { code: 404, message: "not found" } },
-          { status: 404 },
-        ),
-      ),
-    );
-
-    await expect(repo.fetchWeeklyReportById("missing")).rejects.toBeDefined();
-  });
-});

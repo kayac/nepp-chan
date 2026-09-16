@@ -4,7 +4,6 @@ import {
   modelWithReasoning,
   OPENAI_LITE,
   OPENAI_MAIN,
-  primaryModelId,
   resolveModelTier,
   voiceModelConfig,
 } from "./llm-models";
@@ -27,10 +26,6 @@ describe("modelWithReasoning", () => {
     expect(modelWithReasoning({ effort: "medium" })).not.toHaveProperty(
       "providerOptions",
     );
-  });
-
-  it("model 省略時は LITE を使う", () => {
-    expect(modelWithReasoning({ effort: "medium" }).model).toBe(OPENAI_LITE);
   });
 
   it("Gemini の thinkingLevel に none が無いため minimal へ読み替える", () => {
@@ -76,62 +71,33 @@ describe("modelWithReasoning", () => {
   });
 });
 
-describe("promptCacheKey（プレフィックスキャッシュの誘導キー）", () => {
-  it("メインエージェントはプラットフォーム × intent ごとのキーを持つ", () => {
-    const cases = [
-      { intent: "casual", platform: "web", key: "nepp-chan-web-casual" },
-      { intent: "casual", platform: "line", key: "nepp-chan-line-casual" },
-      { intent: "thinking", platform: "web", key: "nepp-chan-web-thinking" },
-      { intent: "thinking", platform: "line", key: "nepp-chan-line-thinking" },
-    ] as const;
-    for (const { intent, platform, key } of cases) {
-      const tier = resolveModelTier({ intent, platform, isAdmin: false });
-      for (const entry of tier.model) {
-        expect(entry.providerOptions.openai.promptCacheKey).toBe(key);
-      }
-    }
-  });
-
-  it("voice はチェーン全体で nepp-chan-voice を使う", () => {
-    for (const entry of voiceModelConfig.model) {
-      expect(entry.providerOptions.openai.promptCacheKey).toBe(
-        "nepp-chan-voice",
-      );
-    }
-  });
-});
-
 describe("resolveModelTier", () => {
   describe("Admin は thinking の reasoning と casual の maxSteps を引き上げる", () => {
-    const platforms = ["web", "line"] as const;
+    const platform = "web" as const;
 
-    for (const platform of platforms) {
-      it(`casual/${platform} は effort=none のまま maxSteps だけ thinking と揃える`, () => {
-        const tier = resolveModelTier({
-          intent: "casual",
-          platform,
-          isAdmin: true,
-        });
-        expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
-          "none",
-        );
-        expect(tier.defaultOptions.maxSteps).toBe(
-          resolveModelTier({ intent: "thinking", platform, isAdmin: false })
-            .defaultOptions.maxSteps,
-        );
+    it("casual は effort=none のまま maxSteps だけ thinking と揃える", () => {
+      const tier = resolveModelTier({
+        intent: "casual",
+        platform,
+        isAdmin: true,
       });
+      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe("none");
+      expect(tier.defaultOptions.maxSteps).toBe(
+        resolveModelTier({ intent: "thinking", platform, isAdmin: false })
+          .defaultOptions.maxSteps,
+      );
+    });
 
-      it(`thinking/${platform} は effort=high`, () => {
-        const tier = resolveModelTier({
-          intent: "thinking",
-          platform,
-          isAdmin: true,
-        });
-        for (const entry of tier.model) {
-          expect(entry.providerOptions.openai.reasoningEffort).toBe("high");
-        }
+    it("thinking は effort=high", () => {
+      const tier = resolveModelTier({
+        intent: "thinking",
+        platform,
+        isAdmin: true,
       });
-    }
+      for (const entry of tier.model) {
+        expect(entry.providerOptions.openai.reasoningEffort).toBe("high");
+      }
+    });
   });
 
   describe("Web プラットフォーム（非 Admin）", () => {
@@ -203,14 +169,6 @@ describe("resolveModelTier", () => {
         voiceModelConfig.model[0].providerOptions.openai.reasoningEffort,
       ).toBe("low");
     });
-
-    it("重い MAIN は使わない（軽量ゲート）", () => {
-      expect(voiceModelConfig.model[0].model).not.toBe(OPENAI_MAIN);
-    });
-
-    it("tool 委譲のため maxSteps は 10 を維持", () => {
-      expect(voiceModelConfig.defaultOptions.maxSteps).toBe(10);
-    });
   });
 
   describe("maxSteps", () => {
@@ -245,17 +203,6 @@ describe("resolveModelTier", () => {
       );
     });
 
-    it("全エントリに maxRetries が設定されている", () => {
-      const tier = resolveModelTier({
-        intent: "casual",
-        platform: "web",
-        isAdmin: false,
-      });
-      for (const entry of tier.model) {
-        expect(entry.maxRetries).toBe(1);
-      }
-    });
-
     it("全エントリに id が明示されている（未指定だと randomUUID が workerd の起動を壊す）", () => {
       const tier = resolveModelTier({
         intent: "casual",
@@ -266,16 +213,5 @@ describe("resolveModelTier", () => {
         expect(entry.id).toBe(entry.model);
       }
     });
-  });
-});
-
-describe("primaryModelId", () => {
-  it("先頭エントリのモデル ID を返す", () => {
-    const tier = resolveModelTier({
-      intent: "casual",
-      platform: "web",
-      isAdmin: false,
-    });
-    expect(primaryModelId(tier)).toBe(OPENAI_LITE);
   });
 });

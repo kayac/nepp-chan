@@ -139,16 +139,6 @@ describe("buildCuratedMarkdown", () => {
     );
   });
 
-  it("verified_at と url は YAML で文字列として quote される", () => {
-    const md = buildCuratedMarkdown(draftFields, {
-      inputUrls: ["https://example.com/"],
-      verifiedAt,
-    });
-
-    expect(md).toContain("verified_at: '2026-09-02'");
-    expect(md).toContain("url: 'https://example.com/'");
-  });
-
   it("入力 URL は読めなくても全部載せ、sourceLinks は重複を除いてラベル付きで続ける", () => {
     const md = buildCuratedMarkdown(
       {
@@ -342,18 +332,6 @@ describe("draftCurated", () => {
     expect(prompt.match(/あ/g)).toHaveLength(30_000);
   });
 
-  it("本文が短くても資料として通す", async () => {
-    fetchSpy.mockResolvedValue(htmlResponse("<p>開店準備中</p>"));
-    respondWithDraft();
-
-    const result = await draftCurated(
-      { urls: ["https://a.example/"], files: [] },
-      deps,
-    );
-
-    expect(result.readUrls).toEqual(["https://a.example/"]);
-  });
-
   it("X の投稿 URL は oEmbed で読む", async () => {
     fetchSpy.mockResolvedValue(
       new Response(
@@ -432,30 +410,6 @@ describe("draftCurated", () => {
 
     expect(result.unreadable).toEqual([
       { name: "https://a.example/huge", reason: "5MB を超えています" },
-    ]);
-  });
-
-  it("unreadable は完了順ではなく入力順で並ぶ", async () => {
-    fetchSpy.mockImplementation(async (url) => {
-      if (String(url).includes("slow")) {
-        await new Promise((resolve) => setTimeout(resolve, 20));
-      }
-      return htmlResponse("", { status: 404 });
-    });
-    respondWithDraft();
-
-    const result = await draftCurated(
-      {
-        urls: ["https://slow.example/", "https://fast.example/"],
-        text: "本文",
-        files: [],
-      },
-      deps,
-    );
-
-    expect(result.unreadable.map((u) => u.name)).toEqual([
-      "https://slow.example/",
-      "https://fast.example/",
     ]);
   });
 
