@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  classifyRelationship,
+  classifySegment,
   normalizeSentiment,
   normalizeTopic,
   personaAttributes,
@@ -23,17 +23,49 @@ describe("personaAttributes", () => {
   });
 });
 
-describe("classifyRelationship", () => {
-  it("該当する関係性を返す", () => {
-    expect(classifyRelationship("30代,観光客")).toBe("観光客");
+describe("classifySegment", () => {
+  it("観光客の類義語を観光客に寄せる", () => {
+    expect(classifySegment("30代,観光客")).toBe("観光客");
+    expect(classifySegment("旅行者,そば")).toBe("観光客");
+    expect(classifySegment("旅行検討者")).toBe("観光客");
+    expect(classifySegment("観光検討者")).toBe("観光客");
+    expect(classifySegment("訪問検討者")).toBe("観光客");
+    expect(classifySegment("旅行客")).toBe("観光客");
   });
 
-  it("複数該当したら優先順位の先頭を返す", () => {
-    expect(classifyRelationship("移住検討者,村人")).toBe("村人");
+  it("移住検討者の類義語を移住検討者に寄せる", () => {
+    expect(classifySegment("移住希望,30代")).toBe("移住検討者");
+    expect(classifySegment("移住を検討中")).toBe("移住検討者");
   });
 
-  it("該当なしは null", () => {
-    expect(classifyRelationship("40代,村外")).toBeNull();
+  it("帰省を帰省者に寄せる", () => {
+    expect(classifySegment("帰省中,20代")).toBe("帰省者");
+  });
+
+  it("村人・村内・移住者・在住を村内住民に寄せる", () => {
+    expect(classifySegment("村人")).toBe("村内住民");
+    expect(classifySegment("60代,村内")).toBe("村内住民");
+    expect(classifySegment("移住者,子育て")).toBe("村内住民");
+    expect(classifySegment("音威子府在住")).toBe("村内住民");
+  });
+
+  it("村外は村外", () => {
+    expect(classifySegment("40代,村外")).toBe("村外");
+  });
+
+  it("複数該当したら具体的な関係性を居住地より優先する", () => {
+    expect(classifySegment("移住検討者,村人")).toBe("移住検討者");
+    expect(classifySegment("村外,観光客")).toBe("観光客");
+    expect(classifySegment("村内,帰省")).toBe("帰省者");
+  });
+
+  it("観光・旅行のトピック語だけでは分類しない", () => {
+    expect(classifySegment("観光,旅行,そば")).toBe("不明セグメント");
+  });
+
+  it("該当なしと空文字は不明セグメント", () => {
+    expect(classifySegment("40代,子育て")).toBe("不明セグメント");
+    expect(classifySegment("")).toBe("不明セグメント");
   });
 });
 

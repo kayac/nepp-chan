@@ -11,14 +11,28 @@ export const TOPICS = [
 ] as const;
 export type PersonaTopic = (typeof TOPICS)[number];
 
-// 配列順は排他分類の優先順位（先頭一致で1つに分類する）
-export const RELATIONSHIPS = [
-  "村人",
+export const SEGMENTS = [
   "観光客",
   "移住検討者",
   "帰省者",
+  "村内住民",
+  "村外",
+  "不明セグメント",
 ] as const;
-export type PersonaRelationship = (typeof RELATIONSHIPS)[number];
+export type Segment = (typeof SEGMENTS)[number];
+
+// 配列順は排他分類の優先順位（具体的な関係性が先、居住地由来が後）。
+// 「観光」「旅行」単体は tags でトピック語として使われるため含めない
+const SEGMENT_KEYWORDS: [Segment, string[]][] = [
+  [
+    "観光客",
+    ["観光客", "旅行者", "旅行検討者", "観光検討者", "訪問検討者", "旅行客"],
+  ],
+  ["移住検討者", ["移住検討者", "移住希望", "移住を検討"]],
+  ["帰省者", ["帰省"]],
+  ["村内住民", ["村人", "村内", "移住者", "在住"]],
+  ["村外", ["村外"]],
+];
 
 export const SENTIMENTS = [
   "positive",
@@ -33,8 +47,10 @@ export const personaAttributes = (row: {
   demographicSummary: string | null;
 }) => [row.tags, row.demographicSummary].filter(Boolean).join(",");
 
-export const classifyRelationship = (attributes: string) =>
-  RELATIONSHIPS.find((r) => attributes.includes(r)) ?? null;
+export const classifySegment = (attributes: string) =>
+  SEGMENT_KEYWORDS.find(([, keywords]) =>
+    keywords.some((keyword) => attributes.includes(keyword)),
+  )?.[0] ?? "不明セグメント";
 
 export const normalizeSentiment = (sentiment: string | null) =>
   SENTIMENTS.includes(sentiment as PersonaSentiment)

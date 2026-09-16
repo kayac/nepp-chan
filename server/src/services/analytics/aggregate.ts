@@ -1,5 +1,5 @@
 import {
-  classifyRelationship,
+  classifySegment,
   normalizeSentiment,
   normalizeTopic,
   personaAttributes,
@@ -425,7 +425,8 @@ export const getPersonaAnalytics = async (
       RESIDENCES.find((r) => attributes.includes(r)) ?? "不明";
     residence.set(residenceKey, (residence.get(residenceKey) ?? 0) + 1);
 
-    const relationshipKey = classifyRelationship(attributes) ?? "不明";
+    const segment = classifySegment(attributes);
+    const relationshipKey = segment === "不明セグメント" ? "不明" : segment;
     relationship.set(
       relationshipKey,
       (relationship.get(relationshipKey) ?? 0) + 1,

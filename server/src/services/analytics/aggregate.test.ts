@@ -1149,18 +1149,19 @@ describe("getPersonaAnalytics", () => {
     expect(result.topics).toHaveLength(9);
   });
 
-  it("居住地（村内/村外）と関係性（村人/観光客/移住検討者/帰省者）を集計する", async () => {
+  it("居住地（村内/村外）と関係性セグメントを集計し、未分類は「不明」にする", async () => {
     await insertPersona({ id: "p1", tags: "60代,村内" });
     await insertPersona({ id: "p2", tags: "村外,観光客" });
     await insertPersona({ id: "p3", demographicSummary: "30代,移住検討者" });
-    await insertPersona({ id: "p4", tags: "50代" }); // 居住地・関係性なし
+    await insertPersona({ id: "p4", tags: "50代" });
+    await insertPersona({ id: "p5", tags: "40代,村外" });
 
     const result = await getPersonaAnalytics(d1, {});
 
     expect(result.segments.residence).toEqual(
       expect.arrayContaining([
         { label: "村内", count: 1 },
-        { label: "村外", count: 1 },
+        { label: "村外", count: 2 },
         { label: "不明", count: 2 },
       ]),
     );
@@ -1168,9 +1169,12 @@ describe("getPersonaAnalytics", () => {
       expect.arrayContaining([
         { label: "観光客", count: 1 },
         { label: "移住検討者", count: 1 },
-        { label: "不明", count: 2 },
+        { label: "村内住民", count: 1 },
+        { label: "村外", count: 1 },
+        { label: "不明", count: 1 },
       ]),
     );
+    expect(result.segments.relationship).toHaveLength(5);
   });
 
   it("from/to は会話終了時刻基準で絞り込み、会話時刻不明の行は除外する", async () => {
