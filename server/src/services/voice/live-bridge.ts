@@ -6,6 +6,7 @@ import {
   LIVE_MODEL,
   parseLiveVoice,
 } from "./live-instructions";
+import { createDelegationProgress } from "./live-progress";
 import {
   commentaryAppendMessage,
   inputAudioAppendMessage,
@@ -313,6 +314,13 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
     const controller = new AbortController();
     this.currentTurn = controller;
 
+    const progress = createDelegationProgress({
+      signal: controller.signal,
+      send: (content, step) =>
+        this.sendProgress(delegationId, content, step, startedAt),
+    });
+    progress.start();
+
     this.conversationPromise ??= createVoiceConversation({
       env: this.env,
       from: this.from,
@@ -342,8 +350,27 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
         this.sendCommentary(delegationId, DELEGATION_FALLBACK, startedAt);
       }
     } finally {
+      progress.dispose();
       if (this.currentTurn === controller) this.currentTurn = null;
     }
+  }
+
+  private sendProgress(
+    delegationId: string,
+    content: string,
+    step: { index: number; atMs: number },
+    startedAt: number,
+  ) {
+    logger.info("[LiveBridge] progress sent", {
+      id: delegationId,
+      index: step.index,
+      scheduledAtMs: step.atMs,
+      elapsedMs: Date.now() - startedAt,
+      content,
+    });
+    this.live?.send(
+      serializeLiveMessage(commentaryAppendMessage(delegationId, content)),
+    );
   }
 
   private sendCommentary(
