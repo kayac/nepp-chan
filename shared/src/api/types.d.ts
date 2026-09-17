@@ -5078,6 +5078,13 @@ export interface paths {
                             unassigned: {
                                 tag: string;
                                 count: number;
+                                example: string | null;
+                            }[];
+                            recent: {
+                                tag: string;
+                                groupId: string;
+                                groupName: string;
+                                assignedAt: string;
                             }[];
                         };
                     };

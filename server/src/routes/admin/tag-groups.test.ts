@@ -92,7 +92,8 @@ describe("tagGroupAdminRoutes", () => {
   it("GET / はグループ一覧を返す", async () => {
     vi.mocked(getTagGroupOverview).mockResolvedValue({
       groups: [],
-      unassigned: [{ tag: "新語", count: 3 }],
+      unassigned: [{ tag: "新語", count: 3, example: "例文" }],
+      recent: [],
     });
 
     const res = await routes.request(authed("/"), undefined, mockEnv);
@@ -100,7 +101,8 @@ describe("tagGroupAdminRoutes", () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({
       groups: [],
-      unassigned: [{ tag: "新語", count: 3 }],
+      unassigned: [{ tag: "新語", count: 3, example: "例文" }],
+      recent: [],
     });
   });
 

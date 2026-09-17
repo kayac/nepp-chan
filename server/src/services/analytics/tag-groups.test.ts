@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   aggregateAudiences,
+  collectTagExamples,
   collectUnassignedTags,
   collectUnmappedTags,
   countTags,
@@ -254,5 +255,33 @@ describe("sanitizeAssignments", () => {
       { tag: "謎", groupId: null },
       { tag: "返答なし", groupId: null },
     ]);
+  });
+});
+
+describe("collectTagExamples", () => {
+  it("タグごとに会話終了時刻が最新の声の content を返す", () => {
+    const rows = [
+      {
+        tags: "新語",
+        demographicSummary: null,
+        content: "古い",
+        conversationEndedAt: "2026-01-01T00:00:00.000Z",
+      },
+      {
+        tags: "新語,別",
+        demographicSummary: null,
+        content: "新しい",
+        conversationEndedAt: "2026-06-01T00:00:00.000Z",
+      },
+      {
+        tags: "別",
+        demographicSummary: null,
+        content: "時刻なし",
+        conversationEndedAt: null,
+      },
+    ];
+    const examples = collectTagExamples(rows);
+    expect(examples.get("新語")).toBe("新しい");
+    expect(examples.get("別")).toBe("新しい");
   });
 });

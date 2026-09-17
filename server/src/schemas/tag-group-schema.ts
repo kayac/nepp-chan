@@ -19,7 +19,22 @@ export const tagGroupsResponseSchema = z.object({
       ),
     }),
   ),
-  unassigned: z.array(z.object({ tag: z.string(), count: z.number() })),
+  unassigned: z.array(
+    z.object({
+      tag: z.string(),
+      count: z.number(),
+      // そのタグを持つ最新の声。何のタグか判断する手がかり
+      example: z.string().nullable(),
+    }),
+  ),
+  recent: z.array(
+    z.object({
+      tag: z.string(),
+      groupId: z.string(),
+      groupName: z.string(),
+      assignedAt: z.string(),
+    }),
+  ),
 });
 
 export const createTagGroupBodySchema = z

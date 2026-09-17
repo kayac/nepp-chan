@@ -115,8 +115,25 @@ describe("getTagGroupOverview", () => {
       { tag: "旅行者", assignedBy: "seed", count: 1 },
     ]);
     expect(overview.unassigned).toEqual([
-      { tag: "新語", count: 2 },
-      { tag: "謎", count: 1 },
+      { tag: "新語", count: 2, example: "声 p1" },
+      { tag: "謎", count: 1, example: "声 p2" },
+    ]);
+  });
+
+  it("最近 LLM が振り分けたタグを新しい順に返し、人が付けたものは含めない", async () => {
+    await personaTagGroupRepository.insertAliasesIfAbsent(env.DB, [
+      { tag: "旅行客", groupId: "tourist", assignedBy: "llm" },
+      { tag: "住民", groupId: "resident", assignedBy: "human" },
+    ]);
+
+    const overview = await getTagGroupOverview(env.DB);
+
+    expect(overview.recent).toEqual([
+      expect.objectContaining({
+        tag: "旅行客",
+        groupId: "tourist",
+        groupName: "観光客",
+      }),
     ]);
   });
 });

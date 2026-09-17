@@ -229,6 +229,25 @@ const filterCounts = (
     Number.POSITIVE_INFINITY,
   ).map(([tag, count]) => ({ tag, count }));
 
+export const collectTagExamples = (
+  rows: Pick<
+    AudienceRow,
+    "tags" | "demographicSummary" | "content" | "conversationEndedAt"
+  >[],
+) => {
+  const latest = new Map<string, { content: string; endedAt: string }>();
+  for (const row of rows) {
+    const endedAt = row.conversationEndedAt ?? "";
+    for (const tag of splitAttributes(personaAttributes(row))) {
+      const current = latest.get(tag);
+      if (!current || endedAt > current.endedAt) {
+        latest.set(tag, { content: row.content, endedAt });
+      }
+    }
+  }
+  return new Map([...latest].map(([tag, v]) => [tag, v.content]));
+};
+
 export const collectUnassignedTags = (
   counts: Map<string, number>,
   aliases: AliasMap,

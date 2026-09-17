@@ -5,6 +5,7 @@ import { createRequestContext } from "~/mastra/request-context";
 import { personaRepository } from "~/repository/persona-repository";
 import { personaTagGroupRepository } from "~/repository/persona-tag-group-repository";
 import {
+  collectTagExamples,
   collectUnassignedTags,
   collectUnmappedTags,
   countTags,
@@ -82,6 +83,7 @@ export const assignUnmappedTags = async (
 };
 
 const SORT_ORDER_STEP = 10;
+const RECENT_LIMIT = 20;
 
 export const createTagGroup = async (
   d1: D1Database,
@@ -111,6 +113,8 @@ export const getTagGroupOverview = async (d1: D1Database) => {
     tagsByGroup.set(alias.groupId, list);
   }
   const counts = countTags(rows);
+  const examples = collectTagExamples(rows);
+  const groupName = new Map(groups.map((g) => [g.id, g.name]));
   return {
     groups: groups.map((g) => ({
       ...g,
@@ -118,6 +122,24 @@ export const getTagGroupOverview = async (d1: D1Database) => {
         .map((t) => ({ ...t, count: counts.get(t.tag) ?? 0 }))
         .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, "ja")),
     })),
-    unassigned: collectUnassignedTags(counts, aliases),
+    unassigned: collectUnassignedTags(counts, aliases).map((u) => ({
+      ...u,
+      example: examples.get(u.tag) ?? null,
+    })),
+    recent: aliasRows
+      .flatMap((a) =>
+        a.assignedBy === "llm" && a.groupId
+          ? [
+              {
+                tag: a.tag,
+                groupId: a.groupId,
+                groupName: groupName.get(a.groupId) ?? a.groupId,
+                assignedAt: a.createdAt,
+              },
+            ]
+          : [],
+      )
+      .sort((a, b) => b.assignedAt.localeCompare(a.assignedAt))
+      .slice(0, RECENT_LIMIT),
   };
 };
