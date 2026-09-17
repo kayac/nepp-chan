@@ -69,7 +69,6 @@ export const HomePanel = ({ onNavigate, onShowAnalytics }: Props) => {
             relationships={relationships}
             onShowConversations={() => onShowAnalytics("conversation")}
             onShowVillage={() => onShowAnalytics("overview")}
-            onShowAudience={() => onShowAnalytics("audience")}
             onShowSentiment={(key) =>
               onNavigate("voices", { period: "d7", sents: [key] })
             }

@@ -35,7 +35,6 @@ const baseProps = {
   onShowConversations: vi.fn(),
   onShowVillage: vi.fn(),
   onShowSentiment: vi.fn(),
-  onShowAudience: vi.fn(),
 };
 
 describe("WeekSummary", () => {
@@ -158,16 +157,5 @@ describe("WeekSummary", () => {
     );
 
     expect(screen.queryByTestId("speaker-breakdown")).toBeNull();
-  });
-
-  it("層ごとの関心と課題を見るで onShowAudience が呼ばれる", async () => {
-    const onShowAudience = vi.fn();
-    render(<WeekSummary {...baseProps} onShowAudience={onShowAudience} />);
-
-    await userEvent.click(
-      screen.getByRole("button", { name: "層ごとの関心と課題を見る →" }),
-    );
-
-    expect(onShowAudience).toHaveBeenCalled();
   });
 });

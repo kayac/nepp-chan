@@ -23,7 +23,6 @@ interface Props {
   onShowConversations: () => void;
   onShowVillage: () => void;
   onShowSentiment: (key: SentimentKey) => void;
-  onShowAudience: () => void;
 }
 
 const Metric = ({
@@ -92,7 +91,6 @@ export const WeekSummary = ({
   onShowConversations,
   onShowVillage,
   onShowSentiment,
-  onShowAudience,
 }: Props) => {
   const voiceTotal = sentimentTotal(sentiments);
   const speakers = [
@@ -186,16 +184,7 @@ export const WeekSummary = ({
 
         {speakers.length > 0 && (
           <div data-testid="speaker-breakdown">
-            <div className="mb-2 flex items-baseline justify-between">
-              <h4 className="text-sm font-medium text-(--fg-2)">声の分布</h4>
-              <button
-                type="button"
-                onClick={onShowAudience}
-                className="text-xs text-(--teal-700) underline"
-              >
-                層ごとの関心と課題を見る →
-              </button>
-            </div>
+            <h4 className="text-sm font-medium text-(--fg-2) mb-2">声の分布</h4>
             <dl className="space-y-1.5">
               {speakers.map((row) => (
                 <SpeakerRow key={row.title} {...row} />
