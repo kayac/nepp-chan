@@ -16,23 +16,16 @@ interface Props {
 
 const TimeAxisHeading = ({
   title,
-  period,
   askContext,
   onAskMayor,
 }: {
   title: string;
-  period?: string;
   askContext: string;
   onAskMayor?: (context: string) => void;
 }) => (
   <div className="pt-2 flex items-end justify-between gap-2">
     <div>
       <h3 className="text-lg font-bold text-(--fg-1)">{title}</h3>
-      {period && (
-        <span className="mt-1 inline-block rounded-(--r-pill) bg-(--bg-sunken) px-2 py-0.5 text-xs text-(--fg-3)">
-          {period}
-        </span>
-      )}
     </div>
     {onAskMayor && (
       <button
@@ -63,7 +56,6 @@ export const AnalyticsPanel = ({
       <div id="analytics-conversation" className="space-y-6">
         <TimeAxisHeading
           title="最近の動き"
-          period="直近30日"
           askContext="直近30日の会話データ"
           onAskMayor={onAskMayor}
         />
@@ -73,7 +65,6 @@ export const AnalyticsPanel = ({
       <div id="analytics-overview" className="space-y-6">
         <TimeAxisHeading
           title="村の全体像"
-          period="全期間"
           askContext="全期間の全体分析"
           onAskMayor={onAskMayor}
         />
