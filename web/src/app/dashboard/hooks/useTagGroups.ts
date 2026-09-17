@@ -6,10 +6,10 @@ const invalidateTagGroups = (queryClient: ReturnType<typeof useQueryClient>) =>
   Promise.all([
     queryClient.invalidateQueries({ queryKey: dashboardKeys.tagGroups }),
     queryClient.invalidateQueries({
-      queryKey: ["dashboard", "analytics", "audiences"],
+      queryKey: dashboardKeys.analyticsAudiencesAll,
     }),
     queryClient.invalidateQueries({
-      queryKey: ["dashboard", "analytics", "persona"],
+      queryKey: dashboardKeys.analyticsPersonaAll,
     }),
     queryClient.invalidateQueries({
       queryKey: dashboardKeys.analyticsOntology,

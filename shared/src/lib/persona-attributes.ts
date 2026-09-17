@@ -11,6 +11,8 @@ export const TOPICS = [
 ] as const;
 export type PersonaTopic = (typeof TOPICS)[number];
 
+export const UNKNOWN_SEGMENT = "不明セグメント";
+
 export const SENTIMENTS = [
   "positive",
   "negative",

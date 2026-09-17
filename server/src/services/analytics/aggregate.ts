@@ -48,9 +48,9 @@ const AGE_GROUPS = [
   "不明",
 ] as const;
 
-const RESIDENCE_BY_GROUP: Record<string, string> = {
-  村内住民: "村内",
-  村外: "村外",
+const RESIDENCE_BY_GROUP_ID: Record<string, string> = {
+  resident: "村内",
+  outsider: "村外",
 };
 
 export const getConversationStats = async (d1: D1Database, period: Period) => {
@@ -435,10 +435,10 @@ export const getPersonaAnalytics = async (
       attributes,
       tagGroups.aliases,
       tagGroups.groups,
-    );
+    ).sort((a, b) => a.sortOrder - b.sortOrder);
     const residenceKey =
       groups
-        .map((g) => RESIDENCE_BY_GROUP[g.name])
+        .map((g) => RESIDENCE_BY_GROUP_ID[g.id])
         .find((label) => label !== undefined) ?? "不明";
     residence.set(residenceKey, (residence.get(residenceKey) ?? 0) + 1);
 

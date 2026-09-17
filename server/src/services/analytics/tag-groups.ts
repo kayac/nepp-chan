@@ -66,21 +66,25 @@ export const partitionByPriority = (resolved: TagGroup[], axis: string) =>
     .filter((g) => g.axis === axis)
     .sort((a, b) => a.sortOrder - b.sortOrder)[0] ?? null;
 
-const parseEntityNames = (raw: string | null) => {
+export const parseEntities = (raw: string | null) => {
   if (!raw) return [];
   try {
     const parsed = personaEntitiesSchema.safeParse(JSON.parse(raw));
-    return parsed.success
-      ? parsed.data
-          .map((e) => e.name.normalize("NFKC").trim())
-          .filter((name) => name.length > 0)
-      : [];
+    return parsed.success ? parsed.data : [];
   } catch {
     return [];
   }
 };
 
-const increment = <K>(map: Map<K, number>, key: K) =>
+export const canonicalEntityName = (name: string) =>
+  name.normalize("NFKC").trim();
+
+const parseEntityNames = (raw: string | null) =>
+  parseEntities(raw)
+    .map((e) => canonicalEntityName(e.name))
+    .filter((name) => name.length > 0);
+
+export const increment = <K>(map: Map<K, number>, key: K) =>
   map.set(key, (map.get(key) ?? 0) + 1);
 
 const topCounts = (map: Map<string, number>, limit: number) =>
@@ -121,25 +125,18 @@ export const aggregateAudiences = (
   aliases: AliasMap,
 ) => {
   const aggs = new Map<string, GroupAgg>();
-  const byId = new Map(groups.map((g) => [g.id, g]));
 
   for (const row of rows) {
-    const tags = splitAttributes(personaAttributes(row));
     const topic = normalizeTopic(row.topic);
     const sentiment = normalizeSentiment(row.sentiment);
     const entityNames = parseEntityNames(row.entities);
 
-    const resolved = new Map<string, TagGroup>();
-    for (const tag of tags) {
-      const groupId = aliases.get(tag);
-      const group = groupId ? byId.get(groupId) : undefined;
-      if (group) resolved.set(group.id, group);
-    }
-    const topicGroupNames = [...resolved.values()]
+    const resolved = resolveGroups(personaAttributes(row), aliases, groups);
+    const topicGroupNames = resolved
       .filter((g) => g.kind === "topic")
       .map((g) => g.name);
 
-    for (const group of resolved.values()) {
+    for (const group of resolved) {
       if (group.kind !== "attribute") continue;
       const agg: GroupAgg = aggs.get(group.id) ?? {
         group,
@@ -211,37 +208,36 @@ const sum = (c: ReturnType<typeof emptySentimentCounts>) =>
 
 export const RELATION_AXIS = "関わり";
 
-export const collectUnassignedTags = (
+export const countTags = (
   rows: Pick<AudienceRow, "tags" | "demographicSummary">[],
-  aliases: AliasMap,
 ) => {
   const counts = new Map<string, number>();
   for (const row of rows) {
     for (const tag of splitAttributes(personaAttributes(row))) {
-      if (!aliases.get(tag)) increment(counts, tag);
+      increment(counts, tag);
     }
   }
-  return topCounts(counts, Number.POSITIVE_INFINITY).map(([tag, count]) => ({
-    tag,
-    count,
-  }));
+  return counts;
 };
 
-export const collectUnmappedTags = (
-  rows: Pick<AudienceRow, "tags" | "demographicSummary">[],
+const filterCounts = (
+  counts: Map<string, number>,
+  include: (tag: string) => boolean,
+) =>
+  topCounts(
+    new Map([...counts].filter(([tag]) => include(tag))),
+    Number.POSITIVE_INFINITY,
+  ).map(([tag, count]) => ({ tag, count }));
+
+export const collectUnassignedTags = (
+  counts: Map<string, number>,
   aliases: AliasMap,
-) => {
-  const counts = new Map<string, number>();
-  for (const row of rows) {
-    for (const tag of splitAttributes(personaAttributes(row))) {
-      if (!aliases.has(tag)) increment(counts, tag);
-    }
-  }
-  return topCounts(counts, Number.POSITIVE_INFINITY).map(([tag, count]) => ({
-    tag,
-    count,
-  }));
-};
+) => filterCounts(counts, (tag) => !aliases.get(tag));
+
+export const collectUnmappedTags = (
+  counts: Map<string, number>,
+  aliases: AliasMap,
+) => filterCounts(counts, (tag) => !aliases.has(tag));
 
 export const sanitizeAssignments = (
   assignments: { tag: string; groupId: string | null }[],
@@ -276,7 +272,7 @@ export const loadTagGroups = async (d1: D1Database) => {
     sortOrder: g.sortOrder,
   }));
   const aliases: AliasMap = new Map(aliasRows.map((a) => [a.tag, a.groupId]));
-  return { groups, aliases };
+  return { groups, aliases, aliasRows };
 };
 
 export const getAudiences = async (

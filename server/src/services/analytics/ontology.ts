@@ -2,18 +2,20 @@ import {
   normalizeSentiment,
   normalizeTopic,
   personaAttributes,
+  UNKNOWN_SEGMENT,
 } from "@nepp-chan/shared/lib/persona-attributes";
 import { personaRepository } from "~/repository/persona-repository";
-import { personaEntitiesSchema } from "~/schemas/persona-entity-schema";
 import { emptySentimentCounts } from "./aggregate";
 import {
+  canonicalEntityName,
+  increment,
   loadTagGroups,
+  parseEntities,
   partitionByPriority,
   RELATION_AXIS,
   resolveGroups,
 } from "./tag-groups";
 
-export const UNKNOWN_SEGMENT = "不明セグメント";
 type Segment = string;
 
 const ROLES = [
@@ -100,9 +102,6 @@ export const classifyRoles = (
 export const nonZeroRecord = (entries: Iterable<[string, number]>) =>
   Object.fromEntries([...entries].filter(([, count]) => count > 0));
 
-const increment = <K>(map: Map<K, number>, key: K) =>
-  map.set(key, (map.get(key) ?? 0) + 1);
-
 const dominantTopic = (topicCounts: Map<string, number>) =>
   [...topicCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "その他";
 
@@ -120,16 +119,6 @@ const roleAndBreakdowns = (
     bySegment: nonZeroRecord(bySegment),
     bySentiment: nonZeroRecord(Object.entries(bySentiment)),
   };
-};
-
-const parseEntities = (raw: string | null) => {
-  if (!raw) return [];
-  try {
-    const parsed = personaEntitiesSchema.safeParse(JSON.parse(raw));
-    return parsed.success ? parsed.data : [];
-  } catch {
-    return [];
-  }
 };
 
 type EntityAgg = {
@@ -190,7 +179,7 @@ export const getOntology = async (d1: D1Database): Promise<OntologyData> => {
     increment(linkCounts, `${segment} ${topic}`);
 
     for (const entity of parseEntities(row.entities)) {
-      const canonical = entity.name.normalize("NFKC").trim();
+      const canonical = canonicalEntityName(entity.name);
       if (!canonical) continue;
 
       const ent = entityAgg.get(canonical) ?? {

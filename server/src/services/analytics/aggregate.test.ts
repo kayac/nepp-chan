@@ -1157,19 +1157,20 @@ describe("getPersonaAnalytics", () => {
     await insertPersona({ id: "p3", demographicSummary: "30代,移住検討者" });
     await insertPersona({ id: "p4", tags: "旅行者" });
     await insertPersona({ id: "p5", tags: "50代" });
+    await insertPersona({ id: "p6", tags: "村外,村内" });
 
     const result = await getPersonaAnalytics(d1, {});
 
     expect(result.segments.residence).toEqual(
       expect.arrayContaining([
-        { label: "村内", count: 1 },
+        { label: "村内", count: 2 },
         { label: "村外", count: 1 },
         { label: "不明", count: 3 },
       ]),
     );
     expect(result.segments.relationship).toEqual(
       expect.arrayContaining([
-        { label: "村内住民", count: 1 },
+        { label: "村内住民", count: 2 },
         { label: "観光客", count: 2 },
         { label: "移住検討者", count: 1 },
         { label: "不明", count: 1 },

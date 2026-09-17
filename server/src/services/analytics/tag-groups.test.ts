@@ -3,6 +3,7 @@ import {
   aggregateAudiences,
   collectUnassignedTags,
   collectUnmappedTags,
+  countTags,
   normalizeTag,
   partitionByPriority,
   resolveGroups,
@@ -217,7 +218,7 @@ describe("collectUnassignedTags", () => {
       { tags: "観光客,新語,関心事", demographicSummary: "謎タグ" },
       { tags: "新語", demographicSummary: null },
     ];
-    expect(collectUnassignedTags(rows, aliases)).toEqual([
+    expect(collectUnassignedTags(countTags(rows), aliases)).toEqual([
       { tag: "新語", count: 2 },
       { tag: "謎タグ", count: 1 },
     ]);
@@ -230,7 +231,7 @@ describe("collectUnmappedTags", () => {
       { tags: "観光客,新語", demographicSummary: "謎タグ" },
       { tags: "新語,別の新語", demographicSummary: null },
     ];
-    expect(collectUnmappedTags(rows, aliases)).toEqual([
+    expect(collectUnmappedTags(countTags(rows), aliases)).toEqual([
       { tag: "新語", count: 2 },
       { tag: "別の新語", count: 1 },
     ]);

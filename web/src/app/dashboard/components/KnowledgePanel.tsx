@@ -17,10 +17,11 @@ import {
   useKnowledgeFiles,
   useSyncKnowledge,
 } from "~/app/dashboard/hooks/useKnowledge";
+import { FolderTabs } from "~/components/ui/FolderTabs";
 
 const TABS = [
-  { prefix: CURATED_PREFIX, label: "追加したナレッジ" },
-  { prefix: OFFICIAL_PREFIX, label: "公式資料" },
+  { value: CURATED_PREFIX, label: "追加したナレッジ" },
+  { value: OFFICIAL_PREFIX, label: "公式資料" },
 ] as const;
 
 const SECTION_HEADING = "text-base font-bold text-stone-800 mb-4";
@@ -140,28 +141,12 @@ export const KnowledgePanel = () => {
   return (
     <div className="space-y-6">
       <div>
-        <div
-          role="tablist"
-          aria-label="ナレッジの種類"
-          className="flex border-b border-stone-300 divide-x divide-stone-300"
-        >
-          {TABS.map((item) => (
-            <button
-              key={item.prefix}
-              type="button"
-              role="tab"
-              aria-selected={tab === item.prefix}
-              onClick={() => setTab(item.prefix)}
-              className={`px-4 py-2 -mb-px text-sm font-medium border-t border-b border-stone-300 rounded-t-lg first:border-l last:border-r transition-colors ${
-                tab === item.prefix
-                  ? "border-b-white bg-white text-stone-800"
-                  : "border-b-transparent bg-stone-100 text-stone-600 hover:text-stone-800"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
+        <FolderTabs
+          label="ナレッジの種類"
+          tabs={TABS}
+          selected={tab}
+          onSelect={setTab}
+        />
 
         <div className="bg-white rounded-b-xl border border-t-0 border-stone-300 p-6">
           {message && (

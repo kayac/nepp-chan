@@ -1,3 +1,4 @@
+import { UNKNOWN_SEGMENT } from "@nepp-chan/shared/lib/persona-attributes";
 import {
   forceCenter,
   forceCollide,
@@ -44,7 +45,7 @@ const SEGMENT_ICONS: Record<string, string> = {
   移住検討者: "🧳",
   帰省者: "🎒",
   村外: "🌏",
-  不明セグメント: "👤",
+  [UNKNOWN_SEGMENT]: "👤",
 };
 
 const SENTIMENT_META: Record<string, { label: string; color: string }> = {
@@ -544,7 +545,7 @@ const OntologyGraph = ({
                     title="誰が"
                     rows={selected.bySegment}
                     getMeta={(key) => ({
-                      label: key === "不明セグメント" ? "不明" : key,
+                      label: key === UNKNOWN_SEGMENT ? "不明" : key,
                       color: "#f4a06a",
                       icon: SEGMENT_ICONS[key] ?? "👤",
                     })}

@@ -1,4 +1,3 @@
-import { personaAttributes } from "@nepp-chan/shared/lib/persona-attributes";
 import { z } from "zod";
 import { getStorage } from "~/lib/storage";
 import { tagGroupAgent } from "~/mastra/agents/tag-group-agent";
@@ -8,16 +7,11 @@ import { personaTagGroupRepository } from "~/repository/persona-tag-group-reposi
 import {
   collectUnassignedTags,
   collectUnmappedTags,
+  countTags,
   loadTagGroups,
   sanitizeAssignments,
-  splitAttributes,
   type TagGroup,
 } from "./tag-groups";
-
-const splitAttributesOf = (row: {
-  tags: string | null;
-  demographicSummary: string | null;
-}) => splitAttributes(personaAttributes(row));
 
 export const ASSIGN_BATCH_SIZE = 100;
 const EXAMPLE_LIMIT = 5;
@@ -54,7 +48,7 @@ export const assignUnmappedTags = async (
     loadTagGroups(env.DB),
     personaRepository.listForAudience(env.DB, {}),
   ]);
-  const unmapped = collectUnmappedTags(rows, aliases);
+  const unmapped = collectUnmappedTags(countTags(rows), aliases);
   const batch = unmapped.slice(0, ASSIGN_BATCH_SIZE);
   if (batch.length === 0) {
     return { assigned: 0, unassigned: 0, remaining: 0 };
@@ -88,11 +82,10 @@ export const assignUnmappedTags = async (
 };
 
 export const getTagGroupOverview = async (d1: D1Database) => {
-  const [{ groups, aliases }, rows] = await Promise.all([
+  const [{ groups, aliases, aliasRows }, rows] = await Promise.all([
     loadTagGroups(d1),
     personaRepository.listForAudience(d1, {}),
   ]);
-  const aliasRows = await personaTagGroupRepository.listAliases(d1);
   const tagsByGroup = new Map<string, { tag: string; assignedBy: string }[]>();
   for (const alias of aliasRows) {
     if (!alias.groupId) continue;
@@ -100,12 +93,7 @@ export const getTagGroupOverview = async (d1: D1Database) => {
     list.push({ tag: alias.tag, assignedBy: alias.assignedBy });
     tagsByGroup.set(alias.groupId, list);
   }
-  const counts = new Map<string, number>();
-  for (const row of rows) {
-    for (const tag of splitAttributesOf(row)) {
-      counts.set(tag, (counts.get(tag) ?? 0) + 1);
-    }
-  }
+  const counts = countTags(rows);
   return {
     groups: groups.map((g) => ({
       ...g,
@@ -113,6 +101,6 @@ export const getTagGroupOverview = async (d1: D1Database) => {
         .map((t) => ({ ...t, count: counts.get(t.tag) ?? 0 }))
         .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, "ja")),
     })),
-    unassigned: collectUnassignedTags(rows, aliases),
+    unassigned: collectUnassignedTags(counts, aliases),
   };
 };

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAudiences } from "~/app/dashboard/hooks/useAnalytics";
+import { FolderTabs } from "~/components/ui/FolderTabs";
 import { SENTIMENT_SERIES } from "~/lib/chart-helpers";
 import {
   SectionCard,
@@ -90,39 +91,6 @@ const GroupCard = ({ group }: { group: AudienceGroup }) => (
   </article>
 );
 
-const AxisTabs = ({
-  axes,
-  selected,
-  onSelect,
-}: {
-  axes: string[];
-  selected: string;
-  onSelect: (axis: string) => void;
-}) => (
-  <div
-    role="tablist"
-    aria-label="属性の軸"
-    className="flex border-b border-stone-300 divide-x divide-stone-300"
-  >
-    {axes.map((axis) => (
-      <button
-        key={axis}
-        type="button"
-        role="tab"
-        aria-selected={selected === axis}
-        onClick={() => onSelect(axis)}
-        className={`px-4 py-2 -mb-px text-sm font-medium border-t border-b border-stone-300 rounded-t-lg first:border-l last:border-r transition-colors ${
-          selected === axis
-            ? "border-b-white bg-white text-stone-800"
-            : "border-b-transparent bg-stone-100 text-stone-600 hover:text-stone-800"
-        }`}
-      >
-        {axis}
-      </button>
-    ))}
-  </div>
-);
-
 export const AudienceSection = () => {
   const { data, isLoading, error } = useAudiences();
   const [selectedAxis, setSelectedAxis] = useState<string | null>(null);
@@ -144,8 +112,9 @@ export const AudienceSection = () => {
       )}
       {data && activeAxis && (
         <div className="space-y-4">
-          <AxisTabs
-            axes={axes}
+          <FolderTabs
+            label="属性の軸"
+            tabs={axes.map((axis) => ({ value: axis, label: axis }))}
             selected={activeAxis}
             onSelect={setSelectedAxis}
           />
