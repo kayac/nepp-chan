@@ -62,6 +62,18 @@ describe("personaTagGroupRepository", () => {
     expect(aliases.find((a) => a.tag === "謎")?.groupId).toBeNull();
   });
 
+  it("insertAliasesIfAbsent は 100 件を超えても全件入る", async () => {
+    const inputs = Array.from({ length: 150 }, (_, i) => ({
+      tag: `tag-${i}`,
+      groupId: null,
+      assignedBy: "llm" as const,
+    }));
+
+    await personaTagGroupRepository.insertAliasesIfAbsent(d1, inputs);
+
+    expect(await personaTagGroupRepository.countAliases(d1)).toBe(150);
+  });
+
   it("setAlias は割り当て先を上書きし、更新者を記録する", async () => {
     await personaTagGroupRepository.insertAliasesIfAbsent(d1, [
       { tag: "旅行者", groupId: null, assignedBy: "llm" },
