@@ -1,5 +1,4 @@
 import {
-  classifyRelationship,
   normalizeSentiment,
   normalizeTopic,
   personaAttributes,
@@ -12,6 +11,12 @@ import {
 } from "~/repository/llm-usage-repository";
 import { mastraMessageRepository } from "~/repository/mastra-message-repository";
 import { personaRepository } from "~/repository/persona-repository";
+import {
+  loadTagGroups,
+  partitionByPriority,
+  RELATION_AXIS,
+  resolveGroups,
+} from "./tag-groups";
 
 // API は JST ラベル済みのデータを返す（フロントでは変換しない）
 
@@ -43,7 +48,10 @@ const AGE_GROUPS = [
   "不明",
 ] as const;
 
-const RESIDENCES = ["村内", "村外"] as const;
+const RESIDENCE_BY_GROUP: Record<string, string> = {
+  村内住民: "村内",
+  村外: "村外",
+};
 
 export const getConversationStats = async (d1: D1Database, period: Period) => {
   const [hourlyRows, weekdayRows, daily, platforms, totalsRow] =
@@ -387,12 +395,14 @@ export const getPersonaAnalytics = async (
   d1: D1Database,
   params: { from?: string; to?: string },
 ) => {
-  const [rows, hourlyRows, weekdayRows, officeRow] = await Promise.all([
-    personaRepository.listAttributes(d1, params),
-    personaRepository.countByConversationHour(d1, params),
-    personaRepository.countByConversationWeekday(d1, params),
-    personaRepository.countOfficeHours(d1, params),
-  ]);
+  const [rows, hourlyRows, weekdayRows, officeRow, tagGroups] =
+    await Promise.all([
+      personaRepository.listAttributes(d1, params),
+      personaRepository.countByConversationHour(d1, params),
+      personaRepository.countByConversationWeekday(d1, params),
+      personaRepository.countOfficeHours(d1, params),
+      loadTagGroups(d1),
+    ]);
 
   const ageSentiment = new Map(
     AGE_GROUPS.map((age) => [age as string, emptySentimentCounts()]),
@@ -421,11 +431,19 @@ export const getPersonaAnalytics = async (
       topicCounts[sentiment] += 1;
     }
 
+    const groups = resolveGroups(
+      attributes,
+      tagGroups.aliases,
+      tagGroups.groups,
+    );
     const residenceKey =
-      RESIDENCES.find((r) => attributes.includes(r)) ?? "不明";
+      groups
+        .map((g) => RESIDENCE_BY_GROUP[g.name])
+        .find((label) => label !== undefined) ?? "不明";
     residence.set(residenceKey, (residence.get(residenceKey) ?? 0) + 1);
 
-    const relationshipKey = classifyRelationship(attributes) ?? "不明";
+    const relationshipKey =
+      partitionByPriority(groups, RELATION_AXIS)?.name ?? "不明";
     relationship.set(
       relationshipKey,
       (relationship.get(relationshipKey) ?? 0) + 1,

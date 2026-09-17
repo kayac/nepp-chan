@@ -465,6 +465,26 @@ export const personaRepository = {
       .all();
   },
 
+  async listForAudience(d1: D1Database, period: ConversationPeriod) {
+    const db = createDb(d1);
+
+    const conditions = conversationPeriodFilters(period);
+
+    return db
+      .select({
+        tags: persona.tags,
+        demographicSummary: persona.demographicSummary,
+        topic: persona.topic,
+        sentiment: persona.sentiment,
+        entities: persona.entities,
+        content: persona.content,
+        conversationEndedAt: persona.conversationEndedAt,
+      })
+      .from(persona)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .all();
+  },
+
   async listAllAttributesWithEntities(d1: D1Database) {
     const db = createDb(d1);
 

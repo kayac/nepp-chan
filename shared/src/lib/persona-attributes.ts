@@ -11,15 +11,6 @@ export const TOPICS = [
 ] as const;
 export type PersonaTopic = (typeof TOPICS)[number];
 
-// 配列順は排他分類の優先順位（先頭一致で1つに分類する）
-export const RELATIONSHIPS = [
-  "村人",
-  "観光客",
-  "移住検討者",
-  "帰省者",
-] as const;
-export type PersonaRelationship = (typeof RELATIONSHIPS)[number];
-
 export const SENTIMENTS = [
   "positive",
   "negative",
@@ -32,9 +23,6 @@ export const personaAttributes = (row: {
   tags: string | null;
   demographicSummary: string | null;
 }) => [row.tags, row.demographicSummary].filter(Boolean).join(",");
-
-export const classifyRelationship = (attributes: string) =>
-  RELATIONSHIPS.find((r) => attributes.includes(r)) ?? null;
 
 export const normalizeSentiment = (sentiment: string | null) =>
   SENTIMENTS.includes(sentiment as PersonaSentiment)
