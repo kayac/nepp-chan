@@ -16,16 +16,19 @@ interface Props {
 
 const TimeAxisHeading = ({
   title,
+  description,
   askContext,
   onAskMayor,
 }: {
   title: string;
+  description: string;
   askContext: string;
   onAskMayor?: (context: string) => void;
 }) => (
   <div className="pt-2 flex items-end justify-between gap-2">
     <div>
       <h3 className="text-lg font-bold text-(--fg-1)">{title}</h3>
+      <p className="text-xs text-(--fg-3) mt-0.5">{description}</p>
     </div>
     {onAskMayor && (
       <button
@@ -56,6 +59,7 @@ export const AnalyticsPanel = ({
       <div id="analytics-conversation" className="space-y-6">
         <TimeAxisHeading
           title="最近の動き"
+          description="会話の量・時間帯・流入元"
           askContext="直近30日の会話データ"
           onAskMayor={onAskMayor}
         />
@@ -65,6 +69,7 @@ export const AnalyticsPanel = ({
       <div id="analytics-overview" className="space-y-6">
         <TimeAxisHeading
           title="村の全体像"
+          description="誰が、何について、どう感じているか"
           askContext="全期間の全体分析"
           onAskMayor={onAskMayor}
         />
@@ -84,6 +89,7 @@ export const AnalyticsPanel = ({
 
       <TimeAxisHeading
         title="今週のできごと"
+        description="毎週火曜に自動生成"
         askContext="今週の週次レポート"
         onAskMayor={onAskMayor}
       />
