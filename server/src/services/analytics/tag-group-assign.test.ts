@@ -162,8 +162,8 @@ describe("createTagGroup", () => {
     expect(attribute).toMatchObject({
       name: "農家",
       axis: "立場",
-      sortOrder: 60,
+      sortOrder: 170,
     });
-    expect(topic).toMatchObject({ name: "農業", axis: null, sortOrder: 70 });
+    expect(topic).toMatchObject({ name: "農業", axis: null, sortOrder: 180 });
   });
 });

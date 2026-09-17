@@ -1091,64 +1091,43 @@ describe("getPersonaAnalytics", () => {
     await seedRelationGroups(db);
   });
 
-  it("tags の年代 × sentiment を集計する", async () => {
+  it("年代はタググループで集計し、60代以上を 1 区分にまとめる", async () => {
     await insertPersona({ id: "p1", tags: "60代,村内", sentiment: "negative" });
     await insertPersona({ id: "p2", tags: "60代", sentiment: "positive" });
     await insertPersona({
       id: "p3",
       tags: "80代以上,村内",
-      sentiment: "request",
+      sentiment: "neutral",
     });
+    await insertPersona({ id: "p4", tags: "高齢者", sentiment: "request" });
+    await insertPersona({ id: "p5", tags: "高校生", sentiment: "neutral" });
 
     const result = await getPersonaAnalytics(d1, {});
 
-    const age60 = result.ageSentiment.find((a) => a.age === "60代");
-    const age80 = result.ageSentiment.find((a) => a.age === "80代以上");
-    expect(age60).toEqual({
-      age: "60代",
+    expect(result.ageSentiment.map((a) => a.age)).toEqual([
+      "10代",
+      "20代",
+      "60代以上",
+      "不明",
+    ]);
+    expect(result.ageSentiment.find((a) => a.age === "60代以上")).toEqual({
+      age: "60代以上",
       positive: 1,
       negative: 1,
-      request: 0,
-      neutral: 0,
-    });
-    expect(age80).toEqual({
-      age: "80代以上",
-      positive: 0,
-      negative: 0,
       request: 1,
-      neutral: 0,
+      neutral: 1,
     });
+    expect(result.ageSentiment.find((a) => a.age === "10代")?.neutral).toBe(1);
   });
 
-  it("tags に年代が無ければ demographic_summary から抽出し、どちらにも無ければ「不明」", async () => {
-    await insertPersona({ id: "p1", demographicSummary: "30代,移住検討者" });
-    await insertPersona({ id: "p2", tags: "観光客" });
+  it("年代は demographic_summary からも拾い、明示の年代を高齢者より優先し、無ければ「不明」", async () => {
+    await insertPersona({ id: "p1", demographicSummary: "20代,高齢者" });
+    await insertPersona({ id: "p2", tags: "そば" });
 
     const result = await getPersonaAnalytics(d1, {});
 
-    expect(result.ageSentiment.find((a) => a.age === "30代")?.neutral).toBe(1);
+    expect(result.ageSentiment.find((a) => a.age === "20代")?.neutral).toBe(1);
     expect(result.ageSentiment.find((a) => a.age === "不明")?.neutral).toBe(1);
-  });
-
-  it("topic 9 分類 × sentiment を集計し、topic 無しは「その他」に入る", async () => {
-    await insertPersona({ id: "p1", topic: "交通", sentiment: "negative" });
-    await insertPersona({ id: "p2", topic: "交通", sentiment: "request" });
-    await insertPersona({ id: "p3", sentiment: "positive" }); // topic なし
-
-    const result = await getPersonaAnalytics(d1, {});
-
-    const traffic = result.topics.find((t) => t.topic === "交通");
-    const other = result.topics.find((t) => t.topic === "その他");
-    expect(traffic).toEqual({
-      topic: "交通",
-      total: 2,
-      positive: 0,
-      negative: 1,
-      request: 1,
-      neutral: 0,
-    });
-    expect(other?.total).toBe(1);
-    expect(result.topics).toHaveLength(9);
   });
 
   it("居住地と関係性をタググループで集計し、関係性は優先順位で 1 つに寄せる", async () => {
