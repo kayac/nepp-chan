@@ -75,7 +75,7 @@ describe("TagGroupsPanel", () => {
     expect(screen.getByText("最近自動で振り分けたもの")).toBeInTheDocument();
   });
 
-  it("判断待ちにグループを選ぶと割り当て、集計に使わないは除外に入れる", async () => {
+  it("判断待ちにグループを選ぶと割り当て、集計対象外にするは除外に入れる", async () => {
     renderWithQuery(<TagGroupsPanel />);
     await waitFor(() => expect(screen.getByText("低予算")).toBeInTheDocument());
 
@@ -92,7 +92,7 @@ describe("TagGroupsPanel", () => {
 
     const row = screen.getByText("年代不明").closest("li") as HTMLElement;
     await userEvent.click(
-      within(row).getByRole("button", { name: "集計に使わない" }),
+      within(row).getByRole("button", { name: "集計対象外にする" }),
     );
     await waitFor(() =>
       expect(puts).toContainEqual({
@@ -155,7 +155,7 @@ describe("TagGroupsPanel", () => {
     const attribute = within(section).getByText("話者の属性")
       .parentElement as HTMLElement;
     expect(within(attribute).getByText("関わり / 観光客")).toBeInTheDocument();
-    const excluded = within(section).getByText("集計に使わない")
+    const excluded = within(section).getByText("集計対象外")
       .parentElement as HTMLElement;
     expect(within(excluded).getByText("除外")).toBeInTheDocument();
 
@@ -164,7 +164,7 @@ describe("TagGroupsPanel", () => {
       within(select).getByRole("group", { name: "話者の属性" }),
     ).toBeInTheDocument();
     expect(
-      within(select).queryByRole("group", { name: "集計に使わない" }),
+      within(select).queryByRole("group", { name: "集計対象外" }),
     ).toBeNull();
   });
 
