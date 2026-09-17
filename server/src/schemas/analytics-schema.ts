@@ -89,6 +89,25 @@ const ontologyLinkSchema = z.object({
   kind: z.enum(["seg-topic", "topic-ent", "seg-ent"]),
 });
 
+const audienceGroupSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  // 1 件の声が同じ軸の複数グループに入るため、件数は排他ではない
+  count: z.number(),
+  topics: z.array(z.object({ topic: z.string(), ...sentimentCountsShape })),
+  entities: z.array(z.object({ name: z.string(), count: z.number() })),
+  tags: z.array(z.object({ tag: z.string(), count: z.number() })),
+  samples: z.array(
+    z.object({ content: z.string(), topic: z.string(), sentiment: z.string() }),
+  ),
+});
+
+export const audiencesResponseSchema = z.object({
+  axes: z.array(
+    z.object({ axis: z.string(), groups: z.array(audienceGroupSchema) }),
+  ),
+});
+
 export const ontologyResponseSchema = z.object({
   nodes: z.array(ontologyNodeSchema),
   links: z.array(ontologyLinkSchema),

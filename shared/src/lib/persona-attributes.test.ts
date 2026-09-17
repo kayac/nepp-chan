@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  classifyRelationship,
   normalizeSentiment,
   normalizeTopic,
   personaAttributes,
@@ -20,20 +19,6 @@ describe("personaAttributes", () => {
     expect(personaAttributes({ tags: null, demographicSummary: null })).toBe(
       "",
     );
-  });
-});
-
-describe("classifyRelationship", () => {
-  it("該当する関係性を返す", () => {
-    expect(classifyRelationship("30代,観光客")).toBe("観光客");
-  });
-
-  it("複数該当したら優先順位の先頭を返す", () => {
-    expect(classifyRelationship("移住検討者,村人")).toBe("村人");
-  });
-
-  it("該当なしは null", () => {
-    expect(classifyRelationship("40代,村外")).toBeNull();
   });
 });
 

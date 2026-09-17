@@ -12,6 +12,7 @@ export type LlmUsageSource =
   | "intent-classify"
   | "persona-extract"
   | "weekly-report"
+  | "tag-group-assign"
   | "image-convert"
   | "curated-draft"
   | "embedding"

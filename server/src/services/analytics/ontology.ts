@@ -2,20 +2,21 @@ import {
   normalizeSentiment,
   normalizeTopic,
   personaAttributes,
+  UNKNOWN_SEGMENT,
 } from "@nepp-chan/shared/lib/persona-attributes";
 import { personaRepository } from "~/repository/persona-repository";
-import { personaEntitiesSchema } from "~/schemas/persona-entity-schema";
 import { emptySentimentCounts } from "./aggregate";
+import {
+  canonicalEntityName,
+  increment,
+  loadTagGroups,
+  parseEntities,
+  partitionByPriority,
+  RELATION_AXIS,
+  resolveGroups,
+} from "./tag-groups";
 
-const SEGMENTS = [
-  "観光客",
-  "移住検討者",
-  "帰省者",
-  "村内住民",
-  "村外",
-  "不明セグメント",
-] as const;
-export type Segment = (typeof SEGMENTS)[number];
+type Segment = string;
 
 const ROLES = [
   "接続点",
@@ -66,16 +67,6 @@ const DISPUTE_SHARE = 0.08;
 const BIAS_SHARE = 0.12;
 const SEGMENT_SHARE = 0.15;
 
-export const extractSegment = (attributes: string): Segment => {
-  if (attributes.includes("観光客")) return "観光客";
-  if (attributes.includes("移住検討者")) return "移住検討者";
-  if (attributes.includes("帰省者")) return "帰省者";
-  if (attributes.includes("村人")) return "村内住民";
-  if (attributes.includes("村外")) return "村外";
-  if (attributes.includes("村内")) return "村内住民";
-  return "不明セグメント";
-};
-
 export const classifyRoles = (
   bySentiment: SentimentCounts,
   bySegment: Map<Segment, number>,
@@ -89,12 +80,12 @@ export const classifyRoles = (
   const neg = sentimentTotal ? bySentiment.negative / sentimentTotal : 0;
 
   const knownSegmentTotal = [...bySegment.entries()]
-    .filter(([segment]) => segment !== "不明セグメント")
+    .filter(([segment]) => segment !== UNKNOWN_SEGMENT)
     .reduce((sum, [, count]) => sum + count, 0);
   const diversity = knownSegmentTotal
     ? [...bySegment.entries()].filter(
         ([segment, count]) =>
-          segment !== "不明セグメント" &&
+          segment !== UNKNOWN_SEGMENT &&
           count / knownSegmentTotal >= SEGMENT_SHARE,
       ).length
     : 0;
@@ -110,9 +101,6 @@ export const classifyRoles = (
 
 export const nonZeroRecord = (entries: Iterable<[string, number]>) =>
   Object.fromEntries([...entries].filter(([, count]) => count > 0));
-
-const increment = <K>(map: Map<K, number>, key: K) =>
-  map.set(key, (map.get(key) ?? 0) + 1);
 
 const dominantTopic = (topicCounts: Map<string, number>) =>
   [...topicCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "その他";
@@ -133,16 +121,6 @@ const roleAndBreakdowns = (
   };
 };
 
-const parseEntities = (raw: string | null) => {
-  if (!raw) return [];
-  try {
-    const parsed = personaEntitiesSchema.safeParse(JSON.parse(raw));
-    return parsed.success ? parsed.data : [];
-  } catch {
-    return [];
-  }
-};
-
 type EntityAgg = {
   canonical: string;
   type: string;
@@ -153,7 +131,10 @@ type EntityAgg = {
 };
 
 export const getOntology = async (d1: D1Database): Promise<OntologyData> => {
-  const rows = await personaRepository.listAllAttributesWithEntities(d1);
+  const [rows, tagGroups] = await Promise.all([
+    personaRepository.listAllAttributesWithEntities(d1),
+    loadTagGroups(d1),
+  ]);
 
   const segmentCounts = new Map<Segment, number>();
   const topicAgg = new Map<
@@ -171,8 +152,15 @@ export const getOntology = async (d1: D1Database): Promise<OntologyData> => {
   for (const row of rows) {
     if (row.entities === null) entitiesPending = true;
 
-    const attributes = personaAttributes(row);
-    const segment = extractSegment(attributes);
+    const segment =
+      partitionByPriority(
+        resolveGroups(
+          personaAttributes(row),
+          tagGroups.aliases,
+          tagGroups.groups,
+        ),
+        RELATION_AXIS,
+      )?.name ?? UNKNOWN_SEGMENT;
     const sentiment = normalizeSentiment(row.sentiment);
     const topic = normalizeTopic(row.topic);
 
@@ -191,7 +179,7 @@ export const getOntology = async (d1: D1Database): Promise<OntologyData> => {
     increment(linkCounts, `${segment} ${topic}`);
 
     for (const entity of parseEntities(row.entities)) {
-      const canonical = entity.name.normalize("NFKC").trim();
+      const canonical = canonicalEntityName(entity.name);
       if (!canonical) continue;
 
       const ent = entityAgg.get(canonical) ?? {

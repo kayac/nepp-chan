@@ -1,5 +1,4 @@
 import {
-  classifyRelationship,
   normalizeSentiment,
   normalizeTopic,
   personaAttributes,
@@ -12,6 +11,12 @@ import {
 } from "~/repository/llm-usage-repository";
 import { mastraMessageRepository } from "~/repository/mastra-message-repository";
 import { personaRepository } from "~/repository/persona-repository";
+import {
+  loadTagGroups,
+  partitionByPriority,
+  RELATION_AXIS,
+  resolveGroups,
+} from "./tag-groups";
 
 // API は JST ラベル済みのデータを返す（フロントでは変換しない）
 
@@ -31,19 +36,13 @@ const fillWeekdays = (rows: { dow: number; count: number }[]) =>
     count: Number(rows.find((r) => Number(r.dow) === dow)?.count ?? 0),
   }));
 
-const AGE_GROUPS = [
-  "10代",
-  "20代",
-  "30代",
-  "40代",
-  "50代",
-  "60代",
-  "70代",
-  "80代以上",
-  "不明",
-] as const;
+const AGE_AXIS = "年代";
+const UNKNOWN_LABEL = "不明";
 
-const RESIDENCES = ["村内", "村外"] as const;
+const RESIDENCE_BY_GROUP_ID: Record<string, string> = {
+  resident: "村内",
+  outsider: "村外",
+};
 
 export const getConversationStats = async (d1: D1Database, period: Period) => {
   const [hourlyRows, weekdayRows, daily, platforms, totalsRow] =
@@ -364,18 +363,6 @@ export const getThreadTurnUsage = async (d1: D1Database, threadId: string) => {
   };
 };
 
-const extractAgeGroup = (attributes: string) => {
-  const matched = attributes.match(/(\d0)代/);
-  if (!matched) {
-    return "不明";
-  }
-  const decade = Number(matched[1]);
-  if (decade >= 80) {
-    return "80代以上";
-  }
-  return decade >= 10 ? `${decade}代` : "不明";
-};
-
 export const emptySentimentCounts = () => ({
   positive: 0,
   negative: 0,
@@ -387,15 +374,24 @@ export const getPersonaAnalytics = async (
   d1: D1Database,
   params: { from?: string; to?: string },
 ) => {
-  const [rows, hourlyRows, weekdayRows, officeRow] = await Promise.all([
-    personaRepository.listAttributes(d1, params),
-    personaRepository.countByConversationHour(d1, params),
-    personaRepository.countByConversationWeekday(d1, params),
-    personaRepository.countOfficeHours(d1, params),
-  ]);
+  const [rows, hourlyRows, weekdayRows, officeRow, tagGroups] =
+    await Promise.all([
+      personaRepository.listAttributes(d1, params),
+      personaRepository.countByConversationHour(d1, params),
+      personaRepository.countByConversationWeekday(d1, params),
+      personaRepository.countOfficeHours(d1, params),
+      loadTagGroups(d1),
+    ]);
 
+  const ageLabels = [
+    ...tagGroups.groups
+      .filter((g) => g.kind === "attribute" && g.axis === AGE_AXIS)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((g) => g.name),
+    UNKNOWN_LABEL,
+  ];
   const ageSentiment = new Map(
-    AGE_GROUPS.map((age) => [age as string, emptySentimentCounts()]),
+    ageLabels.map((age) => [age, emptySentimentCounts()]),
   );
   const topics = new Map(
     TOPICS.map((topic) => [
@@ -410,7 +406,14 @@ export const getPersonaAnalytics = async (
     const attributes = personaAttributes(row);
     const sentiment = normalizeSentiment(row.sentiment);
 
-    const ageCounts = ageSentiment.get(extractAgeGroup(attributes));
+    const groups = resolveGroups(
+      attributes,
+      tagGroups.aliases,
+      tagGroups.groups,
+    ).sort((a, b) => a.sortOrder - b.sortOrder);
+
+    const ageKey = partitionByPriority(groups, AGE_AXIS)?.name ?? UNKNOWN_LABEL;
+    const ageCounts = ageSentiment.get(ageKey);
     if (ageCounts) {
       ageCounts[sentiment] += 1;
     }
@@ -422,10 +425,13 @@ export const getPersonaAnalytics = async (
     }
 
     const residenceKey =
-      RESIDENCES.find((r) => attributes.includes(r)) ?? "不明";
+      groups
+        .map((g) => RESIDENCE_BY_GROUP_ID[g.id])
+        .find((label) => label !== undefined) ?? UNKNOWN_LABEL;
     residence.set(residenceKey, (residence.get(residenceKey) ?? 0) + 1);
 
-    const relationshipKey = classifyRelationship(attributes) ?? "不明";
+    const relationshipKey =
+      partitionByPriority(groups, RELATION_AXIS)?.name ?? UNKNOWN_LABEL;
     relationship.set(
       relationshipKey,
       (relationship.get(relationshipKey) ?? 0) + 1,
@@ -440,7 +446,7 @@ export const getPersonaAnalytics = async (
     hourly: fillHours(hourlyRows),
     weekday: fillWeekdays(weekdayRows),
     officeHours: { open: officeOpen, closed: officeTotal - officeOpen },
-    ageSentiment: AGE_GROUPS.map((age) => ({
+    ageSentiment: ageLabels.map((age) => ({
       age,
       ...(ageSentiment.get(age) ?? emptySentimentCounts()),
     })),

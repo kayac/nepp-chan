@@ -2,6 +2,7 @@ import { Agent } from "@mastra/core/agent";
 import { modelWithReasoning } from "~/lib/llm-models";
 import { adminPersonaTool } from "~/mastra/tools/admin-persona-tool";
 import { personaAggregateTool } from "~/mastra/tools/persona-aggregate-tool";
+import { personaAudienceTool } from "~/mastra/tools/persona-audience-tool";
 import { personaGetTool } from "~/mastra/tools/persona-get-tool";
 import { withUsageRecording } from "~/services/analytics/llm-usage";
 
@@ -32,6 +33,10 @@ export const personaAnalystAgent = new Agent({
 ### 傾向分析
 - 「村民の要望を分析して」「住民の声の傾向は？」
 - persona-aggregate ツールでトピック別集計
+
+### 層ごとの分析
+- 「観光客は何に関心がある？」「そば好きは村内と村外どちらが多い？」「10代の困りごとは？」
+- persona-audience ツールで層の件数・話題 × 感情・他の軸での内訳・代表の声を取る。層の名前が分からなければ引数なしで全層を見る
 
 ### 詳細検索
 - 「交通に関する意見は？」「高齢者の声を教えて」
@@ -113,6 +118,7 @@ export const personaAnalystAgent = new Agent({
   tools: {
     adminPersonaTool,
     personaAggregateTool,
+    personaAudienceTool,
     personaGetTool,
   },
 });

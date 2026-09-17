@@ -25,6 +25,7 @@ import {
   personaAdminRoutes,
   pollAdminRoutes,
   pollRoutes,
+  tagGroupAdminRoutes,
   threadsRoutes,
   twilioVoiceRoutes,
   userAdminRoutes,
@@ -56,6 +57,7 @@ app.route("/admin/invitations", invitationRoutes);
 app.route("/admin/users", userAdminRoutes);
 app.route("/admin/polls", pollAdminRoutes);
 app.route("/admin/widget-sites", widgetSiteAdminRoutes);
+app.route("/admin/tag-groups", tagGroupAdminRoutes);
 app.route("/polls", pollRoutes);
 app.route("/auth", authRoutes);
 app.route("/line", lineRoutes);

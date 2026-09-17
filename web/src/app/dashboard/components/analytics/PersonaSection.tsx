@@ -237,9 +237,6 @@ export const PersonaSection = () => {
                 />
               </div>
             </div>
-            <p className="text-xs text-stone-500 mt-1">
-              ※いずれも会話終了時刻ベースの近似値。1会話から複数件抽出されるため、件数は会話数とは一致しません。
-            </p>
           </div>
 
           <div>
@@ -274,11 +271,6 @@ export const PersonaSection = () => {
                 </BarChart>
               </ResponsiveContainer>
             </DrillDownSection>
-            <p className="text-xs text-stone-500 mt-1">
-              ※年代が判明した {knownCount.toLocaleString()} 件（判明率{" "}
-              {knownRate}%）の内訳。不明 {unknownCount.toLocaleString()}{" "}
-              件は上の帯で割合のみ表示。
-            </p>
           </div>
 
           <div>
@@ -317,7 +309,7 @@ export const PersonaSection = () => {
               data={data.segments.residence.filter((s) => s.count > 0)}
             />
             <SegmentPie
-              title="関係性（村人/観光客など）"
+              title="関係性（観光客/村内住民など）"
               data={data.segments.relationship.filter((s) => s.count > 0)}
             />
           </div>

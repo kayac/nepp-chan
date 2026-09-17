@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { seedRelationGroups } from "~/__tests__/helpers/tag-groups";
 import { createTestDb, type TestDb } from "~/__tests__/helpers/test-db";
 import { persona } from "~/db";
 
@@ -50,6 +51,7 @@ describe("getOntology", () => {
   beforeEach(async () => {
     db = await createTestDb();
     testDbHolder.db = db;
+    await seedRelationGroups(db);
   });
 
   it("セグメントノード・トピックノード・リンクを集計する", async () => {
@@ -81,11 +83,15 @@ describe("getOntology", () => {
 
   it("関係性を居住地より優先してセグメントを割り当てる", async () => {
     await insertPersona(db, { id: "p1", tags: "村外,観光客" });
+    await insertPersona(db, { id: "p2", tags: "50代" });
 
     const result = await getOntology(d1);
 
     expect(result.nodes.find((n) => n.id === "seg:観光客")?.count).toBe(1);
     expect(result.nodes.find((n) => n.id === "seg:村外")).toBeUndefined();
+    expect(result.nodes.find((n) => n.id === "seg:不明セグメント")?.count).toBe(
+      1,
+    );
   });
 
   it("既知トピック以外は『その他』に集約する", async () => {
