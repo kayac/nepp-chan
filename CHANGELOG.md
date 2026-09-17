@@ -1,5 +1,36 @@
 # Changelog
 
+## [v1.0.14](https://github.com/kayac/nepp-chan/compare/v1.0.13...v1.0.14) - 2026-09-17
+
+- build(deps): bump astro from 7.3.1 to 7.3.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1199
+- build(deps-dev): bump @biomejs/biome from 2.5.12 to 2.5.13 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1198
+- build(deps): bump @twilio/voice-sdk from 2.18.4 to 2.18.5 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1197
+- build(deps): bump @hono/zod-openapi from 1.6.2 to 1.6.3 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1196
+- build(deps-dev): bump autoprefixer from 10.5.4 to 10.5.6 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1184
+- build(deps): bump hono from 4.13.5 to 4.13.7 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1183
+- build(deps): bump @sentry/react from 10.73.0 to 10.74.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1201
+- build(deps): bump @sentry/cloudflare from 10.73.0 to 10.74.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1179
+- build(deps-dev): bump wrangler from 4.129.0 to 4.131.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1202
+- build(deps-dev): bump @types/node from 26.4.1 to 26.5.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1185
+- build(deps-dev): bump vite from 8.2.2 to 8.3.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1182
+- build(deps): bump the react group across 1 directory with 4 updates by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1178
+- build(deps): bump zod from 4.5.4 to 4.6.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1188
+- build(deps): bump @mastra/observability from 1.17.5 to 1.17.7 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1190
+- build(deps): bump @mastra/rag from 2.6.1 to 2.6.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1187
+- build(deps): bump @mastra/evals from 1.10.0 to 1.10.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1194
+- build(deps-dev): bump mastra from 1.20.1 to 1.29.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1180
+- build(deps): AI SDK を v7 世代に上げる by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1204
+- build(deps): bump @mastra/mcp from 1.17.2 to 1.17.3 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1132
+- build(deps): bump @mastra/loggers from 1.2.0 to 1.3.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1158
+- build(deps): bump @mastra/cloudflare-d1 from 1.1.1 to 1.3.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1147
+- build(deps): bump @mastra/memory from 1.26.2 to 1.29.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1191
+- build(deps): bump @mastra/libsql from 1.17.0 to 1.22.5 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1195
+- chore(server): 移行用の DELETE /admin/knowledge/legacy を撤去する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1205
+- test: 重複と実装の写しになっているテストを整理する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1206
+- feat: ペルソナの自由タグをタググループにまとめ、話者別の関心と課題を出す by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1209
+- fix: タグの自動振り分けが D1 の変数上限で失敗する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1210
+- perf: タグ別名の分割 INSERT を D1 の batch で 1 往復にする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1211
+
 ## [v1.0.13](https://github.com/kayac/nepp-chan/compare/v1.0.12...v1.0.13) - 2026-09-14
 
 - LLM利用コストの計測・集計・管理画面を拡張する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1072
