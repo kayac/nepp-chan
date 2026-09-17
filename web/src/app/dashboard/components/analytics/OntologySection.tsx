@@ -570,11 +570,17 @@ const OntologyGraph = ({
         </div>
       </div>
 
-      <p className="text-xs text-stone-500 mt-3">
-        ※アイコン = セグメント（誰が）、大きい円 =
-        トピック（全数集計）、小さい円 =
-        具体エンティティ（LLM抽出）。役割は感情構成とセグメント構成から機械的に判定しています。
-      </p>
+      <ul className="mt-3 flex flex-wrap gap-4 text-xs text-stone-500">
+        <li>👤 誰が</li>
+        <li>
+          <span className="mr-1 inline-block h-3 w-3 rounded-full bg-stone-400 align-middle" />
+          話題
+        </li>
+        <li>
+          <span className="mr-1 inline-block h-2 w-2 rounded-full bg-stone-400 align-middle" />
+          具体的な物事
+        </li>
+      </ul>
     </>
   );
 };

@@ -19,7 +19,6 @@ export type ShowVoices = (
 
 interface Props {
   onShowVoices?: ShowVoices;
-  onFixGroups?: () => void;
 }
 
 const TOPIC_LIMIT = 5;
@@ -133,7 +132,7 @@ const GroupCard = ({
   </article>
 );
 
-export const AudienceSection = ({ onShowVoices, onFixGroups }: Props) => {
+export const AudienceSection = ({ onShowVoices }: Props) => {
   const { data, isLoading, error } = useAudiences();
   const [selectedAxis, setSelectedAxis] = useState<string | null>(null);
 
@@ -143,21 +142,7 @@ export const AudienceSection = ({ onShowVoices, onFixGroups }: Props) => {
   const groups = data?.axes.find((a) => a.axis === activeAxis)?.groups ?? [];
 
   return (
-    <SectionCard
-      title="話者別の関心と課題"
-      description="タグをグループにまとめ、層ごとに話題と感情を見る。1 件の声が複数の層に入るため件数は重なる"
-      action={
-        onFixGroups && (
-          <button
-            type="button"
-            onClick={onFixGroups}
-            className="shrink-0 text-sm text-(--apricot-700) underline"
-          >
-            分け方を直す →
-          </button>
-        )
-      }
-    >
+    <SectionCard title="話者別の関心と課題">
       {isLoading && <SectionLoading />}
       {error && <SectionError error={error} />}
       {data && axes.length === 0 && (

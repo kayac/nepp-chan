@@ -123,17 +123,4 @@ describe("AudienceSection", () => {
     );
     expect(screen.queryByRole("button", { name: "声を見る" })).toBeNull();
   });
-
-  it("分け方を直すは onFixGroups があるときだけ出る", async () => {
-    const onFixGroups = vi.fn();
-    renderWithQuery(<AudienceSection onFixGroups={onFixGroups} />);
-    await waitFor(() =>
-      expect(screen.getByText("観光客の声")).toBeInTheDocument(),
-    );
-
-    await userEvent.click(
-      screen.getByRole("button", { name: "分け方を直す →" }),
-    );
-    expect(onFixGroups).toHaveBeenCalled();
-  });
 });

@@ -332,11 +332,6 @@ export const App = () => {
               <AnalyticsPanel
                 onAskMayor={openMayorChat}
                 onShowVoices={(filter) => handleTabChange("voices", filter)}
-                onFixGroups={
-                  hasRole("admin")
-                    ? () => handleTabChange("tag-groups")
-                    : undefined
-                }
                 initialSection={analyticsSection}
               />
             )}
