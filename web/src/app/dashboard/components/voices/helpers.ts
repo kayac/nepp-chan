@@ -12,7 +12,6 @@ export type VoiceSort = "list" | "topics";
 
 export type VoiceGroup = { id: string; name: string };
 
-// group は話者別の関心と課題からの導線でだけ入る。絞り込み UI の軸には出さない
 export type VoiceFilter = {
   period: VoicePeriod;
   sents: VoiceSentiment[];
