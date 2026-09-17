@@ -6,6 +6,7 @@ import { setAuthToken } from "~/lib/auth-token";
 import { server } from "~/test/msw-server";
 import { renderHookWithQuery } from "~/test/query";
 import {
+  useAudiences,
   useConversationAnalytics,
   usePersonaAnalytics,
   useUsageAnalytics,
@@ -149,5 +150,25 @@ describe("useWeeklyReports / useWeeklyReportDetail", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.report.stats.conversationCount).toBe(10);
+  });
+});
+
+describe("useAudiences", () => {
+  it("from/to をクエリで送って話者別集計を取得する", async () => {
+    let received: { from: string | null; to: string | null } | null = null;
+    server.use(
+      http.get(`${API}/admin/analytics/persona/audiences`, ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        received = { from: params.get("from"), to: params.get("to") };
+        return HttpResponse.json({ axes: [] });
+      }),
+    );
+
+    const { result } = renderHookWithQuery(() =>
+      useAudiences({ from: "2026-06-01", to: "2026-06-07" }),
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(received).toEqual({ from: "2026-06-01", to: "2026-06-07" });
   });
 });

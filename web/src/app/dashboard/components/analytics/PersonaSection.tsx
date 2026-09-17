@@ -317,7 +317,7 @@ export const PersonaSection = () => {
               data={data.segments.residence.filter((s) => s.count > 0)}
             />
             <SegmentPie
-              title="関係性（村人/観光客など）"
+              title="関係性（観光客/村内住民など）"
               data={data.segments.relationship.filter((s) => s.count > 0)}
             />
           </div>

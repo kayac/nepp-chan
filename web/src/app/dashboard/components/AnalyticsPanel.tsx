@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { AudienceSection } from "./analytics/AudienceSection";
 import { ConversationSection } from "./analytics/ConversationSection";
 import { OntologySection } from "./analytics/OntologySection";
 import { PersonaSection } from "./analytics/PersonaSection";
@@ -67,6 +68,7 @@ export const AnalyticsPanel = ({ onAskMayor, initialSection }: Props) => {
           onAskMayor={onAskMayor}
         />
         <PersonaSection />
+        <AudienceSection />
         <OntologySection />
       </div>
 

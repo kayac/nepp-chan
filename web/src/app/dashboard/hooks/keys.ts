@@ -12,6 +12,9 @@ export const dashboardKeys = {
   analyticsThreadTurnUsage: (threadId: string) =>
     ["dashboard", "analytics", "usage", "thread-turns", threadId] as const,
   analyticsOntology: ["dashboard", "analytics", "ontology"] as const,
+  analyticsAudiences: (from?: string, to?: string) =>
+    ["dashboard", "analytics", "audiences", from, to] as const,
+  tagGroups: ["dashboard", "tag-groups"] as const,
   weeklyReports: ["dashboard", "analytics", "reports"] as const,
   weeklyReportDetail: (id: string) =>
     ["dashboard", "analytics", "report", id] as const,
