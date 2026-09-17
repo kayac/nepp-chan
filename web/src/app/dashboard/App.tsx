@@ -11,6 +11,7 @@ import {
   HandThumbUpIcon,
   HomeIcon,
   MegaphoneIcon,
+  TagIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
@@ -29,6 +30,7 @@ import {
   type MayorRequest,
 } from "~/app/dashboard/components/mayor/MayorChatPanel";
 import { PollPanel } from "~/app/dashboard/components/PollPanel";
+import { TagGroupsPanel } from "~/app/dashboard/components/TagGroupsPanel";
 import { UsagePanel } from "~/app/dashboard/components/UsagePanel";
 import { VoicesPanel } from "~/app/dashboard/components/VoicesPanel";
 import type { VoiceFilter } from "~/app/dashboard/components/voices/helpers";
@@ -47,6 +49,7 @@ export type Tab =
   | "feedback"
   | "invitations"
   | "widget-sites"
+  | "tag-groups"
   | "usage";
 
 type AdminRole = AdminUser["role"];
@@ -123,6 +126,13 @@ const tabs: {
     icon: <GlobeAltIcon className="w-5 h-5" aria-hidden="true" />,
     group: "system",
     minRole: "super_admin",
+  },
+  {
+    id: "tag-groups",
+    label: "グループ分け",
+    icon: <TagIcon className="w-5 h-5" aria-hidden="true" />,
+    group: "system",
+    minRole: "admin",
   },
   {
     id: "usage",
@@ -322,6 +332,11 @@ export const App = () => {
               <AnalyticsPanel
                 onAskMayor={openMayorChat}
                 onShowVoices={(filter) => handleTabChange("voices", filter)}
+                onFixGroups={
+                  hasRole("admin")
+                    ? () => handleTabChange("tag-groups")
+                    : undefined
+                }
                 initialSection={analyticsSection}
               />
             )}
@@ -338,6 +353,7 @@ export const App = () => {
             {activeTab === "feedback" && <FeedbackPanel />}
             {activeTab === "invitations" && <InvitationsPanel />}
             {activeTab === "widget-sites" && <WidgetSitesPanel />}
+            {activeTab === "tag-groups" && <TagGroupsPanel />}
             {activeTab === "usage" && <UsagePanel />}
           </div>
         </div>

@@ -6,11 +6,12 @@ import { PersonaSection } from "./analytics/PersonaSection";
 import { ReportsSection } from "./analytics/ReportsSection";
 import type { VoiceFilter } from "./voices/helpers";
 
-export type AnalyticsSection = "conversation" | "overview";
+export type AnalyticsSection = "conversation" | "audience" | "overview";
 
 interface Props {
   onAskMayor?: (context: string) => void;
   onShowVoices?: (filter: Partial<VoiceFilter>) => void;
+  onFixGroups?: () => void;
   initialSection?: AnalyticsSection;
 }
 
@@ -45,6 +46,7 @@ const TimeAxisHeading = ({
 export const AnalyticsPanel = ({
   onAskMayor,
   onShowVoices,
+  onFixGroups,
   initialSection,
 }: Props) => {
   useEffect(() => {
@@ -73,15 +75,18 @@ export const AnalyticsPanel = ({
           askContext="全期間の全体分析"
           onAskMayor={onAskMayor}
         />
+        <div id="analytics-audience">
+          <AudienceSection
+            onShowVoices={
+              onShowVoices
+                ? (group, topic) =>
+                    onShowVoices({ period: "all", group, topic: topic ?? null })
+                : undefined
+            }
+            onFixGroups={onFixGroups}
+          />
+        </div>
         <PersonaSection />
-        <AudienceSection
-          onShowVoices={
-            onShowVoices
-              ? (group, topic) =>
-                  onShowVoices({ period: "all", group, topic: topic ?? null })
-              : undefined
-          }
-        />
         <OntologySection />
       </div>
 

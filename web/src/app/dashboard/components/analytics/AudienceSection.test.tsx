@@ -34,27 +34,12 @@ const audiences = {
   ],
 };
 
-const tagGroups = {
-  groups: [
-    {
-      id: "tourist",
-      name: "観光客",
-      kind: "attribute",
-      axis: "関わり",
-      sortOrder: 10,
-      tags: [{ tag: "観光客", assignedBy: "seed", count: 3 }],
-    },
-  ],
-  unassigned: [],
-};
-
 beforeEach(() => {
   setAuthToken("admin-token");
   server.use(
     http.get(`${API}/admin/analytics/persona/audiences`, () =>
       HttpResponse.json(audiences),
     ),
-    http.get(`${API}/admin/tag-groups`, () => HttpResponse.json(tagGroups)),
   );
 });
 
@@ -137,5 +122,18 @@ describe("AudienceSection", () => {
       expect(screen.getByText("観光客の声")).toBeInTheDocument(),
     );
     expect(screen.queryByRole("button", { name: "声を見る" })).toBeNull();
+  });
+
+  it("分け方を直すは onFixGroups があるときだけ出る", async () => {
+    const onFixGroups = vi.fn();
+    renderWithQuery(<AudienceSection onFixGroups={onFixGroups} />);
+    await waitFor(() =>
+      expect(screen.getByText("観光客の声")).toBeInTheDocument(),
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "分け方を直す →" }),
+    );
+    expect(onFixGroups).toHaveBeenCalled();
   });
 });
