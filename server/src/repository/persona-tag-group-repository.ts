@@ -1,6 +1,9 @@
 import { eq, sql } from "drizzle-orm";
 import { createDb, personaTagAliases, personaTagGroups } from "~/db";
 
+// D1 は 1 文あたりの bind 変数が 100 個まで。5 列なので 20 行が上限
+const INSERT_CHUNK = 20;
+
 type AliasInput = {
   tag: string;
   groupId: string | null;
@@ -33,13 +36,18 @@ export const personaTagGroupRepository = {
   },
 
   async insertAliasesIfAbsent(d1: D1Database, inputs: AliasInput[]) {
-    if (inputs.length === 0) return;
     const db = createDb(d1);
     const createdAt = new Date().toISOString();
-    await db
-      .insert(personaTagAliases)
-      .values(inputs.map((input) => ({ ...input, createdAt })))
-      .onConflictDoNothing();
+    for (let i = 0; i < inputs.length; i += INSERT_CHUNK) {
+      await db
+        .insert(personaTagAliases)
+        .values(
+          inputs
+            .slice(i, i + INSERT_CHUNK)
+            .map((input) => ({ ...input, createdAt })),
+        )
+        .onConflictDoNothing();
+    }
   },
 
   async setAlias(d1: D1Database, input: AliasInput) {
