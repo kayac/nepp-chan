@@ -59,7 +59,7 @@ export const AnalyticsPanel = ({
       <div id="analytics-conversation" className="space-y-6">
         <TimeAxisHeading
           title="最近の動き"
-          description="会話の量・時間帯・流入元"
+          description="直近30日の会話の量と時間帯、どこから来たか"
           askContext="直近30日の会話データ"
           onAskMayor={onAskMayor}
         />
@@ -69,7 +69,7 @@ export const AnalyticsPanel = ({
       <div id="analytics-overview" className="space-y-6">
         <TimeAxisHeading
           title="村の全体像"
-          description="誰が、何について、どう感じているか"
+          description="これまでの声から、誰が何についてどう感じているか"
           askContext="全期間の全体分析"
           onAskMayor={onAskMayor}
         />
@@ -89,7 +89,7 @@ export const AnalyticsPanel = ({
 
       <TimeAxisHeading
         title="今週のできごと"
-        description="毎週火曜に自動生成"
+        description="週ごとのまとめ。毎週火曜に自動で更新"
         askContext="今週の週次レポート"
         onAskMayor={onAskMayor}
       />
