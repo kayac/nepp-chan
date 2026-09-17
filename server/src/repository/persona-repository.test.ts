@@ -395,6 +395,47 @@ describe("personaRepository", () => {
     });
   });
 
+  describe("listForAdmin: attributeTags", () => {
+    it("tags か demographicSummary にいずれかのタグを区切り単位で含む声だけ返す", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-1", tags: "観光客, 村外" }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-2", tags: "村内住民" }),
+      );
+      await personaRepository.create(
+        fakeD1,
+        baseInput({
+          id: "p-3",
+          tags: "そば",
+          demographicSummary: "60代、村内",
+        }),
+      );
+
+      const result = await personaRepository.listForAdmin(fakeD1, {
+        attributeTags: ["村内", "村人"],
+      });
+
+      expect(result.personas.map((p) => p.id)).toEqual(["p-3"]);
+    });
+
+    it("タグが空配列なら何も返さない", async () => {
+      await personaRepository.create(
+        fakeD1,
+        baseInput({ id: "p-1", tags: "村内" }),
+      );
+
+      const result = await personaRepository.listForAdmin(fakeD1, {
+        attributeTags: [],
+      });
+
+      expect(result.personas).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+  });
+
   describe("listForAdmin", () => {
     it("conversationEndedAt 優先 + id の複合ソートとカーソル", async () => {
       // conversationEndedAt が null の場合は createdAt にフォールバックして比較する

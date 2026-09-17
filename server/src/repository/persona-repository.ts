@@ -24,12 +24,24 @@ const NAMED_TOPICS = TOPICS.filter((t) => t !== OTHER_TOPIC);
 // 生成列を参照するのは式のままだと idx_persona_sort_date が使えないため
 const sortDate = sql`sort_date`;
 
-type PersonaFilter = {
+export type PersonaFilter = {
   from?: string;
   to?: string;
   sentiments?: string[];
   topic?: string;
+  attributeTags?: string[];
 };
+
+// タグを区切り文字ごと比較して「村内」が「村内住民」に部分一致しないようにする
+const attributeTokens = sql`',' || REPLACE(REPLACE(COALESCE(${persona.tags}, '') || ',' || COALESCE(${persona.demographicSummary}, ''), ' ', ''), '、', ',') || ','`;
+
+const hasAnyAttributeTag = (tags: string[]) =>
+  tags.length === 0
+    ? sql`0`
+    : sql.join(
+        tags.map((tag) => sql`${attributeTokens} LIKE ${`%,${tag},%`}`),
+        sql` OR `,
+      );
 
 const personaFilters = (options: PersonaFilter): SQL[] => {
   const conditions: SQL[] = [];
@@ -47,6 +59,9 @@ const personaFilters = (options: PersonaFilter): SQL[] => {
     conditions.push(sql`COALESCE(${persona.topic}, '') NOT IN ${NAMED_TOPICS}`);
   } else if (options.topic) {
     conditions.push(eq(persona.topic, options.topic));
+  }
+  if (options.attributeTags) {
+    conditions.push(sql`(${hasAnyAttributeTag(options.attributeTags)})`);
   }
   return conditions;
 };
@@ -293,14 +308,7 @@ export const personaRepository = {
 
   async listForAdmin(
     d1: D1Database,
-    options: {
-      limit?: number;
-      cursor?: string;
-      from?: string;
-      to?: string;
-      sentiments?: string[];
-      topic?: string;
-    } = {},
+    options: PersonaFilter & { limit?: number; cursor?: string } = {},
   ): Promise<{
     personas: Persona[];
     total: number;

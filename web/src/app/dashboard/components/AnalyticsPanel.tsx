@@ -4,11 +4,13 @@ import { ConversationSection } from "./analytics/ConversationSection";
 import { OntologySection } from "./analytics/OntologySection";
 import { PersonaSection } from "./analytics/PersonaSection";
 import { ReportsSection } from "./analytics/ReportsSection";
+import type { VoiceFilter } from "./voices/helpers";
 
 export type AnalyticsSection = "conversation" | "overview";
 
 interface Props {
   onAskMayor?: (context: string) => void;
+  onShowVoices?: (filter: Partial<VoiceFilter>) => void;
   initialSection?: AnalyticsSection;
 }
 
@@ -40,7 +42,11 @@ const TimeAxisHeading = ({
   </div>
 );
 
-export const AnalyticsPanel = ({ onAskMayor, initialSection }: Props) => {
+export const AnalyticsPanel = ({
+  onAskMayor,
+  onShowVoices,
+  initialSection,
+}: Props) => {
   useEffect(() => {
     if (!initialSection) return;
     document
@@ -68,7 +74,14 @@ export const AnalyticsPanel = ({ onAskMayor, initialSection }: Props) => {
           onAskMayor={onAskMayor}
         />
         <PersonaSection />
-        <AudienceSection />
+        <AudienceSection
+          onShowVoices={
+            onShowVoices
+              ? (group, topic) =>
+                  onShowVoices({ period: "all", group, topic: topic ?? null })
+              : undefined
+          }
+        />
         <OntologySection />
       </div>
 

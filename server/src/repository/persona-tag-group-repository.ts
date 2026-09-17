@@ -17,6 +17,16 @@ export const personaTagGroupRepository = {
       .all();
   },
 
+  async listTagsByGroup(d1: D1Database, groupId: string) {
+    const db = createDb(d1);
+    const rows = await db
+      .select({ tag: personaTagAliases.tag })
+      .from(personaTagAliases)
+      .where(eq(personaTagAliases.groupId, groupId))
+      .all();
+    return rows.map((r) => r.tag);
+  },
+
   async listAliases(d1: D1Database) {
     const db = createDb(d1);
     return db.select().from(personaTagAliases).all();

@@ -81,6 +81,22 @@ describe("personaTagGroupRepository", () => {
     expect(alias?.updatedAt).not.toBeNull();
   });
 
+  it("listTagsByGroup はそのグループに属するタグだけ返す", async () => {
+    await personaTagGroupRepository.insertAliasesIfAbsent(d1, [
+      { tag: "観光客", groupId: "tourist", assignedBy: "seed" },
+      { tag: "旅行者", groupId: "tourist", assignedBy: "llm" },
+      { tag: "村内", groupId: "resident", assignedBy: "seed" },
+      { tag: "謎", groupId: null, assignedBy: "llm" },
+    ]);
+
+    expect(
+      (await personaTagGroupRepository.listTagsByGroup(d1, "tourist")).sort(),
+    ).toEqual(["旅行者", "観光客"]);
+    expect(await personaTagGroupRepository.listTagsByGroup(d1, "nope")).toEqual(
+      [],
+    );
+  });
+
   it("createGroup は行を作って返す", async () => {
     const created = await personaTagGroupRepository.createGroup(d1, {
       id: "farmers",

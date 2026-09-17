@@ -3290,6 +3290,8 @@ export interface paths {
                     to?: string;
                     sentiments?: string;
                     topic?: string;
+                    /** @description タググループ id。所属タグのいずれかを持つ声に絞る */
+                    group?: string;
                 };
                 header?: never;
                 path?: never;
@@ -3381,6 +3383,8 @@ export interface paths {
                     to?: string;
                     sentiments?: string;
                     topic?: string;
+                    /** @description タググループ id。所属タグのいずれかを持つ声に絞る */
+                    group?: string;
                 };
                 header?: never;
                 path?: never;

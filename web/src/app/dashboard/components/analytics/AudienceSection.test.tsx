@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setAuthToken } from "~/lib/auth-token";
 import { server } from "~/test/msw-server";
 import { renderWithQuery } from "~/test/query";
@@ -104,5 +104,38 @@ describe("AudienceSection", () => {
         screen.getByText("属性グループに入る声がまだありません"),
       ).toBeInTheDocument(),
     );
+  });
+
+  it("声を見るでグループを、話題の行でグループと話題を渡す", async () => {
+    const onShowVoices = vi.fn();
+    renderWithQuery(<AudienceSection onShowVoices={onShowVoices} />);
+    await waitFor(() =>
+      expect(screen.getByText("観光客の声")).toBeInTheDocument(),
+    );
+
+    const cards = screen.getAllByRole("article");
+    await userEvent.click(
+      within(cards[0]).getByRole("button", { name: "声を見る" }),
+    );
+    expect(onShowVoices).toHaveBeenLastCalledWith({
+      id: "tourist",
+      name: "観光客",
+    });
+
+    await userEvent.click(
+      within(cards[0]).getByRole("button", { name: /観光/ }),
+    );
+    expect(onShowVoices).toHaveBeenLastCalledWith(
+      { id: "tourist", name: "観光客" },
+      "観光",
+    );
+  });
+
+  it("導線が無ければ声を見るを出さない", async () => {
+    renderWithQuery(<AudienceSection />);
+    await waitFor(() =>
+      expect(screen.getByText("観光客の声")).toBeInTheDocument(),
+    );
+    expect(screen.queryByRole("button", { name: "声を見る" })).toBeNull();
   });
 });

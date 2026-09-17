@@ -321,6 +321,7 @@ export const App = () => {
             {activeTab === "analytics" && (
               <AnalyticsPanel
                 onAskMayor={openMayorChat}
+                onShowVoices={(filter) => handleTabChange("voices", filter)}
                 initialSection={analyticsSection}
               />
             )}
