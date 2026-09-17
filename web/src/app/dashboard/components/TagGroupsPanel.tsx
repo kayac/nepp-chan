@@ -9,7 +9,6 @@ import {
 import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
 import { PanelLoading } from "~/components/ui/PanelLoading";
 
-const QUEUE_LIMIT = 50;
 const GROUP_TAG_LIMIT = 12;
 const EXCLUDE_GROUP_ID = "exclude";
 
@@ -21,6 +20,7 @@ export const TagGroupsPanel = () => {
   const setAlias = useSetTagAlias();
   const assign = useAssignTagGroups();
   const [showAllGroups, setShowAllGroups] = useState(false);
+  const [isAddingGroup, setIsAddingGroup] = useState(false);
 
   if (isLoading) return <PanelLoading />;
   if (error) return <ErrorBanner>{formatError(error)}</ErrorBanner>;
@@ -75,8 +75,8 @@ export const TagGroupsPanel = () => {
             判断待ちのタグはありません
           </p>
         ) : (
-          <ul className="divide-y divide-(--border-1)">
-            {data.unassigned.slice(0, QUEUE_LIMIT).map((item) => (
+          <ul className="max-h-[60dvh] overflow-y-auto divide-y divide-(--border-1) pr-1">
+            {data.unassigned.map((item) => (
               <li
                 key={item.tag}
                 className="flex flex-wrap items-center gap-3 py-2 text-sm"
@@ -131,12 +131,6 @@ export const TagGroupsPanel = () => {
               </li>
             ))}
           </ul>
-        )}
-        {data.unassigned.length > QUEUE_LIMIT && (
-          <p className="text-xs text-(--fg-3)">
-            他 {data.unassigned.length - QUEUE_LIMIT}{" "}
-            件。件数の多いものから表示しています
-          </p>
         )}
       </section>
 
@@ -215,12 +209,31 @@ export const TagGroupsPanel = () => {
             </li>
           ))}
         </ul>
-        <div>
-          <h4 className="mb-2 text-xs font-semibold text-(--fg-2)">
-            グループを追加
-          </h4>
-          <GroupForm axes={axes} />
-        </div>
+        {isAddingGroup ? (
+          <div className="rounded border border-dashed border-(--border-2) p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <h4 className="text-xs font-semibold text-(--fg-2)">
+                グループを追加
+              </h4>
+              <button
+                type="button"
+                className="text-xs text-(--fg-3) hover:text-(--fg-1)"
+                onClick={() => setIsAddingGroup(false)}
+              >
+                閉じる
+              </button>
+            </div>
+            <GroupForm axes={axes} onCreated={() => setIsAddingGroup(false)} />
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="text-sm text-(--teal-700) underline"
+            onClick={() => setIsAddingGroup(true)}
+          >
+            ＋ グループを追加
+          </button>
+        )}
       </section>
     </div>
   );

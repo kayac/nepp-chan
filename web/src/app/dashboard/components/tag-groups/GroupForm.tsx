@@ -12,9 +12,10 @@ type Kind = keyof typeof KIND_LABELS;
 
 interface Props {
   axes: string[];
+  onCreated?: () => void;
 }
 
-export const GroupForm = ({ axes }: Props) => {
+export const GroupForm = ({ axes, onCreated }: Props) => {
   const create = useCreateTagGroup();
   const [name, setName] = useState("");
   const [kind, setKind] = useState<Kind>("attribute");
@@ -37,6 +38,7 @@ export const GroupForm = ({ axes }: Props) => {
             onSuccess: () => {
               setName("");
               setAxis("");
+              onCreated?.();
             },
           },
         );

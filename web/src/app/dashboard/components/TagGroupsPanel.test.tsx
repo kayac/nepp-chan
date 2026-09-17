@@ -162,4 +162,46 @@ describe("TagGroupsPanel", () => {
     );
     expect(within(section).getByText("除外")).toBeInTheDocument();
   });
+
+  it("＋ グループを追加で初めてフォームが開き、追加すると閉じる", async () => {
+    let received: unknown = null;
+    server.use(
+      http.post(`${API}/admin/tag-groups`, async ({ request }) => {
+        received = await request.json();
+        return HttpResponse.json(
+          {
+            id: "g-1",
+            name: "農家",
+            kind: "attribute",
+            axis: "立場",
+            sortOrder: 360,
+          },
+          { status: 201 },
+        );
+      }),
+    );
+    renderWithQuery(<TagGroupsPanel />);
+    await waitFor(() => expect(screen.getByText("低予算")).toBeInTheDocument());
+    expect(screen.queryByLabelText("グループ名")).toBeNull();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "＋ グループを追加" }),
+    );
+    await userEvent.type(screen.getByLabelText("グループ名"), "農家");
+    await userEvent.type(screen.getByLabelText("軸"), "立場");
+    await userEvent.click(
+      screen.getByRole("button", { name: "グループを追加" }),
+    );
+
+    await waitFor(() =>
+      expect(received).toEqual({
+        name: "農家",
+        kind: "attribute",
+        axis: "立場",
+      }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByLabelText("グループ名")).toBeNull(),
+    );
+  });
 });
