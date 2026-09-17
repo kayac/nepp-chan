@@ -36,18 +36,20 @@ export const personaTagGroupRepository = {
   },
 
   async insertAliasesIfAbsent(d1: D1Database, inputs: AliasInput[]) {
+    if (inputs.length === 0) return;
     const db = createDb(d1);
     const createdAt = new Date().toISOString();
-    for (let i = 0; i < inputs.length; i += INSERT_CHUNK) {
-      await db
+    const chunks = Array.from(
+      { length: Math.ceil(inputs.length / INSERT_CHUNK) },
+      (_, i) => inputs.slice(i * INSERT_CHUNK, (i + 1) * INSERT_CHUNK),
+    );
+    const [first, ...rest] = chunks.map((chunk) =>
+      db
         .insert(personaTagAliases)
-        .values(
-          inputs
-            .slice(i, i + INSERT_CHUNK)
-            .map((input) => ({ ...input, createdAt })),
-        )
-        .onConflictDoNothing();
-    }
+        .values(chunk.map((input) => ({ ...input, createdAt })))
+        .onConflictDoNothing(),
+    );
+    await db.batch([first, ...rest]);
   },
 
   async setAlias(d1: D1Database, input: AliasInput) {
