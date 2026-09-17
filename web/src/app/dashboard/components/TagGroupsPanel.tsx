@@ -164,18 +164,33 @@ export const TagGroupsPanel = () => {
       )}
 
       <section className="bg-(--bg-raised) rounded-xl border border-(--border-1) p-5 space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center gap-3">
           <h3 className="text-base font-semibold text-(--fg-1)">グループ</h3>
-          <button
-            type="button"
-            className="text-xs text-(--teal-700) underline"
-            onClick={() => setShowAllGroups((v) => !v)}
-          >
-            {showAllGroups
-              ? "話者の属性だけ表示"
-              : "話題・集計に使わないものも表示"}
-          </button>
+          <div className="ml-auto flex items-center gap-3">
+            <button
+              type="button"
+              className="text-xs text-(--teal-700) underline"
+              onClick={() => setShowAllGroups((v) => !v)}
+            >
+              {showAllGroups
+                ? "話者の属性だけ表示"
+                : "話題・集計に使わないものも表示"}
+            </button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setIsAddingGroup((v) => !v)}
+            >
+              {isAddingGroup ? "閉じる" : "＋ グループを追加"}
+            </Button>
+          </div>
         </div>
+        {isAddingGroup && (
+          <div className="rounded border border-dashed border-(--border-2) p-3">
+            <GroupForm axes={axes} onCreated={() => setIsAddingGroup(false)} />
+          </div>
+        )}
         <ul className="grid gap-2 sm:grid-cols-2">
           {visibleGroups.map((group) => (
             <li
@@ -209,31 +224,6 @@ export const TagGroupsPanel = () => {
             </li>
           ))}
         </ul>
-        {isAddingGroup ? (
-          <div className="rounded border border-dashed border-(--border-2) p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <h4 className="text-xs font-semibold text-(--fg-2)">
-                グループを追加
-              </h4>
-              <button
-                type="button"
-                className="text-xs text-(--fg-3) hover:text-(--fg-1)"
-                onClick={() => setIsAddingGroup(false)}
-              >
-                閉じる
-              </button>
-            </div>
-            <GroupForm axes={axes} onCreated={() => setIsAddingGroup(false)} />
-          </div>
-        ) : (
-          <button
-            type="button"
-            className="text-sm text-(--teal-700) underline"
-            onClick={() => setIsAddingGroup(true)}
-          >
-            ＋ グループを追加
-          </button>
-        )}
       </section>
     </div>
   );
