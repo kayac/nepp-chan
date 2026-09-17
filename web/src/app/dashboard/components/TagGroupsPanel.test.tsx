@@ -145,20 +145,27 @@ describe("TagGroupsPanel", () => {
     );
   });
 
-  it("グループ一覧は話者の属性だけを最初に出し、すべてに切り替えると除外も出す", async () => {
+  it("グループ一覧と割り当て先は種別ごとに分けて出す", async () => {
     renderWithQuery(<TagGroupsPanel />);
     await waitFor(() => expect(screen.getByText("低予算")).toBeInTheDocument());
 
     const section = screen
       .getByText("グループ")
       .closest("section") as HTMLElement;
-    expect(within(section).getByText("関わり / 観光客")).toBeInTheDocument();
-    expect(within(section).queryByText("除外")).toBeNull();
+    const attribute = within(section).getByText("話者の属性")
+      .parentElement as HTMLElement;
+    expect(within(attribute).getByText("関わり / 観光客")).toBeInTheDocument();
+    const excluded = within(section).getByText("集計に使わない")
+      .parentElement as HTMLElement;
+    expect(within(excluded).getByText("除外")).toBeInTheDocument();
 
-    await userEvent.click(
-      within(section).getByRole("button", { name: "すべて" }),
-    );
-    expect(within(section).getByText("除外")).toBeInTheDocument();
+    const select = screen.getByLabelText("低予算 の割り当て先");
+    expect(
+      within(select).getByRole("group", { name: "話者の属性" }),
+    ).toBeInTheDocument();
+    expect(
+      within(select).queryByRole("group", { name: "集計に使わない" }),
+    ).toBeNull();
   });
 
   it("＋ グループを追加で初めてフォームが開き、追加すると閉じる", async () => {

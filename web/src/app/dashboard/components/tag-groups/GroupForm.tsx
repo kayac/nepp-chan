@@ -2,13 +2,9 @@ import { Button } from "@nepp-chan/shared/ui/Button";
 import { useState } from "react";
 import { useCreateTagGroup } from "~/app/dashboard/hooks/useTagGroups";
 import { formatError } from "~/components/ui/ErrorBanner";
+import { KIND_LABELS, type TagGroupKind } from "./helpers";
 
-const KIND_LABELS = {
-  attribute: "話者の属性",
-  topic: "話題",
-  exclude: "集計に使わない",
-} as const;
-type Kind = keyof typeof KIND_LABELS;
+type Kind = TagGroupKind;
 
 interface Props {
   axes: string[];

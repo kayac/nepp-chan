@@ -1,7 +1,11 @@
-import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { Button } from "@nepp-chan/shared/ui/Button";
 import { useState } from "react";
 import { GroupForm } from "~/app/dashboard/components/tag-groups/GroupForm";
+import {
+  groupLabel,
+  KIND_LABELS,
+  KIND_ORDER,
+} from "~/app/dashboard/components/tag-groups/helpers";
 import {
   useAssignTagGroups,
   useSetTagAlias,
@@ -11,20 +15,12 @@ import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
 import { PanelLoading } from "~/components/ui/PanelLoading";
 
 const GROUP_TAG_LIMIT = 12;
-const GROUP_VIEWS = [
-  { label: "話者の属性", all: false },
-  { label: "すべて", all: true },
-];
 const EXCLUDE_GROUP_ID = "exclude";
-
-const groupLabel = (g: { axis: string | null; name: string }) =>
-  g.axis ? `${g.axis} / ${g.name}` : g.name;
 
 export const TagGroupsPanel = () => {
   const { data, isLoading, error } = useTagGroups();
   const setAlias = useSetTagAlias();
   const assign = useAssignTagGroups();
-  const [showAllGroups, setShowAllGroups] = useState(false);
   const [isAddingGroup, setIsAddingGroup] = useState(false);
 
   if (isLoading) return <PanelLoading />;
@@ -32,7 +28,10 @@ export const TagGroupsPanel = () => {
   if (!data) return null;
 
   const attributeGroups = data.groups.filter((g) => g.kind === "attribute");
-  const visibleGroups = showAllGroups ? data.groups : attributeGroups;
+  const groupsByKind = KIND_ORDER.map((kind) => ({
+    kind,
+    groups: data.groups.filter((g) => g.kind === kind),
+  })).filter((section) => section.groups.length > 0);
   const axes = [
     ...new Set(attributeGroups.flatMap((g) => (g.axis ? [g.axis] : []))),
   ];
@@ -110,12 +109,19 @@ export const TagGroupsPanel = () => {
                   }
                 >
                   <option value="">グループを選ぶ</option>
-                  {data.groups
-                    .filter((g) => g.kind !== "exclude")
-                    .map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {groupLabel(g)}
-                      </option>
+                  {groupsByKind
+                    .filter((section) => section.kind !== "exclude")
+                    .map((section) => (
+                      <optgroup
+                        key={section.kind}
+                        label={KIND_LABELS[section.kind]}
+                      >
+                        {section.groups.map((g) => (
+                          <option key={g.id} value={g.id}>
+                            {groupLabel(g)}
+                          </option>
+                        ))}
+                      </optgroup>
                     ))}
                 </select>
                 {hasExclude && (
@@ -130,7 +136,7 @@ export const TagGroupsPanel = () => {
                       })
                     }
                   >
-                    集計に使わない
+                    集計対象外にする
                   </button>
                 )}
               </li>
@@ -172,27 +178,6 @@ export const TagGroupsPanel = () => {
         <div className="flex flex-wrap items-center gap-3">
           <h3 className="text-base font-semibold text-(--fg-1)">グループ</h3>
           <div className="ml-auto flex items-center gap-3">
-            <fieldset
-              aria-label="表示するグループ"
-              className="m-0 flex items-center gap-1 rounded-(--r-pill) border-0 bg-(--bg-sunken) p-1"
-            >
-              {GROUP_VIEWS.map((view) => (
-                <button
-                  key={view.label}
-                  type="button"
-                  aria-pressed={showAllGroups === view.all}
-                  onClick={() => setShowAllGroups(view.all)}
-                  className={cn(
-                    "px-3 py-1 rounded-(--r-pill) text-xs transition-colors",
-                    showAllGroups === view.all
-                      ? "bg-(--bg-raised) font-medium text-(--fg-1) shadow-(--shadow-xs)"
-                      : "text-(--fg-3)",
-                  )}
-                >
-                  {view.label}
-                </button>
-              ))}
-            </fieldset>
             <Button
               type="button"
               size="sm"
@@ -208,39 +193,46 @@ export const TagGroupsPanel = () => {
             <GroupForm axes={axes} onCreated={() => setIsAddingGroup(false)} />
           </div>
         )}
-        <ul className="grid gap-2 sm:grid-cols-2">
-          {visibleGroups.map((group) => (
-            <li
-              key={group.id}
-              className="rounded border border-(--border-1) p-3 text-xs"
-            >
-              <div className="mb-1.5 font-medium text-(--fg-1)">
-                {groupLabel(group)}
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {group.tags.slice(0, GROUP_TAG_LIMIT).map((t) => (
-                  <button
-                    key={t.tag}
-                    type="button"
-                    title="クリックで判断待ちに戻す"
-                    className="rounded-(--r-pill) bg-(--bg-sunken) px-2 py-0.5 text-(--fg-2) hover:bg-(--brand-soft)"
-                    disabled={setAlias.isPending}
-                    onClick={() =>
-                      setAlias.mutate({ tag: t.tag, groupId: null })
-                    }
-                  >
-                    {t.tag} <span className="text-(--fg-3)">{t.count}</span>
-                  </button>
-                ))}
-                {group.tags.length > GROUP_TAG_LIMIT && (
-                  <span className="text-(--fg-3)">
-                    他 {group.tags.length - GROUP_TAG_LIMIT} 語
-                  </span>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
+        {groupsByKind.map((section) => (
+          <div key={section.kind} className="space-y-2">
+            <h4 className="text-xs font-semibold text-(--fg-2)">
+              {KIND_LABELS[section.kind]}
+            </h4>
+            <ul className="grid gap-2 sm:grid-cols-2">
+              {section.groups.map((group) => (
+                <li
+                  key={group.id}
+                  className="rounded border border-(--border-1) p-3 text-xs"
+                >
+                  <div className="mb-1.5 font-medium text-(--fg-1)">
+                    {groupLabel(group)}
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {group.tags.slice(0, GROUP_TAG_LIMIT).map((t) => (
+                      <button
+                        key={t.tag}
+                        type="button"
+                        title="クリックで判断待ちに戻す"
+                        className="rounded-(--r-pill) bg-(--bg-sunken) px-2 py-0.5 text-(--fg-2) hover:bg-(--brand-soft)"
+                        disabled={setAlias.isPending}
+                        onClick={() =>
+                          setAlias.mutate({ tag: t.tag, groupId: null })
+                        }
+                      >
+                        {t.tag} <span className="text-(--fg-3)">{t.count}</span>
+                      </button>
+                    ))}
+                    {group.tags.length > GROUP_TAG_LIMIT && (
+                      <span className="text-(--fg-3)">
+                        他 {group.tags.length - GROUP_TAG_LIMIT} 語
+                      </span>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </section>
     </div>
   );
