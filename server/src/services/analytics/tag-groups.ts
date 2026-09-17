@@ -208,6 +208,83 @@ const sum = (c: ReturnType<typeof emptySentimentCounts>) =>
 
 export const RELATION_AXIS = "関わり";
 
+const BREAKDOWN_SAMPLE_LIMIT = 3;
+
+export const findAttributeGroup = (groups: TagGroup[], query: string) => {
+  const q = normalizeTag(query);
+  return (
+    groups.find(
+      (g) => g.kind === "attribute" && (g.id === q || g.name === q),
+    ) ?? null
+  );
+};
+
+export const summarizeGroup = (
+  rows: AudienceRow[],
+  groups: TagGroup[],
+  aliases: AliasMap,
+  groupId: string,
+) => {
+  const matched = rows
+    .map((row) => ({
+      row,
+      resolved: resolveGroups(personaAttributes(row), aliases, groups),
+    }))
+    .filter(({ resolved }) => resolved.some((g) => g.id === groupId));
+
+  const topics = new Map<string, ReturnType<typeof emptySentimentCounts>>();
+  const entities = new Map<string, number>();
+  const breakdown = new Map<string, Map<string, number>>();
+  const samples: Sample[] = [];
+  for (const { row, resolved } of matched) {
+    const topic = normalizeTopic(row.topic);
+    const sentiment = normalizeSentiment(row.sentiment);
+    const counts = topics.get(topic) ?? emptySentimentCounts();
+    counts[sentiment] += 1;
+    topics.set(topic, counts);
+    for (const name of parseEntityNames(row.entities))
+      increment(entities, name);
+    for (const g of resolved) {
+      if (g.kind !== "attribute" || !g.axis || g.id === groupId) continue;
+      const byAxis = breakdown.get(g.axis) ?? new Map<string, number>();
+      increment(byAxis, g.name);
+      breakdown.set(g.axis, byAxis);
+    }
+    samples.push({
+      content: row.content,
+      topic,
+      sentiment,
+      endedAt: row.conversationEndedAt ?? "",
+    });
+  }
+
+  return {
+    count: matched.length,
+    topics: [...topics.entries()]
+      .sort((a, b) => sum(b[1]) - sum(a[1]))
+      .map(([t, c]) => ({ topic: t, ...c })),
+    entities: topCounts(entities, ENTITY_LIMIT).map(([name, count]) => ({
+      name,
+      count,
+    })),
+    breakdown: [...breakdown.entries()].map(([axis, counts]) => ({
+      axis,
+      groups: topCounts(counts, Number.POSITIVE_INFINITY).map(
+        ([name, count]) => ({ name, count }),
+      ),
+    })),
+    samples: [...samples]
+      .sort(
+        (a, b) =>
+          (SAMPLE_PRIORITY[a.sentiment] ?? 1) -
+            (SAMPLE_PRIORITY[b.sentiment] ?? 1) ||
+          b.endedAt.localeCompare(a.endedAt),
+      )
+      .slice(0, BREAKDOWN_SAMPLE_LIMIT)
+      .map(({ content, topic, sentiment }) => ({ content, topic, sentiment })),
+  };
+};
+
 export const countTags = (
   rows: Pick<AudienceRow, "tags" | "demographicSummary">[],
 ) => {

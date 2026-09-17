@@ -5,11 +5,13 @@ import {
   collectUnassignedTags,
   collectUnmappedTags,
   countTags,
+  findAttributeGroup,
   normalizeTag,
   partitionByPriority,
   resolveGroups,
   sanitizeAssignments,
   splitAttributes,
+  summarizeGroup,
   type TagGroup,
 } from "./tag-groups";
 
@@ -283,5 +285,51 @@ describe("collectTagExamples", () => {
     const examples = collectTagExamples(rows);
     expect(examples.get("新語")).toBe("新しい");
     expect(examples.get("別")).toBe("新しい");
+  });
+});
+
+describe("findAttributeGroup", () => {
+  it("id か表示名で属性グループを探し、話題グループは対象外", () => {
+    expect(findAttributeGroup(groups, "tourist")?.name).toBe("観光客");
+    expect(findAttributeGroup(groups, " 観光客 ")?.id).toBe("tourist");
+    expect(findAttributeGroup(groups, "食")).toBeNull();
+  });
+});
+
+describe("summarizeGroup", () => {
+  const row = (tags: string, over: Record<string, unknown> = {}) => ({
+    tags,
+    demographicSummary: null,
+    topic: "観光",
+    sentiment: "neutral",
+    entities: null,
+    content: "テスト",
+    conversationEndedAt: "2026-06-01T00:00:00.000Z",
+    ...over,
+  });
+
+  it("層に入る声だけを数え、他の軸での内訳・話題・代表の声を返す", () => {
+    const result = summarizeGroup(
+      [
+        row("観光客,村外", {
+          topic: "交通",
+          sentiment: "request",
+          content: "バスが少ない",
+        }),
+        row("旅行者,高校生", { topic: "観光" }),
+        row("村内", { topic: "除雪" }),
+      ],
+      groups,
+      aliases,
+      "tourist",
+    );
+
+    expect(result.count).toBe(2);
+    expect(result.breakdown).toEqual([
+      { axis: "関わり", groups: [{ name: "村外", count: 1 }] },
+      { axis: "年代", groups: [{ name: "10代", count: 1 }] },
+    ]);
+    expect(result.topics[0]).toMatchObject({ topic: "交通", request: 1 });
+    expect(result.samples[0]?.content).toBe("バスが少ない");
   });
 });
