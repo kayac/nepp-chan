@@ -21,16 +21,18 @@ const TimeAxisHeading = ({
   onAskMayor,
 }: {
   title: string;
-  period: string;
+  period?: string;
   askContext: string;
   onAskMayor?: (context: string) => void;
 }) => (
   <div className="pt-2 flex items-end justify-between gap-2">
     <div>
       <h3 className="text-lg font-bold text-(--fg-1)">{title}</h3>
-      <span className="mt-1 inline-block rounded-(--r-pill) bg-(--bg-sunken) px-2 py-0.5 text-xs text-(--fg-3)">
-        {period}
-      </span>
+      {period && (
+        <span className="mt-1 inline-block rounded-(--r-pill) bg-(--bg-sunken) px-2 py-0.5 text-xs text-(--fg-3)">
+          {period}
+        </span>
+      )}
     </div>
     {onAskMayor && (
       <button
@@ -91,7 +93,6 @@ export const AnalyticsPanel = ({
 
       <TimeAxisHeading
         title="今週のできごと"
-        period="週ごと"
         askContext="今週の週次レポート"
         onAskMayor={onAskMayor}
       />
