@@ -156,9 +156,7 @@ describe("TagGroupsPanel", () => {
     expect(within(section).queryByText("除外")).toBeNull();
 
     await userEvent.click(
-      within(section).getByRole("button", {
-        name: "話題・集計に使わないものも表示",
-      }),
+      within(section).getByRole("button", { name: "すべて" }),
     );
     expect(within(section).getByText("除外")).toBeInTheDocument();
   });

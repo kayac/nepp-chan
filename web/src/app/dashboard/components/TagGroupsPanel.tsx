@@ -172,10 +172,9 @@ export const TagGroupsPanel = () => {
         <div className="flex flex-wrap items-center gap-3">
           <h3 className="text-base font-semibold text-(--fg-1)">グループ</h3>
           <div className="ml-auto flex items-center gap-3">
-            <div
-              role="group"
+            <fieldset
               aria-label="表示するグループ"
-              className="flex items-center gap-1 rounded-(--r-pill) bg-(--bg-sunken) p-1"
+              className="m-0 flex items-center gap-1 rounded-(--r-pill) border-0 bg-(--bg-sunken) p-1"
             >
               {GROUP_VIEWS.map((view) => (
                 <button
@@ -193,7 +192,7 @@ export const TagGroupsPanel = () => {
                   {view.label}
                 </button>
               ))}
-            </div>
+            </fieldset>
             <Button
               type="button"
               size="sm"
