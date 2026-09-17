@@ -209,4 +209,22 @@ describe("TagGroupsPanel", () => {
       expect(screen.queryByLabelText("グループ名")).toBeNull(),
     );
   });
+
+  it("グループ内のタグは × を押したときだけ判断待ちに戻る", async () => {
+    renderWithQuery(<TagGroupsPanel />);
+    await waitFor(() => expect(screen.getByText("低予算")).toBeInTheDocument());
+
+    const section = screen
+      .getByText("グループ")
+      .closest("section") as HTMLElement;
+    await userEvent.click(within(section).getByText("旅行者"));
+    expect(puts).toEqual([]);
+
+    await userEvent.click(
+      within(section).getByRole("button", { name: "旅行者 を判断待ちに戻す" }),
+    );
+    await waitFor(() =>
+      expect(puts).toContainEqual({ tag: "旅行者", body: { groupId: null } }),
+    );
+  });
 });

@@ -1,3 +1,4 @@
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Button } from "@nepp-chan/shared/ui/Button";
 import { useState } from "react";
 import { GroupForm } from "~/app/dashboard/components/tag-groups/GroupForm";
@@ -209,18 +210,23 @@ export const TagGroupsPanel = () => {
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {group.tags.slice(0, GROUP_TAG_LIMIT).map((t) => (
-                      <button
+                      <span
                         key={t.tag}
-                        type="button"
-                        title="クリックで判断待ちに戻す"
-                        className="rounded-(--r-pill) bg-(--bg-sunken) px-2 py-0.5 text-(--fg-2) hover:bg-(--brand-soft)"
-                        disabled={setAlias.isPending}
-                        onClick={() =>
-                          setAlias.mutate({ tag: t.tag, groupId: null })
-                        }
+                        className="inline-flex items-center gap-1 rounded-(--r-pill) bg-(--bg-sunken) pl-2 pr-1 py-0.5 text-(--fg-2)"
                       >
                         {t.tag} <span className="text-(--fg-3)">{t.count}</span>
-                      </button>
+                        <button
+                          type="button"
+                          aria-label={`${t.tag} を判断待ちに戻す`}
+                          className="rounded-full p-0.5 text-(--fg-3) hover:bg-(--brand-soft) hover:text-(--fg-1)"
+                          disabled={setAlias.isPending}
+                          onClick={() =>
+                            setAlias.mutate({ tag: t.tag, groupId: null })
+                          }
+                        >
+                          <XMarkIcon className="h-3 w-3" aria-hidden="true" />
+                        </button>
+                      </span>
                     ))}
                     {group.tags.length > GROUP_TAG_LIMIT && (
                       <span className="text-(--fg-3)">
