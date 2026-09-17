@@ -1,3 +1,4 @@
+import { cn } from "@nepp-chan/shared/lib/class-merge";
 import { Button } from "@nepp-chan/shared/ui/Button";
 import { useState } from "react";
 import { GroupForm } from "~/app/dashboard/components/tag-groups/GroupForm";
@@ -10,6 +11,10 @@ import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
 import { PanelLoading } from "~/components/ui/PanelLoading";
 
 const GROUP_TAG_LIMIT = 12;
+const GROUP_VIEWS = [
+  { label: "話者の属性", all: false },
+  { label: "すべて", all: true },
+];
 const EXCLUDE_GROUP_ID = "exclude";
 
 const groupLabel = (g: { axis: string | null; name: string }) =>
@@ -167,15 +172,28 @@ export const TagGroupsPanel = () => {
         <div className="flex flex-wrap items-center gap-3">
           <h3 className="text-base font-semibold text-(--fg-1)">グループ</h3>
           <div className="ml-auto flex items-center gap-3">
-            <button
-              type="button"
-              className="text-xs text-(--teal-700) underline"
-              onClick={() => setShowAllGroups((v) => !v)}
+            <div
+              role="group"
+              aria-label="表示するグループ"
+              className="flex items-center gap-1 rounded-(--r-pill) bg-(--bg-sunken) p-1"
             >
-              {showAllGroups
-                ? "話者の属性だけ表示"
-                : "話題・集計に使わないものも表示"}
-            </button>
+              {GROUP_VIEWS.map((view) => (
+                <button
+                  key={view.label}
+                  type="button"
+                  aria-pressed={showAllGroups === view.all}
+                  onClick={() => setShowAllGroups(view.all)}
+                  className={cn(
+                    "px-3 py-1 rounded-(--r-pill) text-xs transition-colors",
+                    showAllGroups === view.all
+                      ? "bg-(--bg-raised) font-medium text-(--fg-1) shadow-(--shadow-xs)"
+                      : "text-(--fg-3)",
+                  )}
+                >
+                  {view.label}
+                </button>
+              ))}
+            </div>
             <Button
               type="button"
               size="sm"

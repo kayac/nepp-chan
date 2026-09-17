@@ -145,7 +145,7 @@ describe("TagGroupsPanel", () => {
     );
   });
 
-  it("グループ一覧は話者の属性だけを最初に出し、切り替えで除外も出す", async () => {
+  it("グループ一覧は話者の属性だけを最初に出し、すべてに切り替えると除外も出す", async () => {
     renderWithQuery(<TagGroupsPanel />);
     await waitFor(() => expect(screen.getByText("低予算")).toBeInTheDocument());
 
