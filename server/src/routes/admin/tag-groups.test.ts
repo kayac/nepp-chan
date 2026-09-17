@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("~/services/analytics/tag-group-assign", () => ({
   assignUnmappedTags: vi.fn(),
+  createTagGroup: vi.fn(),
   getTagGroupOverview: vi.fn(),
 }));
 
@@ -21,9 +22,8 @@ vi.mock("~/services/auth/anonymous-session", () => ({
   verifyAnonymousToken: vi.fn(),
 }));
 
-const { assignUnmappedTags, getTagGroupOverview } = await import(
-  "~/services/analytics/tag-group-assign"
-);
+const { assignUnmappedTags, createTagGroup, getTagGroupOverview } =
+  await import("~/services/analytics/tag-group-assign");
 const { personaTagGroupRepository } = await import(
   "~/repository/persona-tag-group-repository"
 );
@@ -163,6 +163,50 @@ describe("tagGroupAdminRoutes", () => {
 
     expect(res.status).toBe(404);
     expect(personaTagGroupRepository.setAlias).not.toHaveBeenCalled();
+  });
+
+  it("POST / はグループを追加して 201 を返す", async () => {
+    vi.mocked(createTagGroup).mockResolvedValue({
+      id: "g-1",
+      name: "農家",
+      kind: "attribute",
+      axis: "立場",
+      sortOrder: 360,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: null,
+    });
+
+    const res = await routes.request(
+      authed("/", {
+        method: "POST",
+        body: JSON.stringify({ name: "農家", kind: "attribute", axis: "立場" }),
+      }),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(201);
+    expect(await res.json()).toEqual({
+      id: "g-1",
+      name: "農家",
+      kind: "attribute",
+      axis: "立場",
+      sortOrder: 360,
+    });
+  });
+
+  it("属性グループに軸が無ければ 400", async () => {
+    const res = await routes.request(
+      authed("/", {
+        method: "POST",
+        body: JSON.stringify({ name: "農家", kind: "attribute" }),
+      }),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(400);
+    expect(createTagGroup).not.toHaveBeenCalled();
   });
 
   it("POST /assign は 1 バッチ分の結果を返す", async () => {

@@ -6,6 +6,7 @@ import { server } from "~/test/msw-server";
 import { renderHookWithQuery } from "~/test/query";
 import {
   useAssignTagGroups,
+  useCreateTagGroup,
   useSetTagAlias,
   useTagGroups,
 } from "./useTagGroups";
@@ -86,5 +87,33 @@ describe("useAssignTagGroups", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(calls).toBe(2);
     expect(result.current.data).toEqual({ assigned: 120, unassigned: 30 });
+  });
+});
+
+describe("useCreateTagGroup", () => {
+  it("グループを POST して作成結果を返す", async () => {
+    let received: unknown = null;
+    server.use(
+      http.post(`${API}/admin/tag-groups`, async ({ request }) => {
+        received = await request.json();
+        return HttpResponse.json(
+          {
+            id: "g-1",
+            name: "農家",
+            kind: "attribute",
+            axis: "立場",
+            sortOrder: 360,
+          },
+          { status: 201 },
+        );
+      }),
+    );
+
+    const { result } = renderHookWithQuery(() => useCreateTagGroup());
+    result.current.mutate({ name: "農家", kind: "attribute", axis: "立場" });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(received).toEqual({ name: "農家", kind: "attribute", axis: "立場" });
+    expect(result.current.data?.id).toBe("g-1");
   });
 });

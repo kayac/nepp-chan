@@ -48,6 +48,24 @@ export const personaTagGroupRepository = {
       });
   },
 
+  async createGroup(
+    d1: D1Database,
+    input: {
+      id: string;
+      name: string;
+      kind: string;
+      axis: string | null;
+      sortOrder: number;
+    },
+  ) {
+    const db = createDb(d1);
+    return db
+      .insert(personaTagGroups)
+      .values({ ...input, createdAt: new Date().toISOString() })
+      .returning()
+      .get();
+  },
+
   async findGroup(d1: D1Database, id: string) {
     const db = createDb(d1);
     const row = await db

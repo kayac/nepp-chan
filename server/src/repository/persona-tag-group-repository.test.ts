@@ -81,6 +81,25 @@ describe("personaTagGroupRepository", () => {
     expect(alias?.updatedAt).not.toBeNull();
   });
 
+  it("createGroup は行を作って返す", async () => {
+    const created = await personaTagGroupRepository.createGroup(d1, {
+      id: "farmers",
+      name: "農家",
+      kind: "attribute",
+      axis: "立場",
+      sortOrder: 360,
+    });
+
+    expect(created).toMatchObject({
+      id: "farmers",
+      name: "農家",
+      axis: "立場",
+    });
+    expect(
+      (await personaTagGroupRepository.listGroups(d1)).map((g) => g.id),
+    ).toEqual(["tourist", "resident", "farmers"]);
+  });
+
   it("findGroup は無ければ null", async () => {
     expect(
       await personaTagGroupRepository.findGroup(d1, "tourist"),

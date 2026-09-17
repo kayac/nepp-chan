@@ -105,6 +105,77 @@ describe("TagAssignment", () => {
     await waitFor(() => expect(received).toEqual({ groupId: null }));
   });
 
+  it("グループ名と軸を入れて追加すると POST し、入力を空に戻す", async () => {
+    let received: unknown = null;
+    server.use(
+      http.post(`${API}/admin/tag-groups`, async ({ request }) => {
+        received = await request.json();
+        return HttpResponse.json(
+          {
+            id: "g-1",
+            name: "農家",
+            kind: "attribute",
+            axis: "立場",
+            sortOrder: 360,
+          },
+          { status: 201 },
+        );
+      }),
+    );
+    renderWithQuery(<TagAssignment />);
+    await waitFor(() => expect(screen.getByText("新語")).toBeInTheDocument());
+
+    const submit = screen.getByRole("button", { name: "グループを追加" });
+    expect(submit).toBeDisabled();
+    await userEvent.type(screen.getByLabelText("グループ名"), "農家");
+    expect(submit).toBeDisabled();
+    await userEvent.type(screen.getByLabelText("軸"), "立場");
+    await userEvent.click(submit);
+
+    await waitFor(() =>
+      expect(received).toEqual({
+        name: "農家",
+        kind: "attribute",
+        axis: "立場",
+      }),
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText("グループ名")).toHaveValue(""),
+    );
+  });
+
+  it("話題グループは軸なしで追加できる", async () => {
+    let received: unknown = null;
+    server.use(
+      http.post(`${API}/admin/tag-groups`, async ({ request }) => {
+        received = await request.json();
+        return HttpResponse.json(
+          {
+            id: "g-2",
+            name: "農業",
+            kind: "topic",
+            axis: null,
+            sortOrder: 370,
+          },
+          { status: 201 },
+        );
+      }),
+    );
+    renderWithQuery(<TagAssignment />);
+    await waitFor(() => expect(screen.getByText("新語")).toBeInTheDocument());
+
+    await userEvent.selectOptions(screen.getByLabelText("種別"), "topic");
+    expect(screen.queryByLabelText("軸")).not.toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText("グループ名"), "農業");
+    await userEvent.click(
+      screen.getByRole("button", { name: "グループを追加" }),
+    );
+
+    await waitFor(() =>
+      expect(received).toEqual({ name: "農業", kind: "topic", axis: null }),
+    );
+  });
+
   it("LLM で振り分けを押すと remaining 0 まで繰り返し、合計を表示する", async () => {
     const responses = [
       { assigned: 1, unassigned: 0, remaining: 1 },

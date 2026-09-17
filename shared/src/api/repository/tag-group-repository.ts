@@ -7,6 +7,16 @@ export const createTagGroupRepository = (client: ApiClient) => ({
     return data;
   },
 
+  createTagGroup: async (body: {
+    name: string;
+    kind: "attribute" | "topic" | "exclude";
+    axis?: string | null;
+  }) => {
+    const { data, error } = await client.POST("/admin/tag-groups", { body });
+    if (error) throw error;
+    return data;
+  },
+
   setTagAlias: async (tag: string, groupId: string | null) => {
     const { data, error } = await client.PUT(
       "/admin/tag-groups/aliases/{tag}",

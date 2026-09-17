@@ -14,9 +14,8 @@ vi.mock("~/db", async (importOriginal) => {
 
 vi.mock("~/lib/storage", () => ({ getStorage: vi.fn().mockResolvedValue({}) }));
 
-const { assignUnmappedTags, getTagGroupOverview } = await import(
-  "./tag-group-assign"
-);
+const { assignUnmappedTags, createTagGroup, getTagGroupOverview } =
+  await import("./tag-group-assign");
 const { personaTagGroupRepository } = await import(
   "~/repository/persona-tag-group-repository"
 );
@@ -119,5 +118,35 @@ describe("getTagGroupOverview", () => {
       { tag: "新語", count: 2 },
       { tag: "謎", count: 1 },
     ]);
+  });
+});
+
+describe("createTagGroup", () => {
+  let db: TestDb;
+
+  beforeEach(async () => {
+    db = await createTestDb();
+    testDbHolder.db = db;
+    await seedRelationGroups(db);
+  });
+
+  it("末尾の sortOrder の後ろに追加し、属性以外は軸を持たない", async () => {
+    const attribute = await createTagGroup(env.DB, {
+      name: "農家",
+      kind: "attribute",
+      axis: "立場",
+    });
+    const topic = await createTagGroup(env.DB, {
+      name: "農業",
+      kind: "topic",
+      axis: "立場",
+    });
+
+    expect(attribute).toMatchObject({
+      name: "農家",
+      axis: "立場",
+      sortOrder: 60,
+    });
+    expect(topic).toMatchObject({ name: "農業", axis: null, sortOrder: 70 });
   });
 });

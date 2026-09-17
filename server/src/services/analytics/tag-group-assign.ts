@@ -81,6 +81,23 @@ export const assignUnmappedTags = async (
   };
 };
 
+const SORT_ORDER_STEP = 10;
+
+export const createTagGroup = async (
+  d1: D1Database,
+  input: { name: string; kind: TagGroup["kind"]; axis?: string | null },
+) => {
+  const groups = await personaTagGroupRepository.listGroups(d1);
+  const maxSortOrder = groups.reduce((max, g) => Math.max(max, g.sortOrder), 0);
+  return personaTagGroupRepository.createGroup(d1, {
+    id: crypto.randomUUID(),
+    name: input.name,
+    kind: input.kind,
+    axis: input.kind === "attribute" ? (input.axis ?? null) : null,
+    sortOrder: maxSortOrder + SORT_ORDER_STEP,
+  });
+};
+
 export const getTagGroupOverview = async (d1: D1Database) => {
   const [{ groups, aliases, aliasRows }, rows] = await Promise.all([
     loadTagGroups(d1),

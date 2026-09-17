@@ -6,11 +6,14 @@ import { requireRole } from "~/middleware/require-role";
 import { personaTagGroupRepository } from "~/repository/persona-tag-group-repository";
 import {
   assignTagGroupsResponseSchema,
+  createTagGroupBodySchema,
   setTagAliasBodySchema,
+  tagGroupSchema,
   tagGroupsResponseSchema,
 } from "~/schemas/tag-group-schema";
 import {
   assignUnmappedTags,
+  createTagGroup,
   getTagGroupOverview,
 } from "~/services/analytics/tag-group-assign";
 import { normalizeTag } from "~/services/analytics/tag-groups";
@@ -40,6 +43,41 @@ const listRoute = createRoute({
 tagGroupAdminRoutes.openapi(listRoute, async (c) => {
   const overview = await getTagGroupOverview(c.env.DB);
   return c.json(overview, 200);
+});
+
+const createGroupRoute = createRoute({
+  method: "post",
+  path: "/",
+  tags: ["Admin - Tag Groups"],
+  summary: "グループを追加する",
+  request: {
+    body: {
+      content: { "application/json": { schema: createTagGroupBodySchema } },
+    },
+  },
+  responses: {
+    201: {
+      description: "追加したグループ",
+      content: { "application/json": { schema: tagGroupSchema } },
+    },
+    400: errorResponse(400),
+    401: errorResponse(401),
+    403: errorResponse(403),
+  },
+});
+
+tagGroupAdminRoutes.openapi(createGroupRoute, async (c) => {
+  const group = await createTagGroup(c.env.DB, c.req.valid("json"));
+  return c.json(
+    {
+      id: group.id,
+      name: group.name,
+      kind: group.kind as "attribute" | "topic" | "exclude",
+      axis: group.axis,
+      sortOrder: group.sortOrder,
+    },
+    201,
+  );
 });
 
 const setAliasRoute = createRoute({

@@ -22,6 +22,14 @@ export const useTagGroups = () =>
     queryFn: tagGroupRepository.fetchTagGroups,
   });
 
+export const useCreateTagGroup = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: tagGroupRepository.createTagGroup,
+    onSuccess: () => invalidateTagGroups(queryClient),
+  });
+};
+
 export const useSetTagAlias = () => {
   const queryClient = useQueryClient();
   return useMutation({
