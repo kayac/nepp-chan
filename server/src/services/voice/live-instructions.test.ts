@@ -1,3 +1,4 @@
+import { DEFAULT_LIVE_VOICE } from "@nepp-chan/shared/constants/live-voices";
 import { describe, expect, it } from "vitest";
 import { buildLiveInstructions, parseLiveVoice } from "./live-instructions";
 
@@ -33,12 +34,12 @@ describe("parseLiveVoice", () => {
     expect(parseLiveVoice("coral")).toBe("coral");
   });
 
-  it("リストに無い声は既定の sage に落とす", () => {
-    expect(parseLiveVoice("nova")).toBe("sage");
+  it("リストに無い声は既定に落とす", () => {
+    expect(parseLiveVoice("nova")).toBe(DEFAULT_LIVE_VOICE);
   });
 
-  it("未指定なら既定の sage を使う", () => {
-    expect(parseLiveVoice(undefined)).toBe("sage");
-    expect(parseLiveVoice("")).toBe("sage");
+  it("未指定なら既定を使う", () => {
+    expect(parseLiveVoice(undefined)).toBe(DEFAULT_LIVE_VOICE);
+    expect(parseLiveVoice("")).toBe(DEFAULT_LIVE_VOICE);
   });
 });
