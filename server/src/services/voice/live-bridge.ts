@@ -1,6 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { logger } from "~/lib/logger";
 import { createVoiceConversation } from "./conversation";
+import { splitForAppend, takeChunk } from "./live-chunker";
 import {
   buildLiveInstructions,
   LIVE_MODEL,
@@ -10,6 +11,7 @@ import { createDelegationProgress } from "./live-progress";
 import {
   commentaryAppendMessage,
   inputAudioAppendMessage,
+  instructionsAppendMessage,
   parseLiveEvent,
   parseStreamEvent,
   serializeLiveMessage,
@@ -19,6 +21,9 @@ import {
   streamMediaMessage,
 } from "./live-protocol";
 import {
+  buildDelegationInput,
+  lastAssistantEnd,
+  recentTranscript,
   reconstructQuestion,
   type TranscriptFragment,
 } from "./live-transcript";
@@ -33,7 +38,13 @@ const DELEGATION_FALLBACK = "うまく調べられなかった。";
 
 const DELEGATION_STUB = "ごめんね、それは今ちょっと分からないや。";
 
-const CLOSE_GRACE_MS = 3_000;
+const CLOSE_GRACE_MS = 15_000;
+
+// delegation は文が完成する前に届くことがあるため、遅れて来る断片を少し待つ。
+const TRANSCRIPT_SETTLE_MS = 400;
+
+const GREETING_INSTRUCTION =
+  "通話がつながった。日本語で、相手が何か言うのを待たずに今すぐ自分から「もしもし、ねっぷちゃんだよ。どうしたの？」と挨拶して、そのあとは黙って相手の話を聞く。";
 
 export const handleLiveUpgrade = (
   request: Request,
@@ -60,9 +71,9 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
   private outputFrames = 0;
   private nonSilentOutputFrames = 0;
   private delegationCount = 0;
-  private inputFragments: TranscriptFragment[] = [];
-  private lastOutputEndMs = 0;
+  private fragments: TranscriptFragment[] = [];
   private lastDelegationOffsetMs = 0;
+  private eventSeq = 0;
   private currentTurn: AbortController | null = null;
   private conversationPromise: ReturnType<
     typeof createVoiceConversation
@@ -200,6 +211,7 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
     socket.send(
       serializeLiveMessage(
         sessionStartMessage({
+          eventId: this.nextEventId("start"),
           model: LIVE_MODEL,
           instructions: buildLiveInstructions(this.knowledgeEnabled),
           voice: this.voice,
@@ -233,19 +245,39 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
       logger.info("[LiveBridge] session started", {
         droppedInboundFrames: this.droppedInboundFrames,
       });
+      this.sendGreeting();
     } else if (msg.type === "session.input_transcript.delta") {
       logger.info("[LiveBridge] user transcript", { delta: msg.delta });
-      this.inputFragments.push({
+      this.fragments.push({
+        role: "user",
         text: msg.delta,
         startMs: msg.start_ms,
         endMs: msg.end_ms,
       });
     } else if (msg.type === "session.output_transcript.delta") {
       logger.info("[LiveBridge] nepp transcript", { delta: msg.delta });
-      const end = msg.end_ms ?? msg.start_ms;
-      if (end !== undefined) {
-        this.lastOutputEndMs = Math.max(this.lastOutputEndMs, end);
-      }
+      this.fragments.push({
+        role: "assistant",
+        text: msg.delta,
+        startMs: msg.start_ms,
+        endMs: msg.end_ms,
+      });
+    } else if (
+      msg.type === "session.instructions.appended" ||
+      msg.type === "session.commentary.appended" ||
+      msg.type === "session.thinking.appended"
+    ) {
+      logger.info("[LiveBridge] append acked", {
+        type: msg.type,
+        clientEventId: msg.client_event_id ?? "",
+        startMs: msg.start_ms ?? -1,
+        endMs: msg.end_ms ?? -1,
+      });
+    } else if (msg.type === "session.usage.updated") {
+      logger.info("[LiveBridge] usage", {
+        usage: JSON.stringify(msg.usage ?? null),
+        contextWindow: JSON.stringify(msg.context_window ?? null),
+      });
     } else if (msg.type === "session.delegation.created") {
       this.delegationCount++;
       const offsetMs = msg.offset_ms ?? Number.POSITIVE_INFINITY;
@@ -258,6 +290,7 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
       );
     } else if (msg.type === "session.closed") {
       logger.info("[LiveBridge] session closed", {
+        reason: msg.reason ?? "",
         usage: JSON.stringify(msg.usage ?? null),
         delegationCount: this.delegationCount,
         sentInboundFrames: this.sentInboundFrames,
@@ -284,13 +317,20 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
       return;
     }
 
-    // 自分の直前の発話より後、かつ前回の委譲より後の断片だけを質問文とみなす。
-    const sinceMs = Math.max(this.lastOutputEndMs, this.lastDelegationOffsetMs);
-    const text = reconstructQuestion({
-      fragments: this.inputFragments,
+    await scheduler.wait(TRANSCRIPT_SETTLE_MS);
+    if (this.closing) return;
+
+    // 相槌は区切りにしないので、まとまった発話の終わりと前回の委譲の遅い方を起点にする。
+    const sinceMs = Math.max(
+      lastAssistantEnd(this.fragments, offsetMs),
+      this.lastDelegationOffsetMs,
+    );
+    const question = reconstructQuestion({
+      fragments: this.fragments,
       sinceMs,
       untilMs: offsetMs,
     });
+    const context = recentTranscript(this.fragments, sinceMs);
     this.lastDelegationOffsetMs = Number.isFinite(offsetMs)
       ? offsetMs
       : this.lastDelegationOffsetMs;
@@ -300,15 +340,18 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
       count: this.delegationCount,
       offsetMs,
       sinceMs,
-      lastInputEndMs: this.inputFragments.at(-1)?.endMs ?? -1,
-      question: text,
+      lastFragmentEndMs: this.fragments.at(-1)?.endMs ?? -1,
+      question,
+      contextChars: context.length,
     });
 
-    if (!text) {
+    if (!question) {
       logger.warn("[LiveBridge] delegation question empty");
       this.sendCommentary(delegationId, DELEGATION_FALLBACK, startedAt);
       return;
     }
+
+    const text = buildDelegationInput(question, context);
 
     this.currentTurn?.abort();
     const controller = new AbortController();
@@ -329,19 +372,29 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
 
     try {
       const conversation = await this.conversationPromise;
-      let answer = "";
+      let buffer = "";
+      let sent = 0;
       for await (const delta of conversation.runTurn({
         text,
         signal: controller.signal,
       })) {
-        answer += delta;
+        buffer += delta;
+        const { chunk, rest } = takeChunk(buffer, false);
+        buffer = rest;
+        if (!chunk) continue;
+        progress.dispose();
+        this.sendCommentary(delegationId, chunk, startedAt);
+        sent++;
       }
       if (controller.signal.aborted) return;
-      this.sendCommentary(
-        delegationId,
-        answer || DELEGATION_FALLBACK,
-        startedAt,
-      );
+      const { chunk } = takeChunk(buffer, true);
+      if (chunk) {
+        this.sendCommentary(delegationId, chunk, startedAt);
+        sent++;
+      }
+      if (sent === 0) {
+        this.sendCommentary(delegationId, DELEGATION_FALLBACK, startedAt);
+      }
     } catch (e) {
       logger.error("[LiveBridge] delegation turn failed", {
         error: e instanceof Error ? e.message : String(e),
@@ -355,13 +408,32 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
     }
   }
 
+  private nextEventId(prefix: string) {
+    this.eventSeq++;
+    return `${prefix}_${this.eventSeq}`;
+  }
+
+  // 挨拶は startup の instructions では 4 回に 1 回しか発火しない。
+  // 仕様どおり session.started の後に delegation_id: null で送り直す。
+  private sendGreeting() {
+    const eventId = this.nextEventId("greet");
+    logger.info("[LiveBridge] greeting requested", { eventId });
+    this.live?.send(
+      serializeLiveMessage(
+        instructionsAppendMessage(eventId, GREETING_INSTRUCTION),
+      ),
+    );
+  }
+
   private sendProgress(
     delegationId: string,
     content: string,
     step: { index: number; atMs: number },
     startedAt: number,
   ) {
+    const eventId = this.nextEventId("progress");
     logger.info("[LiveBridge] progress sent", {
+      eventId,
       id: delegationId,
       index: step.index,
       scheduledAtMs: step.atMs,
@@ -369,7 +441,9 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
       content,
     });
     this.live?.send(
-      serializeLiveMessage(commentaryAppendMessage(delegationId, content)),
+      serializeLiveMessage(
+        commentaryAppendMessage(eventId, content, delegationId),
+      ),
     );
   }
 
@@ -378,14 +452,20 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
     answer: string,
     startedAt: number,
   ) {
-    logger.info("[LiveBridge] commentary sent", {
-      id: delegationId,
-      contentChars: answer.length,
-      delegationMs: Date.now() - startedAt,
-    });
-    this.live?.send(
-      serializeLiveMessage(commentaryAppendMessage(delegationId, answer)),
-    );
+    for (const part of splitForAppend(answer)) {
+      const eventId = this.nextEventId("commentary");
+      logger.info("[LiveBridge] commentary sent", {
+        eventId,
+        id: delegationId,
+        contentChars: part.length,
+        delegationMs: Date.now() - startedAt,
+      });
+      this.live?.send(
+        serializeLiveMessage(
+          commentaryAppendMessage(eventId, part, delegationId),
+        ),
+      );
+    }
   }
 
   // Twilio 側が閉じても session.closed の usage を取りこぼさないよう、
@@ -393,11 +473,14 @@ export class LiveBridge extends DurableObject<CloudflareBindings> {
   private async finishLiveSession() {
     if (this.closeRequested) return;
     this.closeRequested = true;
+    this.currentTurn?.abort();
     if (!this.live || !this.sessionStarted) {
       this.shutdown();
       return;
     }
-    this.live.send(serializeLiveMessage(sessionCloseMessage()));
+    this.live.send(
+      serializeLiveMessage(sessionCloseMessage(this.nextEventId("close"))),
+    );
     await new Promise<void>((resolve) => {
       this.resolveClosed = resolve;
       setTimeout(resolve, CLOSE_GRACE_MS);

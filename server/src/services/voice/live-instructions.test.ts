@@ -22,6 +22,7 @@ describe("buildLiveInstructions", () => {
       expect(instructions).toContain("ねっぷちゃん");
       expect(instructions).toContain("おといねっぷ");
       expect(instructions).toContain("### 応答スタイル");
+      expect(instructions).not.toContain("### 通話の開始");
     }
   });
 });
