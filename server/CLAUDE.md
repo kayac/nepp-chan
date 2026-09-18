@@ -35,7 +35,7 @@ server/src/
 │   ├── analytics/           # 分析（usage 記録・集計・週次レポート）
 │   ├── auth/                # 認証
 │   ├── knowledge/           # RAG ナレッジ処理
-│   ├── voice/               # 通話（Twilio ConversationRelay・CallBridge DO）
+│   ├── voice/               # 通話（Twilio ConversationRelay・CallBridge DO / GPT-Live・LiveBridge DO）
 │   └── persona-extractor.ts # ペルソナ抽出
 ├── repository/              # データアクセス層
 ├── handlers/                # Cron/Queue ハンドラー
