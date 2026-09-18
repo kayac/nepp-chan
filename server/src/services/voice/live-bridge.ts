@@ -43,8 +43,10 @@ const CLOSE_GRACE_MS = 15_000;
 // delegation は文が完成する前に届くことがあるため、遅れて来る断片を少し待つ。
 const TRANSCRIPT_SETTLE_MS = 400;
 
+// delegation_id: null の指示はセッション全体に効き続けるため、
+// 挨拶のあとの振る舞いはここに書かない。
 const GREETING_INSTRUCTION =
-  "通話がつながった。日本語で、相手が何か言うのを待たずに今すぐ自分から「もしもし、ねっぷちゃんだよ。どうしたの？」と挨拶して、そのあとは黙って相手の話を聞く。";
+  "通話がつながった。日本語で、相手が何か言うのを待たずに今すぐ自分から「もしもし、ねっぷちゃんだよ。どうしたの？」と挨拶する。";
 
 export const handleLiveUpgrade = (
   request: Request,
