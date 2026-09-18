@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   commentaryAppendMessage,
   inputAudioAppendMessage,
+  instructionsAppendMessage,
   parseLiveEvent,
   parseStreamEvent,
   serializeLiveMessage,
@@ -218,6 +219,7 @@ describe("parseLiveEvent", () => {
 describe("sessionStartMessage", () => {
   it("Twilio Media Streams と一致する μ-law 8kHz を指定する", () => {
     const msg = sessionStartMessage({
+      eventId: "start_1",
       model: "gpt-live-1",
       instructions: "ねっぷちゃんとして話す",
       voice: "marin",
@@ -233,6 +235,7 @@ describe("sessionStartMessage", () => {
 
   it("delegation は client を明示する", () => {
     const msg = sessionStartMessage({
+      eventId: "start_1",
       model: "gpt-live-1",
       instructions: "x",
       voice: "marin",
@@ -242,6 +245,7 @@ describe("sessionStartMessage", () => {
 
   it("session は未知フィールドを拒否するため既定のキーだけを持つ", () => {
     const msg = sessionStartMessage({
+      eventId: "start_1",
       model: "gpt-live-1",
       instructions: "x",
       voice: "marin",
@@ -263,18 +267,32 @@ describe("送信メッセージ", () => {
     });
   });
 
-  it("commentary.append は delegation_id を伴う", () => {
+  it("commentary.append は event_id と delegation_id を伴う", () => {
     expect(
-      commentaryAppendMessage("item_1", "ごめん、今は調べられないや"),
+      commentaryAppendMessage("c_1", "音威子府そばは黒い麺だよ", "item_1"),
     ).toEqual({
       type: "session.commentary.append",
+      event_id: "c_1",
       delegation_id: "item_1",
-      content: "ごめん、今は調べられないや",
+      content: "音威子府そばは黒い麺だよ",
     });
   });
 
-  it("session.close は type のみ", () => {
-    expect(sessionCloseMessage()).toEqual({ type: "session.close" });
+  it("delegation_id は省略すると null になる（必須で null 許容）", () => {
+    expect(instructionsAppendMessage("g_1", "今すぐ挨拶して")).toEqual({
+      type: "session.instructions.append",
+      event_id: "g_1",
+      delegation_id: null,
+      content: "今すぐ挨拶して",
+    });
+    expect(commentaryAppendMessage("c_1", "始めて").delegation_id).toBeNull();
+  });
+
+  it("session.close は event_id を伴う", () => {
+    expect(sessionCloseMessage("close_1")).toEqual({
+      type: "session.close",
+      event_id: "close_1",
+    });
   });
 
   it("JSON 文字列化して往復できる", () => {

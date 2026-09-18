@@ -99,7 +99,25 @@ const delegationCreatedSchema = z.looseObject({
 
 const sessionClosedSchema = z.looseObject({
   type: z.literal("session.closed"),
+  reason: z.string().optional(),
   usage: z.unknown().optional(),
+});
+
+const usageUpdatedSchema = z.looseObject({
+  type: z.literal("session.usage.updated"),
+  usage: z.unknown().optional(),
+  context_window: z.unknown().optional(),
+});
+
+const appendedSchema = z.looseObject({
+  type: z.enum([
+    "session.instructions.appended",
+    "session.thinking.appended",
+    "session.commentary.appended",
+  ]),
+  client_event_id: z.string().optional(),
+  start_ms: z.number().optional(),
+  end_ms: z.number().optional(),
 });
 
 const liveErrorSchema = z.looseObject({
@@ -113,6 +131,8 @@ const inboundLiveEventSchema = z.discriminatedUnion("type", [
   outputTranscriptDeltaSchema,
   delegationCreatedSchema,
   sessionClosedSchema,
+  usageUpdatedSchema,
+  appendedSchema,
   liveErrorSchema,
 ]);
 
@@ -136,10 +156,12 @@ type SessionStartOptions = {
   model: string;
   instructions: string;
   voice: string;
+  eventId: string;
 };
 
 type SessionStartMessage = {
   type: "session.start";
+  event_id: string;
   session: {
     model: string;
     instructions: string;
@@ -155,8 +177,10 @@ export const sessionStartMessage = ({
   model,
   instructions,
   voice,
+  eventId,
 }: SessionStartOptions): SessionStartMessage => ({
   type: "session.start",
+  event_id: eventId,
   session: {
     model,
     instructions,
@@ -180,31 +204,47 @@ export const inputAudioAppendMessage = (
   audio,
 });
 
-type CommentaryAppendMessage = {
-  type: "session.commentary.append";
-  delegation_id: string;
+// delegation_id は必須で null 許容。省略すると missing_required_parameter になる。
+type AppendMessage = {
+  type: "session.commentary.append" | "session.instructions.append";
+  event_id: string;
+  delegation_id: string | null;
   content: string;
 };
 
 export const commentaryAppendMessage = (
-  delegationId: string,
+  eventId: string,
   content: string,
-): CommentaryAppendMessage => ({
+  delegationId: string | null = null,
+): AppendMessage => ({
   type: "session.commentary.append",
+  event_id: eventId,
   delegation_id: delegationId,
   content,
 });
 
-type SessionCloseMessage = { type: "session.close" };
+export const instructionsAppendMessage = (
+  eventId: string,
+  content: string,
+  delegationId: string | null = null,
+): AppendMessage => ({
+  type: "session.instructions.append",
+  event_id: eventId,
+  delegation_id: delegationId,
+  content,
+});
 
-export const sessionCloseMessage = (): SessionCloseMessage => ({
+type SessionCloseMessage = { type: "session.close"; event_id: string };
+
+export const sessionCloseMessage = (eventId: string): SessionCloseMessage => ({
   type: "session.close",
+  event_id: eventId,
 });
 
 export const serializeLiveMessage = (
   msg:
     | SessionStartMessage
     | InputAudioAppendMessage
-    | CommentaryAppendMessage
+    | AppendMessage
     | SessionCloseMessage,
 ) => JSON.stringify(msg);
