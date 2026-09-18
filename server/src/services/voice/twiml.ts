@@ -51,16 +51,11 @@ const parameterTags = (parameters: Record<string, string> | undefined) =>
     )
     .join("");
 
-const connectTwiml = (
-  tag: string,
-  attrs: string,
-  params: string,
-  before = "",
-) => {
+const connectTwiml = (tag: string, attrs: string, params: string) => {
   const element = params
     ? `<${tag}${attrs}>${params}</${tag}>`
     : `<${tag}${attrs}/>`;
-  return `<?xml version="1.0" encoding="UTF-8"?><Response>${before}<Connect>${element}</Connect></Response>`;
+  return `<?xml version="1.0" encoding="UTF-8"?><Response><Connect>${element}</Connect></Response>`;
 };
 
 export const buildConversationRelayTwiml = ({
@@ -120,18 +115,11 @@ export const buildConversationRelayTwiml = ({
 
 type MediaStreamConfig = {
   wsUrl: string;
-  connectTone?: string;
   parameters?: Record<string, string>;
 };
 
 export const buildMediaStreamTwiml = ({
   wsUrl,
-  connectTone,
   parameters,
 }: MediaStreamConfig) =>
-  connectTwiml(
-    "Stream",
-    attr("url", wsUrl),
-    parameterTags(parameters),
-    connectTone ? `<Play${attr("digits", connectTone)}/>` : "",
-  );
+  connectTwiml("Stream", attr("url", wsUrl), parameterTags(parameters));

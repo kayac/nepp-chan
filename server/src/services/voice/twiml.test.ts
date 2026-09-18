@@ -174,17 +174,4 @@ describe("buildMediaStreamTwiml", () => {
         "</Stream></Connect></Response>",
     );
   });
-
-  it("connectTone を渡すと Connect の前に DTMF を鳴らす", () => {
-    const xml = buildMediaStreamTwiml({
-      wsUrl: "wss://x/twilio/voice/live",
-      connectTone: "1",
-    });
-    expect(xml).toContain('<Response><Play digits="1"/><Connect>');
-  });
-
-  it("connectTone 未指定なら Play を出さない", () => {
-    const xml = buildMediaStreamTwiml({ wsUrl: "wss://x/live" });
-    expect(xml).not.toContain("<Play");
-  });
 });
