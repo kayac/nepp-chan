@@ -46,7 +46,7 @@ describe("parseVoiceTuning", () => {
   it("speechTimeout の範囲外は既定値へフォールバックし invalidKeys に含める", () => {
     for (const value of ["599", "5001", "abc"]) {
       const { relay, invalidKeys } = parseVoiceTuning({ speechTimeout: value });
-      expect(relay.speechTimeout).toBe("600");
+      expect(relay.speechTimeout).toBe("1000");
       expect(invalidKeys).toContain("speechTimeout");
     }
   });
@@ -82,7 +82,7 @@ describe("parseVoiceTuning", () => {
       interruptSensitivity: "max",
     });
     expect(relay.interruptible).toBe("speech");
-    expect(relay.interruptSensitivity).toBeUndefined();
+    expect(relay.interruptSensitivity).toBe("medium");
     expect(invalidKeys).toEqual(
       expect.arrayContaining(["interruptible", "interruptSensitivity"]),
     );

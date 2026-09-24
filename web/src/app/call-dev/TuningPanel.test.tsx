@@ -277,10 +277,10 @@ describe("TuningPanel", () => {
     expect(onChange).toHaveBeenCalledWith({ deepgramSmartFormat: "false" });
   });
 
-  it("speechTimeout の auto を外すと 600 に戻す", () => {
+  it("speechTimeout の auto を外すと 1000 に戻す", () => {
     const { onChange } = setup({ speechTimeout: "auto" });
     fireEvent.click(screen.getByLabelText("auto"));
-    expect(onChange).toHaveBeenCalledWith({ speechTimeout: "600" });
+    expect(onChange).toHaveBeenCalledWith({ speechTimeout: "1000" });
   });
 
   it("ElevenLabs から Google への切り替えは voice を維持する", () => {

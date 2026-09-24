@@ -66,7 +66,7 @@ export const BRIDGE_CONFIG_DEFAULTS: BridgeConfig = {
   thinkingFillers: [...THINKING_FILLERS],
   backchannelFillers: [...BACKCHANNEL_FILLERS],
   aizuchiEnabled: true,
-  aizuchiCooldownMs: 2_000,
+  aizuchiCooldownMs: 3_500,
   aizuchiPhrases: [...AIZUCHI_PHRASES],
   holdAudioEnabled: true,
   holdAudioUrl: "https://amachamusic.chagasi.com/mp3/tsukinokobune.mp3",

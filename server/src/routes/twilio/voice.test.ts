@@ -205,7 +205,7 @@ describe("POST /twilio/voice/incoming", () => {
     });
     expect(res.status).toBe(200);
     const xml = await res.text();
-    expect(xml).toContain('speechTimeout="600"');
+    expect(xml).toContain('speechTimeout="1000"');
     expect(xml).toContain('voice="8EkOjt4xTPGMclNlh1pk-flash_v2_5"');
     expect(xml).not.toContain("<Say>");
   });
