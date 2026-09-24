@@ -5,6 +5,7 @@ const READINGS: Record<string, string> = {
   物満内: "ものまない",
   常盤: "ときわ",
   天北: "てんぽく",
+  木遊館: "もくゆうかん",
 };
 
 const READING_KEYS = Object.keys(READINGS).sort((a, b) => b.length - a.length);
