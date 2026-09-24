@@ -127,6 +127,38 @@ describe("CallBridge", () => {
     });
   });
 
+  it("TTS には読みに置き換えた文を送り、履歴には元の文を保存する", async () => {
+    const runTurn = vi.fn(async function* () {
+      yield "音威";
+      yield "子府は9:";
+      yield "00からだよ";
+    });
+    const persistTurn = vi.fn();
+    createVoiceConversationMock.mockResolvedValue({ runTurn, persistTurn });
+    const bridge = new CallBridge(
+      {} as DurableObjectState,
+      {} as CloudflareBindings,
+    );
+    const ws = { send: vi.fn() } as unknown as WebSocket;
+    const handlePrompt = Reflect.get(bridge, "handlePrompt") as (
+      ws: WebSocket,
+      text: string,
+    ) => Promise<void>;
+
+    await handlePrompt.call(bridge, ws, "役場は何時から");
+
+    const spoken = vi
+      .mocked(ws.send)
+      .mock.calls.map(([raw]) => JSON.parse(raw as string))
+      .filter((message) => message.type === "text")
+      .map((message) => message.token)
+      .join("");
+    expect(spoken).toContain("おといねっぷは9時からだよ");
+    expect(persistTurn).toHaveBeenCalledWith(
+      expect.objectContaining({ assistantText: "音威子府は9:00からだよ" }),
+    );
+  });
+
   it("先回りのトグルをターンに引き渡す", async () => {
     const runTurn = vi.fn(async function* () {
       yield "回答";

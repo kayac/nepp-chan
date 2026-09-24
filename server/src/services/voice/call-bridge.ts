@@ -20,6 +20,7 @@ import {
   textTokenMessage,
 } from "./relay-protocol";
 import { createSilenceCover } from "./silence-cover";
+import { createSpeechReader } from "./speech-reading";
 import { verifySetupToken } from "./twilio-token";
 
 // 有効な setup が届かない接続を無期限に張らせないための待受上限。
@@ -223,6 +224,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         ws.send(serializeRelayMessage(playMessage(source, options))),
     });
     cover.start();
+    const reader = createSpeechReader();
 
     try {
       for await (const delta of conversation.runTurn({
@@ -242,9 +244,12 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         assistantChars += delta.length;
         assistantText += delta;
         cover.onToken();
-        send(delta);
+        const spoken = reader.push(delta);
+        if (spoken) send(spoken);
       }
       if (!controller.signal.aborted) {
+        const rest = reader.flush();
+        if (rest) send(rest);
         send("", true);
         responseEndMs = Date.now() - t0;
         if (this.currentTurn === controller) this.currentTurn = null;
