@@ -399,6 +399,58 @@ describe("CallBridge", () => {
       expect(persistTurn).not.toHaveBeenCalled();
     });
 
+    it("応答中に次の発話が確定したら、次のターンを始める前に前の発話を履歴に残す", async () => {
+      const { runTurn, startedPromise } = hangingTurn();
+      const order: string[] = [];
+      const recordInterruptedTurn = vi.fn(({ userText }) => {
+        order.push(`record:${userText}`);
+      });
+      const nextRunTurn = vi.fn(async function* ({ text }: { text: string }) {
+        order.push(`run:${text}`);
+        yield "回答";
+      });
+      const { handlePrompt } = setupBridge({
+        runTurn: vi.fn((params) =>
+          params.text === "駅の" ? runTurn(params) : nextRunTurn(params),
+        ),
+        recordInterruptedTurn,
+        truncateLastReply: vi.fn(),
+        persistTurn: vi.fn(),
+      });
+
+      const first = handlePrompt("駅の");
+      await startedPromise;
+      await handlePrompt("時刻表が知りたい");
+      await first;
+
+      expect(order).toEqual(["record:駅の", "run:時刻表が知りたい"]);
+    });
+
+    it("遮られた直後に次の発話が確定しても、遮られたターンは一度だけ履歴に残す", async () => {
+      const { runTurn, startedPromise } = hangingTurn();
+      const recordInterruptedTurn = vi.fn();
+      const { handlePrompt, interrupt } = setupBridge({
+        runTurn: vi.fn((params) =>
+          params.text === "駅は" ? runTurn(params) : (async function* () {})(),
+        ),
+        recordInterruptedTurn,
+        truncateLastReply: vi.fn(),
+        persistTurn: vi.fn(),
+      });
+
+      const first = handlePrompt("駅は");
+      await startedPromise;
+      const interrupted = interrupt("駅は北");
+      const second = handlePrompt("北口のこと");
+      await Promise.all([interrupted, second, first]);
+
+      expect(recordInterruptedTurn).toHaveBeenCalledTimes(1);
+      expect(recordInterruptedTurn).toHaveBeenCalledWith({
+        userText: "駅は",
+        heardText: "駅は北",
+      });
+    });
+
     it("応答を送り終えた後の読み上げ中に遮られたら直前の返事を聞かせた分に切り詰める", async () => {
       const truncateLastReply = vi.fn();
       const { handlePrompt, interrupt } = setupBridge({

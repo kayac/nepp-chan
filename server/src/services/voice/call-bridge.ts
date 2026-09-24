@@ -35,13 +35,18 @@ export const handleRelayUpgrade = (
   return env.CALL_BRIDGE.get(id).fetch(request);
 };
 
+type VoiceConversation = Awaited<ReturnType<typeof createVoiceConversation>>;
+
 export class CallBridge extends DurableObject<CloudflareBindings> {
   private from = "";
   private callSid = "";
   private verified = false;
   private socket: WebSocket | null = null;
   private currentTurn: AbortController | null = null;
-  private heardOnInterrupt = new WeakMap<AbortController, string>();
+  private turnInputs = new WeakMap<
+    AbortController,
+    { conversation: VoiceConversation; userText: string }
+  >();
   private fillerIndex = 0;
   private lastAizuchiAt: number | null = null;
   private aizuchiIndex = 0;
@@ -147,13 +152,27 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
 
   private async handleInterrupt(heardText: string | undefined) {
     if (this.currentTurn) {
-      this.heardOnInterrupt.set(this.currentTurn, heardText ?? "");
-      this.currentTurn.abort();
+      await this.abortTurn(this.currentTurn, heardText ?? "");
       return;
     }
     if (heardText === undefined) return;
     const conversation = await this.conversationPromise;
     conversation?.truncateLastReply(heardText);
+  }
+
+  private async abortTurn(turn: AbortController | null, heardText: string) {
+    if (!turn) return;
+    turn.abort();
+    const input = this.turnInputs.get(turn);
+    if (!input) return;
+    this.turnInputs.delete(turn);
+    input.conversation.recordInterruptedTurn({
+      userText: input.userText,
+      heardText,
+    });
+    if (heardText) {
+      await this.persistTurn(input.conversation, input.userText, heardText);
+    }
   }
 
   private maybeSendAizuchi(ws: WebSocket, interimChars: number) {
@@ -187,9 +206,10 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
   }
 
   private async handlePrompt(ws: WebSocket, text: string) {
-    this.currentTurn?.abort();
+    const previousTurn = this.currentTurn;
     const controller = new AbortController();
     this.currentTurn = controller;
+    await this.abortTurn(previousTurn, "");
 
     const t0 = Date.now();
     this.conversationPromise ??= createVoiceConversation({
@@ -202,6 +222,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       if (this.currentTurn === controller) this.currentTurn = null;
       return;
     }
+    this.turnInputs.set(controller, { conversation, userText: text });
 
     let firstSendMs: number | null = null;
     let tokenCount = 0;
@@ -274,13 +295,6 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     } finally {
       cover.dispose();
       if (this.currentTurn === controller) this.currentTurn = null;
-      if (controller.signal.aborted) {
-        const heardText = this.heardOnInterrupt.get(controller) ?? "";
-        conversation.recordInterruptedTurn({ userText: text, heardText });
-        if (heardText) {
-          persistenceMs = await this.persistTurn(conversation, text, heardText);
-        }
-      }
       const timing: Record<string, number | boolean> = {
         turnEndMs: responseEndMs ?? Date.now() - t0,
         tokenCount,
@@ -293,7 +307,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
   }
 
   private async persistTurn(
-    conversation: Awaited<ReturnType<typeof createVoiceConversation>>,
+    conversation: VoiceConversation,
     userText: string,
     assistantText: string,
   ) {
