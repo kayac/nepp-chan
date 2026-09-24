@@ -14,7 +14,11 @@ const READING_RE = new RegExp(READING_KEYS.join("|"), "g");
 const PHONE_RE = /(?<!\d)(\d{2,5})-(\d{1,4})-(\d{3,4})(?!\d)/g;
 const TIME_RE = /(?<!\d)(\d{1,2})[:：](\d{2})(?!\d)/g;
 const RANGE_RE = /[~〜～]\s*(?=\d)/g;
-const PENDING_NOTATION_RE = /[\d:：\-~〜～\s]+$/;
+const TIME_RANGE_RE = /([時分])\s*[-－]\s*(?=\d)/g;
+const WEEKDAY_RANGE_RE =
+  /([月火水木金土日](?:曜日?)?)\s*[~〜～]\s*(?=[月火水木金土日])/g;
+const PENDING_NOTATION_RE =
+  /(?:[月火水木金土日](?:曜日?)?|[時分])?[\d:：\-－~〜～\s]+$/;
 
 export const toSpeechReading = (text: string) =>
   text
@@ -25,6 +29,8 @@ export const toSpeechReading = (text: string) =>
         `${Number(hour)}時${minute === "00" ? "" : `${Number(minute)}分`}`,
     )
     .replace(RANGE_RE, "から")
+    .replace(TIME_RANGE_RE, "$1から")
+    .replace(WEEKDAY_RANGE_RE, "$1から")
     .replace(READING_RE, (word) => READINGS[word]);
 
 const pendingReadingLength = (text: string) => {

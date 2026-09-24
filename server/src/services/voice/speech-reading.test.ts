@@ -20,8 +20,17 @@ describe("toSpeechReading", () => {
     expect(toSpeechReading("3〜4日")).toBe("3から4日");
   });
 
-  it("スラッシュ区切りの数字は補助率などの分数でありうるので変えない", () => {
-    expect(toSpeechReading("費用の1/2を補助")).toBe("費用の1/2を補助");
+  it("時刻の間のハイフンを「から」と読ませる", () => {
+    expect(toSpeechReading("9:00-17:00")).toBe("9時から17時");
+  });
+
+  it("曜日の間の波ダッシュを「から」と読ませる", () => {
+    expect(toSpeechReading("月〜金は開いてるよ")).toBe("月から金は開いてるよ");
+    expect(toSpeechReading("月曜〜金曜")).toBe("月曜から金曜");
+  });
+
+  it("語尾を伸ばす波ダッシュはそのまま残す", () => {
+    expect(toSpeechReading("また来てね〜")).toBe("また来てね〜");
   });
 
   it("電話番号の区切りを「の」と読ませる", () => {
@@ -52,6 +61,10 @@ describe("createSpeechReader", () => {
     expect(readAll(["9:", "00〜1", "7:00だよ"]).join("")).toBe(
       "9時から17時だよ",
     );
+  });
+
+  it("曜日の範囲がチャンクをまたいでも読みに置き換える", () => {
+    expect(readAll(["月曜〜", "金曜だよ"]).join("")).toBe("月曜から金曜だよ");
   });
 
   it("置き換えの途中になりえない部分はすぐに返す", () => {
