@@ -124,7 +124,8 @@ chatRoutes.openapi(chatRoute, async (c) => {
       | undefined
   )?.text;
   const intent =
-    fixedIntent ?? (await classifyIntent(userText ?? "", requestContext));
+    fixedIntent ??
+    (await classifyIntent({ text: userText ?? "" }, requestContext));
   const modelConfig = resolveModelTier({ intent, platform: "web", isAdmin });
   logger.info(`[Chat] intent: ${intent}`, { threadId });
 

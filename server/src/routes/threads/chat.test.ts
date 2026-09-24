@@ -218,7 +218,7 @@ describe("chatRoutes: POST /:threadId/chat", () => {
     );
 
     expect(mockClassifyIntent).toHaveBeenCalledWith(
-      "こんにちは",
+      { text: "こんにちは" },
       expect.anything(),
     );
   });
@@ -235,7 +235,10 @@ describe("chatRoutes: POST /:threadId/chat", () => {
       mockEnv,
     );
 
-    expect(mockClassifyIntent).toHaveBeenCalledWith("", expect.anything());
+    expect(mockClassifyIntent).toHaveBeenCalledWith(
+      { text: "" },
+      expect.anything(),
+    );
   });
 
   it("ストリーム完了時に usage を platform=web で記録する", async () => {

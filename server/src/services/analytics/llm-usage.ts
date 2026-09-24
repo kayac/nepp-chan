@@ -112,6 +112,15 @@ const contextAttributes = (requestContext: RequestContext | undefined) => ({
   turnIndex: requestContext?.get("usageTurnIndex") as number | undefined,
 });
 
+// cloudflare:workers は workerd 専用モジュール。top-level import すると
+// このファイルを import 経由で読む Node 実行の eval スクリプトが落ちる
+export const runInBackground = (task: Promise<unknown> | undefined) => {
+  if (!task) return;
+  void import("cloudflare:workers")
+    .then(({ waitUntil }) => waitUntil(task))
+    .catch(() => {});
+};
+
 /** requestContext から db・チャネル・スレッドを取り出して記録する（db 不在なら何もしない） */
 export const recordUsageFromContext = (
   requestContext: RequestContext | undefined,
@@ -184,11 +193,7 @@ export const usageRecordingOptions =
           durationMs: Date.now() - startedAt,
           ...contextAttributes(requestContext),
         });
-        // cloudflare:workers は workerd 専用モジュール。top-level import すると
-        // このファイルを import 経由で読む Node 実行の eval スクリプトが落ちる
-        void import("cloudflare:workers")
-          .then(({ waitUntil }) => waitUntil(recording))
-          .catch(() => {});
+        runInBackground(recording);
         return recording;
       },
     };

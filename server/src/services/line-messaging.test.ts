@@ -242,6 +242,20 @@ describe("generateReply", () => {
     expect(arg.memory).toEqual({ resource: "res-1", thread: "thr-1" });
   });
 
+  it("classifyIntent にユーザー発話を渡す", async () => {
+    agentHolder.generate.mockResolvedValueOnce({
+      steps: [{ text: "x" }],
+      text: "x",
+    });
+
+    await generateReply(baseParams);
+
+    expect(classifyIntent).toHaveBeenCalledWith(
+      { text: baseParams.userMessage },
+      expect.anything(),
+    );
+  });
+
   it("intent 結果は resolveModelTier に流される", async () => {
     vi.mocked(classifyIntent).mockResolvedValueOnce("thinking");
     agentHolder.generate.mockResolvedValueOnce({
