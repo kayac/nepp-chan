@@ -153,7 +153,7 @@ describe("POST /twilio/voice/incoming", () => {
     expect(xml).toContain('ttsProvider="ElevenLabs"');
     expect(xml).toContain('voice="8EkOjt4xTPGMclNlh1pk-flash_v2_5"');
     expect(xml).toContain("もしもし、ねっぷちゃんだよ。");
-    expect(xml).toContain('hints="音威子府,おといねっぷ"');
+    expect(xml).toContain('hints="音威子府,');
   });
 
   it("リクエストの host から wss の relay URL を組み立てる", async () => {

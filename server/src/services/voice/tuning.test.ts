@@ -110,7 +110,7 @@ describe("parseVoiceTuning", () => {
     expect(relay.welcomeGreeting).toBe(
       "もしもし、ねっぷちゃんだよ。なんでも聞いてね。",
     );
-    expect(relay.hints).toBe("音威子府,おといねっぷ");
+    expect(relay.hints).toBe(VOICE_TUNING_DEFAULTS.hints);
     expect(invalidKeys).toEqual(
       expect.arrayContaining(["welcomeGreeting", "hints"]),
     );

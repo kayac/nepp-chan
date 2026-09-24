@@ -92,7 +92,8 @@ const RELAY_TUNING_DEFAULTS = {
   transcriptionProvider: "Google",
   speechModel: "long",
   speechTimeout: "1000",
-  hints: "音威子府,おといねっぷ",
+  hints:
+    "音威子府,おといねっぷ,ねっぷちゃん,咲来,筬島,常盤,物満内,上音威子府,天塩川,天塩川温泉,音威富士,天北線,エコミュージアムおさしま,アトリエ3モア,砂澤ビッキ,美術工芸高校,道の駅おといねっぷ,咲来そば,音威子府そば,中川町,美深町,松浦武四郎,地域複合施設ときわ",
   interruptible: "speech",
   interruptSensitivity: "medium",
   reportInputDuringAgentSpeech: "any",
