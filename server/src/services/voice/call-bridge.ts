@@ -43,6 +43,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
   private fillerIndex = 0;
   private lastAizuchiAt: number | null = null;
   private aizuchiIndex = 0;
+  private charsAtLastAizuchi = 0;
   // 直前の中間認識からの経過時間の観測用（endpointing がどれだけ確定を保留するか）。
   private lastInterimAt: number | null = null;
   private findingsSlot: VoiceFindingsSlot = createVoiceFindingsSlot();
@@ -116,7 +117,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       this.cancelPendingEnd();
       if (msg.last === false) {
         this.lastInterimAt = Date.now();
-        this.maybeSendAizuchi(ws);
+        this.maybeSendAizuchi(ws, msg.voicePrompt.length);
         return;
       }
       logger.info("[Voice] final prompt", {
@@ -126,6 +127,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
           : -1,
       });
       this.lastInterimAt = null;
+      this.charsAtLastAizuchi = 0;
       await this.handlePrompt(ws, msg.voicePrompt);
     } else if (msg.type === "interrupt") {
       logger.info("[Voice] interrupt", {
@@ -141,9 +143,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     }
   }
 
-  // 中間認識を受けるたびに、クールダウン明けなら即座に相槌を挟む。
-  // 区切りを待たず、話している最中も相槌を続けて構わないという前提に立った実装。
-  private maybeSendAizuchi(ws: WebSocket) {
+  private maybeSendAizuchi(ws: WebSocket, interimChars: number) {
     if (!this.config.aizuchiEnabled) return;
     const now = Date.now();
     if (
@@ -152,11 +152,13 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         lastAizuchiAt: this.lastAizuchiAt,
         now,
         cooldownMs: this.config.aizuchiCooldownMs,
+        charsSinceLastAizuchi: interimChars - this.charsAtLastAizuchi,
       })
     ) {
       return;
     }
     this.lastAizuchiAt = now;
+    this.charsAtLastAizuchi = interimChars;
     const phrase = pickAizuchi(this.aizuchiIndex++, this.config.aizuchiPhrases);
     logger.info("[Voice] aizuchi sent", { phrase });
     ws.send(

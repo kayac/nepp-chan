@@ -21,6 +21,7 @@ describe("shouldSendAizuchi", () => {
         lastAizuchiAt: null,
         now: 1000,
         cooldownMs: 2000,
+        charsSinceLastAizuchi: 8,
       }),
     ).toBe(false);
   });
@@ -32,6 +33,7 @@ describe("shouldSendAizuchi", () => {
         lastAizuchiAt: 1000,
         now: 2000,
         cooldownMs: 2000,
+        charsSinceLastAizuchi: 8,
       }),
     ).toBe(false);
   });
@@ -43,6 +45,7 @@ describe("shouldSendAizuchi", () => {
         lastAizuchiAt: 1000,
         now: 3000,
         cooldownMs: 2000,
+        charsSinceLastAizuchi: 8,
       }),
     ).toBe(true);
   });
@@ -54,7 +57,20 @@ describe("shouldSendAizuchi", () => {
         lastAizuchiAt: null,
         now: 1000,
         cooldownMs: 2000,
+        charsSinceLastAizuchi: 8,
       }),
     ).toBe(true);
+  });
+
+  it("前回の相槌から聞き取れた文字数が 8 文字未満なら送らない", () => {
+    expect(
+      shouldSendAizuchi({
+        hasActiveTurn: false,
+        lastAizuchiAt: null,
+        now: 1000,
+        cooldownMs: 2000,
+        charsSinceLastAizuchi: 7,
+      }),
+    ).toBe(false);
   });
 });
