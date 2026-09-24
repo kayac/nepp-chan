@@ -138,6 +138,7 @@ describe("serializeBridgeConfig", () => {
       backchannelFillers: ["ふむふむ"],
       aizuchiEnabled: true,
       aizuchiCooldownMs: 4500,
+      aizuchiPauseMs: 700,
       aizuchiPhrases: ["はい", "ええ"],
       holdAudioEnabled: false,
       holdAudioUrl: "https://example.com/hold.mp3",

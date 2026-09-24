@@ -556,6 +556,15 @@ export const TuningPanel = ({
           step={500}
           onChange={(value) => onChange({ aizuchiCooldownMs: value })}
         />
+        <NumberRow
+          label="あいづちの間(ms)"
+          hint="中間認識がこの時間途切れたら打つ。speechTimeout より短くする"
+          value={v("aizuchiPauseMs")}
+          min={100}
+          max={3000}
+          step={100}
+          onChange={(value) => onChange({ aizuchiPauseMs: value })}
+        />
         <TextRow
           label="あいづち文言"
           hint="カンマ区切りで順に使う"

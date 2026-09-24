@@ -51,6 +51,7 @@ export type BridgeConfig = {
   backchannelFillers: string[];
   aizuchiEnabled: boolean;
   aizuchiCooldownMs: number;
+  aizuchiPauseMs: number;
   aizuchiPhrases: string[];
   holdAudioEnabled: boolean;
   holdAudioUrl: string;
@@ -67,6 +68,7 @@ export const BRIDGE_CONFIG_DEFAULTS: BridgeConfig = {
   backchannelFillers: [...BACKCHANNEL_FILLERS],
   aizuchiEnabled: true,
   aizuchiCooldownMs: 3_500,
+  aizuchiPauseMs: 500,
   aizuchiPhrases: [...AIZUCHI_PHRASES],
   holdAudioEnabled: true,
   holdAudioUrl: "https://amachamusic.chagasi.com/mp3/tsukinokobune.mp3",
@@ -85,6 +87,7 @@ export const bridgeFieldSchemas = {
   backchannelFillers: phraseListParam,
   aizuchiEnabled: boolParam,
   aizuchiCooldownMs: z.coerce.number().int().min(500).max(30_000),
+  aizuchiPauseMs: z.coerce.number().int().min(100).max(3_000),
   aizuchiPhrases: phraseListParam,
   holdAudioEnabled: boolParam,
   holdAudioUrl: z
@@ -111,6 +114,7 @@ export const serializeBridgeConfig = (config: BridgeConfig) => ({
   backchannelFillers: config.backchannelFillers.join(","),
   aizuchiEnabled: String(config.aizuchiEnabled),
   aizuchiCooldownMs: String(config.aizuchiCooldownMs),
+  aizuchiPauseMs: String(config.aizuchiPauseMs),
   aizuchiPhrases: config.aizuchiPhrases.join(","),
   holdAudioEnabled: String(config.holdAudioEnabled),
   holdAudioUrl: config.holdAudioUrl,

@@ -485,4 +485,56 @@ describe("CallBridge", () => {
       expect(truncateLastReply).not.toHaveBeenCalled();
     });
   });
+
+  describe("相槌", () => {
+    const setupAizuchi = () => {
+      vi.useFakeTimers();
+      const bridge = new CallBridge(
+        {} as DurableObjectState,
+        {} as CloudflareBindings,
+      );
+      Reflect.set(bridge, "verified", true);
+      Reflect.set(bridge, "handlePrompt", vi.fn());
+      const ws = { send: vi.fn() } as unknown as WebSocket;
+      const onMessage = Reflect.get(bridge, "onMessage") as (
+        ws: WebSocket,
+        event: MessageEvent,
+      ) => Promise<void>;
+      const prompt = (voicePrompt: string, last: boolean) =>
+        onMessage.call(bridge, ws, {
+          data: JSON.stringify({ type: "prompt", voicePrompt, last }),
+        } as MessageEvent);
+      const aizuchiCount = () =>
+        vi
+          .mocked(ws.send)
+          .mock.calls.filter(([raw]) =>
+            ["うん", "うんうん"].includes(JSON.parse(raw as string).token),
+          ).length;
+      return { prompt, aizuchiCount };
+    };
+
+    it("話している最中は打たず、中間認識が途切れて間ができたら打つ", async () => {
+      const { prompt, aizuchiCount } = setupAizuchi();
+
+      await prompt("音威子府の駅の近くで", false);
+      await vi.advanceTimersByTimeAsync(300);
+      await prompt("音威子府の駅の近くでご飯を", false);
+      await vi.advanceTimersByTimeAsync(300);
+      expect(aizuchiCount()).toBe(0);
+
+      await vi.advanceTimersByTimeAsync(200);
+      expect(aizuchiCount()).toBe(1);
+    });
+
+    it("間ができる前に発話が確定したら打たない", async () => {
+      const { prompt, aizuchiCount } = setupAizuchi();
+
+      await prompt("音威子府の駅の近くで", false);
+      await vi.advanceTimersByTimeAsync(300);
+      await prompt("音威子府の駅の近くで", true);
+      await vi.advanceTimersByTimeAsync(1_000);
+
+      expect(aizuchiCount()).toBe(0);
+    });
+  });
 });

@@ -56,6 +56,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
   private findingsSlot: VoiceFindingsSlot = createVoiceFindingsSlot();
   private config: BridgeConfig = BRIDGE_CONFIG_DEFAULTS;
   private pendingEndTimer: ReturnType<typeof setTimeout> | null = null;
+  private aizuchiTimer: ReturnType<typeof setTimeout> | null = null;
   private conversationPromise: ReturnType<
     typeof createVoiceConversation
   > | null = null;
@@ -69,6 +70,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       this.handleMessageEvent(server, event);
     });
     server.addEventListener("close", () => {
+      this.cancelAizuchi();
       this.currentTurn?.abort();
       this.cancelPendingEnd();
     });
@@ -124,7 +126,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       this.cancelPendingEnd();
       if (msg.last === false) {
         this.lastInterimAt = Date.now();
-        this.maybeSendAizuchi(ws, msg.voicePrompt.length);
+        this.scheduleAizuchi(ws, msg.voicePrompt.length);
         return;
       }
       logger.info("[Voice] final prompt", {
@@ -134,6 +136,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
           : -1,
       });
       this.lastInterimAt = null;
+      this.cancelAizuchi();
       this.charsAtLastAizuchi = 0;
       await this.handlePrompt(ws, msg.voicePrompt);
     } else if (msg.type === "interrupt") {
@@ -173,6 +176,20 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     if (heardText) {
       await this.persistTurn(input.conversation, input.userText, heardText);
     }
+  }
+
+  private scheduleAizuchi(ws: WebSocket, interimChars: number) {
+    this.cancelAizuchi();
+    this.aizuchiTimer = setTimeout(() => {
+      this.aizuchiTimer = null;
+      this.maybeSendAizuchi(ws, interimChars);
+    }, this.config.aizuchiPauseMs);
+  }
+
+  private cancelAizuchi() {
+    if (!this.aizuchiTimer) return;
+    clearTimeout(this.aizuchiTimer);
+    this.aizuchiTimer = null;
   }
 
   private maybeSendAizuchi(ws: WebSocket, interimChars: number) {

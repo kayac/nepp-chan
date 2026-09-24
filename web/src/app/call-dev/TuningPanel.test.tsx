@@ -47,6 +47,7 @@ const baseValues = {
   backchannelFillers: "うんうん",
   aizuchiEnabled: "true",
   aizuchiCooldownMs: "2000",
+  aizuchiPauseMs: "500",
   aizuchiPhrases: "うん,うんうん",
   holdAudioEnabled: "true",
   holdAudioUrl: "https://example.com/hold.mp3",
@@ -190,6 +191,7 @@ describe("TuningPanel", () => {
     ["保留音 URL", "holdAudioUrl", "https://example.com/bgm.mp3"],
     ["speechTimeout(ms)", "speechTimeout", "800"],
     ["あいづち最短間隔(ms)", "aizuchiCooldownMs", "4000"],
+    ["あいづちの間(ms)", "aizuchiPauseMs", "700"],
     ["フィラー遅延(ms)", "fillerDelayMs", "500"],
     ["保留音遅延(ms)", "holdDelayMs", "1000"],
   ])("%s の入力は %s を onChange する", (label, key, value) => {
