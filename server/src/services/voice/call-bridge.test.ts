@@ -271,4 +271,134 @@ describe("CallBridge", () => {
     expect(timing.turnEndMs).toBeLessThan(500);
     expect(timing.persistenceMs).toBeGreaterThanOrEqual(500);
   });
+
+  describe("割り込み", () => {
+    const setupBridge = (conversation: Record<string, unknown>) => {
+      createVoiceConversationMock.mockResolvedValue(conversation);
+      const bridge = new CallBridge(
+        {} as DurableObjectState,
+        {} as CloudflareBindings,
+      );
+      Reflect.set(bridge, "verified", true);
+      const ws = { send: vi.fn() } as unknown as WebSocket;
+      const handlePrompt = (
+        Reflect.get(bridge, "handlePrompt") as (
+          ws: WebSocket,
+          text: string,
+        ) => Promise<void>
+      ).bind(bridge, ws);
+      const onMessage = Reflect.get(bridge, "onMessage") as (
+        ws: WebSocket,
+        event: MessageEvent,
+      ) => Promise<void>;
+      const interrupt = (utteranceUntilInterrupt?: string) =>
+        onMessage.call(bridge, ws, {
+          data: JSON.stringify({ type: "interrupt", utteranceUntilInterrupt }),
+        } as MessageEvent);
+      return { handlePrompt, interrupt };
+    };
+
+    const hangingTurn = () => {
+      let started: () => void = () => {};
+      const startedPromise = new Promise<void>((resolve) => {
+        started = resolve;
+      });
+      const runTurn = vi.fn(async function* ({
+        signal,
+      }: {
+        signal: AbortSignal;
+      }) {
+        yield "駅は北口";
+        started();
+        await new Promise((resolve) =>
+          signal.addEventListener("abort", resolve, { once: true }),
+        );
+      });
+      return { runTurn, startedPromise };
+    };
+
+    it("応答中に遮られたら聞かせた分を履歴に残し D1 にも保存する", async () => {
+      const { runTurn, startedPromise } = hangingTurn();
+      const recordInterruptedTurn = vi.fn();
+      const persistTurn = vi.fn();
+      const { handlePrompt, interrupt } = setupBridge({
+        runTurn,
+        recordInterruptedTurn,
+        truncateLastReply: vi.fn(),
+        persistTurn,
+      });
+
+      const prompt = handlePrompt("駅はどこ");
+      await startedPromise;
+      await interrupt("駅は");
+      await prompt;
+
+      expect(recordInterruptedTurn).toHaveBeenCalledWith({
+        userText: "駅はどこ",
+        heardText: "駅は",
+      });
+      expect(persistTurn).toHaveBeenCalledWith({
+        turnIndex: 0,
+        userText: "駅はどこ",
+        assistantText: "駅は",
+      });
+    });
+
+    it("何も聞かせないうちに遮られたら履歴には残すが D1 には保存しない", async () => {
+      const { runTurn, startedPromise } = hangingTurn();
+      const recordInterruptedTurn = vi.fn();
+      const persistTurn = vi.fn();
+      const { handlePrompt, interrupt } = setupBridge({
+        runTurn,
+        recordInterruptedTurn,
+        truncateLastReply: vi.fn(),
+        persistTurn,
+      });
+
+      const prompt = handlePrompt("駅はどこ");
+      await startedPromise;
+      await interrupt("");
+      await prompt;
+
+      expect(recordInterruptedTurn).toHaveBeenCalledWith({
+        userText: "駅はどこ",
+        heardText: "",
+      });
+      expect(persistTurn).not.toHaveBeenCalled();
+    });
+
+    it("応答を送り終えた後の読み上げ中に遮られたら直前の返事を聞かせた分に切り詰める", async () => {
+      const truncateLastReply = vi.fn();
+      const { handlePrompt, interrupt } = setupBridge({
+        runTurn: vi.fn(async function* () {
+          yield "駅は北口だよ。バスもあるよ。";
+        }),
+        recordInterruptedTurn: vi.fn(),
+        truncateLastReply,
+        persistTurn: vi.fn(),
+      });
+
+      await handlePrompt("駅はどこ");
+      await interrupt("駅は北口だよ。");
+
+      expect(truncateLastReply).toHaveBeenCalledWith("駅は北口だよ。");
+    });
+
+    it("聞かせた分が通知されない割り込みでは直前の返事を変えない", async () => {
+      const truncateLastReply = vi.fn();
+      const { handlePrompt, interrupt } = setupBridge({
+        runTurn: vi.fn(async function* () {
+          yield "駅は北口だよ。";
+        }),
+        recordInterruptedTurn: vi.fn(),
+        truncateLastReply,
+        persistTurn: vi.fn(),
+      });
+
+      await handlePrompt("駅はどこ");
+      await interrupt();
+
+      expect(truncateLastReply).not.toHaveBeenCalled();
+    });
+  });
 });
