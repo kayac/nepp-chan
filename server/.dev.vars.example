@@ -29,3 +29,6 @@ TWILIO_AUTH_TOKEN=your-twilio-auth-token
 
 # relay WS 入場用の短命トークン署名鍵（HMAC-SHA256）
 CALL_TOKEN_SECRET=local-dev-call-token-secret-change-me
+
+# TypeSafe（jev）
+TYPESAFE_API_KEY=your-typesafe-api-key

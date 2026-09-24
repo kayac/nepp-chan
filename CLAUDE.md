@@ -117,6 +117,7 @@ web / lp / widget の接続先は `PUBLIC_ENV`（widget は `VITE_ENV`）で選�
 | `TWILIO_TWIML_APP_SID`         | softphone の発信先 TwiML App          |
 | `TWILIO_AUTH_TOKEN`            | webhook 署名検証（X-Twilio-Signature）|
 | `CALL_TOKEN_SECRET`            | relay WS 短命トークン署名（HMAC）     |
+| `TYPESAFE_API_KEY`             | intent 分類（jev）。未設定なら luna にフォールバック |
 
 ### 本番環境
 
@@ -126,6 +127,7 @@ web / lp / widget の接続先は `PUBLIC_ENV`（widget は `VITE_ENV`）で選�
 # Workers シークレット
 wrangler secret put OPENAI_API_KEY
 wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
+wrangler secret put TYPESAFE_API_KEY
 
 # Pages 環境変数は Cloudflare Dashboard で設定
 ```

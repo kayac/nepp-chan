@@ -7,6 +7,7 @@ const PRICING = [
   { match: "luna", inputPer1M: 0.2, cachedInputPer1M: 0.02, outputPer1M: 1.2 },
   { match: "terra", inputPer1M: 2.0, cachedInputPer1M: 0.2, outputPer1M: 12.0 },
   { match: "sol", inputPer1M: 5.0, cachedInputPer1M: 0.5, outputPer1M: 30.0 },
+  { match: "jev", inputPer1M: 0.042, cachedInputPer1M: 0.042, outputPer1M: 0 },
   {
     match: "4.1-nano",
     inputPer1M: 0.1,
