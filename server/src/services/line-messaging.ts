@@ -6,6 +6,7 @@ import { logger } from "~/lib/logger";
 import { splitMessagesForLine } from "~/lib/split-message";
 import { getStorage } from "~/lib/storage";
 import { stripMarkdown } from "~/lib/strip-markdown";
+import { latestAssistantText } from "~/lib/thread-history";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { nextTurnIndex, recordLlmUsage } from "~/services/analytics/llm-usage";
@@ -24,9 +25,13 @@ export const generateReply = async (params: {
   threadId: string;
   env: CloudflareBindings;
 }) => {
-  const [storage, turnIndex] = await Promise.all([
-    getStorage(params.env.DB),
+  const storagePromise = getStorage(params.env.DB);
+  const [storage, turnIndex, previousAssistant] = await Promise.all([
+    storagePromise,
     nextTurnIndex(params.env.DB, params.threadId),
+    params.userMessage
+      ? storagePromise.then((s) => latestAssistantText(s, params.threadId))
+      : undefined,
   ]);
   const startedAt = Date.now();
 
@@ -54,7 +59,10 @@ export const generateReply = async (params: {
   // Intent 分類でモデルティアを決定（非テキストメッセージは casual 直行）
   const [intent] = await Promise.all([
     params.userMessage
-      ? classifyIntent({ text: params.userMessage }, requestContext)
+      ? classifyIntent(
+          { text: params.userMessage, previousAssistant },
+          requestContext,
+        )
       : ("casual" as const),
     injectBroadcastsToThread({
       d1: params.env.DB,

@@ -35,6 +35,10 @@ vi.mock("~/lib/classify-intent", () => ({
   classifyIntent: vi.fn(async () => "casual"),
 }));
 
+vi.mock("~/lib/thread-history", () => ({
+  latestAssistantText: vi.fn(async () => "直前の返答"),
+}));
+
 vi.mock("~/lib/llm-models", async (importOriginal) => ({
   ...(await importOriginal<typeof import("~/lib/llm-models")>()),
   resolveModelTier: vi.fn(() => ({
@@ -242,7 +246,7 @@ describe("generateReply", () => {
     expect(arg.memory).toEqual({ resource: "res-1", thread: "thr-1" });
   });
 
-  it("classifyIntent にユーザー発話を渡す", async () => {
+  it("classifyIntent にユーザー発話と直前の assistant 発話を渡す", async () => {
     agentHolder.generate.mockResolvedValueOnce({
       steps: [{ text: "x" }],
       text: "x",
@@ -251,7 +255,7 @@ describe("generateReply", () => {
     await generateReply(baseParams);
 
     expect(classifyIntent).toHaveBeenCalledWith(
-      { text: baseParams.userMessage },
+      { text: baseParams.userMessage, previousAssistant: "直前の返答" },
       expect.anything(),
     );
   });

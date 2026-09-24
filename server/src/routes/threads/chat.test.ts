@@ -41,6 +41,14 @@ vi.mock("~/lib/storage", () => ({
   getStorage: vi.fn().mockResolvedValue({}),
 }));
 
+const { mockLatestAssistantText } = vi.hoisted(() => ({
+  mockLatestAssistantText: vi.fn(async () => "直前の返答"),
+}));
+
+vi.mock("~/lib/thread-history", () => ({
+  latestAssistantText: mockLatestAssistantText,
+}));
+
 const { mockCreateNeppChanAgent } = vi.hoisted(() => ({
   mockCreateNeppChanAgent: vi.fn(),
 }));
@@ -205,6 +213,7 @@ describe("chatRoutes: POST /:threadId/chat", () => {
     );
 
     expect(mockClassifyIntent).not.toHaveBeenCalled();
+    expect(mockLatestAssistantText).not.toHaveBeenCalled();
   });
 
   it("intent 未指定は classifyIntent を呼ぶ", async () => {
@@ -218,7 +227,7 @@ describe("chatRoutes: POST /:threadId/chat", () => {
     );
 
     expect(mockClassifyIntent).toHaveBeenCalledWith(
-      { text: "こんにちは" },
+      { text: "こんにちは", previousAssistant: "直前の返答" },
       expect.anything(),
     );
   });
@@ -236,7 +245,7 @@ describe("chatRoutes: POST /:threadId/chat", () => {
     );
 
     expect(mockClassifyIntent).toHaveBeenCalledWith(
-      { text: "" },
+      { text: "", previousAssistant: "直前の返答" },
       expect.anything(),
     );
   });

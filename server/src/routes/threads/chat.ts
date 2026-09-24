@@ -7,6 +7,7 @@ import { primaryModelId, resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import type { PrincipalVariables } from "~/lib/principal";
 import { getStorage } from "~/lib/storage";
+import { latestAssistantText } from "~/lib/thread-history";
 import { normalizeSiteHost } from "~/lib/widget-site";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
@@ -91,12 +92,16 @@ chatRoutes.openapi(chatRoute, async (c) => {
   // line:/admin: と同じ、resourceId prefix でチャネルを区別する規約）
   const platform = thread.resourceId.startsWith("widget-") ? "widget" : "web";
   const isWidgetGreeting = platform === "widget" && isGreeting === true;
-  const [site, storage, turnIndex] = await Promise.all([
+  const storagePromise = getStorage(c.env.DB);
+  const [site, storage, turnIndex, previousAssistant] = await Promise.all([
     platform === "widget" && siteHost
       ? widgetSiteRepository.findByHost(c.env.DB, siteHost)
       : null,
-    getStorage(c.env.DB),
+    storagePromise,
     nextTurnIndex(c.env.DB, threadId),
+    fixedIntent
+      ? undefined
+      : storagePromise.then((s) => latestAssistantText(s, threadId)),
   ]);
   const verifiedCurrentPageUrl =
     site &&
@@ -125,7 +130,10 @@ chatRoutes.openapi(chatRoute, async (c) => {
   )?.text;
   const intent =
     fixedIntent ??
-    (await classifyIntent({ text: userText ?? "" }, requestContext));
+    (await classifyIntent(
+      { text: userText ?? "", previousAssistant },
+      requestContext,
+    ));
   const modelConfig = resolveModelTier({ intent, platform: "web", isAdmin });
   logger.info(`[Chat] intent: ${intent}`, { threadId });
 
