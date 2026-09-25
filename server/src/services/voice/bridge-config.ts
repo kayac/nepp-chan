@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { AIZUCHI_PHRASES } from "./aizuchi";
 import { BACKCHANNEL_FILLERS, THINKING_FILLERS } from "./filler";
+import { HOLD_PHRASES } from "./silence-cover";
 
 export const boolParam = z
   .enum(["true", "false"])
@@ -49,12 +49,11 @@ export type BridgeConfig = {
   fillerDelayMs: number;
   thinkingFillers: string[];
   backchannelFillers: string[];
-  aizuchiEnabled: boolean;
-  aizuchiCooldownMs: number;
-  aizuchiPhrases: string[];
   holdAudioEnabled: boolean;
   holdAudioUrl: string;
   holdDelayMs: number;
+  holdPhrases: string[];
+  holdPhraseIntervalMs: number;
   endCallEnabled: boolean;
   parentRoutingEnabled: boolean;
   prefetchEnabled: boolean;
@@ -65,12 +64,11 @@ export const BRIDGE_CONFIG_DEFAULTS: BridgeConfig = {
   fillerDelayMs: 0,
   thinkingFillers: [...THINKING_FILLERS],
   backchannelFillers: [...BACKCHANNEL_FILLERS],
-  aizuchiEnabled: true,
-  aizuchiCooldownMs: 2_000,
-  aizuchiPhrases: [...AIZUCHI_PHRASES],
-  holdAudioEnabled: true,
+  holdAudioEnabled: false,
   holdAudioUrl: "https://amachamusic.chagasi.com/mp3/tsukinokobune.mp3",
   holdDelayMs: 0,
+  holdPhrases: [...HOLD_PHRASES],
+  holdPhraseIntervalMs: 10_000,
   endCallEnabled: true,
   parentRoutingEnabled: true,
   prefetchEnabled: true,
@@ -83,15 +81,14 @@ export const bridgeFieldSchemas = {
   fillerDelayMs: delayParam,
   thinkingFillers: phraseListParam,
   backchannelFillers: phraseListParam,
-  aizuchiEnabled: boolParam,
-  aizuchiCooldownMs: z.coerce.number().int().min(500).max(30_000),
-  aizuchiPhrases: phraseListParam,
   holdAudioEnabled: boolParam,
   holdAudioUrl: z
     .string()
     .max(300)
     .refine((v) => URL.canParse(v) && new URL(v).protocol === "https:"),
   holdDelayMs: delayParam,
+  holdPhrases: phraseListParam,
+  holdPhraseIntervalMs: z.coerce.number().int().min(3_000).max(30_000),
   endCallEnabled: boolParam,
   parentRoutingEnabled: boolParam,
   prefetchEnabled: boolParam,
@@ -109,12 +106,11 @@ export const serializeBridgeConfig = (config: BridgeConfig) => ({
   fillerDelayMs: String(config.fillerDelayMs),
   thinkingFillers: config.thinkingFillers.join(","),
   backchannelFillers: config.backchannelFillers.join(","),
-  aizuchiEnabled: String(config.aizuchiEnabled),
-  aizuchiCooldownMs: String(config.aizuchiCooldownMs),
-  aizuchiPhrases: config.aizuchiPhrases.join(","),
   holdAudioEnabled: String(config.holdAudioEnabled),
   holdAudioUrl: config.holdAudioUrl,
   holdDelayMs: String(config.holdDelayMs),
+  holdPhrases: config.holdPhrases.join(","),
+  holdPhraseIntervalMs: String(config.holdPhraseIntervalMs),
   endCallEnabled: String(config.endCallEnabled),
   parentRoutingEnabled: String(config.parentRoutingEnabled),
   prefetchEnabled: String(config.prefetchEnabled),

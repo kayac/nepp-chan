@@ -1,6 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
 import { logger } from "~/lib/logger";
-import { pickAizuchi, shouldSendAizuchi } from "./aizuchi";
 import {
   BRIDGE_CONFIG_DEFAULTS,
   type BridgeConfig,
@@ -20,6 +19,7 @@ import {
   textTokenMessage,
 } from "./relay-protocol";
 import { createSilenceCover } from "./silence-cover";
+import { createSpeechReader } from "./speech-reading";
 import { verifySetupToken } from "./twilio-token";
 
 // 有効な setup が届かない接続を無期限に張らせないための待受上限。
@@ -34,15 +34,19 @@ export const handleRelayUpgrade = (
   return env.CALL_BRIDGE.get(id).fetch(request);
 };
 
+type VoiceConversation = Awaited<ReturnType<typeof createVoiceConversation>>;
+
 export class CallBridge extends DurableObject<CloudflareBindings> {
   private from = "";
   private callSid = "";
   private verified = false;
   private socket: WebSocket | null = null;
   private currentTurn: AbortController | null = null;
+  private turnInputs = new WeakMap<
+    AbortController,
+    { conversation: VoiceConversation; userText: string }
+  >();
   private fillerIndex = 0;
-  private lastAizuchiAt: number | null = null;
-  private aizuchiIndex = 0;
   // 直前の中間認識からの経過時間の観測用（endpointing がどれだけ確定を保留するか）。
   private lastInterimAt: number | null = null;
   private findingsSlot: VoiceFindingsSlot = createVoiceFindingsSlot();
@@ -116,7 +120,6 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       this.cancelPendingEnd();
       if (msg.last === false) {
         this.lastInterimAt = Date.now();
-        this.maybeSendAizuchi(ws);
         return;
       }
       logger.info("[Voice] final prompt", {
@@ -133,7 +136,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         durationUntilInterruptMs: msg.durationUntilInterruptMs ?? -1,
       });
       this.cancelPendingEnd();
-      this.currentTurn?.abort();
+      await this.handleInterrupt(msg.utteranceUntilInterrupt);
     } else if (msg.type === "error") {
       logger.warn("[CallBridge] relay error", {
         description: msg.description ?? "",
@@ -141,40 +144,36 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     }
   }
 
-  // 中間認識を受けるたびに、クールダウン明けなら即座に相槌を挟む。
-  // 区切りを待たず、話している最中も相槌を続けて構わないという前提に立った実装。
-  private maybeSendAizuchi(ws: WebSocket) {
-    if (!this.config.aizuchiEnabled) return;
-    const now = Date.now();
-    if (
-      !shouldSendAizuchi({
-        hasActiveTurn: this.currentTurn !== null,
-        lastAizuchiAt: this.lastAizuchiAt,
-        now,
-        cooldownMs: this.config.aizuchiCooldownMs,
-      })
-    ) {
+  private async handleInterrupt(heardText: string | undefined) {
+    if (this.currentTurn) {
+      await this.abortTurn(this.currentTurn, heardText ?? "");
       return;
     }
-    this.lastAizuchiAt = now;
-    const phrase = pickAizuchi(this.aizuchiIndex++, this.config.aizuchiPhrases);
-    logger.info("[Voice] aizuchi sent", { phrase });
-    ws.send(
-      serializeRelayMessage(
-        textTokenMessage(phrase, true, {
-          preemptible: true,
-          // ユーザーは話し続けている最中なので interruptible:true だと即座に
-          // interrupt が飛んできて相槌がほぼ聞こえない。ここは中断させない。
-          interruptible: false,
-        }),
-      ),
-    );
+    if (heardText === undefined) return;
+    const conversation = await this.conversationPromise;
+    conversation?.truncateLastReply(heardText);
+  }
+
+  private async abortTurn(turn: AbortController | null, heardText: string) {
+    if (!turn) return;
+    turn.abort();
+    const input = this.turnInputs.get(turn);
+    if (!input) return;
+    this.turnInputs.delete(turn);
+    input.conversation.recordInterruptedTurn({
+      userText: input.userText,
+      heardText,
+    });
+    if (heardText) {
+      await this.persistTurn(input.conversation, input.userText, heardText);
+    }
   }
 
   private async handlePrompt(ws: WebSocket, text: string) {
-    this.currentTurn?.abort();
+    const previousTurn = this.currentTurn;
     const controller = new AbortController();
     this.currentTurn = controller;
+    await this.abortTurn(previousTurn, "");
 
     const t0 = Date.now();
     this.conversationPromise ??= createVoiceConversation({
@@ -187,6 +186,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       if (this.currentTurn === controller) this.currentTurn = null;
       return;
     }
+    this.turnInputs.set(controller, { conversation, userText: text });
 
     let firstSendMs: number | null = null;
     let tokenCount = 0;
@@ -209,6 +209,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         ws.send(serializeRelayMessage(playMessage(source, options))),
     });
     cover.start();
+    const reader = createSpeechReader();
 
     try {
       for await (const delta of conversation.runTurn({
@@ -228,9 +229,12 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         assistantChars += delta.length;
         assistantText += delta;
         cover.onToken();
-        send(delta);
+        const spoken = reader.push(delta);
+        if (spoken) send(spoken);
       }
       if (!controller.signal.aborted) {
+        const rest = reader.flush();
+        if (rest) send(rest);
         send("", true);
         responseEndMs = Date.now() - t0;
         if (this.currentTurn === controller) this.currentTurn = null;
@@ -238,21 +242,11 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
           this.scheduleEndCall(ws, assistantChars);
         }
         if (assistantText) {
-          const turnIndex = this.turnIndex++;
-          const persistStart = Date.now();
-          try {
-            await conversation.persistTurn({
-              turnIndex,
-              userText: text,
-              assistantText,
-            });
-          } catch (e) {
-            logger.error("[Voice] turn persistence failed", {
-              error: e instanceof Error ? e.message : String(e),
-              turnIndex,
-            });
-          }
-          persistenceMs = Date.now() - persistStart;
+          persistenceMs = await this.persistTurn(
+            conversation,
+            text,
+            assistantText,
+          );
         }
       }
     } catch (e) {
@@ -274,6 +268,24 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       if (persistenceMs !== null) timing.persistenceMs = persistenceMs;
       logger.info("[Voice] turn timing", timing);
     }
+  }
+
+  private async persistTurn(
+    conversation: VoiceConversation,
+    userText: string,
+    assistantText: string,
+  ) {
+    const turnIndex = this.turnIndex++;
+    const persistStart = Date.now();
+    try {
+      await conversation.persistTurn({ turnIndex, userText, assistantText });
+    } catch (e) {
+      logger.error("[Voice] turn persistence failed", {
+        error: e instanceof Error ? e.message : String(e),
+        turnIndex,
+      });
+    }
+    return Date.now() - persistStart;
   }
 
   // Twilio の end がキュー済み TTS の再生完了を待つかは未文書のため、

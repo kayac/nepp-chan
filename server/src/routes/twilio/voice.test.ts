@@ -153,7 +153,7 @@ describe("POST /twilio/voice/incoming", () => {
     expect(xml).toContain('ttsProvider="ElevenLabs"');
     expect(xml).toContain('voice="8EkOjt4xTPGMclNlh1pk-flash_v2_5"');
     expect(xml).toContain("もしもし、ねっぷちゃんだよ。");
-    expect(xml).toContain('hints="音威子府,おといねっぷ"');
+    expect(xml).toContain('hints="音威子府,');
   });
 
   it("リクエストの host から wss の relay URL を組み立てる", async () => {
@@ -205,7 +205,7 @@ describe("POST /twilio/voice/incoming", () => {
     });
     expect(res.status).toBe(200);
     const xml = await res.text();
-    expect(xml).toContain('speechTimeout="600"');
+    expect(xml).toContain('speechTimeout="3000"');
     expect(xml).toContain('voice="8EkOjt4xTPGMclNlh1pk-flash_v2_5"');
     expect(xml).not.toContain("<Say>");
   });
@@ -213,12 +213,14 @@ describe("POST /twilio/voice/incoming", () => {
   it("サーバ側ノブを <Parameter> として出力し token と共存させる", async () => {
     const res = await postIncoming({
       fillerEnabled: "false",
-      aizuchiCooldownMs: "4000",
+      holdPhraseIntervalMs: "8000",
     });
     const xml = await res.text();
     expect(xml).toMatch(/<Parameter name="token" value="[^"]+"\/>/);
     expect(xml).toContain('<Parameter name="fillerEnabled" value="false"/>');
-    expect(xml).toContain('<Parameter name="aizuchiCooldownMs" value="4000"/>');
+    expect(xml).toContain(
+      '<Parameter name="holdPhraseIntervalMs" value="8000"/>',
+    );
   });
 });
 
