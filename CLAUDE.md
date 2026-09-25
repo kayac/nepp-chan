@@ -117,7 +117,7 @@ web / lp / widget の接続先は `PUBLIC_ENV`（widget は `VITE_ENV`）で選�
 | `TWILIO_TWIML_APP_SID`         | softphone の発信先 TwiML App          |
 | `TWILIO_AUTH_TOKEN`            | webhook 署名検証（X-Twilio-Signature）|
 | `CALL_TOKEN_SECRET`            | relay WS 短命トークン署名（HMAC）     |
-| `TYPESAFE_API_KEY`             | intent 分類（jev）。未設定なら luna にフォールバック |
+| `TYPESAFE_API_KEY`             | intent 分類・ナレッジ reranker（jev）。未設定なら luna にフォールバック |
 
 ### 本番環境
 

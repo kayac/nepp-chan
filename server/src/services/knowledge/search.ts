@@ -1,57 +1,16 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { Agent } from "@mastra/core/agent";
-import { createSimilarityPrompt } from "@mastra/core/relevance";
 import type { RequestContext } from "@mastra/core/request-context";
 import { rerankWithScorer } from "@mastra/rag";
 import { embed } from "ai";
-import {
-  GEMINI_EMBEDDING,
-  modelWithReasoning,
-  OPENAI_LITE,
-} from "~/lib/llm-models";
+import { GEMINI_EMBEDDING } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
-import {
-  recordUsageFromContext,
-  withUsageRecording,
-} from "~/services/analytics/llm-usage";
+import { recordUsageFromContext } from "~/services/analytics/llm-usage";
+import { createRerankScorer } from "./rerank-scorer";
 import { EMBEDDING_DIMENSIONS } from "./vector-store";
 
 const SEARCH_TOP_K = 10;
 
 const RERANK_TOP_K = 5;
-
-// MastraAgentRelevanceScorer 相当の自前実装。usage 記録のために requestContext を
-// generate まで通す必要があり、本家の getRelevanceScore(query, text) では渡せない。
-// instructions は本家と同一（スコアリング挙動を変えないため）。
-// 呼び出しごとの new は Agent ごとに ephemeral Mastra を増殖させるためモジュールスコープで保持する
-const knowledgeRerankAgent = new Agent({
-  id: "relevance-scorer-knowledge-reranker",
-  name: "Relevance Scorer knowledge-reranker",
-  instructions: `You are a specialized agent for evaluating the relevance of text to queries.
-Your task is to rate how well a text passage answers a given query.
-Output only a number between 0 and 1, where:
-1.0 = Perfectly relevant, directly answers the query
-0.0 = Completely irrelevant
-Consider:
-- Direct relevance to the question
-- Completeness of information
-- Quality and specificity
-Always return just the number, no explanation.`,
-  ...withUsageRecording(
-    modelWithReasoning({ model: OPENAI_LITE, effort: "none" }),
-    { agent: "knowledge-reranker", source: "rerank" },
-  ),
-});
-
-const createRerankScorer = (requestContext?: RequestContext) => ({
-  getRelevanceScore: async (query: string, text: string) => {
-    const response = await knowledgeRerankAgent.generate(
-      createSimilarityPrompt(query, text),
-      { requestContext },
-    );
-    return Number.parseFloat(response.text);
-  },
-});
 
 export type KnowledgeResult = {
   content: string;
