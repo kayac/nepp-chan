@@ -60,6 +60,6 @@
     "typescript": "^6.0.3",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "~5.0.0",
-    "wrangler": "^4.131.0"
+    "wrangler": "^4.136.1"
   }
 }
