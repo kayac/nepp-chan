@@ -254,7 +254,10 @@ export const TuningPanel = ({
     onChange({ voice: buildElevenLabsVoice({ ...voiceParts, ...next }) });
 
   return (
-    <fieldset disabled={disabled} className="flex w-full flex-col gap-3">
+    <fieldset
+      disabled={disabled}
+      className="flex w-full flex-col gap-3 disabled:opacity-50"
+    >
       <Section title="ボイス（TTS）" defaultOpen>
         <SelectRow
           label="プリセット"

@@ -34,6 +34,7 @@ import {
 import type { LineEventMessage } from "~/schemas/line-schema";
 import type { R2EventMessage } from "~/services/knowledge/sync";
 import { CallBridge, handleRelayUpgrade } from "~/services/voice/call-bridge";
+import { handleLiveUpgrade, LiveBridge } from "~/services/voice/live-bridge";
 
 const app = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
 
@@ -77,11 +78,13 @@ app.get("/swagger", swaggerUI({ url: "/doc" }));
 const handler: ExportedHandler<CloudflareBindings> = {
   fetch: (request, env, ctx) => {
     const url = new URL(request.url);
-    if (
-      url.pathname === "/twilio/voice/relay" &&
-      request.headers.get("Upgrade")?.toLowerCase() === "websocket"
-    ) {
+    const isUpgrade =
+      request.headers.get("Upgrade")?.toLowerCase() === "websocket";
+    if (url.pathname === "/twilio/voice/relay" && isUpgrade) {
       return handleRelayUpgrade(request, env);
+    }
+    if (url.pathname === "/twilio/voice/live" && isUpgrade) {
+      return handleLiveUpgrade(request, env);
     }
     return app.fetch(request, env, ctx);
   },
@@ -97,7 +100,7 @@ const handler: ExportedHandler<CloudflareBindings> = {
   scheduled: handleScheduled,
 };
 
-export { CallBridge };
+export { CallBridge, LiveBridge };
 
 export default Sentry.withSentry<CloudflareBindings>(
   (env) => getSentryOptions(env),
