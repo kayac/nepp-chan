@@ -75,7 +75,7 @@ ${getCurrentDateInfo()}
 - 過去を明示する表現（「去年の」「以前の」「○年の」）がある場合のみ、該当時期で検索する
 `;
 
-const KNOWLEDGE_EFFORT: ReasoningEffort = "medium";
+const KNOWLEDGE_EFFORT: ReasoningEffort = "low";
 
 export const createKnowledgeAgent = ({
   model,
