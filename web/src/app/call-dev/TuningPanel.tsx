@@ -419,7 +419,7 @@ export const TuningPanel = ({
           hint="発話終端の検出を Twilio に任せる"
           checked={v("speechTimeout") === "auto"}
           onChange={(checked) =>
-            onChange({ speechTimeout: checked ? "auto" : "1000" })
+            onChange({ speechTimeout: checked ? "auto" : "3000" })
           }
         />
         <NumberRow
