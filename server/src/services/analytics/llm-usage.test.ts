@@ -1,3 +1,4 @@
+import { RequestContext } from "@mastra/core/request-context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestDb, type TestDb } from "~/__tests__/helpers/test-db";
 import { llmUsage } from "~/db";
@@ -27,7 +28,16 @@ vi.mock("~/lib/logger", () => ({
   logger: loggerMock,
 }));
 
-const { recordLlmUsage, usageRecordingOptions } = await import("./llm-usage");
+const { askJevMock } = vi.hoisted(() => ({ askJevMock: vi.fn() }));
+
+vi.mock("~/lib/jev", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("~/lib/jev")>()),
+  askJev: askJevMock,
+}));
+
+const { askJevWithUsage, recordLlmUsage, usageRecordingOptions } = await import(
+  "./llm-usage"
+);
 
 const d1 = {} as D1Database;
 
@@ -287,5 +297,95 @@ describe("usageRecordingOptions", () => {
 
     expect(options.providerOptions).toEqual(defaults.providerOptions);
     expect(typeof options.onFinish).toBe("function");
+  });
+});
+
+describe("askJevWithUsage", () => {
+  let db: TestDb;
+
+  const contextWithDb = () => {
+    const ctx = new RequestContext();
+    ctx.set("db", d1);
+    return ctx;
+  };
+
+  const question = { type: "noul" as const, instructions: "Relevant?" };
+
+  beforeEach(async () => {
+    db = await createTestDb();
+    testDbHolder.db = db;
+    askJevMock.mockReset();
+  });
+
+  it("jev の応答を返し、model・トークン数・所要時間を source・agent 付きで記録する", async () => {
+    const response = {
+      model: "jev-1.13.0",
+      answers: { q: { type: "noul", noul: 0.8 } },
+      usage: { input_tokens: 680, output_tokens: 0 },
+    };
+    askJevMock.mockResolvedValueOnce(response);
+
+    const result = await askJevWithUsage({
+      apiKey: "k",
+      state: "x",
+      questions: { q: question },
+      requestContext: contextWithDb(),
+      source: "rerank",
+      agent: "knowledge-reranker",
+    });
+
+    expect(result).toBe(response);
+    expect(askJevMock).toHaveBeenCalledWith({
+      apiKey: "k",
+      state: "x",
+      questions: { q: question },
+    });
+    await vi.waitFor(async () => {
+      const rows = await db.select().from(llmUsage).all();
+      expect(rows[0]).toMatchObject({
+        model: "jev-1.13.0",
+        inputTokens: 680,
+        outputTokens: 0,
+        source: "rerank",
+        agent: "knowledge-reranker",
+      });
+      expect(rows[0]?.durationMs).toEqual(expect.any(Number));
+    });
+  });
+
+  it("応答に model が無ければ jev-latest で記録する", async () => {
+    askJevMock.mockResolvedValueOnce({
+      answers: { q: { type: "noul", noul: 0.8 } },
+    });
+
+    await askJevWithUsage({
+      apiKey: "k",
+      state: "x",
+      questions: { q: question },
+      requestContext: contextWithDb(),
+      source: "intent-classify",
+      agent: "intent-router",
+    });
+
+    await vi.waitFor(async () => {
+      const rows = await db.select().from(llmUsage).all();
+      expect(rows[0]?.model).toBe("jev-latest");
+    });
+  });
+
+  it("jev が throw したら記録せずにそのまま throw する", async () => {
+    askJevMock.mockRejectedValueOnce(new Error("jev responded 429"));
+
+    await expect(
+      askJevWithUsage({
+        apiKey: "k",
+        state: "x",
+        questions: { q: question },
+        requestContext: contextWithDb(),
+        source: "rerank",
+        agent: "knowledge-reranker",
+      }),
+    ).rejects.toThrow("jev responded 429");
+    expect(await db.select().from(llmUsage).all()).toHaveLength(0);
   });
 });

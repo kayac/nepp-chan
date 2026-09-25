@@ -1,16 +1,13 @@
 import type { RequestContext } from "@mastra/core/request-context";
 import { z } from "zod";
-import { askJev, JEV_MODEL, type JevQuestion } from "~/lib/jev";
+import { type JevQuestion, jevApiKey } from "~/lib/jev";
 import { logger } from "~/lib/logger";
 import { intentRouterAgent } from "~/mastra/agents/intent-router-agent";
-import {
-  recordUsageFromContext,
-  runInBackground,
-} from "~/services/analytics/llm-usage";
+import { askJevWithUsage } from "~/services/analytics/llm-usage";
 
 const THINKING_THRESHOLD = 0.3;
 
-export const intentQuestion: JevQuestion = {
+const intentQuestion: JevQuestion = {
   type: "choice",
   instructions:
     "Classify the intent of the user's latest message. When in doubt, choose thinking.",
@@ -26,12 +23,12 @@ const intentSchema = z.object({
   intent: z.enum(["casual", "thinking"]),
 });
 
-export type ClassifyIntentInput = {
+type ClassifyIntentInput = {
   text: string;
   previousAssistant?: string;
 };
 
-export const buildIntentState = (input: ClassifyIntentInput) => [
+const buildIntentState = (input: ClassifyIntentInput) => [
   ...(input.previousAssistant
     ? [{ from: "assistant", text: input.previousAssistant }]
     : []),
@@ -43,24 +40,14 @@ const classifyWithJev = async (
   apiKey: string,
   requestContext: RequestContext,
 ) => {
-  const startedAt = Date.now();
-  const response = await askJev({
+  const response = await askJevWithUsage({
     apiKey,
     state: buildIntentState(input),
     questions: { intent: intentQuestion },
+    requestContext,
+    source: "intent-classify",
+    agent: "intent-router",
   });
-  runInBackground(
-    recordUsageFromContext(requestContext, {
-      model: response.model ?? JEV_MODEL,
-      usage: {
-        inputTokens: response.usage?.input_tokens,
-        outputTokens: response.usage?.output_tokens,
-      },
-      source: "intent-classify",
-      agent: "intent-router",
-      durationMs: Date.now() - startedAt,
-    }),
-  );
   const answer = response.answers.intent;
   const pThinking =
     answer?.type === "choice" ? answer.probabilities.thinking : undefined;
@@ -89,8 +76,7 @@ export const classifyIntent = async (
   input: ClassifyIntentInput,
   requestContext?: RequestContext,
 ) => {
-  const apiKey = (requestContext?.get("env") as CloudflareBindings | undefined)
-    ?.TYPESAFE_API_KEY;
+  const apiKey = jevApiKey(requestContext);
   if (!apiKey || !requestContext) {
     return classifyWithAgent(input.text, requestContext);
   }

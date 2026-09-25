@@ -2,11 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { parseArgs } from "node:util";
-import {
-  buildIntentState,
-  classifyIntent,
-  intentQuestion,
-} from "../src/lib/classify-intent";
+import { classifyIntent } from "../src/lib/classify-intent";
 import {
   askJev,
   JEV_MODEL,
@@ -74,6 +70,28 @@ const jaIntentQuestion: JevQuestion = {
   instructions: JA_INSTRUCTIONS,
   criteria: JA_CRITERIA,
 };
+
+const intentQuestion: JevQuestion = {
+  type: "choice",
+  instructions:
+    "Classify the intent of the user's latest message. When in doubt, choose thinking.",
+  criteria: {
+    casual:
+      "Greeting, small talk, acknowledgement, reaction, sharing feelings or daily events. No information lookup is needed.",
+    thinking:
+      "A question, information request, or fact check that needs search or reasoning to answer.",
+  },
+};
+
+const buildIntentState = (input: {
+  text: string;
+  previousAssistant?: string;
+}) => [
+  ...(input.previousAssistant
+    ? [{ from: "assistant", text: input.previousAssistant }]
+    : []),
+  { from: "user", text: input.text },
+];
 
 const buildInput = (variant: Variant, c: IntentCase) => {
   const question = variant === "A" ? jaIntentQuestion : intentQuestion;
@@ -146,7 +164,7 @@ const callJev = async (
 
 const callLuna = async (c: IntentCase, run: number) => {
   const started = performance.now();
-  const intent = await classifyIntent(c.text);
+  const intent = await classifyIntent({ text: c.text });
   return { caseId: c.id, run, intent, latencyMs: performance.now() - started };
 };
 

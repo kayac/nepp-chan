@@ -1,9 +1,8 @@
 import { RequestContext } from "@mastra/core/request-context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { generateMock, recordUsageMock, askJevMock } = vi.hoisted(() => ({
+const { generateMock, askJevMock } = vi.hoisted(() => ({
   generateMock: vi.fn(),
-  recordUsageMock: vi.fn(),
   askJevMock: vi.fn(),
 }));
 
@@ -11,14 +10,9 @@ vi.mock("~/mastra/agents/intent-router-agent", () => ({
   intentRouterAgent: { generate: generateMock },
 }));
 
-vi.mock("~/services/analytics/llm-usage", () => ({
-  recordUsageFromContext: recordUsageMock,
-  runInBackground: vi.fn(),
-}));
-
-vi.mock("~/lib/jev", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("~/lib/jev")>()),
-  askJev: askJevMock,
+vi.mock("~/services/analytics/llm-usage", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("~/services/analytics/llm-usage")>()),
+  askJevWithUsage: askJevMock,
 }));
 
 vi.mock("~/lib/logger", () => ({
@@ -50,7 +44,6 @@ const sentState = () => askJevMock.mock.calls[0]?.[0]?.state;
 
 beforeEach(() => {
   generateMock.mockReset();
-  recordUsageMock.mockReset();
   askJevMock.mockReset();
 });
 
@@ -107,17 +100,15 @@ describe("classifyIntent（jev）", () => {
     expect(sentState()).toEqual([{ from: "user", text: "こんにちは" }]);
   });
 
-  it("成功時は usage を source intent-classify・応答の model で記録する", async () => {
+  it("usage の記録先として requestContext・source intent-classify・agent intent-router を渡す", async () => {
     askJevMock.mockResolvedValueOnce(jevResponse(0.9));
     const ctx = contextWithKey("k");
     await classifyIntent({ text: "教えて" }, ctx);
-    expect(recordUsageMock).toHaveBeenCalledWith(
-      ctx,
+    expect(askJevMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: "jev-1.13.0",
+        requestContext: ctx,
         source: "intent-classify",
         agent: "intent-router",
-        usage: { inputTokens: 400, outputTokens: 0 },
       }),
     );
   });
@@ -151,7 +142,6 @@ describe("classifyIntent（フォールバック）", () => {
       "thinking",
     );
     expect(generateMock).toHaveBeenCalledTimes(1);
-    expect(recordUsageMock).not.toHaveBeenCalled();
   });
 
   it("answers.intent に thinking の確率が無ければ intentRouterAgent に落ちる", async () => {

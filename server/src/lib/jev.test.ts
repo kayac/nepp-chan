@@ -1,5 +1,6 @@
+import { RequestContext } from "@mastra/core/request-context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { askJev, JevHttpError } from "./jev";
+import { askJev, JevHttpError, jevApiKey } from "./jev";
 
 const fetchSpy = vi.spyOn(globalThis, "fetch");
 
@@ -105,5 +106,17 @@ describe("askJev", () => {
     await expect(
       askJev({ apiKey: "k", state: "x", questions: { q: question } }),
     ).rejects.toThrow();
+  });
+});
+
+describe("jevApiKey", () => {
+  it("requestContext の env から TYPESAFE_API_KEY を返す", () => {
+    const ctx = new RequestContext();
+    ctx.set("env", { TYPESAFE_API_KEY: "secret" });
+    expect(jevApiKey(ctx)).toBe("secret");
+  });
+
+  it("requestContext が無ければ undefined", () => {
+    expect(jevApiKey()).toBeUndefined();
   });
 });
