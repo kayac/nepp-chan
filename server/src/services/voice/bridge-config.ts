@@ -77,7 +77,7 @@ export const BRIDGE_CONFIG_DEFAULTS: BridgeConfig = {
   holdAudioUrl: "https://amachamusic.chagasi.com/mp3/tsukinokobune.mp3",
   holdDelayMs: 0,
   holdPhrases: [...HOLD_PHRASES],
-  holdPhraseIntervalMs: 6_000,
+  holdPhraseIntervalMs: 10_000,
   endCallEnabled: true,
   parentRoutingEnabled: true,
   prefetchEnabled: true,
