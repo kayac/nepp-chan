@@ -22,6 +22,7 @@ describe("shouldSendAizuchi", () => {
         now: 1000,
         cooldownMs: 2000,
         charsSinceLastAizuchi: 8,
+        interimText: "昔は駅のそばに住んでいて",
       }),
     ).toBe(false);
   });
@@ -34,6 +35,7 @@ describe("shouldSendAizuchi", () => {
         now: 2000,
         cooldownMs: 2000,
         charsSinceLastAizuchi: 8,
+        interimText: "昔は駅のそばに住んでいて",
       }),
     ).toBe(false);
   });
@@ -46,6 +48,7 @@ describe("shouldSendAizuchi", () => {
         now: 3000,
         cooldownMs: 2000,
         charsSinceLastAizuchi: 8,
+        interimText: "昔は駅のそばに住んでいて",
       }),
     ).toBe(true);
   });
@@ -58,6 +61,7 @@ describe("shouldSendAizuchi", () => {
         now: 1000,
         cooldownMs: 2000,
         charsSinceLastAizuchi: 8,
+        interimText: "昔は駅のそばに住んでいて",
       }),
     ).toBe(true);
   });
@@ -70,7 +74,24 @@ describe("shouldSendAizuchi", () => {
         now: 1000,
         cooldownMs: 2000,
         charsSinceLastAizuchi: 7,
+        interimText: "昔は駅のそばに住んで",
       }),
     ).toBe(false);
   });
+
+  it.each(["明日のゴミの日って何を捨てる？", "じゃあ村の歴史について教えて"])(
+    "質問や依頼（%s）には相槌を打たない",
+    (interimText) => {
+      expect(
+        shouldSendAizuchi({
+          hasActiveTurn: false,
+          lastAizuchiAt: null,
+          now: 1000,
+          cooldownMs: 2000,
+          charsSinceLastAizuchi: 8,
+          interimText,
+        }),
+      ).toBe(false);
+    },
+  );
 });

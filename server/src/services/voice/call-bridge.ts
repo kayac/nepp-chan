@@ -126,7 +126,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       this.cancelPendingEnd();
       if (msg.last === false) {
         this.lastInterimAt = Date.now();
-        this.scheduleAizuchi(ws, msg.voicePrompt.length);
+        this.scheduleAizuchi(ws, msg.voicePrompt);
         return;
       }
       logger.info("[Voice] final prompt", {
@@ -178,11 +178,11 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     }
   }
 
-  private scheduleAizuchi(ws: WebSocket, interimChars: number) {
+  private scheduleAizuchi(ws: WebSocket, interimText: string) {
     this.cancelAizuchi();
     this.aizuchiTimer = setTimeout(() => {
       this.aizuchiTimer = null;
-      this.maybeSendAizuchi(ws, interimChars);
+      this.maybeSendAizuchi(ws, interimText);
     }, this.config.aizuchiPauseMs);
   }
 
@@ -192,7 +192,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     this.aizuchiTimer = null;
   }
 
-  private maybeSendAizuchi(ws: WebSocket, interimChars: number) {
+  private maybeSendAizuchi(ws: WebSocket, interimText: string) {
     if (!this.config.aizuchiEnabled) return;
     const now = Date.now();
     if (
@@ -201,13 +201,14 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         lastAizuchiAt: this.lastAizuchiAt,
         now,
         cooldownMs: this.config.aizuchiCooldownMs,
-        charsSinceLastAizuchi: interimChars - this.charsAtLastAizuchi,
+        charsSinceLastAizuchi: interimText.length - this.charsAtLastAizuchi,
+        interimText,
       })
     ) {
       return;
     }
     this.lastAizuchiAt = now;
-    this.charsAtLastAizuchi = interimChars;
+    this.charsAtLastAizuchi = interimText.length;
     const phrase = pickAizuchi(this.aizuchiIndex++, this.config.aizuchiPhrases);
     logger.info("[Voice] aizuchi sent", { phrase });
     ws.send(
