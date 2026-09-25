@@ -80,7 +80,7 @@ export const relayFieldSchemas = {
   debug: z.string().regex(/^[a-z][a-z -]{0,99}$/),
 } satisfies Record<string, z.ZodType>;
 
-// Twilio 既定の telephony が ja-JP 非対応で弾かれるため speechModel は long を明示。
+// Deepgram flux では speechTimeout は確定待ちではなく、ターンを強制的に閉じる無音の上限になる。
 // speechTimeout は "auto" または 600〜5000 の範囲でなければならない（600未満はエラー64101）。
 // reportInputDuringAgentSpeech は Twilio 既定 none だと非中断の相槌再生中に
 // 重なったユーザー発話が報告されず転写から欠落するため any を既定にする。
@@ -89,8 +89,8 @@ export const relayFieldSchemas = {
 const RELAY_TUNING_DEFAULTS = {
   welcomeGreeting: "もしもし、ねっぷちゃんだよ。なんでも聞いてね。",
   language: "ja-JP",
-  transcriptionProvider: "Google",
-  speechModel: "long",
+  transcriptionProvider: "Deepgram",
+  speechModel: "flux",
   speechTimeout: "1000",
   hints:
     "音威子府,おといねっぷ,ねっぷちゃん,咲来,筬島,常盤,物満内,上音威子府,天塩川,天塩川温泉,音威富士,天北線,エコミュージアムおさしま,アトリエ3モア,砂澤ビッキ,美術工芸高校,道の駅おといねっぷ,咲来そば,音威子府そば,中川町,美深町,松浦武四郎,地域複合施設ときわ,木遊館,おと高,トムテ,おとっきー,交通ターミナル,音威富士スキー場",
