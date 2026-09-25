@@ -52,6 +52,8 @@ const baseValues = {
   holdAudioEnabled: "true",
   holdAudioUrl: "https://example.com/hold.mp3",
   holdDelayMs: "0",
+  holdPhrases: "いま調べてるよ",
+  holdPhraseIntervalMs: "6000",
   endCallEnabled: "true",
   parentRoutingEnabled: "true",
   prefetchEnabled: "true",
@@ -194,6 +196,8 @@ describe("TuningPanel", () => {
     ["あいづちの間(ms)", "aizuchiPauseMs", "700"],
     ["フィラー遅延(ms)", "fillerDelayMs", "500"],
     ["保留音遅延(ms)", "holdDelayMs", "1000"],
+    ["待ちの声かけ", "holdPhrases", "調べてるよ,待ってね"],
+    ["声かけ間隔(ms)", "holdPhraseIntervalMs", "8000"],
   ])("%s の入力は %s を onChange する", (label, key, value) => {
     const { onChange } = setup();
     fireEvent.change(screen.getByLabelText(label), { target: { value } });

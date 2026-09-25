@@ -143,6 +143,8 @@ describe("serializeBridgeConfig", () => {
       holdAudioEnabled: false,
       holdAudioUrl: "https://example.com/hold.mp3",
       holdDelayMs: 1200,
+      holdPhrases: ["調べてるよ"],
+      holdPhraseIntervalMs: 8000,
       endCallEnabled: false,
       parentRoutingEnabled: false,
       prefetchEnabled: false,

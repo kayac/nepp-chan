@@ -574,8 +574,23 @@ export const TuningPanel = ({
         {boolRow(
           "保留音",
           "holdAudioEnabled",
-          "ナレッジ検索などの待ち時間に音楽を流す",
+          "オンで待ち時間に音楽を流す。オフなら下の声かけを話す",
         )}
+        <TextRow
+          label="待ちの声かけ"
+          hint="カンマ区切りで順に繰り返す"
+          value={v("holdPhrases")}
+          onChange={(value) => onChange({ holdPhrases: value })}
+        />
+        <NumberRow
+          label="声かけ間隔(ms)"
+          hint="「ちょっと待ってね」のあと、この間隔で声かけする"
+          value={v("holdPhraseIntervalMs")}
+          min={3000}
+          max={30000}
+          step={1000}
+          onChange={(value) => onChange({ holdPhraseIntervalMs: value })}
+        />
         <NumberRow
           label="保留音遅延(ms)"
           hint="検索開始から指定時間待つ。最短3秒後に開始"
