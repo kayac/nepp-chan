@@ -69,7 +69,7 @@ export const BRIDGE_CONFIG_DEFAULTS: BridgeConfig = {
   fillerDelayMs: 0,
   thinkingFillers: [...THINKING_FILLERS],
   backchannelFillers: [...BACKCHANNEL_FILLERS],
-  aizuchiEnabled: true,
+  aizuchiEnabled: false,
   aizuchiCooldownMs: 3_500,
   aizuchiPauseMs: 500,
   aizuchiPhrases: [...AIZUCHI_PHRASES],

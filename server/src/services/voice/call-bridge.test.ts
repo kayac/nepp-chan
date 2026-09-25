@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { logger } from "~/lib/logger";
+import { BRIDGE_CONFIG_DEFAULTS } from "./bridge-config";
 import { CallBridge } from "./call-bridge";
 
 const { createVoiceConversationMock } = vi.hoisted(() => ({
@@ -495,6 +496,10 @@ describe("CallBridge", () => {
       );
       Reflect.set(bridge, "verified", true);
       Reflect.set(bridge, "handlePrompt", vi.fn());
+      Reflect.set(bridge, "config", {
+        ...BRIDGE_CONFIG_DEFAULTS,
+        aizuchiEnabled: true,
+      });
       const ws = { send: vi.fn() } as unknown as WebSocket;
       const onMessage = Reflect.get(bridge, "onMessage") as (
         ws: WebSocket,
