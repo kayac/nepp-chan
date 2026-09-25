@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { AIZUCHI_PHRASES } from "./aizuchi";
 import { BACKCHANNEL_FILLERS, THINKING_FILLERS } from "./filler";
 import { HOLD_PHRASES } from "./silence-cover";
 
@@ -50,10 +49,6 @@ export type BridgeConfig = {
   fillerDelayMs: number;
   thinkingFillers: string[];
   backchannelFillers: string[];
-  aizuchiEnabled: boolean;
-  aizuchiCooldownMs: number;
-  aizuchiPauseMs: number;
-  aizuchiPhrases: string[];
   holdAudioEnabled: boolean;
   holdAudioUrl: string;
   holdDelayMs: number;
@@ -69,10 +64,6 @@ export const BRIDGE_CONFIG_DEFAULTS: BridgeConfig = {
   fillerDelayMs: 0,
   thinkingFillers: [...THINKING_FILLERS],
   backchannelFillers: [...BACKCHANNEL_FILLERS],
-  aizuchiEnabled: false,
-  aizuchiCooldownMs: 3_500,
-  aizuchiPauseMs: 500,
-  aizuchiPhrases: [...AIZUCHI_PHRASES],
   holdAudioEnabled: false,
   holdAudioUrl: "https://amachamusic.chagasi.com/mp3/tsukinokobune.mp3",
   holdDelayMs: 0,
@@ -90,10 +81,6 @@ export const bridgeFieldSchemas = {
   fillerDelayMs: delayParam,
   thinkingFillers: phraseListParam,
   backchannelFillers: phraseListParam,
-  aizuchiEnabled: boolParam,
-  aizuchiCooldownMs: z.coerce.number().int().min(500).max(30_000),
-  aizuchiPauseMs: z.coerce.number().int().min(100).max(3_000),
-  aizuchiPhrases: phraseListParam,
   holdAudioEnabled: boolParam,
   holdAudioUrl: z
     .string()
@@ -119,10 +106,6 @@ export const serializeBridgeConfig = (config: BridgeConfig) => ({
   fillerDelayMs: String(config.fillerDelayMs),
   thinkingFillers: config.thinkingFillers.join(","),
   backchannelFillers: config.backchannelFillers.join(","),
-  aizuchiEnabled: String(config.aizuchiEnabled),
-  aizuchiCooldownMs: String(config.aizuchiCooldownMs),
-  aizuchiPauseMs: String(config.aizuchiPauseMs),
-  aizuchiPhrases: config.aizuchiPhrases.join(","),
   holdAudioEnabled: String(config.holdAudioEnabled),
   holdAudioUrl: config.holdAudioUrl,
   holdDelayMs: String(config.holdDelayMs),

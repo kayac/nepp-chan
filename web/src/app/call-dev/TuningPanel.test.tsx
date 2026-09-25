@@ -45,10 +45,6 @@ const baseValues = {
   fillerDelayMs: "0",
   thinkingFillers: "えーっとね,うーんとね",
   backchannelFillers: "うんうん",
-  aizuchiEnabled: "true",
-  aizuchiCooldownMs: "2000",
-  aizuchiPauseMs: "500",
-  aizuchiPhrases: "うん,うんうん",
   holdAudioEnabled: "true",
   holdAudioUrl: "https://example.com/hold.mp3",
   holdDelayMs: "0",
@@ -146,14 +142,6 @@ describe("TuningPanel", () => {
     expect(onChange).toHaveBeenCalledWith({ endCallEnabled: "false" });
   });
 
-  it("あいづち文言をカンマ区切りのまま onChange する", () => {
-    const { onChange } = setup();
-    fireEvent.change(screen.getByLabelText("あいづち文言"), {
-      target: { value: "はい,ええ" },
-    });
-    expect(onChange).toHaveBeenCalledWith({ aizuchiPhrases: "はい,ええ" });
-  });
-
   it("disabled のとき入力とリセットが無効になる", () => {
     const onReset = vi.fn();
     render(
@@ -192,8 +180,6 @@ describe("TuningPanel", () => {
     ["相槌フィラー", "backchannelFillers", "ふむふむ"],
     ["保留音 URL", "holdAudioUrl", "https://example.com/bgm.mp3"],
     ["speechTimeout(ms)", "speechTimeout", "800"],
-    ["あいづち最短間隔(ms)", "aizuchiCooldownMs", "4000"],
-    ["あいづちの間(ms)", "aizuchiPauseMs", "700"],
     ["フィラー遅延(ms)", "fillerDelayMs", "500"],
     ["保留音遅延(ms)", "holdDelayMs", "1000"],
     ["待ちの声かけ", "holdPhrases", "調べてるよ,待ってね"],
@@ -222,7 +208,6 @@ describe("TuningPanel", () => {
     ["preemptible", "preemptible", "true"],
     ["DTMF 検出", "dtmfDetection", "true"],
     ["partialPrompts", "partialPrompts", "false"],
-    ["あいづち", "aizuchiEnabled", "false"],
     ["保留音", "holdAudioEnabled", "false"],
     ["検索先をねっぷちゃんが選ぶ", "parentRoutingEnabled", "false"],
     ["問いかけを先読みして検索", "prefetchEnabled", "false"],

@@ -213,12 +213,14 @@ describe("POST /twilio/voice/incoming", () => {
   it("サーバ側ノブを <Parameter> として出力し token と共存させる", async () => {
     const res = await postIncoming({
       fillerEnabled: "false",
-      aizuchiCooldownMs: "4000",
+      holdPhraseIntervalMs: "8000",
     });
     const xml = await res.text();
     expect(xml).toMatch(/<Parameter name="token" value="[^"]+"\/>/);
     expect(xml).toContain('<Parameter name="fillerEnabled" value="false"/>');
-    expect(xml).toContain('<Parameter name="aizuchiCooldownMs" value="4000"/>');
+    expect(xml).toContain(
+      '<Parameter name="holdPhraseIntervalMs" value="8000"/>',
+    );
   });
 });
 

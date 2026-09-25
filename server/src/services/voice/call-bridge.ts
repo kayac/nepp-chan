@@ -1,6 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
 import { logger } from "~/lib/logger";
-import { pickAizuchi, shouldSendAizuchi } from "./aizuchi";
 import {
   BRIDGE_CONFIG_DEFAULTS,
   type BridgeConfig,
@@ -48,15 +47,11 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     { conversation: VoiceConversation; userText: string }
   >();
   private fillerIndex = 0;
-  private lastAizuchiAt: number | null = null;
-  private aizuchiIndex = 0;
-  private charsAtLastAizuchi = 0;
   // 直前の中間認識からの経過時間の観測用（endpointing がどれだけ確定を保留するか）。
   private lastInterimAt: number | null = null;
   private findingsSlot: VoiceFindingsSlot = createVoiceFindingsSlot();
   private config: BridgeConfig = BRIDGE_CONFIG_DEFAULTS;
   private pendingEndTimer: ReturnType<typeof setTimeout> | null = null;
-  private aizuchiTimer: ReturnType<typeof setTimeout> | null = null;
   private conversationPromise: ReturnType<
     typeof createVoiceConversation
   > | null = null;
@@ -70,7 +65,6 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       this.handleMessageEvent(server, event);
     });
     server.addEventListener("close", () => {
-      this.cancelAizuchi();
       this.currentTurn?.abort();
       this.cancelPendingEnd();
     });
@@ -126,7 +120,6 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       this.cancelPendingEnd();
       if (msg.last === false) {
         this.lastInterimAt = Date.now();
-        this.scheduleAizuchi(ws, msg.voicePrompt);
         return;
       }
       logger.info("[Voice] final prompt", {
@@ -136,8 +129,6 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
           : -1,
       });
       this.lastInterimAt = null;
-      this.cancelAizuchi();
-      this.charsAtLastAizuchi = 0;
       await this.handlePrompt(ws, msg.voicePrompt);
     } else if (msg.type === "interrupt") {
       logger.info("[Voice] interrupt", {
@@ -176,51 +167,6 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     if (heardText) {
       await this.persistTurn(input.conversation, input.userText, heardText);
     }
-  }
-
-  private scheduleAizuchi(ws: WebSocket, interimText: string) {
-    this.cancelAizuchi();
-    this.aizuchiTimer = setTimeout(() => {
-      this.aizuchiTimer = null;
-      this.maybeSendAizuchi(ws, interimText);
-    }, this.config.aizuchiPauseMs);
-  }
-
-  private cancelAizuchi() {
-    if (!this.aizuchiTimer) return;
-    clearTimeout(this.aizuchiTimer);
-    this.aizuchiTimer = null;
-  }
-
-  private maybeSendAizuchi(ws: WebSocket, interimText: string) {
-    if (!this.config.aizuchiEnabled) return;
-    const now = Date.now();
-    if (
-      !shouldSendAizuchi({
-        hasActiveTurn: this.currentTurn !== null,
-        lastAizuchiAt: this.lastAizuchiAt,
-        now,
-        cooldownMs: this.config.aizuchiCooldownMs,
-        charsSinceLastAizuchi: interimText.length - this.charsAtLastAizuchi,
-        interimText,
-      })
-    ) {
-      return;
-    }
-    this.lastAizuchiAt = now;
-    this.charsAtLastAizuchi = interimText.length;
-    const phrase = pickAizuchi(this.aizuchiIndex++, this.config.aizuchiPhrases);
-    logger.info("[Voice] aizuchi sent", { phrase });
-    ws.send(
-      serializeRelayMessage(
-        textTokenMessage(phrase, true, {
-          preemptible: true,
-          // ユーザーは話し続けている最中なので interruptible:true だと即座に
-          // interrupt が飛んできて相槌がほぼ聞こえない。ここは中断させない。
-          interruptible: false,
-        }),
-      ),
-    );
   }
 
   private async handlePrompt(ws: WebSocket, text: string) {

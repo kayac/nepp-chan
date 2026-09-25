@@ -502,11 +502,7 @@ export const TuningPanel = ({
           "新しい発話が再生中の音声を置き換えられる",
         )}
         {boolRow("DTMF 検出", "dtmfDetection", "プッシュ音をサーバに通知する")}
-        {boolRow(
-          "partialPrompts",
-          "partialPrompts",
-          "確定前の中間認識も送る。off だとあいづちが動かない",
-        )}
+        {boolRow("partialPrompts", "partialPrompts", "確定前の中間認識も送る")}
         <TextRow
           label="debug"
           hint="Twilio のデバッグメッセージを購読する"
@@ -541,35 +537,6 @@ export const TuningPanel = ({
           hint="雑談への一言（カンマ区切り）"
           value={v("backchannelFillers")}
           onChange={(value) => onChange({ backchannelFillers: value })}
-        />
-        {boolRow(
-          "あいづち",
-          "aizuchiEnabled",
-          "ユーザーの発話中に「うん」を挟む",
-        )}
-        <NumberRow
-          label="あいづち最短間隔(ms)"
-          hint="連発を防ぐ間隔。時間での定期発話ではない"
-          value={v("aizuchiCooldownMs")}
-          min={500}
-          max={30000}
-          step={500}
-          onChange={(value) => onChange({ aizuchiCooldownMs: value })}
-        />
-        <NumberRow
-          label="あいづちの間(ms)"
-          hint="中間認識がこの時間途切れたら打つ。speechTimeout より短くする"
-          value={v("aizuchiPauseMs")}
-          min={100}
-          max={3000}
-          step={100}
-          onChange={(value) => onChange({ aizuchiPauseMs: value })}
-        />
-        <TextRow
-          label="あいづち文言"
-          hint="カンマ区切りで順に使う"
-          value={v("aizuchiPhrases")}
-          onChange={(value) => onChange({ aizuchiPhrases: value })}
         />
         {boolRow(
           "保留音",

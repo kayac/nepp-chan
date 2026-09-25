@@ -82,8 +82,8 @@ export const relayFieldSchemas = {
 
 // Deepgram flux では speechTimeout は確定待ちではなく、ターンを強制的に閉じる無音の上限になる。
 // speechTimeout は "auto" または 600〜5000 の範囲でなければならない（600未満はエラー64101）。
-// reportInputDuringAgentSpeech は Twilio 既定 none だと非中断の相槌再生中に
-// 重なったユーザー発話が報告されず転写から欠落するため any を既定にする。
+// reportInputDuringAgentSpeech は Twilio 既定 none だと読み上げ中に重なった
+// ユーザー発話が報告されず転写から欠落するため any を既定にする。
 // ignoreBackchannel はユーザーの相槌（うん・はい等）で応答ターンが
 // interrupt→abort され途中で黙るのを防ぐため true を既定にする。
 const RELAY_TUNING_DEFAULTS = {

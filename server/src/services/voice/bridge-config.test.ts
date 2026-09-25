@@ -14,28 +14,26 @@ describe("parseBridgeConfig", () => {
   it("文字列の true/false を boolean に変換する", () => {
     const config = parseBridgeConfig({
       fillerEnabled: "false",
-      aizuchiEnabled: "false",
-      holdAudioEnabled: "false",
+      holdAudioEnabled: "true",
     });
     expect(config.fillerEnabled).toBe(false);
-    expect(config.aizuchiEnabled).toBe(false);
-    expect(config.holdAudioEnabled).toBe(false);
+    expect(config.holdAudioEnabled).toBe(true);
   });
 
-  it("aizuchiCooldownMs は範囲内の値を数値として受け取る", () => {
+  it("holdPhraseIntervalMs は範囲内の値を数値として受け取る", () => {
     expect(
-      parseBridgeConfig({ aizuchiCooldownMs: "500" }).aizuchiCooldownMs,
-    ).toBe(500);
+      parseBridgeConfig({ holdPhraseIntervalMs: "3000" }).holdPhraseIntervalMs,
+    ).toBe(3000);
     expect(
-      parseBridgeConfig({ aizuchiCooldownMs: "30000" }).aizuchiCooldownMs,
+      parseBridgeConfig({ holdPhraseIntervalMs: "30000" }).holdPhraseIntervalMs,
     ).toBe(30000);
   });
 
-  it("aizuchiCooldownMs の範囲外・非数値は既定値へフォールバックする", () => {
-    for (const value of ["499", "30001", "abc", ""]) {
+  it("holdPhraseIntervalMs の範囲外・非数値は既定値へフォールバックする", () => {
+    for (const value of ["2999", "30001", "abc", ""]) {
       expect(
-        parseBridgeConfig({ aizuchiCooldownMs: value }).aizuchiCooldownMs,
-      ).toBe(BRIDGE_CONFIG_DEFAULTS.aizuchiCooldownMs);
+        parseBridgeConfig({ holdPhraseIntervalMs: value }).holdPhraseIntervalMs,
+      ).toBe(BRIDGE_CONFIG_DEFAULTS.holdPhraseIntervalMs);
     }
   });
 
@@ -81,16 +79,17 @@ describe("parseBridgeConfig: 文言カスタム", () => {
     const config = parseBridgeConfig({
       thinkingFillers: "えっとね, どれどれ",
       backchannelFillers: "ふむふむ",
-      aizuchiPhrases: "はい,ええ, うん",
+      holdPhrases: "調べてるよ, 待ってね",
     });
     expect(config.thinkingFillers).toEqual(["えっとね", "どれどれ"]);
     expect(config.backchannelFillers).toEqual(["ふむふむ"]);
-    expect(config.aizuchiPhrases).toEqual(["はい", "ええ", "うん"]);
+    expect(config.holdPhrases).toEqual(["調べてるよ", "待ってね"]);
   });
 
   it("空要素は除外する", () => {
     expect(
-      parseBridgeConfig({ aizuchiPhrases: "うん,,ええ," }).aizuchiPhrases,
+      parseBridgeConfig({ backchannelFillers: "うん,,ええ," })
+        .backchannelFillers,
     ).toEqual(["うん", "ええ"]);
   });
 
@@ -101,8 +100,8 @@ describe("parseBridgeConfig: 文言カスタム", () => {
       Array.from({ length: 11 }, (_, i) => `フレーズ${i}`).join(","),
     ]) {
       expect(
-        parseBridgeConfig({ aizuchiPhrases: value }).aizuchiPhrases,
-      ).toEqual(BRIDGE_CONFIG_DEFAULTS.aizuchiPhrases);
+        parseBridgeConfig({ backchannelFillers: value }).backchannelFillers,
+      ).toEqual(BRIDGE_CONFIG_DEFAULTS.backchannelFillers);
     }
   });
 });
@@ -136,10 +135,6 @@ describe("serializeBridgeConfig", () => {
       fillerDelayMs: 800,
       thinkingFillers: ["えっとね", "どれどれ"],
       backchannelFillers: ["ふむふむ"],
-      aizuchiEnabled: true,
-      aizuchiCooldownMs: 4500,
-      aizuchiPauseMs: 700,
-      aizuchiPhrases: ["はい", "ええ"],
       holdAudioEnabled: false,
       holdAudioUrl: "https://example.com/hold.mp3",
       holdDelayMs: 1200,

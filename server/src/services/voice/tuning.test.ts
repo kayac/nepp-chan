@@ -119,10 +119,10 @@ describe("parseVoiceTuning", () => {
   it("bridge 系キーは bridge に分配される", () => {
     const { bridge } = parseVoiceTuning({
       fillerEnabled: "false",
-      aizuchiCooldownMs: "4000",
+      holdPhraseIntervalMs: "8000",
     });
     expect(bridge.fillerEnabled).toBe(false);
-    expect(bridge.aizuchiCooldownMs).toBe(4000);
+    expect(bridge.holdPhraseIntervalMs).toBe(8000);
   });
 });
 
