@@ -16,7 +16,7 @@
     "@ai-sdk/react": "^4.0.105",
     "@heroicons/react": "^2.2.0",
     "@nepp-chan/shared": "workspace:*",
-    "ai": "^7.0.102",
+    "ai": "^7.0.109",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
