@@ -55,7 +55,7 @@
     "@types/node": "^26.6.2",
     "@vitest/coverage-istanbul": "~5.0.0",
     "drizzle-kit": "^0.31.10",
-    "mastra": "1.29.0",
+    "mastra": "1.30.0",
     "tsx": "^4.23.13",
     "typescript": "^6.0.3",
     "vite-tsconfig-paths": "^6.1.1",
