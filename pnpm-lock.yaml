@@ -112,8 +112,8 @@ importers:
         specifier: 1.10.2
         version: 1.10.2(@mastra/core@1.66.0(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))(vitest@5.0.0)
       '@mastra/libsql':
-        specifier: 1.22.5
-        version: 1.22.5(@mastra/core@1.66.0(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))
+        specifier: 1.23.0
+        version: 1.23.0(@mastra/core@1.66.0(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))
       '@mastra/loggers':
         specifier: 1.3.2
         version: 1.3.2(@mastra/core@1.66.0(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))
@@ -2186,8 +2186,8 @@ packages:
       vitest:
         optional: true
 
-  '@mastra/libsql@1.22.5':
-    resolution: {integrity: sha512-L9b64P956xuoBszOsWwBF15Msc4+6E7te+cbHFL7UkOUeg5RigpnWIpFoGJAQCUeK958cmME4aPFi+ZXaswugA==}
+  '@mastra/libsql@1.23.0':
+    resolution: {integrity: sha512-BANqYxmNnxssUHCjuifByOhfG7Oa24CKGsQzVdQcw+m+gQtAJZ+Pr6IErVXhpkkpOEQpIsGVy/D1kB/lekcjaA==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.63.1-0 <2.0.0-0'
@@ -3159,9 +3159,6 @@ packages:
 
   '@types/node@24.13.3':
     resolution: {integrity: sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q==}
-
-  '@types/node@26.5.1':
-    resolution: {integrity: sha512-CzNm2FezW4VR/LjG6yUdiEgLE/rAQ9Slj5gCu/C2VrdcW7I0ahNZ8DRbHT7zOZ6r3ONgd/bsQIeSaoDGrd1C6g==}
 
   '@types/node@26.6.2':
     resolution: {integrity: sha512-X1P21scMv4zGKLYqjdGjaKa7COa0RKVYYZZN/NfvLQ1JegxFhdhpZG/Lyn8AXx6CDUavKAd11v6BvfpkDByK8g==}
@@ -8245,7 +8242,7 @@ snapshots:
     optionalDependencies:
       vitest: 5.0.0(@opentelemetry/api@1.9.1)(@types/node@26.6.2)(@vitest/coverage-istanbul@5.0.0)(@vitest/coverage-v8@5.0.0)(jsdom@29.1.1(@noble/hashes@1.8.0))(msw@2.15.0(@types/node@26.6.2)(typescript@6.0.3))(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))
 
-  '@mastra/libsql@1.22.5(@mastra/core@1.66.0(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))':
+  '@mastra/libsql@1.23.0(@mastra/core@1.66.0(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2))':
     dependencies:
       '@libsql/client': 0.18.0
       '@mastra/core': 1.66.0(ai@7.0.97(zod@4.6.2))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.2)
@@ -9163,10 +9160,6 @@ snapshots:
     dependencies:
       undici-types: 7.18.2
 
-  '@types/node@26.5.1':
-    dependencies:
-      undici-types: 8.9.0
-
   '@types/node@26.6.2':
     dependencies:
       undici-types: 8.9.0
@@ -9183,7 +9176,7 @@ snapshots:
 
   '@types/set-cookie-parser@2.4.10':
     dependencies:
-      '@types/node': 26.5.1
+      '@types/node': 26.6.2
 
   '@types/statuses@2.0.6': {}
 
