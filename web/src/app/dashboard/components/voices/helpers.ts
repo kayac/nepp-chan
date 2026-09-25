@@ -10,10 +10,13 @@ import { periodRange, type VoicePeriod } from "~/lib/voice-period";
 export type VoiceSentiment = PersonaSentiment | "emergency";
 export type VoiceSort = "list" | "topics";
 
+export type VoiceGroup = { id: string; name: string };
+
 export type VoiceFilter = {
   period: VoicePeriod;
   sents: VoiceSentiment[];
   topic: string | null;
+  group: VoiceGroup | null;
   sort: VoiceSort;
 };
 
@@ -21,6 +24,7 @@ export const DEFAULT_FILTER: VoiceFilter = {
   period: "m1",
   sents: [],
   topic: null,
+  group: null,
   sort: "list",
 };
 
@@ -70,6 +74,7 @@ export const toPersonaFilters = (
     ...periodRange(filter.period, now),
     ...(sentiments.length > 0 ? { sentiments } : {}),
     ...(filter.topic ? { topic: filter.topic } : {}),
+    ...(filter.group ? { group: filter.group.id } : {}),
   };
 };
 
@@ -77,8 +82,8 @@ export const shouldIncludePersonas = (filter: VoiceFilter) =>
   filter.sents.length === 0 || filter.sents.some((s) => s !== "emergency");
 
 export const shouldIncludeEmergencies = (filter: VoiceFilter) => {
-  // 緊急には話題が付かないため、話題で絞ったら対象外になる
-  if (filter.topic) {
+  // 緊急には話題も話者も付かないため、どちらかで絞ったら対象外になる
+  if (filter.topic || filter.group) {
     return false;
   }
   return filter.sents.length === 0 || filter.sents.includes("emergency");
@@ -87,7 +92,8 @@ export const shouldIncludeEmergencies = (filter: VoiceFilter) => {
 export const appliedCount = (filter: VoiceFilter) =>
   (filter.period !== DEFAULT_FILTER.period ? 1 : 0) +
   filter.sents.length +
-  (filter.topic ? 1 : 0);
+  (filter.topic ? 1 : 0) +
+  (filter.group ? 1 : 0);
 
 export type FilterChip = { key: string; label: string };
 
@@ -103,6 +109,7 @@ export const activeChips = (filter: VoiceFilter): FilterChip[] => [
     : []),
   ...filter.sents.map((s) => ({ key: `sent:${s}`, label: sentLabel(s) })),
   ...(filter.topic ? [{ key: "topic", label: filter.topic }] : []),
+  ...(filter.group ? [{ key: "group", label: filter.group.name }] : []),
 ];
 
 export const analyzeContextLabel = (filter: VoiceFilter, count: number) => {
@@ -120,6 +127,9 @@ export const removeChip = (filter: VoiceFilter, key: string): VoiceFilter => {
   }
   if (key === "topic") {
     return { ...filter, topic: null };
+  }
+  if (key === "group") {
+    return { ...filter, group: null };
   }
   if (key.startsWith("sent:")) {
     const value = key.slice("sent:".length);

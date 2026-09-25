@@ -5,14 +5,21 @@ import { describe, expect, it, vi } from "vitest";
 import { FilterPopover } from "./FilterPopover";
 import { DEFAULT_FILTER, type VoiceFilter } from "./helpers";
 
+const GROUPS = [
+  { id: "tourist", name: "観光客" },
+  { id: "resident", name: "村内住民" },
+];
+
 const setup = (
   overrides: Partial<VoiceFilter> = {},
   matchCount: number | null = 12,
+  groups = GROUPS,
 ) => {
   const onChange = vi.fn();
   render(
     <FilterPopover
       filter={{ ...DEFAULT_FILTER, ...overrides }}
+      groups={groups}
       matchCount={matchCount}
       onChange={onChange}
     />,
@@ -35,12 +42,23 @@ describe("FilterPopover", () => {
     expect(screen.getByText("話題")).toBeVisible();
   });
 
-  it("誰の声か（セグメント）は絞り込み軸に出さない", async () => {
-    const { user } = setup();
+  it("誰の声かはタググループをピルで出し、選ぶと group に入る", async () => {
+    const { user, onChange } = setup();
+    await user.click(screen.getByRole("button", { name: /絞り込む/ }));
+
+    expect(screen.getByText("誰の声か")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "村内住民" }));
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ group: { id: "resident", name: "村内住民" } }),
+    );
+  });
+
+  it("グループが無ければ誰の声かを出さない", async () => {
+    const { user } = setup({}, 12, []);
     await user.click(screen.getByRole("button", { name: /絞り込む/ }));
 
     expect(screen.queryByText("誰の声か")).toBeNull();
-    expect(screen.queryByRole("button", { name: /村内住民/ })).toBeNull();
   });
 
   it("適用件数をボタンのラベルに出す", () => {

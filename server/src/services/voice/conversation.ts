@@ -181,6 +181,31 @@ export const createVoiceConversation = async ({
     }
   };
 
+  const recordInterruptedTurn = ({
+    userText,
+    heardText,
+  }: {
+    userText: string;
+    heardText: string;
+  }) => {
+    const heard: ModelMessage[] = heardText
+      ? [{ role: "assistant", content: heardText }]
+      : [];
+    history = [
+      ...history,
+      { role: "user" as const, content: userText },
+      ...heard,
+    ].slice(-MAX_HISTORY_MESSAGES);
+  };
+
+  const truncateLastReply = (heardText: string) => {
+    if (history.at(-1)?.role !== "assistant") return;
+    const earlier = history.slice(0, -1);
+    history = heardText
+      ? [...earlier, { role: "assistant", content: heardText }]
+      : earlier;
+  };
+
   const persistTurn = async ({
     turnIndex,
     userText,
@@ -233,5 +258,5 @@ export const createVoiceConversation = async ({
     }
   };
 
-  return { runTurn, persistTurn };
+  return { runTurn, recordInterruptedTurn, truncateLastReply, persistTurn };
 };

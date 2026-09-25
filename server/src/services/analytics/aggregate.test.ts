@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { seedRelationGroups } from "~/__tests__/helpers/tag-groups";
 import { createTestDb, type TestDb } from "~/__tests__/helpers/test-db";
 import { llmUsage, mastraMessages, mastraThreads, persona } from "~/db";
 
@@ -1087,90 +1088,74 @@ describe("getPersonaAnalytics", () => {
   beforeEach(async () => {
     db = await createTestDb();
     testDbHolder.db = db;
+    await seedRelationGroups(db);
   });
 
-  it("tags の年代 × sentiment を集計する", async () => {
+  it("年代はタググループで集計し、60代以上を 1 区分にまとめる", async () => {
     await insertPersona({ id: "p1", tags: "60代,村内", sentiment: "negative" });
     await insertPersona({ id: "p2", tags: "60代", sentiment: "positive" });
     await insertPersona({
       id: "p3",
       tags: "80代以上,村内",
-      sentiment: "request",
+      sentiment: "neutral",
     });
+    await insertPersona({ id: "p4", tags: "高齢者", sentiment: "request" });
+    await insertPersona({ id: "p5", tags: "高校生", sentiment: "neutral" });
 
     const result = await getPersonaAnalytics(d1, {});
 
-    const age60 = result.ageSentiment.find((a) => a.age === "60代");
-    const age80 = result.ageSentiment.find((a) => a.age === "80代以上");
-    expect(age60).toEqual({
-      age: "60代",
+    expect(result.ageSentiment.map((a) => a.age)).toEqual([
+      "10代",
+      "20代",
+      "60代以上",
+      "不明",
+    ]);
+    expect(result.ageSentiment.find((a) => a.age === "60代以上")).toEqual({
+      age: "60代以上",
       positive: 1,
       negative: 1,
-      request: 0,
-      neutral: 0,
-    });
-    expect(age80).toEqual({
-      age: "80代以上",
-      positive: 0,
-      negative: 0,
       request: 1,
-      neutral: 0,
+      neutral: 1,
     });
+    expect(result.ageSentiment.find((a) => a.age === "10代")?.neutral).toBe(1);
   });
 
-  it("tags に年代が無ければ demographic_summary から抽出し、どちらにも無ければ「不明」", async () => {
-    await insertPersona({ id: "p1", demographicSummary: "30代,移住検討者" });
-    await insertPersona({ id: "p2", tags: "観光客" });
+  it("年代は demographic_summary からも拾い、明示の年代を高齢者より優先し、無ければ「不明」", async () => {
+    await insertPersona({ id: "p1", demographicSummary: "20代,高齢者" });
+    await insertPersona({ id: "p2", tags: "そば" });
 
     const result = await getPersonaAnalytics(d1, {});
 
-    expect(result.ageSentiment.find((a) => a.age === "30代")?.neutral).toBe(1);
+    expect(result.ageSentiment.find((a) => a.age === "20代")?.neutral).toBe(1);
     expect(result.ageSentiment.find((a) => a.age === "不明")?.neutral).toBe(1);
   });
 
-  it("topic 9 分類 × sentiment を集計し、topic 無しは「その他」に入る", async () => {
-    await insertPersona({ id: "p1", topic: "交通", sentiment: "negative" });
-    await insertPersona({ id: "p2", topic: "交通", sentiment: "request" });
-    await insertPersona({ id: "p3", sentiment: "positive" }); // topic なし
-
-    const result = await getPersonaAnalytics(d1, {});
-
-    const traffic = result.topics.find((t) => t.topic === "交通");
-    const other = result.topics.find((t) => t.topic === "その他");
-    expect(traffic).toEqual({
-      topic: "交通",
-      total: 2,
-      positive: 0,
-      negative: 1,
-      request: 1,
-      neutral: 0,
-    });
-    expect(other?.total).toBe(1);
-    expect(result.topics).toHaveLength(9);
-  });
-
-  it("居住地（村内/村外）と関係性（村人/観光客/移住検討者/帰省者）を集計する", async () => {
+  it("居住地と関係性をタググループで集計し、関係性は優先順位で 1 つに寄せる", async () => {
     await insertPersona({ id: "p1", tags: "60代,村内" });
     await insertPersona({ id: "p2", tags: "村外,観光客" });
     await insertPersona({ id: "p3", demographicSummary: "30代,移住検討者" });
-    await insertPersona({ id: "p4", tags: "50代" }); // 居住地・関係性なし
+    await insertPersona({ id: "p4", tags: "旅行者" });
+    await insertPersona({ id: "p5", tags: "50代" });
+    await insertPersona({ id: "p6", tags: "村外,村内" });
 
     const result = await getPersonaAnalytics(d1, {});
 
     expect(result.segments.residence).toEqual(
       expect.arrayContaining([
-        { label: "村内", count: 1 },
+        { label: "村内", count: 2 },
         { label: "村外", count: 1 },
-        { label: "不明", count: 2 },
+        { label: "不明", count: 3 },
       ]),
     );
     expect(result.segments.relationship).toEqual(
       expect.arrayContaining([
-        { label: "観光客", count: 1 },
+        { label: "村内住民", count: 2 },
+        { label: "観光客", count: 2 },
         { label: "移住検討者", count: 1 },
-        { label: "不明", count: 2 },
+        { label: "不明", count: 1 },
       ]),
     );
+    expect(result.segments.relationship).toHaveLength(4);
   });
 
   it("from/to は会話終了時刻基準で絞り込み、会話時刻不明の行は除外する", async () => {

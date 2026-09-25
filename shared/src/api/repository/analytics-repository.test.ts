@@ -167,3 +167,35 @@ describe("fetchWeeklyReports", () => {
     expect(result?.reports).toEqual([]);
   });
 });
+
+describe("fetchAudiences", () => {
+  it("from/to をクエリで渡して話者別集計を返す", async () => {
+    server.use(
+      http.get(`${API}/admin/analytics/persona/audiences`, ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        expect(params.get("from")).toBe("2026-06-01");
+        expect(params.get("to")).toBe("2026-06-07");
+        return HttpResponse.json({ axes: [] });
+      }),
+    );
+
+    const result = await repo.fetchAudiences({
+      from: "2026-06-01",
+      to: "2026-06-07",
+    });
+    expect(result.axes).toEqual([]);
+  });
+
+  it("エラーは throw する", async () => {
+    server.use(
+      http.get(`${API}/admin/analytics/persona/audiences`, () =>
+        HttpResponse.json(
+          { error: { code: 500, message: "x" } },
+          { status: 500 },
+        ),
+      ),
+    );
+
+    await expect(repo.fetchAudiences()).rejects.toBeDefined();
+  });
+});

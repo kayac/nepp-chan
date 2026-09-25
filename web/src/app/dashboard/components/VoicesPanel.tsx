@@ -9,6 +9,7 @@ import {
   SORT_OPTIONS,
   type VoiceFilter,
 } from "~/app/dashboard/components/voices/helpers";
+import { useTagGroups } from "~/app/dashboard/hooks/useTagGroups";
 import { EMERGENCY_TOPIC, useVoices } from "~/app/dashboard/hooks/useVoices";
 import { ErrorBanner, formatError } from "~/components/ui/ErrorBanner";
 import { PanelLoading } from "~/components/ui/PanelLoading";
@@ -101,6 +102,10 @@ export const VoicesPanel = ({ initialFilter, onAskMayor }: Props) => {
     isFetchingNextPage,
     loadMoreRef,
   } = useVoices(initialFilter);
+  const tagGroups = useTagGroups();
+  const groups = (tagGroups.data?.groups ?? [])
+    .filter((g) => g.kind === "attribute")
+    .map((g) => ({ id: g.id, name: g.name }));
 
   if (isLoading) {
     return <PanelLoading />;
@@ -121,6 +126,7 @@ export const VoicesPanel = ({ initialFilter, onAskMayor }: Props) => {
       <div className="flex flex-wrap items-center gap-3">
         <FilterPopover
           filter={filter}
+          groups={groups}
           matchCount={matchCount}
           onChange={setFilter}
         />

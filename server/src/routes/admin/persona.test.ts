@@ -4,6 +4,10 @@ vi.mock("~/repository/persona-repository", () => ({
   personaRepository: { listForAdmin: vi.fn(), topicBreakdown: vi.fn() },
 }));
 
+vi.mock("~/repository/persona-tag-group-repository", () => ({
+  personaTagGroupRepository: { listTagsByGroup: vi.fn() },
+}));
+
 vi.mock("~/services/persona-extractor", () => ({
   extractAllPendingThreads: vi.fn(),
   extractPersonaFromThreadById: vi.fn(),
@@ -22,6 +26,9 @@ vi.mock("~/services/auth/anonymous-session", () => ({
 }));
 
 const { personaRepository } = await import("~/repository/persona-repository");
+const { personaTagGroupRepository } = await import(
+  "~/repository/persona-tag-group-repository"
+);
 const personaExtractor = await import("~/services/persona-extractor");
 const { adminSessionRepository } = await import(
   "~/repository/admin-session-repository"
@@ -188,6 +195,54 @@ describe("personaAdminRoutes", () => {
         from: "2029-12-31T15:00:00.000Z",
         to: "2030-02-01T15:00:00.000Z",
       });
+    });
+
+    it("group はグループの所属タグに解決して repository に渡す", async () => {
+      useAdminAuth();
+      vi.mocked(personaTagGroupRepository.listTagsByGroup).mockResolvedValue([
+        "村内",
+        "村人",
+      ]);
+      vi.mocked(personaRepository.listForAdmin).mockResolvedValue({
+        personas: [],
+        total: 0,
+        nextCursor: null,
+        hasMore: false,
+      });
+
+      const res = await routes.request(
+        authed("GET", "/?group=resident"),
+        undefined,
+        mockEnv,
+      );
+
+      expect(res.status).toBe(200);
+      expect(personaTagGroupRepository.listTagsByGroup).toHaveBeenCalledWith(
+        mockEnv.DB,
+        "resident",
+      );
+      expect(personaRepository.listForAdmin).toHaveBeenCalledWith(
+        mockEnv.DB,
+        expect.objectContaining({ attributeTags: ["村内", "村人"] }),
+      );
+    });
+
+    it("group が無ければ attributeTags を渡さない", async () => {
+      useAdminAuth();
+      vi.mocked(personaRepository.listForAdmin).mockResolvedValue({
+        personas: [],
+        total: 0,
+        nextCursor: null,
+        hasMore: false,
+      });
+
+      await routes.request(authed("GET", "/"), undefined, mockEnv);
+
+      expect(personaTagGroupRepository.listTagsByGroup).not.toHaveBeenCalled();
+      expect(personaRepository.listForAdmin).toHaveBeenCalledWith(
+        mockEnv.DB,
+        expect.objectContaining({ attributeTags: undefined }),
+      );
     });
 
     it("日付形式でない from は 400", async () => {

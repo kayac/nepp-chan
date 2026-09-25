@@ -128,7 +128,7 @@ throw new HTTPException(404, { message: "Not found" });
 | -------------- | --------------------------------------- | ----------------------------------------------------------------- |
 | `*/5 * * * *`  | handleBroadcastCheck                    | 配信予約チェック（5分ごと）                                        |
 | `*/5 * * * *`  | handlePollCheck                         | 投票予約配信チェック（5分ごと）                                    |
-| `0 18 * * *`   | handlePersonaExtract → handleDataRetention | ペルソナ抽出 + 保管期間自動削除（毎日03:00 JST、順次実行。retention は Sentry Cron Monitor で不起動検知） |
+| `0 18 * * *`   | handlePersonaExtract → handleDataRetention → handleTagGroupAssign | ペルソナ抽出 + 保管期間自動削除 + 未登録タグのグループ振り分け 1 バッチ（毎日03:00 JST、順次実行。retention は Sentry Cron Monitor で不起動検知） |
 | `0 20 * * 1`   | handleWeeklyReport                      | 週次レポート生成（毎週火曜05:00 JST、前週月〜日が対象。Sentry Cron Monitor で不起動検知） |
 
 ### 保管期間自動削除

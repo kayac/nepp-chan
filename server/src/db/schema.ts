@@ -26,6 +26,25 @@ export const persona = sqliteTable("persona", {
   conversationEndedAt: text("conversation_ended_at"),
 });
 
+export const personaTagGroups = sqliteTable("persona_tag_groups", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  kind: text("kind").notNull(),
+  axis: text("axis"),
+  sortOrder: integer("sort_order").notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at"),
+});
+
+// group_id が NULL の行は「見たが割り当て先を決められなかった」未分類
+export const personaTagAliases = sqliteTable("persona_tag_aliases", {
+  tag: text("tag").primaryKey(),
+  groupId: text("group_id"),
+  assignedBy: text("assigned_by").notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at"),
+});
+
 // スレッドペルソナ処理状態
 export const threadPersonaStatus = sqliteTable("thread_persona_status", {
   threadId: text("thread_id").primaryKey(),
@@ -58,6 +77,8 @@ export type EmergencyReport = typeof emergencyReports.$inferSelect;
 export type NewEmergencyReport = typeof emergencyReports.$inferInsert;
 
 export type Persona = typeof persona.$inferSelect;
+export type PersonaTagGroup = typeof personaTagGroups.$inferSelect;
+export type PersonaTagAlias = typeof personaTagAliases.$inferSelect;
 export type NewPersona = typeof persona.$inferInsert;
 
 export type ThreadPersonaStatus = typeof threadPersonaStatus.$inferSelect;

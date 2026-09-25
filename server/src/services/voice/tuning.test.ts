@@ -46,7 +46,7 @@ describe("parseVoiceTuning", () => {
   it("speechTimeout の範囲外は既定値へフォールバックし invalidKeys に含める", () => {
     for (const value of ["599", "5001", "abc"]) {
       const { relay, invalidKeys } = parseVoiceTuning({ speechTimeout: value });
-      expect(relay.speechTimeout).toBe("600");
+      expect(relay.speechTimeout).toBe("3000");
       expect(invalidKeys).toContain("speechTimeout");
     }
   });
@@ -82,7 +82,7 @@ describe("parseVoiceTuning", () => {
       interruptSensitivity: "max",
     });
     expect(relay.interruptible).toBe("speech");
-    expect(relay.interruptSensitivity).toBeUndefined();
+    expect(relay.interruptSensitivity).toBe("medium");
     expect(invalidKeys).toEqual(
       expect.arrayContaining(["interruptible", "interruptSensitivity"]),
     );
@@ -110,7 +110,7 @@ describe("parseVoiceTuning", () => {
     expect(relay.welcomeGreeting).toBe(
       "もしもし、ねっぷちゃんだよ。なんでも聞いてね。",
     );
-    expect(relay.hints).toBe("音威子府,おといねっぷ");
+    expect(relay.hints).toBe(VOICE_TUNING_DEFAULTS.hints);
     expect(invalidKeys).toEqual(
       expect.arrayContaining(["welcomeGreeting", "hints"]),
     );
@@ -119,10 +119,10 @@ describe("parseVoiceTuning", () => {
   it("bridge 系キーは bridge に分配される", () => {
     const { bridge } = parseVoiceTuning({
       fillerEnabled: "false",
-      aizuchiCooldownMs: "4000",
+      holdPhraseIntervalMs: "8000",
     });
     expect(bridge.fillerEnabled).toBe(false);
-    expect(bridge.aizuchiCooldownMs).toBe(4000);
+    expect(bridge.holdPhraseIntervalMs).toBe(8000);
   });
 });
 
