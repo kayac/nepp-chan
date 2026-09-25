@@ -52,7 +52,7 @@
   },
   "devDependencies": {
     "@libsql/client": "^0.18.0",
-    "@types/node": "^26.5.1",
+    "@types/node": "^26.6.2",
     "@vitest/coverage-istanbul": "~5.0.0",
     "drizzle-kit": "^0.31.10",
     "mastra": "1.29.0",
