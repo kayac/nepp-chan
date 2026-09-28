@@ -61,7 +61,7 @@ export type BridgeConfig = {
 
 export const BRIDGE_CONFIG_DEFAULTS: BridgeConfig = {
   fillerEnabled: true,
-  fillerDelayMs: 0,
+  fillerDelayMs: 1_000,
   thinkingFillers: [...THINKING_FILLERS],
   backchannelFillers: [...BACKCHANNEL_FILLERS],
   holdAudioEnabled: false,

@@ -66,10 +66,14 @@ describe("parseBridgeConfig: 遅延ノブ", () => {
     expect(config.holdDelayMs).toBe(5000);
   });
 
-  it("範囲外・非数値は既定値（0）へフォールバックする", () => {
+  it("範囲外・非数値は既定値へフォールバックする", () => {
     for (const value of ["-1", "5001", "abc"]) {
-      expect(parseBridgeConfig({ fillerDelayMs: value }).fillerDelayMs).toBe(0);
-      expect(parseBridgeConfig({ holdDelayMs: value }).holdDelayMs).toBe(0);
+      expect(parseBridgeConfig({ fillerDelayMs: value }).fillerDelayMs).toBe(
+        BRIDGE_CONFIG_DEFAULTS.fillerDelayMs,
+      );
+      expect(parseBridgeConfig({ holdDelayMs: value }).holdDelayMs).toBe(
+        BRIDGE_CONFIG_DEFAULTS.holdDelayMs,
+      );
     }
   });
 });
