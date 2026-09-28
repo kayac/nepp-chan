@@ -15,7 +15,7 @@ import { requireAuth } from "~/middleware/auth";
 import type { ThreadVariables } from "~/middleware/require-thread-access";
 import { requireThreadAccess } from "~/middleware/require-thread-access";
 import { widgetSiteRepository } from "~/repository/widget-site-repository";
-import { nextTurnIndex, recordLlmUsage } from "~/services/analytics/llm-usage";
+import { newTurnId, recordLlmUsage } from "~/services/analytics/llm-usage";
 
 export const chatRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -93,16 +93,16 @@ chatRoutes.openapi(chatRoute, async (c) => {
   const platform = thread.resourceId.startsWith("widget-") ? "widget" : "web";
   const isWidgetGreeting = platform === "widget" && isGreeting === true;
   const storagePromise = getStorage(c.env.DB);
-  const [site, storage, turnIndex, previousAssistant] = await Promise.all([
+  const [site, storage, previousAssistant] = await Promise.all([
     platform === "widget" && siteHost
       ? widgetSiteRepository.findByHost(c.env.DB, siteHost)
       : null,
     storagePromise,
-    nextTurnIndex(c.env.DB, threadId),
     fixedIntent
       ? undefined
       : storagePromise.then((s) => latestAssistantText(s, threadId)),
   ]);
+  const turnId = newTurnId();
   const verifiedCurrentPageUrl =
     site &&
     currentPageUrl &&
@@ -119,7 +119,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
     adminUser,
     usagePlatform: platform,
     usageThreadId: threadId,
-    usageTurnIndex: turnIndex,
+    usageTurnId: turnId,
   });
 
   // Intent 分類でモデルティアを決定（fixedIntent 指定時はルータースキップ）
@@ -172,7 +172,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
           agent: "nepp-chan",
           intent,
           threadId,
-          turnIndex,
+          turnId,
           durationMs: Date.now() - startedAt,
         }),
       ),

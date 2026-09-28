@@ -20,12 +20,6 @@ describe("isQuestionLike", () => {
 });
 
 describe("pickFiller", () => {
-  it("質問には考えるリードを返す", () => {
-    expect(THINKING_FILLERS).toContain(pickFiller("今日の天気を教えて", 0));
-    expect(THINKING_FILLERS).toContain(pickFiller("そばって美味しいの？", 0));
-    expect(THINKING_FILLERS).toContain(pickFiller("駅はどこ", 0));
-  });
-
   it("報告・雑談には相槌を返す", () => {
     expect(BACKCHANNEL_FILLERS).toContain(pickFiller("今日は疲れたよ", 0));
     expect(BACKCHANNEL_FILLERS).toContain(pickFiller("ラーメン食べたい", 0));
@@ -43,12 +37,5 @@ describe("pickFiller", () => {
     const pools = { thinking: ["どれどれ"], backchannel: ["ふむ", "ほう"] };
     expect(pickFiller("駅はどこ", 0, pools)).toBe("どれどれ");
     expect(pickFiller("今日は疲れたよ", 1, pools)).toBe("ほう");
-  });
-
-  it("読み上げ可能な短い日本語（装飾記号なし）", () => {
-    for (const f of [...THINKING_FILLERS, ...BACKCHANNEL_FILLERS]) {
-      expect(f.length).toBeGreaterThan(0);
-      expect(f).not.toMatch(/[*#`~]/);
-    }
   });
 });

@@ -276,29 +276,6 @@ describe("HomePanel", () => {
     expect(onShowAnalytics).toHaveBeenCalledWith("overview");
   });
 
-  it("サマリーに声の内訳と声の分布を出す", async () => {
-    useDefaultHandlers();
-    renderWithQuery(
-      <HomePanel onNavigate={vi.fn()} onShowAnalytics={vi.fn()} />,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId("sentiment-breakdown")).toBeInTheDocument();
-    });
-    // 期待値は topics 2 行の合算
-    const breakdown = screen.getByTestId("sentiment-breakdown");
-    expect(breakdown.textContent).toContain("ポジティブ 8");
-    expect(breakdown.textContent).toContain("ネガティブ 5");
-    expect(breakdown.textContent).toContain("要望 3");
-
-    const speakers = screen.getByTestId("speaker-breakdown");
-    // 年代の件数は sentiment 内訳の合算
-    expect(speakers.textContent).toContain("50代 8");
-    expect(speakers.textContent).toContain("村内 12");
-    expect(speakers.textContent).toContain("村人 10");
-    expect(speakers.textContent).not.toContain("不明");
-  });
-
   it("サマリーの感情から声一覧へ絞り込んで遷移する", async () => {
     const onNavigate = vi.fn();
     useDefaultHandlers();
@@ -316,19 +293,6 @@ describe("HomePanel", () => {
       period: "d7",
       sents: ["request"],
     });
-  });
-
-  it("会話数の単独カードは出さない", async () => {
-    useDefaultHandlers();
-    renderWithQuery(
-      <HomePanel onNavigate={vi.fn()} onShowAnalytics={vi.fn()} />,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText("✨ 今週の話題")).toBeVisible();
-    });
-    expect(screen.queryByText(/最近の会話/)).toBeNull();
-    expect(screen.getAllByText(/村の分析で見る/).length).toBeGreaterThan(0);
   });
 
   it("予約中の配信と実施中の投票を表示する", async () => {

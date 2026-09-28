@@ -87,6 +87,29 @@ const usePersonaHandlers = () => {
     http.get(`${API}/admin/emergency`, () =>
       HttpResponse.json({ emergencies }),
     ),
+    http.get(`${API}/admin/tag-groups`, () =>
+      HttpResponse.json({
+        groups: [
+          {
+            id: "tourist",
+            name: "観光客",
+            kind: "attribute",
+            axis: "関わり",
+            sortOrder: 10,
+            tags: [],
+          },
+          {
+            id: "topic-food",
+            name: "食",
+            kind: "topic",
+            axis: null,
+            sortOrder: 1020,
+            tags: [],
+          },
+        ],
+        unassigned: [],
+      }),
+    ),
   );
   return calls;
 };
@@ -258,16 +281,6 @@ describe("VoicesPanel", () => {
     expect(cards.every((c) => c.textContent?.includes("緊急"))).toBe(true);
   });
 
-  it("緊急だけを選ぶとペルソナを取得しない", async () => {
-    const calls = usePersonaHandlers();
-    renderWithQuery(<VoicesPanel initialFilter={{ sents: ["emergency"] }} />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/熊の出没/)).toBeInTheDocument();
-    });
-    expect(calls).toHaveLength(0);
-  });
-
   it("分析ボタンでフィルター文脈つきの onAskMayor が呼ばれる", async () => {
     usePersonaHandlers();
     const onAskMayor = vi.fn();
@@ -310,5 +323,24 @@ describe("VoicesPanel", () => {
     await waitFor(() => {
       expect(screen.getByText(/熊の出没/)).toBeInTheDocument();
     });
+  });
+  it("誰の声かで観光客を選ぶと group をサーバーに送り、チップに出る", async () => {
+    const calls = usePersonaHandlers();
+    renderWithQuery(<VoicesPanel />);
+    await waitFor(() =>
+      expect(screen.getByText(/件が該当/)).toBeInTheDocument(),
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /絞り込む/ }));
+    const popover = screen.getByText("誰の声か").closest("div") as HTMLElement;
+    expect(within(popover).queryByRole("button", { name: "食" })).toBeNull();
+    await userEvent.click(
+      within(popover).getByRole("button", { name: "観光客" }),
+    );
+
+    await waitFor(() => expect(calls.at(-1)?.get("group")).toBe("tourist"));
+    expect(
+      screen.getByRole("button", { name: "観光客 を解除" }),
+    ).toBeInTheDocument();
   });
 });

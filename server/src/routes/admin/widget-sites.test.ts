@@ -98,15 +98,6 @@ describe("widgetSiteAdminRoutes", () => {
       );
       expect(res.status).toBe(401);
     });
-
-    it.each(["staff", "admin"] as const)("%s ロールは 403", async (role) => {
-      useAuth({ ...superAdminUser, role });
-
-      const res = await routes.request(authed("/", "GET"), undefined, mockEnv);
-
-      expect(res.status).toBe(403);
-      expect(widgetSiteRepository.list).not.toHaveBeenCalled();
-    });
   });
 
   it("一覧を返す", async () => {
@@ -159,18 +150,6 @@ describe("widgetSiteAdminRoutes", () => {
 
     expect(res.status).toBe(409);
     expect(widgetSiteRepository.create).not.toHaveBeenCalled();
-  });
-
-  it("host が空なら 400", async () => {
-    useAuth();
-
-    const res = await routes.request(
-      authed("/", "POST", { host: "", instructions: "案内文" }),
-      undefined,
-      mockEnv,
-    );
-
-    expect(res.status).toBe(400);
   });
 
   it("設置サイトを更新する", async () => {

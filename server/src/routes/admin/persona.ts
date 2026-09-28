@@ -5,6 +5,7 @@ import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
 import { requireRole } from "~/middleware/require-role";
 import { personaRepository } from "~/repository/persona-repository";
+import { personaTagGroupRepository } from "~/repository/persona-tag-group-repository";
 import {
   extractAllPendingThreads,
   extractPersonaFromThreadById,
@@ -37,7 +38,14 @@ const filterQuerySchema = z.object({
         .optional(),
     ),
   topic: z.string().optional(),
+  group: z
+    .string()
+    .optional()
+    .describe("タググループ id。所属タグのいずれかを持つ声に絞る"),
 });
+
+const attributeTagsOf = async (d1: D1Database, group: string | undefined) =>
+  group ? personaTagGroupRepository.listTagsByGroup(d1, group) : undefined;
 
 // from/to は JST 日付。to はその日を含むため翌日 0:00 JST 未満に広げる
 const toPeriod = (from?: string, to?: string) => ({
@@ -95,8 +103,10 @@ const listRoute = createRoute({
 });
 
 personaAdminRoutes.openapi(listRoute, async (c) => {
-  const { limit, cursor, from, to, sentiments, topic } = c.req.valid("query");
+  const { limit, cursor, from, to, sentiments, topic, group } =
+    c.req.valid("query");
   const result = await personaRepository.listForAdmin(c.env.DB, {
+    attributeTags: await attributeTagsOf(c.env.DB, group),
     limit,
     cursor: cursor ?? undefined,
     ...toPeriod(from, to),
@@ -142,8 +152,9 @@ const topicsRoute = createRoute({
 });
 
 personaAdminRoutes.openapi(topicsRoute, async (c) => {
-  const { from, to, sentiments, topic } = c.req.valid("query");
+  const { from, to, sentiments, topic, group } = c.req.valid("query");
   const topics = await personaRepository.topicBreakdown(c.env.DB, {
+    attributeTags: await attributeTagsOf(c.env.DB, group),
     ...toPeriod(from, to),
     sentiments,
     topic,

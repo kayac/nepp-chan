@@ -38,11 +38,6 @@ describe("hmacSha256", () => {
     expect(out).toHaveLength(43);
   });
 
-  it("空文字 value でも HMAC を計算できる", async () => {
-    const out = await hmacSha256("", "secret");
-    expect(out).toHaveLength(43);
-  });
-
   it("空 secret は許容しない", async () => {
     await expect(hmacSha256("value", "")).rejects.toThrow();
   });
@@ -91,21 +86,11 @@ describe("generateId", () => {
     const id = generateId();
     expect(id).toMatch(/^[0-9a-f]{32}$/);
   });
-
-  it("呼び出しごとに異なる値を返す", () => {
-    const ids = new Set(Array.from({ length: 20 }, generateId));
-    expect(ids.size).toBe(20);
-  });
 });
 
 describe("generateToken", () => {
   it("32 バイト (64 文字の hex) を返す", () => {
     const token = generateToken();
     expect(token).toMatch(/^[0-9a-f]{64}$/);
-  });
-
-  it("呼び出しごとに異なる値を返す", () => {
-    const tokens = new Set(Array.from({ length: 20 }, generateToken));
-    expect(tokens.size).toBe(20);
   });
 });

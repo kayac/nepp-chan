@@ -11,6 +11,15 @@ export const createAnalyticsRepository = (client: ApiClient) => ({
     return data;
   },
 
+  fetchAudiences: async (params: { from?: string; to?: string } = {}) => {
+    const { data, error } = await client.GET(
+      "/admin/analytics/persona/audiences",
+      { params: { query: params } },
+    );
+    if (error) throw error;
+    return data;
+  },
+
   fetchOntology: async () => {
     const { data, error } = await client.GET("/admin/analytics/ontology");
     if (error) throw error;

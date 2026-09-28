@@ -57,10 +57,4 @@ describe("userPollStateRepository", () => {
       await userPollStateRepository.findByUserId(fakeD1, "u2"),
     ).not.toBeNull();
   });
-
-  it("deleteByUserId: 該当が無ければ 0 件を返す", async () => {
-    expect(await userPollStateRepository.deleteByUserId(fakeD1, "ghost")).toBe(
-      0,
-    );
-  });
 });

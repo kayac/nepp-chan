@@ -1,7 +1,7 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { ROLE_LABELS, useRole } from "./useRole";
+import { useRole } from "./useRole";
 
 const buildUser = (role: "super_admin" | "admin" | "staff") => ({
   id: "u-1",
@@ -43,13 +43,5 @@ describe("useRole", () => {
     expect(result.current.hasRole("admin")).toBe(true);
     expect(result.current.hasRole("super_admin")).toBe(true);
     expect(result.current.isSuperAdmin).toBe(true);
-  });
-});
-
-describe("ROLE_LABELS", () => {
-  it("3 ロール分のラベルが定義されている", () => {
-    expect(ROLE_LABELS.super_admin).toBe("スーパー管理者");
-    expect(ROLE_LABELS.admin).toBe("管理者");
-    expect(ROLE_LABELS.staff).toBe("職員");
   });
 });

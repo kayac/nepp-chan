@@ -16,7 +16,7 @@ export type MastraRequestContextType = {
   adminUser?: AuthUser;
   usagePlatform?: LlmUsagePlatform;
   usageThreadId?: string;
-  usageTurnIndex?: number;
+  usageTurnId?: string;
   voiceFindings?: VoiceFindingsSlot;
   voicePrefetch?: VoicePrefetchSlot;
   voiceParentRouting?: boolean;
@@ -44,8 +44,8 @@ export const createRequestContext = (values: MastraRequestContextType) => {
   if (values.usageThreadId) {
     requestContext.set("usageThreadId", values.usageThreadId);
   }
-  if (values.usageTurnIndex !== undefined) {
-    requestContext.set("usageTurnIndex", values.usageTurnIndex);
+  if (values.usageTurnId !== undefined) {
+    requestContext.set("usageTurnId", values.usageTurnId);
   }
   if (values.voiceFindings) {
     requestContext.set("voiceFindings", values.voiceFindings);

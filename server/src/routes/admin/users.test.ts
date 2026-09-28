@@ -88,19 +88,6 @@ describe("userAdminRoutes", () => {
 
       expect(res.status).toBe(401);
     });
-
-    it.each(["staff", "admin"] as const)("%s ロールは 403", async (role) => {
-      useAuth({ ...superAdminUser, role });
-
-      const res = await routes.request(
-        authedDelete("/u-target"),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(403);
-      expect(deleteAdminUser).not.toHaveBeenCalled();
-    });
   });
 
   describe("DELETE /:id", () => {

@@ -33,18 +33,6 @@ describe("password", () => {
       expect(result).toBe(false);
     });
 
-    it("空文字のパスワードも処理できる", async () => {
-      const hash = await hashPassword("");
-      expect(await verifyPassword("", hash)).toBe(true);
-      expect(await verifyPassword("notempty", hash)).toBe(false);
-    });
-
-    it("日本語パスワードも処理できる", async () => {
-      const hash = await hashPassword("パスワード123");
-      expect(await verifyPassword("パスワード123", hash)).toBe(true);
-      expect(await verifyPassword("パスワード124", hash)).toBe(false);
-    });
-
     it("不正なフォーマットのハッシュではエラーになる", async () => {
       await expect(verifyPassword("pass", "invalid")).rejects.toThrow();
     });

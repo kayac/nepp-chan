@@ -53,9 +53,4 @@ describe("splitMessagesForLine", () => {
     expect(result[3]).toBe("b".repeat(1000));
     expect(result[4]).toBe("c".repeat(5000));
   });
-
-  it("単一テキストの分割（splitMessage 相当）が正しく動作する", () => {
-    const text = "hello world";
-    expect(splitMessagesForLine([text])).toEqual(["hello world"]);
-  });
 });

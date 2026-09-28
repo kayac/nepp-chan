@@ -72,37 +72,31 @@ describe("handleR2Event", () => {
     expect(syncFile).not.toHaveBeenCalled();
   });
 
-  it.each(["PutObject", "CompleteMultipartUpload", "CopyObject"] as const)(
-    "%s は R2 の内容で syncFile を呼ぶ",
-    async (action) => {
-      const m = buildMessage(action, "doc.md");
+  it("PutObject は R2 の内容で syncFile を呼ぶ", async () => {
+    const m = buildMessage("PutObject", "doc.md");
 
-      await handleR2Event(buildBatch([m]), env);
+    await handleR2Event(buildBatch([m]), env);
 
-      expect(syncFile).toHaveBeenCalledWith("doc.md", "md", {
-        vectorize: env.VECTORIZE,
-        apiKey: "key",
-        d1: env.DB,
-      });
-      expect(m.ack).toHaveBeenCalled();
-    },
-  );
+    expect(syncFile).toHaveBeenCalledWith("doc.md", "md", {
+      vectorize: env.VECTORIZE,
+      apiKey: "key",
+      d1: env.DB,
+    });
+    expect(m.ack).toHaveBeenCalled();
+  });
 
-  it.each(["DeleteObject", "LifecycleDeletion"] as const)(
-    "%s は deleteKnowledgeBySource のみ",
-    async (action) => {
-      const m = buildMessage(action, "doc.md");
+  it("DeleteObject は deleteKnowledgeBySource のみ", async () => {
+    const m = buildMessage("DeleteObject", "doc.md");
 
-      await handleR2Event(buildBatch([m]), env);
+    await handleR2Event(buildBatch([m]), env);
 
-      expect(deleteKnowledgeBySource).toHaveBeenCalledWith(
-        env.VECTORIZE,
-        "doc.md",
-      );
-      expect(syncFile).not.toHaveBeenCalled();
-      expect(m.ack).toHaveBeenCalled();
-    },
-  );
+    expect(deleteKnowledgeBySource).toHaveBeenCalledWith(
+      env.VECTORIZE,
+      "doc.md",
+    );
+    expect(syncFile).not.toHaveBeenCalled();
+    expect(m.ack).toHaveBeenCalled();
+  });
 
   it("R2 から取得できないと retry", async () => {
     r2Bucket.get.mockResolvedValue(null);

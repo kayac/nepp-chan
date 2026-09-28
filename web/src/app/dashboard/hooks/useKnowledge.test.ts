@@ -7,14 +7,9 @@ import { setAuthToken } from "~/lib/auth-token";
 import { server } from "~/test/msw-server";
 import { renderHookWithQuery } from "~/test/query";
 import {
-  useConvertFile,
-  useDeleteFile,
-  useDraftCurated,
   useKnowledgeFile,
   useKnowledgeFileExists,
   useKnowledgeFiles,
-  useSaveFile,
-  useSyncKnowledge,
   useUploadFiles,
 } from "./useKnowledge";
 
@@ -162,72 +157,6 @@ describe("useKnowledgeFiles", () => {
   });
 });
 
-describe("knowledge mutations", () => {
-  it("useSaveFile: 成功で isSuccess", async () => {
-    server.use(
-      http.put(`${API}/admin/knowledge/files/doc.md`, () =>
-        HttpResponse.json({ message: "saved" }),
-      ),
-    );
-
-    const { result } = renderHookWithQuery(() => useSaveFile());
-
-    await act(async () => {
-      await result.current.mutateAsync({ key: "doc.md", content: "# x" });
-    });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-  });
-
-  it("useDeleteFile: 成功で isSuccess", async () => {
-    server.use(
-      http.delete(`${API}/admin/knowledge/files/doc.md`, () =>
-        HttpResponse.json({ message: "deleted" }),
-      ),
-    );
-
-    const { result } = renderHookWithQuery(() => useDeleteFile());
-
-    await act(async () => {
-      await result.current.mutateAsync("doc.md");
-    });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-  });
-
-  it("useSyncKnowledge: 投入件数を返す", async () => {
-    server.use(
-      http.post(`${API}/admin/knowledge/sync`, () =>
-        HttpResponse.json({ message: "queued", queued: 338 }),
-      ),
-    );
-
-    const { result } = renderHookWithQuery(() => useSyncKnowledge());
-
-    await act(async () => {
-      await result.current.mutateAsync();
-    });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.queued).toBe(338);
-  });
-
-  it("useConvertFile: 成功で isSuccess", async () => {
-    server.use(
-      http.post(`${API}/admin/knowledge/convert`, () =>
-        HttpResponse.json({ key: "k", chunks: 1, originalType: "image/png" }),
-      ),
-    );
-
-    const { result } = renderHookWithQuery(() => useConvertFile());
-
-    await act(async () => {
-      await result.current.mutateAsync({
-        file: new File(["x"], "f.png", { type: "image/png" }),
-        filename: "f",
-      });
-    });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-  });
-});
-
 describe("useUploadFiles", () => {
   const item = (relativePath: string) => ({
     file: new File(["# x"], relativePath.split("/").pop() ?? relativePath),
@@ -270,32 +199,5 @@ describe("useUploadFiles", () => {
       uploaded: 2,
       failed: [{ ...items[1], error: "boom" }],
     });
-  });
-});
-
-describe("useDraftCurated", () => {
-  it("multipart POST して下書きを返す", async () => {
-    server.use(
-      http.post(`${API}/admin/knowledge/curated-draft`, () =>
-        HttpResponse.json({
-          key: "curated/x.md",
-          content: "# x",
-          readUrls: ["https://a.example/"],
-          unreadable: [],
-        }),
-      ),
-    );
-
-    const { result } = renderHookWithQuery(() => useDraftCurated());
-
-    await act(async () => {
-      await result.current.mutateAsync({
-        urls: ["https://a.example/"],
-        files: [],
-      });
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.key).toBe("curated/x.md");
   });
 });

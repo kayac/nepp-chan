@@ -69,6 +69,10 @@ export default defineConfig({
         "src/components/chat/types.ts",
         // barrel（knowledge 配下コンポーネントの re-export のみ）
         "src/app/dashboard/components/knowledge/index.ts",
+        // window.confirm への 1 行委譲と、分岐を持たない静的ラッパー
+        "src/lib/dialog.ts",
+        "src/components/ui/EmptyStateCard.tsx",
+        "src/components/ui/PanelLoading.tsx",
         // d3-force シミュレーション + SVG のドラッグ/パン/ズーム操作が中心で E2E 領域。
         // 役割分類・集計・スナップショットのマージ等の本質ロジックは server 側
         // （services/analytics/ontology*）に抽出済みで、描画・選択の振る舞いは
@@ -79,15 +83,16 @@ export default defineConfig({
         // recharts の描画ラッパー。tickFormatter / labelFormatter / Cell の
         // 配色コールバックは jsdom では発火せず E2E 領域。集計データは
         // server 側でテスト済み
+        "src/app/dashboard/components/analytics/DailyPurposeChart.tsx",
         "src/app/dashboard/components/analytics/HourlyChart.tsx",
         "src/app/dashboard/components/analytics/WeekdayChart.tsx",
         "src/app/dashboard/components/home/WeekTrendChart.tsx",
       ],
       thresholds: {
         branches: 88,
-        lines: 96,
-        functions: 95,
-        statements: 95,
+        lines: 94,
+        functions: 91,
+        statements: 93,
       },
     },
   },

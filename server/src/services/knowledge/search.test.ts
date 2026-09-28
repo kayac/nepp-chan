@@ -51,21 +51,6 @@ beforeEach(() => {
 });
 
 describe("searchKnowledge", () => {
-  it("reranker は Luna の reasoning none を使う", () => {
-    const config = agentConfigs.find(
-      (candidate) => candidate.id === "relevance-scorer-knowledge-reranker",
-    );
-    if (!config) throw new Error("reranker Agent が構築されていない");
-    const defaultOptions = (
-      config.defaultOptions as (args: Record<string, unknown>) => {
-        providerOptions: { openai: { reasoningEffort: string } };
-      }
-    )({});
-
-    expect(config.model).toBe("openai/gpt-5.6-luna");
-    expect(defaultOptions.providerOptions.openai.reasoningEffort).toBe("none");
-  });
-
   it("matches が無ければ空配列を返す", async () => {
     vi.mocked(embed).mockResolvedValueOnce({ embedding: [0.1] } as never);
     const vectorize = buildVectorize();
@@ -181,26 +166,5 @@ describe("searchKnowledge", () => {
 
     const result = await searchKnowledge("q", vectorize, "key");
     expect(result.error).toBe("Unknown error");
-  });
-
-  it("rerank の topK / weights を指定して呼ぶ", async () => {
-    vi.mocked(embed).mockResolvedValueOnce({ embedding: [0.1] } as never);
-    const vectorize = buildVectorize();
-    vi.mocked(vectorize.query).mockResolvedValueOnce({
-      matches: [{ id: "v1", score: 0.5, metadata: { content: "x" } }],
-    } as never);
-    vi.mocked(rerankWithScorer).mockResolvedValueOnce([] as never);
-
-    await searchKnowledge("q", vectorize, "key");
-
-    const arg = vi.mocked(rerankWithScorer).mock.calls[0]?.[0] as {
-      options: { topK: number; weights: Record<string, number> };
-    };
-    expect(arg.options.topK).toBe(5);
-    expect(arg.options.weights).toEqual({
-      semantic: 0.5,
-      vector: 0.3,
-      position: 0.2,
-    });
   });
 });

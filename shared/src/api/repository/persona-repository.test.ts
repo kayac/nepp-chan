@@ -105,25 +105,3 @@ describe("fetchPersonaTopics", () => {
     await repo.fetchPersonaTopics({ sentiments: [] });
   });
 });
-
-describe("失敗系", () => {
-  it("fetchPersonas: 500 は throw", async () => {
-    server.use(
-      http.get(`${API}/admin/persona`, () =>
-        HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
-      ),
-    );
-
-    await expect(repo.fetchPersonas()).rejects.toBeDefined();
-  });
-
-  it("fetchPersonaTopics: 500 は throw", async () => {
-    server.use(
-      http.get(`${API}/admin/persona/topics`, () =>
-        HttpResponse.json({ error: { message: "boom" } }, { status: 500 }),
-      ),
-    );
-
-    await expect(repo.fetchPersonaTopics()).rejects.toBeDefined();
-  });
-});

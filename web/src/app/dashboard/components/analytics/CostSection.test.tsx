@@ -14,8 +14,19 @@ const operationCost = {
   byCategory: [],
   byProvider: [],
   daily: [
-    { date: "2026-08-24", costUsd: 0.217 },
-    { date: "2026-08-25", costUsd: 0.193 },
+    {
+      date: "2026-08-24",
+      costUsd: 0.217,
+      purposes: [{ purpose: "conversation", costUsd: 0.217 }],
+    },
+    {
+      date: "2026-08-25",
+      costUsd: 0.193,
+      purposes: [
+        { purpose: "conversation", costUsd: 0.18 },
+        { purpose: "embedding", costUsd: 0.013 },
+      ],
+    },
   ],
 };
 
@@ -117,7 +128,7 @@ describe("CostSection", () => {
     renderWithQuery(<CostSection />);
 
     expect(
-      await screen.findByText("エージェント別のコスト"),
+      await screen.findByText("会話のエージェント別コスト"),
     ).toBeInTheDocument();
     expect(screen.getByText("リランク")).toBeInTheDocument();
     expect(screen.getByText("¥27.75")).toBeInTheDocument();
@@ -140,7 +151,7 @@ describe("CostSection", () => {
         HttpResponse.json({
           turns: [
             {
-              turnIndex: null,
+              turnId: null,
               answeredAt: null,
               totalTokens: 1_000,
               costUsd: 0.01,
@@ -155,7 +166,7 @@ describe("CostSection", () => {
               ],
             },
             {
-              turnIndex: 1,
+              turnId: "turn-1",
               answeredAt: "2026-08-25T08:24:00.000Z",
               totalTokens: 12_000,
               costUsd: 0.072,

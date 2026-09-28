@@ -51,16 +51,6 @@ describe("buildConversationRelayTwiml", () => {
     expect(xml).toContain('welcomeGreeting=""');
   });
 
-  it("welcomeGreeting の特殊文字をエスケープする", () => {
-    const xml = buildConversationRelayTwiml({
-      wsUrl: "wss://x/relay",
-      welcomeGreeting: 'こんにちは"ねっぷちゃん"だよ & よろしく',
-    });
-    expect(xml).toContain(
-      'welcomeGreeting="こんにちは&quot;ねっぷちゃん&quot;だよ &amp; よろしく"',
-    );
-  });
-
   it("interruptible と transcriptionProvider を含められる", () => {
     const xml = buildConversationRelayTwiml({
       wsUrl: "wss://x/relay",

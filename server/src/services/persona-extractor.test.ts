@@ -161,27 +161,6 @@ describe("extractPersonaFromThreadById", () => {
       reason: "no_new_messages",
     });
   });
-
-  it("スキップ時に正しい reason メッセージを返す", async () => {
-    mockGet.mockResolvedValue({ id: threadId, resourceId: "village-1" });
-
-    vi.mocked(threadPersonaStatusRepository.findByThreadId).mockResolvedValue({
-      threadId,
-      lastExtractedAt: "2024-01-01T00:00:00Z",
-      lastMessageCount: 2,
-    });
-    mockMemoryRecall.mockResolvedValue({
-      messages: [
-        { role: "user", content: "こんにちは" },
-        { role: "assistant", content: "はい" },
-      ],
-    });
-
-    const result = await extractPersonaFromThreadById(threadId, mockEnv);
-
-    expect(result.message).toContain("スキップされました");
-    expect(result.message).toContain("no_new_messages");
-  });
 });
 
 describe("extractPersonaFromThreadById エラー処理", () => {

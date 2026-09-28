@@ -68,15 +68,4 @@ describe("parseFeedback", () => {
 
     expect(result.toolExecutions).toEqual([]);
   });
-
-  it("rating / category の値はそのまま保持", () => {
-    const result = parseFeedback({
-      ...baseRow,
-      rating: "bad",
-      category: "incorrect_fact",
-    });
-
-    expect(result.rating).toBe("bad");
-    expect(result.category).toBe("incorrect_fact");
-  });
 });

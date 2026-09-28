@@ -5,6 +5,12 @@ type Timer = ReturnType<typeof setTimeout>;
 
 const WAITING_PHRASE_DURATION_MS = 3_000;
 
+export const HOLD_PHRASES = [
+  "いま調べてるよ〜",
+  "もうちょっと待ってね",
+  "ごめんね、もう少しかかりそう",
+] as const;
+
 type Params = {
   config: BridgeConfig;
   promptText: string;
@@ -33,6 +39,8 @@ export const createSilenceCover = ({
 }: Params) => {
   let fillerTimer: Timer | null = null;
   let holdTimer: Timer | null = null;
+  let holdPhraseTimer: ReturnType<typeof setInterval> | null = null;
+  let holdPhraseIndex = 0;
   let holdPlaying = false;
   let waitingSpoken = false;
 
@@ -46,6 +54,24 @@ export const createSilenceCover = ({
     if (!holdTimer) return;
     clearTimeout(holdTimer);
     holdTimer = null;
+  };
+
+  const clearHoldPhraseTimer = () => {
+    if (!holdPhraseTimer) return;
+    clearInterval(holdPhraseTimer);
+    holdPhraseTimer = null;
+  };
+
+  const startHoldPhrases = () => {
+    if (holdPhraseTimer) return;
+    holdPhraseTimer = setInterval(() => {
+      if (signal?.aborted) return clearHoldPhraseTimer();
+      const phrases = config.holdPhrases;
+      sendText(phrases[holdPhraseIndex++ % phrases.length], true, {
+        preemptible: false,
+        interruptible: true,
+      });
+    }, config.holdPhraseIntervalMs);
   };
 
   const sendFiller = () =>
@@ -93,7 +119,11 @@ export const createSilenceCover = ({
           interruptible: true,
         });
       }
-      if (!config.holdAudioEnabled || holdPlaying || holdTimer) return;
+      if (!config.holdAudioEnabled) {
+        startHoldPhrases();
+        return;
+      }
+      if (holdPlaying || holdTimer) return;
       holdTimer = setTimeout(
         playHold,
         Math.max(config.holdDelayMs, WAITING_PHRASE_DURATION_MS),
@@ -104,10 +134,12 @@ export const createSilenceCover = ({
       waitingSpoken = false;
       clearFillerTimer();
       clearHoldTimer();
+      clearHoldPhraseTimer();
     },
     dispose: () => {
       clearFillerTimer();
       clearHoldTimer();
+      clearHoldPhraseTimer();
     },
   };
 };

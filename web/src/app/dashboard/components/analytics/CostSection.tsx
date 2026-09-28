@@ -3,7 +3,8 @@ import {
   useOperationCost,
   useThreadUsage,
 } from "~/app/dashboard/hooks/useAnalytics";
-import { CostSparkline } from "./CostSparkline";
+import { CostBreakdownBar } from "./CostBreakdownBar";
+import { DailyPurposeChart } from "./DailyPurposeChart";
 import {
   agentColor,
   agentLabel,
@@ -30,7 +31,6 @@ export const CostSection = () => {
   const byAgent = (summary?.byAgent ?? []).filter(
     (entry) => entry.agent !== null,
   );
-  const agentTotal = byAgent.reduce((sum, a) => sum + a.costUsd, 0);
   const maxThreadCost = threads.reduce((max, t) => Math.max(max, t.costUsd), 0);
   const avgMessage = summary?.avgCostPerMessageUsd ?? null;
 
@@ -63,49 +63,19 @@ export const CostSection = () => {
                   {summary.threads.toLocaleString()}
                 </p>
               </div>
-              {operation.data.daily.length > 1 && (
-                <div className="flex-1 min-w-40">
-                  <p className="text-xs text-(--fg-3) mb-1">日別</p>
-                  <CostSparkline daily={operation.data.daily} />
-                </div>
-              )}
             </div>
 
-            {byAgent.length > 0 && agentTotal > 0 && (
-              <div>
-                <p className="text-xs text-(--fg-3) mb-1.5">
-                  エージェント別のコスト
-                </p>
-                <div className="flex h-7 rounded-md overflow-hidden bg-(--bg-sunken)">
-                  {byAgent.map((entry) => (
-                    <div
-                      key={entry.agent ?? "unknown"}
-                      style={{
-                        width: `${(entry.costUsd / agentTotal) * 100}%`,
-                        background: agentColor(entry.agent),
-                      }}
-                    />
-                  ))}
-                </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-(--fg-2)">
-                  {byAgent.map((entry) => (
-                    <span
-                      key={entry.agent ?? "unknown"}
-                      className="inline-flex items-center gap-1.5"
-                    >
-                      <span
-                        className="w-2.5 h-2.5 rounded-sm"
-                        style={{ background: agentColor(entry.agent) }}
-                      />
-                      {agentLabel(entry.agent)}
-                      <b className="font-medium tabular-nums text-(--fg-1)">
-                        {formatCostJpy(entry.costUsd)}
-                      </b>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+            <DailyPurposeChart daily={operation.data.daily} />
+
+            <CostBreakdownBar
+              title="会話のエージェント別コスト"
+              segments={byAgent.map((entry) => ({
+                key: entry.agent ?? "unknown",
+                label: agentLabel(entry.agent),
+                color: agentColor(entry.agent),
+                costUsd: entry.costUsd,
+              }))}
+            />
 
             <div className="overflow-auto max-h-[26rem]">
               <table className="w-full text-sm">

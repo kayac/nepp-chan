@@ -58,18 +58,6 @@ describe("adminSessionRepository", () => {
       expect(expiresAt - before).toBeGreaterThanOrEqual(sevenDays - 1000);
       expect(expiresAt - after).toBeLessThanOrEqual(sevenDays + 1000);
     });
-
-    it("複数の userId に対してそれぞれセッションが作れる", async () => {
-      vi.mocked(generateToken)
-        .mockReturnValueOnce("t1")
-        .mockReturnValueOnce("t2");
-
-      await adminSessionRepository.create(fakeD1, "u1");
-      await adminSessionRepository.create(fakeD1, "u2");
-
-      const all = await db.select().from(adminSessions);
-      expect(all).toHaveLength(2);
-    });
   });
 
   describe("findValid", () => {
@@ -126,12 +114,6 @@ describe("adminSessionRepository", () => {
 
       const remaining = await db.select().from(adminSessions);
       expect(remaining.map((r) => r.token)).toEqual(["t2"]);
-    });
-
-    it("冪等性: 存在しない token を削除してもエラーにならない", async () => {
-      await expect(
-        adminSessionRepository.deleteByToken(fakeD1, "ghost"),
-      ).resolves.toBeUndefined();
     });
   });
 

@@ -153,7 +153,7 @@ export const createTestDb = async () => {
       source TEXT NOT NULL,
       intent TEXT,
       agent TEXT,
-      turn_index INTEGER,
+      turn_id TEXT,
       duration_ms INTEGER,
       thread_id TEXT,
       cost_usd REAL,
@@ -181,6 +181,22 @@ export const createTestDb = async () => {
       created_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS persona_tag_groups (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      axis TEXT,
+      sort_order INTEGER NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS persona_tag_aliases (
+      tag TEXT PRIMARY KEY,
+      group_id TEXT,
+      assigned_by TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT
+    );
     CREATE TABLE IF NOT EXISTS widget_sites (
       id TEXT PRIMARY KEY,
       host TEXT NOT NULL UNIQUE,

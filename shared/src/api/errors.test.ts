@@ -1,16 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ApiError, parseErrorResponse } from "./errors";
-
-describe("ApiError", () => {
-  it("status・message・name を保持する", () => {
-    const err = new ApiError("boom", 500);
-
-    expect(err.message).toBe("boom");
-    expect(err.status).toBe(500);
-    expect(err.name).toBe("ApiError");
-    expect(err).toBeInstanceOf(Error);
-  });
-});
+import { parseErrorResponse } from "./errors";
 
 describe("parseErrorResponse", () => {
   const jsonRes = (body: unknown, status = 500) =>

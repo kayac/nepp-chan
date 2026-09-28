@@ -7,6 +7,7 @@ export type PersonaFilterParams = {
   to?: string;
   sentiments?: PersonaSentiment[];
   topic?: string;
+  group?: string;
 };
 
 export type FetchPersonasParams = PersonaFilterParams & {
@@ -22,6 +23,7 @@ const toQuery = (params: PersonaFilterParams) => ({
       ? params.sentiments.join(",")
       : undefined,
   topic: params.topic,
+  group: params.group,
 });
 
 export const createPersonaRepository = (client: ApiClient) => ({

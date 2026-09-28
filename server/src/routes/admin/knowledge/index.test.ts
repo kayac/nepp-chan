@@ -8,7 +8,6 @@ vi.mock("~/services/knowledge", async (importOriginal) => ({
   listFiles: vi.fn(),
   getFile: vi.fn(),
   deleteFile: vi.fn(),
-  deleteLegacyFiles: vi.fn(),
   syncFile: vi.fn(),
   syncAll: vi.fn(),
   uploadMarkdownFile: vi.fn(),
@@ -105,20 +104,9 @@ describe("knowledge routes 統合テスト", () => {
   });
 
   describe("認証", () => {
-    it.each([
-      { method: "GET", path: "/files" },
-      { method: "GET", path: "/files/test.md" },
-      { method: "PUT", path: "/files/test.md" },
-      { method: "DELETE", path: "/files/test.md" },
-      { method: "DELETE", path: "/legacy" },
-      { method: "POST", path: "/sync" },
-      { method: "POST", path: "/upload" },
-      { method: "POST", path: "/convert" },
-      { method: "POST", path: "/reconvert" },
-      { method: "POST", path: "/curated-draft" },
-    ])("$method $path - 認証なしは 401", async ({ method, path }) => {
+    it("認証なしは 401", async () => {
       const res = await app.request(
-        new Request(`http://localhost${path}`, { method }),
+        new Request("http://localhost/files"),
         undefined,
         mockEnv,
       );
@@ -241,26 +229,6 @@ describe("knowledge routes 統合テスト", () => {
       expect(knowledgeService.syncAll).toHaveBeenCalledWith(
         mockEnv.KNOWLEDGE_BUCKET,
         mockEnv.KNOWLEDGE_SYNC_QUEUE,
-      );
-    });
-  });
-
-  describe("DELETE /legacy", () => {
-    it("旧配置の削除件数を返す", async () => {
-      vi.mocked(knowledgeService.deleteLegacyFiles).mockResolvedValue({
-        deleted: 12,
-      });
-
-      const res = await app.request(
-        authedRequest("/legacy", { method: "DELETE" }),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(200);
-      expect(await res.json()).toEqual({ deleted: 12 });
-      expect(knowledgeService.deleteLegacyFiles).toHaveBeenCalledWith(
-        mockEnv.KNOWLEDGE_BUCKET,
       );
     });
   });

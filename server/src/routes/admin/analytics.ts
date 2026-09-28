@@ -6,6 +6,7 @@ import type { PrincipalVariables } from "~/lib/principal";
 import { requireRole } from "~/middleware/require-role";
 import { weeklyReportRepository } from "~/repository/weekly-report-repository";
 import {
+  audiencesResponseSchema,
   conversationAnalyticsQuerySchema,
   conversationAnalyticsResponseSchema,
   ontologyResponseSchema,
@@ -32,6 +33,7 @@ import {
   getThreadUsage,
 } from "~/services/analytics/aggregate";
 import { getOntology } from "~/services/analytics/ontology";
+import { getAudiences } from "~/services/analytics/tag-groups";
 
 export const analyticsAdminRoutes = new OpenAPIHono<{
   Bindings: CloudflareBindings;
@@ -65,6 +67,36 @@ analyticsAdminRoutes.openapi(personaRoute, async (c) => {
   const result = await getPersonaAnalytics(c.env.DB, {
     from: from ? jstDateToUtc(from).toISOString() : undefined,
     // to はその日を含むため翌日 0:00 JST 未満で絞る
+    to: to
+      ? new Date(jstDateToUtc(to).getTime() + DAY_MS).toISOString()
+      : undefined,
+  });
+
+  return c.json(result, 200);
+});
+
+const audiencesRoute = createRoute({
+  method: "get",
+  path: "/persona/audiences",
+  tags: ["Admin - Analytics"],
+  summary: "話者別の関心と課題（タググループ × 話題 × 感情）",
+  request: { query: personaAnalyticsQuerySchema },
+  responses: {
+    200: {
+      description: "属性軸ごとのグループ集計と未分類タグ",
+      content: { "application/json": { schema: audiencesResponseSchema } },
+    },
+    400: errorResponse(400),
+    401: errorResponse(401),
+    403: errorResponse(403),
+  },
+});
+
+analyticsAdminRoutes.openapi(audiencesRoute, async (c) => {
+  const { from, to } = c.req.valid("query");
+
+  const result = await getAudiences(c.env.DB, {
+    from: from ? jstDateToUtc(from).toISOString() : undefined,
     to: to
       ? new Date(jstDateToUtc(to).getTime() + DAY_MS).toISOString()
       : undefined,

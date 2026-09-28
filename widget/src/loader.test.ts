@@ -80,13 +80,6 @@ describe("mountWidget", () => {
       iconSrc: "https://nepp-chan.ai/mascot/icon.png",
     });
 
-  it("起動ボタンを body に 1 つ追加する", () => {
-    mount();
-    const buttons = document.body.querySelectorAll("button");
-    expect(buttons).toHaveLength(1);
-    expect(buttons[0].getAttribute("aria-label")).toBeTruthy();
-  });
-
   it("二重ロードしてもボタンは 1 つ", () => {
     mount();
     mount();
@@ -138,41 +131,6 @@ describe("mountWidget", () => {
     expect(iframe?.style.visibility).toBe("hidden");
     expect(iframe?.style.opacity).toBe("0");
     expect(iframe?.style.pointerEvents).toBe("none");
-  });
-
-  it("transition に visibility を含め、close のフェードアウト中もパネルが見える", () => {
-    mount();
-    document.body.querySelector("button")?.click();
-    const iframe = document.body.querySelector<HTMLIFrameElement>("iframe");
-    expect(iframe?.style.transition).toMatch(/visibility \d+ms/);
-  });
-
-  it("初回オープンは closed スタイルを reflow で確定させてから行う", async () => {
-    const visibilityAtReflow: string[] = [];
-    const spy = vi
-      .spyOn(HTMLIFrameElement.prototype, "getBoundingClientRect")
-      .mockImplementation(function (this: HTMLIFrameElement) {
-        visibilityAtReflow.push(this.style.visibility);
-        return new DOMRect();
-      });
-
-    mount();
-    document.body.querySelector("button")?.click();
-
-    expect(visibilityAtReflow).toEqual(["hidden"]);
-
-    await nextFrame();
-    const iframe = document.body.querySelector<HTMLIFrameElement>("iframe");
-    expect(iframe?.style.visibility).toBe("visible");
-    spy.mockRestore();
-  });
-
-  it("初回クリック直後は論理状態が open になり aria-expanded が true になる", () => {
-    mount();
-    const button = document.body.querySelector("button");
-    button?.click();
-
-    expect(button?.getAttribute("aria-expanded")).toBe("true");
   });
 
   it("rAF 発火前に 2 回クリックすると閉じた状態のまま aria-expanded が false になる", () => {

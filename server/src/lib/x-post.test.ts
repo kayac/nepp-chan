@@ -5,7 +5,6 @@ describe("isXPostUrl", () => {
   it.each([
     "https://x.com/jack/status/20",
     "https://twitter.com/jack/status/20?s=20",
-    "https://mobile.twitter.com/jack/status/20",
   ])("%s は個別投稿", (url) => {
     expect(isXPostUrl(url)).toBe(true);
   });

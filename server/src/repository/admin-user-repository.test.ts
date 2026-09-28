@@ -193,11 +193,5 @@ describe("adminUserRepository", () => {
       expect(await adminUserRepository.findById(fakeD1, "u-1")).toBeNull();
       expect(await adminUserRepository.findById(fakeD1, "u-2")).not.toBeNull();
     });
-
-    it("存在しない id でも throw しない", async () => {
-      await expect(
-        adminUserRepository.delete(fakeD1, "ghost"),
-      ).resolves.toBeUndefined();
-    });
   });
 });

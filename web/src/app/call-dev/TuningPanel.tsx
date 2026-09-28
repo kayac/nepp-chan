@@ -419,7 +419,7 @@ export const TuningPanel = ({
           hint="発話終端の検出を Twilio に任せる"
           checked={v("speechTimeout") === "auto"}
           onChange={(checked) =>
-            onChange({ speechTimeout: checked ? "auto" : "600" })
+            onChange({ speechTimeout: checked ? "auto" : "3000" })
           }
         />
         <NumberRow
@@ -502,11 +502,7 @@ export const TuningPanel = ({
           "新しい発話が再生中の音声を置き換えられる",
         )}
         {boolRow("DTMF 検出", "dtmfDetection", "プッシュ音をサーバに通知する")}
-        {boolRow(
-          "partialPrompts",
-          "partialPrompts",
-          "確定前の中間認識も送る。off だとあいづちが動かない",
-        )}
+        {boolRow("partialPrompts", "partialPrompts", "確定前の中間認識も送る")}
         <TextRow
           label="debug"
           hint="Twilio のデバッグメッセージを購読する"
@@ -543,30 +539,25 @@ export const TuningPanel = ({
           onChange={(value) => onChange({ backchannelFillers: value })}
         />
         {boolRow(
-          "あいづち",
-          "aizuchiEnabled",
-          "ユーザーの発話中に「うん」を挟む",
-        )}
-        <NumberRow
-          label="あいづち最短間隔(ms)"
-          hint="連発を防ぐ間隔。時間での定期発話ではない"
-          value={v("aizuchiCooldownMs")}
-          min={500}
-          max={30000}
-          step={500}
-          onChange={(value) => onChange({ aizuchiCooldownMs: value })}
-        />
-        <TextRow
-          label="あいづち文言"
-          hint="カンマ区切りで順に使う"
-          value={v("aizuchiPhrases")}
-          onChange={(value) => onChange({ aizuchiPhrases: value })}
-        />
-        {boolRow(
           "保留音",
           "holdAudioEnabled",
-          "ナレッジ検索などの待ち時間に音楽を流す",
+          "オンで待ち時間に音楽を流す。オフなら下の声かけを話す",
         )}
+        <TextRow
+          label="待ちの声かけ"
+          hint="カンマ区切りで順に繰り返す"
+          value={v("holdPhrases")}
+          onChange={(value) => onChange({ holdPhrases: value })}
+        />
+        <NumberRow
+          label="声かけ間隔(ms)"
+          hint="「ちょっと待ってね」のあと、この間隔で声かけする"
+          value={v("holdPhraseIntervalMs")}
+          min={3000}
+          max={30000}
+          step={1000}
+          onChange={(value) => onChange({ holdPhraseIntervalMs: value })}
+        />
         <NumberRow
           label="保留音遅延(ms)"
           hint="検索開始から指定時間待つ。最短3秒後に開始"

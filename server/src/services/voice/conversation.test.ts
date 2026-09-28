@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { logger } from "~/lib/logger";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createVoiceConversation } from "./conversation";
 
@@ -176,6 +175,117 @@ describe("createVoiceConversation", () => {
     );
   });
 
+  describe("割り込み", () => {
+    const drain = async (iter: AsyncIterable<string>) => {
+      for await (const _ of iter) {
+        // drain
+      }
+    };
+    const lastInput = () => streamMock.mock.lastCall?.[0];
+
+    it("中断したターンはユーザー発話と聞かせた分の返事だけを履歴に残す", async () => {
+      streamMock.mockResolvedValue({
+        fullStream: fakeFullStream([textDelta("回答")]),
+      });
+      const conversation = await createVoiceConversation({
+        env,
+        from: "client:tester",
+        callSid: "CA123",
+      });
+
+      conversation.recordInterruptedTurn({
+        userText: "駅の時刻表は",
+        heardText: "えーっとね、駅は",
+      });
+      await drain(conversation.runTurn({ text: "上りだけでいい" }));
+
+      expect(lastInput()).toEqual([
+        { role: "user", content: "駅の時刻表は" },
+        { role: "assistant", content: "えーっとね、駅は" },
+        { role: "user", content: "上りだけでいい" },
+      ]);
+    });
+
+    it("何も聞かせないうちに中断したターンはユーザー発話だけを残す", async () => {
+      streamMock.mockResolvedValue({
+        fullStream: fakeFullStream([textDelta("回答")]),
+      });
+      const conversation = await createVoiceConversation({
+        env,
+        from: "client:tester",
+        callSid: "CA123",
+      });
+
+      conversation.recordInterruptedTurn({
+        userText: "駅の",
+        heardText: "",
+      });
+      await drain(conversation.runTurn({ text: "時刻表が知りたい" }));
+
+      expect(lastInput()).toEqual([
+        { role: "user", content: "駅の" },
+        { role: "user", content: "時刻表が知りたい" },
+      ]);
+    });
+
+    it("読み上げ中に遮られた直前の返事は聞かせた分に切り詰める", async () => {
+      streamMock.mockResolvedValue({
+        fullStream: fakeFullStream([textDelta("駅は北口だよ。バスもあるよ。")]),
+      });
+      const conversation = await createVoiceConversation({
+        env,
+        from: "client:tester",
+        callSid: "CA123",
+      });
+      await drain(conversation.runTurn({ text: "駅はどこ" }));
+
+      conversation.truncateLastReply("駅は北口だよ。");
+      await drain(conversation.runTurn({ text: "北口ってどっち" }));
+
+      expect(lastInput()).toEqual([
+        { role: "user", content: "駅はどこ" },
+        { role: "assistant", content: "駅は北口だよ。" },
+        { role: "user", content: "北口ってどっち" },
+      ]);
+    });
+
+    it("直前の返事を一言も聞かせずに遮られたら返事を履歴から外す", async () => {
+      streamMock.mockResolvedValue({
+        fullStream: fakeFullStream([textDelta("駅は北口だよ。")]),
+      });
+      const conversation = await createVoiceConversation({
+        env,
+        from: "client:tester",
+        callSid: "CA123",
+      });
+      await drain(conversation.runTurn({ text: "駅はどこ" }));
+
+      conversation.truncateLastReply("");
+      await drain(conversation.runTurn({ text: "やっぱりバス" }));
+
+      expect(lastInput()).toEqual([
+        { role: "user", content: "駅はどこ" },
+        { role: "user", content: "やっぱりバス" },
+      ]);
+    });
+
+    it("返事がまだ無いときの切り詰めは何もしない", async () => {
+      streamMock.mockResolvedValue({
+        fullStream: fakeFullStream([textDelta("回答")]),
+      });
+      const conversation = await createVoiceConversation({
+        env,
+        from: "client:tester",
+        callSid: "CA123",
+      });
+
+      conversation.truncateLastReply("もしもし、ねっぷ");
+      await drain(conversation.runTurn({ text: "こんにちは" }));
+
+      expect(lastInput()).toEqual([{ role: "user", content: "こんにちは" }]);
+    });
+  });
+
   it("D1 保存が一度失敗した場合は同じ ID で一度だけ再試行する", async () => {
     saveMessagesMock
       .mockRejectedValueOnce(new Error("temporary failure"))
@@ -244,32 +354,6 @@ describe("createVoiceConversation", () => {
     expect(out).toEqual(["調べてみるね", "音威子府そばだよ"]);
   });
 
-  it("ターン完了時に llm timing を1回記録する（intent 分類なし）", async () => {
-    streamMock.mockResolvedValue({
-      fullStream: fakeFullStream([textDelta("こん"), textDelta("にちは")]),
-    });
-    const infoSpy = vi.spyOn(logger, "info");
-
-    const { runTurn } = await createVoiceConversation({
-      env,
-      from: "client:tester",
-      callSid: "CA123",
-    });
-    for await (const _ of runTurn({ text: "やあ" })) {
-      // drain
-    }
-
-    const timingCalls = infoSpy.mock.calls.filter(
-      ([msg]) => msg === "[Voice] llm timing",
-    );
-    expect(timingCalls).toHaveLength(1);
-    expect(timingCalls[0][1]).toHaveProperty("streamReadyMs");
-    expect(timingCalls[0][1]).toHaveProperty("firstTokenMs");
-    expect(timingCalls[0][1]).not.toHaveProperty("intent");
-
-    infoSpy.mockRestore();
-  });
-
   describe("投機検索（prefetch）", () => {
     const drain = async (
       params: Parameters<
@@ -315,28 +399,6 @@ describe("createVoiceConversation", () => {
       await drain({ text: "今日は疲れたよ", prefetchEnabled: true });
 
       expect(prefetchMock).not.toHaveBeenCalled();
-    });
-
-    it("findings が貯まっていても話題転換に備えて起動する", async () => {
-      const findingsSlot = {
-        entries: [
-          {
-            query: "そば",
-            source: "knowledge" as const,
-            text: "前の資料",
-          },
-        ],
-      };
-
-      await drain({
-        text: "郵便局はどこ？",
-        prefetchEnabled: true,
-        findingsSlot,
-      });
-
-      expect(prefetchMock).toHaveBeenCalledWith(
-        expect.objectContaining({ question: "郵便局はどこ？" }),
-      );
     });
 
     it("prefetchEnabled でなければ起動しない", async () => {

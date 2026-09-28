@@ -93,15 +93,6 @@ describe("バリデーション", () => {
     });
     expect(result.current.isValid).toBe(true);
   });
-
-  it("タイトルが空ならまだ isValid=false", () => {
-    const { result } = renderForm();
-    act(() => {
-      result.current.updateChoice(result.current.choices[0].id, "A");
-      result.current.updateChoice(result.current.choices[1].id, "B");
-    });
-    expect(result.current.isValid).toBe(false);
-  });
 });
 
 describe("handleSubmit", () => {

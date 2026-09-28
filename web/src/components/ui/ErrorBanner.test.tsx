@@ -1,21 +1,6 @@
-import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { ErrorBanner, formatError } from "./ErrorBanner";
-
-describe("ErrorBanner", () => {
-  it("children を表示する", () => {
-    render(<ErrorBanner>エラー: 何かがおかしい</ErrorBanner>);
-
-    expect(screen.getByText("エラー: 何かがおかしい")).toBeInTheDocument();
-  });
-
-  it("className を追加できる", () => {
-    render(<ErrorBanner className="aui-message-error-root">内容</ErrorBanner>);
-
-    expect(screen.getByText("内容")).toHaveClass("aui-message-error-root");
-  });
-});
+import { formatError } from "./ErrorBanner";
 
 describe("formatError", () => {
   it("Error インスタンスなら message を使う", () => {

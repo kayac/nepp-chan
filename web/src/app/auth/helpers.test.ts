@@ -21,13 +21,6 @@ describe("validatePassword", () => {
     });
   });
 
-  it("空文字は不一致より長さ違反が優先...ではなく、一致なら長さチェック", () => {
-    expect(validatePassword("", "")).toEqual({
-      ok: false,
-      message: "パスワードは8文字以上で入力してください",
-    });
-  });
-
   it("ちょうど 8 文字なら ok", () => {
     expect(validatePassword("12345678", "12345678")).toEqual({ ok: true });
   });

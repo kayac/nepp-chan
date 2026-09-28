@@ -8,7 +8,7 @@ import { sanitizeForSpeech } from "~/lib/voice-text";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { startVoicePrefetch } from "~/mastra/tools/voice-answer-tool";
-import { recordLlmUsage } from "~/services/analytics/llm-usage";
+import { newTurnId, recordLlmUsage } from "~/services/analytics/llm-usage";
 import { isQuestionLike } from "./filler";
 import {
   createVoicePrefetchSlot,
@@ -17,7 +17,6 @@ import {
 
 type RunTurnParams = {
   text: string;
-  turnIndex?: number;
   signal?: AbortSignal;
   onToolCall?: () => void;
   onEndCall?: () => void;
@@ -68,7 +67,6 @@ export const createVoiceConversation = async ({
 
   const runTurn = async function* ({
     text,
-    turnIndex,
     signal,
     onToolCall,
     onEndCall,
@@ -77,6 +75,7 @@ export const createVoiceConversation = async ({
     parentRouting,
   }: RunTurnParams) {
     const start = Date.now();
+    const turnId = newTurnId();
     const prefetchSlot = prefetchEnabled
       ? createVoicePrefetchSlot()
       : undefined;
@@ -85,7 +84,7 @@ export const createVoiceConversation = async ({
       env,
       usagePlatform: "voice",
       usageThreadId: threadId,
-      usageTurnIndex: turnIndex,
+      usageTurnId: turnId,
       voiceFindings: findingsSlot,
       voicePrefetch: prefetchSlot,
       voiceParentRouting: parentRouting,
@@ -168,7 +167,7 @@ export const createVoiceConversation = async ({
           source: "chat",
           agent: "nepp-chan",
           threadId,
-          turnIndex,
+          turnId,
           durationMs: Date.now() - start,
         });
       }
@@ -180,6 +179,31 @@ export const createVoiceConversation = async ({
         logger.info("[Voice] llm timing", timing);
       }
     }
+  };
+
+  const recordInterruptedTurn = ({
+    userText,
+    heardText,
+  }: {
+    userText: string;
+    heardText: string;
+  }) => {
+    const heard: ModelMessage[] = heardText
+      ? [{ role: "assistant", content: heardText }]
+      : [];
+    history = [
+      ...history,
+      { role: "user" as const, content: userText },
+      ...heard,
+    ].slice(-MAX_HISTORY_MESSAGES);
+  };
+
+  const truncateLastReply = (heardText: string) => {
+    if (history.at(-1)?.role !== "assistant") return;
+    const earlier = history.slice(0, -1);
+    history = heardText
+      ? [...earlier, { role: "assistant", content: heardText }]
+      : earlier;
   };
 
   const persistTurn = async ({
@@ -234,5 +258,5 @@ export const createVoiceConversation = async ({
     }
   };
 
-  return { runTurn, persistTurn };
+  return { runTurn, recordInterruptedTurn, truncateLastReply, persistTurn };
 };

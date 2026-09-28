@@ -277,12 +277,6 @@ describe("adminInvitationRepository", () => {
         await adminInvitationRepository.findById(fakeD1, "b"),
       ).not.toBeNull();
     });
-
-    it("存在しない id でもエラーにならない（冪等）", async () => {
-      await expect(
-        adminInvitationRepository.delete(fakeD1, "ghost"),
-      ).resolves.toBeUndefined();
-    });
   });
 
   describe("deleteByUsername", () => {
@@ -302,12 +296,6 @@ describe("adminInvitationRepository", () => {
       expect(
         await adminInvitationRepository.findById(fakeD1, "b"),
       ).not.toBeNull();
-    });
-
-    it("存在しない username でもエラーにならない（冪等）", async () => {
-      await expect(
-        adminInvitationRepository.deleteByUsername(fakeD1, "ghost"),
-      ).resolves.toBeUndefined();
     });
   });
 

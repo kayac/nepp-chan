@@ -29,26 +29,6 @@ describe("FeedbackDetailModal", () => {
     expect(screen.getByText("良い回答")).toBeInTheDocument();
   });
 
-  it("rating=bad のときは『改善が必要』を表示", () => {
-    render(
-      <FeedbackDetailModal
-        feedback={{ ...baseFeedback, rating: "bad" }}
-        onClose={vi.fn()}
-      />,
-    );
-    expect(screen.getByText("改善が必要")).toBeInTheDocument();
-  });
-
-  it("rating=idea のときは『アイデア』を表示", () => {
-    render(
-      <FeedbackDetailModal
-        feedback={{ ...baseFeedback, rating: "idea" }}
-        onClose={vi.fn()}
-      />,
-    );
-    expect(screen.getByText("アイデア")).toBeInTheDocument();
-  });
-
   it("category が既知ならラベルへ変換して表示", () => {
     render(
       <FeedbackDetailModal

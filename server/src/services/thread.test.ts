@@ -61,31 +61,6 @@ describe("deleteThreadWithRelatedData", () => {
     expect(mockDeleteThread).toHaveBeenCalledWith(threadId);
   });
 
-  it("feedback → personaStatus → thread の順に削除される", async () => {
-    const callOrder: string[] = [];
-
-    mockGetThreadById.mockResolvedValue({ id: threadId });
-    vi.mocked(feedbackRepository.deleteByThreadId).mockImplementation(
-      async () => {
-        callOrder.push("feedback");
-        return 0;
-      },
-    );
-    vi.mocked(threadPersonaStatusRepository.delete).mockImplementation(
-      async () => {
-        callOrder.push("personaStatus");
-        return 0;
-      },
-    );
-    mockDeleteThread.mockImplementation(async () => {
-      callOrder.push("thread");
-    });
-
-    await deleteThreadWithRelatedData(threadId, mockDb);
-
-    expect(callOrder).toEqual(["feedback", "personaStatus", "thread"]);
-  });
-
   it("存在しないスレッドで HTTPException(404) をスローする", async () => {
     mockGetThreadById.mockResolvedValue(null);
 

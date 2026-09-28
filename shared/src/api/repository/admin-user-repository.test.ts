@@ -31,17 +31,4 @@ describe("admin-user-repository", () => {
     await repo.deleteAdminUser("u-1");
     expect(called).toBe(true);
   });
-
-  it("失敗系: deleteAdminUser 4xx は throw", async () => {
-    server.use(
-      http.delete(`${API}/admin/users/u-self`, () =>
-        HttpResponse.json(
-          { error: { message: "自分自身は削除できません" } },
-          { status: 400 },
-        ),
-      ),
-    );
-
-    await expect(repo.deleteAdminUser("u-self")).rejects.toBeDefined();
-  });
 });

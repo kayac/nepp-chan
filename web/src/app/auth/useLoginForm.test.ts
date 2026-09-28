@@ -84,22 +84,4 @@ describe("useLoginForm", () => {
     expect(redirectTo).not.toHaveBeenCalled();
     expect(getAuthToken()).toBeNull();
   });
-
-  it("送信完了で isLoading が false に戻る", async () => {
-    server.use(
-      http.post(`${API}/auth/login`, () =>
-        HttpResponse.json({
-          accessToken: "tok",
-          user: { id: "u-1", username: "a", role: "admin", name: null },
-        }),
-      ),
-    );
-
-    const { result } = renderHook(() => useLoginForm());
-    await act(async () => {
-      await result.current.handleSubmit(submitEvent());
-    });
-
-    expect(result.current.isLoading).toBe(false);
-  });
 });

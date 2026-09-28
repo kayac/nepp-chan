@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getCurrentSearchParams, redirectTo } from "./redirect";
+import { redirectTo } from "./redirect";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -28,12 +28,5 @@ describe("redirectTo", () => {
 
     redirectTo("/dashboard");
     expect(setter).toHaveBeenCalledWith("/dashboard");
-  });
-});
-
-describe("getCurrentSearchParams", () => {
-  it("URLSearchParams を返す", () => {
-    const params = getCurrentSearchParams();
-    expect(params).toBeInstanceOf(URLSearchParams);
   });
 });

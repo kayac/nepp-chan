@@ -88,6 +88,7 @@ describe("createSilenceCover", () => {
   describe("保留音", () => {
     it("遅延 0 でも待機を伝え終わってから流す", () => {
       const { cover, sendText, sendPlay } = setup({
+        holdAudioEnabled: true,
         fillerEnabled: false,
         holdDelayMs: 0,
       });
@@ -106,7 +107,7 @@ describe("createSilenceCover", () => {
       );
     });
 
-    it("holdAudioEnabled が false でも待機を伝え、保留音だけ流さない", () => {
+    it("holdAudioEnabled が false なら待機を伝え、保留音は流さない", () => {
       const { cover, sendText, sendPlay } = setup({
         holdAudioEnabled: false,
       });
@@ -120,7 +121,10 @@ describe("createSilenceCover", () => {
     });
 
     it("遅延中に応答トークンが来たら流さない", () => {
-      const { cover, sendPlay } = setup({ holdDelayMs: 1_000 });
+      const { cover, sendPlay } = setup({
+        holdAudioEnabled: true,
+        holdDelayMs: 1_000,
+      });
       cover.onToolCall();
       cover.onToken();
       vi.advanceTimersByTime(10_000);
@@ -128,7 +132,10 @@ describe("createSilenceCover", () => {
     });
 
     it("再生中の二重 onToolCall では重ねて流さない", () => {
-      const { cover, sendText, sendPlay } = setup({ holdDelayMs: 0 });
+      const { cover, sendText, sendPlay } = setup({
+        holdAudioEnabled: true,
+        holdDelayMs: 0,
+      });
       cover.onToolCall();
       cover.onToolCall();
       vi.advanceTimersByTime(3_000);
@@ -138,6 +145,7 @@ describe("createSilenceCover", () => {
 
     it("トークン再開後の再検索では改めて流せる", () => {
       const { cover, sendPlay } = setup({
+        holdAudioEnabled: true,
         holdDelayMs: 0,
         fillerEnabled: false,
       });
@@ -151,6 +159,7 @@ describe("createSilenceCover", () => {
 
     it("保留音が始まったら予約中のフィラーを取り消す", () => {
       const { cover, sendText } = setup({
+        holdAudioEnabled: true,
         fillerDelayMs: 2_000,
         holdDelayMs: 0,
       });
@@ -162,6 +171,68 @@ describe("createSilenceCover", () => {
         preemptible: false,
         interruptible: true,
       });
+    });
+  });
+
+  describe("待ちの声かけ", () => {
+    const holdPhrases = ["いま調べてるよ", "もうちょっと待ってね"];
+
+    it("待機を伝えたあと、間隔ごとに声かけを順に繰り返す", () => {
+      const { cover, sendText, sendPlay } = setup({
+        fillerEnabled: false,
+        holdPhrases,
+        holdPhraseIntervalMs: 6_000,
+      });
+      cover.onToolCall();
+      vi.advanceTimersByTime(5_999);
+      expect(sendText).toHaveBeenCalledTimes(1);
+
+      vi.advanceTimersByTime(1);
+      vi.advanceTimersByTime(6_000);
+      vi.advanceTimersByTime(6_000);
+      expect(sendText.mock.calls.map(([text]) => text)).toEqual([
+        "ちょっと待ってね",
+        "いま調べてるよ",
+        "もうちょっと待ってね",
+        "いま調べてるよ",
+      ]);
+      expect(sendPlay).not.toHaveBeenCalled();
+    });
+
+    it("応答トークンが届いたら声かけをやめる", () => {
+      const { cover, sendText } = setup({
+        fillerEnabled: false,
+        holdPhrases,
+        holdPhraseIntervalMs: 6_000,
+      });
+      cover.onToolCall();
+      vi.advanceTimersByTime(6_000);
+      cover.onToken();
+      vi.advanceTimersByTime(30_000);
+      expect(sendText).toHaveBeenCalledTimes(2);
+    });
+
+    it("検索が重なっても声かけを二重に始めない", () => {
+      const { cover, sendText } = setup({
+        fillerEnabled: false,
+        holdPhrases,
+        holdPhraseIntervalMs: 6_000,
+      });
+      cover.onToolCall();
+      cover.onToolCall();
+      vi.advanceTimersByTime(6_000);
+      expect(sendText).toHaveBeenCalledTimes(2);
+    });
+
+    it("保留音を使う設定では声かけをしない", () => {
+      const { cover, sendText } = setup({
+        fillerEnabled: false,
+        holdAudioEnabled: true,
+        holdPhrases,
+      });
+      cover.onToolCall();
+      vi.advanceTimersByTime(30_000);
+      expect(sendText).toHaveBeenCalledTimes(1);
     });
   });
 

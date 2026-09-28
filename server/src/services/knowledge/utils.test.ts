@@ -11,10 +11,6 @@ describe("extractBaseName", () => {
     expect(extractBaseName("foo.pdf")).toBe("foo");
   });
 
-  it("両方除去", () => {
-    expect(extractBaseName("originals/data.csv")).toBe("data");
-  });
-
   it("拡張子が無いときはそのまま", () => {
     expect(extractBaseName("README")).toBe("README");
   });

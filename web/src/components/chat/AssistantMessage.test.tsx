@@ -56,12 +56,6 @@ describe("AssistantMessage", () => {
     ).toBeInTheDocument();
   });
 
-  it("フィードバックボタンでモーダルを開く", async () => {
-    renderMessage(textMessage("回答"), true);
-    await userEvent.click(screen.getByLabelText("良い回答"));
-    expect(screen.getByText("フィードバック")).toBeInTheDocument();
-  });
-
   it("最新メッセージの生成中はフィードバックバーを隠す", () => {
     renderMessage(textMessage("生成中"), true, { isRunning: true });
     expect(
@@ -74,24 +68,6 @@ describe("AssistantMessage", () => {
       error: new Error("通信に失敗しました"),
     });
     expect(screen.getByText("通信に失敗しました")).toBeInTheDocument();
-  });
-
-  it("ツールパートを ToolPart 経由で表示する", () => {
-    const message: UIMessage = {
-      id: "a-1",
-      role: "assistant",
-      parts: [
-        {
-          type: "tool-knowledge-search",
-          toolCallId: "t-1",
-          state: "output-available",
-          input: {},
-          output: {},
-        } as never,
-      ],
-    };
-    renderMessage(message, true);
-    expect(screen.getByText("ねっぷちゃんが調査しました")).toBeInTheDocument();
   });
 
   it("bad のフィードバックで改善点モーダルを開く", async () => {

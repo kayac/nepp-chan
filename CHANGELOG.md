@@ -1,5 +1,60 @@
 # Changelog
 
+## [v1.0.14](https://github.com/kayac/nepp-chan/compare/v1.0.13...v1.0.14) - 2026-09-17
+
+- build(deps): bump astro from 7.3.1 to 7.3.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1199
+- build(deps-dev): bump @biomejs/biome from 2.5.12 to 2.5.13 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1198
+- build(deps): bump @twilio/voice-sdk from 2.18.4 to 2.18.5 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1197
+- build(deps): bump @hono/zod-openapi from 1.6.2 to 1.6.3 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1196
+- build(deps-dev): bump autoprefixer from 10.5.4 to 10.5.6 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1184
+- build(deps): bump hono from 4.13.5 to 4.13.7 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1183
+- build(deps): bump @sentry/react from 10.73.0 to 10.74.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1201
+- build(deps): bump @sentry/cloudflare from 10.73.0 to 10.74.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1179
+- build(deps-dev): bump wrangler from 4.129.0 to 4.131.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1202
+- build(deps-dev): bump @types/node from 26.4.1 to 26.5.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1185
+- build(deps-dev): bump vite from 8.2.2 to 8.3.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1182
+- build(deps): bump the react group across 1 directory with 4 updates by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1178
+- build(deps): bump zod from 4.5.4 to 4.6.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1188
+- build(deps): bump @mastra/observability from 1.17.5 to 1.17.7 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1190
+- build(deps): bump @mastra/rag from 2.6.1 to 2.6.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1187
+- build(deps): bump @mastra/evals from 1.10.0 to 1.10.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1194
+- build(deps-dev): bump mastra from 1.20.1 to 1.29.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1180
+- build(deps): AI SDK を v7 世代に上げる by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1204
+- build(deps): bump @mastra/mcp from 1.17.2 to 1.17.3 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1132
+- build(deps): bump @mastra/loggers from 1.2.0 to 1.3.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1158
+- build(deps): bump @mastra/cloudflare-d1 from 1.1.1 to 1.3.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1147
+- build(deps): bump @mastra/memory from 1.26.2 to 1.29.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1191
+- build(deps): bump @mastra/libsql from 1.17.0 to 1.22.5 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1195
+- chore(server): 移行用の DELETE /admin/knowledge/legacy を撤去する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1205
+- test: 重複と実装の写しになっているテストを整理する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1206
+- feat: ペルソナの自由タグをタググループにまとめ、話者別の関心と課題を出す by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1209
+- fix: タグの自動振り分けが D1 の変数上限で失敗する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1210
+- perf: タグ別名の分割 INSERT を D1 の batch で 1 往復にする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1211
+
+## [v1.0.13](https://github.com/kayac/nepp-chan/compare/v1.0.12...v1.0.13) - 2026-09-14
+
+- LLM利用コストの計測・集計・管理画面を拡張する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1072
+- feat: メイン LLM を OpenAI GPT-5.6 へ切り替える（Gemini 併存） by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1019
+- モデルと reasoning effort をタスク相応に見直す by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1084
+- トークン消費・コストを日付単位のモデル内訳表示にする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1112
+- refactor(server): SQL を repository に集約する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1121
+- docs(lp): プライバシーポリシーを OpenAI API 切り替えに備えて更新 by @vesperworks in https://github.com/kayac/nepp-chan/pull/1110
+- chore(biome): .claude の除外をリポジトリ直下だけにする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1122
+- feat(knowledge): URL・文章・画像から curated ナレッジの下書きを作って保存する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1123
+- feat(server): ナレッジ同期を決定的 ID の upsert 上書きにする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1129
+- feat(server): ナレッジ同期の経路を R2 イベント → Queue に一本化する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1130
+- build(deps): bump 24 dependencies across workspaces by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1163
+- build(deps-dev): bump vitest and coverage providers to 5.0.0 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1164
+- ナレッジ画面に公式資料の一括アップロードを追加し、R2 を official/ と curated/ に区分する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1165
+- feat: ねっぷちゃんの口調を GPT-5.6 向けに立て直し、らしさ eval を追加する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1166
+- feat(server): ねっぷちゃんに役割の維持と公の顔の線引きを入れ、インジェクション eval を追加 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1167
+- feat(server): PII 対策 PR 2 ― POST /feedback の認証 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1168
+- refactor(server): ねっぷちゃん eval の gate を runEvals の turns gates で実行する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1169
+- test(server): 安全性ケースの入力文を穏やかにし、snapshot の source 表記を簡潔にする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1171
+- feat(server): LINE 返答の長さを相手の投げかけの型で変える by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1172
+- feat(server): 連絡先を working memory に記録しない by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1170
+- llm_usage のターン識別を turn_id にし、コスト画面に用途別の内訳を出す by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1177
+
 ## [v1.0.12](https://github.com/kayac/nepp-chan/compare/v1.0.11...v1.0.12) - 2026-08-28
 
 - ウィジェットに設置サイトの文脈を持たせる by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1015

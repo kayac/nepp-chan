@@ -61,8 +61,6 @@ R2 のキーはプレフィクスで区分し、ルート直下には置かな�
 
 `GET /admin/knowledge/files` は `prefix` と `cursor` でページングする。Vectorize への反映は R2 イベント経由で、削除も同様に伝播する。`knowledge:upload --clean` は Vectorize インデックスを作り直すだけで R2 は消えないので、clean 後は `POST /admin/knowledge/sync` で R2 全体を再同期する。
 
-`DELETE /admin/knowledge/legacy` は `official/` `curated/` 以外のオブジェクトを全削除する移行用の一時エンドポイントで、移行完了後に削除する。
-
 ## コーディング規約
 
 ### コメント

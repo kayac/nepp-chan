@@ -42,22 +42,6 @@ describe("calcCostUsd", () => {
     expect(cost).toBeCloseTo(11.25, 10);
   });
 
-  it("jev モデルは input $0.042/1M・output 無料で計算する", () => {
-    const cost = calcCostUsd("jev-1.13.0", {
-      inputTokens: 1_000_000,
-      outputTokens: 1_000_000,
-    });
-    expect(cost).toBeCloseTo(0.042, 10);
-  });
-
-  it("luna モデルは input $0.20/1M・output $1.20/1M で計算する", () => {
-    const cost = calcCostUsd("openai/gpt-5.6-luna", {
-      inputTokens: 1_000_000,
-      outputTokens: 1_000_000,
-    });
-    expect(cost).toBeCloseTo(1.4, 10);
-  });
-
   it("terra モデルは input $2.00/1M・output $12.00/1M で計算する", () => {
     const cost = calcCostUsd("openai/gpt-5.6-terra", {
       inputTokens: 1_000_000,

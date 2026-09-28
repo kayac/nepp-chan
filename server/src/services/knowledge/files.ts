@@ -1,4 +1,3 @@
-import { KNOWLEDGE_PREFIXES } from "@nepp-chan/shared/constants/knowledge";
 import { logger } from "~/lib/logger";
 import { extractBaseName, markdownBaseName } from "./utils";
 
@@ -38,28 +37,6 @@ export const listFiles = async (
     nextCursor: listed.truncated ? listed.cursor : null,
     hasMore: listed.truncated,
   };
-};
-
-const isManagedKey = (key: string) =>
-  KNOWLEDGE_PREFIXES.some((prefix) => key.startsWith(prefix));
-
-export const deleteLegacyFiles = async (bucket: R2Bucket) => {
-  let deleted = 0;
-  let cursor: string | undefined;
-  do {
-    const listed = await bucket.list({ cursor });
-    const targets = listed.objects
-      .map((obj) => obj.key)
-      .filter((key) => !isManagedKey(key));
-    if (targets.length > 0) {
-      await bucket.delete(targets);
-      deleted += targets.length;
-    }
-    cursor = listed.truncated ? listed.cursor : undefined;
-  } while (cursor);
-
-  logger.info(`[Delete] Deleted ${deleted} legacy objects from R2`);
-  return { deleted };
 };
 
 export const getFile = async (

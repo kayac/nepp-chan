@@ -9,7 +9,7 @@ import { stripMarkdown } from "~/lib/strip-markdown";
 import { latestAssistantText } from "~/lib/thread-history";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
-import { nextTurnIndex, recordLlmUsage } from "~/services/analytics/llm-usage";
+import { newTurnId, recordLlmUsage } from "~/services/analytics/llm-usage";
 import { injectBroadcastsToThread } from "~/services/broadcast-thread-injector";
 import { injectPollsToThread } from "~/services/poll-thread-injector";
 
@@ -26,13 +26,13 @@ export const generateReply = async (params: {
   env: CloudflareBindings;
 }) => {
   const storagePromise = getStorage(params.env.DB);
-  const [storage, turnIndex, previousAssistant] = await Promise.all([
+  const [storage, previousAssistant] = await Promise.all([
     storagePromise,
-    nextTurnIndex(params.env.DB, params.threadId),
     params.userMessage
       ? storagePromise.then((s) => latestAssistantText(s, params.threadId))
       : undefined,
   ]);
+  const turnId = newTurnId();
   const startedAt = Date.now();
 
   const requestContext = createRequestContext({
@@ -41,7 +41,7 @@ export const generateReply = async (params: {
     env: params.env,
     usagePlatform: "line",
     usageThreadId: params.threadId,
-    usageTurnIndex: turnIndex,
+    usageTurnId: turnId,
   });
 
   params.client
@@ -115,7 +115,7 @@ export const generateReply = async (params: {
     agent: "nepp-chan",
     intent,
     threadId: params.threadId,
-    turnIndex,
+    turnId,
     durationMs: Date.now() - startedAt,
   });
 

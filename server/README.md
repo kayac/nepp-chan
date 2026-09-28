@@ -242,7 +242,6 @@ pnpm knowledge:upload:dev --clean --file=mayor-interview.md
 | `/admin/knowledge/files`          | GET        | ファイル一覧取得。`prefix`・`limit`・`cursor` でページング |
 | `/admin/knowledge/files/:key`     | GET/PUT/DELETE | ファイル取得・保存・削除   |
 | `/admin/knowledge/upload`         | POST       | Markdown を `official/` 配下にアップロード |
-| `/admin/knowledge/legacy`         | DELETE     | `official/` `curated/` 以外を全削除する移行用の一時エンドポイント |
 | `/admin/knowledge/convert`        | POST       | 画像/PDF → Markdown 変換       |
 | `/admin/knowledge/reconvert`      | POST       | 元ファイルから Markdown 再生成 |
 | `/admin/knowledge/curated-draft`  | POST       | URL・文章・画像/PDF から curated 下書きを生成 |

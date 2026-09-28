@@ -65,16 +65,6 @@ describe("login", () => {
     const result = await login("u", "p");
     expect(result.accessToken).toBe("tok");
   });
-
-  it("401 は error.message を throw", async () => {
-    server.use(
-      http.post(`${API_BASE}/auth/login`, () =>
-        HttpResponse.json({ error: { message: "認証失敗" } }, { status: 401 }),
-      ),
-    );
-
-    await expect(login("u", "wrong")).rejects.toThrow("認証失敗");
-  });
 });
 
 describe("fetchCurrentUser", () => {

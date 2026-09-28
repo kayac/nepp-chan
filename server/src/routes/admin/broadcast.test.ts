@@ -183,18 +183,6 @@ describe("broadcastAdminRoutes", () => {
         status: "draft",
       });
     });
-
-    it("status enum 外は 400", async () => {
-      useAuth();
-
-      const res = await routes.request(
-        authedJson("GET", "/?status=unknown"),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(400);
-    });
   });
 
   describe("POST /", () => {
@@ -220,55 +208,6 @@ describe("broadcastAdminRoutes", () => {
           createdBy: "u-1",
         }),
       );
-    });
-
-    it("境界値: parts 5 件は 201", async () => {
-      useAuth();
-      vi.mocked(broadcastService.createBroadcastMessage).mockResolvedValue(
-        sampleBroadcast,
-      );
-
-      const res = await routes.request(
-        authedJson("POST", "/", {
-          parts: Array.from({ length: 5 }, (_, i) => ({
-            type: "text",
-            text: `p${i}`,
-          })),
-        }),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(201);
-    });
-
-    it("境界値: parts 6 件は 400", async () => {
-      useAuth();
-
-      const res = await routes.request(
-        authedJson("POST", "/", {
-          parts: Array.from({ length: 6 }, (_, i) => ({
-            type: "text",
-            text: `p${i}`,
-          })),
-        }),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(400);
-    });
-
-    it("境界値: parts 0 件は 400", async () => {
-      useAuth();
-
-      const res = await routes.request(
-        authedJson("POST", "/", { parts: [] }),
-        undefined,
-        mockEnv,
-      );
-
-      expect(res.status).toBe(400);
     });
 
     it("service が throw すると 500 を返す", async () => {

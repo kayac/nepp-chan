@@ -8,10 +8,12 @@ import {
   SENT_OPTIONS,
   TOPIC_OPTIONS,
   type VoiceFilter,
+  type VoiceGroup,
 } from "./helpers";
 
 interface Props {
   filter: VoiceFilter;
+  groups: VoiceGroup[];
   matchCount: number | null;
   onChange: (next: VoiceFilter) => void;
 }
@@ -85,7 +87,12 @@ const MultiSelectGroup = <T,>({
   </Group>
 );
 
-export const FilterPopover = ({ filter, matchCount, onChange }: Props) => {
+export const FilterPopover = ({
+  filter,
+  groups,
+  matchCount,
+  onChange,
+}: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const count = appliedCount(filter);
 
@@ -142,6 +149,24 @@ export const FilterPopover = ({ filter, matchCount, onChange }: Props) => {
                 />
               ))}
             </Group>
+
+            {groups.length > 0 && (
+              <Group label="誰の声か">
+                <Pill
+                  label="すべて"
+                  selected={filter.group === null}
+                  onClick={() => onChange({ ...filter, group: null })}
+                />
+                {groups.map((group) => (
+                  <Pill
+                    key={group.id}
+                    label={group.name}
+                    selected={filter.group?.id === group.id}
+                    onClick={() => onChange({ ...filter, group })}
+                  />
+                ))}
+              </Group>
+            )}
 
             <div className="flex items-center justify-between gap-3 pt-3 border-t border-(--border-1)">
               <button

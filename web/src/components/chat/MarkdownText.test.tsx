@@ -71,48 +71,6 @@ describe("MarkdownText", () => {
     expect(writeText).not.toHaveBeenCalled();
   });
 
-  it("見出し・引用・リスト・水平線・表・脚注を描画する", () => {
-    const md = `## H2
-### H3
-#### H4
-##### H5
-###### H6
-
-> 引用文
-
-- 項目A
-- 項目B
-
-1. 1番目
-2. 2番目
-
----
-
-| 列1 | 列2 |
-| --- | --- |
-| a | b |
-
-脚注[^1]
-
-[^1]: 注釈テキスト`;
-    render(<MarkdownText text={md} />);
-
-    expect(
-      screen.getByRole("heading", { level: 2, name: "H2" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { level: 6, name: "H6" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("引用文")).toBeInTheDocument();
-    expect(screen.getByText("項目A")).toBeInTheDocument();
-    expect(screen.getByText("1番目")).toBeInTheDocument();
-    expect(screen.getByRole("table")).toBeInTheDocument();
-    expect(
-      screen.getByRole("columnheader", { name: "列1" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("cell", { name: "a" })).toBeInTheDocument();
-  });
-
   it("約物に隣接する強調を CJK 文中で描画する", () => {
     const { container } = render(
       <MarkdownText

@@ -16,7 +16,7 @@ const formatDurationMs = (ms: number | null) =>
 
 export const ThreadTurnBreakdown = ({ threadId }: Props) => {
   const { data, isLoading, error } = useThreadTurnUsage(threadId);
-  const turns = (data?.turns ?? []).filter((turn) => turn.turnIndex !== null);
+  const turns = (data?.turns ?? []).filter((turn) => turn.turnId !== null);
 
   if (isLoading) return <SectionLoading />;
   if (error != null) return <SectionError error={error} />;
@@ -43,7 +43,7 @@ export const ThreadTurnBreakdown = ({ threadId }: Props) => {
         </thead>
         <tbody className="divide-y divide-(--border-1)/50">
           {turns.map((turn) => (
-            <tr key={turn.turnIndex ?? "unknown"}>
+            <tr key={turn.turnId ?? "unknown"}>
               <td className="px-2 py-1 text-(--fg-2) tabular-nums whitespace-nowrap">
                 {turn.answeredAt ? formatJstTime(turn.answeredAt) : "記録前"}
               </td>

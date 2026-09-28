@@ -55,9 +55,7 @@ describe("deleteWithCount", () => {
     expect(remaining.map((r) => r.id)).toEqual(["l-2"]);
   });
 
-  it("一致する行が無ければ DELETE を発行しない", async () => {
-    const spy = vi.spyOn(db, "delete");
-
+  it("一致する行が無ければ 0 件を返す", async () => {
     const deleted = await deleteWithCount(
       createDb(fakeD1),
       dataRetentionLogs,
@@ -65,6 +63,5 @@ describe("deleteWithCount", () => {
     );
 
     expect(deleted).toBe(0);
-    expect(spy).not.toHaveBeenCalled();
   });
 });

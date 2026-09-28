@@ -57,24 +57,6 @@ describe("parseParts", () => {
     );
     expect(result).toEqual([{ id: "id-1", type: "text", text: "fallback" }]);
   });
-
-  it("複数パートで generateId が複数回呼ばれる", () => {
-    let calls = 0;
-    parseParts(
-      baseBroadcast({
-        parts: JSON.stringify([
-          { type: "text", text: "a" },
-          { type: "text", text: "b" },
-          { type: "text", text: "c" },
-        ]),
-      }),
-      () => {
-        calls += 1;
-        return `gen-${calls}`;
-      },
-    );
-    expect(calls).toBe(3);
-  });
 });
 
 describe("getImageUrl", () => {

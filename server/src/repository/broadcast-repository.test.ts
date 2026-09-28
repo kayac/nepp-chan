@@ -399,24 +399,6 @@ describe("broadcastRepository", () => {
       expect(result.details).toHaveLength(3);
       expect(result.summaries.length + result.details.length).toBe(5);
     });
-
-    it("sentAt が null の summary は空文字に変換される", async () => {
-      // status=sent だが sentAt=null は実運用ではないがコード上の防御
-      await db.insert(broadcastMessages).values({
-        ...baseInput,
-        id: "weird",
-        status: "sent",
-        sentAt: null,
-      });
-      await seedSentInDaysAgo("normal", 1);
-
-      const result = await broadcastRepository.findRecentSent(fakeD1, {
-        detailLimit: 1,
-      });
-      const weirdSummary = result.summaries.find((s) => s.id === "weird");
-      // null は filter で 30 日条件を満たさず除外される（sql 比較で null < since）
-      expect(weirdSummary).toBeUndefined();
-    });
   });
 
   describe("findSentSince", () => {

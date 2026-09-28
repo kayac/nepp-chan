@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { seedRelationGroups } from "~/__tests__/helpers/tag-groups";
 import { createTestDb, type TestDb } from "~/__tests__/helpers/test-db";
 import { llmUsage, mastraMessages, mastraThreads, persona } from "~/db";
 
@@ -523,25 +524,6 @@ describe("getThreadUsage", () => {
     ]);
   });
 
-  it("cost_usd NULL の行は現行単価の概算で補完する", async () => {
-    await insertUsage({
-      id: "u1",
-      threadId: "t1",
-      inputTokens: 1_000_000,
-      costUsd: 0.5,
-    });
-    await insertUsage({
-      id: "u2",
-      threadId: "t1",
-      inputTokens: 1_000_000,
-      costUsd: null,
-    });
-
-    const result = await getThreadUsage(d1, period, { limit: 50 });
-
-    expect(result.threads[0]?.costUsd).toBeCloseTo(0.7, 10);
-  });
-
   it("mastra_messages から会話の開始・終了・所要秒数を出す", async () => {
     await insertThread(db, "t1", WEB_RESOURCE);
     await insertMessage(db, {
@@ -788,6 +770,34 @@ describe("getOperationCost", () => {
     ]);
   });
 
+  it("日ごとに用途別の内訳を返し、会話はまとめる", async () => {
+    await insertUsage({
+      id: "u1",
+      source: "chat",
+      costUsd: 0.02,
+      createdAt: "2026-06-09T01:00:00.000Z",
+    });
+    await insertUsage({
+      id: "u2",
+      source: "subagent",
+      costUsd: 0.03,
+      createdAt: "2026-06-09T02:00:00.000Z",
+    });
+    await insertUsage({
+      id: "u3",
+      source: "persona-extract",
+      costUsd: 0.01,
+      createdAt: "2026-06-09T03:00:00.000Z",
+    });
+
+    const result = await getOperationCost(d1, period);
+
+    expect(result.daily[0]?.purposes).toEqual([
+      { purpose: "conversation", costUsd: expect.closeTo(0.05, 10) },
+      { purpose: "persona-extract", costUsd: 0.01 },
+    ]);
+  });
+
   it("JST の日付ごとの推移を古い順に返す", async () => {
     await insertUsage({
       id: "u1",
@@ -811,8 +821,18 @@ describe("getOperationCost", () => {
     const result = await getOperationCost(d1, period);
 
     expect(result.daily).toEqual([
-      { date: "2026-06-09", costUsd: 0.03 },
-      { date: "2026-06-10", costUsd: expect.closeTo(0.03, 10) },
+      {
+        date: "2026-06-09",
+        costUsd: 0.03,
+        purposes: [{ purpose: "conversation", costUsd: 0.03 }],
+      },
+      {
+        date: "2026-06-10",
+        costUsd: expect.closeTo(0.03, 10),
+        purposes: [
+          { purpose: "conversation", costUsd: expect.closeTo(0.03, 10) },
+        ],
+      },
     ]);
   });
 
@@ -837,7 +857,7 @@ describe("getThreadTurnUsage", () => {
 
   const insertUsage = async (params: {
     id: string;
-    turnIndex?: number | null;
+    turnId?: string | null;
     agent?: string | null;
     source?: string;
     model?: string;
@@ -845,6 +865,7 @@ describe("getThreadTurnUsage", () => {
     totalTokens?: number;
     costUsd?: number | null;
     durationMs?: number | null;
+    createdAt?: string;
   }) => {
     await db.insert(llmUsage).values({
       id: params.id,
@@ -853,11 +874,11 @@ describe("getThreadTurnUsage", () => {
       source: params.source ?? "chat",
       agent: params.agent,
       intent: params.intent,
-      turnIndex: params.turnIndex,
+      turnId: params.turnId,
       durationMs: params.durationMs,
       threadId: "t1",
       costUsd: params.costUsd,
-      createdAt: "2026-06-09T00:00:00.000Z",
+      createdAt: params.createdAt ?? "2026-06-09T00:00:00.000Z",
     });
   };
 
@@ -869,31 +890,33 @@ describe("getThreadTurnUsage", () => {
   it("往復ごとにコスト・エージェント内訳・所要時間を返す", async () => {
     await insertUsage({
       id: "u1",
-      turnIndex: 1,
+      turnId: "turn-1",
       agent: "nepp-chan",
       costUsd: 0.01,
       durationMs: 18_000,
     });
     await insertUsage({
       id: "u2",
-      turnIndex: 1,
+      turnId: "turn-1",
       agent: "knowledge",
       source: "subagent",
       costUsd: 0.05,
+      createdAt: "2026-06-09T00:00:01.000Z",
     });
     await insertUsage({
       id: "u3",
-      turnIndex: 2,
+      turnId: "turn-2",
       agent: "nepp-chan",
       costUsd: 0.002,
       durationMs: 3_000,
+      createdAt: "2026-06-09T00:01:00.000Z",
     });
 
     const { turns } = await getThreadTurnUsage(d1, "t1");
 
     expect(turns).toHaveLength(2);
     expect(turns[0]).toMatchObject({
-      turnIndex: 1,
+      turnId: "turn-1",
       durationMs: 18_000,
       answeredAt: "2026-06-09T00:00:00.000Z",
     });
@@ -902,19 +925,45 @@ describe("getThreadTurnUsage", () => {
       expect.objectContaining({ agent: "knowledge", costUsd: 0.05 }),
       expect.objectContaining({ agent: "nepp-chan", costUsd: 0.01 }),
     ]);
-    expect(turns[1]).toMatchObject({ turnIndex: 2, durationMs: 3_000 });
+    expect(turns[1]).toMatchObject({ turnId: "turn-2", durationMs: 3_000 });
+  });
+
+  it("ターン内の委譲が次のターンより後に記録されてもターン順は崩れない", async () => {
+    await insertUsage({
+      id: "u1",
+      turnId: "turn-1",
+      agent: "nepp-chan",
+      createdAt: "2026-06-09T00:00:00.000Z",
+    });
+    await insertUsage({
+      id: "u2",
+      turnId: "turn-2",
+      agent: "nepp-chan",
+      createdAt: "2026-06-09T00:00:30.000Z",
+    });
+    await insertUsage({
+      id: "u3",
+      turnId: "turn-1",
+      agent: "knowledge",
+      source: "subagent",
+      createdAt: "2026-06-09T00:01:00.000Z",
+    });
+
+    const { turns } = await getThreadTurnUsage(d1, "t1");
+
+    expect(turns.map((t) => t.turnId)).toEqual(["turn-1", "turn-2"]);
   });
 
   it("本体の応答行から intent を取り出す", async () => {
     await insertUsage({
       id: "u1",
-      turnIndex: 1,
+      turnId: "turn-1",
       agent: "nepp-chan",
       intent: "thinking",
     });
     await insertUsage({
       id: "u2",
-      turnIndex: 1,
+      turnId: "turn-1",
       agent: "knowledge",
       source: "subagent",
     });
@@ -924,13 +973,30 @@ describe("getThreadTurnUsage", () => {
     expect(turns[0]?.intent).toBe("thinking");
   });
 
-  it("turn_index 記録前の行は turnIndex: null として末尾にまとめる", async () => {
-    await insertUsage({ id: "u1", turnIndex: null, costUsd: 0.03 });
-    await insertUsage({ id: "u2", turnIndex: 1, costUsd: 0.01 });
+  it("turn_id 記録前の行は turnId: null の 1 件にまとめる", async () => {
+    await insertUsage({
+      id: "u1",
+      turnId: null,
+      costUsd: 0.03,
+      createdAt: "2026-06-09T00:00:00.000Z",
+    });
+    await insertUsage({
+      id: "u2",
+      turnId: null,
+      costUsd: 0.02,
+      createdAt: "2026-06-09T00:00:30.000Z",
+    });
+    await insertUsage({
+      id: "u3",
+      turnId: "turn-1",
+      costUsd: 0.01,
+      createdAt: "2026-06-09T00:01:00.000Z",
+    });
 
     const { turns } = await getThreadTurnUsage(d1, "t1");
 
-    expect(turns.map((t) => t.turnIndex)).toEqual([1, null]);
+    expect(turns.map((t) => t.turnId)).toEqual([null, "turn-1"]);
+    expect(turns[0]?.costUsd).toBeCloseTo(0.05, 10);
   });
 
   it("記録が無ければ空配列を返す", async () => {
@@ -1022,90 +1088,74 @@ describe("getPersonaAnalytics", () => {
   beforeEach(async () => {
     db = await createTestDb();
     testDbHolder.db = db;
+    await seedRelationGroups(db);
   });
 
-  it("tags の年代 × sentiment を集計する", async () => {
+  it("年代はタググループで集計し、60代以上を 1 区分にまとめる", async () => {
     await insertPersona({ id: "p1", tags: "60代,村内", sentiment: "negative" });
     await insertPersona({ id: "p2", tags: "60代", sentiment: "positive" });
     await insertPersona({
       id: "p3",
       tags: "80代以上,村内",
-      sentiment: "request",
+      sentiment: "neutral",
     });
+    await insertPersona({ id: "p4", tags: "高齢者", sentiment: "request" });
+    await insertPersona({ id: "p5", tags: "高校生", sentiment: "neutral" });
 
     const result = await getPersonaAnalytics(d1, {});
 
-    const age60 = result.ageSentiment.find((a) => a.age === "60代");
-    const age80 = result.ageSentiment.find((a) => a.age === "80代以上");
-    expect(age60).toEqual({
-      age: "60代",
+    expect(result.ageSentiment.map((a) => a.age)).toEqual([
+      "10代",
+      "20代",
+      "60代以上",
+      "不明",
+    ]);
+    expect(result.ageSentiment.find((a) => a.age === "60代以上")).toEqual({
+      age: "60代以上",
       positive: 1,
       negative: 1,
-      request: 0,
-      neutral: 0,
-    });
-    expect(age80).toEqual({
-      age: "80代以上",
-      positive: 0,
-      negative: 0,
       request: 1,
-      neutral: 0,
+      neutral: 1,
     });
+    expect(result.ageSentiment.find((a) => a.age === "10代")?.neutral).toBe(1);
   });
 
-  it("tags に年代が無ければ demographic_summary から抽出し、どちらにも無ければ「不明」", async () => {
-    await insertPersona({ id: "p1", demographicSummary: "30代,移住検討者" });
-    await insertPersona({ id: "p2", tags: "観光客" });
+  it("年代は demographic_summary からも拾い、明示の年代を高齢者より優先し、無ければ「不明」", async () => {
+    await insertPersona({ id: "p1", demographicSummary: "20代,高齢者" });
+    await insertPersona({ id: "p2", tags: "そば" });
 
     const result = await getPersonaAnalytics(d1, {});
 
-    expect(result.ageSentiment.find((a) => a.age === "30代")?.neutral).toBe(1);
+    expect(result.ageSentiment.find((a) => a.age === "20代")?.neutral).toBe(1);
     expect(result.ageSentiment.find((a) => a.age === "不明")?.neutral).toBe(1);
   });
 
-  it("topic 9 分類 × sentiment を集計し、topic 無しは「その他」に入る", async () => {
-    await insertPersona({ id: "p1", topic: "交通", sentiment: "negative" });
-    await insertPersona({ id: "p2", topic: "交通", sentiment: "request" });
-    await insertPersona({ id: "p3", sentiment: "positive" }); // topic なし
-
-    const result = await getPersonaAnalytics(d1, {});
-
-    const traffic = result.topics.find((t) => t.topic === "交通");
-    const other = result.topics.find((t) => t.topic === "その他");
-    expect(traffic).toEqual({
-      topic: "交通",
-      total: 2,
-      positive: 0,
-      negative: 1,
-      request: 1,
-      neutral: 0,
-    });
-    expect(other?.total).toBe(1);
-    expect(result.topics).toHaveLength(9);
-  });
-
-  it("居住地（村内/村外）と関係性（村人/観光客/移住検討者/帰省者）を集計する", async () => {
+  it("居住地と関係性をタググループで集計し、関係性は優先順位で 1 つに寄せる", async () => {
     await insertPersona({ id: "p1", tags: "60代,村内" });
     await insertPersona({ id: "p2", tags: "村外,観光客" });
     await insertPersona({ id: "p3", demographicSummary: "30代,移住検討者" });
-    await insertPersona({ id: "p4", tags: "50代" }); // 居住地・関係性なし
+    await insertPersona({ id: "p4", tags: "旅行者" });
+    await insertPersona({ id: "p5", tags: "50代" });
+    await insertPersona({ id: "p6", tags: "村外,村内" });
 
     const result = await getPersonaAnalytics(d1, {});
 
     expect(result.segments.residence).toEqual(
       expect.arrayContaining([
-        { label: "村内", count: 1 },
+        { label: "村内", count: 2 },
         { label: "村外", count: 1 },
-        { label: "不明", count: 2 },
+        { label: "不明", count: 3 },
       ]),
     );
     expect(result.segments.relationship).toEqual(
       expect.arrayContaining([
-        { label: "観光客", count: 1 },
+        { label: "村内住民", count: 2 },
+        { label: "観光客", count: 2 },
         { label: "移住検討者", count: 1 },
-        { label: "不明", count: 2 },
+        { label: "不明", count: 1 },
       ]),
     );
+    expect(result.segments.relationship).toHaveLength(4);
   });
 
   it("from/to は会話終了時刻基準で絞り込み、会話時刻不明の行は除外する", async () => {
@@ -1125,18 +1175,6 @@ describe("getPersonaAnalytics", () => {
     });
 
     expect(result.totalCount).toBe(1);
-  });
-
-  it("from/to なしは conversation_ended_at が NULL の行も含む全件を集計する", async () => {
-    await insertPersona({
-      id: "p1",
-      conversationEndedAt: "2026-06-09T00:00:00.000Z",
-    });
-    await insertPersona({ id: "p2" }); // conversation_ended_at なし
-
-    const result = await getPersonaAnalytics(d1, {});
-
-    expect(result.totalCount).toBe(2);
   });
 
   it("conversation_ended_at を JST の時間帯分布に集計し、NULL は除外する", async () => {
@@ -1180,26 +1218,6 @@ describe("getPersonaAnalytics", () => {
     expect(result.weekday[5]).toEqual({ dow: 5, count: 1 });
     expect(result.weekday[6]).toEqual({ dow: 6, count: 1 });
     expect(result.weekday.reduce((sum, d) => sum + d.count, 0)).toBe(2);
-  });
-
-  it("開庁時間（平日 8〜17 時 JST）と閉庁時間の声を数える", async () => {
-    await insertPersona({
-      id: "p1",
-      conversationEndedAt: "2026-06-12T01:00:00.000Z", // JST 金 10:00 → 開庁
-    });
-    await insertPersona({
-      id: "p2",
-      conversationEndedAt: "2026-06-12T10:00:00.000Z", // JST 金 19:00 → 閉庁（夜間）
-    });
-    await insertPersona({
-      id: "p3",
-      conversationEndedAt: "2026-06-13T02:00:00.000Z", // JST 土 11:00 → 閉庁（土日）
-    });
-    await insertPersona({ id: "p4" }); // conversation_ended_at なし → 対象外
-
-    const result = await getPersonaAnalytics(d1, {});
-
-    expect(result.officeHours).toEqual({ open: 1, closed: 2 });
   });
 
   it("時間帯分布も from/to（conversation_ended_at 基準）で絞り込める", async () => {

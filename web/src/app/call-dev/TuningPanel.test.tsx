@@ -45,12 +45,11 @@ const baseValues = {
   fillerDelayMs: "0",
   thinkingFillers: "えーっとね,うーんとね",
   backchannelFillers: "うんうん",
-  aizuchiEnabled: "true",
-  aizuchiCooldownMs: "2000",
-  aizuchiPhrases: "うん,うんうん",
   holdAudioEnabled: "true",
   holdAudioUrl: "https://example.com/hold.mp3",
   holdDelayMs: "0",
+  holdPhrases: "いま調べてるよ",
+  holdPhraseIntervalMs: "6000",
   endCallEnabled: "true",
   parentRoutingEnabled: "true",
   prefetchEnabled: "true",
@@ -143,14 +142,6 @@ describe("TuningPanel", () => {
     expect(onChange).toHaveBeenCalledWith({ endCallEnabled: "false" });
   });
 
-  it("あいづち文言をカンマ区切りのまま onChange する", () => {
-    const { onChange } = setup();
-    fireEvent.change(screen.getByLabelText("あいづち文言"), {
-      target: { value: "はい,ええ" },
-    });
-    expect(onChange).toHaveBeenCalledWith({ aizuchiPhrases: "はい,ええ" });
-  });
-
   it("disabled のとき入力とリセットが無効になる", () => {
     const onReset = vi.fn();
     render(
@@ -189,9 +180,10 @@ describe("TuningPanel", () => {
     ["相槌フィラー", "backchannelFillers", "ふむふむ"],
     ["保留音 URL", "holdAudioUrl", "https://example.com/bgm.mp3"],
     ["speechTimeout(ms)", "speechTimeout", "800"],
-    ["あいづち最短間隔(ms)", "aizuchiCooldownMs", "4000"],
     ["フィラー遅延(ms)", "fillerDelayMs", "500"],
     ["保留音遅延(ms)", "holdDelayMs", "1000"],
+    ["待ちの声かけ", "holdPhrases", "調べてるよ,待ってね"],
+    ["声かけ間隔(ms)", "holdPhraseIntervalMs", "8000"],
   ])("%s の入力は %s を onChange する", (label, key, value) => {
     const { onChange } = setup();
     fireEvent.change(screen.getByLabelText(label), { target: { value } });
@@ -216,7 +208,6 @@ describe("TuningPanel", () => {
     ["preemptible", "preemptible", "true"],
     ["DTMF 検出", "dtmfDetection", "true"],
     ["partialPrompts", "partialPrompts", "false"],
-    ["あいづち", "aizuchiEnabled", "false"],
     ["保留音", "holdAudioEnabled", "false"],
     ["検索先をねっぷちゃんが選ぶ", "parentRoutingEnabled", "false"],
     ["問いかけを先読みして検索", "prefetchEnabled", "false"],
@@ -277,10 +268,10 @@ describe("TuningPanel", () => {
     expect(onChange).toHaveBeenCalledWith({ deepgramSmartFormat: "false" });
   });
 
-  it("speechTimeout の auto を外すと 600 に戻す", () => {
+  it("speechTimeout の auto を外すと 3000 に戻す", () => {
     const { onChange } = setup({ speechTimeout: "auto" });
     fireEvent.click(screen.getByLabelText("auto"));
-    expect(onChange).toHaveBeenCalledWith({ speechTimeout: "600" });
+    expect(onChange).toHaveBeenCalledWith({ speechTimeout: "3000" });
   });
 
   it("ElevenLabs から Google への切り替えは voice を維持する", () => {

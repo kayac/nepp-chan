@@ -182,8 +182,4 @@ describe("requireAdminUser", () => {
     const p: AnonymousPrincipal = { type: "anonymous", id: "uuid-1234" };
     expect(() => requireAdminUser(p)).toThrow(HTTPException);
   });
-
-  it("undefined で HTTPException(403) をスローする", () => {
-    expect(() => requireAdminUser(undefined)).toThrow(HTTPException);
-  });
 });

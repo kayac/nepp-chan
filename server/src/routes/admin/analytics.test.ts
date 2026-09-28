@@ -32,6 +32,10 @@ vi.mock("~/services/analytics/ontology", () => ({
   getOntology: vi.fn(),
 }));
 
+vi.mock("~/services/analytics/tag-groups", () => ({
+  getAudiences: vi.fn(),
+}));
+
 const {
   getConversationStats,
   getDailyUsage,
@@ -41,6 +45,7 @@ const {
   getPersonaAnalytics,
 } = await import("~/services/analytics/aggregate");
 const { getOntology } = await import("~/services/analytics/ontology");
+const { getAudiences } = await import("~/services/analytics/tag-groups");
 const { weeklyReportRepository } = await import(
   "~/repository/weekly-report-repository"
 );
@@ -249,7 +254,13 @@ describe("GET /usage/operation", () => {
       { category: "knowledge-base", costUsd: 0.04, agents: [] },
     ],
     byProvider: [{ provider: "openai", totalTokens: 100, costUsd: 0.11 }],
-    daily: [{ date: "2026-06-09", costUsd: 0.11 }],
+    daily: [
+      {
+        date: "2026-06-09",
+        costUsd: 0.11,
+        purposes: [{ purpose: "conversation", costUsd: 0.11 }],
+      },
+    ],
   };
 
   beforeEach(() => {
@@ -294,7 +305,7 @@ describe("GET /usage/threads/{threadId}", () => {
   const turnUsage = {
     turns: [
       {
-        turnIndex: 1,
+        turnId: "turn-1",
         answeredAt: "2026-06-09T00:00:00.000Z",
         totalTokens: 1000,
         costUsd: 0.05,
@@ -595,5 +606,29 @@ describe("GET /ontology", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as { meta: { entityLayerStatus: string } };
     expect(body.meta.entityLayerStatus).toBe("ready");
+  });
+});
+
+describe("GET /persona/audiences", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useAuth("staff");
+  });
+
+  it("JST 日付を UTC 期間に変換して集計を返す", async () => {
+    vi.mocked(getAudiences).mockResolvedValue({ axes: [] });
+
+    const res = await routes.request(
+      authedGet("/persona/audiences?from=2026-06-01&to=2026-06-01"),
+      undefined,
+      mockEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(getAudiences).toHaveBeenCalledWith(mockEnv.DB, {
+      from: "2026-05-31T15:00:00.000Z",
+      to: "2026-06-01T15:00:00.000Z",
+    });
+    expect(await res.json()).toEqual({ axes: [] });
   });
 });

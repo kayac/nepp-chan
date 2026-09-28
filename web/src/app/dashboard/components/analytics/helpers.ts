@@ -141,6 +141,31 @@ const PROVIDER_LABELS: Record<string, string> = {
 export const providerLabel = (provider: string) =>
   PROVIDER_LABELS[provider] ?? provider;
 
+const PURPOSE_LABELS: Record<string, string> = {
+  conversation: "会話",
+  embedding: "埋め込み同期",
+  "curated-draft": "ナレッジ下書き",
+  "persona-extract": "ペルソナ抽出",
+  "weekly-report": "週次レポート",
+  "image-convert": "画像変換",
+};
+
+export const purposeLabel = (purpose: string) =>
+  PURPOSE_LABELS[purpose] ?? purpose;
+
+// AGENT_COLORS と同じ画面に並ぶため、そちらで使うトークンとは重ならないものを選ぶ
+const PURPOSE_COLORS: Record<string, string> = {
+  conversation: "var(--pine)",
+  embedding: "var(--teal-500)",
+  "curated-draft": "var(--honey)",
+  "persona-extract": "var(--apricot-500)",
+  "weekly-report": "var(--apricot-700)",
+  "image-convert": "var(--teal-700)",
+};
+
+export const purposeColor = (purpose: string) =>
+  PURPOSE_COLORS[purpose] ?? "var(--border-2)";
+
 // エージェント別コストの色。全体と会話内で同じエージェントが同じ色になるよう名前で固定する
 const AGENT_COLORS: Record<string, string> = {
   "knowledge-reranker": "var(--berry)",
@@ -163,3 +188,27 @@ export const cacheRatePercent = (params: {
   params.inputTokens > 0
     ? Math.round((params.cachedInputTokens / params.inputTokens) * 100)
     : 0;
+
+export const pivotDailyPurposes = (
+  daily: { date: string; purposes: { purpose: string; costUsd: number }[] }[],
+) => {
+  const totals = new Map<string, number>();
+  for (const day of daily) {
+    for (const entry of day.purposes) {
+      totals.set(
+        entry.purpose,
+        (totals.get(entry.purpose) ?? 0) + entry.costUsd,
+      );
+    }
+  }
+
+  return {
+    purposes: [...totals.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([purpose]) => purpose),
+    rows: daily.map((day) => ({
+      date: day.date,
+      ...Object.fromEntries(day.purposes.map((e) => [e.purpose, e.costUsd])),
+    })),
+  };
+};

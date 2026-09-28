@@ -34,6 +34,8 @@ while IFS= read -r file; do
     # エージェント定義は宣言的な設定・配線のみでテスト必須の対象外（担保は型）。
     # instructions の仕様テストを書くのは任意
     server/src/mastra/agents/*) continue ;;
+    # 分岐を持たない静的ラッパー / window.confirm への 1 行委譲。coverage からも除外済み
+    web/src/lib/dialog.ts|web/src/components/ui/EmptyStateCard.tsx|web/src/components/ui/PanelLoading.tsx) continue ;;
   esac
   case "$file" in
     server/src/*.ts|web/src/*.ts|web/src/*.tsx)

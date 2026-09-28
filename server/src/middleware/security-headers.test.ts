@@ -10,54 +10,6 @@ describe("securityHeaders ミドルウェア", () => {
     return app;
   };
 
-  it("X-Content-Type-Options ヘッダーを設定する", async () => {
-    const app = createApp();
-    const res = await app.request("/test");
-
-    expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
-  });
-
-  it("X-Frame-Options ヘッダーを設定する", async () => {
-    const app = createApp();
-    const res = await app.request("/test");
-
-    expect(res.headers.get("X-Frame-Options")).toBe("DENY");
-  });
-
-  it("Referrer-Policy ヘッダーを設定する", async () => {
-    const app = createApp();
-    const res = await app.request("/test");
-
-    expect(res.headers.get("Referrer-Policy")).toBe(
-      "strict-origin-when-cross-origin",
-    );
-  });
-
-  it("Strict-Transport-Security ヘッダーを設定する", async () => {
-    const app = createApp();
-    const res = await app.request("/test");
-
-    expect(res.headers.get("Strict-Transport-Security")).toBe(
-      "max-age=31536000; includeSubDomains",
-    );
-  });
-
-  it("X-XSS-Protection ヘッダーを設定しない（非推奨のため）", async () => {
-    const app = createApp();
-    const res = await app.request("/test");
-
-    expect(res.headers.get("X-XSS-Protection")).toBeNull();
-  });
-
-  it("Permissions-Policy ヘッダーを設定する", async () => {
-    const app = createApp();
-    const res = await app.request("/test");
-
-    expect(res.headers.get("Permissions-Policy")).toBe(
-      "geolocation=(), microphone=()",
-    );
-  });
-
   it("全てのセキュリティヘッダーが同時に設定される", async () => {
     const app = createApp();
     const res = await app.request("/test");

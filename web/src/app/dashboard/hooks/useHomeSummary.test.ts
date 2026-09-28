@@ -231,16 +231,6 @@ describe("useHomeSummary", () => {
     ]);
   });
 
-  it("管理画面からの会話は流入元に含めない", async () => {
-    useHandlers();
-    const { result } = renderHookWithQuery(() => useHomeSummary());
-
-    await waitFor(() => expect(result.current.platforms).toHaveLength(2));
-    expect(result.current.platforms.some((p) => p.platform === "admin")).toBe(
-      false,
-    );
-  });
-
   it("声の内訳は話題ごとの sentiment を合算する", async () => {
     useHandlers();
     const { result } = renderHookWithQuery(() => useHomeSummary());

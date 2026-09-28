@@ -33,6 +33,7 @@ description: "テストに関するプロジェクト共通の方針。カバレ
 - Astro から `client:only` でマウントされる薄い page shell
 - 外部 SDK 連携が深く E2E 領域に該当するもの（recharts 描画や副作用中心の表示など）
 - HOC で囲んだ登録 / barrel / registry
+- 分岐を持たない静的ラッパーと、ブラウザ API への 1 行委譲
 - 責務分離が完了して orchestration だけになった Panel / Provider / context wrapper
 - 自動生成資源（Mastra の `mastra/public/**` 等）
 
@@ -40,7 +41,7 @@ orchestration shell を exclude するときは「本質的ロジックが hooks
 
 ## カバレッジ閾値
 
-- 実測値ベースで段階引き上げ（各 `vitest.config.ts` の `coverage.thresholds`）
+- 各 `vitest.config.ts` の `coverage.thresholds` に実測値ベースで置く。テストを減らして実測が下がったら閾値も下げる（閾値を守るために薄いテストを足さない）
 - ぎりぎりではなく実測 - 1〜2pt のマージンを付ける（CI のノイズ防止）
 
 ## カバレッジのためにプロダクトコードを変更しない

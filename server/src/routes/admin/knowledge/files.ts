@@ -3,18 +3,12 @@ import { HTTPException } from "hono/http-exception";
 
 import { errorResponse } from "~/lib/openapi-errors";
 import type { PrincipalVariables } from "~/lib/principal";
-import {
-  deleteFile,
-  deleteLegacyFiles,
-  getFile,
-  listFiles,
-} from "~/services/knowledge";
+import { deleteFile, getFile, listFiles } from "~/services/knowledge";
 import {
   FileContentResponseSchema,
   FileKeyParamSchema,
   FilesListQuerySchema,
   FilesListResponseSchema,
-  LegacyDeleteResponseSchema,
   SaveFileRequestSchema,
   SuccessResponseSchema,
   validateFileKey,
@@ -146,28 +140,4 @@ knowledgeFilesRoutes.openapi(deleteFileRoute, async (c) => {
   await deleteFile(c.env.KNOWLEDGE_BUCKET, key);
   const baseName = key.replace(/\.md$/, "");
   return c.json({ message: `${baseName} を完全に削除しました` }, 200);
-});
-
-const deleteLegacyRoute = createRoute({
-  method: "delete",
-  path: "/legacy",
-  summary: "旧配置のナレッジを全削除",
-  description:
-    "curated/ と official/ のどちらにも属さないオブジェクト（ルート直下の Markdown と originals/）を R2 から全て削除します。Vectorize のデータは R2 イベント経由で削除されます。official/ への移行後に 1 回だけ使う一時的なエンドポイントで、移行完了後に削除する予定です",
-  tags: ["Admin - Knowledge"],
-  responses: {
-    200: {
-      description: "削除成功",
-      content: {
-        "application/json": { schema: LegacyDeleteResponseSchema },
-      },
-    },
-    401: errorResponse(401),
-    500: errorResponse(500),
-  },
-});
-
-knowledgeFilesRoutes.openapi(deleteLegacyRoute, async (c) => {
-  const result = await deleteLegacyFiles(c.env.KNOWLEDGE_BUCKET);
-  return c.json(result, 200);
 });

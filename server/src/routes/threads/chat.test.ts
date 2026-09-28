@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { primaryModelId, resolveModelTier } from "~/lib/llm-models";
+
 const {
   mockHandleChatStream,
   mockClassifyIntent,
@@ -82,7 +84,7 @@ vi.mock("~/services/thread", () => ({
 
 vi.mock("~/services/analytics/llm-usage", () => ({
   recordLlmUsage: mockRecordLlmUsage,
-  nextTurnIndex: vi.fn(async () => 1),
+  newTurnId: vi.fn(() => "turn-1"),
 }));
 
 vi.mock("~/repository/admin-session-repository", () => ({
@@ -276,7 +278,7 @@ describe("chatRoutes: POST /:threadId/chat", () => {
         agent: "nepp-chan",
         intent: "casual",
         threadId: "thread-1",
-        turnIndex: 1,
+        turnId: "turn-1",
       }),
     );
   });
@@ -479,7 +481,15 @@ describe("chatRoutes: POST /:threadId/chat", () => {
 
     expect(mockRecordLlmUsage).toHaveBeenCalledWith(
       mockEnv.DB,
-      expect.objectContaining({ model: "openai/gpt-5.6-luna" }),
+      expect.objectContaining({
+        model: primaryModelId(
+          resolveModelTier({
+            intent: "casual",
+            platform: "web",
+            isAdmin: false,
+          }),
+        ),
+      }),
     );
   });
 

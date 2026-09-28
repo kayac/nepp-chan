@@ -20,6 +20,7 @@ web / lp / widget / dashboard の UI をつくるとき、人間も AI も最初
 3. **文字は読みやすさ最優先。** 本文を `--fs-base`（15px）未満にしない。行間は `--lh-normal`（1.7）基準
 4. **モーションは控えめ・意味のあるものだけ。** ふわふわ（mascot-float）はマスコットと浮遊要素だけの特権。`prefers-reduced-motion` を壊さない
 5. **マスコットは装飾ではなく状態表現。** 表情・ポーズは `MascotState` 経由で意味を持たせる（`shared/src/components/Mascot.tsx`）
+6. **「見る」画面に整備・設定の操作を置かない。** 整備は設定側の 1 画面に集約し、サイドバーから辿る
 
 ## UXライティング — 話者基準
 

@@ -158,3 +158,22 @@ describe("analyzeContextLabel", () => {
     expect(analyzeContextLabel(filter(), 34)).toBe("直近30日・34件");
   });
 });
+
+describe("話者グループの絞り込み", () => {
+  const group = { id: "resident", name: "村内住民" };
+
+  it("group は id で API に渡し、緊急は対象外になる", () => {
+    const f = filter({ group });
+    expect(toPersonaFilters(f, NOW).group).toBe("resident");
+    expect(shouldIncludeEmergencies(f)).toBe(false);
+    expect(shouldIncludePersonas(f)).toBe(true);
+  });
+
+  it("チップには表示名を出し、解除で group が外れる", () => {
+    const f = filter({ group });
+    expect(appliedCount(f)).toBe(1);
+    expect(activeChips(f)).toEqual([{ key: "group", label: "村内住民" }]);
+    expect(removeChip(f, "group").group).toBeNull();
+    expect(analyzeContextLabel(f, 3)).toBe("直近30日 × 村内住民・3件");
+  });
+});

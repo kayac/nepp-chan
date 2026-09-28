@@ -1,5 +1,4 @@
 import {
-  classifyRelationship,
   normalizeSentiment,
   normalizeTopic,
   personaAttributes,
@@ -12,6 +11,12 @@ import {
 } from "~/repository/llm-usage-repository";
 import { mastraMessageRepository } from "~/repository/mastra-message-repository";
 import { personaRepository } from "~/repository/persona-repository";
+import {
+  loadTagGroups,
+  partitionByPriority,
+  RELATION_AXIS,
+  resolveGroups,
+} from "./tag-groups";
 
 // API は JST ラベル済みのデータを返す（フロントでは変換しない）
 
@@ -31,19 +36,13 @@ const fillWeekdays = (rows: { dow: number; count: number }[]) =>
     count: Number(rows.find((r) => Number(r.dow) === dow)?.count ?? 0),
   }));
 
-const AGE_GROUPS = [
-  "10代",
-  "20代",
-  "30代",
-  "40代",
-  "50代",
-  "60代",
-  "70代",
-  "80代以上",
-  "不明",
-] as const;
+const AGE_AXIS = "年代";
+const UNKNOWN_LABEL = "不明";
 
-const RESIDENCES = ["村内", "村外"] as const;
+const RESIDENCE_BY_GROUP_ID: Record<string, string> = {
+  resident: "村内",
+  outsider: "村外",
+};
 
 export const getConversationStats = async (d1: D1Database, period: Period) => {
   const [hourlyRows, weekdayRows, daily, platforms, totalsRow] =
@@ -161,15 +160,17 @@ const addProviderTotals = (
 export const getOperationCost = async (d1: D1Database, period: Period) => {
   const [rows, dailyRows] = await Promise.all([
     llmUsageRepository.sumByCategory(d1, period),
-    llmUsageRepository.sumByDateAndModel(d1, period),
+    llmUsageRepository.sumByDateAndPurpose(d1, period),
   ]);
 
-  const dailyTotals = new Map<string, number>();
+  const daily = new Map<string, Map<string, number>>();
   for (const row of dailyRows) {
-    dailyTotals.set(
-      row.date,
-      (dailyTotals.get(row.date) ?? 0) + usageCostUsd(row),
+    const purposes = daily.get(row.date) ?? new Map<string, number>();
+    purposes.set(
+      row.purpose,
+      (purposes.get(row.purpose) ?? 0) + usageCostUsd(row),
     );
+    daily.set(row.date, purposes);
   }
 
   const byCategory = new Map<
@@ -205,9 +206,12 @@ export const getOperationCost = async (d1: D1Database, period: Period) => {
         agents: sortedAgentTotals(agentTotals),
       })),
     byProvider: [...byProvider.values()].sort((a, b) => b.costUsd - a.costUsd),
-    daily: [...dailyTotals.entries()].map(([date, costUsd]) => ({
+    daily: [...daily.entries()].map(([date, purposes]) => ({
       date,
-      costUsd,
+      costUsd: [...purposes.values()].reduce((sum, cost) => sum + cost, 0),
+      purposes: [...purposes.entries()]
+        .map(([purpose, costUsd]) => ({ purpose, costUsd }))
+        .sort((a, b) => b.costUsd - a.costUsd),
     })),
   };
 };
@@ -320,7 +324,7 @@ export const getThreadTurnUsage = async (d1: D1Database, threadId: string) => {
   const rows = await llmUsageRepository.sumConversationByTurn(d1, threadId);
 
   type TurnTotals = {
-    turnIndex: number | null;
+    turnId: string | null;
     totalTokens: number;
     costUsd: number;
     durationMs: number | null;
@@ -328,11 +332,13 @@ export const getThreadTurnUsage = async (d1: D1Database, threadId: string) => {
     intent: string | null;
     agentTotals: Map<string | null, AgentTotals>;
   };
-  const turns = new Map<number | null, TurnTotals>();
+  // sumConversationByTurn が最初の記録時刻順に返すので、Map の挿入順がそのままターン順になる。
+  // 発話順ではなく記録順なので、同一スレッドへの並行リクエストでは前後しうる
+  const turns = new Map<string | null, TurnTotals>();
   for (const row of rows) {
-    const key = row.turnIndex === null ? null : Number(row.turnIndex);
+    const key = row.turnId ?? null;
     const current = turns.get(key) ?? {
-      turnIndex: key,
+      turnId: key,
       totalTokens: 0,
       costUsd: 0,
       durationMs: null,
@@ -350,30 +356,11 @@ export const getThreadTurnUsage = async (d1: D1Database, threadId: string) => {
   }
 
   return {
-    // turn_index 記録前の行は turnIndex: null にまとまり、末尾に並ぶ
-    turns: [...turns.values()]
-      .sort(
-        (a, b) =>
-          (a.turnIndex ?? Number.MAX_SAFE_INTEGER) -
-          (b.turnIndex ?? Number.MAX_SAFE_INTEGER),
-      )
-      .map(({ agentTotals, ...turn }) => ({
-        ...turn,
-        agents: sortedAgentTotals(agentTotals),
-      })),
+    turns: [...turns.values()].map(({ agentTotals, ...turn }) => ({
+      ...turn,
+      agents: sortedAgentTotals(agentTotals),
+    })),
   };
-};
-
-const extractAgeGroup = (attributes: string) => {
-  const matched = attributes.match(/(\d0)代/);
-  if (!matched) {
-    return "不明";
-  }
-  const decade = Number(matched[1]);
-  if (decade >= 80) {
-    return "80代以上";
-  }
-  return decade >= 10 ? `${decade}代` : "不明";
 };
 
 export const emptySentimentCounts = () => ({
@@ -387,15 +374,24 @@ export const getPersonaAnalytics = async (
   d1: D1Database,
   params: { from?: string; to?: string },
 ) => {
-  const [rows, hourlyRows, weekdayRows, officeRow] = await Promise.all([
-    personaRepository.listAttributes(d1, params),
-    personaRepository.countByConversationHour(d1, params),
-    personaRepository.countByConversationWeekday(d1, params),
-    personaRepository.countOfficeHours(d1, params),
-  ]);
+  const [rows, hourlyRows, weekdayRows, officeRow, tagGroups] =
+    await Promise.all([
+      personaRepository.listAttributes(d1, params),
+      personaRepository.countByConversationHour(d1, params),
+      personaRepository.countByConversationWeekday(d1, params),
+      personaRepository.countOfficeHours(d1, params),
+      loadTagGroups(d1),
+    ]);
 
+  const ageLabels = [
+    ...tagGroups.groups
+      .filter((g) => g.kind === "attribute" && g.axis === AGE_AXIS)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((g) => g.name),
+    UNKNOWN_LABEL,
+  ];
   const ageSentiment = new Map(
-    AGE_GROUPS.map((age) => [age as string, emptySentimentCounts()]),
+    ageLabels.map((age) => [age, emptySentimentCounts()]),
   );
   const topics = new Map(
     TOPICS.map((topic) => [
@@ -410,7 +406,14 @@ export const getPersonaAnalytics = async (
     const attributes = personaAttributes(row);
     const sentiment = normalizeSentiment(row.sentiment);
 
-    const ageCounts = ageSentiment.get(extractAgeGroup(attributes));
+    const groups = resolveGroups(
+      attributes,
+      tagGroups.aliases,
+      tagGroups.groups,
+    ).sort((a, b) => a.sortOrder - b.sortOrder);
+
+    const ageKey = partitionByPriority(groups, AGE_AXIS)?.name ?? UNKNOWN_LABEL;
+    const ageCounts = ageSentiment.get(ageKey);
     if (ageCounts) {
       ageCounts[sentiment] += 1;
     }
@@ -422,10 +425,13 @@ export const getPersonaAnalytics = async (
     }
 
     const residenceKey =
-      RESIDENCES.find((r) => attributes.includes(r)) ?? "不明";
+      groups
+        .map((g) => RESIDENCE_BY_GROUP_ID[g.id])
+        .find((label) => label !== undefined) ?? UNKNOWN_LABEL;
     residence.set(residenceKey, (residence.get(residenceKey) ?? 0) + 1);
 
-    const relationshipKey = classifyRelationship(attributes) ?? "不明";
+    const relationshipKey =
+      partitionByPriority(groups, RELATION_AXIS)?.name ?? UNKNOWN_LABEL;
     relationship.set(
       relationshipKey,
       (relationship.get(relationshipKey) ?? 0) + 1,
@@ -440,7 +446,7 @@ export const getPersonaAnalytics = async (
     hourly: fillHours(hourlyRows),
     weekday: fillWeekdays(weekdayRows),
     officeHours: { open: officeOpen, closed: officeTotal - officeOpen },
-    ageSentiment: AGE_GROUPS.map((age) => ({
+    ageSentiment: ageLabels.map((age) => ({
       age,
       ...(ageSentiment.get(age) ?? emptySentimentCounts()),
     })),
