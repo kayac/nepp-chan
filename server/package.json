@@ -25,7 +25,8 @@
     "eval:neppchan:vitest": "vitest run --config vitest.eval.config.ts",
     "api:quota": "tsx scripts/api-quota.ts",
     "spike:jev": "tsx scripts/jev-intent-spike.ts",
-    "spike:jev-rerank": "tsx scripts/jev-rerank-spike.ts"
+    "spike:jev-rerank": "tsx scripts/jev-rerank-spike.ts",
+    "spike:jev-route": "tsx scripts/jev-route-spike.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.83",

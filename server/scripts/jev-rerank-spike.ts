@@ -211,7 +211,7 @@ const scoreCase = async (
   c: Candidates,
   run: number,
   jevKey: string | undefined,
-): Promise<ScoreRecord> => {
+) => {
   const errors: string[] = [];
   const inputTokens: number[] = [];
   const started = performance.now();
