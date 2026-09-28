@@ -1,5 +1,6 @@
 import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
+import { ToolCallFilter } from "@mastra/core/processors";
 import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { getCurrentDateInfo } from "~/lib/date";
 import {
@@ -214,6 +215,8 @@ const adminTools = {
   [pollGetToolName]: pollGetTool,
 };
 
+const researchMemoFilter = new ToolCallFilter({ exclude: [researchToolName] });
+
 const researchTools = {
   [researchToolName]: researchTool,
 };
@@ -369,6 +372,7 @@ ${currentPageUrl}
     ...modelConfig,
     agents,
     tools,
+    inputProcessors: [researchMemoFilter],
     ...(withMemory && {
       memory: ({ requestContext }) =>
         getMemoryFromContext(requestContext, neppChanMemoryOptions(intent)),
