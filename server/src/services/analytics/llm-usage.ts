@@ -11,6 +11,7 @@ export type LlmUsageSource =
   | "chat"
   | "subagent"
   | "intent-classify"
+  | "research-route"
   | "persona-extract"
   | "weekly-report"
   | "image-convert"

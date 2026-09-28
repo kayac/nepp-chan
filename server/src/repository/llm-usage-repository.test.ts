@@ -134,12 +134,15 @@ describe("llmUsageRepository", () => {
       to: "2026-06-08T00:00:00.000Z",
     };
 
-    it("source が会話系なら conversation に分類する", async () => {
-      await insert(db, { source: "subagent" });
+    it.each(["subagent", "research-route"])(
+      "source が会話系（%s）なら conversation に分類する",
+      async (source) => {
+        await insert(db, { source });
 
-      const [row] = await llmUsageRepository.sumByCategory(d1, period);
-      expect(row?.category).toBe("conversation");
-    });
+        const [row] = await llmUsageRepository.sumByCategory(d1, period);
+        expect(row?.category).toBe("conversation");
+      },
+    );
 
     it("embedding はスレッドに紐づくときだけ conversation に分類する", async () => {
       await insert(db, { source: "embedding", threadId: "t-1" });

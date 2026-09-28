@@ -36,7 +36,7 @@ const usageSumColumns = sql`
 // embedding は検索クエリ分（スレッドに紐づく）が会話、ナレッジ同期分が基盤
 const usageCategoryExpr = sql`
   CASE
-    WHEN source IN ('chat', 'subagent', 'intent-classify', 'rerank') THEN 'conversation'
+    WHEN source IN ('chat', 'subagent', 'intent-classify', 'research-route', 'rerank') THEN 'conversation'
     WHEN source = 'embedding' AND thread_id IS NOT NULL THEN 'conversation'
     WHEN source IN ('embedding', 'curated-draft') THEN 'knowledge-base'
     ELSE 'batch'
