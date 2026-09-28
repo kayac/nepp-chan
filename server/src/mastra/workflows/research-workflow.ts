@@ -6,6 +6,10 @@ import { logger } from "~/lib/logger";
 import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { askJevWithUsage } from "~/services/analytics/llm-usage";
+import {
+  type KnowledgeResult,
+  searchKnowledge,
+} from "~/services/knowledge/search";
 
 const VILLAGE_THRESHOLD = 0.3;
 
@@ -26,6 +30,32 @@ const COVERAGE_RULE = `
 判定: 取れた（質問の中心に答える事実が揃っている）
 判定: 一部（中心の一部だけ確認できた）
 判定: 取れない（質問に答える事実が見つからない）`;
+
+const MEMO_FORMAT = `
+調査メモは、質問に答える事実の箇条書きと出典 URL だけにする。文章に整えず、1 項目 1 行、多くても 8 行。`;
+
+const renderSearchResults = (results: KnowledgeResult[]) =>
+  results
+    .map((r, i) => {
+      const heading = [r.title, r.section].filter(Boolean).join(" / ");
+      const url = r.url ? ` (${r.url})` : "";
+      const date = r.date ? ` [${r.date} ${r.dateType ?? ""}]` : "";
+      return `【${i + 1}】${heading}${url}${date}\n${r.content}`;
+    })
+    .join("\n\n");
+
+const preSearch = async (question: string, requestContext?: RequestContext) => {
+  const env = requestContext?.get("env") as CloudflareBindings | undefined;
+  if (!env?.VECTORIZE || !env.GOOGLE_GENERATIVE_AI_API_KEY) return undefined;
+  const { results, error } = await searchKnowledge(
+    question,
+    env.VECTORIZE,
+    env.GOOGLE_GENERATIVE_AI_API_KEY,
+    requestContext,
+  );
+  if (error) return undefined;
+  return renderSearchResults(results) || "該当なし";
+};
 
 const coverageSchema = z.enum(["取れた", "一部", "取れない"]);
 
@@ -104,10 +134,12 @@ const knowledgeStep = createStep({
   outputSchema: knowledgeSchema,
   execute: async ({ inputData, requestContext }) => {
     if (inputData.route === "outside") return inputData;
-    const res = await knowledgeAgent.generate(
-      `ユーザーの質問: ${inputData.question}\n${COVERAGE_RULE}`,
-      { requestContext },
-    );
+    const searched = await preSearch(inputData.question, requestContext);
+    const searchedSection = searched
+      ? `最初の検索結果:\n${searched}\n\n足りない情報だけ追加で検索してよい。\n`
+      : "";
+    const prompt = `ユーザーの質問: ${inputData.question}\n${searchedSection}${MEMO_FORMAT}\n${COVERAGE_RULE}`;
+    const res = await knowledgeAgent.generate(prompt, { requestContext });
     return {
       ...inputData,
       knowledgeMemo: stripCoverage(res.text),

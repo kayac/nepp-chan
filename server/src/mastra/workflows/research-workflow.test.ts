@@ -1,10 +1,17 @@
 import { RequestContext } from "@mastra/core/request-context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { knowledgeGenerate, webGenerate, askJevMock } = vi.hoisted(() => ({
-  knowledgeGenerate: vi.fn(),
-  webGenerate: vi.fn(),
-  askJevMock: vi.fn(),
+const { knowledgeGenerate, webGenerate, askJevMock, searchMock } = vi.hoisted(
+  () => ({
+    knowledgeGenerate: vi.fn(),
+    webGenerate: vi.fn(),
+    askJevMock: vi.fn(),
+    searchMock: vi.fn(),
+  }),
+);
+
+vi.mock("~/services/knowledge/search", () => ({
+  searchKnowledge: searchMock,
 }));
 
 vi.mock("~/mastra/agents/knowledge-agent", () => ({
@@ -26,9 +33,17 @@ vi.mock("~/lib/logger", () => ({
 
 const { parseCoverage, runResearch } = await import("./research-workflow");
 
-const contextWithKey = (key?: string) => {
+const vectorize = {} as VectorizeIndex;
+
+const contextWithKey = (key?: string, withSearch = true) => {
   const ctx = new RequestContext();
-  ctx.set("env", { TYPESAFE_API_KEY: key });
+  ctx.set("env", {
+    TYPESAFE_API_KEY: key,
+    ...(withSearch && {
+      VECTORIZE: vectorize,
+      GOOGLE_GENERATIVE_AI_API_KEY: "g",
+    }),
+  });
   return ctx;
 };
 
@@ -47,6 +62,8 @@ beforeEach(() => {
   knowledgeGenerate.mockReset();
   webGenerate.mockReset();
   askJevMock.mockReset();
+  searchMock.mockReset();
+  searchMock.mockResolvedValue({ results: [] });
 });
 
 describe("parseCoverage", () => {
@@ -135,6 +152,68 @@ describe("runResearch", () => {
     await runResearch({ question: "q", requestContext: contextWithKey("k") });
 
     expect(knowledgeGenerate).toHaveBeenCalledTimes(1);
+  });
+
+  it("村のことなら、質問そのままで先に検索し、結果をナレッジ用エージェントに渡す", async () => {
+    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    searchMock.mockResolvedValueOnce({
+      results: [
+        {
+          content: "寮費は月額30,000円",
+          score: 0.9,
+          source: "official/otoko/qa.md",
+          title: "おと高Q&A",
+          url: "https://example.com/qa",
+        },
+      ],
+    });
+    knowledgeGenerate.mockResolvedValueOnce({ text: "メモ\n判定: 取れた" });
+    const ctx = contextWithKey("k");
+
+    await runResearch({ question: "寮費は？", requestContext: ctx });
+
+    expect(searchMock).toHaveBeenCalledWith("寮費は？", vectorize, "g", ctx);
+    const prompt = knowledgeGenerate.mock.calls[0]?.[0] as string;
+    expect(prompt).toContain("寮費は月額30,000円");
+    expect(prompt).toContain("おと高Q&A");
+    expect(prompt).toContain("https://example.com/qa");
+  });
+
+  it("Vectorize が使えなければ先の検索を飛ばし、ナレッジ用エージェントに任せる", async () => {
+    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    knowledgeGenerate.mockResolvedValueOnce({ text: "メモ\n判定: 取れた" });
+
+    await runResearch({
+      question: "q",
+      requestContext: contextWithKey("k", false),
+    });
+
+    expect(searchMock).not.toHaveBeenCalled();
+    expect(knowledgeGenerate).toHaveBeenCalledTimes(1);
+  });
+
+  it("先の検索が失敗したら、検索結果を渡さずナレッジ用エージェントに任せる", async () => {
+    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    searchMock.mockResolvedValueOnce({ results: [], error: "vectorize 500" });
+    knowledgeGenerate.mockResolvedValueOnce({ text: "メモ\n判定: 取れた" });
+
+    await runResearch({ question: "q", requestContext: contextWithKey("k") });
+
+    expect(knowledgeGenerate.mock.calls[0]?.[0]).not.toContain(
+      "最初の検索結果",
+    );
+  });
+
+  it("村外なら先の検索もしない", async () => {
+    askJevMock.mockResolvedValueOnce(routeResponse(0.1));
+    webGenerate.mockResolvedValueOnce({ text: "明日は雪" });
+
+    await runResearch({
+      question: "明日の天気は？",
+      requestContext: contextWithKey("k"),
+    });
+
+    expect(searchMock).not.toHaveBeenCalled();
   });
 
   it("エージェントに requestContext をそのまま渡す", async () => {
