@@ -1,64 +1,26 @@
-import { Agent } from "@mastra/core/agent";
+import type { ToolsInput } from "@mastra/core/agent";
 import { createTool } from "@mastra/core/tools";
 import { LibSQLStore } from "@mastra/libsql";
 import { Memory } from "@mastra/memory";
-import { simulateReadableStream } from "ai";
-import { MockLanguageModelV3 } from "ai/test";
+import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { z } from "zod";
 import {
   primaryModelId,
   resolveModelTier,
   voiceModelConfig,
 } from "~/lib/llm-models";
-import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import {
   createNeppChanAgent,
   neppChanMemoryOptions,
 } from "~/mastra/agents/nepp-chan-agent";
-import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
+import { displayChartTool } from "~/mastra/tools/display-chart-tool";
+import { displayTableTool } from "~/mastra/tools/display-table-tool";
+import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
 import { endCallTool, endCallToolName } from "~/mastra/tools/end-call-tool";
+import { researchToolName } from "~/mastra/tools/research-tool";
 import { voiceAnswerToolName } from "~/mastra/tools/voice-answer-tool";
 import { fixtures } from "./fixtures";
 import type { PersonaCase } from "./schema";
-
-const zeroUsage = {
-  inputTokens: { total: 0, noCache: 0, cacheRead: 0, cacheWrite: 0 },
-  outputTokens: { total: 0, text: 0, reasoning: 0 },
-};
-
-const stop = { unified: "stop" as const, raw: "stop" };
-
-const fixedTextModel = (text: string) =>
-  new MockLanguageModelV3({
-    provider: "eval",
-    modelId: "fixture",
-    doGenerate: async () => ({
-      content: [{ type: "text", text }],
-      finishReason: stop,
-      usage: zeroUsage,
-      warnings: [],
-    }),
-    doStream: async () => ({
-      stream: simulateReadableStream({
-        chunks: [
-          { type: "stream-start", warnings: [] },
-          { type: "text-start", id: "fixture" },
-          { type: "text-delta", id: "fixture", delta: text },
-          { type: "text-end", id: "fixture" },
-          { type: "finish", finishReason: stop, usage: zeroUsage },
-        ],
-      }),
-    }),
-  });
-
-const fixtureAgent = (source: Agent, text: string) =>
-  new Agent({
-    id: source.id,
-    name: source.name,
-    description: source.getDescription(),
-    instructions: "与えられた調査メモをそのまま返す。",
-    model: fixedTextModel(text),
-  });
 
 const fixtureVoiceTool = (text: string) =>
   createTool({
@@ -73,26 +35,37 @@ const fixtureVoiceTool = (text: string) =>
     execute: async () => ({ answer: text }),
   });
 
+const fixtureResearchTool = (text: string) =>
+  createTool({
+    id: "research-answer",
+    description:
+      "村のナレッジと配信、必要に応じて Web を調べ、質問に答えるための調査メモを返します。",
+    inputSchema: z.object({ question: z.string() }),
+    outputSchema: z.object({ memo: z.string() }),
+    execute: async () => ({ memo: text }),
+  });
+
 export const createEvalTarget = (c: PersonaCase) => {
   const memo = fixtures[c.fixture ?? "none"];
   const intent = c.intent ?? "thinking";
   const platform = c.platform;
 
-  const knowledge = fixtureAgent(knowledgeAgent, memo);
-  const web = fixtureAgent(webResearcherAgent, memo);
-
-  const agents: Record<string, Agent> =
-    platform === "voice"
-      ? {}
-      : { knowledgeAgent: knowledge, webResearcherAgent: web };
-
-  const tools =
+  const tools: ToolsInput =
     platform === "voice"
       ? {
           [voiceAnswerToolName]: fixtureVoiceTool(memo),
           [endCallToolName]: endCallTool,
         }
-      : undefined;
+      : {
+          [researchToolName]: fixtureResearchTool(memo),
+          ...(platform === "web"
+            ? {
+                [DISPLAY_TOOL_NAMES.chart]: displayChartTool,
+                [DISPLAY_TOOL_NAMES.table]: displayTableTool,
+                [DISPLAY_TOOL_NAMES.timeline]: displayTimelineTool,
+              }
+            : {}),
+        };
 
   const modelConfig =
     platform === "voice"
@@ -115,8 +88,7 @@ export const createEvalTarget = (c: PersonaCase) => {
       modelConfig,
       siteInstructions: c.site?.instructions,
       currentPageUrl: c.site?.currentPageUrl,
-      agents,
-      ...(tools && { tools }),
+      tools,
       memory,
     }),
     memory,

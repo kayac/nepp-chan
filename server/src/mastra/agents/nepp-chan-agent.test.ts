@@ -5,6 +5,7 @@ import type { AgentModelConfig } from "~/lib/llm-models";
 import { broadcastGetToolName } from "~/mastra/tools/broadcast-get-tool";
 import { endCallToolName } from "~/mastra/tools/end-call-tool";
 import { pollGetToolName } from "~/mastra/tools/poll-get-tool";
+import { researchToolName } from "~/mastra/tools/research-tool";
 import { voiceAnswerToolName } from "~/mastra/tools/voice-answer-tool";
 import { createNeppChanAgent, neppChanMemoryOptions } from "./nepp-chan-agent";
 
@@ -21,6 +22,9 @@ const instructionsOf = async (agent: ReturnType<typeof createNeppChanAgent>) =>
       }
     ).getInstructions({}),
   );
+
+const agentNamesOf = async (agent: ReturnType<typeof createNeppChanAgent>) =>
+  Object.keys(await agent.listAgents());
 
 const toolNamesOf = (agent: ReturnType<typeof createNeppChanAgent>) =>
   Object.keys(agent.__getOverridableFields().tools as Record<string, unknown>);
@@ -232,16 +236,16 @@ describe("createNeppChanAgent", () => {
       expect(ins).not.toContain("### 例");
     });
 
-    it("村内情報は knowledgeAgent から不足時 webResearcherAgent へ補完する", async () => {
+    it("村の情報も村外・時事も researchTool に質問を1つ渡して調べる", async () => {
       const ins = await instructionsOf(build());
       expect(ins).toContain("村の情報（最新のお知らせを含む）");
-      expect(ins).toContain(
-        "ナレッジ検索と配信検索でも重要項目が見つからなければ、webResearcherAgent で補う",
-      );
       expect(ins).toContain("天気・交通・ニュース・時事・村外の情報");
+      expect(ins).toContain(researchToolName);
+      expect(ins).not.toContain("knowledgeAgent");
+      expect(ins).not.toContain("webResearcherAgent");
     });
 
-    it("knowledgeAgent の調査メモからユーザー向け回答を1度だけ作る", async () => {
+    it("researchTool の調査メモからユーザー向け回答を1度だけ作る", async () => {
       const ins = await instructionsOf(build());
       expect(ins).toContain("ユーザー向け回答ではなく調査メモ");
       expect(ins).toContain(
@@ -272,8 +276,37 @@ describe("createNeppChanAgent", () => {
       expect(ins).toContain(pollGetToolName);
 
       const lineIns = await instructionsOf(build({ platform: "line" }));
-      expect(lineIns).toContain("knowledgeAgent");
+      expect(lineIns).toContain(researchToolName);
       expect(lineIns).not.toContain(broadcastGetToolName);
+    });
+
+    it.each(["web", "line", "widget"] as const)(
+      "platform=%s は researchTool を登録し、調べ物のサブエージェントを持たない",
+      async (platform) => {
+        const agent = build({ platform });
+        expect(toolNamesOf(agent)).toContain(researchToolName);
+        const agents = await agentNamesOf(agent);
+        expect(agents).not.toContain("knowledgeAgent");
+        expect(agents).not.toContain("webResearcherAgent");
+      },
+    );
+
+    it("管理者は researchTool と分析用のサブエージェントを持つ", async () => {
+      const agent = build({ isAdmin: true });
+      expect(toolNamesOf(agent)).toContain(researchToolName);
+      expect(await agentNamesOf(agent)).toEqual(
+        expect.arrayContaining([
+          "personaAnalystAgent",
+          "emergencyAgent",
+          "feedbackAgent",
+        ]),
+      );
+    });
+
+    it("platform=voice は researchTool を登録しない", () => {
+      expect(toolNamesOf(build({ platform: "voice" }))).not.toContain(
+        researchToolName,
+      );
     });
 
     it("platform=voice は voiceAnswerTool を登録キーで参照する", async () => {

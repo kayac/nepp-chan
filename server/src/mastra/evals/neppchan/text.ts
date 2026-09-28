@@ -162,6 +162,7 @@ const INTERNAL_NAMES = [
   "displayChartTool",
   "displayTimelineTool",
   "voiceAnswerTool",
+  "researchTool",
   "knowledgeSearchTool",
   "broadcastGet",
   "pollGet",

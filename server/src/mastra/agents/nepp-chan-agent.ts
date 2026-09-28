@@ -10,15 +10,14 @@ import {
 } from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { feedbackAgent } from "~/mastra/agents/feedback-agent";
-import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
-import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
 import { endCallTool, endCallToolName } from "~/mastra/tools/end-call-tool";
 import { pollGetTool, pollGetToolName } from "~/mastra/tools/poll-get-tool";
+import { researchTool, researchToolName } from "~/mastra/tools/research-tool";
 import {
   voiceAnswerTool,
   voiceAnswerToolName,
@@ -102,9 +101,8 @@ ${
 ${
   platform === "voice"
     ? `- 村の情報・最新情報・時事・天気など事実にもとづく質問 → ${voiceAnswerToolName} ツールを使う（このツールが検索と要点化をまとめて行う）`
-    : `- 村の情報（最新のお知らせを含む）→ knowledgeAgent に委譲。ナレッジ検索と配信検索でも重要項目が見つからなければ、webResearcherAgent で補う
-- 天気・交通・ニュース・時事・村外の情報 → webResearcherAgent
-- knowledgeAgent の返却内容はユーザー向け回答ではなく調査メモ。事実・URL・不確実性を根拠に、ねっぷちゃんが一度だけユーザー向け回答を組み立てる。調査メモの文面をそのまま言い換えない`
+    : `- 村の情報（最新のお知らせを含む）、天気・交通・ニュース・時事・村外の情報 → ${researchToolName} に質問を1つ渡す。どこを調べるかはツールが決める
+- ${researchToolName} の返却内容はユーザー向け回答ではなく調査メモ。事実・URL・不確実性を根拠に、ねっぷちゃんが一度だけユーザー向け回答を組み立てる。調査メモの文面をそのまま言い換えない`
 }
 - 挨拶・相槌・自己紹介は調べずにテキストだけで返す
 `;
@@ -191,7 +189,7 @@ const adminInstructions = `
 - 緊急報告の取得（例: 「村の危険情報は？」「緊急報告を見せて」）→ emergencyAgent
 - フィードバック一覧と統計（例: 「最近のフィードバックは？」「利用者の満足度は？」）→ feedbackAgent
 - 村民の声・住民レポート → まず personaAnalystAgent に委譲する
-  村の状況把握や住民の声に関する質問はpersonaAnalystAgentを優先する。結果が不十分な場合はwebResearcherAgentで補完する。
+  村の状況把握や住民の声に関する質問はpersonaAnalystAgentを優先する。結果が不十分な場合は${researchToolName}で補完する。
   例: 「住民の声を教えて」「困ってる人はいる？」「村の調子はどう？」「最近どんな話題が多い？」「年代別の傾向は？」「交通の不満をもっと教えて」
 
 ### 投票の結果・傾向分析
@@ -206,30 +204,22 @@ const adminInstructions = `
 4. 打ち手の提案（LINE配信・投票・ナレッジ追加のうち効きそうなもの）
 `;
 
-const baseAgents = {
-  knowledgeAgent,
-  webResearcherAgent,
-};
-
 const adminAgents = {
-  ...baseAgents,
   emergencyAgent,
   feedbackAgent,
   personaAnalystAgent,
 };
 
-const widgetAgents = {
-  knowledgeAgent,
-  webResearcherAgent,
-};
-
-const voiceAgents = {};
-
 const adminTools = {
   [pollGetToolName]: pollGetTool,
 };
 
+const researchTools = {
+  [researchToolName]: researchTool,
+};
+
 const webTools = {
+  ...researchTools,
   [DISPLAY_TOOL_NAMES.chart]: displayChartTool,
   [DISPLAY_TOOL_NAMES.table]: displayTableTool,
   [DISPLAY_TOOL_NAMES.timeline]: displayTimelineTool,
@@ -242,7 +232,7 @@ const voiceTools = {
 
 const getTools = (platform: Platform, isAdmin: boolean) => {
   if (platform === "voice") return voiceTools;
-  if (platform === "line" || platform === "widget") return {};
+  if (platform === "line" || platform === "widget") return researchTools;
   return isAdmin ? { ...webTools, ...adminTools } : webTools;
 };
 
@@ -275,7 +265,7 @@ const lineInstructions = `
 ### LINE配信の記憶
 ユーザーはLINE配信メッセージを受信している。会話履歴に【LINE配信のお知らせ】として含まれている。
 - ユーザーの発言が直近の配信内容に関連していそうなら、その配信を踏まえて応答する。指示語（「これ」「さっきの」「あれ」「この前の」等）に限らず、配信で触れた話題・イベント・告知への反応や質問・感想も対象とする
-- 古い配信や会話履歴に無い配信の詳細が必要なときは knowledgeAgent に委譲する
+- 古い配信や会話履歴に無い配信の詳細が必要なときは ${researchToolName} で調べる
 `;
 
 const voiceInstructions = `
@@ -344,13 +334,7 @@ export const createNeppChanAgent = ({
   ...agentOptions
 }: Props) => {
   const agents =
-    platform === "widget"
-      ? widgetAgents
-      : platform === "voice"
-        ? voiceAgents
-        : isAdmin
-          ? adminAgents
-          : baseAgents;
+    isAdmin && (platform === "web" || platform === "line") ? adminAgents : {};
   const tools = getTools(platform, isAdmin);
 
   const instructions = () =>
