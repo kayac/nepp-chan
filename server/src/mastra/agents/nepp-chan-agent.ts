@@ -1,6 +1,9 @@
 import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
-import { ToolCallFilter } from "@mastra/core/processors";
+import {
+  type ProcessInputStepArgs,
+  ToolCallFilter,
+} from "@mastra/core/processors";
 import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { getCurrentDateInfo } from "~/lib/date";
 import {
@@ -102,7 +105,7 @@ ${
 ${
   platform === "voice"
     ? `- 村の情報・最新情報・時事・天気など事実にもとづく質問 → ${voiceAnswerToolName} ツールを使う（このツールが検索と要点化をまとめて行う）`
-    : `- 村の情報（最新のお知らせを含む）、天気・交通・ニュース・時事・村外の情報 → ${researchToolName} に質問を1つ渡す。どこを調べるかはツールが決める
+    : `- 村の情報（最新のお知らせを含む）、天気・交通・ニュース・時事・村外の情報 → ${researchToolName} に質問と検索語を渡す。どこを調べるかはツールが決める
 - ${researchToolName} の返却内容はユーザー向け回答ではなく調査メモ。事実・URL・不確実性を根拠に、ねっぷちゃんが一度だけユーザー向け回答を組み立てる。調査メモの文面をそのまま言い換えない`
 }
 - 挨拶・相槌・自己紹介は調べずにテキストだけで返す
@@ -216,6 +219,21 @@ const adminTools = {
 };
 
 const researchMemoFilter = new ToolCallFilter({ exclude: [researchToolName] });
+
+const researchOncePerTurn = {
+  id: "research-once-per-turn",
+  processInputStep: ({ steps, tools }: ProcessInputStepArgs) => {
+    const researched = steps.some((step) =>
+      step.toolCalls.some((call) => call.toolName === researchToolName),
+    );
+    if (!researched) return {};
+    return {
+      activeTools: Object.keys(tools ?? {}).filter(
+        (name) => name !== researchToolName,
+      ),
+    };
+  },
+};
 
 const researchTools = {
   [researchToolName]: researchTool,
@@ -371,7 +389,7 @@ ${currentPageUrl}
     ...modelConfig,
     agents,
     tools,
-    inputProcessors: [researchMemoFilter],
+    inputProcessors: [researchMemoFilter, researchOncePerTurn],
     ...(withMemory && {
       memory: ({ requestContext }) =>
         getMemoryFromContext(requestContext, neppChanMemoryOptions(intent)),

@@ -29,7 +29,7 @@ const routeQuestion: JevQuestion = {
 const COVERAGE_RULE = `
 調査メモの最後の行に、次のどれか 1 つだけを書く。
 判定: 取れた（質問の中心に答える事実が揃っている）
-判定: 一部（中心の一部だけ確認できた）
+判定: 一部（中心の一部だけ確認できた。時刻表・料金・日程など時期で変わる情報の資料が古く、今も有効か確かめる必要があるときもこれ）
 判定: 取れない（質問に答える事実が見つからない）`;
 
 const MEMO_FORMAT = `
@@ -45,16 +45,32 @@ const renderSearchResults = (results: KnowledgeResult[]) =>
     })
     .join("\n\n");
 
-const preSearch = async (question: string, requestContext?: RequestContext) => {
+const preSearch = async (
+  searchTerms: string[],
+  requestContext?: RequestContext,
+) => {
   const env = requestContext?.get("env") as CloudflareBindings | undefined;
   if (!env?.VECTORIZE || !env.GOOGLE_GENERATIVE_AI_API_KEY) return undefined;
-  const { results, error } = await searchKnowledge(
-    question,
-    env.VECTORIZE,
-    env.GOOGLE_GENERATIVE_AI_API_KEY,
-    requestContext,
+  const { VECTORIZE, GOOGLE_GENERATIVE_AI_API_KEY } = env;
+  const outputs = await Promise.all(
+    searchTerms.map((term) =>
+      searchKnowledge(
+        term,
+        VECTORIZE,
+        GOOGLE_GENERATIVE_AI_API_KEY,
+        requestContext,
+      ),
+    ),
   );
-  if (error) return undefined;
+  if (outputs.every((output) => output.error)) return undefined;
+  const seen = new Set<string>();
+  const results = outputs
+    .flatMap((output) => output.results)
+    .filter((result) => {
+      if (seen.has(result.content)) return false;
+      seen.add(result.content);
+      return true;
+    });
   return renderSearchResults(results) || "該当なし";
 };
 
@@ -62,7 +78,8 @@ const coverageSchema = z.enum(["取れた", "一部", "取れない"]);
 
 type Coverage = z.infer<typeof coverageSchema>;
 
-const COVERAGE_LINE = /\n?\s*判定[:：]\s*(取れた|一部|取れない)[^\n]*\s*$/;
+const COVERAGE_LINE =
+  /\n?\s*(?:[-・*]\s*)?判定[:：]\s*(取れた|一部|取れない)[^\n]*\s*$/;
 
 export const parseCoverage = (memo: string): Coverage =>
   (memo.match(COVERAGE_LINE)?.[1] as Coverage | undefined) ?? "一部";
@@ -98,7 +115,10 @@ const routeFor = async (
   }
 };
 
-const questionSchema = z.object({ question: z.string() });
+const questionSchema = z.object({
+  question: z.string(),
+  queries: z.array(z.string()).optional(),
+});
 
 const routedSchema = questionSchema.extend({
   route: z.enum(["village", "outside"]),
@@ -124,7 +144,7 @@ const routeStep = createStep({
   inputSchema: questionSchema,
   outputSchema: routedSchema,
   execute: async ({ inputData, requestContext }) => ({
-    question: inputData.question,
+    ...inputData,
     route: await routeFor(inputData.question, requestContext),
   }),
 });
@@ -135,16 +155,36 @@ const knowledgeStep = createStep({
   outputSchema: knowledgeSchema,
   execute: async ({ inputData, requestContext }) => {
     if (inputData.route === "outside") return inputData;
-    const searched = await preSearch(inputData.question, requestContext);
+    const searchTerms = inputData.queries?.length
+      ? inputData.queries
+      : [inputData.question];
+    const searchStartedAt = Date.now();
+    const searched = await preSearch(searchTerms, requestContext);
+    const preSearchMs = Date.now() - searchStartedAt;
     const searchedSection = searched
       ? `最初の検索結果:\n${searched}\n\n足りない情報だけ追加で検索してよい。\n`
       : "";
     const prompt = `ユーザーの質問: ${inputData.question}\n${searchedSection}${MEMO_FORMAT}\n${COVERAGE_RULE}`;
+    const agentStartedAt = Date.now();
     const res = await knowledgeAgent.generate(prompt, { requestContext });
+    const coverage = parseCoverage(res.text);
+    logger.info("[Research] knowledge", {
+      question: inputData.question,
+      searchTerms: searchTerms.length,
+      preSearchMs,
+      agentMs: Date.now() - agentStartedAt,
+      extraSearches: res.steps
+        .flatMap((step) => step.toolCalls)
+        .filter((call) => call.payload.toolName === "knowledgeSearchTool")
+        .length,
+      promptChars: prompt.length,
+      memoChars: res.text.length,
+      coverage,
+    });
     return {
       ...inputData,
       knowledgeMemo: stripCoverage(res.text),
-      coverage: parseCoverage(res.text),
+      coverage,
     };
   },
 });
@@ -155,9 +195,15 @@ const webStep = createStep({
   outputSchema: memoSchema,
   execute: async ({ inputData, requestContext }) => {
     const prompt = inputData.knowledgeMemo
-      ? `ユーザーの質問: ${inputData.question}\n\n村のナレッジで確認できた内容:\n${inputData.knowledgeMemo}\n\n不足している点だけを調べる。`
+      ? `ユーザーの質問: ${inputData.question}\n\n村のナレッジで確認できた内容:\n${inputData.knowledgeMemo}\n\n不足している点と、資料が古い情報がいまも有効かだけを調べる。`
       : `ユーザーの質問: ${inputData.question}`;
+    const startedAt = Date.now();
     const res = await webResearcherAgent.generate(prompt, { requestContext });
+    logger.info("[Research] web", {
+      question: inputData.question,
+      ms: Date.now() - startedAt,
+      memoChars: res.text.length,
+    });
     return {
       memo: renderMemo({ knowledge: inputData.knowledgeMemo, web: res.text }),
     };
@@ -207,13 +253,18 @@ export const researchWorkflow = createWorkflow({
 
 export const runResearch = async ({
   question,
+  queries,
   requestContext,
 }: {
   question: string;
+  queries?: string[];
   requestContext?: RequestContext;
 }) => {
   const run = await researchWorkflow.createRun();
-  const result = await run.start({ inputData: { question }, requestContext });
+  const result = await run.start({
+    inputData: { question, queries },
+    requestContext,
+  });
   if (result.status !== "success") {
     throw new Error(`research workflow ${result.status}`);
   }

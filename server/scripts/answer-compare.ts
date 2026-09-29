@@ -6,7 +6,12 @@ import { z } from "zod";
 import { loadDevVars } from "../src/mastra/evals/neppchan/dev-vars";
 import { evalTestCases } from "./data/eval-test-cases";
 
-type Verdict = "accuracy" | "helpfulness" | "persona" | "overall";
+type Verdict =
+  | "accuracy"
+  | "completeness"
+  | "helpfulness"
+  | "persona"
+  | "overall";
 
 type Row = {
   question: string;
@@ -27,6 +32,7 @@ const { values } = parseArgs({
 
 const judgeSchema = z.object({
   accuracy: z.enum(["A", "B", "tie"]),
+  completeness: z.enum(["A", "B", "tie"]),
   helpfulness: z.enum(["A", "B", "tie"]),
   persona: z.enum(["A", "B", "tie"]),
   overall: z.enum(["A", "B", "tie"]),
@@ -36,6 +42,7 @@ const judgeSchema = z.object({
 const JUDGE_PROMPT = `あなたは音威子府村のマスコット「ねっぷちゃん」の回答を比べる審査員です。
 同じ質問への回答 1 と回答 2 を、次の観点でそれぞれどちらが良いか判定してください。差がなければ tie。
 - accuracy: 事実の正しさ。参考情報があればそれと食い違わないか。根拠のない断定や作り話がないか
+- completeness: 相手が知っておくべき制度・選択肢・手続きを漏らしていないか（給付や手当の見落としは重く見る）
 - helpfulness: 質問にすぐ答えているか、相手が次に動ける情報があるか。不要に長くないか
 - persona: 親しみやすいねっぷちゃんらしい語り口か
 - overall: 総合してどちらを村の人に返したいか
@@ -88,6 +95,7 @@ const main = async () => {
         [b.label]: keywordPass(sa.question, sb.text),
       },
       accuracy: unswap(object.accuracy),
+      completeness: unswap(object.completeness),
       helpfulness: unswap(object.helpfulness),
       persona: unswap(object.persona),
       overall: unswap(object.overall),
@@ -112,6 +120,7 @@ const main = async () => {
   );
   for (const key of [
     "accuracy",
+    "completeness",
     "helpfulness",
     "persona",
     "overall",

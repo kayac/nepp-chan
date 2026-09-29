@@ -16,14 +16,22 @@ export const researchTool = createTool({
     question: z
       .string()
       .describe(
-        "ユーザーの質問を短い1文で。指示語は会話の流れから補い、条件や調べ方の注文は足さない",
+        "ユーザーの質問。ユーザーの言葉をなるべくそのまま使い、指示語だけ会話の流れから補う",
+      ),
+    queries: z
+      .array(z.string())
+      .max(5)
+      .optional()
+      .describe(
+        "資料を探す検索語。質問に含まれる手続き・制度・施設ごとに 1 つずつ、多くても 5 つ。資料に出てきそうな制度名・施設名・手続き名で書く",
       ),
   }),
   outputSchema: z.object({ memo: z.string() }),
-  execute: async ({ question }, context) => {
+  execute: async ({ question, queries }, context) => {
     try {
       return await runResearch({
         question,
+        queries,
         requestContext: context?.requestContext,
       });
     } catch (error) {

@@ -99,4 +99,43 @@ describe("createNeppChanAgent の memory", () => {
     expect(prompts[2]).not.toContain("MEMO_TURN_1");
     expect(prompts[3]).toContain("MEMO_TURN_2");
   });
+
+  it("researchTool を呼んだ後の手では researchTool を出さず、ほかのツールは残す", async () => {
+    const turns = [toolCallTurn("c1", "寮費は？"), textTurn("月額3万円だよ")];
+    const model = new MockLanguageModelV3({
+      doStream: async () => {
+        const next = turns.shift();
+        if (!next) throw new Error("no more turns");
+        return next;
+      },
+    });
+    const agent = createNeppChanAgent({
+      modelConfig: { model } as unknown as AgentModelConfig,
+      withMemory: false,
+      tools: {
+        [researchToolName]: createTool({
+          id: "research",
+          description: "調べる",
+          inputSchema: z.object({ question: z.string() }),
+          outputSchema: z.object({ memo: z.string() }),
+          execute: async () => ({ memo: "MEMO" }),
+        }),
+        otherTool: createTool({
+          id: "other",
+          description: "ほか",
+          inputSchema: z.object({}),
+          execute: async () => ({}),
+        }),
+      },
+    });
+
+    const stream = await agent.stream("寮費は？");
+    await stream.consumeStream();
+
+    const toolNames = (call: (typeof model.doStreamCalls)[number]) =>
+      (call.tools ?? []).map((tool) => tool.name);
+    expect(toolNames(model.doStreamCalls[0])).toContain(researchToolName);
+    expect(toolNames(model.doStreamCalls[1])).not.toContain(researchToolName);
+    expect(toolNames(model.doStreamCalls[1])).toContain("otherTool");
+  });
 });

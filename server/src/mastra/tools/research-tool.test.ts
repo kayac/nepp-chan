@@ -30,6 +30,20 @@ describe("researchTool.execute", () => {
     expect(args.requestContext).toBeDefined();
   });
 
+  it("検索語をワークフローに渡す", async () => {
+    runResearchMock.mockResolvedValueOnce({ memo: "メモ" });
+
+    await callTool(researchTool, {
+      question: "子供が生まれました。支援制度は？",
+      queries: ["出生祝金", "児童手当"],
+    });
+
+    expect(runResearchMock.mock.calls[0]?.[0]).toMatchObject({
+      question: "子供が生まれました。支援制度は？",
+      queries: ["出生祝金", "児童手当"],
+    });
+  });
+
   it("ワークフローが失敗したら、調べられなかったことを伝えるメモを返す", async () => {
     runResearchMock.mockRejectedValueOnce(
       new Error("research workflow failed"),

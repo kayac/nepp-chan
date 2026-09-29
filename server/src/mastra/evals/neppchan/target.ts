@@ -37,7 +37,10 @@ const fixtureResearchTool = (text: string) =>
     id: "research-answer",
     description:
       "村のナレッジと配信、必要に応じて Web を調べ、質問に答えるための調査メモを返します。",
-    inputSchema: z.object({ question: z.string() }),
+    inputSchema: z.object({
+      question: z.string(),
+      queries: z.array(z.string()).max(5).optional(),
+    }),
     outputSchema: z.object({ memo: z.string() }),
     execute: async () => ({ memo: text }),
   });
