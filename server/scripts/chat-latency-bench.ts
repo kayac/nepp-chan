@@ -15,6 +15,7 @@ type Sample = {
   run: number;
   phases?: Phases;
   text?: string;
+  memo?: string;
   firstTextMs: number | null;
   totalMs: number;
   chars: number;
@@ -68,6 +69,7 @@ const ask = async (token: string, question: string, run: number) => {
   let chars = 0;
   const phases: Phases = {};
   let text = "";
+  let memo: string | undefined;
   const decoder = new TextDecoder();
   let buffer = "";
   for await (const chunk of res.body) {
@@ -79,6 +81,7 @@ const ask = async (token: string, question: string, run: number) => {
       const event = JSON.parse(line.slice(6)) as {
         type: string;
         delta?: string;
+        output?: { memo?: string };
       };
       const at = performance.now() - started;
       if (event.type === "text-delta") {
@@ -90,6 +93,7 @@ const ask = async (token: string, question: string, run: number) => {
         phases.delegateStartMs ??= at;
       } else if (event.type === "tool-output-available") {
         phases.delegateEndMs = at;
+        memo = event.output?.memo ?? memo;
       }
     }
   }
@@ -98,6 +102,7 @@ const ask = async (token: string, question: string, run: number) => {
     run,
     phases,
     text,
+    memo,
     firstTextMs,
     totalMs: performance.now() - started,
     chars,
