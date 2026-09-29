@@ -19,7 +19,7 @@ import {
 
 const routeQuestion: JevQuestion = {
   type: "choice",
-  instructions: `${ROUTE_CONTEXT} Decide where the answer to the user's question should be looked up.`,
+  instructions: `${ROUTE_CONTEXT}ユーザーの質問の答えをどこで調べるべきかを判定する。`,
   criteria: {
     village: VILLAGE_CRITERION,
     outside: OUTSIDE_CRITERION,

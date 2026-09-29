@@ -14,9 +14,9 @@ export type VoiceRoute = "none" | "village" | "outside";
 
 const routeQuestion: JevQuestion = {
   type: "choice",
-  instructions: `${ROUTE_CONTEXT} Decide what the assistant must look up to answer the user's latest message.`,
+  instructions: `${ROUTE_CONTEXT}ユーザーの最新のメッセージに答えるために、アシスタントが何を調べる必要があるかを判定する。`,
   criteria: {
-    none: "Nothing to look up: greetings, small talk, feelings, rephrasing or organizing what the user already said, or a request the assistant cannot carry out.",
+    none: "調べるものがない。挨拶、雑談、気持ち、ユーザーがすでに言ったことの言い換えや整理、アシスタントが実行できない依頼。",
     village: VILLAGE_CRITERION,
     outside: OUTSIDE_CRITERION,
   },

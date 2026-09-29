@@ -13,8 +13,8 @@ import { loadDevVars, serverRoot } from "../src/mastra/evals/neppchan/dev-vars";
 import { type IntentCase, intentCases } from "./data/intent-cases";
 
 type Intent = IntentCase["expected"];
-type Variant = "A" | "B" | "C";
-const VARIANTS: Variant[] = ["A", "B", "C"];
+type Variant = "A" | "B" | "C" | "D";
+const VARIANTS: Variant[] = ["A", "B", "C", "D"];
 const THRESHOLDS = Array.from({ length: 9 }, (_, i) => (30 + i * 5) / 100);
 
 type JevRecord = {
@@ -83,6 +83,17 @@ const intentQuestion: JevQuestion = {
   },
 };
 
+const jaLatestIntentQuestion: JevQuestion = {
+  type: "choice",
+  instructions:
+    "ユーザーの最新のメッセージの意図を分類する。迷ったら thinking にする。",
+  criteria: {
+    casual:
+      "挨拶、雑談、相槌、リアクション、気持ちや日常の出来事の共有。情報を調べる必要がない。",
+    thinking: "検索や推論が必要な質問、情報の依頼、事実確認。",
+  },
+};
+
 const buildIntentState = (input: {
   text: string;
   previousAssistant?: string;
@@ -94,9 +105,14 @@ const buildIntentState = (input: {
 ];
 
 const buildInput = (variant: Variant, c: IntentCase) => {
-  const question = variant === "A" ? jaIntentQuestion : intentQuestion;
+  const question =
+    variant === "A"
+      ? jaIntentQuestion
+      : variant === "D"
+        ? jaLatestIntentQuestion
+        : intentQuestion;
   const state =
-    variant === "C"
+    variant === "C" || variant === "D"
       ? buildIntentState({
           text: c.text,
           previousAssistant: c.previousAssistant,

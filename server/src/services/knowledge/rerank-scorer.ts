@@ -11,12 +11,11 @@ import {
 
 const rerankQuestion: JevQuestion = {
   type: "noul",
-  instructions:
-    "Does the passage contain information that answers the user's query?",
+  instructions: "この文章に、ユーザーの検索語に答える情報が含まれているか。",
   criteria: {
-    true: "The passage states facts that directly answer the query or are a substantial part of the answer.",
+    true: "検索語に直接答える事実、または答えの主要な部分が書かれている。",
     false:
-      "The passage is off-topic, or only shares words or the general topic with the query without answering it.",
+      "話題が違う、または検索語と言葉や大まかな話題が重なるだけで答えになっていない。",
   },
 };
 

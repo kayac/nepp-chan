@@ -10,12 +10,11 @@ const THINKING_THRESHOLD = 0.3;
 const intentQuestion: JevQuestion = {
   type: "choice",
   instructions:
-    "Classify the intent of the user's latest message. When in doubt, choose thinking.",
+    "ユーザーの最新のメッセージの意図を分類する。迷ったら thinking にする。",
   criteria: {
     casual:
-      "Greeting, small talk, acknowledgement, reaction, sharing feelings or daily events. No information lookup is needed.",
-    thinking:
-      "A question, information request, or fact check that needs search or reasoning to answer.",
+      "挨拶、雑談、相槌、リアクション、気持ちや日常の出来事の共有。情報を調べる必要がない。",
+    thinking: "検索や推論が必要な質問、情報の依頼、事実確認。",
   },
 };
 

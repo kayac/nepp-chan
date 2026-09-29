@@ -1,10 +1,10 @@
 export const VILLAGE_THRESHOLD = 0.3;
 
 export const ROUTE_CONTEXT =
-  "The assistant is the mascot of Otoineppu, a small village in Hokkaido, Japan, and answers from the village's own documents or from a web search.";
+  "アシスタントは北海道の小さな村・音威子府村のマスコットで、村の資料か Web 検索をもとに答える。";
 
 export const VILLAGE_CRITERION =
-  "Information about Otoineppu village itself: its facilities, shops, events, schools, administration, history, local rules, local bus schedules, or village announcements.";
+  "音威子府村そのものの情報。村の施設、お店、行事、学校、行政、歴史、地域のルール、地域バスの時刻、村からのお知らせ。";
 
 export const OUTSIDE_CRITERION =
-  "Current or outside information: weather, live traffic or train status, news and current events, or places and general facts outside the village.";
+  "最新の情報や村の外の情報。天気、交通や列車の運行状況、ニュースや時事、村の外の場所や一般的な事柄。";

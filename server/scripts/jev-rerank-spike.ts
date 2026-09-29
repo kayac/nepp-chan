@@ -30,6 +30,16 @@ const rerankQuestion: JevQuestion = {
   },
 };
 
+const jaRerankQuestion: JevQuestion = {
+  type: "noul",
+  instructions: "この文章に、ユーザーの検索語に答える情報が含まれているか。",
+  criteria: {
+    true: "検索語に直接答える事実、または答えの主要な部分が書かれている。",
+    false:
+      "話題が違う、または検索語と言葉や大まかな話題が重なるだけで答えになっていない。",
+  },
+};
+
 type Chunk = {
   id: string;
   vectorScore: number;
@@ -47,8 +57,8 @@ type Candidates = {
   chunks: Chunk[];
 };
 
-type Arm = "luna" | "jev";
-const ARMS: Arm[] = ["luna", "jev"];
+type Arm = "luna" | "jev" | "jev-ja";
+const ARMS: Arm[] = ["luna", "jev", "jev-ja"];
 
 type ScoreRecord = {
   caseId: string;
@@ -191,11 +201,16 @@ const askJevWithRetry = async (params: Parameters<typeof askJev>[0]) => {
   }
 };
 
-const scoreWithJev = async (apiKey: string, query: string, text: string) => {
+const scoreWithJev = async (
+  apiKey: string,
+  query: string,
+  text: string,
+  question: JevQuestion,
+) => {
   const response = await askJevWithRetry({
     apiKey,
     state: { query, passage: text },
-    questions: { relevant: rerankQuestion },
+    questions: { relevant: question },
   });
   const answer = response.answers.relevant;
   if (answer?.type !== "noul") {
@@ -223,7 +238,12 @@ const scoreCase = async (
           return Number.isNaN(s) ? null : s;
         }
         if (!jevKey) throw new Error("TYPESAFE_API_KEY is not set");
-        const r = await scoreWithJev(jevKey, c.query, chunk.content);
+        const r = await scoreWithJev(
+          jevKey,
+          c.query,
+          chunk.content,
+          arm === "jev-ja" ? jaRerankQuestion : rerankQuestion,
+        );
         if (r.inputTokens !== undefined) inputTokens.push(r.inputTokens);
         return r.score;
       } catch (error) {
