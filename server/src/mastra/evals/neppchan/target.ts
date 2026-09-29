@@ -27,10 +27,7 @@ const fixtureVoiceTool = (text: string) =>
     id: "voice-answer",
     description:
       "村の情報・最新情報・時事・天気など、事実にもとづく質問に答えるための要点を取得します。",
-    inputSchema: z.object({
-      question: z.string(),
-      source: z.enum(["knowledge", "web"]).optional(),
-    }),
+    inputSchema: z.object({ question: z.string() }),
     outputSchema: z.object({ answer: z.string() }),
     execute: async () => ({ answer: text }),
   });

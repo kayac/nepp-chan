@@ -1,6 +1,8 @@
+export type VoiceSource = "knowledge" | "web";
+
 export type VoiceFindings = {
   query: string;
-  source: "knowledge" | "web";
+  source: VoiceSource;
   text: string;
 };
 
@@ -34,6 +36,7 @@ export const pushVoiceFindings = (
 
 export type VoicePrefetch = {
   query: string;
+  source: VoiceSource;
   promise: Promise<string>;
   abort: () => void;
 };

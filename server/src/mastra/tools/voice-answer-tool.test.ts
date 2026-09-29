@@ -51,14 +51,17 @@ type CallOptions = {
   parentRouting?: boolean;
 };
 
+const ROUTE_OF_SOURCE = { knowledge: "village", web: "outside" } as const;
+
 const call = (
   question: string,
   { slot, signal, source, prefetch, parentRouting }: CallOptions = {},
 ) =>
   callTool(
     voiceAnswerTool,
-    { question, ...(source ? { source } : {}) },
+    { question },
     {
+      ...(source ? { voiceRoute: ROUTE_OF_SOURCE[source] } : {}),
       ...(slot ? { voiceFindings: slot } : {}),
       ...(signal ? { voiceTurnSignal: signal } : {}),
       ...(prefetch ? { voicePrefetch: prefetch } : {}),
@@ -306,7 +309,7 @@ describe("voiceAnswerTool", () => {
     expect(loggerError).not.toHaveBeenCalled();
   });
 
-  describe("親エージェントによるルーティング", () => {
+  describe("jev の行き先によるルーティング", () => {
     it("slot が空なら資料なしの要点化を挟まず、指定された source を直接検索する", async () => {
       summarizerGen.mockResolvedValueOnce({ text: "音威子府そばがあるよ" });
       knowledgeGen.mockResolvedValueOnce({ text: "そばの資料" });
@@ -443,6 +446,7 @@ describe("voiceAnswerTool", () => {
         current: {
           query: "村でそば食べられる？",
           promise: Promise.resolve("先に取っておいた資料"),
+          source: "knowledge",
           abort: vi.fn(),
         },
       };
@@ -468,6 +472,7 @@ describe("voiceAnswerTool", () => {
         current: {
           query: "そば",
           promise: Promise.resolve(""),
+          source: "knowledge",
           abort: vi.fn(),
         },
       };
@@ -492,6 +497,7 @@ describe("voiceAnswerTool", () => {
         current: {
           query: "営業時間は？",
           promise: Promise.resolve("未使用の資料"),
+          source: "knowledge",
           abort,
         },
       };
@@ -521,6 +527,7 @@ describe("voiceAnswerTool", () => {
         current: {
           query: "今日の天気は？",
           promise: Promise.resolve("村の一般資料"),
+          source: "knowledge",
           abort,
         },
       };
@@ -538,6 +545,29 @@ describe("voiceAnswerTool", () => {
       expect(abort).toHaveBeenCalled();
     });
 
+    it("村外の行き先なら web の先行検索を使い、web を検索し直さない", async () => {
+      summarizerGen.mockResolvedValueOnce({ text: "明日は雨だよ" });
+      const prefetch: VoicePrefetchSlot = {
+        current: {
+          query: "明日の天気は？",
+          source: "web",
+          promise: Promise.resolve("先に取った天気の資料"),
+          abort: vi.fn(),
+        },
+      };
+
+      const result = await call("明日の天気は？", {
+        slot: createVoiceFindingsSlot(),
+        source: "web",
+        parentRouting: true,
+        prefetch,
+      });
+
+      expect(result.answer).toBe("明日は雨だよ");
+      expect(webGen).not.toHaveBeenCalled();
+      expect(knowledgeGen).not.toHaveBeenCalled();
+    });
+
     it("先行検索の資料で答えられなければ question で knowledge を本検索し直す", async () => {
       summarizerGen
         .mockResolvedValueOnce({ text: "" })
@@ -547,6 +577,7 @@ describe("voiceAnswerTool", () => {
         current: {
           query: "あそこの営業時間は？",
           promise: Promise.resolve("的外れな資料"),
+          source: "knowledge",
           abort: vi.fn(),
         },
       };
@@ -574,6 +605,7 @@ describe("voiceAnswerTool", () => {
         current: {
           query: "そば",
           promise: Promise.resolve("資料"),
+          source: "knowledge",
           abort: vi.fn(),
         },
       };
@@ -593,6 +625,7 @@ describe("voiceAnswerTool", () => {
       const prefetch: VoicePrefetchSlot = {
         current: {
           query: "そば",
+          source: "knowledge",
           promise: new Promise<string>((resolve) =>
             setTimeout(() => resolve("遅れて届いた資料"), 300),
           ),

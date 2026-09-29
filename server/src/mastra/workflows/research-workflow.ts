@@ -3,6 +3,12 @@ import { createStep, createWorkflow } from "@mastra/core/workflows";
 import { z } from "zod";
 import { type JevQuestion, jevApiKey } from "~/lib/jev";
 import { logger } from "~/lib/logger";
+import {
+  OUTSIDE_CRITERION,
+  ROUTE_CONTEXT,
+  VILLAGE_CRITERION,
+  VILLAGE_THRESHOLD,
+} from "~/lib/route-criteria";
 import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { askJevWithUsage } from "~/services/analytics/llm-usage";
@@ -11,17 +17,12 @@ import {
   searchKnowledge,
 } from "~/services/knowledge/search";
 
-const VILLAGE_THRESHOLD = 0.3;
-
 const routeQuestion: JevQuestion = {
   type: "choice",
-  instructions:
-    "The assistant is the mascot of Otoineppu, a small village in Hokkaido, Japan, and answers from the village's own documents or from a web search. Decide where the answer to the user's question should be looked up.",
+  instructions: `${ROUTE_CONTEXT} Decide where the answer to the user's question should be looked up.`,
   criteria: {
-    village:
-      "Information about Otoineppu village itself: its facilities, shops, events, schools, administration, history, local rules, local bus schedules, or village announcements.",
-    outside:
-      "Current or outside information: weather, live traffic or train status, news and current events, or places and general facts outside the village.",
+    village: VILLAGE_CRITERION,
+    outside: OUTSIDE_CRITERION,
   },
 };
 

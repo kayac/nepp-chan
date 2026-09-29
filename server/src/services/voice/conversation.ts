@@ -7,13 +7,16 @@ import { getStorage } from "~/lib/storage";
 import { sanitizeForSpeech } from "~/lib/voice-text";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
-import { startVoicePrefetch } from "~/mastra/tools/voice-answer-tool";
+import {
+  sourceOfRoute,
+  startVoicePrefetch,
+} from "~/mastra/tools/voice-answer-tool";
 import { newTurnId, recordLlmUsage } from "~/services/analytics/llm-usage";
-import { isQuestionLike } from "./filler";
 import {
   createVoicePrefetchSlot,
   type VoiceFindingsSlot,
 } from "./findings-slot";
+import { classifyVoiceTurn, type VoiceRoute } from "./turn-route";
 
 type RunTurnParams = {
   text: string;
@@ -23,6 +26,7 @@ type RunTurnParams = {
   findingsSlot?: VoiceFindingsSlot;
   prefetchEnabled?: boolean;
   parentRouting?: boolean;
+  route?: Promise<VoiceRoute>;
 };
 
 type PersistTurnParams = {
@@ -73,6 +77,7 @@ export const createVoiceConversation = async ({
     findingsSlot,
     prefetchEnabled,
     parentRouting,
+    route,
   }: RunTurnParams) {
     const start = Date.now();
     const turnId = newTurnId();
@@ -88,27 +93,34 @@ export const createVoiceConversation = async ({
       voiceFindings: findingsSlot,
       voicePrefetch: prefetchSlot,
       voiceParentRouting: parentRouting,
+      voiceRoute: route,
       voiceSearchStart: onToolCall,
       voiceTurnSignal: signal,
       voiceEndCall: onEndCall,
     });
 
-    if (prefetchSlot && isQuestionLike(text)) {
-      logger.info("[Voice] prefetch start", { query: text });
+    let turnDone = false;
+    const startPrefetch = (resolved: VoiceRoute) => {
+      const source = sourceOfRoute(resolved);
+      if (!prefetchSlot || !source || turnDone || signal?.aborted) return;
+      logger.info("[Voice] prefetch start", { query: text, source });
       const controller = new AbortController();
       signal?.addEventListener("abort", () => controller.abort(), {
         once: true,
       });
       prefetchSlot.current = {
         query: text,
+        source,
         abort: () => controller.abort(),
         promise: startVoicePrefetch({
           question: text,
+          source,
           requestContext,
           signal: controller.signal,
         }),
       };
-    }
+    };
+    void route?.then(startPrefetch);
 
     const input: ModelMessage[] = [...history, { role: "user", content: text }];
 
@@ -172,6 +184,7 @@ export const createVoiceConversation = async ({
         });
       }
     } finally {
+      turnDone = true;
       prefetchSlot?.current?.abort();
       if (streamReadyMs !== undefined) {
         const timing: Record<string, number> = { streamReadyMs };
@@ -258,5 +271,22 @@ export const createVoiceConversation = async ({
     }
   };
 
-  return { runTurn, recordInterruptedTurn, truncateLastReply, persistTurn };
+  const routeTurn = (text: string) =>
+    classifyVoiceTurn({
+      text,
+      requestContext: createRequestContext({
+        db: env.DB,
+        env,
+        usagePlatform: "voice",
+        usageThreadId: threadId,
+      }),
+    });
+
+  return {
+    runTurn,
+    routeTurn,
+    recordInterruptedTurn,
+    truncateLastReply,
+    persistTurn,
+  };
 };

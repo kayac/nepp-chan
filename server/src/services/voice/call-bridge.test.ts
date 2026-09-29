@@ -2,8 +2,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { logger } from "~/lib/logger";
 import { CallBridge } from "./call-bridge";
 
-const { createVoiceConversationMock } = vi.hoisted(() => ({
+const { createVoiceConversationMock, routeTurn } = vi.hoisted(() => ({
   createVoiceConversationMock: vi.fn(),
+  routeTurn: vi.fn(async () => "none" as const),
 }));
 
 vi.mock("./conversation", () => ({
@@ -45,6 +46,7 @@ describe("CallBridge", () => {
     let resolveRunner:
       | ((conversation: {
           runTurn: typeof turnRunner;
+          routeTurn: typeof routeTurn;
           persistTurn: () => Promise<void>;
         }) => void)
       | undefined;
@@ -72,7 +74,7 @@ describe("CallBridge", () => {
     await onMessage.call(bridge, ws, {
       data: JSON.stringify({ type: "interrupt" }),
     } as MessageEvent);
-    resolveRunner?.({ runTurn: turnRunner, persistTurn: vi.fn() });
+    resolveRunner?.({ runTurn: turnRunner, routeTurn, persistTurn: vi.fn() });
     await prompt;
 
     expect(turnRunner).not.toHaveBeenCalled();
@@ -87,7 +89,11 @@ describe("CallBridge", () => {
     const persistTurn = vi.fn(async () => {
       order.push("persist");
     });
-    createVoiceConversationMock.mockResolvedValue({ runTurn, persistTurn });
+    createVoiceConversationMock.mockResolvedValue({
+      runTurn,
+      routeTurn,
+      persistTurn,
+    });
 
     const bridge = new CallBridge(
       {} as DurableObjectState,
@@ -134,7 +140,11 @@ describe("CallBridge", () => {
       yield "00からだよ";
     });
     const persistTurn = vi.fn();
-    createVoiceConversationMock.mockResolvedValue({ runTurn, persistTurn });
+    createVoiceConversationMock.mockResolvedValue({
+      runTurn,
+      routeTurn,
+      persistTurn,
+    });
     const bridge = new CallBridge(
       {} as DurableObjectState,
       {} as CloudflareBindings,
@@ -159,11 +169,43 @@ describe("CallBridge", () => {
     );
   });
 
+  it("発話の行き先を 1 回だけ判定し、判定を待たずにターンへ引き渡す", async () => {
+    const runTurn = vi.fn(async function* () {
+      yield "回答";
+    });
+    const villageRoute = vi.fn(async () => "village" as const);
+    createVoiceConversationMock.mockResolvedValue({
+      routeTurn: villageRoute,
+      runTurn,
+      persistTurn: vi.fn(),
+    });
+
+    const bridge = new CallBridge(
+      {} as DurableObjectState,
+      {} as CloudflareBindings,
+    );
+    const ws = { send: vi.fn() } as unknown as WebSocket;
+    const handlePrompt = Reflect.get(bridge, "handlePrompt") as (
+      ws: WebSocket,
+      text: string,
+    ) => Promise<void>;
+
+    await handlePrompt.call(bridge, ws, "寮費は？");
+
+    expect(villageRoute).toHaveBeenCalledTimes(1);
+    expect(villageRoute).toHaveBeenCalledWith("寮費は？");
+    const [params] = (runTurn.mock.lastCall ?? []) as unknown as [
+      { route: Promise<string> },
+    ];
+    expect(await params.route).toBe("village");
+  });
+
   it("先回りのトグルをターンに引き渡す", async () => {
     const runTurn = vi.fn(async function* () {
       yield "回答";
     });
     createVoiceConversationMock.mockResolvedValue({
+      routeTurn,
       runTurn,
       persistTurn: vi.fn(),
     });
@@ -213,7 +255,11 @@ describe("CallBridge", () => {
           resolvePersistence = resolve;
         }),
     );
-    createVoiceConversationMock.mockResolvedValue({ runTurn, persistTurn });
+    createVoiceConversationMock.mockResolvedValue({
+      runTurn,
+      routeTurn,
+      persistTurn,
+    });
 
     const bridge = new CallBridge(
       {} as DurableObjectState,
@@ -244,7 +290,11 @@ describe("CallBridge", () => {
       // ツール呼び出しのみで終わり、text-delta を1つも yield しないケース
     });
     const persistTurn = vi.fn();
-    createVoiceConversationMock.mockResolvedValue({ runTurn, persistTurn });
+    createVoiceConversationMock.mockResolvedValue({
+      runTurn,
+      routeTurn,
+      persistTurn,
+    });
 
     const bridge = new CallBridge(
       {} as DurableObjectState,
@@ -274,7 +324,11 @@ describe("CallBridge", () => {
     const persistTurn = vi.fn(
       () => new Promise<void>((resolve) => setTimeout(resolve, 500)),
     );
-    createVoiceConversationMock.mockResolvedValue({ runTurn, persistTurn });
+    createVoiceConversationMock.mockResolvedValue({
+      runTurn,
+      routeTurn,
+      persistTurn,
+    });
     const infoSpy = vi.spyOn(logger, "info");
 
     const bridge = new CallBridge(
@@ -354,6 +408,7 @@ describe("CallBridge", () => {
       const recordInterruptedTurn = vi.fn();
       const persistTurn = vi.fn();
       const { handlePrompt, interrupt } = setupBridge({
+        routeTurn,
         runTurn,
         recordInterruptedTurn,
         truncateLastReply: vi.fn(),
@@ -381,6 +436,7 @@ describe("CallBridge", () => {
       const recordInterruptedTurn = vi.fn();
       const persistTurn = vi.fn();
       const { handlePrompt, interrupt } = setupBridge({
+        routeTurn,
         runTurn,
         recordInterruptedTurn,
         truncateLastReply: vi.fn(),
@@ -410,6 +466,7 @@ describe("CallBridge", () => {
         yield "回答";
       });
       const { handlePrompt } = setupBridge({
+        routeTurn,
         runTurn: vi.fn((params) =>
           params.text === "駅の" ? runTurn(params) : nextRunTurn(params),
         ),
@@ -430,6 +487,7 @@ describe("CallBridge", () => {
       const { runTurn, startedPromise } = hangingTurn();
       const recordInterruptedTurn = vi.fn();
       const { handlePrompt, interrupt } = setupBridge({
+        routeTurn,
         runTurn: vi.fn((params) =>
           params.text === "駅は" ? runTurn(params) : (async function* () {})(),
         ),
@@ -454,6 +512,7 @@ describe("CallBridge", () => {
     it("応答を送り終えた後の読み上げ中に遮られたら直前の返事を聞かせた分に切り詰める", async () => {
       const truncateLastReply = vi.fn();
       const { handlePrompt, interrupt } = setupBridge({
+        routeTurn,
         runTurn: vi.fn(async function* () {
           yield "駅は北口だよ。バスもあるよ。";
         }),
@@ -471,6 +530,7 @@ describe("CallBridge", () => {
     it("聞かせた分が通知されない割り込みでは直前の返事を変えない", async () => {
       const truncateLastReply = vi.fn();
       const { handlePrompt, interrupt } = setupBridge({
+        routeTurn,
         runTurn: vi.fn(async function* () {
           yield "駅は北口だよ。";
         }),

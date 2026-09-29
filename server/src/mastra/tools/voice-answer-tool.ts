@@ -14,11 +14,14 @@ import {
   pushVoiceFindings,
   type VoiceFindings,
   type VoicePrefetch,
+  type VoiceSource,
 } from "~/services/voice/findings-slot";
+import type { VoiceRoute } from "~/services/voice/turn-route";
 import {
   getVoiceFindings,
   getVoiceParentRouting,
   getVoicePrefetch,
+  getVoiceRoute,
   getVoiceSearchStart,
   getVoiceTurnSignal,
 } from "./helpers";
@@ -32,11 +35,9 @@ const PREFETCH_GRACE_MS = 150;
 const voiceKnowledgeAgent = createKnowledgeAgent({ effort: "low" });
 const voiceWebResearcherAgent = createWebResearcherAgent();
 
-type Source = "knowledge" | "web";
-
 type Decision =
   | { kind: "answer"; text: string }
-  | { kind: "route"; source: Source }
+  | { kind: "route"; source: VoiceSource }
   | { kind: "miss" };
 
 const renderFindings = (entries: VoiceFindings[]) =>
@@ -75,7 +76,7 @@ const decide = async (
 };
 
 const runSearch = async (
-  source: Source,
+  source: VoiceSource,
   question: string,
   requestContext: RequestContext | undefined,
   signal: AbortSignal | undefined,
@@ -89,21 +90,33 @@ const runSearch = async (
   return res.text ?? "";
 };
 
+const SOURCE_OF_ROUTE = { village: "knowledge", outside: "web" } as const;
+
+export const sourceOfRoute = (route: VoiceRoute | undefined) =>
+  route === "village" || route === "outside"
+    ? SOURCE_OF_ROUTE[route]
+    : undefined;
+
 export const startVoicePrefetch = ({
   question,
+  source,
   requestContext,
   signal,
 }: {
   question: string;
+  source: VoiceSource;
   requestContext?: RequestContext;
   signal?: AbortSignal;
 }) => {
   const start = Date.now();
-  return voiceKnowledgeAgent
+  const agent =
+    source === "web" ? voiceWebResearcherAgent : voiceKnowledgeAgent;
+  return agent
     .generate(question, { requestContext, abortSignal: signal })
     .then((res) => {
       const text = res.text ?? "";
       logger.info("[Voice] prefetch done", {
+        source,
         ms: Date.now() - start,
         query: question,
         resultChars: text.length,
@@ -127,18 +140,13 @@ export const voiceAnswerTool = createTool({
     question: z
       .string()
       .describe("ユーザーが知りたいこと。会話の流れをふまえた具体的な問い"),
-    source: z
-      .enum(["knowledge", "web"])
-      .optional()
-      .describe(
-        "音威子府村ローカルのこと（施設・観光・行政・歴史・イベント・村の店）は knowledge、天気・ニュース・時事・村外の一般的なことは web",
-      ),
   }),
   outputSchema: z.object({
     answer: z.string(),
   }),
   execute: async (inputData, context) => {
-    const { question, source } = inputData;
+    const { question } = inputData;
+    const source = sourceOfRoute(await getVoiceRoute(context));
     const requestContext = context?.requestContext;
     const slot = getVoiceFindings(context);
     const prefetchSlot = getVoicePrefetch(context);
@@ -164,7 +172,7 @@ export const voiceAnswerTool = createTool({
           slot?.entries.reduce((sum, entry) => sum + entry.text.length, 0) ?? 0,
       });
 
-      let summarizerRoute: Source | undefined;
+      let summarizerRoute: VoiceSource | undefined;
       if (!parentRouting || hasVoiceFindings(slot)) {
         if (!hasVoiceFindings(slot)) startHold?.();
         const first = await decide(
@@ -189,11 +197,11 @@ export const voiceAnswerTool = createTool({
       const searchSource = parentRouting
         ? (source ?? summarizerRoute)
         : summarizerRoute;
-      const routes: Source[] =
+      const routes: VoiceSource[] =
         searchSource === "web" ? ["web"] : ["knowledge", "web"];
 
       const tryAnswer = async (
-        route: Source,
+        route: VoiceSource,
         text: string,
         timing: { ms: number; fromPrefetch: boolean },
       ) => {
@@ -221,7 +229,9 @@ export const voiceAnswerTool = createTool({
       };
 
       const prefetched =
-        routes[0] === "knowledge" ? prefetchSlot?.current : undefined;
+        prefetchSlot?.current?.source === routes[0]
+          ? prefetchSlot.current
+          : undefined;
       discardPrefetch(prefetched);
 
       if (prefetched) {
@@ -236,7 +246,7 @@ export const voiceAnswerTool = createTool({
         const text = quick ?? (await prefetched.promise);
         if (signal?.aborted) return { answer: ABORTED_ANSWER };
         if (text) {
-          const answer = await tryAnswer("knowledge", text, {
+          const answer = await tryAnswer(prefetched.source, text, {
             ms: Date.now() - waitStart,
             fromPrefetch: true,
           });

@@ -1,24 +1,25 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BRIDGE_CONFIG_DEFAULTS, type BridgeConfig } from "./bridge-config";
 import { createSilenceCover } from "./silence-cover";
+import type { VoiceRoute } from "./turn-route";
 
 const setup = (
   overrides: Partial<BridgeConfig> = {},
-  promptText = "駅はどこ",
+  route: VoiceRoute = "village",
 ) => {
   const sendText = vi.fn();
   const sendPlay = vi.fn();
   const controller = new AbortController();
   let fillerIndex = 0;
-  const cover = createSilenceCover({
+  const created = createSilenceCover({
     config: { ...BRIDGE_CONFIG_DEFAULTS, ...overrides },
-    promptText,
     signal: controller.signal,
     nextFillerIndex: () => fillerIndex++,
     sendText,
     sendPlay,
   });
-  return { cover, sendText, sendPlay, controller };
+  const cover = { ...created, start: () => created.start(route) };
+  return { cover, created, sendText, sendPlay, controller };
 };
 
 describe("createSilenceCover", () => {
@@ -31,7 +32,28 @@ describe("createSilenceCover", () => {
   });
 
   describe("フィラー", () => {
-    it("遅延 0 なら start で即時にフィラーを送る（質問には考え中プール）", () => {
+    it("行き先が決まる前に返事が始まっていたら、フィラーを送らない", () => {
+      const { created, sendText } = setup({ fillerDelayMs: 0 });
+      created.onToken();
+      created.start("village");
+      expect(sendText).not.toHaveBeenCalled();
+    });
+
+    it("行き先が決まる前にツールが呼ばれていたら、フィラーを送らない", () => {
+      const { created, sendText } = setup({ fillerDelayMs: 0 });
+      created.onToolCall();
+      sendText.mockClear();
+      created.start("village");
+      expect(sendText).not.toHaveBeenCalled();
+    });
+
+    it("調べないターンでは既定でフィラーを送らない", () => {
+      const { cover, sendText } = setup({ fillerDelayMs: 0 }, "none");
+      cover.start();
+      expect(sendText).not.toHaveBeenCalled();
+    });
+
+    it("遅延 0 なら start で即時にフィラーを送る（調べ物のあるターンには考え中プール）", () => {
       const { cover, sendText } = setup({ fillerDelayMs: 0 });
       cover.start();
       expect(sendText).toHaveBeenCalledWith("えーっとね", true, {
@@ -75,7 +97,7 @@ describe("createSilenceCover", () => {
     it("カスタム文言プールを使う", () => {
       const { cover, sendText } = setup(
         { fillerDelayMs: 0, thinkingFillers: ["どれどれ"] },
-        "駅はどこ",
+        "village",
       );
       cover.start();
       expect(sendText).toHaveBeenCalledWith("どれどれ", true, {

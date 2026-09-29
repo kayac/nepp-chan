@@ -1,5 +1,6 @@
 import type { BridgeConfig } from "./bridge-config";
 import { pickFiller } from "./filler";
+import type { VoiceRoute } from "./turn-route";
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -13,7 +14,6 @@ export const HOLD_PHRASES = [
 
 type Params = {
   config: BridgeConfig;
-  promptText: string;
   signal?: AbortSignal;
   nextFillerIndex: () => number;
   sendText: (
@@ -31,7 +31,6 @@ type Params = {
 // 遅延中に応答か保留音が始まればフィラーは省略し、応答トークンが届いたら予約をすべて取り消す。
 export const createSilenceCover = ({
   config,
-  promptText,
   signal,
   nextFillerIndex,
   sendText,
@@ -43,6 +42,7 @@ export const createSilenceCover = ({
   let holdPhraseIndex = 0;
   let holdPlaying = false;
   let waitingSpoken = false;
+  let responded = false;
 
   const clearFillerTimer = () => {
     if (!fillerTimer) return;
@@ -74,15 +74,14 @@ export const createSilenceCover = ({
     }, config.holdPhraseIntervalMs);
   };
 
-  const sendFiller = () =>
-    sendText(
-      pickFiller(promptText, nextFillerIndex(), {
-        thinking: config.thinkingFillers,
-        backchannel: config.backchannelFillers,
-      }),
-      true,
-      { preemptible: true, interruptible: true },
-    );
+  const sendFiller = (route: VoiceRoute) => {
+    const phrase = pickFiller(route, nextFillerIndex(), {
+      thinking: config.thinkingFillers,
+      backchannel: config.backchannelFillers,
+    });
+    if (phrase)
+      sendText(phrase, true, { preemptible: true, interruptible: true });
+  };
 
   const playHold = () => {
     holdTimer = null;
@@ -98,19 +97,20 @@ export const createSilenceCover = ({
   };
 
   return {
-    start: () => {
-      if (!config.fillerEnabled) return;
+    start: (route: VoiceRoute) => {
+      if (!config.fillerEnabled || responded || signal?.aborted) return;
       if (config.fillerDelayMs > 0) {
         fillerTimer = setTimeout(() => {
           fillerTimer = null;
           if (signal?.aborted) return;
-          sendFiller();
+          sendFiller(route);
         }, config.fillerDelayMs);
       } else {
-        sendFiller();
+        sendFiller(route);
       }
     },
     onToolCall: () => {
+      responded = true;
       if (!waitingSpoken) {
         waitingSpoken = true;
         clearFillerTimer();
@@ -130,6 +130,7 @@ export const createSilenceCover = ({
       );
     },
     onToken: () => {
+      responded = true;
       holdPlaying = false;
       waitingSpoken = false;
       clearFillerTimer();

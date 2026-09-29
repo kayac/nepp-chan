@@ -26,7 +26,9 @@ const {
   saveThreadMock,
   streamMock,
   prefetchMock,
+  classifyMock,
 } = vi.hoisted(() => ({
+  classifyMock: vi.fn(),
   getMemoryStoreMock: vi.fn(),
   saveMessagesMock: vi.fn(),
   saveThreadMock: vi.fn(),
@@ -40,7 +42,13 @@ vi.mock("~/lib/storage", () => ({
 vi.mock("~/mastra/agents/nepp-chan-agent", () => ({
   createNeppChanAgent: vi.fn(() => ({})),
 }));
-vi.mock("~/mastra/tools/voice-answer-tool", () => ({
+vi.mock("./turn-route", () => ({
+  classifyVoiceTurn: classifyMock,
+}));
+vi.mock("~/mastra/tools/voice-answer-tool", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("~/mastra/tools/voice-answer-tool")
+  >()),
   startVoicePrefetch: prefetchMock,
 }));
 vi.mock("@mastra/core/mastra", () => ({
@@ -372,12 +380,13 @@ describe("createVoiceConversation", () => {
       }
     };
 
-    it("問いかけなら親の判断を待たず検索を起動し、ターン専用スロットでツールへ渡す", async () => {
-      let currentAtStream: unknown;
+    it("行き先が村のことならナレッジを先読みし、ターン専用スロットでツールへ渡す", async () => {
+      let slot: { current?: unknown } | undefined;
       streamMock.mockImplementation(async (_input, opts) => {
-        currentAtStream = opts.requestContext.get("voicePrefetch")?.current;
+        slot = opts.requestContext.get("voicePrefetch");
         return { fullStream: fakeFullStream([textDelta("はい")]) };
       });
+      const prefetchAtEnd = () => slot?.current;
       const { runTurn } = await createVoiceConversation({
         env,
         from: "client:x",
@@ -385,20 +394,53 @@ describe("createVoiceConversation", () => {
       });
       for await (const _ of runTurn({
         text: "そば屋はどこ？",
+        route: Promise.resolve("village" as const),
         prefetchEnabled: true,
       })) {
       }
 
       expect(prefetchMock).toHaveBeenCalledWith(
-        expect.objectContaining({ question: "そば屋はどこ？" }),
+        expect.objectContaining({
+          question: "そば屋はどこ？",
+          source: "knowledge",
+        }),
       );
-      expect(currentAtStream).toMatchObject({ query: "そば屋はどこ？" });
+      expect(prefetchAtEnd()).toMatchObject({
+        query: "そば屋はどこ？",
+        source: "knowledge",
+      });
     });
 
-    it("問いかけでない雑談では起動しない", async () => {
-      await drain({ text: "今日は疲れたよ", prefetchEnabled: true });
+    it("行き先が村外なら Web を先読みする", async () => {
+      await drain({
+        text: "明日の天気は？",
+        route: Promise.resolve("outside" as const),
+        prefetchEnabled: true,
+      });
+
+      expect(prefetchMock).toHaveBeenCalledWith(
+        expect.objectContaining({ question: "明日の天気は？", source: "web" }),
+      );
+    });
+
+    it("調べない行き先では起動しない", async () => {
+      await drain({
+        text: "今日は疲れたよ",
+        route: Promise.resolve("none" as const),
+        prefetchEnabled: true,
+      });
 
       expect(prefetchMock).not.toHaveBeenCalled();
+    });
+
+    it("行き先を requestContext 経由でツールへ渡す", async () => {
+      await drain({
+        text: "明日の天気は？",
+        route: Promise.resolve("outside" as const),
+      });
+
+      const { requestContext } = streamMock.mock.calls[0][1];
+      expect(await requestContext.get("voiceRoute")).toBe("outside");
     });
 
     it("prefetchEnabled でなければ起動しない", async () => {
@@ -407,8 +449,24 @@ describe("createVoiceConversation", () => {
       expect(prefetchMock).not.toHaveBeenCalled();
     });
 
+    it("行き先の判定がターンの終了より遅れたら、先読みを始めない", async () => {
+      let resolveRoute: (route: "village") => void = () => {};
+      const route = new Promise<"village">((resolve) => {
+        resolveRoute = resolve;
+      });
+      await drain({ text: "そば屋はどこ？", route, prefetchEnabled: true });
+      resolveRoute("village");
+      await route;
+
+      expect(prefetchMock).not.toHaveBeenCalled();
+    });
+
     it("ツールに消費されなかった投機検索はターン終了時に中断する", async () => {
-      await drain({ text: "そば屋はどこ？", prefetchEnabled: true });
+      await drain({
+        text: "そば屋はどこ？",
+        route: Promise.resolve("village" as const),
+        prefetchEnabled: true,
+      });
 
       const prefetchSignal = prefetchMock.mock.calls[0][0].signal;
       expect(prefetchSignal.aborted).toBe(true);
@@ -425,6 +483,7 @@ describe("createVoiceConversation", () => {
       await expect(async () => {
         for await (const _ of runTurn({
           text: "そば屋はどこ？",
+          route: Promise.resolve("village" as const),
           prefetchEnabled: true,
         })) {
         }
@@ -438,6 +497,7 @@ describe("createVoiceConversation", () => {
       const controller = new AbortController();
       let abortedDuringStream: boolean | undefined;
       streamMock.mockImplementation(async () => {
+        await Promise.resolve();
         controller.abort();
         abortedDuringStream = prefetchMock.mock.calls[0][0].signal.aborted;
         return { fullStream: fakeFullStream([]) };
@@ -449,6 +509,7 @@ describe("createVoiceConversation", () => {
       });
       for await (const _ of runTurn({
         text: "そば屋はどこ？",
+        route: Promise.resolve("village" as const),
         prefetchEnabled: true,
         signal: controller.signal,
       })) {
@@ -463,6 +524,21 @@ describe("createVoiceConversation", () => {
       const { requestContext } = streamMock.mock.calls[0][1];
       expect(requestContext.get("voiceParentRouting")).toBe(true);
     });
+  });
+
+  it("routeTurn は発話を行き先に分類し、usage を通話のスレッドに紐づける", async () => {
+    classifyMock.mockResolvedValueOnce("village");
+    const { routeTurn } = await createVoiceConversation({
+      env,
+      from: "client:x",
+      callSid: "CA123",
+    });
+
+    expect(await routeTurn("寮費は？")).toBe("village");
+    const { text, requestContext } = classifyMock.mock.calls[0][0];
+    expect(text).toBe("寮費は？");
+    expect(requestContext.get("env")).toBe(env);
+    expect(requestContext.get("usagePlatform")).toBe("voice");
   });
 
   it("signal を agent.stream に渡し、中断で停止する", async () => {

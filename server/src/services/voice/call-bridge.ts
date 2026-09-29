@@ -199,16 +199,23 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     const send = (token: string, last = false, options?: TextTokenOptions) =>
       ws.send(serializeRelayMessage(textTokenMessage(token, last, options)));
 
+    const route = conversation.routeTurn(text);
+
     const cover = createSilenceCover({
       config: this.config,
-      promptText: text,
       signal: controller.signal,
       nextFillerIndex: () => this.fillerIndex++,
       sendText: send,
       sendPlay: (source, options) =>
         ws.send(serializeRelayMessage(playMessage(source, options))),
     });
-    cover.start();
+    void route.then((resolved) => {
+      logger.info("[Voice] turn route", {
+        route: resolved,
+        ms: Date.now() - t0,
+      });
+      cover.start(resolved);
+    });
     const reader = createSpeechReader();
 
     try {
@@ -222,6 +229,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         findingsSlot: this.findingsSlot,
         prefetchEnabled: this.config.prefetchEnabled,
         parentRouting: this.config.parentRoutingEnabled,
+        route,
       })) {
         if (controller.signal.aborted) break;
         if (firstSendMs === null) firstSendMs = Date.now() - t0;

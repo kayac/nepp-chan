@@ -5,6 +5,7 @@ import type {
   VoiceFindingsSlot,
   VoicePrefetchSlot,
 } from "~/services/voice/findings-slot";
+import type { VoiceRoute } from "~/services/voice/turn-route";
 
 type ToolContext = ToolExecutionContext | undefined;
 
@@ -34,6 +35,12 @@ export const getVoicePrefetch = (
 ): VoicePrefetchSlot | undefined =>
   context?.requestContext?.get("voicePrefetch") as
     | VoicePrefetchSlot
+    | undefined;
+
+export const getVoiceRoute = (context: ToolContext) =>
+  context?.requestContext?.get("voiceRoute") as
+    | Promise<VoiceRoute>
+    | VoiceRoute
     | undefined;
 
 export const getVoiceParentRouting = (context: ToolContext): boolean =>
