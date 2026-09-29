@@ -5,12 +5,17 @@ import { embed } from "ai";
 import { GEMINI_EMBEDDING } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { recordUsageFromContext } from "~/services/analytics/llm-usage";
+import { boostByRecency } from "./recency";
 import { createRerankScorer } from "./rerank-scorer";
 import { EMBEDDING_DIMENSIONS } from "./vector-store";
 
-const SEARCH_TOP_K = 10;
+const SEARCH_TOP_K = 50;
+
+const RERANK_CANDIDATES = 10;
 
 const RERANK_TOP_K = 5;
+
+const RECENCY_WEIGHT = 0.15;
 
 export type KnowledgeResult = {
   content: string;
@@ -83,24 +88,39 @@ export const searchKnowledge = async (
       };
     }
 
-    const queryResults = results.matches.map((match) => {
-      const result = toKnowledgeResult(
-        match.metadata as Record<string, unknown> | undefined,
-        match.score,
-      );
-      return {
-        id: match.id,
-        score: match.score,
-        metadata: { ...result, text: result.content },
-      };
-    });
+    const now = new Date();
+    const candidates = boostByRecency(
+      results.matches.map((match) => {
+        const result = toKnowledgeResult(
+          match.metadata as Record<string, unknown> | undefined,
+          match.score,
+        );
+        return {
+          id: match.id,
+          score: match.score,
+          result,
+          date: result.date,
+          dateType: result.dateType,
+        };
+      }),
+      now,
+      RECENCY_WEIGHT,
+    )
+      .slice(0, RERANK_CANDIDATES)
+      .sort((a, b) => b.result.score - a.result.score);
+
+    const queryResults = candidates.map((c) => ({
+      id: c.id,
+      score: c.result.score,
+      metadata: { ...c.result, text: c.result.content },
+    }));
 
     const rerankedResults = await rerankWithScorer({
       results: queryResults,
       query,
       scorer: createRerankScorer(requestContext),
       options: {
-        topK: RERANK_TOP_K,
+        topK: queryResults.length,
         weights: {
           semantic: 0.5,
           vector: 0.3,
@@ -109,12 +129,16 @@ export const searchKnowledge = async (
       },
     });
 
-    const knowledgeResults = rerankedResults.map((r) => {
-      const { text: _, ...result } = r.result.metadata as KnowledgeResult & {
-        text: string;
-      };
-      return { ...result, score: r.score };
-    });
+    const knowledgeResults = boostByRecency(
+      rerankedResults.map((r) => {
+        const { text: _, ...result } = r.result.metadata as KnowledgeResult & {
+          text: string;
+        };
+        return { ...result, score: r.score };
+      }),
+      now,
+      RECENCY_WEIGHT,
+    ).slice(0, RERANK_TOP_K);
 
     logger.info("[Knowledge] search result", {
       query,
