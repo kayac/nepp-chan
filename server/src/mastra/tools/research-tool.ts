@@ -1,7 +1,17 @@
 import { createTool } from "@mastra/core/tools";
+import type { ModelMessage } from "ai";
 import { z } from "zod";
 import { logger } from "~/lib/logger";
 import { runResearch } from "~/mastra/workflows/research-workflow";
+
+const lastUserText = (messages: ModelMessage[] | undefined) => {
+  const last = messages?.findLast((message) => message.role === "user");
+  if (!last) return undefined;
+  if (typeof last.content === "string") return last.content;
+  return last.content
+    .flatMap((part) => (part.type === "text" ? [part.text] : []))
+    .join("\n");
+};
 
 export const researchToolName = "researchTool";
 
@@ -31,6 +41,7 @@ export const researchTool = createTool({
     try {
       return await runResearch({
         question,
+        userText: lastUserText(context?.agent?.messages),
         queries,
         requestContext: context?.requestContext,
       });

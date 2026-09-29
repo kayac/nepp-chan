@@ -98,22 +98,57 @@ describe("runResearch", () => {
     expect(result.memo).not.toContain("判定:");
   });
 
-  it("村のことで一部だけなら、確認済みの内容を添えて Web に足りない点を頼む", async () => {
+  it("村のことで一部なら、Web に回さずナレッジのメモを返す", async () => {
     askJevMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
-      text: "和室は2室\n判定: 一部",
+      text: "粗大ごみは10月3日\n判定: 一部",
     });
-    webGenerate.mockResolvedValueOnce({ text: "料金は1時間500円" });
 
     const result = await runResearch({
-      question: "和室を借りたい",
+      question: "粗大ごみはいつ出せる？",
       requestContext: contextWithKey("k"),
     });
 
-    expect(webGenerate.mock.calls[0]?.[0]).toContain("和室は2室");
-    expect(result.memo).toContain("和室は2室");
-    expect(result.memo).toContain("料金は1時間500円");
+    expect(webGenerate).not.toHaveBeenCalled();
+    expect(result.memo).toContain("粗大ごみは10月3日");
+  });
+
+  it("調べ先の判定には、補った質問ではなくユーザーの発言を使う", async () => {
+    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    knowledgeGenerate.mockResolvedValueOnce({
+      steps: [],
+      text: "メモ\n判定: 取れた",
+    });
+
+    await runResearch({
+      question: "子育て支援制度の最新の申請期限と窓口",
+      userText: "子供が生まれたら何をしたらいい",
+      requestContext: contextWithKey("k"),
+    });
+
+    expect(askJevMock.mock.calls[0]?.[0].state).toEqual([
+      { from: "user", text: "子供が生まれたら何をしたらいい" },
+    ]);
+  });
+
+  it("村のことで取れないなら、確認済みの内容を添えて Web で探す", async () => {
+    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    knowledgeGenerate.mockResolvedValueOnce({
+      steps: [],
+      text: "村名の記載はあるが由来は無い\n判定: 取れない",
+    });
+    webGenerate.mockResolvedValueOnce({ text: "由来はアイヌ語" });
+
+    const result = await runResearch({
+      question: "村の名前の由来は？",
+      requestContext: contextWithKey("k"),
+    });
+
+    expect(webGenerate.mock.calls[0]?.[0]).toContain(
+      "村名の記載はあるが由来は無い",
+    );
+    expect(result.memo).toContain("由来はアイヌ語");
   });
 
   it("村外・時事なら、ナレッジを使わず Web だけで調べる", async () => {
@@ -251,6 +286,29 @@ describe("runResearch", () => {
     expect(searchMock).toHaveBeenCalledWith("寮費は？", vectorize, "g", ctx);
   });
 
+  it("ユーザーの発言と補った質問が違えば、両方と検索語をナレッジ用エージェントに渡す", async () => {
+    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    searchMock.mockResolvedValue({ results: [] });
+    knowledgeGenerate.mockResolvedValueOnce({
+      steps: [],
+      text: "メモ\n判定: 取れた",
+    });
+
+    await runResearch({
+      question: "音威子府村の眼科の診療日と受付時間",
+      userText: "眼科の診療日を教えて",
+      queries: ["眼科 診療日", "眼科 受付時間"],
+      requestContext: contextWithKey("k"),
+    });
+
+    const prompt = knowledgeGenerate.mock.calls[0]?.[0] as string;
+    expect(prompt).toContain("ユーザーの発言: 眼科の診療日を教えて");
+    expect(prompt).toContain(
+      "文脈を補った質問: 音威子府村の眼科の診療日と受付時間",
+    );
+    expect(prompt).toContain("検索語: 眼科 診療日 / 眼科 受付時間");
+  });
+
   it("判定が箇条書きの 1 行でも読み取り、メモから取り除く", async () => {
     askJevMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
@@ -315,7 +373,7 @@ describe("runResearch", () => {
     askJevMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
-      text: "メモ\n判定: 一部",
+      text: "メモ\n判定: 取れない",
     });
     webGenerate.mockResolvedValueOnce({ text: "補足" });
     const ctx = contextWithKey("k");

@@ -12,7 +12,7 @@ vi.mock("~/lib/logger", () => ({
 
 const { researchTool } = await import("./research-tool");
 
-import { callTool } from "~/__tests__/helpers/tool-context";
+import { buildToolContext, callTool } from "~/__tests__/helpers/tool-context";
 
 beforeEach(() => {
   runResearchMock.mockReset();
@@ -41,6 +41,31 @@ describe("researchTool.execute", () => {
     expect(runResearchMock.mock.calls[0]?.[0]).toMatchObject({
       question: "子供が生まれました。支援制度は？",
       queries: ["出生祝金", "児童手当"],
+    });
+  });
+
+  it("会話の最後のユーザー発言をワークフローに渡す", async () => {
+    runResearchMock.mockResolvedValueOnce({ memo: "メモ" });
+
+    await researchTool.execute?.(
+      { question: "音威子府村の眼科の診療日・受付時間を知りたい" },
+      {
+        ...buildToolContext({}),
+        agent: {
+          messages: [
+            { role: "user", content: "こんにちは" },
+            { role: "assistant", content: "こんにちは！" },
+            {
+              role: "user",
+              content: [{ type: "text", text: "眼科の診療日を教えて" }],
+            },
+          ],
+        },
+      },
+    );
+
+    expect(runResearchMock.mock.calls[0]?.[0]).toMatchObject({
+      userText: "眼科の診療日を教えて",
     });
   });
 
