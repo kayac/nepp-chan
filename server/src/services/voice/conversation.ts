@@ -1,7 +1,11 @@
 import { Mastra } from "@mastra/core/mastra";
 import type { ModelMessage } from "ai";
 import { classifyTurn, type TurnRoute } from "~/lib/classify-intent";
-import { primaryModelId, voiceModelConfig } from "~/lib/llm-models";
+import {
+  primaryModelId,
+  voiceCasualModelConfig,
+  voiceModelConfig,
+} from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { toVoiceIds } from "~/lib/principal";
 import { getStorage } from "~/lib/storage";
@@ -57,8 +61,16 @@ export const createVoiceConversation = async ({
     modelConfig: voiceModelConfig,
     withMemory: false,
   });
-  const mastra = new Mastra({ agents: { neppChanAgent } });
+  const neppChanCasualAgent = createNeppChanAgent({
+    platform: "voice",
+    modelConfig: voiceCasualModelConfig,
+    withMemory: false,
+  });
+  const mastra = new Mastra({
+    agents: { neppChanAgent, neppChanCasualAgent },
+  });
   const agent = mastra.getAgent("neppChanAgent");
+  const casualAgent = mastra.getAgent("neppChanCasualAgent");
 
   const runTurn = async function* ({
     text,
@@ -89,7 +101,8 @@ export const createVoiceConversation = async ({
     let firstTokenMs: number | null = null;
     let assistantText = "";
     try {
-      const result = await agent.stream(input, {
+      const turnAgent = (await route) === "none" ? casualAgent : agent;
+      const result = await turnAgent.stream(input, {
         requestContext,
         abortSignal: signal,
       });

@@ -25,8 +25,10 @@ const {
   saveMessagesMock,
   saveThreadMock,
   streamMock,
+  casualStreamMock,
   classifyMock,
 } = vi.hoisted(() => ({
+  casualStreamMock: vi.fn(),
   classifyMock: vi.fn(),
   getMemoryStoreMock: vi.fn(),
   saveMessagesMock: vi.fn(),
@@ -45,8 +47,10 @@ vi.mock("~/lib/classify-intent", () => ({
 }));
 vi.mock("@mastra/core/mastra", () => ({
   Mastra: class {
-    getAgent() {
-      return { stream: streamMock };
+    getAgent(name: string) {
+      return {
+        stream: name === "neppChanCasualAgent" ? casualStreamMock : streamMock,
+      };
     }
   },
 }));
@@ -59,6 +63,7 @@ describe("createVoiceConversation", () => {
 
   beforeEach(() => {
     streamMock.mockReset();
+    casualStreamMock.mockReset();
     getMemoryStoreMock.mockReset();
     getMemoryStoreMock.mockResolvedValue({
       saveMessages: saveMessagesMock,
@@ -107,6 +112,32 @@ describe("createVoiceConversation", () => {
       expect.anything(),
     );
   });
+
+  it.each([
+    ["none", casualStreamMock, streamMock],
+    ["village", streamMock, casualStreamMock],
+  ] as const)(
+    "調べ先が %s のターンは対応する本体で答える",
+    async (route, used, unused) => {
+      used.mockResolvedValue({
+        fullStream: fakeFullStream([textDelta("はい")]),
+      });
+      const { runTurn } = await createVoiceConversation({
+        env,
+        from: "client:x",
+        callSid: "CA123",
+      });
+
+      for await (const _ of runTurn({
+        text: "q",
+        route: Promise.resolve(route),
+      })) {
+      }
+
+      expect(used).toHaveBeenCalledTimes(1);
+      expect(unused).not.toHaveBeenCalled();
+    },
+  );
 
   it("応答完了後に同じ ID でスレッドと1ターンを upsert する", async () => {
     const conversation = await createVoiceConversation({
