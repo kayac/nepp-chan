@@ -29,7 +29,7 @@ vi.mock("~/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const { parseCoverage, runResearch } = await import("./research-workflow");
+const { runResearch } = await import("./research-workflow");
 
 const vectorize = {} as VectorizeIndex;
 
@@ -58,26 +58,12 @@ beforeEach(() => {
   searchMock.mockResolvedValue({ results: [] });
 });
 
-describe("parseCoverage", () => {
-  it.each([
-    ["調査メモ\n判定: 取れた", "取れた"],
-    ["調査メモ\n判定：一部", "一部"],
-    ["判定: 取れない", "取れない"],
-  ])("「%s」から %s を読む", (memo, expected) => {
-    expect(parseCoverage(memo)).toBe(expected);
-  });
-
-  it("判定行が無ければ一部として扱う", () => {
-    expect(parseCoverage("調査メモだけ")).toBe("一部");
-  });
-});
-
 describe("runResearch", () => {
   it("村のことで取れたなら、ナレッジだけで調査メモを返す", async () => {
     classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
-      text: "寮費は月額30,000円\n判定: 取れた",
+      object: { memo: "寮費は月額30,000円", coverage: "取れた" },
     });
 
     const result = await runResearch({
@@ -87,14 +73,45 @@ describe("runResearch", () => {
 
     expect(webGenerate).not.toHaveBeenCalled();
     expect(result.memo).toContain("寮費は月額30,000円");
-    expect(result.memo).not.toContain("判定:");
+  });
+
+  it("構造化出力が得られなければ、本文をメモにして一部として扱う", async () => {
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
+    knowledgeGenerate.mockResolvedValueOnce({
+      steps: [],
+      text: "寮費は月3万円",
+    });
+
+    const result = await runResearch({
+      question: "寮費は？",
+      requestContext: contextWithKey("k"),
+    });
+
+    expect(webGenerate).not.toHaveBeenCalled();
+    expect(result.memo).toContain("寮費は月3万円");
+  });
+
+  it("ナレッジ用エージェントにメモと判定の構造化出力を求める", async () => {
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
+    knowledgeGenerate.mockResolvedValueOnce({
+      steps: [],
+      object: { memo: "メモ", coverage: "取れた" },
+    });
+
+    await runResearch({ question: "q", requestContext: contextWithKey("k") });
+
+    const options = knowledgeGenerate.mock.calls[0]?.[1];
+    expect(Object.keys(options.structuredOutput.schema.shape).sort()).toEqual([
+      "coverage",
+      "memo",
+    ]);
   });
 
   it("村のことで一部なら、Web に回さずナレッジのメモを返す", async () => {
     classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
-      text: "粗大ごみは10月3日\n判定: 一部",
+      object: { memo: "粗大ごみは10月3日", coverage: "一部" },
     });
 
     const result = await runResearch({
@@ -110,7 +127,7 @@ describe("runResearch", () => {
     classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
-      text: "メモ\n判定: 取れた",
+      object: { memo: "メモ", coverage: "取れた" },
     });
 
     await runResearch({
@@ -128,7 +145,7 @@ describe("runResearch", () => {
     classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
-      text: "村名の記載はあるが由来は無い\n判定: 取れない",
+      object: { memo: "村名の記載はあるが由来は無い", coverage: "取れない" },
     });
     webGenerate.mockResolvedValueOnce({ text: "由来はアイヌ語" });
 
@@ -186,7 +203,7 @@ describe("runResearch", () => {
     });
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
-      text: "メモ\n判定: 取れた",
+      object: { memo: "メモ", coverage: "取れた" },
     });
     const ctx = contextWithKey("k");
 
@@ -220,7 +237,7 @@ describe("runResearch", () => {
       });
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
-      text: "メモ\n判定: 取れた",
+      object: { memo: "メモ", coverage: "取れた" },
     });
     const ctx = contextWithKey("k");
 
@@ -243,7 +260,7 @@ describe("runResearch", () => {
     classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
-      text: "メモ\n判定: 取れた",
+      object: { memo: "メモ", coverage: "取れた" },
     });
 
     await runResearch({
@@ -259,7 +276,7 @@ describe("runResearch", () => {
     classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
-      text: "メモ\n判定: 取れた",
+      object: { memo: "メモ", coverage: "取れた" },
     });
     const ctx = contextWithKey("k");
 
@@ -278,7 +295,7 @@ describe("runResearch", () => {
     searchMock.mockResolvedValue({ results: [] });
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
-      text: "メモ\n判定: 取れた",
+      object: { memo: "メモ", coverage: "取れた" },
     });
 
     await runResearch({
@@ -296,28 +313,11 @@ describe("runResearch", () => {
     expect(prompt).toContain("検索語: 眼科 診療日 / 眼科 受付時間");
   });
 
-  it("判定が箇条書きの 1 行でも読み取り、メモから取り除く", async () => {
-    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
-    knowledgeGenerate.mockResolvedValueOnce({
-      steps: [],
-      text: "- 寮費は月額30,000円\n- 判定: 取れた",
-    });
-
-    const result = await runResearch({
-      question: "寮費は？",
-      requestContext: contextWithKey("k"),
-    });
-
-    expect(webGenerate).not.toHaveBeenCalled();
-    expect(result.memo).toContain("- 寮費は月額30,000円");
-    expect(result.memo).not.toMatch(/\n-\s*$/);
-  });
-
   it("Vectorize が使えなければ先の検索を飛ばし、ナレッジ用エージェントに任せる", async () => {
     classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
-      text: "メモ\n判定: 取れた",
+      object: { memo: "メモ", coverage: "取れた" },
     });
 
     await runResearch({
@@ -334,7 +334,7 @@ describe("runResearch", () => {
     searchMock.mockResolvedValueOnce({ results: [], error: "vectorize 500" });
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
-      text: "メモ\n判定: 取れた",
+      object: { memo: "メモ", coverage: "取れた" },
     });
 
     await runResearch({ question: "q", requestContext: contextWithKey("k") });
@@ -386,7 +386,7 @@ describe("runResearch", () => {
     classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
-      text: "メモ\n判定: 取れない",
+      object: { memo: "メモ", coverage: "取れない" },
     });
     webGenerate.mockResolvedValueOnce({ text: "補足" });
     const ctx = contextWithKey("k");

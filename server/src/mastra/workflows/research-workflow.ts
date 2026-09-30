@@ -10,15 +10,6 @@ import {
   searchKnowledge,
 } from "~/services/knowledge/search";
 
-const COVERAGE_RULE = `
-調査メモの最後の行に、次のどれか 1 つだけを書く。判定はユーザーの発言に答えられるかで決める。
-判定: 取れた（ユーザーが聞いていることの中心に答える事実が揃っている）
-判定: 一部（中心に答える事実はあるが、細部が確認できない）
-判定: 取れない（ユーザーが聞いていることの中心に答える事実が見つからない）`;
-
-const MEMO_FORMAT = `
-調査メモは、質問に答える事実の箇条書きと出典 URL だけにする。文章に整えず、1 項目 1 行、多くても 8 行。`;
-
 const renderSearchResults = (results: KnowledgeResult[]) =>
   results
     .map((r, i) => {
@@ -58,17 +49,20 @@ const preSearch = async (
   return renderSearchResults(results) || "該当なし";
 };
 
-const coverageSchema = z.enum(["取れた", "一部", "取れない"]);
+const coverageSchema = z
+  .enum(["取れた", "一部", "取れない"])
+  .describe(
+    "ユーザーの発言に答えられるか。取れた: 聞いていることの中心に答える事実が揃っている。一部: 中心に答える事実はあるが、細部が確認できない。取れない: 中心に答える事実が見つからない",
+  );
 
-type Coverage = z.infer<typeof coverageSchema>;
-
-const COVERAGE_LINE =
-  /\n?\s*(?:[-・*]\s*)?判定[:：]\s*(取れた|一部|取れない)[^\n]*\s*$/;
-
-export const parseCoverage = (memo: string): Coverage =>
-  (memo.match(COVERAGE_LINE)?.[1] as Coverage | undefined) ?? "一部";
-
-const stripCoverage = (memo: string) => memo.replace(COVERAGE_LINE, "").trim();
+const knowledgeOutputSchema = z.object({
+  memo: z
+    .string()
+    .describe(
+      "調査メモ。質問に答える事実の箇条書きと出典 URL だけにする。文章に整えず、1 項目 1 行、多くても 8 行",
+    ),
+  coverage: coverageSchema,
+});
 
 const routeFor = async (
   text: string,
@@ -141,13 +135,17 @@ const knowledgeStep = createStep({
     const searchedSection = searched
       ? `最初の検索結果（検索語: ${searchTerms.join(" / ")}）:\n${searched}\n\n足りない情報だけ、検索済みの語と違う観点で追加検索してよい。\n`
       : "";
-    const prompt = `${describeQuestion(inputData)}\n${searchedSection}${MEMO_FORMAT}\n${COVERAGE_RULE}`;
+    const prompt = `${describeQuestion(inputData)}\n${searchedSection}`;
     const agentStartedAt = Date.now();
     const res = await knowledgeAgent.generate(prompt, {
       requestContext,
       abortSignal,
+      structuredOutput: { schema: knowledgeOutputSchema },
     });
-    const coverage = parseCoverage(res.text);
+    const { memo, coverage } = res.object ?? {
+      memo: res.text,
+      coverage: "一部" as const,
+    };
     logger.info("[Research] knowledge", {
       question: inputData.question,
       ...(inputData.userText && { userText: inputData.userText }),
@@ -159,12 +157,12 @@ const knowledgeStep = createStep({
         .filter((call) => call.payload.toolName === "knowledgeSearchTool")
         .length,
       promptChars: prompt.length,
-      memoChars: res.text.length,
+      memoChars: memo.length,
       coverage,
     });
     return {
       ...inputData,
-      knowledgeMemo: stripCoverage(res.text),
+      knowledgeMemo: memo,
       coverage,
     };
   },
