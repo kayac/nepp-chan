@@ -3,8 +3,9 @@ import { seedRelationGroups } from "~/__tests__/helpers/tag-groups";
 import { createTestDb, type TestDb } from "~/__tests__/helpers/test-db";
 import { persona } from "~/db";
 
-const { testDbHolder } = vi.hoisted(() => ({
+const { testDbHolder, askJevMock } = vi.hoisted(() => ({
   testDbHolder: { db: null as TestDb | null },
+  askJevMock: vi.fn(),
 }));
 
 vi.mock("~/db", async (importOriginal) => {
@@ -14,6 +15,11 @@ vi.mock("~/db", async (importOriginal) => {
 
 vi.mock("~/lib/storage", () => ({ getStorage: vi.fn().mockResolvedValue({}) }));
 
+vi.mock("~/services/analytics/llm-usage", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("~/services/analytics/llm-usage")>()),
+  askJevWithUsage: askJevMock,
+}));
+
 const { assignUnmappedTags, createTagGroup, getTagGroupOverview } =
   await import("./tag-group-assign");
 const { personaTagGroupRepository } = await import(
@@ -21,6 +27,21 @@ const { personaTagGroupRepository } = await import(
 );
 
 const env = { DB: {} as D1Database } as CloudflareBindings;
+const jevEnv = { ...env, TYPESAFE_API_KEY: "k" } as CloudflareBindings;
+
+const jevChoosing = (choices: Record<string, string>) =>
+  askJevMock.mockImplementation(async ({ state }: { state: string }) => {
+    if (!(state in choices)) throw new Error("jev responded 500");
+    return {
+      answers: {
+        group: {
+          type: "choice",
+          choice: choices[state],
+          probabilities: { [choices[state]]: 0.9 },
+        },
+      },
+    };
+  });
 
 const insertPersona = async (db: TestDb, id: string, tags: string) => {
   await db.insert(persona).values({
@@ -88,6 +109,58 @@ describe("assignUnmappedTags", () => {
 
     expect(classifier.generate).not.toHaveBeenCalled();
     expect(result).toEqual({ assigned: 0, unassigned: 0, remaining: 0 });
+  });
+});
+
+describe("assignUnmappedTags（jev）", () => {
+  let db: TestDb;
+
+  beforeEach(async () => {
+    db = await createTestDb();
+    testDbHolder.db = db;
+    await seedRelationGroups(db);
+    askJevMock.mockReset();
+  });
+
+  it("タグごとに jev でグループを選び、none は未分類として登録する", async () => {
+    await insertPersona(db, "p1", "旅行検討者,謎");
+    jevChoosing({ 旅行検討者: "tourist", 謎: "none" });
+
+    const result = await assignUnmappedTags(jevEnv);
+
+    expect(askJevMock).toHaveBeenCalledTimes(2);
+    expect(result).toEqual({ assigned: 1, unassigned: 1, remaining: 0 });
+    const aliases = await personaTagGroupRepository.listAliases(env.DB);
+    expect(aliases.find((a) => a.tag === "旅行検討者")).toMatchObject({
+      groupId: "tourist",
+      assignedBy: "llm",
+    });
+    expect(aliases.find((a) => a.tag === "謎")?.groupId).toBeNull();
+  });
+
+  it("選択肢はグループの id と none で、グループには例のタグを添える", async () => {
+    await insertPersona(db, "p1", "旅行検討者");
+    jevChoosing({ 旅行検討者: "tourist" });
+
+    await assignUnmappedTags(jevEnv);
+
+    const { criteria } = askJevMock.mock.calls[0][0].questions.group;
+    expect(Object.keys(criteria)).toContain("tourist");
+    expect(Object.keys(criteria)).toContain("none");
+    expect(criteria.tourist).toContain("観光客");
+    expect(criteria.tourist).toContain("旅行者");
+  });
+
+  it("jev が失敗したタグは登録せず、次回また振り分ける", async () => {
+    await insertPersona(db, "p1", "旅行検討者,失敗するタグ");
+    jevChoosing({ 旅行検討者: "tourist" });
+
+    const first = await assignUnmappedTags(jevEnv);
+    jevChoosing({ 失敗するタグ: "none" });
+    const second = await assignUnmappedTags(jevEnv);
+
+    expect(first).toEqual({ assigned: 1, unassigned: 0, remaining: 0 });
+    expect(second).toEqual({ assigned: 0, unassigned: 1, remaining: 0 });
   });
 });
 

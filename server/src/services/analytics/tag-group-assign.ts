@@ -1,9 +1,13 @@
+import type { RequestContext } from "@mastra/core/request-context";
 import { z } from "zod";
+import { type JevQuestion, jevApiKey } from "~/lib/jev";
+import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
 import { tagGroupAgent } from "~/mastra/agents/tag-group-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { personaRepository } from "~/repository/persona-repository";
 import { personaTagGroupRepository } from "~/repository/persona-tag-group-repository";
+import { askJevWithUsage } from "~/services/analytics/llm-usage";
 import {
   collectTagExamples,
   collectUnassignedTags,
@@ -25,6 +29,84 @@ const assignmentSchema = z.object({
 
 type Classifier = Pick<typeof tagGroupAgent, "generate">;
 
+type Assignment = { tag: string; groupId: string | null };
+
+const JEV_CONCURRENCY = 8;
+
+const NO_GROUP = "none";
+
+const KIND_LABELS: Record<TagGroup["kind"], string> = {
+  attribute: "話者自身の属性",
+  topic: "話題",
+  exclude: "集計に使えない語（分類名の写し・地名・意味の無い語）",
+};
+
+const examplesOf = (groupId: string, aliases: Map<string, string | null>) =>
+  [...aliases.entries()]
+    .filter(([, id]) => id === groupId)
+    .slice(0, EXAMPLE_LIMIT)
+    .map(([tag]) => tag);
+
+const tagGroupQuestion = (
+  groups: TagGroup[],
+  aliases: Map<string, string | null>,
+): JevQuestion => ({
+  type: "choice",
+  instructions:
+    "村の声（ペルソナ）に付いた自由記述のタグを、最も意味の合うグループに振り分ける。属性のグループは話者自身の属性、話題のグループは話題。合うものが無い、または迷うなら none。",
+  criteria: {
+    ...Object.fromEntries(
+      groups.map((g) => {
+        const axis = g.axis ? `・${g.axis}` : "";
+        const examples = examplesOf(g.id, aliases).join("、");
+        return [
+          g.id,
+          `${g.name}（${KIND_LABELS[g.kind]}${axis}）${examples ? `。例: ${examples}` : ""}`,
+        ];
+      }),
+    ),
+    [NO_GROUP]: "意味が一致するグループが無い、または判断に迷う",
+  },
+});
+
+const classifyWithJev = async (
+  tags: string[],
+  question: JevQuestion,
+  apiKey: string,
+  requestContext: RequestContext,
+) => {
+  const assignments: Assignment[] = [];
+  const queue = [...tags];
+  await Promise.all(
+    Array.from({ length: JEV_CONCURRENCY }, async () => {
+      for (let tag = queue.shift(); tag !== undefined; tag = queue.shift()) {
+        try {
+          const response = await askJevWithUsage({
+            apiKey,
+            state: tag,
+            questions: { group: question },
+            requestContext,
+            source: "tag-group-assign",
+            agent: "tag-group",
+          });
+          const answer = response.answers.group;
+          const choice = answer?.type === "choice" ? answer.choice : NO_GROUP;
+          assignments.push({
+            tag,
+            groupId: choice === NO_GROUP ? null : choice,
+          });
+        } catch (error) {
+          logger.warn("[TagGroup] jev failed, retry next run", {
+            tag,
+            error: String(error),
+          });
+        }
+      }
+    }),
+  );
+  return assignments;
+};
+
 const describeGroups = (
   groups: TagGroup[],
   aliases: Map<string, string | null>,
@@ -40,6 +122,23 @@ const describeGroups = (
       return `- ${g.id}: ${g.name}（${g.kind}${axis}）例: ${examples || "なし"}`;
     })
     .join("\n");
+
+const classifyWithAgent = async (
+  classifier: Classifier,
+  batch: { tag: string; count: number }[],
+  groups: TagGroup[],
+  aliases: Map<string, string | null>,
+  requestContext: RequestContext,
+) => {
+  const result = await classifier.generate(
+    `## グループ一覧\n${describeGroups(groups, aliases)}\n\n## 振り分けるタグ（件数）\n${batch
+      .map((t) => `- ${t.tag}（${t.count}）`)
+      .join("\n")}`,
+    { requestContext, structuredOutput: { schema: assignmentSchema } },
+  );
+  const assignments: Assignment[] = result.object?.assignments ?? [];
+  return assignments;
+};
 
 export const assignUnmappedTags = async (
   env: CloudflareBindings,
@@ -57,19 +156,25 @@ export const assignUnmappedTags = async (
 
   const storage = await getStorage(env.DB);
   const requestContext = createRequestContext({ storage, db: env.DB, env });
-  const classifier = options.classifier ?? tagGroupAgent;
-  const result = await classifier.generate(
-    `## グループ一覧\n${describeGroups(groups, aliases)}\n\n## 振り分けるタグ（件数）\n${batch
-      .map((t) => `- ${t.tag}（${t.count}）`)
-      .join("\n")}`,
-    { requestContext, structuredOutput: { schema: assignmentSchema } },
-  );
+  const apiKey = jevApiKey(requestContext);
+  const batchTags = batch.map((t) => t.tag);
+  const decided = apiKey
+    ? await classifyWithJev(
+        batchTags,
+        tagGroupQuestion(groups, aliases),
+        apiKey,
+        requestContext,
+      )
+    : await classifyWithAgent(
+        options.classifier ?? tagGroupAgent,
+        batch,
+        groups,
+        aliases,
+        requestContext,
+      );
+  const settledTags = apiKey ? decided.map((a) => a.tag) : batchTags;
 
-  const decisions = sanitizeAssignments(
-    result.object?.assignments ?? [],
-    batch.map((t) => t.tag),
-    groups,
-  );
+  const decisions = sanitizeAssignments(decided, settledTags, groups);
   await personaTagGroupRepository.insertAliasesIfAbsent(
     env.DB,
     decisions.map((d) => ({ ...d, assignedBy: "llm" as const })),
