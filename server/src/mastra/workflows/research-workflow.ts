@@ -133,7 +133,7 @@ const knowledgeStep = createStep({
   execute: async ({ inputData, requestContext, abortSignal }) => {
     if (inputData.route === "outside") return inputData;
     const searchTerms = inputData.queries?.length
-      ? inputData.queries
+      ? [...new Set(inputData.queries)]
       : [inputData.question];
     const searchStartedAt = Date.now();
     const searched = await preSearch(searchTerms, requestContext);

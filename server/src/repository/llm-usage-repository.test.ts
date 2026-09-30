@@ -119,7 +119,7 @@ describe("llmUsageRepository", () => {
       to: "2026-06-08T00:00:00.000Z",
     };
 
-    it.each(["subagent", "research-route"])(
+    it.each(["subagent", "rerank"])(
       "source が会話系（%s）なら conversation に分類する",
       async (source) => {
         await insert(db, { source });

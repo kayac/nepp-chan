@@ -15,7 +15,7 @@ export type MastraRequestContextType = {
   usageThreadId?: string;
   usageTurnId?: string;
   voiceFindings?: VoiceFindingsSlot;
-  turnRoute?: Promise<TurnRoute>;
+  turnRoute?: TurnRoute | Promise<TurnRoute>;
   voiceSearchStart?: () => void;
   voiceTurnSignal?: AbortSignal;
   voiceEndCall?: () => void;

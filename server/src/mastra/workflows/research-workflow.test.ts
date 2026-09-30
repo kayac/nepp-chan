@@ -239,6 +239,22 @@ describe("runResearch", () => {
     expect(prompt).toContain("児童手当は認定請求が必要");
   });
 
+  it("同じ検索語は 1 回だけ検索する", async () => {
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
+    knowledgeGenerate.mockResolvedValueOnce({
+      steps: [],
+      text: "メモ\n判定: 取れた",
+    });
+
+    await runResearch({
+      question: "q",
+      queries: ["児童手当", "児童手当", "出生祝金"],
+      requestContext: contextWithKey("k"),
+    });
+
+    expect(searchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("検索語が空なら質問そのままで検索する", async () => {
     classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({

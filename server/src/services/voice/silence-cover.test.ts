@@ -18,7 +18,10 @@ const setup = (
     sendText,
     sendPlay,
   });
-  const cover = { ...created, start: () => created.start(route) };
+  const cover = {
+    ...created,
+    start: () => created.start(Promise.resolve(route)),
+  };
   return { cover, created, sendText, sendPlay, controller };
 };
 
@@ -32,78 +35,129 @@ describe("createSilenceCover", () => {
   });
 
   describe("フィラー", () => {
-    it("行き先が決まる前に返事が始まっていたら、フィラーを送らない", () => {
+    it("行き先が決まる前に返事が始まっていたら、フィラーを送らない", async () => {
       const { created, sendText } = setup({ fillerDelayMs: 0 });
       created.onToken();
-      created.start("village");
+      created.start(Promise.resolve("village"));
+      await vi.advanceTimersByTimeAsync(0);
       expect(sendText).not.toHaveBeenCalled();
     });
 
-    it("行き先が決まる前にツールが呼ばれていたら、フィラーを送らない", () => {
+    it("行き先が決まる前にツールが呼ばれていたら、フィラーを送らない", async () => {
       const { created, sendText } = setup({ fillerDelayMs: 0 });
       created.onToolCall();
       sendText.mockClear();
-      created.start("village");
+      created.start(Promise.resolve("village"));
+      await vi.advanceTimersByTimeAsync(0);
       expect(sendText).not.toHaveBeenCalled();
     });
 
-    it("調べないターンでは既定でフィラーを送らない", () => {
+    it("調べないターンでは既定でフィラーを送らない", async () => {
       const { cover, sendText } = setup({ fillerDelayMs: 0 }, "none");
       cover.start();
+      await vi.advanceTimersByTimeAsync(0);
       expect(sendText).not.toHaveBeenCalled();
     });
 
-    it("遅延 0 なら start で即時にフィラーを送る（調べ物のあるターンには考え中プール）", () => {
+    it("遅延 0 なら start で即時にフィラーを送る（調べ物のあるターンには考え中プール）", async () => {
       const { cover, sendText } = setup({ fillerDelayMs: 0 });
       cover.start();
+      await vi.advanceTimersByTimeAsync(0);
       expect(sendText).toHaveBeenCalledWith("えーっとね", true, {
         preemptible: true,
         interruptible: true,
       });
     });
 
-    it("fillerEnabled が false なら何も送らない", () => {
+    it("fillerEnabled が false なら何も送らない", async () => {
       const { cover, sendText } = setup({ fillerEnabled: false });
       cover.start();
-      vi.advanceTimersByTime(10_000);
+      await vi.advanceTimersByTimeAsync(10_000);
       expect(sendText).not.toHaveBeenCalled();
     });
 
-    it("遅延ありでは経過後に送る", () => {
+    it("遅延ありでは経過後に送る", async () => {
       const { cover, sendText } = setup({ fillerDelayMs: 800 });
       cover.start();
-      vi.advanceTimersByTime(799);
+      await vi.advanceTimersByTimeAsync(799);
       expect(sendText).not.toHaveBeenCalled();
-      vi.advanceTimersByTime(1);
+      await vi.advanceTimersByTimeAsync(1);
       expect(sendText).toHaveBeenCalledTimes(1);
     });
 
-    it("遅延中に応答トークンが来たら省略する", () => {
+    it("遅延中に応答トークンが来たら省略する", async () => {
       const { cover, sendText } = setup({ fillerDelayMs: 800 });
       cover.start();
       cover.onToken();
-      vi.advanceTimersByTime(10_000);
+      await vi.advanceTimersByTimeAsync(10_000);
       expect(sendText).not.toHaveBeenCalled();
     });
 
-    it("遅延中に barge-in（abort）されたら送らない", () => {
+    it("遅延中に barge-in（abort）されたら送らない", async () => {
       const { cover, sendText, controller } = setup({ fillerDelayMs: 800 });
       cover.start();
       controller.abort();
-      vi.advanceTimersByTime(10_000);
+      await vi.advanceTimersByTimeAsync(10_000);
       expect(sendText).not.toHaveBeenCalled();
     });
 
-    it("カスタム文言プールを使う", () => {
+    it("カスタム文言プールを使う", async () => {
       const { cover, sendText } = setup(
         { fillerDelayMs: 0, thinkingFillers: ["どれどれ"] },
         "village",
       );
       cover.start();
+      await vi.advanceTimersByTimeAsync(0);
       expect(sendText).toHaveBeenCalledWith("どれどれ", true, {
         preemptible: true,
         interruptible: true,
       });
+    });
+    it("行き先が決まる前から遅延を数え、経過時点で決まった行き先のフィラーを送る", async () => {
+      const { created, sendText } = setup({ fillerDelayMs: 800 });
+      let resolveRoute: (route: TurnRoute) => void = () => {};
+      created.start(
+        new Promise<TurnRoute>((resolve) => {
+          resolveRoute = resolve;
+        }),
+      );
+      await vi.advanceTimersByTimeAsync(300);
+      resolveRoute("village");
+      await vi.advanceTimersByTimeAsync(500);
+      expect(sendText).toHaveBeenCalledWith("えーっとね", true, {
+        preemptible: true,
+        interruptible: true,
+      });
+    });
+
+    it("遅延が過ぎても行き先が決まっていなければ、決まった時点で送る", async () => {
+      const { created, sendText } = setup({ fillerDelayMs: 800 });
+      let resolveRoute: (route: TurnRoute) => void = () => {};
+      created.start(
+        new Promise<TurnRoute>((resolve) => {
+          resolveRoute = resolve;
+        }),
+      );
+      await vi.advanceTimersByTimeAsync(1_000);
+      expect(sendText).not.toHaveBeenCalled();
+      resolveRoute("village");
+      await vi.advanceTimersByTimeAsync(0);
+      expect(sendText).toHaveBeenCalledTimes(1);
+    });
+
+    it("行き先を待つ間に応答トークンが来たら送らない", async () => {
+      const { created, sendText } = setup({ fillerDelayMs: 800 });
+      let resolveRoute: (route: TurnRoute) => void = () => {};
+      created.start(
+        new Promise<TurnRoute>((resolve) => {
+          resolveRoute = resolve;
+        }),
+      );
+      await vi.advanceTimersByTimeAsync(1_000);
+      created.onToken();
+      resolveRoute("village");
+      await vi.advanceTimersByTimeAsync(0);
+      expect(sendText).not.toHaveBeenCalled();
     });
   });
 

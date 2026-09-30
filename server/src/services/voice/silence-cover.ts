@@ -97,16 +97,20 @@ export const createSilenceCover = ({
   };
 
   return {
-    start: (route: TurnRoute) => {
+    start: (route: Promise<TurnRoute>) => {
       if (!config.fillerEnabled || responded || signal?.aborted) return;
+      const fire = () =>
+        route.then((resolved) => {
+          if (responded || holdPlaying || signal?.aborted) return;
+          sendFiller(resolved);
+        });
       if (config.fillerDelayMs > 0) {
         fillerTimer = setTimeout(() => {
           fillerTimer = null;
-          if (signal?.aborted) return;
-          sendFiller(route);
+          void fire();
         }, config.fillerDelayMs);
       } else {
-        sendFiller(route);
+        void fire();
       }
     },
     onToolCall: () => {

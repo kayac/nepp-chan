@@ -1,6 +1,5 @@
 import type { ToolExecutionContext } from "@mastra/core/tools";
 import type { ModelMessage } from "ai";
-import type { TurnRoute } from "~/lib/classify-intent";
 import { ROLE_LEVEL } from "~/middleware/require-role";
 import type { AdminRole, AuthUser } from "~/schemas/auth-schema";
 import type { VoiceFindingsSlot } from "~/services/voice/findings-slot";
@@ -27,9 +26,6 @@ export const getVoiceFindings = (
   context?.requestContext?.get("voiceFindings") as
     | VoiceFindingsSlot
     | undefined;
-
-export const getTurnRoute = (context: ToolContext) =>
-  context?.requestContext?.get("turnRoute") as Promise<TurnRoute> | undefined;
 
 export const getLastUserText = (context: ToolContext) => {
   const messages = context?.agent?.messages as ModelMessage[] | undefined;

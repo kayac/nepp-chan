@@ -34,7 +34,7 @@ const usageSumColumns = sql`
 
 // embedding は検索クエリ分（スレッドに紐づく）が会話、ナレッジ同期分はそれ以外
 const conversationExpr = sql`(
-  source IN ('chat', 'subagent', 'intent-classify', 'research-route', 'rerank')
+  source IN ('chat', 'subagent', 'intent-classify', 'rerank')
   OR (source = 'embedding' AND thread_id IS NOT NULL)
 )`;
 

@@ -80,7 +80,7 @@ export const generateReply = async (params: {
     }),
   ]);
   const { intent } = turn;
-  if (turn.route) requestContext.set("turnRoute", Promise.resolve(turn.route));
+  if (turn.route) requestContext.set("turnRoute", turn.route);
   const modelConfig = resolveModelTier({
     intent,
     platform: "line",

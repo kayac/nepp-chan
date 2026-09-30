@@ -135,7 +135,7 @@ chatRoutes.openapi(chatRoute, async (c) => {
         requestContext,
       );
   const { intent } = turn;
-  if (turn.route) requestContext.set("turnRoute", Promise.resolve(turn.route));
+  if (turn.route) requestContext.set("turnRoute", turn.route);
   const modelConfig = resolveModelTier({ intent, platform: "web", isAdmin });
   logger.info(`[Chat] intent: ${intent}`, { threadId });
 

@@ -209,13 +209,13 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       sendPlay: (source, options) =>
         ws.send(serializeRelayMessage(playMessage(source, options))),
     });
-    void route.then((resolved) => {
+    cover.start(route);
+    void route.then((resolved) =>
       logger.info("[Voice] turn route", {
         route: resolved,
         ms: Date.now() - t0,
-      });
-      cover.start(resolved);
-    });
+      }),
+    );
     const reader = createSpeechReader();
 
     try {

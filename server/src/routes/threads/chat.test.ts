@@ -250,9 +250,7 @@ describe("chatRoutes: POST /:threadId/chat", () => {
     );
 
     const ctx = vi.mocked(createRequestContext).mock.results.at(-1)?.value;
-    const [key, route] = ctx.set.mock.calls[0];
-    expect(key).toBe("turnRoute");
-    await expect(route).resolves.toBe("outside");
+    expect(ctx.set).toHaveBeenCalledWith("turnRoute", "outside");
   });
 
   it("text パートが無いメッセージは空文字で classifyTurn を呼ぶ", async () => {
