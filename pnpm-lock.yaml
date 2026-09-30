@@ -109,8 +109,8 @@ importers:
         specifier: 1.66.0
         version: 1.66.0(ai@7.0.102(zod@4.6.5))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.5)
       '@mastra/evals':
-        specifier: 1.10.2
-        version: 1.10.2(@mastra/core@1.66.0(ai@7.0.102(zod@4.6.5))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.5))(vitest@5.0.1)
+        specifier: 1.10.3
+        version: 1.10.3(@mastra/core@1.66.0(ai@7.0.102(zod@4.6.5))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.5))(vitest@5.0.1)
       '@mastra/libsql':
         specifier: 1.23.0
         version: 1.23.0(@mastra/core@1.66.0(ai@7.0.102(zod@4.6.5))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.5))
@@ -2209,8 +2209,8 @@ packages:
     peerDependencies:
       '@mastra/core': '>=1.50.0-0 <2.0.0-0'
 
-  '@mastra/evals@1.10.2':
-    resolution: {integrity: sha512-Tms55WxxcwyTBixWiHVdE+hf1YWbM+7tCwhza17uWn3+GUyBAaCycESGUjyIdSyUeeaw4lH0rjjEBoG4Q/ESJQ==}
+  '@mastra/evals@1.10.3':
+    resolution: {integrity: sha512-doByIGCBQ9S/F5ms4G6AwIvfCoQeX/XlPtvGu4vJ3Ps3HAAvygE+7898PzHS4v7I0t5SKC4krGSQs7C5aiabNA==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.0.0-0 <2.0.0-0'
@@ -6186,10 +6186,6 @@ packages:
     resolution: {integrity: sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==}
     engines: {node: '>=20.18.1'}
 
-  undici@7.29.1:
-    resolution: {integrity: sha512-RYONW2MeafgYlkVOKYKkA/Ag7BmXqgIWCa8t1m0JcxrQg9pI9lEqRhAOruOBCbAohOa/gkCF+iPi9hrgvTzu6Q==}
-    engines: {node: '>=20.18.1'}
-
   undici@7.30.0:
     resolution: {integrity: sha512-dkrQXeHSaoamnItlYbmzG0wFYrM0ZwDxCIg0A7aKjTyyhh9svRzCNFEzV+Vm05/yehjCzjDZ31KXfGEjYSztDQ==}
     engines: {node: '>=20.18.1'}
@@ -8349,7 +8345,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@mastra/evals@1.10.2(@mastra/core@1.66.0(ai@7.0.102(zod@4.6.5))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.5))(vitest@5.0.1)':
+  '@mastra/evals@1.10.3(@mastra/core@1.66.0(ai@7.0.102(zod@4.6.5))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.5))(vitest@5.0.1)':
     dependencies:
       '@mastra/core': 1.66.0(ai@7.0.102(zod@4.6.5))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod@4.6.5)
       compromise: 14.16.0
@@ -10839,7 +10835,7 @@ snapshots:
       saxes: 6.0.0
       symbol-tree: 3.2.4
       tough-cookie: 6.0.1
-      undici: 7.29.1
+      undici: 7.30.0
       w3c-xmlserializer: 5.0.0
       webidl-conversions: 8.0.1
       whatwg-mimetype: 5.0.0
@@ -12586,8 +12582,6 @@ snapshots:
   undici-types@8.9.0: {}
 
   undici@7.29.0: {}
-
-  undici@7.29.1: {}
 
   undici@7.30.0: {}
 
