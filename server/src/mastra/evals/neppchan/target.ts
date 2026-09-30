@@ -3,7 +3,7 @@ import { createTool } from "@mastra/core/tools";
 import { LibSQLStore } from "@mastra/libsql";
 import { Memory } from "@mastra/memory";
 import { simulateReadableStream } from "ai";
-import { MockLanguageModelV3 } from "ai/test";
+import { MockLanguageModelV4 } from "ai/test";
 import { z } from "zod";
 import {
   primaryModelId,
@@ -29,7 +29,7 @@ const zeroUsage = {
 const stop = { unified: "stop" as const, raw: "stop" };
 
 const fixedTextModel = (text: string) =>
-  new MockLanguageModelV3({
+  new MockLanguageModelV4({
     provider: "eval",
     modelId: "fixture",
     doGenerate: async () => ({
