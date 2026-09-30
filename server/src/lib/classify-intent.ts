@@ -7,6 +7,8 @@ import { askJevWithUsage } from "~/services/analytics/llm-usage";
 
 const THINKING_THRESHOLD = 0.3;
 
+const VILLAGE_THRESHOLD = 0.3;
+
 const intentQuestion: JevQuestion = {
   type: "choice",
   instructions:
@@ -18,42 +20,72 @@ const intentQuestion: JevQuestion = {
   },
 };
 
+const routeQuestion: JevQuestion = {
+  type: "choice",
+  instructions:
+    "アシスタントは北海道の小さな村・音威子府村のマスコットで、村の資料か Web 検索をもとに答える。ユーザーの最新のメッセージに答えるために調べる先を判定する。",
+  criteria: {
+    village:
+      "音威子府村そのものの情報。村の施設、お店、行事、学校、行政、歴史、地域のルール、地域バスの時刻、村からのお知らせ。",
+    outside:
+      "最新の情報や村の外の情報。天気、交通や列車の運行状況、ニュースや時事、村の外の場所や一般的な事柄。",
+  },
+};
+
 const intentSchema = z.object({
   intent: z.enum(["casual", "thinking"]),
 });
 
-type ClassifyIntentInput = {
+type Intent = z.infer<typeof intentSchema>["intent"];
+
+export type TurnRoute = "none" | "village" | "outside";
+
+type ClassifyTurnInput = {
   text: string;
   previousAssistant?: string;
 };
 
-const buildIntentState = (input: ClassifyIntentInput) => [
+const buildState = (input: ClassifyTurnInput) => [
   ...(input.previousAssistant
     ? [{ from: "assistant", text: input.previousAssistant }]
     : []),
   { from: "user", text: input.text },
 ];
 
+const withRoute = (intent: Intent, pVillage = 1) => ({
+  intent,
+  route: (intent === "casual"
+    ? "none"
+    : pVillage >= VILLAGE_THRESHOLD
+      ? "village"
+      : "outside") as TurnRoute,
+});
+
 const classifyWithJev = async (
-  input: ClassifyIntentInput,
+  input: ClassifyTurnInput,
   apiKey: string,
   requestContext: RequestContext,
 ) => {
   const response = await askJevWithUsage({
     apiKey,
-    state: buildIntentState(input),
-    questions: { intent: intentQuestion },
+    state: buildState(input),
+    questions: { intent: intentQuestion, route: routeQuestion },
     requestContext,
     source: "intent-classify",
     agent: "intent-router",
   });
-  const answer = response.answers.intent;
+  const { intent, route } = response.answers;
   const pThinking =
-    answer?.type === "choice" ? answer.probabilities.thinking : undefined;
+    intent?.type === "choice" ? intent.probabilities.thinking : undefined;
   if (pThinking === undefined) {
     throw new Error("jev answer has no thinking probability");
   }
-  return pThinking >= THINKING_THRESHOLD ? "thinking" : "casual";
+  const pVillage =
+    route?.type === "choice" ? route.probabilities.village : undefined;
+  return withRoute(
+    pThinking >= THINKING_THRESHOLD ? "thinking" : "casual",
+    pVillage,
+  );
 };
 
 const classifyWithAgent = async (
@@ -65,14 +97,14 @@ const classifyWithAgent = async (
       requestContext,
       structuredOutput: { schema: intentSchema },
     });
-    return result.object?.intent ?? "thinking";
+    return withRoute(result.object?.intent ?? "thinking");
   } catch {
-    return "thinking";
+    return withRoute("thinking");
   }
 };
 
-export const classifyIntent = async (
-  input: ClassifyIntentInput,
+export const classifyTurn = async (
+  input: ClassifyTurnInput,
   requestContext?: RequestContext,
 ) => {
   const apiKey = jevApiKey(requestContext);
@@ -82,7 +114,7 @@ export const classifyIntent = async (
   try {
     return await classifyWithJev(input, apiKey, requestContext);
   } catch (error) {
-    logger.warn("[ClassifyIntent] jev failed, falling back to agent", {
+    logger.warn("[ClassifyTurn] jev failed, falling back to agent", {
       error: String(error),
     });
     return classifyWithAgent(input.text, requestContext);

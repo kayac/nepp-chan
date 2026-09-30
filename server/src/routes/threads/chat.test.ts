@@ -4,13 +4,13 @@ import { primaryModelId, resolveModelTier } from "~/lib/llm-models";
 
 const {
   mockHandleChatStream,
-  mockClassifyIntent,
+  mockClassifyTurn,
   mockGetThreadById,
   mockRecordLlmUsage,
   mockFindWidgetSiteByHost,
 } = vi.hoisted(() => ({
   mockHandleChatStream: vi.fn(),
-  mockClassifyIntent: vi.fn(),
+  mockClassifyTurn: vi.fn(),
   mockGetThreadById: vi.fn(),
   mockRecordLlmUsage: vi.fn(),
   mockFindWidgetSiteByHost: vi.fn(),
@@ -36,7 +36,7 @@ vi.mock("ai", () => ({
 }));
 
 vi.mock("~/lib/classify-intent", () => ({
-  classifyIntent: mockClassifyIntent,
+  classifyTurn: mockClassifyTurn,
 }));
 
 vi.mock("~/lib/storage", () => ({
@@ -60,7 +60,7 @@ vi.mock("~/mastra/agents/nepp-chan-agent", () => ({
 }));
 
 vi.mock("~/mastra/request-context", () => ({
-  createRequestContext: vi.fn(() => ({})),
+  createRequestContext: vi.fn(() => ({ set: vi.fn() })),
 }));
 
 vi.mock("@mastra/memory", () => ({
@@ -100,6 +100,7 @@ vi.mock("~/services/auth/anonymous-session", () => ({
 }));
 
 const sessionService = await import("~/services/auth/anonymous-session");
+const { createRequestContext } = await import("~/mastra/request-context");
 const { threadsRoutes: rawThreadsRoutes } = await import("./index");
 
 import { withResolvePrincipal } from "~/__tests__/helpers/test-app";
@@ -157,7 +158,7 @@ describe("chatRoutes: POST /:threadId/chat", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockHandleChatStream.mockResolvedValue(buildStubStream());
-    mockClassifyIntent.mockResolvedValue("casual");
+    mockClassifyTurn.mockResolvedValue({ intent: "casual", route: "none" });
     mockFindWidgetSiteByHost.mockResolvedValue(null);
   });
 
@@ -204,7 +205,7 @@ describe("chatRoutes: POST /:threadId/chat", () => {
     expect(res.headers.get("content-type")).toMatch(/event-stream/);
   });
 
-  it("intent 指定があれば classifyIntent を呼ばない", async () => {
+  it("intent 指定があれば classifyTurn を呼ばない", async () => {
     useAnonAuth();
     mockGetThreadById.mockResolvedValue(ownThread);
 
@@ -214,11 +215,11 @@ describe("chatRoutes: POST /:threadId/chat", () => {
       mockEnv,
     );
 
-    expect(mockClassifyIntent).not.toHaveBeenCalled();
+    expect(mockClassifyTurn).not.toHaveBeenCalled();
     expect(mockLatestAssistantText).not.toHaveBeenCalled();
   });
 
-  it("intent 未指定は classifyIntent を呼ぶ", async () => {
+  it("intent 未指定は classifyTurn を呼ぶ", async () => {
     useAnonAuth();
     mockGetThreadById.mockResolvedValue(ownThread);
 
@@ -228,13 +229,33 @@ describe("chatRoutes: POST /:threadId/chat", () => {
       mockEnv,
     );
 
-    expect(mockClassifyIntent).toHaveBeenCalledWith(
+    expect(mockClassifyTurn).toHaveBeenCalledWith(
       { text: "こんにちは", previousAssistant: "直前の返答" },
       expect.anything(),
     );
   });
 
-  it("text パートが無いメッセージは空文字で classifyIntent を呼ぶ", async () => {
+  it("分類した調べ先を requestContext に載せる", async () => {
+    useAnonAuth();
+    mockGetThreadById.mockResolvedValue(ownThread);
+    mockClassifyTurn.mockResolvedValueOnce({
+      intent: "thinking",
+      route: "outside",
+    });
+
+    await routes.request(
+      buildReq("/thread-1/chat", validBody),
+      undefined,
+      mockEnv,
+    );
+
+    const ctx = vi.mocked(createRequestContext).mock.results.at(-1)?.value;
+    const [key, route] = ctx.set.mock.calls[0];
+    expect(key).toBe("turnRoute");
+    await expect(route).resolves.toBe("outside");
+  });
+
+  it("text パートが無いメッセージは空文字で classifyTurn を呼ぶ", async () => {
     useAnonAuth();
     mockGetThreadById.mockResolvedValue(ownThread);
 
@@ -246,7 +267,7 @@ describe("chatRoutes: POST /:threadId/chat", () => {
       mockEnv,
     );
 
-    expect(mockClassifyIntent).toHaveBeenCalledWith(
+    expect(mockClassifyTurn).toHaveBeenCalledWith(
       { text: "", previousAssistant: "直前の返答" },
       expect.anything(),
     );

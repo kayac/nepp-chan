@@ -42,8 +42,8 @@ vi.mock("~/lib/storage", () => ({
 vi.mock("~/mastra/agents/nepp-chan-agent", () => ({
   createNeppChanAgent: vi.fn(() => ({})),
 }));
-vi.mock("./turn-route", () => ({
-  classifyVoiceTurn: classifyMock,
+vi.mock("~/lib/classify-intent", () => ({
+  classifyTurn: classifyMock,
 }));
 vi.mock("~/mastra/tools/voice-answer-tool", async (importOriginal) => ({
   ...(await importOriginal<
@@ -440,7 +440,7 @@ describe("createVoiceConversation", () => {
       });
 
       const { requestContext } = streamMock.mock.calls[0][1];
-      expect(await requestContext.get("voiceRoute")).toBe("outside");
+      expect(await requestContext.get("turnRoute")).toBe("outside");
     });
 
     it("prefetchEnabled でなければ起動しない", async () => {
@@ -527,7 +527,10 @@ describe("createVoiceConversation", () => {
   });
 
   it("routeTurn は発話を行き先に分類し、usage を通話のスレッドに紐づける", async () => {
-    classifyMock.mockResolvedValueOnce("village");
+    classifyMock.mockResolvedValueOnce({
+      intent: "thinking",
+      route: "village",
+    });
     const { routeTurn } = await createVoiceConversation({
       env,
       from: "client:x",
@@ -535,7 +538,7 @@ describe("createVoiceConversation", () => {
     });
 
     expect(await routeTurn("寮費は？")).toBe("village");
-    const { text, requestContext } = classifyMock.mock.calls[0][0];
+    const [{ text }, requestContext] = classifyMock.mock.calls[0];
     expect(text).toBe("寮費は？");
     expect(requestContext.get("env")).toBe(env);
     expect(requestContext.get("usagePlatform")).toBe("voice");

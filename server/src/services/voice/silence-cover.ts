@@ -1,6 +1,6 @@
+import type { TurnRoute } from "~/lib/classify-intent";
 import type { BridgeConfig } from "./bridge-config";
 import { pickFiller } from "./filler";
-import type { VoiceRoute } from "./turn-route";
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -74,7 +74,7 @@ export const createSilenceCover = ({
     }, config.holdPhraseIntervalMs);
   };
 
-  const sendFiller = (route: VoiceRoute) => {
+  const sendFiller = (route: TurnRoute) => {
     const phrase = pickFiller(route, nextFillerIndex(), {
       thinking: config.thinkingFillers,
       backchannel: config.backchannelFillers,
@@ -97,7 +97,7 @@ export const createSilenceCover = ({
   };
 
   return {
-    start: (route: VoiceRoute) => {
+    start: (route: TurnRoute) => {
       if (!config.fillerEnabled || responded || signal?.aborted) return;
       if (config.fillerDelayMs > 0) {
         fillerTimer = setTimeout(() => {

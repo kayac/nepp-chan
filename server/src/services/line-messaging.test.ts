@@ -20,7 +20,7 @@ vi.mock("~/lib/storage", () => ({
 }));
 
 vi.mock("~/mastra/request-context", () => ({
-  createRequestContext: vi.fn(() => ({ id: "fake-ctx" })),
+  createRequestContext: vi.fn(() => ({ id: "fake-ctx", set: vi.fn() })),
 }));
 
 vi.mock("~/services/broadcast-thread-injector", () => ({
@@ -32,7 +32,7 @@ vi.mock("~/services/poll-thread-injector", () => ({
 }));
 
 vi.mock("~/lib/classify-intent", () => ({
-  classifyIntent: vi.fn(async () => "casual"),
+  classifyTurn: vi.fn(async () => ({ intent: "casual", route: "none" })),
 }));
 
 vi.mock("~/lib/thread-history", () => ({
@@ -67,7 +67,7 @@ vi.mock("~/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const { classifyIntent } = await import("~/lib/classify-intent");
+const { classifyTurn } = await import("~/lib/classify-intent");
 const { resolveModelTier } = await import("~/lib/llm-models");
 const { recordLlmUsage } = await import("~/services/analytics/llm-usage");
 const { injectBroadcastsToThread } = await import(
@@ -149,7 +149,9 @@ describe("generateReply", () => {
   beforeEach(() => {
     vi.mocked(injectBroadcastsToThread).mockReset().mockResolvedValue();
     vi.mocked(injectPollsToThread).mockReset().mockResolvedValue();
-    vi.mocked(classifyIntent).mockReset().mockResolvedValue("casual");
+    vi.mocked(classifyTurn)
+      .mockReset()
+      .mockResolvedValue({ intent: "casual", route: "none" });
     vi.mocked(resolveModelTier)
       .mockReset()
       .mockReturnValue({
@@ -172,7 +174,7 @@ describe("generateReply", () => {
     expect(injectPollsToThread).toHaveBeenCalled();
   });
 
-  it("空文字 userMessage の場合は intent=casual のまま (classifyIntent をスキップ)", async () => {
+  it("空文字 userMessage の場合は intent=casual のまま (classifyTurn をスキップ)", async () => {
     agentHolder.generate.mockResolvedValueOnce({
       steps: [{ text: "ok" }],
       text: "",
@@ -180,7 +182,7 @@ describe("generateReply", () => {
 
     await generateReply({ ...baseParams, userMessage: "" });
 
-    expect(classifyIntent).not.toHaveBeenCalled();
+    expect(classifyTurn).not.toHaveBeenCalled();
     expect(resolveModelTier).toHaveBeenCalledWith(
       expect.objectContaining({ intent: "casual" }),
     );
@@ -246,7 +248,7 @@ describe("generateReply", () => {
     expect(arg.memory).toEqual({ resource: "res-1", thread: "thr-1" });
   });
 
-  it("classifyIntent にユーザー発話と直前の assistant 発話を渡す", async () => {
+  it("classifyTurn にユーザー発話と直前の assistant 発話を渡す", async () => {
     agentHolder.generate.mockResolvedValueOnce({
       steps: [{ text: "x" }],
       text: "x",
@@ -254,14 +256,17 @@ describe("generateReply", () => {
 
     await generateReply(baseParams);
 
-    expect(classifyIntent).toHaveBeenCalledWith(
+    expect(classifyTurn).toHaveBeenCalledWith(
       { text: baseParams.userMessage, previousAssistant: "直前の返答" },
       expect.anything(),
     );
   });
 
   it("intent 結果は resolveModelTier に流される", async () => {
-    vi.mocked(classifyIntent).mockResolvedValueOnce("thinking");
+    vi.mocked(classifyTurn).mockResolvedValueOnce({
+      intent: "thinking",
+      route: "village",
+    });
     agentHolder.generate.mockResolvedValueOnce({
       steps: [{ text: "x" }],
       text: "x",

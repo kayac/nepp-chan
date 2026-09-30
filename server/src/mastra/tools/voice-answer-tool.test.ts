@@ -61,7 +61,7 @@ const call = (
     voiceAnswerTool,
     { question },
     {
-      ...(source ? { voiceRoute: ROUTE_OF_SOURCE[source] } : {}),
+      ...(source ? { turnRoute: ROUTE_OF_SOURCE[source] } : {}),
       ...(slot ? { voiceFindings: slot } : {}),
       ...(signal ? { voiceTurnSignal: signal } : {}),
       ...(prefetch ? { voicePrefetch: prefetch } : {}),

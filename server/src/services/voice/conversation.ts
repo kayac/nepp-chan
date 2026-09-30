@@ -1,5 +1,6 @@
 import { Mastra } from "@mastra/core/mastra";
 import type { ModelMessage } from "ai";
+import { classifyTurn, type TurnRoute } from "~/lib/classify-intent";
 import { primaryModelId, voiceModelConfig } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { toVoiceIds } from "~/lib/principal";
@@ -16,7 +17,6 @@ import {
   createVoicePrefetchSlot,
   type VoiceFindingsSlot,
 } from "./findings-slot";
-import { classifyVoiceTurn, type VoiceRoute } from "./turn-route";
 
 type RunTurnParams = {
   text: string;
@@ -26,7 +26,7 @@ type RunTurnParams = {
   findingsSlot?: VoiceFindingsSlot;
   prefetchEnabled?: boolean;
   parentRouting?: boolean;
-  route?: Promise<VoiceRoute>;
+  route?: Promise<TurnRoute>;
 };
 
 type PersistTurnParams = {
@@ -93,14 +93,14 @@ export const createVoiceConversation = async ({
       voiceFindings: findingsSlot,
       voicePrefetch: prefetchSlot,
       voiceParentRouting: parentRouting,
-      voiceRoute: route,
+      turnRoute: route,
       voiceSearchStart: onToolCall,
       voiceTurnSignal: signal,
       voiceEndCall: onEndCall,
     });
 
     let turnDone = false;
-    const startPrefetch = (resolved: VoiceRoute) => {
+    const startPrefetch = (resolved: TurnRoute) => {
       const source = sourceOfRoute(resolved);
       if (!prefetchSlot || !source || turnDone || signal?.aborted) return;
       logger.info("[Voice] prefetch start", { query: text, source });
@@ -271,17 +271,25 @@ export const createVoiceConversation = async ({
     }
   };
 
-  const routeTurn = (text: string) =>
-    classifyVoiceTurn({
-      text,
-      requestContext: createRequestContext({
+  const routeTurn = async (text: string) => {
+    const previousAssistant = history.findLast(
+      (message) => message.role === "assistant",
+    )?.content;
+    const { route } = await classifyTurn(
+      {
+        text,
+        previousAssistant:
+          typeof previousAssistant === "string" ? previousAssistant : undefined,
+      },
+      createRequestContext({
         db: env.DB,
         env,
         usagePlatform: "voice",
         usageThreadId: threadId,
       }),
-    });
-
+    );
+    return route;
+  };
   return {
     runTurn,
     routeTurn,

@@ -1,14 +1,13 @@
 import { RequestContext } from "@mastra/core/request-context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { knowledgeGenerate, webGenerate, askJevMock, searchMock } = vi.hoisted(
-  () => ({
+const { knowledgeGenerate, webGenerate, classifyTurnMock, searchMock } =
+  vi.hoisted(() => ({
     knowledgeGenerate: vi.fn(),
     webGenerate: vi.fn(),
-    askJevMock: vi.fn(),
+    classifyTurnMock: vi.fn(),
     searchMock: vi.fn(),
-  }),
-);
+  }));
 
 vi.mock("~/services/knowledge/search", () => ({
   searchKnowledge: searchMock,
@@ -22,9 +21,8 @@ vi.mock("~/mastra/agents/web-researcher-agent", () => ({
   webResearcherAgent: { generate: webGenerate },
 }));
 
-vi.mock("~/services/analytics/llm-usage", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("~/services/analytics/llm-usage")>()),
-  askJevWithUsage: askJevMock,
+vi.mock("~/lib/classify-intent", () => ({
+  classifyTurn: classifyTurnMock,
 }));
 
 vi.mock("~/lib/logger", () => ({
@@ -48,20 +46,14 @@ const contextWithKey = (key?: string, withSearch = true) => {
 };
 
 const routeResponse = (village: number) => ({
-  model: "jev-1.13.0",
-  answers: {
-    route: {
-      type: "choice" as const,
-      choice: village >= 0.5 ? "village" : "outside",
-      probabilities: { village, outside: 1 - village },
-    },
-  },
+  intent: "thinking",
+  route: village >= 0.3 ? "village" : "outside",
 });
 
 beforeEach(() => {
   knowledgeGenerate.mockReset();
   webGenerate.mockReset();
-  askJevMock.mockReset();
+  classifyTurnMock.mockReset();
   searchMock.mockReset();
   searchMock.mockResolvedValue({ results: [] });
 });
@@ -82,7 +74,7 @@ describe("parseCoverage", () => {
 
 describe("runResearch", () => {
   it("村のことで取れたなら、ナレッジだけで調査メモを返す", async () => {
-    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
       text: "寮費は月額30,000円\n判定: 取れた",
@@ -99,7 +91,7 @@ describe("runResearch", () => {
   });
 
   it("村のことで一部なら、Web に回さずナレッジのメモを返す", async () => {
-    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
       text: "粗大ごみは10月3日\n判定: 一部",
@@ -115,7 +107,7 @@ describe("runResearch", () => {
   });
 
   it("調べ先の判定には、補った質問ではなくユーザーの発言を使う", async () => {
-    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
       text: "メモ\n判定: 取れた",
@@ -127,13 +119,13 @@ describe("runResearch", () => {
       requestContext: contextWithKey("k"),
     });
 
-    expect(askJevMock.mock.calls[0]?.[0].state).toEqual([
-      { from: "user", text: "子供が生まれたら何をしたらいい" },
-    ]);
+    expect(classifyTurnMock.mock.calls[0]?.[0]).toEqual({
+      text: "子供が生まれたら何をしたらいい",
+    });
   });
 
   it("村のことで取れないなら、確認済みの内容を添えて Web で探す", async () => {
-    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
       text: "村名の記載はあるが由来は無い\n判定: 取れない",
@@ -151,8 +143,23 @@ describe("runResearch", () => {
     expect(result.memo).toContain("由来はアイヌ語");
   });
 
+  it("ターンの分類で調べ先が決まっていれば、分類し直さずそれを使う", async () => {
+    webGenerate.mockResolvedValueOnce({ text: "明日は雪" });
+    const ctx = contextWithKey("k");
+    ctx.set("turnRoute", Promise.resolve("outside"));
+
+    const result = await runResearch({
+      question: "明日の天気は？",
+      requestContext: ctx,
+    });
+
+    expect(classifyTurnMock).not.toHaveBeenCalled();
+    expect(knowledgeGenerate).not.toHaveBeenCalled();
+    expect(result.memo).toContain("明日は雪");
+  });
+
   it("村外・時事なら、ナレッジを使わず Web だけで調べる", async () => {
-    askJevMock.mockResolvedValueOnce(routeResponse(0.1));
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.1));
     webGenerate.mockResolvedValueOnce({ text: "明日は雪" });
 
     const result = await runResearch({
@@ -164,44 +171,8 @@ describe("runResearch", () => {
     expect(result.memo).toContain("明日は雪");
   });
 
-  it("P(village) が 0.3 以上なら村のこととして扱う", async () => {
-    askJevMock.mockResolvedValueOnce(routeResponse(0.3));
-    knowledgeGenerate.mockResolvedValueOnce({
-      steps: [],
-      text: "メモ\n判定: 取れた",
-    });
-
-    await runResearch({ question: "q", requestContext: contextWithKey("k") });
-
-    expect(knowledgeGenerate).toHaveBeenCalledTimes(1);
-  });
-
-  it("TYPESAFE_API_KEY が無ければ jev を呼ばず村のこととして扱う", async () => {
-    knowledgeGenerate.mockResolvedValueOnce({
-      steps: [],
-      text: "メモ\n判定: 取れた",
-    });
-
-    await runResearch({ question: "q", requestContext: contextWithKey() });
-
-    expect(askJevMock).not.toHaveBeenCalled();
-    expect(knowledgeGenerate).toHaveBeenCalledTimes(1);
-  });
-
-  it("jev が失敗したら村のこととして扱う", async () => {
-    askJevMock.mockRejectedValueOnce(new Error("jev responded 429"));
-    knowledgeGenerate.mockResolvedValueOnce({
-      steps: [],
-      text: "メモ\n判定: 取れた",
-    });
-
-    await runResearch({ question: "q", requestContext: contextWithKey("k") });
-
-    expect(knowledgeGenerate).toHaveBeenCalledTimes(1);
-  });
-
   it("村のことなら、質問そのままで先に検索し、結果をナレッジ用エージェントに渡す", async () => {
-    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     searchMock.mockResolvedValueOnce({
       results: [
         {
@@ -229,7 +200,7 @@ describe("runResearch", () => {
   });
 
   it("検索語が渡されたら、検索語ごとに並列で先に検索し、同じ資料は 1 回だけ渡す", async () => {
-    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     const shared = {
       content: "出生祝金は3万円",
       score: 0.9,
@@ -269,7 +240,7 @@ describe("runResearch", () => {
   });
 
   it("検索語が空なら質問そのままで検索する", async () => {
-    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
       text: "メモ\n判定: 取れた",
@@ -287,7 +258,7 @@ describe("runResearch", () => {
   });
 
   it("ユーザーの発言と補った質問が違えば、両方と検索語をナレッジ用エージェントに渡す", async () => {
-    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     searchMock.mockResolvedValue({ results: [] });
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
@@ -310,7 +281,7 @@ describe("runResearch", () => {
   });
 
   it("判定が箇条書きの 1 行でも読み取り、メモから取り除く", async () => {
-    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
       text: "- 寮費は月額30,000円\n- 判定: 取れた",
@@ -327,7 +298,7 @@ describe("runResearch", () => {
   });
 
   it("Vectorize が使えなければ先の検索を飛ばし、ナレッジ用エージェントに任せる", async () => {
-    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
       text: "メモ\n判定: 取れた",
@@ -343,7 +314,7 @@ describe("runResearch", () => {
   });
 
   it("先の検索が失敗したら、検索結果を渡さずナレッジ用エージェントに任せる", async () => {
-    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     searchMock.mockResolvedValueOnce({ results: [], error: "vectorize 500" });
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
@@ -358,7 +329,7 @@ describe("runResearch", () => {
   });
 
   it("村外なら先の検索もしない", async () => {
-    askJevMock.mockResolvedValueOnce(routeResponse(0.1));
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.1));
     webGenerate.mockResolvedValueOnce({ text: "明日は雪" });
 
     await runResearch({
@@ -370,7 +341,7 @@ describe("runResearch", () => {
   });
 
   it("エージェントに requestContext をそのまま渡す", async () => {
-    askJevMock.mockResolvedValueOnce(routeResponse(0.9));
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
       text: "メモ\n判定: 取れない",

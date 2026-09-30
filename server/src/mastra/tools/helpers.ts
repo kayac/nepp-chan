@@ -1,11 +1,11 @@
 import type { ToolExecutionContext } from "@mastra/core/tools";
+import type { TurnRoute } from "~/lib/classify-intent";
 import { ROLE_LEVEL } from "~/middleware/require-role";
 import type { AdminRole, AuthUser } from "~/schemas/auth-schema";
 import type {
   VoiceFindingsSlot,
   VoicePrefetchSlot,
 } from "~/services/voice/findings-slot";
-import type { VoiceRoute } from "~/services/voice/turn-route";
 
 type ToolContext = ToolExecutionContext | undefined;
 
@@ -37,11 +37,8 @@ export const getVoicePrefetch = (
     | VoicePrefetchSlot
     | undefined;
 
-export const getVoiceRoute = (context: ToolContext) =>
-  context?.requestContext?.get("voiceRoute") as
-    | Promise<VoiceRoute>
-    | VoiceRoute
-    | undefined;
+export const getTurnRoute = (context: ToolContext) =>
+  context?.requestContext?.get("turnRoute") as Promise<TurnRoute> | undefined;
 
 export const getVoiceParentRouting = (context: ToolContext): boolean =>
   context?.requestContext?.get("voiceParentRouting") === true;

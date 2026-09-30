@@ -19,7 +19,7 @@ vi.mock("~/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const { classifyIntent } = await import("./classify-intent");
+const { classifyTurn } = await import("./classify-intent");
 
 const contextWithKey = (key?: string) => {
   const ctx = new RequestContext();
@@ -27,68 +27,86 @@ const contextWithKey = (key?: string) => {
   return ctx;
 };
 
-const jevResponse = (pThinking: number) => ({
+const jevResponse = (pThinking: number, pVillage = 0.9) => ({
   model: "jev-1.13.0",
   answers: {
     intent: {
       type: "choice" as const,
       choice: pThinking >= 0.5 ? "thinking" : "casual",
       probabilities: { casual: 1 - pThinking, thinking: pThinking },
-      confidence: Math.abs(pThinking - 0.5) * 2,
+    },
+    route: {
+      type: "choice" as const,
+      choice: pVillage >= 0.5 ? "village" : "outside",
+      probabilities: { village: pVillage, outside: 1 - pVillage },
     },
   },
-  usage: { input_tokens: 400, output_tokens: 0 },
+  usage: { input_tokens: 600, output_tokens: 0 },
 });
 
-const sentState = () => askJevMock.mock.calls[0]?.[0]?.state;
+const sentParams = () => askJevMock.mock.calls[0]?.[0];
 
 beforeEach(() => {
   generateMock.mockReset();
   askJevMock.mockReset();
 });
 
-describe("classifyIntent（jev）", () => {
-  it("P(thinking) がしきい値以上なら thinking", async () => {
-    askJevMock.mockResolvedValueOnce(jevResponse(0.31));
-    expect(
-      await classifyIntent({ text: "バス動いてる？" }, contextWithKey("k")),
-    ).toBe("thinking");
+describe("classifyTurn（jev）", () => {
+  it.each([
+    [0.31, "thinking"],
+    [0.3, "thinking"],
+    [0.29, "casual"],
+  ])("P(thinking) が %s なら %s", async (pThinking, intent) => {
+    askJevMock.mockResolvedValueOnce(jevResponse(pThinking));
+    const result = await classifyTurn({ text: "q" }, contextWithKey("k"));
+    expect(result.intent).toBe(intent);
     expect(generateMock).not.toHaveBeenCalled();
   });
 
-  it("P(thinking) がしきい値ちょうどなら thinking", async () => {
-    askJevMock.mockResolvedValueOnce(jevResponse(0.3));
-    expect(
-      await classifyIntent({ text: "ほんとに？" }, contextWithKey("k")),
-    ).toBe("thinking");
+  it.each([
+    [0.3, "village"],
+    [0.29, "outside"],
+  ])(
+    "thinking で P(village) が %s なら調べ先は %s",
+    async (pVillage, route) => {
+      askJevMock.mockResolvedValueOnce(jevResponse(0.9, pVillage));
+      const result = await classifyTurn({ text: "q" }, contextWithKey("k"));
+      expect(result.route).toBe(route);
+    },
+  );
+
+  it("casual なら調べ先は none", async () => {
+    askJevMock.mockResolvedValueOnce(jevResponse(0.1, 0.9));
+    const result = await classifyTurn(
+      { text: "こんにちは" },
+      contextWithKey("k"),
+    );
+    expect(result).toEqual({ intent: "casual", route: "none" });
   });
 
-  it("P(thinking) がしきい値未満なら casual", async () => {
-    askJevMock.mockResolvedValueOnce(jevResponse(0.29));
-    expect(
-      await classifyIntent({ text: "こんにちは" }, contextWithKey("k")),
-    ).toBe("casual");
-  });
-
-  it("API キーと casual / thinking の 2 択質問を渡す", async () => {
-    askJevMock.mockResolvedValueOnce(jevResponse(0));
-    await classifyIntent({ text: "こんにちは" }, contextWithKey("secret-key"));
-    const params = askJevMock.mock.calls[0]?.[0];
+  it("意図と調べ先を 1 回の呼び出しでまとめて聞く", async () => {
+    askJevMock.mockResolvedValueOnce(jevResponse(0.9));
+    await classifyTurn({ text: "教えて" }, contextWithKey("secret-key"));
+    expect(askJevMock).toHaveBeenCalledTimes(1);
+    const params = sentParams();
     expect(params.apiKey).toBe("secret-key");
-    expect(params.questions.intent.type).toBe("choice");
     expect(Object.keys(params.questions.intent.criteria).sort()).toEqual([
       "casual",
       "thinking",
+    ]);
+    expect(Object.keys(params.questions.route.criteria).sort()).toEqual([
+      "outside",
+      "village",
     ]);
   });
 
   it("previousAssistant があれば state に assistant → user の順で含める", async () => {
     askJevMock.mockResolvedValueOnce(jevResponse(0.9));
-    await classifyIntent(
+    await classifyTurn(
       { text: "音威子府村村内で！", previousAssistant: "村内で食べたい？" },
       contextWithKey("k"),
     );
-    expect(sentState()).toEqual([
+    expect(sentParams().state).toEqual([
       { from: "assistant", text: "村内で食べたい？" },
       { from: "user", text: "音威子府村村内で！" },
     ]);
@@ -96,14 +114,14 @@ describe("classifyIntent（jev）", () => {
 
   it("previousAssistant が無ければ state は user だけの配列", async () => {
     askJevMock.mockResolvedValueOnce(jevResponse(0));
-    await classifyIntent({ text: "こんにちは" }, contextWithKey("k"));
-    expect(sentState()).toEqual([{ from: "user", text: "こんにちは" }]);
+    await classifyTurn({ text: "こんにちは" }, contextWithKey("k"));
+    expect(sentParams().state).toEqual([{ from: "user", text: "こんにちは" }]);
   });
 
   it("usage の記録先として requestContext・source intent-classify・agent intent-router を渡す", async () => {
     askJevMock.mockResolvedValueOnce(jevResponse(0.9));
     const ctx = contextWithKey("k");
-    await classifyIntent({ text: "教えて" }, ctx);
+    await classifyTurn({ text: "教えて" }, ctx);
     expect(askJevMock).toHaveBeenCalledWith(
       expect.objectContaining({
         requestContext: ctx,
@@ -112,14 +130,28 @@ describe("classifyIntent（jev）", () => {
       }),
     );
   });
+
+  it("調べ先の答えが無ければ、thinking は村のこととして扱う", async () => {
+    askJevMock.mockResolvedValueOnce({
+      answers: {
+        intent: {
+          type: "choice",
+          choice: "thinking",
+          probabilities: { casual: 0.1, thinking: 0.9 },
+        },
+      },
+    });
+    const result = await classifyTurn({ text: "教えて" }, contextWithKey("k"));
+    expect(result).toEqual({ intent: "thinking", route: "village" });
+  });
 });
 
-describe("classifyIntent（フォールバック）", () => {
+describe("classifyTurn（フォールバック）", () => {
   it("TYPESAFE_API_KEY が無ければ jev を呼ばず intentRouterAgent で分類する", async () => {
     generateMock.mockResolvedValueOnce({ object: { intent: "casual" } });
-    expect(await classifyIntent({ text: "こんにちは" }, contextWithKey())).toBe(
-      "casual",
-    );
+    expect(
+      await classifyTurn({ text: "こんにちは" }, contextWithKey()),
+    ).toEqual({ intent: "casual", route: "none" });
     expect(askJevMock).not.toHaveBeenCalled();
     expect(generateMock).toHaveBeenCalledWith(
       "こんにちは",
@@ -129,18 +161,20 @@ describe("classifyIntent（フォールバック）", () => {
     );
   });
 
-  it("requestContext が無ければ intentRouterAgent で分類する", async () => {
+  it("フォールバックで thinking なら調べ先は村のこととして扱う", async () => {
     generateMock.mockResolvedValueOnce({ object: { intent: "thinking" } });
-    expect(await classifyIntent({ text: "教えて" })).toBe("thinking");
+    expect(await classifyTurn({ text: "教えて" })).toEqual({
+      intent: "thinking",
+      route: "village",
+    });
     expect(askJevMock).not.toHaveBeenCalled();
   });
 
   it("jev が throw（非 2xx・timeout・応答不正）したら intentRouterAgent に落ちる", async () => {
     askJevMock.mockRejectedValueOnce(new Error("jev responded 429"));
     generateMock.mockResolvedValueOnce({ object: { intent: "thinking" } });
-    expect(await classifyIntent({ text: "教えて" }, contextWithKey("k"))).toBe(
-      "thinking",
-    );
+    const result = await classifyTurn({ text: "教えて" }, contextWithKey("k"));
+    expect(result.intent).toBe("thinking");
     expect(generateMock).toHaveBeenCalledTimes(1);
   });
 
@@ -155,19 +189,18 @@ describe("classifyIntent（フォールバック）", () => {
       },
     });
     generateMock.mockResolvedValueOnce({ object: { intent: "casual" } });
-    expect(await classifyIntent({ text: "やあ" }, contextWithKey("k"))).toBe(
-      "casual",
-    );
+    const result = await classifyTurn({ text: "やあ" }, contextWithKey("k"));
+    expect(result.intent).toBe("casual");
     expect(generateMock).toHaveBeenCalledTimes(1);
   });
 
   it("フォールバックの object が無ければ thinking", async () => {
     generateMock.mockResolvedValueOnce({ object: undefined });
-    expect(await classifyIntent({ text: "?" })).toBe("thinking");
+    expect((await classifyTurn({ text: "?" })).intent).toBe("thinking");
   });
 
   it("フォールバックの generate が throw したら thinking", async () => {
     generateMock.mockRejectedValueOnce(new Error("model error"));
-    expect(await classifyIntent({ text: "?" })).toBe("thinking");
+    expect((await classifyTurn({ text: "?" })).intent).toBe("thinking");
   });
 });

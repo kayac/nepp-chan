@@ -2,7 +2,7 @@ import { waitUntil } from "cloudflare:workers";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { Mastra } from "@mastra/core/mastra";
 import { respondWithChatStream } from "~/lib/chat-stream";
-import { classifyIntent } from "~/lib/classify-intent";
+import { classifyTurn } from "~/lib/classify-intent";
 import { primaryModelId, resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import type { PrincipalVariables } from "~/lib/principal";
@@ -128,12 +128,14 @@ chatRoutes.openapi(chatRoute, async (c) => {
       | { type: string; text: string }
       | undefined
   )?.text;
-  const intent =
-    fixedIntent ??
-    (await classifyIntent(
-      { text: userText ?? "", previousAssistant },
-      requestContext,
-    ));
+  const turn = fixedIntent
+    ? { intent: fixedIntent, route: undefined }
+    : await classifyTurn(
+        { text: userText ?? "", previousAssistant },
+        requestContext,
+      );
+  const { intent } = turn;
+  if (turn.route) requestContext.set("turnRoute", Promise.resolve(turn.route));
   const modelConfig = resolveModelTier({ intent, platform: "web", isAdmin });
   logger.info(`[Chat] intent: ${intent}`, { threadId });
 

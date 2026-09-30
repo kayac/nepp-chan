@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { TurnRoute } from "~/lib/classify-intent";
 import { BRIDGE_CONFIG_DEFAULTS, type BridgeConfig } from "./bridge-config";
 import { createSilenceCover } from "./silence-cover";
-import type { VoiceRoute } from "./turn-route";
 
 const setup = (
   overrides: Partial<BridgeConfig> = {},
-  route: VoiceRoute = "village",
+  route: TurnRoute = "village",
 ) => {
   const sendText = vi.fn();
   const sendPlay = vi.fn();

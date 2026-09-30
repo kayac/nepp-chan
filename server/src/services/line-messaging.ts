@@ -1,6 +1,6 @@
 import { messagingApi } from "@line/bot-sdk";
 import { Mastra } from "@mastra/core/mastra";
-import { classifyIntent } from "~/lib/classify-intent";
+import { classifyTurn } from "~/lib/classify-intent";
 import { primaryModelId, resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { splitMessagesForLine } from "~/lib/split-message";
@@ -57,13 +57,13 @@ export const generateReply = async (params: {
     );
 
   // Intent 分類でモデルティアを決定（非テキストメッセージは casual 直行）
-  const [intent] = await Promise.all([
+  const [turn] = await Promise.all([
     params.userMessage
-      ? classifyIntent(
+      ? classifyTurn(
           { text: params.userMessage, previousAssistant },
           requestContext,
         )
-      : ("casual" as const),
+      : { intent: "casual" as const, route: undefined },
     injectBroadcastsToThread({
       d1: params.env.DB,
       storage,
@@ -79,6 +79,8 @@ export const generateReply = async (params: {
       userId: params.hashedUserId,
     }),
   ]);
+  const { intent } = turn;
+  if (turn.route) requestContext.set("turnRoute", Promise.resolve(turn.route));
   const modelConfig = resolveModelTier({
     intent,
     platform: "line",

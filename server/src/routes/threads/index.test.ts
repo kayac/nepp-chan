@@ -36,7 +36,7 @@ vi.mock("@mastra/core/agent", () => ({
 }));
 
 vi.mock("~/lib/classify-intent", () => ({
-  classifyIntent: vi.fn(),
+  classifyTurn: vi.fn(),
 }));
 
 vi.mock("~/services/thread", () => ({

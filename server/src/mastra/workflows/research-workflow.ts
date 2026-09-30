@@ -1,30 +1,14 @@
 import type { RequestContext } from "@mastra/core/request-context";
 import { createStep, createWorkflow } from "@mastra/core/workflows";
 import { z } from "zod";
-import { type JevQuestion, jevApiKey } from "~/lib/jev";
+import { classifyTurn, type TurnRoute } from "~/lib/classify-intent";
 import { logger } from "~/lib/logger";
-import {
-  OUTSIDE_CRITERION,
-  ROUTE_CONTEXT,
-  VILLAGE_CRITERION,
-  VILLAGE_THRESHOLD,
-} from "~/lib/route-criteria";
 import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
-import { askJevWithUsage } from "~/services/analytics/llm-usage";
 import {
   type KnowledgeResult,
   searchKnowledge,
 } from "~/services/knowledge/search";
-
-const routeQuestion: JevQuestion = {
-  type: "choice",
-  instructions: `${ROUTE_CONTEXT}ユーザーの質問の答えをどこで調べるべきかを判定する。`,
-  criteria: {
-    village: VILLAGE_CRITERION,
-    outside: OUTSIDE_CRITERION,
-  },
-};
 
 const COVERAGE_RULE = `
 調査メモの最後の行に、次のどれか 1 つだけを書く。判定はユーザーの発言に答えられるかで決める。
@@ -87,32 +71,13 @@ export const parseCoverage = (memo: string): Coverage =>
 const stripCoverage = (memo: string) => memo.replace(COVERAGE_LINE, "").trim();
 
 const routeFor = async (
-  question: string,
+  text: string,
   requestContext: RequestContext | undefined,
 ) => {
-  const apiKey = jevApiKey(requestContext);
-  if (!apiKey || !requestContext) return "village" as const;
-  try {
-    const response = await askJevWithUsage({
-      apiKey,
-      state: [{ from: "user", text: question }],
-      questions: { route: routeQuestion },
-      requestContext,
-      source: "research-route",
-      agent: "research-router",
-    });
-    const answer = response.answers.route;
-    const pVillage =
-      answer?.type === "choice" ? (answer.probabilities.village ?? 0) : 1;
-    return pVillage >= VILLAGE_THRESHOLD
-      ? ("village" as const)
-      : ("outside" as const);
-  } catch (error) {
-    logger.warn("[Research] jev route failed, assuming village", {
-      error: String(error),
-    });
-    return "village" as const;
-  }
+  const route =
+    ((await requestContext?.get("turnRoute")) as TurnRoute | undefined) ??
+    (await classifyTurn({ text }, requestContext)).route;
+  return route === "outside" ? ("outside" as const) : ("village" as const);
 };
 
 const questionSchema = z.object({

@@ -1,6 +1,7 @@
 import type { RequestContext } from "@mastra/core/request-context";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import type { TurnRoute } from "~/lib/classify-intent";
 import { logger } from "~/lib/logger";
 import { createKnowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import {
@@ -16,12 +17,11 @@ import {
   type VoicePrefetch,
   type VoiceSource,
 } from "~/services/voice/findings-slot";
-import type { VoiceRoute } from "~/services/voice/turn-route";
 import {
+  getTurnRoute,
   getVoiceFindings,
   getVoiceParentRouting,
   getVoicePrefetch,
-  getVoiceRoute,
   getVoiceSearchStart,
   getVoiceTurnSignal,
 } from "./helpers";
@@ -92,7 +92,7 @@ const runSearch = async (
 
 const SOURCE_OF_ROUTE = { village: "knowledge", outside: "web" } as const;
 
-export const sourceOfRoute = (route: VoiceRoute | undefined) =>
+export const sourceOfRoute = (route: TurnRoute | undefined) =>
   route === "village" || route === "outside"
     ? SOURCE_OF_ROUTE[route]
     : undefined;
@@ -146,7 +146,7 @@ export const voiceAnswerTool = createTool({
   }),
   execute: async (inputData, context) => {
     const { question } = inputData;
-    const source = sourceOfRoute(await getVoiceRoute(context));
+    const source = sourceOfRoute(await getTurnRoute(context));
     const requestContext = context?.requestContext;
     const slot = getVoiceFindings(context);
     const prefetchSlot = getVoicePrefetch(context);
