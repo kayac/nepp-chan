@@ -150,8 +150,8 @@ const MODEL_TIERS: Record<Intent, Record<"web" | "line", AgentModelConfig>> = {
     line: casualTier("line"),
   },
   thinking: {
-    web: thinkingTier("web", "medium"),
-    line: thinkingTier("line", "medium"),
+    web: thinkingTier("web", "low"),
+    line: thinkingTier("line", "low"),
   },
 };
 

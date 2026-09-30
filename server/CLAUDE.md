@@ -99,7 +99,7 @@ throw new HTTPException(404, { message: "Not found" });
 ### エージェント規約
 
 - instructions: 日本語で記述、セクションは `##` で区分
-- model: `lib/llm-models.ts` の `modelWithReasoning` を使い、effort を必ず指定する。分類・採点・変換など観点が固定された処理は `none` / `low`、ツール選択や統合の判断を伴う処理は `medium`。`OPENAI_MAIN` はフォールバック用で、プライマリには使わない
+- model: `lib/llm-models.ts` の `modelWithReasoning` を使い、effort を必ず指定する。分類・採点・変換など観点が固定された処理は `none` / `low`、ツール選択や統合の判断を伴う処理は `low` を起点にし、eval で質が落ちるときだけ `medium` に上げる。`OPENAI_MAIN` はフォールバック用で、プライマリには使わない
 - temperature を効かせたい決定的な処理は `deterministicModelConfig` を使う（reasoning を有効にすると temperature が無効化される）
 - 動的 instructions: 現在日時が必要な場合のみ関数化（`lib/date.ts` の `getCurrentDateInfo()` を使用）
 
