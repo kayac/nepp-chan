@@ -55,8 +55,6 @@ export type BridgeConfig = {
   holdPhrases: string[];
   holdPhraseIntervalMs: number;
   endCallEnabled: boolean;
-  parentRoutingEnabled: boolean;
-  prefetchEnabled: boolean;
 };
 
 export const BRIDGE_CONFIG_DEFAULTS: BridgeConfig = {
@@ -70,8 +68,6 @@ export const BRIDGE_CONFIG_DEFAULTS: BridgeConfig = {
   holdPhrases: [...HOLD_PHRASES],
   holdPhraseIntervalMs: 10_000,
   endCallEnabled: true,
-  parentRoutingEnabled: true,
-  prefetchEnabled: true,
 };
 
 const delayParam = z.coerce.number().int().min(0).max(5_000);
@@ -90,8 +86,6 @@ export const bridgeFieldSchemas = {
   holdPhrases: phraseListParam,
   holdPhraseIntervalMs: z.coerce.number().int().min(3_000).max(30_000),
   endCallEnabled: boolParam,
-  parentRoutingEnabled: boolParam,
-  prefetchEnabled: boolParam,
 } satisfies Record<string, z.ZodType>;
 
 export const parseBridgeConfig = (
@@ -112,6 +106,4 @@ export const serializeBridgeConfig = (config: BridgeConfig) => ({
   holdPhrases: config.holdPhrases.join(","),
   holdPhraseIntervalMs: String(config.holdPhraseIntervalMs),
   endCallEnabled: String(config.endCallEnabled),
-  parentRoutingEnabled: String(config.parentRoutingEnabled),
-  prefetchEnabled: String(config.prefetchEnabled),
 });

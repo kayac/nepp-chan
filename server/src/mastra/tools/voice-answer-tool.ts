@@ -1,135 +1,51 @@
 import type { RequestContext } from "@mastra/core/request-context";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import type { TurnRoute } from "~/lib/classify-intent";
 import { logger } from "~/lib/logger";
-import { createKnowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import {
-  NEED_KNOWLEDGE,
-  NEED_WEB,
+  NEED_SEARCH,
   voiceSummarizerAgent,
 } from "~/mastra/agents/voice-summarizer-agent";
-import { createWebResearcherAgent } from "~/mastra/agents/web-researcher-agent";
+import { runResearch } from "~/mastra/workflows/research-workflow";
 import {
   hasVoiceFindings,
   pushVoiceFindings,
   type VoiceFindings,
-  type VoicePrefetch,
-  type VoiceSource,
 } from "~/services/voice/findings-slot";
 import {
-  getTurnRoute,
+  getLastUserText,
   getVoiceFindings,
-  getVoiceParentRouting,
-  getVoicePrefetch,
   getVoiceSearchStart,
   getVoiceTurnSignal,
 } from "./helpers";
 
 export const voiceAnswerToolName = "voiceAnswerTool";
 
-const ABORTED_ANSWER = "ごめんね、うまく調べられなかったみたい。";
+const FAILED_ANSWER = "ごめんね、うまく調べられなかったみたい。";
 
-const PREFETCH_GRACE_MS = 150;
-
-const voiceKnowledgeAgent = createKnowledgeAgent({ effort: "low" });
-const voiceWebResearcherAgent = createWebResearcherAgent();
-
-type Decision =
-  | { kind: "answer"; text: string }
-  | { kind: "route"; source: VoiceSource }
-  | { kind: "miss" };
+const UNKNOWN_ANSWER = "ごめんね、それは今わからなかったな。";
 
 const renderFindings = (entries: VoiceFindings[]) =>
   entries
     .map(
-      (entry, i) =>
-        `【資料${i + 1} | 質問「${entry.query}」 | ${entry.source}】\n${entry.text}`,
+      (entry, i) => `【資料${i + 1} | 質問「${entry.query}」】\n${entry.text}`,
     )
     .join("\n\n");
 
-const decide = async (
+const summarize = async (
   question: string,
-  findings: string | undefined,
-  requestContext: RequestContext | undefined,
-  signal: AbortSignal | undefined,
-): Promise<Decision> => {
-  const prompt = findings
-    ? `質問:「${question}」\n\n手元の資料:\n${findings}`
-    : `質問:「${question}」\n\n手元の資料: なし`;
-  const start = Date.now();
-  const res = await voiceSummarizerAgent.generate(prompt, {
-    requestContext,
-    abortSignal: signal,
-  });
-  logger.info("[Voice] decide done", {
-    ms: Date.now() - start,
-    withFindings: Boolean(findings),
-  });
-  const out = (res.text ?? "").trim();
-  if (out.startsWith(NEED_KNOWLEDGE)) {
-    return { kind: "route", source: "knowledge" };
-  }
-  if (out.startsWith(NEED_WEB)) return { kind: "route", source: "web" };
-  if (!out) return { kind: "miss" };
-  return { kind: "answer", text: out };
-};
-
-const runSearch = async (
-  source: VoiceSource,
-  question: string,
+  findings: string,
   requestContext: RequestContext | undefined,
   signal: AbortSignal | undefined,
 ) => {
-  const agent =
-    source === "web" ? voiceWebResearcherAgent : voiceKnowledgeAgent;
-  const res = await agent.generate(question, {
-    requestContext,
-    abortSignal: signal,
-  });
-  return res.text ?? "";
-};
-
-const SOURCE_OF_ROUTE = { village: "knowledge", outside: "web" } as const;
-
-export const sourceOfRoute = (route: TurnRoute | undefined) =>
-  route === "village" || route === "outside"
-    ? SOURCE_OF_ROUTE[route]
-    : undefined;
-
-export const startVoicePrefetch = ({
-  question,
-  source,
-  requestContext,
-  signal,
-}: {
-  question: string;
-  source: VoiceSource;
-  requestContext?: RequestContext;
-  signal?: AbortSignal;
-}) => {
   const start = Date.now();
-  const agent =
-    source === "web" ? voiceWebResearcherAgent : voiceKnowledgeAgent;
-  return agent
-    .generate(question, { requestContext, abortSignal: signal })
-    .then((res) => {
-      const text = res.text ?? "";
-      logger.info("[Voice] prefetch done", {
-        source,
-        ms: Date.now() - start,
-        query: question,
-        resultChars: text.length,
-      });
-      return text;
-    })
-    .catch((error) => {
-      logger.info("[Voice] prefetch dropped", {
-        ms: Date.now() - start,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      return "";
-    });
+  const res = await voiceSummarizerAgent.generate(
+    `質問:「${question}」\n\n手元の資料:\n${findings}`,
+    { requestContext, abortSignal: signal },
+  );
+  logger.info("[Voice] summarize done", { ms: Date.now() - start });
+  const out = (res.text ?? "").trim();
+  return out && !out.startsWith(NEED_SEARCH) ? out : undefined;
 };
 
 export const voiceAnswerTool = createTool({
@@ -144,142 +60,64 @@ export const voiceAnswerTool = createTool({
   outputSchema: z.object({
     answer: z.string(),
   }),
-  execute: async (inputData, context) => {
-    const { question } = inputData;
-    const source = sourceOfRoute(await getTurnRoute(context));
+  execute: async ({ question }, context) => {
     const requestContext = context?.requestContext;
     const slot = getVoiceFindings(context);
-    const prefetchSlot = getVoicePrefetch(context);
-    const parentRouting = getVoiceParentRouting(context);
     const startHold = getVoiceSearchStart(context);
     const signal = getVoiceTurnSignal(context);
     const t0 = Date.now();
 
-    const discardPrefetch = (keep?: VoicePrefetch) => {
-      const current = prefetchSlot?.current;
-      if (current && current !== keep) current.abort();
-      if (prefetchSlot) prefetchSlot.current = undefined;
-    };
-
     try {
-      logger.info("[Voice] answer start", {
-        question,
-        source: source ?? "",
-        parentRouting,
-        hasPrefetch: Boolean(prefetchSlot?.current),
-        slotEntries: slot?.entries.length ?? 0,
-        slotChars:
-          slot?.entries.reduce((sum, entry) => sum + entry.text.length, 0) ?? 0,
-      });
-
-      let summarizerRoute: VoiceSource | undefined;
-      if (!parentRouting || hasVoiceFindings(slot)) {
-        if (!hasVoiceFindings(slot)) startHold?.();
-        const first = await decide(
+      if (slot && hasVoiceFindings(slot)) {
+        const answer = await summarize(
           question,
-          slot && hasVoiceFindings(slot)
-            ? renderFindings(slot.entries)
-            : undefined,
+          renderFindings(slot.entries),
           requestContext,
           signal,
         );
-        if (signal?.aborted) return { answer: ABORTED_ANSWER };
-        if (first.kind === "answer") {
-          discardPrefetch();
+        if (signal?.aborted) return { answer: FAILED_ANSWER };
+        if (answer) {
           logger.info("[Voice] answered from slot", {
-            answer: first.text,
+            answer,
             totalMs: Date.now() - t0,
           });
-          return { answer: first.text };
-        }
-        if (first.kind === "route") summarizerRoute = first.source;
-      }
-      const searchSource = parentRouting
-        ? (source ?? summarizerRoute)
-        : summarizerRoute;
-      const routes: VoiceSource[] =
-        searchSource === "web" ? ["web"] : ["knowledge", "web"];
-
-      const tryAnswer = async (
-        route: VoiceSource,
-        text: string,
-        timing: { ms: number; fromPrefetch: boolean },
-      ) => {
-        logger.info("[Voice] search done", {
-          source: route,
-          query: question,
-          ...timing,
-          resultChars: text.length,
-          resultHead: text.slice(0, 120),
-        });
-        const answer = await decide(question, text, requestContext, signal);
-        if (answer.kind !== "answer") return undefined;
-        const findings: VoiceFindings = {
-          query: question,
-          source: route,
-          text,
-        };
-        if (slot) pushVoiceFindings(slot, findings);
-        logger.info("[Voice] answered from search", {
-          source: route,
-          answer: answer.text,
-          totalMs: Date.now() - t0,
-        });
-        return answer.text;
-      };
-
-      const prefetched =
-        prefetchSlot?.current?.source === routes[0]
-          ? prefetchSlot.current
-          : undefined;
-      discardPrefetch(prefetched);
-
-      if (prefetched) {
-        const waitStart = Date.now();
-        const quick = await Promise.race([
-          prefetched.promise,
-          new Promise<undefined>((resolve) =>
-            setTimeout(() => resolve(undefined), PREFETCH_GRACE_MS),
-          ),
-        ]);
-        if (quick === undefined) startHold?.();
-        const text = quick ?? (await prefetched.promise);
-        if (signal?.aborted) return { answer: ABORTED_ANSWER };
-        if (text) {
-          const answer = await tryAnswer(prefetched.source, text, {
-            ms: Date.now() - waitStart,
-            fromPrefetch: true,
-          });
-          if (signal?.aborted) return { answer: ABORTED_ANSWER };
-          if (answer !== undefined) return { answer };
+          return { answer };
         }
       }
 
       startHold?.();
-
-      for (const route of routes) {
-        const searchStart = Date.now();
-        const text = await runSearch(route, question, requestContext, signal);
-        if (signal?.aborted) return { answer: ABORTED_ANSWER };
-        const answer = await tryAnswer(route, text, {
-          ms: Date.now() - searchStart,
-          fromPrefetch: false,
-        });
-        if (signal?.aborted) return { answer: ABORTED_ANSWER };
-        if (answer !== undefined) return { answer };
-      }
-
-      logger.info("[Voice] no answer found", {
+      const { memo } = await runResearch({
         question,
+        userText: getLastUserText(context),
+        requestContext,
+        signal,
+      });
+      if (signal?.aborted) return { answer: FAILED_ANSWER };
+      const researchMs = Date.now() - t0;
+      const answer = memo
+        ? await summarize(question, memo, requestContext, signal)
+        : undefined;
+      if (signal?.aborted) return { answer: FAILED_ANSWER };
+      if (!answer) {
+        logger.info("[Voice] no answer found", {
+          question,
+          totalMs: Date.now() - t0,
+        });
+        return { answer: UNKNOWN_ANSWER };
+      }
+      if (slot) pushVoiceFindings(slot, { query: question, text: memo });
+      logger.info("[Voice] answered from search", {
+        answer,
+        researchMs,
         totalMs: Date.now() - t0,
       });
-      return { answer: "ごめんね、それは今わからなかったな。" };
+      return { answer };
     } catch (error) {
-      if (signal?.aborted) return { answer: ABORTED_ANSWER };
+      if (signal?.aborted) return { answer: FAILED_ANSWER };
       logger.error("[Voice] voiceAnswer failed", {
         error: error instanceof Error ? error.message : String(error),
       });
-      return { answer: "ごめんね、うまく調べられなかったみたい。" };
+      return { answer: FAILED_ANSWER };
     }
   },
 });

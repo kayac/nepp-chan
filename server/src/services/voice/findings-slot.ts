@@ -1,8 +1,5 @@
-export type VoiceSource = "knowledge" | "web";
-
 export type VoiceFindings = {
   query: string;
-  source: VoiceSource;
   text: string;
 };
 
@@ -33,14 +30,3 @@ export const pushVoiceFindings = (
     slot.entries.shift();
   }
 };
-
-export type VoicePrefetch = {
-  query: string;
-  source: VoiceSource;
-  promise: Promise<string>;
-  abort: () => void;
-};
-
-export type VoicePrefetchSlot = { current?: VoicePrefetch };
-
-export const createVoicePrefetchSlot = (): VoicePrefetchSlot => ({});

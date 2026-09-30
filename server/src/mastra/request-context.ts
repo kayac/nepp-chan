@@ -1,13 +1,9 @@
 import type { D1Store } from "@mastra/cloudflare-d1";
 import { RequestContext } from "@mastra/core/request-context";
 import type { TurnRoute } from "~/lib/classify-intent";
-
 import type { AuthUser } from "~/schemas/auth-schema";
 import type { LlmUsagePlatform } from "~/services/analytics/llm-usage";
-import type {
-  VoiceFindingsSlot,
-  VoicePrefetchSlot,
-} from "~/services/voice/findings-slot";
+import type { VoiceFindingsSlot } from "~/services/voice/findings-slot";
 
 export type MastraRequestContextType = {
   storage?: D1Store;
@@ -19,8 +15,6 @@ export type MastraRequestContextType = {
   usageThreadId?: string;
   usageTurnId?: string;
   voiceFindings?: VoiceFindingsSlot;
-  voicePrefetch?: VoicePrefetchSlot;
-  voiceParentRouting?: boolean;
   turnRoute?: Promise<TurnRoute>;
   voiceSearchStart?: () => void;
   voiceTurnSignal?: AbortSignal;
@@ -52,14 +46,8 @@ export const createRequestContext = (values: MastraRequestContextType) => {
   if (values.voiceFindings) {
     requestContext.set("voiceFindings", values.voiceFindings);
   }
-  if (values.voicePrefetch) {
-    requestContext.set("voicePrefetch", values.voicePrefetch);
-  }
   if (values.turnRoute) {
     requestContext.set("turnRoute", values.turnRoute);
-  }
-  if (values.voiceParentRouting !== undefined) {
-    requestContext.set("voiceParentRouting", values.voiceParentRouting);
   }
   if (values.voiceSearchStart) {
     requestContext.set("voiceSearchStart", values.voiceSearchStart);

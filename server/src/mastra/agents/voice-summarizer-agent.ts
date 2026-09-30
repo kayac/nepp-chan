@@ -2,8 +2,7 @@ import { Agent } from "@mastra/core/agent";
 import { deterministicModelConfig } from "~/lib/llm-models";
 import { withUsageRecording } from "~/services/analytics/llm-usage";
 
-export const NEED_KNOWLEDGE = "NEED_KNOWLEDGE";
-export const NEED_WEB = "NEED_WEB";
+export const NEED_SEARCH = "NEED_SEARCH";
 
 export const voiceSummarizerAgent = new Agent({
   id: "voice-summarizer",
@@ -21,7 +20,5 @@ export const voiceSummarizerAgent = new Agent({
    - 一番大事な1点だけ。列挙・補足・URL・記号・絵文字は書かない。
    - 資料に無い具体値（日付・曜日・時刻・数値など）は推測・捏造しない。
 
-2. 資料で答えられない、または資料が空の場合: 次のどちらか1語だけを出力する（他の文字は一切含めない）。
-   - 音威子府村ローカルの情報（施設・観光・行政・歴史・イベント・村の店など）が必要 → ${NEED_KNOWLEDGE}
-   - 最新情報・時事・天気・村外の一般的な情報が必要 → ${NEED_WEB}`,
+2. 資料で答えられない場合: ${NEED_SEARCH} の1語だけを出力する（他の文字は一切含めない）。`,
 });

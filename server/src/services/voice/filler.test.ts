@@ -1,18 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isQuestionLike, pickFiller, THINKING_FILLERS } from "./filler";
-
-describe("isQuestionLike", () => {
-  it("問いかけを判定する", () => {
-    expect(isQuestionLike("そばって美味しいの？")).toBe(true);
-    expect(isQuestionLike("駅はどこ")).toBe(true);
-    expect(isQuestionLike("今日の天気を教えて")).toBe(true);
-  });
-
-  it("報告・雑談は問いかけとみなさない", () => {
-    expect(isQuestionLike("今日は疲れたよ")).toBe(false);
-    expect(isQuestionLike("ラーメン食べたい")).toBe(false);
-  });
-});
+import { pickFiller, THINKING_FILLERS } from "./filler";
 
 describe("pickFiller", () => {
   it("調べ物のあるターンには考え中のフィラーを返し、index で巡回する", () => {

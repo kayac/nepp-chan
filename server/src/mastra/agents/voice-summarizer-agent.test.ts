@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  NEED_KNOWLEDGE,
-  NEED_WEB,
-  voiceSummarizerAgent,
-} from "./voice-summarizer-agent";
+import { NEED_SEARCH, voiceSummarizerAgent } from "./voice-summarizer-agent";
 
 const instructionsOf = async () =>
   String(
@@ -17,7 +13,6 @@ const instructionsOf = async () =>
 describe("voiceSummarizerAgent", () => {
   it("資料で答えられないときの委譲シグナルを指示に含む", async () => {
     const ins = await instructionsOf();
-    expect(ins).toContain(NEED_KNOWLEDGE);
-    expect(ins).toContain(NEED_WEB);
+    expect(ins).toContain(NEED_SEARCH);
   });
 });

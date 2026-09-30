@@ -1,11 +1,9 @@
 import type { ToolExecutionContext } from "@mastra/core/tools";
+import type { ModelMessage } from "ai";
 import type { TurnRoute } from "~/lib/classify-intent";
 import { ROLE_LEVEL } from "~/middleware/require-role";
 import type { AdminRole, AuthUser } from "~/schemas/auth-schema";
-import type {
-  VoiceFindingsSlot,
-  VoicePrefetchSlot,
-} from "~/services/voice/findings-slot";
+import type { VoiceFindingsSlot } from "~/services/voice/findings-slot";
 
 type ToolContext = ToolExecutionContext | undefined;
 
@@ -30,18 +28,18 @@ export const getVoiceFindings = (
     | VoiceFindingsSlot
     | undefined;
 
-export const getVoicePrefetch = (
-  context: ToolContext,
-): VoicePrefetchSlot | undefined =>
-  context?.requestContext?.get("voicePrefetch") as
-    | VoicePrefetchSlot
-    | undefined;
-
 export const getTurnRoute = (context: ToolContext) =>
   context?.requestContext?.get("turnRoute") as Promise<TurnRoute> | undefined;
 
-export const getVoiceParentRouting = (context: ToolContext): boolean =>
-  context?.requestContext?.get("voiceParentRouting") === true;
+export const getLastUserText = (context: ToolContext) => {
+  const messages = context?.agent?.messages as ModelMessage[] | undefined;
+  const last = messages?.findLast((message) => message.role === "user");
+  if (!last) return undefined;
+  if (typeof last.content === "string") return last.content;
+  return last.content
+    .flatMap((part) => (part.type === "text" ? [part.text] : []))
+    .join("\n");
+};
 
 export const getVoiceSearchStart = (
   context: ToolContext,

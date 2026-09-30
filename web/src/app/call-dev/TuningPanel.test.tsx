@@ -51,8 +51,6 @@ const baseValues = {
   holdPhrases: "いま調べてるよ",
   holdPhraseIntervalMs: "6000",
   endCallEnabled: "true",
-  parentRoutingEnabled: "true",
-  prefetchEnabled: "true",
 };
 
 const setup = (overrides: Partial<typeof baseValues> = {}) => {
@@ -209,8 +207,6 @@ describe("TuningPanel", () => {
     ["DTMF 検出", "dtmfDetection", "true"],
     ["partialPrompts", "partialPrompts", "false"],
     ["保留音", "holdAudioEnabled", "false"],
-    ["検索先をねっぷちゃんが選ぶ", "parentRoutingEnabled", "false"],
-    ["問いかけを先読みして検索", "prefetchEnabled", "false"],
   ])("%s のトグルは %s を onChange する", (label, key, value) => {
     const { onChange } = setup();
     fireEvent.click(screen.getByLabelText(label));

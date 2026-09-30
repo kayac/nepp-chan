@@ -130,7 +130,7 @@ const knowledgeStep = createStep({
   id: "research-knowledge",
   inputSchema: routedSchema,
   outputSchema: knowledgeSchema,
-  execute: async ({ inputData, requestContext }) => {
+  execute: async ({ inputData, requestContext, abortSignal }) => {
     if (inputData.route === "outside") return inputData;
     const searchTerms = inputData.queries?.length
       ? inputData.queries
@@ -143,7 +143,10 @@ const knowledgeStep = createStep({
       : "";
     const prompt = `${describeQuestion(inputData)}\n${searchedSection}${MEMO_FORMAT}\n${COVERAGE_RULE}`;
     const agentStartedAt = Date.now();
-    const res = await knowledgeAgent.generate(prompt, { requestContext });
+    const res = await knowledgeAgent.generate(prompt, {
+      requestContext,
+      abortSignal,
+    });
     const coverage = parseCoverage(res.text);
     logger.info("[Research] knowledge", {
       question: inputData.question,
@@ -171,12 +174,15 @@ const webStep = createStep({
   id: "research-web",
   inputSchema: knowledgeSchema,
   outputSchema: memoSchema,
-  execute: async ({ inputData, requestContext }) => {
+  execute: async ({ inputData, requestContext, abortSignal }) => {
     const prompt = inputData.knowledgeMemo
       ? `${describeQuestion(inputData)}\n\n村のナレッジで確認できた内容:\n${inputData.knowledgeMemo}\n\n不足している点だけを調べる。`
       : describeQuestion(inputData);
     const startedAt = Date.now();
-    const res = await webResearcherAgent.generate(prompt, { requestContext });
+    const res = await webResearcherAgent.generate(prompt, {
+      requestContext,
+      abortSignal,
+    });
     logger.info("[Research] web", {
       question: inputData.question,
       ms: Date.now() - startedAt,
@@ -234,13 +240,16 @@ export const runResearch = async ({
   userText,
   queries,
   requestContext,
+  signal,
 }: {
   question: string;
   userText?: string;
   queries?: string[];
   requestContext?: RequestContext;
+  signal?: AbortSignal;
 }) => {
   const run = await researchWorkflow.createRun();
+  signal?.addEventListener("abort", () => void run.cancel(), { once: true });
   const result = await run.start({
     inputData: { question, userText, queries },
     requestContext,

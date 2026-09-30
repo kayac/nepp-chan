@@ -25,7 +25,6 @@ const {
   saveMessagesMock,
   saveThreadMock,
   streamMock,
-  prefetchMock,
   classifyMock,
 } = vi.hoisted(() => ({
   classifyMock: vi.fn(),
@@ -33,7 +32,6 @@ const {
   saveMessagesMock: vi.fn(),
   saveThreadMock: vi.fn(),
   streamMock: vi.fn(),
-  prefetchMock: vi.fn(),
 }));
 
 vi.mock("~/lib/storage", () => ({
@@ -44,12 +42,6 @@ vi.mock("~/mastra/agents/nepp-chan-agent", () => ({
 }));
 vi.mock("~/lib/classify-intent", () => ({
   classifyTurn: classifyMock,
-}));
-vi.mock("~/mastra/tools/voice-answer-tool", async (importOriginal) => ({
-  ...(await importOriginal<
-    typeof import("~/mastra/tools/voice-answer-tool")
-  >()),
-  startVoicePrefetch: prefetchMock,
 }));
 vi.mock("@mastra/core/mastra", () => ({
   Mastra: class {
@@ -74,8 +66,6 @@ describe("createVoiceConversation", () => {
     });
     saveMessagesMock.mockReset();
     saveThreadMock.mockReset();
-    prefetchMock.mockReset();
-    prefetchMock.mockResolvedValue("投機検索の資料");
   });
 
   it("Mastra Memory を使わず、通話内の履歴を明示して text-delta を返す", async () => {
@@ -362,168 +352,23 @@ describe("createVoiceConversation", () => {
     expect(out).toEqual(["調べてみるね", "音威子府そばだよ"]);
   });
 
-  describe("投機検索（prefetch）", () => {
-    const drain = async (
-      params: Parameters<
-        Awaited<ReturnType<typeof createVoiceConversation>>["runTurn"]
-      >[0],
-    ) => {
-      streamMock.mockResolvedValue({
-        fullStream: fakeFullStream([textDelta("はい")]),
-      });
-      const { runTurn } = await createVoiceConversation({
-        env,
-        from: "client:x",
-        callSid: "CA123",
-      });
-      for await (const _ of runTurn(params)) {
-      }
-    };
-
-    it("行き先が村のことならナレッジを先読みし、ターン専用スロットでツールへ渡す", async () => {
-      let slot: { current?: unknown } | undefined;
-      streamMock.mockImplementation(async (_input, opts) => {
-        slot = opts.requestContext.get("voicePrefetch");
-        return { fullStream: fakeFullStream([textDelta("はい")]) };
-      });
-      const prefetchAtEnd = () => slot?.current;
-      const { runTurn } = await createVoiceConversation({
-        env,
-        from: "client:x",
-        callSid: "CA123",
-      });
-      for await (const _ of runTurn({
-        text: "そば屋はどこ？",
-        route: Promise.resolve("village" as const),
-        prefetchEnabled: true,
-      })) {
-      }
-
-      expect(prefetchMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          question: "そば屋はどこ？",
-          source: "knowledge",
-        }),
-      );
-      expect(prefetchAtEnd()).toMatchObject({
-        query: "そば屋はどこ？",
-        source: "knowledge",
-      });
+  it("行き先を requestContext 経由でツールへ渡す", async () => {
+    streamMock.mockResolvedValue({
+      fullStream: fakeFullStream([textDelta("はい")]),
     });
-
-    it("行き先が村外なら Web を先読みする", async () => {
-      await drain({
-        text: "明日の天気は？",
-        route: Promise.resolve("outside" as const),
-        prefetchEnabled: true,
-      });
-
-      expect(prefetchMock).toHaveBeenCalledWith(
-        expect.objectContaining({ question: "明日の天気は？", source: "web" }),
-      );
+    const { runTurn } = await createVoiceConversation({
+      env,
+      from: "client:x",
+      callSid: "CA123",
     });
+    for await (const _ of runTurn({
+      text: "明日の天気は？",
+      route: Promise.resolve("outside" as const),
+    })) {
+    }
 
-    it("調べない行き先では起動しない", async () => {
-      await drain({
-        text: "今日は疲れたよ",
-        route: Promise.resolve("none" as const),
-        prefetchEnabled: true,
-      });
-
-      expect(prefetchMock).not.toHaveBeenCalled();
-    });
-
-    it("行き先を requestContext 経由でツールへ渡す", async () => {
-      await drain({
-        text: "明日の天気は？",
-        route: Promise.resolve("outside" as const),
-      });
-
-      const { requestContext } = streamMock.mock.calls[0][1];
-      expect(await requestContext.get("turnRoute")).toBe("outside");
-    });
-
-    it("prefetchEnabled でなければ起動しない", async () => {
-      await drain({ text: "そば屋はどこ？" });
-
-      expect(prefetchMock).not.toHaveBeenCalled();
-    });
-
-    it("行き先の判定がターンの終了より遅れたら、先読みを始めない", async () => {
-      let resolveRoute: (route: "village") => void = () => {};
-      const route = new Promise<"village">((resolve) => {
-        resolveRoute = resolve;
-      });
-      await drain({ text: "そば屋はどこ？", route, prefetchEnabled: true });
-      resolveRoute("village");
-      await route;
-
-      expect(prefetchMock).not.toHaveBeenCalled();
-    });
-
-    it("ツールに消費されなかった投機検索はターン終了時に中断する", async () => {
-      await drain({
-        text: "そば屋はどこ？",
-        route: Promise.resolve("village" as const),
-        prefetchEnabled: true,
-      });
-
-      const prefetchSignal = prefetchMock.mock.calls[0][0].signal;
-      expect(prefetchSignal.aborted).toBe(true);
-    });
-
-    it("stream の初期化が失敗しても投機検索を中断する", async () => {
-      streamMock.mockRejectedValueOnce(new Error("api error"));
-      const { runTurn } = await createVoiceConversation({
-        env,
-        from: "client:x",
-        callSid: "CA123",
-      });
-
-      await expect(async () => {
-        for await (const _ of runTurn({
-          text: "そば屋はどこ？",
-          route: Promise.resolve("village" as const),
-          prefetchEnabled: true,
-        })) {
-        }
-      }).rejects.toThrow("api error");
-
-      const prefetchSignal = prefetchMock.mock.calls[0][0].signal;
-      expect(prefetchSignal.aborted).toBe(true);
-    });
-
-    it("ターンの中断で投機検索も即座に中断される", async () => {
-      const controller = new AbortController();
-      let abortedDuringStream: boolean | undefined;
-      streamMock.mockImplementation(async () => {
-        await Promise.resolve();
-        controller.abort();
-        abortedDuringStream = prefetchMock.mock.calls[0][0].signal.aborted;
-        return { fullStream: fakeFullStream([]) };
-      });
-      const { runTurn } = await createVoiceConversation({
-        env,
-        from: "client:x",
-        callSid: "CA123",
-      });
-      for await (const _ of runTurn({
-        text: "そば屋はどこ？",
-        route: Promise.resolve("village" as const),
-        prefetchEnabled: true,
-        signal: controller.signal,
-      })) {
-      }
-
-      expect(abortedDuringStream).toBe(true);
-    });
-
-    it("parentRouting を requestContext 経由でツールへ渡す", async () => {
-      await drain({ text: "そば屋はどこ？", parentRouting: true });
-
-      const { requestContext } = streamMock.mock.calls[0][1];
-      expect(requestContext.get("voiceParentRouting")).toBe(true);
-    });
+    const { requestContext } = streamMock.mock.calls[0][1];
+    expect(await requestContext.get("turnRoute")).toBe("outside");
   });
 
   it("routeTurn は発話を行き先に分類し、usage を通話のスレッドに紐づける", async () => {

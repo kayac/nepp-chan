@@ -8,7 +8,6 @@ import {
 
 const findings = (query: string, chars = 10): VoiceFindings => ({
   query,
-  source: "knowledge",
   text: "あ".repeat(chars),
 });
 

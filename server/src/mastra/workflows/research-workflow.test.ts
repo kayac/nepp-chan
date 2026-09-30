@@ -340,6 +340,32 @@ describe("runResearch", () => {
     expect(searchMock).not.toHaveBeenCalled();
   });
 
+  it("signal が中断されたら、エージェントの生成を止めて失敗にする", async () => {
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
+    knowledgeGenerate.mockImplementationOnce(
+      (_prompt: string, options: { abortSignal: AbortSignal }) =>
+        new Promise((_resolve, reject) => {
+          options.abortSignal?.addEventListener("abort", () =>
+            reject(new Error("aborted")),
+          );
+        }),
+    );
+    const controller = new AbortController();
+
+    const research = runResearch({
+      question: "q",
+      requestContext: contextWithKey("k"),
+      signal: controller.signal,
+    });
+    await vi.waitFor(() => expect(knowledgeGenerate).toHaveBeenCalled());
+    const { abortSignal } = knowledgeGenerate.mock.calls[0]?.[1] ?? {};
+    expect(abortSignal).toBeInstanceOf(AbortSignal);
+    controller.abort();
+    expect(abortSignal.aborted).toBe(true);
+
+    await expect(research).rejects.toThrow();
+  });
+
   it("エージェントに requestContext をそのまま渡す", async () => {
     classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
