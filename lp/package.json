@@ -17,7 +17,7 @@
     "@astrojs/react": "^7.0.0",
     "@heroicons/react": "^2.2.0",
     "@nepp-chan/shared": "workspace:*",
-    "ai": "^7.0.114",
+    "ai": "^7.0.118",
     "astro": "^7.3.5",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
