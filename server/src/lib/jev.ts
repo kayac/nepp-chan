@@ -1,4 +1,3 @@
-import type { RequestContext } from "@mastra/core/request-context";
 import { z } from "zod";
 
 const JEV_ENDPOINT = "https://api.typesafe.ai/v1/systemone";
@@ -51,10 +50,6 @@ export class JevHttpError extends Error {
     super(`jev responded ${status}`);
   }
 }
-
-export const jevApiKey = (requestContext?: RequestContext) =>
-  (requestContext?.get("env") as CloudflareBindings | undefined)
-    ?.TYPESAFE_API_KEY;
 
 export const askJev = async (params: {
   apiKey: string;

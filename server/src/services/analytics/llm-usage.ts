@@ -1,6 +1,5 @@
 import type { RequestContext } from "@mastra/core/request-context";
 import type { MastraOnFinishCallbackArgs } from "@mastra/core/stream";
-import { askJev, JEV_MODEL } from "~/lib/jev";
 import { calcCostUsd, type LlmServiceTier } from "~/lib/llm-pricing";
 import { logger } from "~/lib/logger";
 import { llmUsageRepository } from "~/repository/llm-usage-repository";
@@ -134,33 +133,6 @@ const serviceTierOf = (defaultOptions?: Record<string, unknown>) =>
       | { openai?: { serviceTier?: LlmServiceTier } }
       | undefined
   )?.openai?.serviceTier;
-
-export const askJevWithUsage = async ({
-  requestContext,
-  source,
-  agent,
-  ...params
-}: Parameters<typeof askJev>[0] & {
-  requestContext: RequestContext;
-  source: LlmUsageSource;
-  agent: string;
-}) => {
-  const startedAt = Date.now();
-  const response = await askJev(params);
-  runInBackground(
-    recordUsageFromContext(requestContext, {
-      model: response.model ?? JEV_MODEL,
-      usage: {
-        inputTokens: response.usage?.input_tokens,
-        outputTokens: response.usage?.output_tokens,
-      },
-      source,
-      agent,
-      durationMs: Date.now() - startedAt,
-    }),
-  );
-  return response;
-};
 
 export const withUsageRecording = <
   T extends { model: string; defaultOptions?: Record<string, unknown> },
