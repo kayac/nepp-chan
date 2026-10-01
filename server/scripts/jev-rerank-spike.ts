@@ -15,7 +15,6 @@ import { searchKnowledge } from "../src/services/knowledge/search";
 import { EMBEDDING_DIMENSIONS } from "../src/services/knowledge/vector-store";
 import { evalTestCases } from "./data/eval-test-cases";
 
-const SEARCH_TOP_K = 10;
 const RERANK_TOP_K = 5;
 const RERANK_WEIGHTS = { semantic: 0.5, vector: 0.3, position: 0.2 };
 
@@ -57,8 +56,32 @@ type Candidates = {
   chunks: Chunk[];
 };
 
-type Arm = "luna" | "jev" | "jev-ja";
-const ARMS: Arm[] = ["luna", "jev", "jev-ja"];
+const JEV_QUESTIONS = {
+  jev: rerankQuestion,
+  "jev-ja": jaRerankQuestion,
+  "jev-ja-answer": {
+    type: "noul",
+    instructions:
+      "この文章が、ユーザーの検索語への答えそのものを書いているか。",
+    criteria: {
+      true: "検索語に直接答える事実や説明が本文に書かれている。",
+      false:
+        "話題が違う、話題や言葉が重なるだけ、またはリンク・目次・メニューの一覧で答えの本文が無い。",
+    },
+  },
+  "jev-ja-nolist": {
+    type: "noul",
+    instructions: "この文章に、ユーザーの検索語に答える情報が含まれているか。",
+    criteria: {
+      true: "検索語に直接答える事実、または答えの主要な部分が書かれている。",
+      false:
+        "話題が違う、検索語と言葉や大まかな話題が重なるだけで答えになっていない、またはページへのリンク・目次・メニューが並んでいるだけで答えの本文が無い。",
+    },
+  },
+} satisfies Record<string, JevQuestion>;
+
+type Arm = "luna" | keyof typeof JEV_QUESTIONS;
+const ARMS = ["luna", ...Object.keys(JEV_QUESTIONS)] as Arm[];
 
 type ScoreRecord = {
   caseId: string;
@@ -79,10 +102,10 @@ type Report = {
 };
 
 const outDir = resolve(serverRoot, "../eval-results/jev-rerank");
-const candidatesPath = join(outDir, "candidates.json");
 
 const { values } = parseArgs({
   options: {
+    "top-k": { type: "string", default: "10" },
     build: { type: "boolean", default: false },
     env: { type: "string", default: "development" },
     only: { type: "string", default: "all" },
@@ -94,6 +117,14 @@ const { values } = parseArgs({
     ineligible: { type: "boolean", default: false },
   },
 });
+
+const SEARCH_TOP_K = Number(values["top-k"]);
+const candidatesPath = join(
+  outDir,
+  SEARCH_TOP_K === 10
+    ? "candidates.json"
+    : `candidates-top${SEARCH_TOP_K}.json`,
+);
 
 const isRelevant = (keywords: string[], chunk: Omit<Chunk, "relevant">) => {
   const haystack = [chunk.title, chunk.section, chunk.content].join("\n");
@@ -242,7 +273,7 @@ const scoreCase = async (
           jevKey,
           c.query,
           chunk.content,
-          arm === "jev-ja" ? jaRerankQuestion : rerankQuestion,
+          JEV_QUESTIONS[arm],
         );
         if (r.inputTokens !== undefined) inputTokens.push(r.inputTokens);
         return r.score;
@@ -545,7 +576,9 @@ const main = async () => {
     await bench(candidates, n);
     return;
   }
-  const arms = ARMS.filter((a) => values.only === "all" || values.only === a);
+  const arms = ARMS.filter(
+    (a) => values.only === "all" || values.only.split(",").includes(a),
+  );
   const report: Report = {
     startedAt: new Date().toISOString(),
     n,
