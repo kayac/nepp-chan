@@ -117,10 +117,10 @@ describe("searchKnowledge", () => {
     expect(rerankArg.options.topK).toBe(1);
   });
 
-  it("vector 候補は新しさ込みで上位 10 件に絞り、vector スコア順で rerank に渡す", async () => {
+  it("vector 候補は新しさ込みで上位 15 件に絞って rerank に渡す", async () => {
     vi.mocked(embed).mockResolvedValueOnce({ embedding: [0.1] } as never);
     const vectorize = buildVectorize();
-    const oldMatches = Array.from({ length: 10 }, (_, i) => ({
+    const oldMatches = Array.from({ length: 15 }, (_, i) => ({
       id: `old${i}`,
       score: 0.72 - i * 0.001,
       metadata: {
@@ -158,12 +158,10 @@ describe("searchKnowledge", () => {
       results: { id: string }[];
       options: { topK: number };
     };
-    expect(rerankArg.results).toHaveLength(10);
+    expect(rerankArg.results).toHaveLength(15);
     expect(rerankArg.results.map((r) => r.id)).toContain("new");
-    expect(rerankArg.results.map((r) => r.id)).not.toContain("old9");
-    expect(rerankArg.results[0].id).toBe("old0");
-    expect(rerankArg.results[9].id).toBe("new");
-    expect(rerankArg.options.topK).toBe(10);
+    expect(rerankArg.results.map((r) => r.id)).not.toContain("old14");
+    expect(rerankArg.options.topK).toBe(15);
   });
 
   it("rerank 後は新しさを加点して並べ替え、上位 5 件を返す", async () => {

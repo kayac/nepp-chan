@@ -11,7 +11,7 @@ import { EMBEDDING_DIMENSIONS } from "./vector-store";
 
 const SEARCH_TOP_K = 50;
 
-const RERANK_CANDIDATES = 10;
+const RERANK_CANDIDATES = 15;
 
 const RERANK_TOP_K = 5;
 
@@ -105,9 +105,7 @@ export const searchKnowledge = async (
       }),
       now,
       RECENCY_WEIGHT,
-    )
-      .slice(0, RERANK_CANDIDATES)
-      .sort((a, b) => b.result.score - a.result.score);
+    ).slice(0, RERANK_CANDIDATES);
 
     const queryResults = candidates.map((c) => ({
       id: c.id,
@@ -123,8 +121,8 @@ export const searchKnowledge = async (
         topK: queryResults.length,
         weights: {
           semantic: 0.5,
-          vector: 0.3,
-          position: 0.2,
+          vector: 0.5,
+          position: 0,
         },
       },
     });
