@@ -10,9 +10,9 @@ vi.mock("~/mastra/agents/intent-router-agent", () => ({
   intentRouterAgent: { generate: generateMock },
 }));
 
-vi.mock("~/services/analytics/llm-usage", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("~/services/analytics/llm-usage")>()),
-  askJevWithUsage: askJevMock,
+vi.mock("~/lib/jev", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("~/lib/jev")>()),
+  askJev: askJevMock,
 }));
 
 vi.mock("~/lib/logger", () => ({
@@ -27,9 +27,31 @@ const contextWithKey = (key?: string) => {
   return ctx;
 };
 
-const jevResponse = (pThinking: number, pVillage = 0.9) => ({
+const backchannelAnswer = (choice: string) => ({
+  type: "choice" as const,
+  choice,
+  probabilities: Object.fromEntries(
+    [
+      "greeting",
+      "agree",
+      "happy",
+      "sad",
+      "surprise",
+      "ask",
+      "listen",
+      "none",
+    ].map((option) => [option, option === choice ? 1 : 0]),
+  ),
+});
+
+const jevResponse = (
+  pThinking: number,
+  pVillage = 0.9,
+  backchannel = "none",
+) => ({
   model: "jev-1.13.0",
   answers: {
+    backchannel: backchannelAnswer(backchannel),
     intent: {
       type: "choice" as const,
       choice: pThinking >= 0.5 ? "thinking" : "casual",
@@ -118,35 +140,10 @@ describe("classifyTurn（jev）", () => {
     expect(sentParams().state).toEqual([{ from: "user", text: "こんにちは" }]);
   });
 
-  it("usage の記録先として requestContext・source intent-classify・agent intent-router を渡す", async () => {
-    askJevMock.mockResolvedValueOnce(jevResponse(0.9));
-    const ctx = contextWithKey("k");
-    await classifyTurn({ text: "教えて" }, ctx);
-    expect(askJevMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        requestContext: ctx,
-        source: "intent-classify",
-        agent: "intent-router",
-      }),
-    );
-  });
-
   it("相槌の種類を同じ呼び出しで聞き、none なら返さない", async () => {
     askJevMock
-      .mockResolvedValueOnce({
-        ...jevResponse(0.1),
-        answers: {
-          ...jevResponse(0.1).answers,
-          backchannel: { type: "choice", choice: "happy", probabilities: {} },
-        },
-      })
-      .mockResolvedValueOnce({
-        ...jevResponse(0.1),
-        answers: {
-          ...jevResponse(0.1).answers,
-          backchannel: { type: "choice", choice: "none", probabilities: {} },
-        },
-      });
+      .mockResolvedValueOnce(jevResponse(0.1, 0.9, "happy"))
+      .mockResolvedValueOnce(jevResponse(0.1, 0.9, "none"));
 
     const happy = await classifyTurn({ text: "晴れた！" }, contextWithKey("k"));
     const none = await classifyTurn({ text: "…" }, contextWithKey("k"));
@@ -156,20 +153,6 @@ describe("classifyTurn（jev）", () => {
     );
     expect(happy.backchannel).toBe("happy");
     expect(none.backchannel).toBeUndefined();
-  });
-
-  it("調べ先の答えが無ければ、thinking は村のこととして扱う", async () => {
-    askJevMock.mockResolvedValueOnce({
-      answers: {
-        intent: {
-          type: "choice",
-          choice: "thinking",
-          probabilities: { casual: 0.1, thinking: 0.9 },
-        },
-      },
-    });
-    const result = await classifyTurn({ text: "教えて" }, contextWithKey("k"));
-    expect(result).toEqual({ intent: "thinking", route: "village" });
   });
 });
 
@@ -205,9 +188,10 @@ describe("classifyTurn（フォールバック）", () => {
     expect(generateMock).toHaveBeenCalledTimes(1);
   });
 
-  it("answers.intent に thinking の確率が無ければ intentRouterAgent に落ちる", async () => {
+  it("jev の応答が判定文の選択肢と合わなければ intentRouterAgent に落ちる", async () => {
     askJevMock.mockResolvedValueOnce({
       answers: {
+        ...jevResponse(0).answers,
         intent: {
           type: "choice",
           choice: "casual",

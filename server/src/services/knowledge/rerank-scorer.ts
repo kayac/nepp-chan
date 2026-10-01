@@ -1,16 +1,17 @@
 import { Agent } from "@mastra/core/agent";
 import { createSimilarityPrompt } from "@mastra/core/relevance";
 import type { RequestContext } from "@mastra/core/request-context";
-import { type JevQuestion, jevApiKey } from "~/lib/jev";
 import { modelWithReasoning, OPENAI_LITE } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
+import { withUsageRecording } from "~/services/analytics/llm-usage";
 import {
-  askJevWithUsage,
-  withUsageRecording,
-} from "~/services/analytics/llm-usage";
+  createDecider,
+  type Decider,
+  type YesNoQuestion,
+} from "~/services/decision/decider";
 
-const rerankQuestion: JevQuestion = {
-  type: "noul",
+const rerankQuestion: YesNoQuestion = {
+  type: "yesno",
   instructions: "この文章に、ユーザーの検索語に答える情報が含まれているか。",
   criteria: {
     true: "検索語に直接答える事実、または答えの主要な部分が書かれている。",
@@ -52,36 +53,30 @@ const scoreWithLuna = async (
   return Number.parseFloat(response.text);
 };
 
-const scoreWithJev = async (
+const scoreWithDecider = async (
   query: string,
   text: string,
-  apiKey: string,
-  requestContext: RequestContext,
+  decider: Decider,
 ) => {
-  const response = await askJevWithUsage({
-    apiKey,
-    state: { query, passage: text },
-    questions: { relevant: rerankQuestion },
-    requestContext,
-    source: "rerank",
-    agent: "knowledge-reranker",
-  });
-  const answer = response.answers.relevant;
-  if (answer?.type !== "noul") {
-    throw new Error("jev answer has no noul");
-  }
-  return answer.noul;
+  const { relevant } = await decider.decide(
+    { query, passage: text },
+    { relevant: rerankQuestion },
+  );
+  return relevant.p;
 };
 
 export const createRerankScorer = (requestContext?: RequestContext) => {
-  const apiKey = jevApiKey(requestContext);
+  const decider = createDecider(requestContext, {
+    source: "rerank",
+    agent: "knowledge-reranker",
+  });
   return {
     getRelevanceScore: async (query: string, text: string) => {
-      if (!apiKey || !requestContext) {
+      if (!decider) {
         return scoreWithLuna(query, text, requestContext);
       }
       try {
-        return await scoreWithJev(query, text, apiKey, requestContext);
+        return await scoreWithDecider(query, text, decider);
       } catch (error) {
         logger.warn("[Rerank] jev failed, falling back to agent", {
           error: String(error),

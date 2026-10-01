@@ -1,13 +1,16 @@
 import type { RequestContext } from "@mastra/core/request-context";
 import { z } from "zod";
-import { type JevQuestion, jevApiKey } from "~/lib/jev";
 import { logger } from "~/lib/logger";
 import { getStorage } from "~/lib/storage";
 import { tagGroupAgent } from "~/mastra/agents/tag-group-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { personaRepository } from "~/repository/persona-repository";
 import { personaTagGroupRepository } from "~/repository/persona-tag-group-repository";
-import { askJevWithUsage } from "~/services/analytics/llm-usage";
+import {
+  type ChoiceQuestion,
+  createDecider,
+  type Decider,
+} from "~/services/decision/decider";
 import {
   collectTagExamples,
   collectUnassignedTags,
@@ -31,7 +34,7 @@ type Classifier = Pick<typeof tagGroupAgent, "generate">;
 
 type Assignment = { tag: string; groupId: string | null };
 
-const JEV_CONCURRENCY = 8;
+const DECIDE_CONCURRENCY = 8;
 
 const NO_GROUP = "none";
 
@@ -50,7 +53,7 @@ const examplesOf = (groupId: string, aliases: Map<string, string | null>) =>
 const tagGroupQuestion = (
   groups: TagGroup[],
   aliases: Map<string, string | null>,
-): JevQuestion => ({
+): ChoiceQuestion => ({
   type: "choice",
   instructions:
     "村の声（ペルソナ）に付いた自由記述のタグを、最も意味の合うグループに振り分ける。属性のグループは話者自身の属性、話題のグループは話題。合うものが無い、または迷うなら none。",
@@ -69,31 +72,21 @@ const tagGroupQuestion = (
   },
 });
 
-const classifyWithJev = async (
+const classifyWithDecider = async (
   tags: string[],
-  question: JevQuestion,
-  apiKey: string,
-  requestContext: RequestContext,
+  question: ChoiceQuestion,
+  decider: Decider,
 ) => {
   const assignments: Assignment[] = [];
   const queue = [...tags];
   await Promise.all(
-    Array.from({ length: JEV_CONCURRENCY }, async () => {
+    Array.from({ length: DECIDE_CONCURRENCY }, async () => {
       for (let tag = queue.shift(); tag !== undefined; tag = queue.shift()) {
         try {
-          const response = await askJevWithUsage({
-            apiKey,
-            state: tag,
-            questions: { group: question },
-            requestContext,
-            source: "tag-group-assign",
-            agent: "tag-group",
-          });
-          const answer = response.answers.group;
-          const choice = answer?.type === "choice" ? answer.choice : NO_GROUP;
+          const { group } = await decider.decide(tag, { group: question });
           assignments.push({
             tag,
-            groupId: choice === NO_GROUP ? null : choice,
+            groupId: group.choice === NO_GROUP ? null : group.choice,
           });
         } catch (error) {
           logger.warn("[TagGroup] jev failed, retry next run", {
@@ -156,14 +149,16 @@ export const assignUnmappedTags = async (
 
   const storage = await getStorage(env.DB);
   const requestContext = createRequestContext({ storage, db: env.DB, env });
-  const apiKey = jevApiKey(requestContext);
+  const decider = createDecider(requestContext, {
+    source: "tag-group-assign",
+    agent: "tag-group",
+  });
   const batchTags = batch.map((t) => t.tag);
-  const decided = apiKey
-    ? await classifyWithJev(
+  const decided = decider
+    ? await classifyWithDecider(
         batchTags,
         tagGroupQuestion(groups, aliases),
-        apiKey,
-        requestContext,
+        decider,
       )
     : await classifyWithAgent(
         options.classifier ?? tagGroupAgent,
@@ -172,7 +167,7 @@ export const assignUnmappedTags = async (
         aliases,
         requestContext,
       );
-  const settledTags = apiKey ? decided.map((a) => a.tag) : batchTags;
+  const settledTags = decider ? decided.map((a) => a.tag) : batchTags;
 
   const decisions = sanitizeAssignments(decided, settledTags, groups);
   await personaTagGroupRepository.insertAliasesIfAbsent(

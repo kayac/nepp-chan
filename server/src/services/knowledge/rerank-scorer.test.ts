@@ -12,9 +12,9 @@ vi.mock("@mastra/core/agent", () => ({
   },
 }));
 
-vi.mock("~/services/analytics/llm-usage", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("~/services/analytics/llm-usage")>()),
-  askJevWithUsage: askJevMock,
+vi.mock("~/lib/jev", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("~/lib/jev")>()),
+  askJev: askJevMock,
 }));
 
 vi.mock("~/lib/logger", () => ({
@@ -63,19 +63,6 @@ describe("createRerankScorer（jev）", () => {
       passage: "月額30,000円",
     });
     expect(params.questions.relevant.type).toBe("noul");
-  });
-
-  it("usage の記録先として requestContext・source rerank・agent knowledge-reranker を渡す", async () => {
-    askJevMock.mockResolvedValueOnce(jevResponse(0.5));
-    const ctx = contextWithKey("k");
-    await createRerankScorer(ctx).getRelevanceScore("q", "p");
-    expect(askJevMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        requestContext: ctx,
-        source: "rerank",
-        agent: "knowledge-reranker",
-      }),
-    );
   });
 });
 

@@ -15,9 +15,9 @@ vi.mock("~/db", async (importOriginal) => {
 
 vi.mock("~/lib/storage", () => ({ getStorage: vi.fn().mockResolvedValue({}) }));
 
-vi.mock("~/services/analytics/llm-usage", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("~/services/analytics/llm-usage")>()),
-  askJevWithUsage: askJevMock,
+vi.mock("~/lib/jev", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("~/lib/jev")>()),
+  askJev: askJevMock,
 }));
 
 const { assignUnmappedTags, createTagGroup, getTagGroupOverview } =
@@ -30,18 +30,31 @@ const env = { DB: {} as D1Database } as CloudflareBindings;
 const jevEnv = { ...env, TYPESAFE_API_KEY: "k" } as CloudflareBindings;
 
 const jevChoosing = (choices: Record<string, string>) =>
-  askJevMock.mockImplementation(async ({ state }: { state: string }) => {
-    if (!(state in choices)) throw new Error("jev responded 500");
-    return {
-      answers: {
-        group: {
-          type: "choice",
-          choice: choices[state],
-          probabilities: { [choices[state]]: 0.9 },
+  askJevMock.mockImplementation(
+    async ({
+      state,
+      questions,
+    }: {
+      state: string;
+      questions: { group: { criteria: Record<string, string> } };
+    }) => {
+      if (!(state in choices)) throw new Error("jev responded 500");
+      return {
+        answers: {
+          group: {
+            type: "choice",
+            choice: choices[state],
+            probabilities: Object.fromEntries(
+              Object.keys(questions.group.criteria).map((option) => [
+                option,
+                option === choices[state] ? 0.9 : 0,
+              ]),
+            ),
+          },
         },
-      },
-    };
-  });
+      };
+    },
+  );
 
 const insertPersona = async (db: TestDb, id: string, tags: string) => {
   await db.insert(persona).values({

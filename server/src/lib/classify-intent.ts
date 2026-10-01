@@ -1,15 +1,18 @@
 import type { RequestContext } from "@mastra/core/request-context";
 import { z } from "zod";
-import { type JevQuestion, jevApiKey } from "~/lib/jev";
 import { logger } from "~/lib/logger";
 import { intentRouterAgent } from "~/mastra/agents/intent-router-agent";
-import { askJevWithUsage } from "~/services/analytics/llm-usage";
+import {
+  type ChoiceQuestion,
+  createDecider,
+  type Decider,
+} from "~/services/decision/decider";
 
 const THINKING_THRESHOLD = 0.3;
 
 const VILLAGE_THRESHOLD = 0.3;
 
-const intentQuestion: JevQuestion = {
+const intentQuestion = {
   type: "choice",
   instructions:
     "ユーザーの最新のメッセージの意図を分類する。迷ったら thinking にする。",
@@ -18,9 +21,9 @@ const intentQuestion: JevQuestion = {
       "挨拶、雑談、相槌、リアクション、気持ちや日常の出来事の共有。情報を調べる必要がない。",
     thinking: "検索や推論が必要な質問、情報の依頼、事実確認。",
   },
-};
+} as const satisfies ChoiceQuestion;
 
-const routeQuestion: JevQuestion = {
+const routeQuestion = {
   type: "choice",
   instructions:
     "アシスタントは北海道の小さな村・音威子府村のマスコットで、村の資料か Web 検索をもとに答える。ユーザーの最新のメッセージに答えるために調べる先を判定する。",
@@ -30,21 +33,11 @@ const routeQuestion: JevQuestion = {
     outside:
       "最新の情報や村の外の情報。天気、交通や列車の運行状況、ニュースや時事、村の外の場所や一般的な事柄。",
   },
-};
+} as const satisfies ChoiceQuestion;
 
-const BACKCHANNELS = [
-  "greeting",
-  "agree",
-  "happy",
-  "sad",
-  "surprise",
-  "ask",
-  "listen",
-] as const;
+const NO_BACKCHANNEL = "none";
 
-export type Backchannel = (typeof BACKCHANNELS)[number];
-
-const backchannelQuestion: JevQuestion = {
+const backchannelQuestion = {
   type: "choice",
   instructions:
     "ユーザーの最新のメッセージに、話し相手が返事の前に入れる相槌の種類を選ぶ。合うものが無ければ none。",
@@ -56,14 +49,14 @@ const backchannelQuestion: JevQuestion = {
     surprise: "意外な出来事や、驚くような話",
     ask: "アシスタント自身の好み・意見・気持ちを聞く問いかけ",
     listen: "話を聞いてほしい、続きがありそうな話",
-    none: "どれにも当たらない",
+    [NO_BACKCHANNEL]: "どれにも当たらない",
   },
-};
+} as const satisfies ChoiceQuestion;
 
-const NO_BACKCHANNEL = "none";
-
-const isBackchannel = (value: string): value is Backchannel =>
-  (BACKCHANNELS as readonly string[]).includes(value);
+export type Backchannel = Exclude<
+  keyof typeof backchannelQuestion.criteria,
+  typeof NO_BACKCHANNEL
+>;
 
 const intentSchema = z.object({
   intent: z.enum(["casual", "thinking"]),
@@ -101,39 +94,28 @@ const withRoute = (intent: Intent, pVillage = 1): TurnClass => ({
         : "outside",
 });
 
-const classifyWithJev = async (
+const classifyWithDecider = async (
   input: ClassifyTurnInput,
-  apiKey: string,
-  requestContext: RequestContext,
+  decider: Decider,
 ) => {
-  const response = await askJevWithUsage({
-    apiKey,
-    state: buildState(input),
-    questions: {
+  const { intent, route, backchannel } = await decider.decide(
+    buildState(input),
+    {
       intent: intentQuestion,
       route: routeQuestion,
       backchannel: backchannelQuestion,
     },
-    requestContext,
-    source: "intent-classify",
-    agent: "intent-router",
-  });
-  const { intent, route, backchannel } = response.answers;
-  const pThinking =
-    intent?.type === "choice" ? intent.probabilities.thinking : undefined;
-  if (pThinking === undefined) {
-    throw new Error("jev answer has no thinking probability");
-  }
-  const pVillage =
-    route?.type === "choice" ? route.probabilities.village : undefined;
-  const backchannelChoice =
-    backchannel?.type === "choice" ? backchannel.choice : NO_BACKCHANNEL;
+  );
   return {
     ...withRoute(
-      pThinking >= THINKING_THRESHOLD ? "thinking" : "casual",
-      pVillage,
+      intent.probabilities.thinking >= THINKING_THRESHOLD
+        ? "thinking"
+        : "casual",
+      route.probabilities.village,
     ),
-    ...(isBackchannel(backchannelChoice) && { backchannel: backchannelChoice }),
+    ...(backchannel.choice !== NO_BACKCHANNEL && {
+      backchannel: backchannel.choice,
+    }),
   };
 };
 
@@ -156,12 +138,15 @@ export const classifyTurn = async (
   input: ClassifyTurnInput,
   requestContext?: RequestContext,
 ) => {
-  const apiKey = jevApiKey(requestContext);
-  if (!apiKey || !requestContext) {
+  const decider = createDecider(requestContext, {
+    source: "intent-classify",
+    agent: "intent-router",
+  });
+  if (!decider) {
     return classifyWithAgent(input.text, requestContext);
   }
   try {
-    return await classifyWithJev(input, apiKey, requestContext);
+    return await classifyWithDecider(input, decider);
   } catch (error) {
     logger.warn("[ClassifyTurn] jev failed, falling back to agent", {
       error: String(error),
