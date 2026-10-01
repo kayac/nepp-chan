@@ -532,12 +532,6 @@ export const TuningPanel = ({
           value={v("thinkingFillers")}
           onChange={(value) => onChange({ thinkingFillers: value })}
         />
-        <TextRow
-          label="相槌フィラー"
-          hint="雑談への一言（カンマ区切り）"
-          value={v("backchannelFillers")}
-          onChange={(value) => onChange({ backchannelFillers: value })}
-        />
         {boolRow(
           "保留音",
           "holdAudioEnabled",

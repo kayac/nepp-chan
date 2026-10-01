@@ -2,9 +2,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { logger } from "~/lib/logger";
 import { CallBridge } from "./call-bridge";
 
-const { createVoiceConversationMock, routeTurn } = vi.hoisted(() => ({
+const { createVoiceConversationMock, classifyUtterance } = vi.hoisted(() => ({
   createVoiceConversationMock: vi.fn(),
-  routeTurn: vi.fn(async () => "none" as const),
+  classifyUtterance: vi.fn(async () => ({
+    intent: "casual" as const,
+    route: "none" as const,
+  })),
 }));
 
 vi.mock("./conversation", () => ({
@@ -46,7 +49,7 @@ describe("CallBridge", () => {
     let resolveRunner:
       | ((conversation: {
           runTurn: typeof turnRunner;
-          routeTurn: typeof routeTurn;
+          classifyUtterance: typeof classifyUtterance;
           persistTurn: () => Promise<void>;
         }) => void)
       | undefined;
@@ -74,7 +77,11 @@ describe("CallBridge", () => {
     await onMessage.call(bridge, ws, {
       data: JSON.stringify({ type: "interrupt" }),
     } as MessageEvent);
-    resolveRunner?.({ runTurn: turnRunner, routeTurn, persistTurn: vi.fn() });
+    resolveRunner?.({
+      runTurn: turnRunner,
+      classifyUtterance,
+      persistTurn: vi.fn(),
+    });
     await prompt;
 
     expect(turnRunner).not.toHaveBeenCalled();
@@ -91,7 +98,7 @@ describe("CallBridge", () => {
     });
     createVoiceConversationMock.mockResolvedValue({
       runTurn,
-      routeTurn,
+      classifyUtterance,
       persistTurn,
     });
 
@@ -142,7 +149,7 @@ describe("CallBridge", () => {
     const persistTurn = vi.fn();
     createVoiceConversationMock.mockResolvedValue({
       runTurn,
-      routeTurn,
+      classifyUtterance,
       persistTurn,
     });
     const bridge = new CallBridge(
@@ -173,9 +180,12 @@ describe("CallBridge", () => {
     const runTurn = vi.fn(async function* () {
       yield "回答";
     });
-    const villageRoute = vi.fn(async () => "village" as const);
+    const villageRoute = vi.fn(async () => ({
+      intent: "thinking" as const,
+      route: "village" as const,
+    }));
     createVoiceConversationMock.mockResolvedValue({
-      routeTurn: villageRoute,
+      classifyUtterance: villageRoute,
       runTurn,
       persistTurn: vi.fn(),
     });
@@ -213,7 +223,7 @@ describe("CallBridge", () => {
     );
     createVoiceConversationMock.mockResolvedValue({
       runTurn,
-      routeTurn,
+      classifyUtterance,
       persistTurn,
     });
 
@@ -248,7 +258,7 @@ describe("CallBridge", () => {
     const persistTurn = vi.fn();
     createVoiceConversationMock.mockResolvedValue({
       runTurn,
-      routeTurn,
+      classifyUtterance,
       persistTurn,
     });
 
@@ -282,7 +292,7 @@ describe("CallBridge", () => {
     );
     createVoiceConversationMock.mockResolvedValue({
       runTurn,
-      routeTurn,
+      classifyUtterance,
       persistTurn,
     });
     const infoSpy = vi.spyOn(logger, "info");
@@ -364,7 +374,7 @@ describe("CallBridge", () => {
       const recordInterruptedTurn = vi.fn();
       const persistTurn = vi.fn();
       const { handlePrompt, interrupt } = setupBridge({
-        routeTurn,
+        classifyUtterance,
         runTurn,
         recordInterruptedTurn,
         truncateLastReply: vi.fn(),
@@ -392,7 +402,7 @@ describe("CallBridge", () => {
       const recordInterruptedTurn = vi.fn();
       const persistTurn = vi.fn();
       const { handlePrompt, interrupt } = setupBridge({
-        routeTurn,
+        classifyUtterance,
         runTurn,
         recordInterruptedTurn,
         truncateLastReply: vi.fn(),
@@ -422,7 +432,7 @@ describe("CallBridge", () => {
         yield "回答";
       });
       const { handlePrompt } = setupBridge({
-        routeTurn,
+        classifyUtterance,
         runTurn: vi.fn((params) =>
           params.text === "駅の" ? runTurn(params) : nextRunTurn(params),
         ),
@@ -443,7 +453,7 @@ describe("CallBridge", () => {
       const { runTurn, startedPromise } = hangingTurn();
       const recordInterruptedTurn = vi.fn();
       const { handlePrompt, interrupt } = setupBridge({
-        routeTurn,
+        classifyUtterance,
         runTurn: vi.fn((params) =>
           params.text === "駅は" ? runTurn(params) : (async function* () {})(),
         ),
@@ -468,7 +478,7 @@ describe("CallBridge", () => {
     it("応答を送り終えた後の読み上げ中に遮られたら直前の返事を聞かせた分に切り詰める", async () => {
       const truncateLastReply = vi.fn();
       const { handlePrompt, interrupt } = setupBridge({
-        routeTurn,
+        classifyUtterance,
         runTurn: vi.fn(async function* () {
           yield "駅は北口だよ。バスもあるよ。";
         }),
@@ -486,7 +496,7 @@ describe("CallBridge", () => {
     it("聞かせた分が通知されない割り込みでは直前の返事を変えない", async () => {
       const truncateLastReply = vi.fn();
       const { handlePrompt, interrupt } = setupBridge({
-        routeTurn,
+        classifyUtterance,
         runTurn: vi.fn(async function* () {
           yield "駅は北口だよ。";
         }),

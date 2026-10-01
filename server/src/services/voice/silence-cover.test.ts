@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { TurnRoute } from "~/lib/classify-intent";
+import type { TurnClass } from "~/lib/classify-intent";
 import { BRIDGE_CONFIG_DEFAULTS, type BridgeConfig } from "./bridge-config";
 import { createSilenceCover } from "./silence-cover";
 
+type Turn = Pick<TurnClass, "route" | "backchannel">;
+
 const setup = (
   overrides: Partial<BridgeConfig> = {},
-  route: TurnRoute = "village",
+  turn: Turn = { route: "village" },
 ) => {
   const sendText = vi.fn();
   const sendPlay = vi.fn();
@@ -20,7 +22,7 @@ const setup = (
   });
   const cover = {
     ...created,
-    start: () => created.start(Promise.resolve(route)),
+    start: () => created.start(Promise.resolve(turn)),
   };
   return { cover, created, sendText, sendPlay, controller };
 };
@@ -38,7 +40,7 @@ describe("createSilenceCover", () => {
     it("行き先が決まる前に返事が始まっていたら、フィラーを送らない", async () => {
       const { created, sendText } = setup({ fillerDelayMs: 0 });
       created.onToken();
-      created.start(Promise.resolve("village"));
+      created.start(Promise.resolve<Turn>({ route: "village" }));
       await vi.advanceTimersByTimeAsync(0);
       expect(sendText).not.toHaveBeenCalled();
     });
@@ -47,16 +49,22 @@ describe("createSilenceCover", () => {
       const { created, sendText } = setup({ fillerDelayMs: 0 });
       created.onToolCall();
       sendText.mockClear();
-      created.start(Promise.resolve("village"));
+      created.start(Promise.resolve<Turn>({ route: "village" }));
       await vi.advanceTimersByTimeAsync(0);
       expect(sendText).not.toHaveBeenCalled();
     });
 
-    it("調べないターンでは既定でフィラーを送らない", async () => {
-      const { cover, sendText } = setup({ fillerDelayMs: 0 }, "none");
+    it("調べないターンでは選ばれた相槌のフィラーを送る", async () => {
+      const { cover, sendText } = setup(
+        { fillerDelayMs: 0 },
+        { route: "none", backchannel: "listen" },
+      );
       cover.start();
       await vi.advanceTimersByTimeAsync(0);
-      expect(sendText).not.toHaveBeenCalled();
+      expect(sendText).toHaveBeenCalledWith("うん、うん！", true, {
+        preemptible: false,
+        interruptible: true,
+      });
     });
 
     it("遅延 0 なら start で即時にフィラーを送る（調べ物のあるターンには考え中プール）", async () => {
@@ -64,7 +72,7 @@ describe("createSilenceCover", () => {
       cover.start();
       await vi.advanceTimersByTimeAsync(0);
       expect(sendText).toHaveBeenCalledWith("えーっとね", true, {
-        preemptible: true,
+        preemptible: false,
         interruptible: true,
       });
     });
@@ -104,58 +112,58 @@ describe("createSilenceCover", () => {
     it("カスタム文言プールを使う", async () => {
       const { cover, sendText } = setup(
         { fillerDelayMs: 0, thinkingFillers: ["どれどれ"] },
-        "village",
+        { route: "village" },
       );
       cover.start();
       await vi.advanceTimersByTimeAsync(0);
       expect(sendText).toHaveBeenCalledWith("どれどれ", true, {
-        preemptible: true,
+        preemptible: false,
         interruptible: true,
       });
     });
     it("行き先が決まる前から遅延を数え、経過時点で決まった行き先のフィラーを送る", async () => {
       const { created, sendText } = setup({ fillerDelayMs: 800 });
-      let resolveRoute: (route: TurnRoute) => void = () => {};
+      let resolveRoute: (turn: Turn) => void = () => {};
       created.start(
-        new Promise<TurnRoute>((resolve) => {
+        new Promise<Turn>((resolve) => {
           resolveRoute = resolve;
         }),
       );
       await vi.advanceTimersByTimeAsync(300);
-      resolveRoute("village");
+      resolveRoute({ route: "village" });
       await vi.advanceTimersByTimeAsync(500);
       expect(sendText).toHaveBeenCalledWith("えーっとね", true, {
-        preemptible: true,
+        preemptible: false,
         interruptible: true,
       });
     });
 
     it("遅延が過ぎても行き先が決まっていなければ、決まった時点で送る", async () => {
       const { created, sendText } = setup({ fillerDelayMs: 800 });
-      let resolveRoute: (route: TurnRoute) => void = () => {};
+      let resolveRoute: (turn: Turn) => void = () => {};
       created.start(
-        new Promise<TurnRoute>((resolve) => {
+        new Promise<Turn>((resolve) => {
           resolveRoute = resolve;
         }),
       );
       await vi.advanceTimersByTimeAsync(1_000);
       expect(sendText).not.toHaveBeenCalled();
-      resolveRoute("village");
+      resolveRoute({ route: "village" });
       await vi.advanceTimersByTimeAsync(0);
       expect(sendText).toHaveBeenCalledTimes(1);
     });
 
     it("行き先を待つ間に応答トークンが来たら送らない", async () => {
       const { created, sendText } = setup({ fillerDelayMs: 800 });
-      let resolveRoute: (route: TurnRoute) => void = () => {};
+      let resolveRoute: (turn: Turn) => void = () => {};
       created.start(
-        new Promise<TurnRoute>((resolve) => {
+        new Promise<Turn>((resolve) => {
           resolveRoute = resolve;
         }),
       );
       await vi.advanceTimersByTimeAsync(1_000);
       created.onToken();
-      resolveRoute("village");
+      resolveRoute({ route: "village" });
       await vi.advanceTimersByTimeAsync(0);
       expect(sendText).not.toHaveBeenCalled();
     });

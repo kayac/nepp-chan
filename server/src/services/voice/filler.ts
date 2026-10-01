@@ -1,16 +1,24 @@
-import type { TurnRoute } from "~/lib/classify-intent";
+import type { Backchannel, TurnClass } from "~/lib/classify-intent";
 
 export const THINKING_FILLERS = ["えーっとね", "うーんとね"] as const;
-export const BACKCHANNEL_FILLERS: readonly string[] = [];
+
+const BACKCHANNEL_PHRASES: Record<Backchannel, string | undefined> = {
+  greeting: undefined,
+  agree: "うん！",
+  happy: "いいね〜！",
+  sad: "そっかぁ…",
+  surprise: "えーーーー！",
+  ask: "え〜〜",
+  listen: "うん、うん！",
+};
 
 export const pickFiller = (
-  route: TurnRoute,
+  turn: Pick<TurnClass, "route" | "backchannel">,
   index: number,
-  pools: {
-    thinking: readonly string[];
-    backchannel: readonly string[];
-  } = { thinking: THINKING_FILLERS, backchannel: BACKCHANNEL_FILLERS },
+  thinking: readonly string[] = THINKING_FILLERS,
 ) => {
-  const pool = route === "none" ? pools.backchannel : pools.thinking;
-  return pool.length > 0 ? pool[index % pool.length] : undefined;
+  if (turn.route === "none") {
+    return turn.backchannel && BACKCHANNEL_PHRASES[turn.backchannel];
+  }
+  return thinking.length > 0 ? thinking[index % thinking.length] : undefined;
 };

@@ -1,8 +1,10 @@
-import type { TurnRoute } from "~/lib/classify-intent";
+import type { TurnClass } from "~/lib/classify-intent";
 import type { BridgeConfig } from "./bridge-config";
 import { pickFiller } from "./filler";
 
 type Timer = ReturnType<typeof setTimeout>;
+
+type Turn = Pick<TurnClass, "route" | "backchannel">;
 
 const WAITING_PHRASE_DURATION_MS = 3_000;
 
@@ -74,13 +76,10 @@ export const createSilenceCover = ({
     }, config.holdPhraseIntervalMs);
   };
 
-  const sendFiller = (route: TurnRoute) => {
-    const phrase = pickFiller(route, nextFillerIndex(), {
-      thinking: config.thinkingFillers,
-      backchannel: config.backchannelFillers,
-    });
+  const sendFiller = (turn: Turn) => {
+    const phrase = pickFiller(turn, nextFillerIndex(), config.thinkingFillers);
     if (phrase)
-      sendText(phrase, true, { preemptible: true, interruptible: true });
+      sendText(phrase, true, { preemptible: false, interruptible: true });
   };
 
   const playHold = () => {
@@ -97,10 +96,10 @@ export const createSilenceCover = ({
   };
 
   return {
-    start: (route: Promise<TurnRoute>) => {
+    start: (turn: Promise<Turn>) => {
       if (!config.fillerEnabled || responded || signal?.aborted) return;
       const fire = () =>
-        route.then((resolved) => {
+        turn.then((resolved) => {
           if (responded || holdPlaying || signal?.aborted) return;
           sendFiller(resolved);
         });

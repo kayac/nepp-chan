@@ -402,18 +402,21 @@ describe("createVoiceConversation", () => {
     expect(await requestContext.get("turnRoute")).toBe("outside");
   });
 
-  it("routeTurn は発話を行き先に分類し、usage を通話のスレッドに紐づける", async () => {
+  it("classifyUtterance は発話を分類し、usage を通話のスレッドに紐づける", async () => {
     classifyMock.mockResolvedValueOnce({
       intent: "thinking",
       route: "village",
     });
-    const { routeTurn } = await createVoiceConversation({
+    const { classifyUtterance } = await createVoiceConversation({
       env,
       from: "client:x",
       callSid: "CA123",
     });
 
-    expect(await routeTurn("寮費は？")).toBe("village");
+    expect(await classifyUtterance("寮費は？")).toEqual({
+      intent: "thinking",
+      route: "village",
+    });
     const [{ text }, requestContext] = classifyMock.mock.calls[0];
     expect(text).toBe("寮費は？");
     expect(requestContext.get("env")).toBe(env);

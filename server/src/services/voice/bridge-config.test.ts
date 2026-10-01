@@ -82,30 +82,38 @@ describe("parseBridgeConfig: 文言カスタム", () => {
   it("カンマ区切りをトリムして配列にする", () => {
     const config = parseBridgeConfig({
       thinkingFillers: "えっとね, どれどれ",
-      backchannelFillers: "ふむふむ",
       holdPhrases: "調べてるよ, 待ってね",
     });
     expect(config.thinkingFillers).toEqual(["えっとね", "どれどれ"]);
-    expect(config.backchannelFillers).toEqual(["ふむふむ"]);
     expect(config.holdPhrases).toEqual(["調べてるよ", "待ってね"]);
   });
 
   it("空要素は除外する", () => {
     expect(
-      parseBridgeConfig({ backchannelFillers: "うん,,ええ," })
-        .backchannelFillers,
+      parseBridgeConfig({ thinkingFillers: "うん,,ええ," }).thinkingFillers,
     ).toEqual(["うん", "ええ"]);
   });
 
-  it("全て空・1フレーズ20文字超・11個以上は既定値へフォールバックする", () => {
+  it.each(["", ",,,"])("「%s」はフレーズなしとして受け付ける", (value) => {
+    expect(
+      parseBridgeConfig({ thinkingFillers: value }).thinkingFillers,
+    ).toEqual([]);
+  });
+
+  it("保留中のフレーズは空なら既定値へフォールバックする", () => {
+    expect(parseBridgeConfig({ holdPhrases: "" }).holdPhrases).toEqual(
+      BRIDGE_CONFIG_DEFAULTS.holdPhrases,
+    );
+  });
+
+  it("1フレーズ20文字超・11個以上は既定値へフォールバックする", () => {
     for (const value of [
-      ",,,",
       "あ".repeat(21),
       Array.from({ length: 11 }, (_, i) => `フレーズ${i}`).join(","),
     ]) {
       expect(
-        parseBridgeConfig({ backchannelFillers: value }).backchannelFillers,
-      ).toEqual(BRIDGE_CONFIG_DEFAULTS.backchannelFillers);
+        parseBridgeConfig({ thinkingFillers: value }).thinkingFillers,
+      ).toEqual(BRIDGE_CONFIG_DEFAULTS.thinkingFillers);
     }
   });
 });
@@ -125,7 +133,6 @@ describe("serializeBridgeConfig", () => {
       fillerEnabled: false,
       fillerDelayMs: 800,
       thinkingFillers: ["えっとね", "どれどれ"],
-      backchannelFillers: ["ふむふむ"],
       holdAudioEnabled: false,
       holdAudioUrl: "https://example.com/hold.mp3",
       holdDelayMs: 1200,

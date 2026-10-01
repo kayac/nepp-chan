@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BACKCHANNEL_FILLERS, THINKING_FILLERS } from "./filler";
+import { THINKING_FILLERS } from "./filler";
 import { HOLD_PHRASES } from "./silence-cover";
 
 export const boolParam = z
@@ -16,12 +16,7 @@ const phraseListParam = z
       .map((s) => s.trim())
       .filter(Boolean),
   )
-  .refine(
-    (list) =>
-      list.length >= 1 &&
-      list.length <= 10 &&
-      list.every((p) => p.length <= 20),
-  );
+  .refine((list) => list.length <= 10 && list.every((p) => p.length <= 20));
 
 export const collectTuningParams = <T extends Record<string, z.ZodType>>(
   fields: T,
@@ -48,7 +43,6 @@ export type BridgeConfig = {
   fillerEnabled: boolean;
   fillerDelayMs: number;
   thinkingFillers: string[];
-  backchannelFillers: string[];
   holdAudioEnabled: boolean;
   holdAudioUrl: string;
   holdDelayMs: number;
@@ -59,9 +53,8 @@ export type BridgeConfig = {
 
 export const BRIDGE_CONFIG_DEFAULTS: BridgeConfig = {
   fillerEnabled: true,
-  fillerDelayMs: 1_000,
+  fillerDelayMs: 0,
   thinkingFillers: [...THINKING_FILLERS],
-  backchannelFillers: [...BACKCHANNEL_FILLERS],
   holdAudioEnabled: false,
   holdAudioUrl: "https://amachamusic.chagasi.com/mp3/tsukinokobune.mp3",
   holdDelayMs: 0,
@@ -76,14 +69,13 @@ export const bridgeFieldSchemas = {
   fillerEnabled: boolParam,
   fillerDelayMs: delayParam,
   thinkingFillers: phraseListParam,
-  backchannelFillers: phraseListParam,
   holdAudioEnabled: boolParam,
   holdAudioUrl: z
     .string()
     .max(300)
     .refine((v) => URL.canParse(v) && new URL(v).protocol === "https:"),
   holdDelayMs: delayParam,
-  holdPhrases: phraseListParam,
+  holdPhrases: phraseListParam.refine((list) => list.length >= 1),
   holdPhraseIntervalMs: z.coerce.number().int().min(3_000).max(30_000),
   endCallEnabled: boolParam,
 } satisfies Record<string, z.ZodType>;
@@ -99,7 +91,6 @@ export const serializeBridgeConfig = (config: BridgeConfig) => ({
   fillerEnabled: String(config.fillerEnabled),
   fillerDelayMs: String(config.fillerDelayMs),
   thinkingFillers: config.thinkingFillers.join(","),
-  backchannelFillers: config.backchannelFillers.join(","),
   holdAudioEnabled: String(config.holdAudioEnabled),
   holdAudioUrl: config.holdAudioUrl,
   holdDelayMs: String(config.holdDelayMs),

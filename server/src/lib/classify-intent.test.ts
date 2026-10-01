@@ -131,6 +131,33 @@ describe("classifyTurn（jev）", () => {
     );
   });
 
+  it("相槌の種類を同じ呼び出しで聞き、none なら返さない", async () => {
+    askJevMock
+      .mockResolvedValueOnce({
+        ...jevResponse(0.1),
+        answers: {
+          ...jevResponse(0.1).answers,
+          backchannel: { type: "choice", choice: "happy", probabilities: {} },
+        },
+      })
+      .mockResolvedValueOnce({
+        ...jevResponse(0.1),
+        answers: {
+          ...jevResponse(0.1).answers,
+          backchannel: { type: "choice", choice: "none", probabilities: {} },
+        },
+      });
+
+    const happy = await classifyTurn({ text: "晴れた！" }, contextWithKey("k"));
+    const none = await classifyTurn({ text: "…" }, contextWithKey("k"));
+
+    expect(askJevMock.mock.calls[0]?.[0].questions.backchannel.type).toBe(
+      "choice",
+    );
+    expect(happy.backchannel).toBe("happy");
+    expect(none.backchannel).toBeUndefined();
+  });
+
   it("調べ先の答えが無ければ、thinking は村のこととして扱う", async () => {
     askJevMock.mockResolvedValueOnce({
       answers: {

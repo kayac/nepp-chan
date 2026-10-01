@@ -32,6 +32,39 @@ const routeQuestion: JevQuestion = {
   },
 };
 
+const BACKCHANNELS = [
+  "greeting",
+  "agree",
+  "happy",
+  "sad",
+  "surprise",
+  "ask",
+  "listen",
+] as const;
+
+export type Backchannel = (typeof BACKCHANNELS)[number];
+
+const backchannelQuestion: JevQuestion = {
+  type: "choice",
+  instructions:
+    "ユーザーの最新のメッセージに、話し相手が返事の前に入れる相槌の種類を選ぶ。合うものが無ければ none。",
+  criteria: {
+    greeting: "挨拶",
+    agree: "短い同意・返事・お礼",
+    happy: "嬉しい・楽しい出来事や、好きなものの話",
+    sad: "疲れた・困った・残念など、大変な話",
+    surprise: "意外な出来事や、驚くような話",
+    ask: "アシスタント自身の好み・意見・気持ちを聞く問いかけ",
+    listen: "話を聞いてほしい、続きがありそうな話",
+    none: "どれにも当たらない",
+  },
+};
+
+const NO_BACKCHANNEL = "none";
+
+const isBackchannel = (value: string): value is Backchannel =>
+  (BACKCHANNELS as readonly string[]).includes(value);
+
 const intentSchema = z.object({
   intent: z.enum(["casual", "thinking"]),
 });
@@ -39,6 +72,12 @@ const intentSchema = z.object({
 type Intent = z.infer<typeof intentSchema>["intent"];
 
 export type TurnRoute = "none" | "village" | "outside";
+
+export type TurnClass = {
+  intent: Intent;
+  route: TurnRoute;
+  backchannel?: Backchannel;
+};
 
 type ClassifyTurnInput = {
   text: string;
@@ -52,13 +91,14 @@ const buildState = (input: ClassifyTurnInput) => [
   { from: "user", text: input.text },
 ];
 
-const withRoute = (intent: Intent, pVillage = 1) => ({
+const withRoute = (intent: Intent, pVillage = 1): TurnClass => ({
   intent,
-  route: (intent === "casual"
-    ? "none"
-    : pVillage >= VILLAGE_THRESHOLD
-      ? "village"
-      : "outside") as TurnRoute,
+  route:
+    intent === "casual"
+      ? "none"
+      : pVillage >= VILLAGE_THRESHOLD
+        ? "village"
+        : "outside",
 });
 
 const classifyWithJev = async (
@@ -69,12 +109,16 @@ const classifyWithJev = async (
   const response = await askJevWithUsage({
     apiKey,
     state: buildState(input),
-    questions: { intent: intentQuestion, route: routeQuestion },
+    questions: {
+      intent: intentQuestion,
+      route: routeQuestion,
+      backchannel: backchannelQuestion,
+    },
     requestContext,
     source: "intent-classify",
     agent: "intent-router",
   });
-  const { intent, route } = response.answers;
+  const { intent, route, backchannel } = response.answers;
   const pThinking =
     intent?.type === "choice" ? intent.probabilities.thinking : undefined;
   if (pThinking === undefined) {
@@ -82,10 +126,15 @@ const classifyWithJev = async (
   }
   const pVillage =
     route?.type === "choice" ? route.probabilities.village : undefined;
-  return withRoute(
-    pThinking >= THINKING_THRESHOLD ? "thinking" : "casual",
-    pVillage,
-  );
+  const backchannelChoice =
+    backchannel?.type === "choice" ? backchannel.choice : NO_BACKCHANNEL;
+  return {
+    ...withRoute(
+      pThinking >= THINKING_THRESHOLD ? "thinking" : "casual",
+      pVillage,
+    ),
+    ...(isBackchannel(backchannelChoice) && { backchannel: backchannelChoice }),
+  };
 };
 
 const classifyWithAgent = async (

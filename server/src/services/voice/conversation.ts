@@ -243,11 +243,11 @@ export const createVoiceConversation = async ({
     }
   };
 
-  const routeTurn = async (text: string) => {
+  const classifyUtterance = (text: string) => {
     const previousAssistant = history.findLast(
       (message) => message.role === "assistant",
     )?.content;
-    const { route } = await classifyTurn(
+    return classifyTurn(
       {
         text,
         previousAssistant:
@@ -260,12 +260,11 @@ export const createVoiceConversation = async ({
         usageThreadId: threadId,
       }),
     );
-    return route;
   };
 
   return {
     runTurn,
-    routeTurn,
+    classifyUtterance,
     recordInterruptedTurn,
     truncateLastReply,
     persistTurn,

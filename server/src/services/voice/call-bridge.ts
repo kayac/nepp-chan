@@ -199,7 +199,8 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     const send = (token: string, last = false, options?: TextTokenOptions) =>
       ws.send(serializeRelayMessage(textTokenMessage(token, last, options)));
 
-    const route = conversation.routeTurn(text);
+    const turn = conversation.classifyUtterance(text);
+    const route = turn.then((resolved) => resolved.route);
 
     const cover = createSilenceCover({
       config: this.config,
@@ -209,10 +210,11 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       sendPlay: (source, options) =>
         ws.send(serializeRelayMessage(playMessage(source, options))),
     });
-    cover.start(route);
-    void route.then((resolved) =>
+    cover.start(turn);
+    void turn.then((resolved) =>
       logger.info("[Voice] turn route", {
-        route: resolved,
+        route: resolved.route,
+        backchannel: resolved.backchannel ?? "",
         ms: Date.now() - t0,
       }),
     );
