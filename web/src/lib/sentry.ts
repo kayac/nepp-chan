@@ -9,6 +9,13 @@ export const initSentry = () => {
     environment: import.meta.env.MODE,
     tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
     ignoreErrors: ["NotAllowedError", "AbortError", "ResizeObserver loop"],
+    dataCollection: {
+      userInfo: false,
+      cookies: false,
+      httpHeaders: false,
+      httpBodies: [],
+      urlQueryParams: false,
+    },
     beforeSend(event) {
       if (event.request) {
         event.request.data = undefined;
