@@ -274,6 +274,41 @@ describe("deleteAllByLineUserId", () => {
     ).toHaveLength(1);
   });
 
+  it("委譲先のサブエージェントのスレッド・メッセージ・リソース・抽出状態も削除する", async () => {
+    const db = testDbHolder.db as TestDb;
+    const delegatedThreadId = `line-thread:${hashedTarget}-uuid`;
+    const delegatedResourceId = `line:${hashedTarget}-knowledgeAgent`;
+    await db
+      .insert(mastraThreads)
+      .values({ id: delegatedThreadId, resourceId: delegatedResourceId });
+    await db
+      .insert(mastraMessages)
+      .values({ id: "m-delegated", threadId: delegatedThreadId });
+    await db.insert(mastraResources).values({ id: delegatedResourceId });
+    await db.insert(threadPersonaStatus).values({
+      threadId: delegatedThreadId,
+      lastExtractedAt: "2025-01-01T00:00:00Z",
+      lastMessageCount: 1,
+    });
+
+    await deleteAllByLineUserId(env, TARGET_USER_ID);
+
+    const otherThreadId = `line-thread:${hashedOther}`;
+    const otherResourceId = `line:${hashedOther}`;
+    expect((await db.select().from(mastraThreads)).map((r) => r.id)).toEqual([
+      otherThreadId,
+    ]);
+    expect(
+      (await db.select().from(mastraMessages)).map((r) => r.threadId),
+    ).toEqual([otherThreadId]);
+    expect((await db.select().from(mastraResources)).map((r) => r.id)).toEqual([
+      otherResourceId,
+    ]);
+    expect(
+      (await db.select().from(threadPersonaStatus)).map((r) => r.threadId),
+    ).toEqual([otherThreadId]);
+  });
+
   it("persona テーブルは削除されない（個人データ非該当）", async () => {
     await deleteAllByLineUserId(env, TARGET_USER_ID);
 

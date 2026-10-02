@@ -131,7 +131,7 @@ export const extractPersonaFromThread = async (
 type ThreadInfo = { id: string; resourceId: string };
 
 const getAllThreads = async (d1: D1Database): Promise<ThreadInfo[]> => {
-  const threads = await mastraThreadRepository.findAll(d1);
+  const threads = await mastraThreadRepository.findAllRoots(d1);
 
   return threads.filter((t): t is ThreadInfo => t.resourceId !== null);
 };

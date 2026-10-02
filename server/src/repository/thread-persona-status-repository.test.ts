@@ -98,29 +98,25 @@ describe("threadPersonaStatusRepository", () => {
     });
   });
 
-  describe("delete", () => {
-    it("対象のみ削除（他は残る）", async () => {
-      await threadPersonaStatusRepository.upsert(fakeD1, {
-        threadId: "t-1",
-        lastExtractedAt: "2025-01-01T00:00:00Z",
-        lastMessageCount: 1,
-      });
-      await threadPersonaStatusRepository.upsert(fakeD1, {
-        threadId: "t-2",
-        lastExtractedAt: "2025-01-01T00:00:00Z",
-        lastMessageCount: 2,
-      });
+  describe("deleteWithDelegatedByThreadId", () => {
+    it("指定スレッドと委譲先スレッドの抽出状態を削除する", async () => {
+      for (const threadId of ["t", "t-uuid1", "tx", "u"]) {
+        await threadPersonaStatusRepository.upsert(fakeD1, {
+          threadId,
+          lastExtractedAt: "2025-01-01T00:00:00Z",
+          lastMessageCount: 1,
+        });
+      }
 
-      await threadPersonaStatusRepository.delete(fakeD1, "t-1");
+      const deleted =
+        await threadPersonaStatusRepository.deleteWithDelegatedByThreadId(
+          fakeD1,
+          "t",
+        );
 
+      expect(deleted).toBe(2);
       const all = await threadPersonaStatusRepository.findAll(fakeD1);
-      expect(all.map((r) => r.threadId)).toEqual(["t-2"]);
-    });
-
-    it("冪等: 存在しない threadId の削除は 0 件を返す", async () => {
-      await expect(
-        threadPersonaStatusRepository.delete(fakeD1, "ghost"),
-      ).resolves.toBe(0);
+      expect(all.map((r) => r.threadId).sort()).toEqual(["tx", "u"]);
     });
   });
 
