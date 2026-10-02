@@ -1,11 +1,16 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, type Column, desc, eq, notExists, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/sqlite-core";
 
 import { createDb, mastraThreads } from "~/db";
 import { deleteWithCount } from "./delete-with-count";
 
 export const mastraThreadRepository = {
-  async findAll(d1: D1Database) {
+  // Mastra の委譲先スレッドは id・resourceId とも「委譲元の値-」で始まる
+  async findAllRoots(d1: D1Database) {
     const db = createDb(d1);
+    const parent = alias(mastraThreads, "parent");
+    const startsWithParent = (child: Column, parentValue: Column) =>
+      sql`substr(${child}, 1, length(${parentValue}) + 1) = ${parentValue} || '-'`;
 
     return db
       .select({
@@ -13,6 +18,19 @@ export const mastraThreadRepository = {
         resourceId: mastraThreads.resourceId,
       })
       .from(mastraThreads)
+      .where(
+        notExists(
+          db
+            .select({ id: parent.id })
+            .from(parent)
+            .where(
+              and(
+                startsWithParent(mastraThreads.id, parent.id),
+                startsWithParent(mastraThreads.resourceId, parent.resourceId),
+              ),
+            ),
+        ),
+      )
       .orderBy(desc(mastraThreads.id))
       .all();
   },

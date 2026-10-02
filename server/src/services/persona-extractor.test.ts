@@ -8,7 +8,9 @@ const { mockGet, mockAll, mockSelect, mockMemoryRecall, mockGenerate } =
     const mockAll = vi.fn();
     const mockOrderBy = vi.fn().mockReturnValue({ all: mockAll });
     const mockGroupBy = vi.fn().mockReturnValue({ all: mockAll });
-    const mockWhere = vi.fn().mockReturnValue({ get: mockGet, all: mockAll });
+    const mockWhere = vi
+      .fn()
+      .mockReturnValue({ get: mockGet, all: mockAll, orderBy: mockOrderBy });
     const mockFrom = vi.fn().mockReturnValue({
       where: mockWhere,
       get: mockGet,

@@ -37,13 +37,13 @@ describe("mastraThreadRepository", () => {
     testDbHolder.db = db;
   });
 
-  describe("findAll", () => {
+  describe("findAllRoots", () => {
     it("id の降順で返す", async () => {
       await insertThread(db, "t-1", "web:a");
       await insertThread(db, "t-3", "web:c");
       await insertThread(db, "t-2", "web:b");
 
-      const rows = await mastraThreadRepository.findAll(d1);
+      const rows = await mastraThreadRepository.findAllRoots(d1);
 
       expect(rows.map((r) => r.id)).toEqual(["t-3", "t-2", "t-1"]);
     });
@@ -51,9 +51,51 @@ describe("mastraThreadRepository", () => {
     it("resourceId が無いスレッドも返す", async () => {
       await insertThread(db, "t-1", null);
 
-      const rows = await mastraThreadRepository.findAll(d1);
+      const rows = await mastraThreadRepository.findAllRoots(d1);
 
       expect(rows).toEqual([{ id: "t-1", resourceId: null }]);
+    });
+
+    it("委譲先のスレッドは返さず、委譲元のスレッドだけを返す", async () => {
+      await insertThread(db, "parent", "line:abc");
+      await insertThread(db, "parent-uuid1", "line:abc-knowledgeAgent");
+      await insertThread(db, "parent-uuid2", "line:abc-webResearcherAgent");
+      await insertThread(
+        db,
+        "parent-uuid1-uuid3",
+        "line:abc-knowledgeAgent-nestedAgent",
+      );
+
+      const rows = await mastraThreadRepository.findAllRoots(d1);
+
+      expect(rows.map((r) => r.id)).toEqual(["parent"]);
+    });
+
+    it("スレッド ID だけが前方一致する別リソースのスレッドは返す", async () => {
+      await insertThread(db, "t", "line:abc");
+      await insertThread(db, "t-x", "line:xyz");
+
+      const rows = await mastraThreadRepository.findAllRoots(d1);
+
+      expect(rows.map((r) => r.id)).toEqual(["t-x", "t"]);
+    });
+
+    it("resourceId だけが前方一致する別スレッドは返す", async () => {
+      await insertThread(db, "t-a", "line:abc");
+      await insertThread(db, "t-b", "line:abc-x");
+
+      const rows = await mastraThreadRepository.findAllRoots(d1);
+
+      expect(rows.map((r) => r.id)).toEqual(["t-b", "t-a"]);
+    });
+
+    it("LIKE のワイルドカード文字を含む ID でも文字どおりに前方一致を判定する", async () => {
+      await insertThread(db, "t_", "line:a_c");
+      await insertThread(db, "tx-uuid", "line:abc-knowledgeAgent");
+
+      const rows = await mastraThreadRepository.findAllRoots(d1);
+
+      expect(rows.map((r) => r.id)).toEqual(["tx-uuid", "t_"]);
     });
   });
 
