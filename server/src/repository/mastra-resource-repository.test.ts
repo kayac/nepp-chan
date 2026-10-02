@@ -49,20 +49,22 @@ describe("mastraResourceRepository", () => {
     });
   });
 
-  describe("deleteById", () => {
-    it("指定リソースだけを削除して件数を返す", async () => {
-      await db
-        .insert(mastraResources)
-        .values({ id: "r-1", updatedAt: "2026-06-01T00:00:00.000Z" });
-      await db
-        .insert(mastraResources)
-        .values({ id: "r-2", updatedAt: "2026-06-01T00:00:00.000Z" });
+  describe("deleteWithDelegatedById", () => {
+    it("指定リソースと委譲先のリソースを削除して件数を返す", async () => {
+      for (const id of ["line:a", "line:a-knowledgeAgent", "line:ab", "u"]) {
+        await db
+          .insert(mastraResources)
+          .values({ id, updatedAt: "2026-06-01T00:00:00.000Z" });
+      }
 
-      const deleted = await mastraResourceRepository.deleteById(d1, "r-1");
+      const deleted = await mastraResourceRepository.deleteWithDelegatedById(
+        d1,
+        "line:a",
+      );
 
-      expect(deleted).toBe(1);
+      expect(deleted).toBe(2);
       const rows = await db.select().from(mastraResources).all();
-      expect(rows.map((r) => r.id)).toEqual(["r-2"]);
+      expect(rows.map((r) => r.id).sort()).toEqual(["line:ab", "u"]);
     });
   });
 });

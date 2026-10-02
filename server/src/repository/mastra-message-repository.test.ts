@@ -294,22 +294,21 @@ describe("mastraMessageRepository", () => {
     });
   });
 
-  describe("deleteByThreadId", () => {
-    it("指定スレッドのメッセージだけを削除して件数を返す", async () => {
-      await insertMessage(db, {
-        threadId: "t-1",
-        createdAt: "2026-06-01T00:00:00.000Z",
-      });
-      await insertMessage(db, {
-        threadId: "t-2",
-        createdAt: "2026-06-01T00:00:00.000Z",
-      });
+  describe("deleteWithDelegatedByThreadId", () => {
+    it("指定スレッドと委譲先スレッドのメッセージを削除して件数を返す", async () => {
+      for (const threadId of ["t", "t-uuid1", "tx", "u"]) {
+        await insertMessage(db, {
+          threadId,
+          createdAt: "2026-06-01T00:00:00.000Z",
+        });
+      }
 
-      const deleted = await mastraMessageRepository.deleteByThreadId(d1, "t-1");
+      const deleted =
+        await mastraMessageRepository.deleteWithDelegatedByThreadId(d1, "t");
 
-      expect(deleted).toBe(1);
+      expect(deleted).toBe(2);
       const rows = await db.select().from(mastraMessages).all();
-      expect(rows.map((r) => r.threadId)).toEqual(["t-2"]);
+      expect(rows.map((r) => r.threadId).sort()).toEqual(["tx", "u"]);
     });
   });
 });

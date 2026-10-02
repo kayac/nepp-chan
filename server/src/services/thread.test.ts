@@ -2,6 +2,8 @@ import { HTTPException } from "hono/http-exception";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { feedbackRepository } from "~/repository/feedback-repository";
+import { mastraMessageRepository } from "~/repository/mastra-message-repository";
+import { mastraThreadRepository } from "~/repository/mastra-thread-repository";
 import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
 import { deleteThreadWithRelatedData } from "./thread";
 
@@ -30,7 +32,19 @@ vi.mock("~/repository/feedback-repository", () => ({
 
 vi.mock("~/repository/thread-persona-status-repository", () => ({
   threadPersonaStatusRepository: {
-    delete: vi.fn(),
+    deleteWithDelegatedByThreadId: vi.fn(),
+  },
+}));
+
+vi.mock("~/repository/mastra-message-repository", () => ({
+  mastraMessageRepository: {
+    deleteWithDelegatedByThreadId: vi.fn(),
+  },
+}));
+
+vi.mock("~/repository/mastra-thread-repository", () => ({
+  mastraThreadRepository: {
+    deleteWithDelegatedById: vi.fn(),
   },
 }));
 
@@ -45,7 +59,6 @@ describe("deleteThreadWithRelatedData", () => {
   it("存在するスレッドの関連データを全て削除できる", async () => {
     mockGetThreadById.mockResolvedValue({ id: threadId });
     vi.mocked(feedbackRepository.deleteByThreadId).mockResolvedValue(0);
-    vi.mocked(threadPersonaStatusRepository.delete).mockResolvedValue(0);
     mockDeleteThread.mockResolvedValue(undefined);
 
     await deleteThreadWithRelatedData(threadId, mockDb);
@@ -54,11 +67,24 @@ describe("deleteThreadWithRelatedData", () => {
       mockDb,
       threadId,
     );
-    expect(threadPersonaStatusRepository.delete).toHaveBeenCalledWith(
+    expect(mockDeleteThread).toHaveBeenCalledWith(threadId);
+  });
+
+  it("委譲先のサブエージェントのスレッド・メッセージ・抽出状態も削除する", async () => {
+    mockGetThreadById.mockResolvedValue({ id: threadId });
+
+    await deleteThreadWithRelatedData(threadId, mockDb);
+
+    expect(
+      threadPersonaStatusRepository.deleteWithDelegatedByThreadId,
+    ).toHaveBeenCalledWith(mockDb, threadId);
+    expect(
+      mastraMessageRepository.deleteWithDelegatedByThreadId,
+    ).toHaveBeenCalledWith(mockDb, threadId);
+    expect(mastraThreadRepository.deleteWithDelegatedById).toHaveBeenCalledWith(
       mockDb,
       threadId,
     );
-    expect(mockDeleteThread).toHaveBeenCalledWith(threadId);
   });
 
   it("存在しないスレッドで HTTPException(404) をスローする", async () => {
@@ -75,7 +101,12 @@ describe("deleteThreadWithRelatedData", () => {
     });
 
     expect(feedbackRepository.deleteByThreadId).not.toHaveBeenCalled();
-    expect(threadPersonaStatusRepository.delete).not.toHaveBeenCalled();
+    expect(
+      threadPersonaStatusRepository.deleteWithDelegatedByThreadId,
+    ).not.toHaveBeenCalled();
+    expect(
+      mastraThreadRepository.deleteWithDelegatedById,
+    ).not.toHaveBeenCalled();
     expect(mockDeleteThread).not.toHaveBeenCalled();
   });
 });

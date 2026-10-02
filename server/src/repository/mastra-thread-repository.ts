@@ -1,16 +1,14 @@
-import { and, type Column, desc, eq, notExists, sql } from "drizzle-orm";
+import { and, desc, eq, notExists, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 
 import { createDb, mastraThreads } from "~/db";
+import { isDelegatedFrom, isSelfOrDelegatedFrom } from "./delegation";
 import { deleteWithCount } from "./delete-with-count";
 
 export const mastraThreadRepository = {
-  // Mastra の委譲先スレッドは id・resourceId とも「委譲元の値-」で始まる
   async findAllRoots(d1: D1Database) {
     const db = createDb(d1);
     const parent = alias(mastraThreads, "parent");
-    const startsWithParent = (child: Column, parentValue: Column) =>
-      sql`substr(${child}, 1, length(${parentValue}) + 1) = ${parentValue} || '-'`;
 
     return db
       .select({
@@ -25,8 +23,8 @@ export const mastraThreadRepository = {
             .from(parent)
             .where(
               and(
-                startsWithParent(mastraThreads.id, parent.id),
-                startsWithParent(mastraThreads.resourceId, parent.resourceId),
+                isDelegatedFrom(mastraThreads.id, parent.id),
+                isDelegatedFrom(mastraThreads.resourceId, parent.resourceId),
               ),
             ),
         ),
@@ -50,10 +48,14 @@ export const mastraThreadRepository = {
     return result ?? null;
   },
 
-  async deleteById(d1: D1Database, id: string) {
+  async deleteWithDelegatedById(d1: D1Database, id: string) {
     const db = createDb(d1);
 
-    return deleteWithCount(db, mastraThreads, eq(mastraThreads.id, id));
+    return deleteWithCount(
+      db,
+      mastraThreads,
+      isSelfOrDelegatedFrom(mastraThreads.id, id),
+    );
   },
 
   async deleteEmptyCreatedBefore(d1: D1Database, cutoff: string) {

@@ -166,16 +166,22 @@ describe("mastraThreadRepository", () => {
     });
   });
 
-  describe("deleteById", () => {
-    it("指定スレッドだけを削除して件数を返す", async () => {
-      await insertThread(db, "t-1", "web:a");
-      await insertThread(db, "t-2", "web:b");
+  describe("deleteWithDelegatedById", () => {
+    it("指定スレッドと委譲先のスレッドを削除して件数を返す", async () => {
+      await insertThread(db, "t", "line:a");
+      await insertThread(db, "t-uuid1", "line:a-knowledgeAgent");
+      await insertThread(db, "t-uuid1-uuid2", "line:a-knowledgeAgent-x");
+      await insertThread(db, "tx", "line:b");
+      await insertThread(db, "u", "line:c");
 
-      const deleted = await mastraThreadRepository.deleteById(d1, "t-1");
+      const deleted = await mastraThreadRepository.deleteWithDelegatedById(
+        d1,
+        "t",
+      );
 
-      expect(deleted).toBe(1);
+      expect(deleted).toBe(3);
       const rows = await db.select().from(mastraThreads).all();
-      expect(rows.map((r) => r.id)).toEqual(["t-2"]);
+      expect(rows.map((r) => r.id).sort()).toEqual(["tx", "u"]);
     });
   });
 });

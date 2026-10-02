@@ -1,6 +1,7 @@
-import { count, eq, sql } from "drizzle-orm";
+import { count, sql } from "drizzle-orm";
 
 import { createDb, mastraMessages } from "~/db";
+import { isSelfOrDelegatedFrom } from "./delegation";
 import { deleteWithCount } from "./delete-with-count";
 
 type Period = { from: string; to: string };
@@ -106,13 +107,13 @@ export const mastraMessageRepository = {
       .all();
   },
 
-  async deleteByThreadId(d1: D1Database, threadId: string) {
+  async deleteWithDelegatedByThreadId(d1: D1Database, threadId: string) {
     const db = createDb(d1);
 
     return deleteWithCount(
       db,
       mastraMessages,
-      eq(mastraMessages.threadId, threadId),
+      isSelfOrDelegatedFrom(mastraMessages.threadId, threadId),
     );
   },
 

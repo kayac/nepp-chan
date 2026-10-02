@@ -25,21 +25,29 @@ export const deleteAllByLineUserId = async (
     await getStorage(env.DB);
 
     const mastraMessagesDeleted =
-      await mastraMessageRepository.deleteByThreadId(env.DB, lineThreadId);
+      await mastraMessageRepository.deleteWithDelegatedByThreadId(
+        env.DB,
+        lineThreadId,
+      );
     const messageFeedbackDeleted = await feedbackRepository.deleteByThreadId(
       env.DB,
       lineThreadId,
     );
     const threadPersonaStatusDeleted =
-      await threadPersonaStatusRepository.delete(env.DB, lineThreadId);
-    const mastraThreadsDeleted = await mastraThreadRepository.deleteById(
-      env.DB,
-      lineThreadId,
-    );
-    const mastraResourcesDeleted = await mastraResourceRepository.deleteById(
-      env.DB,
-      lineResourceId,
-    );
+      await threadPersonaStatusRepository.deleteWithDelegatedByThreadId(
+        env.DB,
+        lineThreadId,
+      );
+    const mastraThreadsDeleted =
+      await mastraThreadRepository.deleteWithDelegatedById(
+        env.DB,
+        lineThreadId,
+      );
+    const mastraResourcesDeleted =
+      await mastraResourceRepository.deleteWithDelegatedById(
+        env.DB,
+        lineResourceId,
+      );
     const pollSubmissionsDeleted =
       await pollRepository.deleteSubmissionsByUserId(env.DB, hashedUserId);
     const userBroadcastStateDeleted =

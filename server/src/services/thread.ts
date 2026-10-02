@@ -3,6 +3,8 @@ import { HTTPException } from "hono/http-exception";
 
 import { getStorage } from "~/lib/storage";
 import { feedbackRepository } from "~/repository/feedback-repository";
+import { mastraMessageRepository } from "~/repository/mastra-message-repository";
+import { mastraThreadRepository } from "~/repository/mastra-thread-repository";
 import { threadPersonaStatusRepository } from "~/repository/thread-persona-status-repository";
 
 export const deleteThreadWithRelatedData = async (
@@ -18,6 +20,11 @@ export const deleteThreadWithRelatedData = async (
   }
 
   await feedbackRepository.deleteByThreadId(db, threadId);
-  await threadPersonaStatusRepository.delete(db, threadId);
+  await threadPersonaStatusRepository.deleteWithDelegatedByThreadId(
+    db,
+    threadId,
+  );
   await memory.deleteThread(threadId);
+  await mastraMessageRepository.deleteWithDelegatedByThreadId(db, threadId);
+  await mastraThreadRepository.deleteWithDelegatedById(db, threadId);
 };
