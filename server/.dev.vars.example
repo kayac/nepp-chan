@@ -1,5 +1,8 @@
 OPENAI_API_KEY=your-api-key-here
 
+# GPT-Live（通話の音声モデル）専用
+OPENAI_LIVE_API_KEY=your-api-key-here
+
 GOOGLE_GENERATIVE_AI_API_KEY=your-api-key-here
 GOOGLE_SEARCH_ENGINE_ID=your-engine-id-here
 

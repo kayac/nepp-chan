@@ -32,6 +32,9 @@ export default defineConfig({
         // relay-protocol に抽出済みでそちらをテスト。WebSocketPair が node
         // テスト環境に無く DO 単体は E2E 領域。
         "src/services/voice/call-bridge.ts",
+        // 同じく DO の WS 配線 shell。本質ロジックは live-protocol /
+        // live-transcript / live-progress / live-instructions に抽出済み。
+        "src/services/voice/live-bridge.ts",
         // Mastra Agent / MCP の宣言ファイル。instructions 文字列 + new Agent()
         // が中心でカバレッジ対象とするロジックを持たない
         "src/mastra/agents/**",
