@@ -46,6 +46,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     AbortController,
     { conversation: VoiceConversation; userText: string }
   >();
+  private answeringTurns = new WeakSet<AbortController>();
   private fillerIndex = 0;
   // 直前の中間認識からの経過時間の観測用（endpointing がどれだけ確定を保留するか）。
   private lastInterimAt: number | null = null;
@@ -144,7 +145,22 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     }
   }
 
+  private isPreparing(turn: AbortController | null) {
+    return turn !== null && !this.answeringTurns.has(turn);
+  }
+
+  private async shouldIgnoreWhilePreparing(text: string) {
+    if (!this.isPreparing(this.currentTurn)) return false;
+    const conversation = await this.conversationPromise;
+    if (!conversation || (await conversation.isStopRequest(text))) return false;
+    logger.info("[Voice] ignored utterance while preparing", {
+      voicePrompt: text,
+    });
+    return true;
+  }
+
   private async handleInterrupt(heardText: string | undefined) {
+    if (this.isPreparing(this.currentTurn)) return;
     if (this.currentTurn) {
       await this.abortTurn(this.currentTurn, heardText ?? "");
       return;
@@ -170,6 +186,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
   }
 
   private async handlePrompt(ws: WebSocket, text: string) {
+    if (await this.shouldIgnoreWhilePreparing(text)) return;
     const previousTurn = this.currentTurn;
     const controller = new AbortController();
     this.currentTurn = controller;
@@ -238,7 +255,10 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         assistantText += delta;
         cover.onToken();
         const spoken = reader.push(delta);
-        if (spoken) send(spoken);
+        if (spoken) {
+          this.answeringTurns.add(controller);
+          send(spoken);
+        }
       }
       if (!controller.signal.aborted) {
         const rest = reader.flush();

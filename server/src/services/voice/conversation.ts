@@ -14,6 +14,7 @@ import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { newTurnId, recordLlmUsage } from "~/services/analytics/llm-usage";
 import type { VoiceFindingsSlot } from "./findings-slot";
+import { isStopRequest } from "./stop-request";
 
 type RunTurnParams = {
   text: string;
@@ -243,6 +244,14 @@ export const createVoiceConversation = async ({
     }
   };
 
+  const usageContext = () =>
+    createRequestContext({
+      db: env.DB,
+      env,
+      usagePlatform: "voice",
+      usageThreadId: threadId,
+    });
+
   const classifyUtterance = (text: string) => {
     const previousAssistant = history.findLast(
       (message) => message.role === "assistant",
@@ -253,18 +262,14 @@ export const createVoiceConversation = async ({
         previousAssistant:
           typeof previousAssistant === "string" ? previousAssistant : undefined,
       },
-      createRequestContext({
-        db: env.DB,
-        env,
-        usagePlatform: "voice",
-        usageThreadId: threadId,
-      }),
+      usageContext(),
     );
   };
 
   return {
     runTurn,
     classifyUtterance,
+    isStopRequest: (text: string) => isStopRequest(text, usageContext()),
     recordInterruptedTurn,
     truncateLastReply,
     persistTurn,

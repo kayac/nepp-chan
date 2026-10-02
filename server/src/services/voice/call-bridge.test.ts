@@ -42,17 +42,11 @@ describe("CallBridge", () => {
     await waitUntil.mock.calls[0][0];
   });
 
-  it("ランナー初期化中に中断されたターンは発話も実行もしない", async () => {
+  it("ランナー初期化中に中断の指示が来たら、前のターンは実行せずその発話に答える", async () => {
     const turnRunner = vi.fn(async function* () {
       yield "回答";
     });
-    let resolveRunner:
-      | ((conversation: {
-          runTurn: typeof turnRunner;
-          classifyUtterance: typeof classifyUtterance;
-          persistTurn: () => Promise<void>;
-        }) => void)
-      | undefined;
+    let resolveRunner: ((conversation: unknown) => void) | undefined;
     createVoiceConversationMock.mockReturnValue(
       new Promise((resolve) => {
         resolveRunner = resolve;
@@ -68,24 +62,22 @@ describe("CallBridge", () => {
       ws: WebSocket,
       text: string,
     ) => Promise<void>;
-    const onMessage = Reflect.get(bridge, "onMessage") as (
-      ws: WebSocket,
-      event: MessageEvent,
-    ) => Promise<void>;
 
-    const prompt = handlePrompt.call(bridge, ws, "質問");
-    await onMessage.call(bridge, ws, {
-      data: JSON.stringify({ type: "interrupt" }),
-    } as MessageEvent);
+    const first = handlePrompt.call(bridge, ws, "質問");
+    const second = handlePrompt.call(bridge, ws, "もういいや");
     resolveRunner?.({
       runTurn: turnRunner,
       classifyUtterance,
+      isStopRequest: vi.fn(async () => true),
+      recordInterruptedTurn: vi.fn(),
       persistTurn: vi.fn(),
     });
-    await prompt;
+    await Promise.all([first, second]);
 
-    expect(turnRunner).not.toHaveBeenCalled();
-    expect(ws.send).not.toHaveBeenCalled();
+    expect(turnRunner).toHaveBeenCalledTimes(1);
+    expect(turnRunner).toHaveBeenCalledWith(
+      expect.objectContaining({ text: "もういいや" }),
+    );
   });
 
   it("完了トークンを送ってから D1 保存を待つ", async () => {
@@ -347,7 +339,7 @@ describe("CallBridge", () => {
         onMessage.call(bridge, ws, {
           data: JSON.stringify({ type: "interrupt", utteranceUntilInterrupt }),
         } as MessageEvent);
-      return { handlePrompt, interrupt };
+      return { handlePrompt, interrupt, ws };
     };
 
     const hangingTurn = () => {
@@ -368,6 +360,115 @@ describe("CallBridge", () => {
       });
       return { runTurn, startedPromise };
     };
+
+    const preparingTurn = () => {
+      let started: () => void = () => {};
+      let release: () => void = () => {};
+      const startedPromise = new Promise<void>((resolve) => {
+        started = resolve;
+      });
+      const released = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      const runTurn = vi.fn(async function* ({
+        signal,
+      }: {
+        signal: AbortSignal;
+      }) {
+        started();
+        await Promise.race([
+          released,
+          new Promise((resolve) =>
+            signal.addEventListener("abort", resolve, { once: true }),
+          ),
+        ]);
+        if (signal.aborted) return;
+        yield "寮費は月3万円だよ。";
+      });
+      return { runTurn, startedPromise, release };
+    };
+
+    const sentTokens = (ws: WebSocket) =>
+      vi
+        .mocked(ws.send)
+        .mock.calls.map(([raw]) => JSON.parse(String(raw)).token as string);
+
+    it("答えを話し始める前の割り込みではターンを止めない", async () => {
+      const { runTurn, startedPromise, release } = preparingTurn();
+      const recordInterruptedTurn = vi.fn();
+      const { handlePrompt, interrupt, ws } = setupBridge({
+        classifyUtterance,
+        runTurn,
+        recordInterruptedTurn,
+        truncateLastReply: vi.fn(),
+        persistTurn: vi.fn(),
+      });
+
+      const prompt = handlePrompt("寮費は？");
+      await startedPromise;
+      await interrupt("");
+      release();
+      await prompt;
+
+      expect(recordInterruptedTurn).not.toHaveBeenCalled();
+      expect(sentTokens(ws)).toContain("寮費は月3万円だよ。");
+    });
+
+    it("答えを話し始める前の発話は、中断の指示でなければ捨てて準備中のターンを続ける", async () => {
+      const { runTurn, startedPromise, release } = preparingTurn();
+      const recordInterruptedTurn = vi.fn();
+      const isStopRequest = vi.fn(async () => false);
+      const { handlePrompt, ws } = setupBridge({
+        classifyUtterance,
+        isStopRequest,
+        runTurn,
+        recordInterruptedTurn,
+        truncateLastReply: vi.fn(),
+        persistTurn: vi.fn(),
+      });
+
+      const first = handlePrompt("寮費は？");
+      await startedPromise;
+      await handlePrompt("まだ？");
+      release();
+      await first;
+
+      expect(isStopRequest).toHaveBeenCalledWith("まだ？");
+      expect(runTurn).toHaveBeenCalledTimes(1);
+      expect(recordInterruptedTurn).not.toHaveBeenCalled();
+      expect(sentTokens(ws)).toContain("寮費は月3万円だよ。");
+    });
+
+    it("答えを話し始める前でも、中断の指示なら準備中のターンを止めてその発話に答える", async () => {
+      const { runTurn, startedPromise } = preparingTurn();
+      const recordInterruptedTurn = vi.fn();
+      const nextRunTurn = vi.fn(async function* (_params: { text: string }) {
+        yield "わかった";
+      });
+      const { handlePrompt } = setupBridge({
+        classifyUtterance,
+        isStopRequest: vi.fn(async () => true),
+        runTurn: vi.fn((params) =>
+          params.text === "寮費は？" ? runTurn(params) : nextRunTurn(params),
+        ),
+        recordInterruptedTurn,
+        truncateLastReply: vi.fn(),
+        persistTurn: vi.fn(),
+      });
+
+      const first = handlePrompt("寮費は？");
+      await startedPromise;
+      await handlePrompt("もういいや");
+      await first;
+
+      expect(recordInterruptedTurn).toHaveBeenCalledWith({
+        userText: "寮費は？",
+        heardText: "",
+      });
+      expect(nextRunTurn).toHaveBeenCalledWith(
+        expect.objectContaining({ text: "もういいや" }),
+      );
+    });
 
     it("応答中に遮られたら聞かせた分を履歴に残し D1 にも保存する", async () => {
       const { runTurn, startedPromise } = hangingTurn();
