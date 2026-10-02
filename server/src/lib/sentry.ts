@@ -6,8 +6,15 @@ export const getSentryOptions = (
   dsn: env.SENTRY_DSN,
   environment: env.ENVIRONMENT,
   tracesSampleRate: (env.ENVIRONMENT as string) === "production" ? 0.1 : 1.0,
-  _experiments: {
-    enableLogs: true,
+  dataCollection: {
+    userInfo: false,
+    cookies: false,
+    httpHeaders: false,
+    httpBodies: [],
+    urlQueryParams: false,
+    genAI: { inputs: false, outputs: false },
+    databaseQueryData: false,
+    queues: false,
   },
   beforeSend(event) {
     if (event.request) {
