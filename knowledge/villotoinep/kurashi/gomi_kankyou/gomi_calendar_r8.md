@@ -2,7 +2,7 @@
 title: 音威子府村 家庭ごみ分別収集カレンダー（令和8年度）
 category: 住民生活
 subcategory: ごみ・環境
-date: '2026-04-01'
+date: '2026-03-18'
 date_type: observed
 ---
 # 音威子府村 家庭ごみ分別収集カレンダー（令和8年度）
