@@ -185,10 +185,6 @@ export const voiceCasualModelConfig: AgentModelConfig = {
   defaultOptions: { maxSteps: VOICE_MAX_STEPS },
 };
 
-/**
- * Intent・プラットフォーム・管理者フラグからモデル設定を解決する。
- * 管理者の thinking は分析用に reasoning を引き上げ、casual は管理ツール連鎖用に maxSteps だけ引き上げる
- */
 export const resolveModelTier = ({
   intent,
   platform,
@@ -198,9 +194,6 @@ export const resolveModelTier = ({
   platform: "web" | "line";
   isAdmin: boolean;
 }): AgentModelConfig => {
-  if (isAdmin && intent === "thinking") {
-    return thinkingTier(platform, "high");
-  }
   const tier = MODEL_TIERS[intent][platform];
   if (isAdmin && tier.defaultOptions.maxSteps < MAX_STEPS.thinking) {
     return {

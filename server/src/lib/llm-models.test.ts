@@ -72,7 +72,7 @@ describe("modelWithReasoning", () => {
 });
 
 describe("resolveModelTier", () => {
-  describe("Admin は thinking の reasoning と casual の maxSteps を引き上げる", () => {
+  describe("Admin は casual の maxSteps だけを引き上げる", () => {
     const platform = "web" as const;
 
     it("casual は effort=none のまま maxSteps だけ thinking と揃える", () => {
@@ -88,15 +88,12 @@ describe("resolveModelTier", () => {
       );
     });
 
-    it("thinking は effort=high", () => {
-      const tier = resolveModelTier({
-        intent: "thinking",
-        platform,
-        isAdmin: true,
-      });
-      for (const entry of tier.model) {
-        expect(entry.providerOptions.openai.reasoningEffort).toBe("high");
-      }
+    it("thinking は非 Admin と同じ設定", () => {
+      expect(
+        resolveModelTier({ intent: "thinking", platform, isAdmin: true }),
+      ).toEqual(
+        resolveModelTier({ intent: "thinking", platform, isAdmin: false }),
+      );
     });
   });
 
