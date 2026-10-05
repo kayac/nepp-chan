@@ -97,8 +97,8 @@ importers:
         specifier: ^1.6.3
         version: 1.6.3(hono@4.13.12)(zod@4.6.5)
       '@line/bot-sdk':
-        specifier: ^11.2.0
-        version: 11.2.0
+        specifier: ^11.3.0
+        version: 11.3.0
       '@mastra/ai-sdk':
         specifier: ^1.10.5
         version: 1.10.5(@mastra/core@1.71.0(ai@7.0.118(zod@4.6.5))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.5))(zod@4.6.5))(zod@4.6.5)
@@ -2145,8 +2145,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@line/bot-sdk@11.2.0':
-    resolution: {integrity: sha512-JKYFa3jaPYWqgI4hnc0ls+7tMmUEgnFF0Jb48kscKcGOO8qh4hddJyiq8/TFqaTWWxXQeSgYd1o5zrHjt6FrpQ==}
+  '@line/bot-sdk@11.3.0':
+    resolution: {integrity: sha512-AHCtmdgcVDElRLlrR8jxSracF4beWholl3Ywnl6TrPgEiSYH81fSovgWVO/LbyN0tlGidCzJMAsOLXNddF5FGg==}
     engines: {node: '>=22'}
 
   '@lukeed/csprng@1.1.0':
@@ -8211,7 +8211,7 @@ snapshots:
   '@libsql/win32-x64-msvc@0.5.29':
     optional: true
 
-  '@line/bot-sdk@11.2.0':
+  '@line/bot-sdk@11.3.0':
     dependencies:
       '@types/node': 24.13.3
 
