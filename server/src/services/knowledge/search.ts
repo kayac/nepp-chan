@@ -4,7 +4,10 @@ import { rerankWithScorer } from "@mastra/rag";
 import { embed } from "ai";
 import { GEMINI_EMBEDDING } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
-import { recordUsageFromContext } from "~/services/analytics/llm-usage";
+import {
+  recordUsageFromContext,
+  runInBackground,
+} from "~/services/analytics/llm-usage";
 import { boostByRecency } from "./recency";
 import { createRerankScorer } from "./rerank-scorer";
 import { EMBEDDING_DIMENSIONS } from "./vector-store";
@@ -70,12 +73,14 @@ export const searchKnowledge = async (
         },
       },
     });
-    await recordUsageFromContext(requestContext, {
-      model: GEMINI_EMBEDDING,
-      usage: { inputTokens: usage?.tokens ?? 0 },
-      source: "embedding",
-      agent: "embedding",
-    });
+    runInBackground(
+      recordUsageFromContext(requestContext, {
+        model: GEMINI_EMBEDDING,
+        usage: { inputTokens: usage?.tokens ?? 0 },
+        source: "embedding",
+        agent: "embedding",
+      }),
+    );
 
     const results = await vectorize.query(embedding, {
       topK: SEARCH_TOP_K,

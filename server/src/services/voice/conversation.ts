@@ -12,7 +12,11 @@ import { getStorage } from "~/lib/storage";
 import { sanitizeForSpeech } from "~/lib/voice-text";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
-import { newTurnId, recordLlmUsage } from "~/services/analytics/llm-usage";
+import {
+  newTurnId,
+  recordLlmUsage,
+  runInBackground,
+} from "~/services/analytics/llm-usage";
 import type { VoiceFindingsSlot } from "./findings-slot";
 import { isStopRequest } from "./stop-request";
 
@@ -146,20 +150,22 @@ export const createVoiceConversation = async ({
       }
       // totalUsage はストリーム完走後にのみ resolve するため、中断ターンでは記録しない
       if (!signal?.aborted) {
-        const [totalUsage, response] = await Promise.all([
-          result.totalUsage,
-          result.response,
-        ]);
-        await recordLlmUsage(env.DB, {
-          model: response?.modelId ?? primaryModelId(voiceModelConfig),
-          usage: totalUsage,
-          platform: "voice",
-          source: "chat",
-          agent: "nepp-chan",
-          threadId,
-          turnId,
-          durationMs: Date.now() - start,
-        });
+        const durationMs = Date.now() - start;
+        runInBackground(
+          Promise.all([result.totalUsage, result.response]).then(
+            ([totalUsage, response]) =>
+              recordLlmUsage(env.DB, {
+                model: response?.modelId ?? primaryModelId(voiceModelConfig),
+                usage: totalUsage,
+                platform: "voice",
+                source: "chat",
+                agent: "nepp-chan",
+                threadId,
+                turnId,
+                durationMs,
+              }),
+          ),
+        );
       }
     } finally {
       if (streamReadyMs !== undefined) {
