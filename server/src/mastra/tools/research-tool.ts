@@ -1,7 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { logger } from "~/lib/logger";
-import { runResearch } from "~/mastra/workflows/research-workflow";
+import { memoSchema, runResearch } from "~/mastra/workflows/research-workflow";
 import { getLastUserText } from "./helpers";
 
 export const researchToolName = "researchTool";
@@ -27,7 +27,7 @@ export const researchTool = createTool({
         "資料を探す検索語。質問に含まれる手続き・制度・施設ごとに 1 つずつ、多くても 5 つ。資料に出てきそうな制度名・施設名・手続き名で書く",
       ),
   }),
-  outputSchema: z.object({ memo: z.string() }),
+  outputSchema: memoSchema,
   execute: async ({ question, queries }, context) => {
     try {
       return await runResearch({

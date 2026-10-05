@@ -71,6 +71,12 @@ export const createVoiceConversation = async ({
     agents: { neppChanAgent, neppChanCasualAgent },
   });
   const agent = mastra.getAgent("neppChanAgent");
+  const baseContext = {
+    db: env.DB,
+    env,
+    usagePlatform: "voice",
+    usageThreadId: threadId,
+  } as const;
   const casualAgent = mastra.getAgent("neppChanCasualAgent");
 
   const runTurn = async function* ({
@@ -84,10 +90,7 @@ export const createVoiceConversation = async ({
     const start = Date.now();
     const turnId = newTurnId();
     const requestContext = createRequestContext({
-      db: env.DB,
-      env,
-      usagePlatform: "voice",
-      usageThreadId: threadId,
+      ...baseContext,
       usageTurnId: turnId,
       voiceFindings: findingsSlot,
       turnRoute: route,
@@ -244,14 +247,6 @@ export const createVoiceConversation = async ({
     }
   };
 
-  const usageContext = () =>
-    createRequestContext({
-      db: env.DB,
-      env,
-      usagePlatform: "voice",
-      usageThreadId: threadId,
-    });
-
   const classifyUtterance = (text: string) => {
     const previousAssistant = history.findLast(
       (message) => message.role === "assistant",
@@ -262,14 +257,15 @@ export const createVoiceConversation = async ({
         previousAssistant:
           typeof previousAssistant === "string" ? previousAssistant : undefined,
       },
-      usageContext(),
+      createRequestContext(baseContext),
     );
   };
 
   return {
     runTurn,
     classifyUtterance,
-    isStopRequest: (text: string) => isStopRequest(text, usageContext()),
+    isStopRequest: (text: string) =>
+      isStopRequest(text, createRequestContext(baseContext)),
     recordInterruptedTurn,
     truncateLastReply,
     persistTurn,

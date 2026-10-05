@@ -1,6 +1,7 @@
 import type { TurnClass } from "~/lib/classify-intent";
 import type { BridgeConfig } from "./bridge-config";
 import { pickFiller } from "./filler";
+import type { PlayOptions, TextTokenOptions } from "./relay-protocol";
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -18,15 +19,8 @@ type Params = {
   config: BridgeConfig;
   signal?: AbortSignal;
   nextFillerIndex: () => number;
-  sendText: (
-    token: string,
-    last?: boolean,
-    options?: { preemptible?: boolean; interruptible?: boolean },
-  ) => void;
-  sendPlay: (
-    source: string,
-    options: { loop: number; preemptible: boolean; interruptible: boolean },
-  ) => void;
+  sendText: (token: string, last?: boolean, options?: TextTokenOptions) => void;
+  sendPlay: (source: string, options: PlayOptions) => void;
 };
 
 // 応答待ちの沈黙をフィラー発話と保留音で埋める、1ターン分の状態機械。

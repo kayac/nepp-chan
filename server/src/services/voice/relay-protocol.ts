@@ -91,7 +91,10 @@ export type PlayMessage = {
   preemptible?: boolean;
 };
 
-type PlayOptions = Pick<PlayMessage, "loop" | "interruptible" | "preemptible">;
+export type PlayOptions = Pick<
+  PlayMessage,
+  "loop" | "interruptible" | "preemptible"
+>;
 
 export const playMessage = (
   source: string,

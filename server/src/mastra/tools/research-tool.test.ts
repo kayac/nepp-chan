@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { runResearchMock } = vi.hoisted(() => ({ runResearchMock: vi.fn() }));
 
-vi.mock("~/mastra/workflows/research-workflow", () => ({
+vi.mock("~/mastra/workflows/research-workflow", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("~/mastra/workflows/research-workflow")
+  >()),
   runResearch: runResearchMock,
 }));
 

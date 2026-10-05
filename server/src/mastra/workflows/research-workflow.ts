@@ -97,7 +97,7 @@ const knowledgeSchema = routedSchema.extend({
   coverage: coverageSchema.optional(),
 });
 
-const memoSchema = z.object({ memo: z.string() });
+export const memoSchema = z.object({ memo: z.string() });
 
 const renderMemo = (parts: { knowledge?: string; web?: string }) =>
   [

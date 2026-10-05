@@ -12,9 +12,6 @@ export const createVoiceFindingsSlot = (): VoiceFindingsSlot => ({
   entries: [],
 });
 
-export const hasVoiceFindings = (slot: VoiceFindingsSlot | undefined) =>
-  (slot?.entries.length ?? 0) > 0;
-
 export const pushVoiceFindings = (
   slot: VoiceFindingsSlot,
   findings: VoiceFindings,

@@ -207,7 +207,6 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
 
     let firstSendMs: number | null = null;
     let tokenCount = 0;
-    let assistantChars = 0;
     let assistantText = "";
     let endRequested = false;
     let responseEndMs: number | null = null;
@@ -251,7 +250,6 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         if (controller.signal.aborted) break;
         if (firstSendMs === null) firstSendMs = Date.now() - t0;
         tokenCount++;
-        assistantChars += delta.length;
         assistantText += delta;
         cover.onToken();
         const spoken = reader.push(delta);
@@ -267,7 +265,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         responseEndMs = Date.now() - t0;
         if (this.currentTurn === controller) this.currentTurn = null;
         if (endRequested && this.config.endCallEnabled) {
-          this.scheduleEndCall(ws, assistantChars);
+          this.scheduleEndCall(ws, assistantText.length);
         }
         if (assistantText) {
           persistenceMs = await this.persistTurn(

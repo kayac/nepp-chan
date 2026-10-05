@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   createVoiceFindingsSlot,
-  hasVoiceFindings,
   pushVoiceFindings,
   type VoiceFindings,
 } from "./findings-slot";
@@ -9,17 +8,6 @@ import {
 const findings = (query: string, chars = 10): VoiceFindings => ({
   query,
   text: "あ".repeat(chars),
-});
-
-describe("hasVoiceFindings", () => {
-  it("undefined・空スロットは false、1件以上で true", () => {
-    expect(hasVoiceFindings(undefined)).toBe(false);
-    expect(hasVoiceFindings(createVoiceFindingsSlot())).toBe(false);
-
-    const slot = createVoiceFindingsSlot();
-    pushVoiceFindings(slot, findings("そば"));
-    expect(hasVoiceFindings(slot)).toBe(true);
-  });
 });
 
 describe("pushVoiceFindings", () => {

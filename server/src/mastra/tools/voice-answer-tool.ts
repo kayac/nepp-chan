@@ -8,7 +8,6 @@ import {
 } from "~/mastra/agents/voice-summarizer-agent";
 import { runResearch } from "~/mastra/workflows/research-workflow";
 import {
-  hasVoiceFindings,
   pushVoiceFindings,
   type VoiceFindings,
 } from "~/services/voice/findings-slot";
@@ -68,7 +67,7 @@ export const voiceAnswerTool = createTool({
     const t0 = Date.now();
 
     try {
-      if (slot && hasVoiceFindings(slot)) {
+      if (slot?.entries.length) {
         const answer = await summarize(
           question,
           renderFindings(slot.entries),

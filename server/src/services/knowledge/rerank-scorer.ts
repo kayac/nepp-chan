@@ -1,7 +1,7 @@
 import { Agent } from "@mastra/core/agent";
 import { createSimilarityPrompt } from "@mastra/core/relevance";
 import type { RequestContext } from "@mastra/core/request-context";
-import { modelWithReasoning, OPENAI_LITE } from "~/lib/llm-models";
+import { modelWithReasoning } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { withUsageRecording } from "~/services/analytics/llm-usage";
 import {
@@ -35,10 +35,10 @@ Consider:
 - Completeness of information
 - Quality and specificity
 Always return just the number, no explanation.`,
-  ...withUsageRecording(
-    modelWithReasoning({ model: OPENAI_LITE, effort: "none" }),
-    { agent: "knowledge-reranker", source: "rerank" },
-  ),
+  ...withUsageRecording(modelWithReasoning({ effort: "none" }), {
+    agent: "knowledge-reranker",
+    source: "rerank",
+  }),
 });
 
 const scoreWithLuna = async (

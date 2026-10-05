@@ -106,11 +106,7 @@ const describeGroups = (
 ) =>
   groups
     .map((g) => {
-      const examples = [...aliases.entries()]
-        .filter(([, groupId]) => groupId === g.id)
-        .slice(0, EXAMPLE_LIMIT)
-        .map(([tag]) => tag)
-        .join(", ");
+      const examples = examplesOf(g.id, aliases).join(", ");
       const axis = g.axis ? ` / ${g.axis}` : "";
       return `- ${g.id}: ${g.name}（${g.kind}${axis}）例: ${examples || "なし"}`;
     })

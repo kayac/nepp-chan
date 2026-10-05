@@ -120,14 +120,11 @@ export type AgentModelConfig = {
 // ツール実行ループの上限（サブエージェント連鎖の暴走によるコスト事故の保険）
 const MAX_STEPS = { casual: 5, thinking: 10 } as const;
 
-const thinkingTier = (
-  platform: "web" | "line",
-  effort: ReasoningEffort,
-): AgentModelConfig => ({
+const thinkingTier = (platform: "web" | "line"): AgentModelConfig => ({
   model: modelChain({
     primary: OPENAI_LITE,
     fallback: OPENAI_MAIN,
-    effort,
+    effort: "low",
     textVerbosity: platform === "web" ? "high" : "medium",
     promptCacheKey: `nepp-chan-${platform}-thinking`,
   }),
@@ -150,8 +147,8 @@ const MODEL_TIERS: Record<Intent, Record<"web" | "line", AgentModelConfig>> = {
     line: casualTier("line"),
   },
   thinking: {
-    web: thinkingTier("web", "low"),
-    line: thinkingTier("line", "low"),
+    web: thinkingTier("web"),
+    line: thinkingTier("line"),
   },
 };
 
