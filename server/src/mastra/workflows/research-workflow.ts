@@ -144,7 +144,7 @@ const knowledgeStep = createStep({
     });
     const { memo, coverage } = res.object ?? {
       memo: res.text,
-      coverage: "一部" as const,
+      coverage: "取れない" as const,
     };
     logger.info("[Research] knowledge", {
       question: inputData.question,

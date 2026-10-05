@@ -75,20 +75,22 @@ describe("runResearch", () => {
     expect(result.memo).toContain("寮費は月額30,000円");
   });
 
-  it("構造化出力が得られなければ、本文をメモにして一部として扱う", async () => {
+  it("構造化出力が得られなければ、本文をメモにして取れない扱いで Web でも調べる", async () => {
     classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
       steps: [],
       text: "寮費は月3万円",
     });
+    webGenerate.mockResolvedValueOnce({ text: "補足" });
 
     const result = await runResearch({
       question: "寮費は？",
       requestContext: contextWithKey("k"),
     });
 
-    expect(webGenerate).not.toHaveBeenCalled();
+    expect(webGenerate).toHaveBeenCalledTimes(1);
     expect(result.memo).toContain("寮費は月3万円");
+    expect(result.memo).toContain("補足");
   });
 
   it("ナレッジ用エージェントにメモと判定の構造化出力を求める", async () => {
