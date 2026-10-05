@@ -147,8 +147,6 @@ const knowledgeStep = createStep({
       coverage: "取れない" as const,
     };
     logger.info("[Research] knowledge", {
-      question: inputData.question,
-      ...(inputData.userText && { userText: inputData.userText }),
       searchTerms: searchTerms.length,
       preSearchMs,
       agentMs: Date.now() - agentStartedAt,
@@ -182,7 +180,6 @@ const webStep = createStep({
       abortSignal,
     });
     logger.info("[Research] web", {
-      question: inputData.question,
       ms: Date.now() - startedAt,
       memoChars: res.text.length,
     });

@@ -154,7 +154,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     const conversation = await this.conversationPromise?.catch(() => undefined);
     if (!conversation || (await conversation.isStopRequest(text))) return false;
     logger.info("[Voice] ignored utterance while preparing", {
-      voicePrompt: text,
+      chars: text.length,
     });
     return true;
   }
