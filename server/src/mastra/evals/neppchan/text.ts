@@ -163,7 +163,6 @@ const INTERNAL_NAMES = [
   "displayTimelineTool",
   "voiceAnswerTool",
   "researchTool",
-  "knowledgeSearchTool",
   "broadcastGet",
   "pollGet",
   "Vectorize",
