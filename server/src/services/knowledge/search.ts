@@ -1,6 +1,5 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import type { RequestContext } from "@mastra/core/request-context";
-import { rerankWithScorer } from "@mastra/rag";
 import { embed } from "ai";
 import { GEMINI_EMBEDDING } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
@@ -9,7 +8,7 @@ import {
   runInBackground,
 } from "~/services/analytics/llm-usage";
 import { boostByRecency } from "./recency";
-import { createRerankScorer } from "./rerank-scorer";
+import { scoreRelevance } from "./rerank-scorer";
 import { EMBEDDING_DIMENSIONS } from "./vector-store";
 
 const SEARCH_TOP_K = 50;
@@ -19,6 +18,8 @@ const RERANK_CANDIDATES = 15;
 const RERANK_TOP_K = 5;
 
 const RECENCY_WEIGHT = 0.15;
+
+const RELEVANCE_WEIGHT = 0.5;
 
 export type KnowledgeResult = {
   content: string;
@@ -112,33 +113,19 @@ export const searchKnowledge = async (
       RECENCY_WEIGHT,
     ).slice(0, RERANK_CANDIDATES);
 
-    const queryResults = candidates.map((c) => ({
-      id: c.id,
-      score: c.result.score,
-      metadata: { ...c.result, text: c.result.content },
-    }));
-
-    const rerankedResults = await rerankWithScorer({
-      results: queryResults,
+    const relevance = await scoreRelevance(
       query,
-      scorer: createRerankScorer(requestContext),
-      options: {
-        topK: queryResults.length,
-        weights: {
-          semantic: 0.5,
-          vector: 0.5,
-          position: 0,
-        },
-      },
-    });
+      candidates.map((c) => c.result.content),
+      requestContext,
+    );
 
     const knowledgeResults = boostByRecency(
-      rerankedResults.map((r) => {
-        const { text: _, ...result } = r.result.metadata as KnowledgeResult & {
-          text: string;
-        };
-        return { ...result, score: r.score };
-      }),
+      candidates.map((c, i) => ({
+        ...c.result,
+        score:
+          RELEVANCE_WEIGHT * relevance[i] +
+          (1 - RELEVANCE_WEIGHT) * c.result.score,
+      })),
       now,
       RECENCY_WEIGHT,
     ).slice(0, RERANK_TOP_K);

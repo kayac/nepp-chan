@@ -10,7 +10,7 @@ import { embed } from "ai";
 import { askJev, JevHttpError, type JevQuestion } from "../src/lib/jev";
 import { GEMINI_EMBEDDING } from "../src/lib/llm-models";
 import { loadDevVars, serverRoot } from "../src/mastra/evals/neppchan/dev-vars";
-import { createRerankScorer } from "../src/services/knowledge/rerank-scorer";
+import { scoreRelevance } from "../src/services/knowledge/rerank-scorer";
 import { searchKnowledge } from "../src/services/knowledge/search";
 import { EMBEDDING_DIMENSIONS } from "../src/services/knowledge/vector-store";
 import { evalTestCases } from "./data/eval-test-cases";
@@ -80,8 +80,20 @@ const JEV_QUESTIONS = {
   },
 } satisfies Record<string, JevQuestion>;
 
-type Arm = "luna" | keyof typeof JEV_QUESTIONS;
-const ARMS = ["luna", ...Object.keys(JEV_QUESTIONS)] as Arm[];
+const BATCH_ARMS = { "jev-ja-batch": jaRerankQuestion } satisfies Record<
+  string,
+  JevQuestion
+>;
+
+type Arm = "luna" | keyof typeof JEV_QUESTIONS | keyof typeof BATCH_ARMS;
+const ARMS = [
+  "luna",
+  ...Object.keys(JEV_QUESTIONS),
+  ...Object.keys(BATCH_ARMS),
+] as Arm[];
+
+const isBatchArm = (arm: Arm): arm is keyof typeof BATCH_ARMS =>
+  arm in BATCH_ARMS;
 
 type ScoreRecord = {
   caseId: string;
@@ -115,6 +127,8 @@ const { values } = parseArgs({
     report: { type: "string" },
     bench: { type: "boolean", default: false },
     ineligible: { type: "boolean", default: false },
+    limit: { type: "string" },
+    shuffle: { type: "boolean", default: false },
   },
 });
 
@@ -250,7 +264,41 @@ const scoreWithJev = async (
   return { score: answer.noul, inputTokens: response.usage?.input_tokens };
 };
 
-const lunaScorer = createRerankScorer();
+const scoreBatchWithJev = async (
+  apiKey: string,
+  query: string,
+  texts: string[],
+  question: JevQuestion,
+) => {
+  const ids = texts.map((_, i) => `p${i}`);
+  const order = values.shuffle
+    ? ids.map((id) => id).sort(() => Math.random() - 0.5)
+    : ids;
+  const textOf = new Map(ids.map((id, i) => [id, texts[i]]));
+  const response = await askJevWithRetry({
+    apiKey,
+    state: {
+      query,
+      passages: order.map((id) => ({ id, text: textOf.get(id) })),
+    },
+    questions: Object.fromEntries(
+      ids.map((id) => [
+        id,
+        {
+          ...question,
+          instructions: `passages のうち id が ${id} の文章について判定する。${question.instructions}`,
+        },
+      ]),
+    ),
+  });
+  return {
+    scores: ids.map((id) => {
+      const answer = response.answers[id];
+      return answer?.type === "noul" ? answer.noul : null;
+    }),
+    inputTokens: response.usage?.input_tokens,
+  };
+};
 
 const scoreCase = async (
   arm: Arm,
@@ -261,11 +309,43 @@ const scoreCase = async (
   const errors: string[] = [];
   const inputTokens: number[] = [];
   const started = performance.now();
+  if (isBatchArm(arm)) {
+    if (!jevKey) throw new Error("TYPESAFE_API_KEY is not set");
+    try {
+      const r = await scoreBatchWithJev(
+        jevKey,
+        c.query,
+        c.chunks.map((chunk) => chunk.content),
+        BATCH_ARMS[arm],
+      );
+      if (r.inputTokens !== undefined) inputTokens.push(r.inputTokens);
+      return {
+        caseId: c.caseId,
+        arm,
+        run,
+        scores: r.scores,
+        wallMs: performance.now() - started,
+        errors,
+        inputTokens,
+      };
+    } catch (error) {
+      errors.push(String(error));
+      return {
+        caseId: c.caseId,
+        arm,
+        run,
+        scores: c.chunks.map(() => null),
+        wallMs: performance.now() - started,
+        errors,
+        inputTokens,
+      };
+    }
+  }
   const scores = await Promise.all(
     c.chunks.map(async (chunk) => {
       try {
         if (arm === "luna") {
-          const s = await lunaScorer.getRelevanceScore(c.query, chunk.content);
+          const [s] = await scoreRelevance(c.query, [chunk.content]);
           return Number.isNaN(s) ? null : s;
         }
         if (!jevKey) throw new Error("TYPESAFE_API_KEY is not set");
@@ -273,7 +353,7 @@ const scoreCase = async (
           jevKey,
           c.query,
           chunk.content,
-          JEV_QUESTIONS[arm],
+          JEV_QUESTIONS[arm as keyof typeof JEV_QUESTIONS],
         );
         if (r.inputTokens !== undefined) inputTokens.push(r.inputTokens);
         return r.score;
@@ -565,7 +645,13 @@ const main = async () => {
   if (!existsSync(candidatesPath)) {
     throw new Error(`run with --build first: ${candidatesPath} is missing`);
   }
-  const all: Candidates[] = JSON.parse(readFileSync(candidatesPath, "utf8"));
+  const loaded: Candidates[] = JSON.parse(readFileSync(candidatesPath, "utf8"));
+  const all = values.limit
+    ? loaded.map((c) => ({
+        ...c,
+        chunks: c.chunks.slice(0, Number(values.limit)),
+      }))
+    : loaded;
   const candidates = values.case
     ? all.filter((c) => c.caseId === values.case)
     : all.filter(

@@ -55,34 +55,45 @@ const scoreWithLuna = async (
 
 const scoreWithDecider = async (
   query: string,
-  text: string,
+  texts: string[],
   decider: Decider,
 ) => {
-  const { relevant } = await decider.decide(
-    { query, passage: text },
-    { relevant: rerankQuestion },
+  const ids = texts.map((_, i) => `p${i}`);
+  const answers = await decider.decide(
+    { query, passages: texts.map((text, i) => ({ id: ids[i], text })) },
+    Object.fromEntries(
+      ids.map((id) => [
+        id,
+        {
+          ...rerankQuestion,
+          instructions: `passages のうち id が ${id} の文章について判定する。${rerankQuestion.instructions}`,
+        },
+      ]),
+    ),
   );
-  return relevant.p;
+  return ids.map((id) => answers[id].p);
 };
 
-export const createRerankScorer = (requestContext?: RequestContext) => {
+export const scoreRelevance = async (
+  query: string,
+  texts: string[],
+  requestContext?: RequestContext,
+) => {
+  if (texts.length === 0) return [];
   const decider = createDecider(requestContext, {
     source: "rerank",
     agent: "knowledge-reranker",
   });
-  return {
-    getRelevanceScore: async (query: string, text: string) => {
-      if (!decider) {
-        return scoreWithLuna(query, text, requestContext);
-      }
-      try {
-        return await scoreWithDecider(query, text, decider);
-      } catch (error) {
-        logger.warn("[Rerank] jev failed, falling back to agent", {
-          error: String(error),
-        });
-        return scoreWithLuna(query, text, requestContext);
-      }
-    },
-  };
+  if (decider) {
+    try {
+      return await scoreWithDecider(query, texts, decider);
+    } catch (error) {
+      logger.warn("[Rerank] jev failed, falling back to agent", {
+        error: String(error),
+      });
+    }
+  }
+  return Promise.all(
+    texts.map((text) => scoreWithLuna(query, text, requestContext)),
+  );
 };

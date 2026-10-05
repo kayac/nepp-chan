@@ -20,8 +20,8 @@ vi.mock("@ai-sdk/google", () => ({
   })),
 }));
 
-vi.mock("@mastra/rag", () => ({
-  rerankWithScorer: vi.fn(),
+vi.mock("./rerank-scorer", () => ({
+  scoreRelevance: vi.fn(),
 }));
 
 vi.mock("ai", () => ({
@@ -33,7 +33,7 @@ vi.mock("~/lib/logger", () => ({
 }));
 
 const { embed } = await import("ai");
-const { rerankWithScorer } = await import("@mastra/rag");
+const { scoreRelevance } = await import("./rerank-scorer");
 const { logger } = await import("~/lib/logger");
 const { searchKnowledge } = await import("./search");
 
@@ -46,7 +46,7 @@ const buildVectorize = () =>
 
 beforeEach(() => {
   vi.mocked(embed).mockReset();
-  vi.mocked(rerankWithScorer).mockReset();
+  vi.mocked(scoreRelevance).mockReset();
   vi.mocked(logger.error).mockReset();
 });
 
@@ -58,10 +58,10 @@ describe("searchKnowledge", () => {
 
     const result = await searchKnowledge("foo", vectorize, "key");
     expect(result).toEqual({ results: [] });
-    expect(rerankWithScorer).not.toHaveBeenCalled();
+    expect(scoreRelevance).not.toHaveBeenCalled();
   });
 
-  it("matches を rerank に渡し、rerank スコアに新しさを加点して返す", async () => {
+  it("候補の本文を関連度の採点に渡し、metadata を結果に写す", async () => {
     vi.mocked(embed).mockResolvedValueOnce({ embedding: [0.1] } as never);
     const vectorize = buildVectorize();
     vi.mocked(vectorize.query).mockResolvedValueOnce({
@@ -83,13 +83,7 @@ describe("searchKnowledge", () => {
       ],
     } as never);
 
-    vi.mocked(rerankWithScorer).mockImplementationOnce(async ({ results }) => [
-      {
-        score: 0.95,
-        result: results[0],
-        details: { semantic: 0, vector: 0, position: 0 },
-      },
-    ]);
+    vi.mocked(scoreRelevance).mockResolvedValueOnce([0.95]);
 
     const result = await searchKnowledge("クエリ", vectorize, "key");
 
@@ -104,20 +98,10 @@ describe("searchKnowledge", () => {
       date: "2999-01-01",
       dateType: "exact",
     });
-    expect(result.results[0].score).toBeCloseTo((0.95 + 0.15) / 1.15, 5);
-
-    const rerankArg = vi.mocked(rerankWithScorer).mock
-      .calls[0]?.[0] as unknown as {
-      query: string;
-      results: { metadata: { source: string } }[];
-      options: { topK: number };
-    };
-    expect(rerankArg.query).toBe("クエリ");
-    expect(rerankArg.results[0].metadata.source).toBe("doc.md");
-    expect(rerankArg.options.topK).toBe(1);
+    expect(scoreRelevance).toHaveBeenCalledWith("クエリ", ["本文1"], undefined);
   });
 
-  it("vector 候補は新しさ込みで上位 15 件に絞って rerank に渡す", async () => {
+  it("vector 候補は新しさ込みで上位 15 件に絞って採点する", async () => {
     vi.mocked(embed).mockResolvedValueOnce({ embedding: [0.1] } as never);
     const vectorize = buildVectorize();
     const oldMatches = Array.from({ length: 15 }, (_, i) => ({
@@ -143,25 +127,16 @@ describe("searchKnowledge", () => {
     vi.mocked(vectorize.query).mockResolvedValueOnce({
       matches: [...oldMatches, newest],
     } as never);
-    vi.mocked(rerankWithScorer).mockImplementationOnce(async ({ results }) =>
-      results.map((r) => ({
-        score: r.score,
-        result: r,
-        details: { semantic: 0, vector: 0, position: 0 },
-      })),
+    vi.mocked(scoreRelevance).mockImplementationOnce(async (_q, texts) =>
+      texts.map(() => 0.5),
     );
 
     await searchKnowledge("q", vectorize, "key");
 
-    const rerankArg = vi.mocked(rerankWithScorer).mock
-      .calls[0]?.[0] as unknown as {
-      results: { id: string }[];
-      options: { topK: number };
-    };
-    expect(rerankArg.results).toHaveLength(15);
-    expect(rerankArg.results.map((r) => r.id)).toContain("new");
-    expect(rerankArg.results.map((r) => r.id)).not.toContain("old14");
-    expect(rerankArg.options.topK).toBe(15);
+    const texts = vi.mocked(scoreRelevance).mock.calls[0]?.[1] ?? [];
+    expect(texts).toHaveLength(15);
+    expect(texts).toContain("新しい");
+    expect(texts).not.toContain("古い14");
   });
 
   it("rerank 後は新しさを加点して並べ替え、上位 5 件を返す", async () => {
@@ -178,12 +153,8 @@ describe("searchKnowledge", () => {
       },
     }));
     vi.mocked(vectorize.query).mockResolvedValueOnce({ matches } as never);
-    vi.mocked(rerankWithScorer).mockImplementationOnce(async ({ results }) =>
-      results.map((r) => ({
-        score: 0.9 - Number(r.id.slice(1)) * 0.01,
-        result: r,
-        details: { semantic: 0, vector: 0, position: 0 },
-      })),
+    vi.mocked(scoreRelevance).mockImplementationOnce(async (_q, texts) =>
+      texts.map((text) => 0.9 - Number(text.slice(1)) * 0.01),
     );
 
     const result = await searchKnowledge("q", vectorize, "key");
@@ -193,27 +164,36 @@ describe("searchKnowledge", () => {
     expect(result.results.map((r) => r.source)).not.toContain("s4.md");
   });
 
-  it("metadata 欠落フィールドは unknown / 空文字で埋め、日付なしは中立の加点になる", async () => {
+  it("metadata 欠落フィールドは unknown / 空文字で埋める", async () => {
     vi.mocked(embed).mockResolvedValueOnce({ embedding: [0.1] } as never);
     const vectorize = buildVectorize();
     vi.mocked(vectorize.query).mockResolvedValueOnce({
       matches: [{ id: "v1", score: 0.7, metadata: undefined }],
     } as never);
 
-    vi.mocked(rerankWithScorer).mockImplementationOnce(async ({ results }) => [
-      {
-        score: 0.5,
-        result: results[0],
-        details: { semantic: 0, vector: 0, position: 0 },
-      },
-    ]);
+    vi.mocked(scoreRelevance).mockResolvedValueOnce([0.5]);
 
     const result = await searchKnowledge("q", vectorize, "key");
     expect(result.results[0]).toMatchObject({
       content: "",
       source: "unknown",
     });
-    expect(result.results[0].score).toBeCloseTo((0.5 + 0.15 * 0.5) / 1.15, 5);
+  });
+
+  it("関連度とベクトルの近さを半々で混ぜて並べる", async () => {
+    vi.mocked(embed).mockResolvedValueOnce({ embedding: [0.1] } as never);
+    const vectorize = buildVectorize();
+    vi.mocked(vectorize.query).mockResolvedValueOnce({
+      matches: [
+        { id: "near", score: 0.9, metadata: { content: "近いだけ" } },
+        { id: "answer", score: 0.6, metadata: { content: "答え" } },
+      ],
+    } as never);
+    vi.mocked(scoreRelevance).mockResolvedValueOnce([0.1, 0.9]);
+
+    const result = await searchKnowledge("q", vectorize, "key");
+
+    expect(result.results.map((r) => r.content)).toEqual(["答え", "近いだけ"]);
   });
 
   it("embed が失敗したら error を返し results は空", async () => {
