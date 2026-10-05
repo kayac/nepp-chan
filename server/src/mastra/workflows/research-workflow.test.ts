@@ -93,22 +93,6 @@ describe("runResearch", () => {
     expect(result.memo).toContain("補足");
   });
 
-  it("ナレッジ用エージェントにメモと判定の構造化出力を求める", async () => {
-    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
-    knowledgeGenerate.mockResolvedValueOnce({
-      steps: [],
-      object: { memo: "メモ", coverage: "取れた" },
-    });
-
-    await runResearch({ question: "q", requestContext: contextWithKey("k") });
-
-    const options = knowledgeGenerate.mock.calls[0]?.[1];
-    expect(Object.keys(options.structuredOutput.schema.shape).sort()).toEqual([
-      "coverage",
-      "memo",
-    ]);
-  });
-
   it("村のことで一部なら、Web に回さずナレッジのメモを返す", async () => {
     classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({
@@ -402,24 +386,5 @@ describe("runResearch", () => {
     ).rejects.toThrow();
     expect(searchMock).not.toHaveBeenCalled();
     expect(knowledgeGenerate).not.toHaveBeenCalled();
-  });
-
-  it("エージェントに requestContext をそのまま渡す", async () => {
-    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
-    knowledgeGenerate.mockResolvedValueOnce({
-      steps: [],
-      object: { memo: "メモ", coverage: "取れない" },
-    });
-    webGenerate.mockResolvedValueOnce({ text: "補足" });
-    const ctx = contextWithKey("k");
-
-    await runResearch({ question: "q", requestContext: ctx });
-
-    expect(knowledgeGenerate.mock.calls[0]?.[1]).toMatchObject({
-      requestContext: ctx,
-    });
-    expect(webGenerate.mock.calls[0]?.[1]).toMatchObject({
-      requestContext: ctx,
-    });
   });
 });

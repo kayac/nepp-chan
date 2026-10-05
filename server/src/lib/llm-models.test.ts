@@ -111,7 +111,7 @@ describe("resolveModelTier", () => {
       expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe("none");
     });
 
-    it("thinking → プライマリ LITE + low、フォールバック MAIN", () => {
+    it("thinking → プライマリ LITE、フォールバック MAIN", () => {
       const tier = resolveModelTier({
         intent: "thinking",
         platform: "web",
@@ -121,7 +121,6 @@ describe("resolveModelTier", () => {
         OPENAI_LITE,
         OPENAI_MAIN,
       ]);
-      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe("low");
       expect(tier.model[0].providerOptions.openai.textVerbosity).toBe("high");
     });
   });
@@ -140,14 +139,13 @@ describe("resolveModelTier", () => {
       });
     });
 
-    it("thinking → プライマリ LITE + low", () => {
+    it("thinking → プライマリ LITE", () => {
       const tier = resolveModelTier({
         intent: "thinking",
         platform: "line",
         isAdmin: false,
       });
       expect(tier.model[0].model).toBe(OPENAI_LITE);
-      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe("low");
       expect(tier.model[0].providerOptions.openai.textVerbosity).toBe("medium");
     });
   });

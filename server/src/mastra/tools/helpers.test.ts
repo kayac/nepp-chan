@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getConversationEndedAt,
   getEnv,
+  getLastUserText,
   requireAdmin,
   requireDb,
 } from "./helpers";
@@ -127,6 +128,47 @@ describe("ツールヘルパー関数", () => {
       if ("error" in result) {
         expect(result.error.error).toBe("NOT_AUTHORIZED");
       }
+    });
+  });
+
+  describe("getLastUserText", () => {
+    const withMessages = (messages: unknown[]) =>
+      ({ agent: { messages } }) as never;
+
+    it("最後のユーザー発言の文字列を返す", () => {
+      expect(
+        getLastUserText(
+          withMessages([
+            { role: "user", content: "前の質問" },
+            { role: "assistant", content: "答え" },
+            { role: "user", content: "寮費は？" },
+          ]),
+        ),
+      ).toBe("寮費は？");
+    });
+
+    it("パーツに分かれた発言は文字のパーツだけを改行でつなぐ", () => {
+      expect(
+        getLastUserText(
+          withMessages([
+            {
+              role: "user",
+              content: [
+                { type: "text", text: "この写真の" },
+                { type: "image", image: "data" },
+                { type: "text", text: "場所はどこ？" },
+              ],
+            },
+          ]),
+        ),
+      ).toBe("この写真の\n場所はどこ？");
+    });
+
+    it("ユーザーの発言が無ければ undefined", () => {
+      expect(
+        getLastUserText(withMessages([{ role: "assistant", content: "やあ" }])),
+      ).toBeUndefined();
+      expect(getLastUserText(undefined)).toBeUndefined();
     });
   });
 });

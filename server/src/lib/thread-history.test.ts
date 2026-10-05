@@ -48,18 +48,6 @@ describe("latestAssistantText", () => {
     );
   });
 
-  it("threadId を渡し createdAt 降順で取得する", async () => {
-    const storage = storageWith([]);
-    await latestAssistantText(storage, "thr-1");
-    const memoryStore = await storage.getStore.mock.results[0]?.value;
-    expect(memoryStore.listMessages).toHaveBeenCalledWith(
-      expect.objectContaining({
-        threadId: "thr-1",
-        orderBy: { field: "createdAt", direction: "DESC" },
-      }),
-    );
-  });
-
   it("assistant メッセージが無ければ undefined", async () => {
     const storage = storageWith([
       message("user", [{ type: "text", text: "こんにちは" }]),

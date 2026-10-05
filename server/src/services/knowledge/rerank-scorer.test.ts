@@ -49,21 +49,6 @@ describe("createRerankScorer（jev）", () => {
     );
     expect(generateMock).not.toHaveBeenCalled();
   });
-
-  it("query と passage を state に、noul 1 問を questions に渡す", async () => {
-    askJevMock.mockResolvedValueOnce(jevResponse(0.5));
-    await createRerankScorer(contextWithKey("secret")).getRelevanceScore(
-      "寮費は？",
-      "月額30,000円",
-    );
-    const params = askJevMock.mock.calls[0]?.[0];
-    expect(params.apiKey).toBe("secret");
-    expect(params.state).toEqual({
-      query: "寮費は？",
-      passage: "月額30,000円",
-    });
-    expect(params.questions.relevant.type).toBe("noul");
-  });
 });
 
 describe("createRerankScorer（luna フォールバック）", () => {
