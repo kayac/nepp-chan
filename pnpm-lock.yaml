@@ -124,8 +124,8 @@ importers:
         specifier: 1.35.0
         version: 1.35.0(@mastra/core@1.71.0(ai@7.0.118(zod@4.6.5))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.5))(zod@4.6.5))(supports-color@10.2.2)
       '@mastra/observability':
-        specifier: 1.18.1
-        version: 1.18.1(@mastra/core@1.71.0(ai@7.0.118(zod@4.6.5))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.5))(zod@4.6.5))(zod@4.6.5)
+        specifier: 1.18.3
+        version: 1.18.3(@mastra/core@1.71.0(ai@7.0.118(zod@4.6.5))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.5))(zod@4.6.5))(zod@4.6.5)
       '@mastra/rag':
         specifier: 2.6.6
         version: 2.6.6(@mastra/core@1.71.0(ai@7.0.118(zod@4.6.5))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.5))(zod@4.6.5))(zod@4.6.5)
@@ -2233,8 +2233,8 @@ packages:
     peerDependencies:
       '@mastra/core': '>=1.4.1-0 <2.0.0-0'
 
-  '@mastra/observability@1.18.1':
-    resolution: {integrity: sha512-6D4I9LBzU7PQ9woqobc7NeLLqZcNeX2fHBJzUUclWh3a1x7RG32Ybimd9JP8oSvYhNZmfn1Rusnwq+s16JdwGQ==}
+  '@mastra/observability@1.18.3':
+    resolution: {integrity: sha512-WYw3gouK3c1U3dvpi6M56duRUyVlx94vE1Qs1OfETOgGXiFdW9AyO64YIchQmD+mqKpVxIq1ASvEssRHMag45Q==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.16.0-0 <2.0.0-0'
@@ -3228,9 +3228,6 @@ packages:
 
   '@types/node@24.13.3':
     resolution: {integrity: sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q==}
-
-  '@types/node@26.6.2':
-    resolution: {integrity: sha512-X1P21scMv4zGKLYqjdGjaKa7COa0RKVYYZZN/NfvLQ1JegxFhdhpZG/Lyn8AXx6CDUavKAd11v6BvfpkDByK8g==}
 
   '@types/node@26.6.4':
     resolution: {integrity: sha512-ldVPDCzj7fsaGZrLB0NuHuTvJcsNasysBAqMolr/cgxrLd1xbqxIr3XJiPnHHJUCxj5sNF1vnRj9aWnrVh5Jcg==}
@@ -8426,7 +8423,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@mastra/observability@1.18.1(@mastra/core@1.71.0(ai@7.0.118(zod@4.6.5))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.5))(zod@4.6.5))(zod@4.6.5)':
+  '@mastra/observability@1.18.3(@mastra/core@1.71.0(ai@7.0.118(zod@4.6.5))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.5))(zod@4.6.5))(zod@4.6.5)':
     dependencies:
       '@mastra/core': 1.71.0(ai@7.0.118(zod@4.6.5))(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.5))(zod@4.6.5)
       zod: 4.6.5
@@ -9268,10 +9265,6 @@ snapshots:
     dependencies:
       undici-types: 7.18.2
 
-  '@types/node@26.6.2':
-    dependencies:
-      undici-types: 8.9.0
-
   '@types/node@26.6.4':
     dependencies:
       undici-types: 8.9.0
@@ -9288,7 +9281,7 @@ snapshots:
 
   '@types/set-cookie-parser@2.4.10':
     dependencies:
-      '@types/node': 26.6.2
+      '@types/node': 26.6.4
 
   '@types/statuses@2.0.6': {}
 
