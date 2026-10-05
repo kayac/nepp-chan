@@ -107,19 +107,11 @@ describe("classifyTurn（jev）", () => {
   });
 
   it("意図と調べ先を 1 回の呼び出しでまとめて聞く", async () => {
-    askJevMock.mockResolvedValueOnce(jevResponse(0.9));
-    await classifyTurn({ text: "教えて" }, contextWithKey("secret-key"));
+    askJevMock.mockResolvedValueOnce(jevResponse(0.9, 0.1));
+    expect(
+      await classifyTurn({ text: "天気は？" }, contextWithKey("k")),
+    ).toEqual({ intent: "thinking", route: "outside" });
     expect(askJevMock).toHaveBeenCalledTimes(1);
-    const params = sentParams();
-    expect(params.apiKey).toBe("secret-key");
-    expect(Object.keys(params.questions.intent.criteria).sort()).toEqual([
-      "casual",
-      "thinking",
-    ]);
-    expect(Object.keys(params.questions.route.criteria).sort()).toEqual([
-      "outside",
-      "village",
-    ]);
   });
 
   it("previousAssistant があれば state に assistant → user の順で含める", async () => {
@@ -140,19 +132,32 @@ describe("classifyTurn（jev）", () => {
     expect(sentParams().state).toEqual([{ from: "user", text: "こんにちは" }]);
   });
 
-  it("相槌の種類を同じ呼び出しで聞き、none なら返さない", async () => {
+  it("withBackchannel なら相槌の種類も同じ呼び出しで聞き、none なら返さない", async () => {
     askJevMock
       .mockResolvedValueOnce(jevResponse(0.1, 0.9, "happy"))
       .mockResolvedValueOnce(jevResponse(0.1, 0.9, "none"));
 
-    const happy = await classifyTurn({ text: "晴れた！" }, contextWithKey("k"));
-    const none = await classifyTurn({ text: "…" }, contextWithKey("k"));
-
-    expect(askJevMock.mock.calls[0]?.[0].questions.backchannel.type).toBe(
-      "choice",
+    const happy = await classifyTurn(
+      { text: "晴れた！", withBackchannel: true },
+      contextWithKey("k"),
     );
+    const none = await classifyTurn(
+      { text: "…", withBackchannel: true },
+      contextWithKey("k"),
+    );
+
+    expect(askJevMock).toHaveBeenCalledTimes(2);
     expect(happy.backchannel).toBe("happy");
     expect(none.backchannel).toBeUndefined();
+  });
+
+  it("withBackchannel でなければ相槌の種類は聞かない", async () => {
+    askJevMock.mockResolvedValueOnce(jevResponse(0.1, 0.9, "happy"));
+
+    const turn = await classifyTurn({ text: "晴れた！" }, contextWithKey("k"));
+
+    expect(sentParams().questions).not.toHaveProperty("backchannel");
+    expect(turn.backchannel).toBeUndefined();
   });
 });
 

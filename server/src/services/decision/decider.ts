@@ -34,7 +34,7 @@ type YesNoAnswer = { p: number };
 type AnswerOf<Q extends Question> =
   Q extends ChoiceQuestion<infer C> ? ChoiceAnswer<C> : YesNoAnswer;
 
-type Answers<Qs extends Questions> = {
+export type Answers<Qs extends Questions> = {
   [K in keyof Qs]: AnswerOf<Qs[K]>;
 };
 
