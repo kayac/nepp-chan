@@ -25,6 +25,8 @@ import { verifySetupToken } from "./twilio-token";
 // 有効な setup が届かない接続を無期限に張らせないための待受上限。
 const SETUP_TIMEOUT_MS = 10_000;
 
+const TURN_FAILED_REPLY = "ごめんね、うまく聞き取れなかったみたい。";
+
 // token は setup メッセージの customParameters で届くため、検証は onMessage 側で行う。
 export const handleRelayUpgrade = (
   request: Request,
@@ -149,7 +151,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
 
   private async shouldIgnoreWhilePreparing(text: string) {
     if (!this.isPreparing(this.currentTurn)) return false;
-    const conversation = await this.conversationPromise;
+    const conversation = await this.conversationPromise?.catch(() => undefined);
     if (!conversation || (await conversation.isStopRequest(text))) return false;
     logger.info("[Voice] ignored utterance while preparing", {
       voicePrompt: text,
@@ -196,7 +198,16 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       from: this.from,
       callSid: this.callSid,
     });
-    const conversation = await this.conversationPromise;
+    const conversation = await this.conversationPromise.catch((e) => {
+      logger.error("[Voice] conversation setup failed", e);
+      this.conversationPromise = null;
+      return undefined;
+    });
+    if (!conversation) {
+      if (this.currentTurn === controller) this.currentTurn = null;
+      ws.send(serializeRelayMessage(textTokenMessage(TURN_FAILED_REPLY, true)));
+      return;
+    }
     if (controller.signal.aborted || this.currentTurn !== controller) {
       if (this.currentTurn === controller) this.currentTurn = null;
       return;
@@ -276,7 +287,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     } catch (e) {
       logger.error("[CallBridge] handlePrompt failed", e);
       if (!controller.signal.aborted) {
-        send("ごめんね、うまく聞き取れなかったみたい。", true);
+        send(TURN_FAILED_REPLY, true);
       }
     } finally {
       cover.dispose();

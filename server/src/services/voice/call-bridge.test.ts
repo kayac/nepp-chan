@@ -80,6 +80,38 @@ describe("CallBridge", () => {
     );
   });
 
+  it("会話の準備に失敗したらそのターンは謝って終え、次の発話で準備をやり直す", async () => {
+    const runTurn = vi.fn(async function* () {
+      yield "回答";
+    });
+    createVoiceConversationMock
+      .mockRejectedValueOnce(new Error("hash failed"))
+      .mockResolvedValueOnce({
+        runTurn,
+        classifyUtterance,
+        persistTurn: vi.fn(),
+      });
+    const bridge = new CallBridge(
+      {} as DurableObjectState,
+      {} as CloudflareBindings,
+    );
+    const ws = { send: vi.fn() } as unknown as WebSocket;
+    const handlePrompt = Reflect.get(bridge, "handlePrompt") as (
+      ws: WebSocket,
+      text: string,
+    ) => Promise<void>;
+
+    await handlePrompt.call(bridge, ws, "寮費は？");
+    await handlePrompt.call(bridge, ws, "寮費は？");
+
+    const tokens = vi
+      .mocked(ws.send)
+      .mock.calls.map(([raw]) => JSON.parse(String(raw)).token as string);
+    expect(tokens[0]).toContain("ごめんね");
+    expect(createVoiceConversationMock).toHaveBeenCalledTimes(2);
+    expect(runTurn).toHaveBeenCalledTimes(1);
+  });
+
   it("完了トークンを送ってから D1 保存を待つ", async () => {
     const order: string[] = [];
     const runTurn = vi.fn(async function* () {
