@@ -262,7 +262,6 @@ export const createVoiceConversation = async ({
         text,
         previousAssistant:
           typeof previousAssistant === "string" ? previousAssistant : undefined,
-        withBackchannel: true,
       },
       createRequestContext(baseContext),
     );

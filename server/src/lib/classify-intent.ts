@@ -3,7 +3,6 @@ import { z } from "zod";
 import { logger } from "~/lib/logger";
 import { intentRouterAgent } from "~/mastra/agents/intent-router-agent";
 import {
-  type Answers,
   type ChoiceQuestion,
   createDecider,
   type Decider,
@@ -76,7 +75,6 @@ export type TurnClass = {
 type ClassifyTurnInput = {
   text: string;
   previousAssistant?: string;
-  withBackchannel?: boolean;
 };
 
 const buildState = (input: ClassifyTurnInput) => [
@@ -96,28 +94,25 @@ const withRoute = (intent: Intent, pVillage = 1): TurnClass => ({
         : "outside",
 });
 
-const turnQuestions = { intent: intentQuestion, route: routeQuestion };
-
-const toTurn = ({ intent, route }: Answers<typeof turnQuestions>) =>
-  withRoute(
-    intent.probabilities.thinking >= THINKING_THRESHOLD ? "thinking" : "casual",
-    route.probabilities.village,
-  );
-
 const classifyWithDecider = async (
   input: ClassifyTurnInput,
   decider: Decider,
 ) => {
-  const state = buildState(input);
-  if (!input.withBackchannel) {
-    return toTurn(await decider.decide(state, turnQuestions));
-  }
-  const { backchannel, ...answers } = await decider.decide(state, {
-    ...turnQuestions,
-    backchannel: backchannelQuestion,
-  });
+  const { intent, route, backchannel } = await decider.decide(
+    buildState(input),
+    {
+      intent: intentQuestion,
+      route: routeQuestion,
+      backchannel: backchannelQuestion,
+    },
+  );
   return {
-    ...toTurn(answers),
+    ...withRoute(
+      intent.probabilities.thinking >= THINKING_THRESHOLD
+        ? "thinking"
+        : "casual",
+      route.probabilities.village,
+    ),
     ...(backchannel.choice !== NO_BACKCHANNEL && {
       backchannel: backchannel.choice,
     }),
