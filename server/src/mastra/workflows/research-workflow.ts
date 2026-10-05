@@ -5,10 +5,13 @@ import { classifyTurn, type TurnRoute } from "~/lib/classify-intent";
 import { logger } from "~/lib/logger";
 import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
+import { broadcastRepository } from "~/repository/broadcast-repository";
 import {
   type KnowledgeResult,
   searchKnowledge,
 } from "~/services/knowledge/search";
+
+const BROADCAST_LIMIT = 5;
 
 const renderSearchResults = (results: KnowledgeResult[]) =>
   results
@@ -47,6 +50,32 @@ const preSearch = async (
       return true;
     });
   return renderSearchResults(results) || "該当なし";
+};
+
+const searchBroadcasts = async (
+  searchTerms: string[],
+  requestContext?: RequestContext,
+) => {
+  const db = requestContext?.get("db") as D1Database | undefined;
+  if (!db) return undefined;
+  try {
+    const broadcasts = await broadcastRepository.findByKeyword(
+      db,
+      searchTerms.join(" "),
+      BROADCAST_LIMIT,
+    );
+    return broadcasts
+      .map(
+        (b, i) =>
+          `【配信${i + 1}】${b.title}${b.sentAt ? ` [${b.sentAt}]` : ""}\n${b.body}`,
+      )
+      .join("\n\n");
+  } catch (error) {
+    logger.warn("[Research] broadcast search failed", {
+      error: String(error),
+    });
+    return undefined;
+  }
 };
 
 const coverageSchema = z
@@ -130,12 +159,19 @@ const knowledgeStep = createStep({
       ? [...new Set(inputData.queries)]
       : [inputData.question];
     const searchStartedAt = Date.now();
-    const searched = await preSearch(searchTerms, requestContext);
+    const [searched, broadcasts] = await Promise.all([
+      preSearch(searchTerms, requestContext),
+      searchBroadcasts(searchTerms, requestContext),
+    ]);
     const preSearchMs = Date.now() - searchStartedAt;
-    const searchedSection = searched
-      ? `最初の検索結果（検索語: ${searchTerms.join(" / ")}）:\n${searched}\n\n足りない情報だけ、検索済みの語と違う観点で追加検索してよい。\n`
-      : "";
-    const prompt = `${describeQuestion(inputData)}\n${searchedSection}`;
+    const materials = [
+      searched &&
+        `村のナレッジの検索結果（検索語: ${searchTerms.join(" / ")}）:\n${searched}`,
+      broadcasts && `村の LINE 配信（新しい順）:\n${broadcasts}`,
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+    const prompt = `${describeQuestion(inputData)}\n${materials ? `${materials}\n\n` : ""}上の検索結果と配信だけから調査メモを書く。`;
     const agentStartedAt = Date.now();
     const res = await knowledgeAgent.generate(prompt, {
       requestContext,
@@ -150,10 +186,7 @@ const knowledgeStep = createStep({
       searchTerms: searchTerms.length,
       preSearchMs,
       agentMs: Date.now() - agentStartedAt,
-      extraSearches: res.steps
-        .flatMap((step) => step.toolCalls)
-        .filter((call) => call.payload.toolName === "knowledgeSearchTool")
-        .length,
+      broadcasts: Boolean(broadcasts),
       promptChars: prompt.length,
       memoChars: memo.length,
       coverage,

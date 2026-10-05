@@ -1,13 +1,23 @@
 import { RequestContext } from "@mastra/core/request-context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { knowledgeGenerate, webGenerate, classifyTurnMock, searchMock } =
-  vi.hoisted(() => ({
-    knowledgeGenerate: vi.fn(),
-    webGenerate: vi.fn(),
-    classifyTurnMock: vi.fn(),
-    searchMock: vi.fn(),
-  }));
+const {
+  knowledgeGenerate,
+  webGenerate,
+  classifyTurnMock,
+  searchMock,
+  findBroadcastsMock,
+} = vi.hoisted(() => ({
+  knowledgeGenerate: vi.fn(),
+  webGenerate: vi.fn(),
+  classifyTurnMock: vi.fn(),
+  searchMock: vi.fn(),
+  findBroadcastsMock: vi.fn(),
+}));
+
+vi.mock("~/repository/broadcast-repository", () => ({
+  broadcastRepository: { findByKeyword: findBroadcastsMock },
+}));
 
 vi.mock("~/services/knowledge/search", () => ({
   searchKnowledge: searchMock,
@@ -42,6 +52,7 @@ const contextWithKey = (key?: string, withSearch = true) => {
       GOOGLE_GENERATIVE_AI_API_KEY: "g",
     }),
   });
+  ctx.set("db", {} as D1Database);
   return ctx;
 };
 
@@ -56,6 +67,8 @@ beforeEach(() => {
   classifyTurnMock.mockReset();
   searchMock.mockReset();
   searchMock.mockResolvedValue({ results: [] });
+  findBroadcastsMock.mockReset();
+  findBroadcastsMock.mockResolvedValue([]);
 });
 
 describe("runResearch", () => {
@@ -326,8 +339,37 @@ describe("runResearch", () => {
     await runResearch({ question: "q", requestContext: contextWithKey("k") });
 
     expect(knowledgeGenerate.mock.calls[0]?.[0]).not.toContain(
-      "最初の検索結果",
+      "村のナレッジの検索結果",
     );
+  });
+
+  it("LINE 配信も検索語で先に検索し、新しい順にナレッジ用エージェントへ渡す", async () => {
+    classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
+    findBroadcastsMock.mockResolvedValueOnce([
+      {
+        title: "除雪のお知らせ",
+        body: "明日は除雪車が通ります",
+        sentAt: "2026-10-01T09:00:00Z",
+      },
+    ]);
+    knowledgeGenerate.mockResolvedValueOnce({
+      steps: [],
+      object: { memo: "メモ", coverage: "取れた" },
+    });
+    const ctx = contextWithKey("k");
+
+    await runResearch({
+      question: "除雪はいつ？",
+      queries: ["除雪", "除雪車"],
+      requestContext: ctx,
+    });
+
+    expect(findBroadcastsMock).toHaveBeenCalledWith(
+      ctx.get("db"),
+      "除雪 除雪車",
+      5,
+    );
+    expect(knowledgeGenerate.mock.calls[0]?.[0]).toContain("除雪のお知らせ");
   });
 
   it("村外なら先の検索もしない", async () => {

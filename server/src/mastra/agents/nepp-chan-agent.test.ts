@@ -2,7 +2,6 @@ import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { describe, expect, it } from "vitest";
 
 import type { AgentModelConfig } from "~/lib/llm-models";
-import { broadcastGetToolName } from "~/mastra/tools/broadcast-get-tool";
 import { endCallToolName } from "~/mastra/tools/end-call-tool";
 import { pollGetToolName } from "~/mastra/tools/poll-get-tool";
 import { researchToolName } from "~/mastra/tools/research-tool";
@@ -200,7 +199,6 @@ describe("createNeppChanAgent", () => {
 
       const lineIns = await instructionsOf(build({ platform: "line" }));
       expect(lineIns).toContain(researchToolName);
-      expect(lineIns).not.toContain(broadcastGetToolName);
     });
 
     it.each(["web", "line", "widget"] as const)(
@@ -265,7 +263,6 @@ describe("createNeppChanAgent", () => {
       const names = toolNamesOf(build({ platform: "voice" }));
       expect(names).toContain(voiceAnswerToolName);
       expect(names).toContain(endCallToolName);
-      expect(names).not.toContain(broadcastGetToolName);
       expect(names).not.toContain(pollGetToolName);
     });
 

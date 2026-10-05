@@ -1,29 +1,11 @@
 import { Agent } from "@mastra/core/agent";
 import { getCurrentDateInfo } from "~/lib/date";
 import { modelWithReasoning, type ReasoningEffort } from "~/lib/llm-models";
-import {
-  broadcastGetTool,
-  broadcastGetToolName,
-} from "~/mastra/tools/broadcast-get-tool";
-import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 import { withUsageRecording } from "~/services/analytics/llm-usage";
 
-const KNOWLEDGE_MAX_STEPS = 5;
-
 const baseInstructions = `
-あなたは音威子府村の情報検索専門エージェントです。
-村のナレッジとLINE配信から、歴史、施設、観光、行政、行事などを検索し、最終回答を作るエージェントへ調査メモを返します。
-
-## 検索
-- 制度、施設、歴史などの基本情報は knowledgeSearchTool で検索する
-- 最近・現在・今後の村内イベント、休業、変更、募集、告知は knowledgeSearchTool と ${broadcastGetToolName} の両方で検索する
-- 「この前のお知らせ」「さっきの案内」など配信を指す質問では ${broadcastGetToolName} を優先する
-- 検索結果を全て確認し、質問に関係する情報を統合する。score は関連性の目安として使う
-- 具体的な日程、曜日、手順、料金などが見つからず、title・source・section に手がかりがある場合は、それらを含むクエリに書き換えて再検索する
-- 再検索は観点を変えるときだけ行う。語順や語尾を変えただけの同じ意図のクエリを繰り返さない
-- 2回検索して出てこない情報はナレッジに無いと判断し、探し続けずに回答へ進む
-- クエリは検索したい内容の自然な日本語で書く。site: や引用符などの検索演算子は効果がないため使わない
-- ${broadcastGetToolName} の keyword は質問全文ではなく、配信に含まれそうな重要語を最大5語、空白区切りで指定する
+あなたは音威子府村の調査メモ担当エージェントです。
+渡された村のナレッジの検索結果と LINE 配信から、最終回答を作るエージェントへ調査メモを返します。
 
 ## 調査メモ
 - ユーザー向けの文章に整えない。人格・導入・締め・会話表現は加えない
@@ -68,14 +50,9 @@ const knowledgeAgentInstructions = () => `${baseInstructions}
 ## 現在の日時
 ${getCurrentDateInfo()}
 
-## 検索クエリ生成ルール
-- 現在の日付や年を機械的に追加しない。情報の版や対象期間を区別するために必要な場合だけ検索語へ含める
-- 「今日」は上記の現在日時との照合に使う。会話履歴や検索結果に現れる過去の日付を「今日」として扱わない
-- 「今年」「今週」「今月」などの曖昧な時間表現も上記の現在日時を基準に解釈する
-- 過去を明示する表現（「去年の」「以前の」「○年の」）がある場合のみ、該当時期で検索する
 `;
 
-const KNOWLEDGE_EFFORT: ReasoningEffort = "low";
+const KNOWLEDGE_EFFORT: ReasoningEffort = "none";
 
 export const createKnowledgeAgent = ({
   model,
@@ -88,21 +65,16 @@ export const createKnowledgeAgent = ({
     id: "knowledge-agent",
     name: "Knowledge Agent",
     description:
-      "音威子府村の情報（歴史、施設、観光、村長、行政、行事）を検索し、ユーザー向け文章ではない簡潔な調査メモを返す担当。",
+      "音威子府村のナレッジと LINE 配信の検索結果から、ユーザー向け文章ではない簡潔な調査メモを返す担当。",
     instructions: knowledgeAgentInstructions,
     ...withUsageRecording(
       modelWithReasoning({
         model,
         effort,
-        maxSteps: KNOWLEDGE_MAX_STEPS,
         promptCacheKey: "knowledge",
       }),
       { agent: "knowledge" },
     ),
-    tools: {
-      knowledgeSearchTool,
-      [broadcastGetToolName]: broadcastGetTool,
-    },
   });
 
 export const knowledgeAgent = createKnowledgeAgent();
