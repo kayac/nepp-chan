@@ -48,7 +48,7 @@
     "@vitest/coverage-v8": "~5.0.1",
     "autoprefixer": "^10.6.1",
     "jsdom": "^29.1.1",
-    "msw": "^2.15.0",
+    "msw": "^3.0.1",
     "openapi-typescript": "^7.13.0",
     "postcss": "^8.5.28",
     "tailwindcss": "^4.3.3",
