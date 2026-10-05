@@ -382,6 +382,26 @@ describe("runResearch", () => {
     await expect(research).rejects.toThrow();
   });
 
+  it("呼ばれた時点で signal が中断済みなら、何も調べずに失敗にする", async () => {
+    classifyTurnMock.mockResolvedValue(routeResponse(0.9));
+    knowledgeGenerate.mockResolvedValue({
+      steps: [],
+      object: { memo: "メモ", coverage: "取れた" },
+    });
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(
+      runResearch({
+        question: "q",
+        requestContext: contextWithKey("k"),
+        signal: controller.signal,
+      }),
+    ).rejects.toThrow();
+    expect(searchMock).not.toHaveBeenCalled();
+    expect(knowledgeGenerate).not.toHaveBeenCalled();
+  });
+
   it("エージェントに requestContext をそのまま渡す", async () => {
     classifyTurnMock.mockResolvedValueOnce(routeResponse(0.9));
     knowledgeGenerate.mockResolvedValueOnce({

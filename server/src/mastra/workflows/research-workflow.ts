@@ -246,6 +246,7 @@ export const runResearch = async ({
   requestContext?: RequestContext;
   signal?: AbortSignal;
 }) => {
+  signal?.throwIfAborted();
   const run = await researchWorkflow.createRun();
   signal?.addEventListener("abort", () => void run.cancel(), { once: true });
   const result = await run.start({

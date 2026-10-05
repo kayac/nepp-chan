@@ -52,6 +52,16 @@ beforeEach(() => {
 });
 
 describe("voiceAnswerTool", () => {
+  it("中断済みのターンでは保留を始めず、調べもしない", async () => {
+    const controller = new AbortController();
+    controller.abort();
+
+    await call("寮費は？", { signal: controller.signal });
+
+    expect(holdFn).not.toHaveBeenCalled();
+    expect(runResearchMock).not.toHaveBeenCalled();
+  });
+
   it("貯めた資料で答えられるなら調べずに要点を返し、保留音も鳴らさない", async () => {
     summarizerGen.mockResolvedValueOnce({ text: "11時からだよ" });
     const slot: VoiceFindingsSlot = {

@@ -84,6 +84,7 @@ export const voiceAnswerTool = createTool({
         }
       }
 
+      if (signal?.aborted) return { answer: FAILED_ANSWER };
       startHold?.();
       const { memo } = await runResearch({
         question,
