@@ -114,9 +114,7 @@ export const voiceAnswerTool = createTool({
       return { answer };
     } catch (error) {
       if (signal?.aborted) return { answer: FAILED_ANSWER };
-      logger.error("[Voice] voiceAnswer failed", {
-        error: error instanceof Error ? error.message : String(error),
-      });
+      logger.error("[Voice] voiceAnswer failed", error);
       return { answer: FAILED_ANSWER };
     }
   },

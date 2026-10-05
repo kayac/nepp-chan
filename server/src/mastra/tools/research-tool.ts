@@ -37,9 +37,7 @@ export const researchTool = createTool({
         requestContext: context?.requestContext,
       });
     } catch (error) {
-      logger.error("[Research] failed", {
-        error: error instanceof Error ? error.message : String(error),
-      });
+      logger.error("[Research] failed", error);
       return { memo: FAILED_MEMO };
     }
   },

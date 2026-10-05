@@ -75,9 +75,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
 
   private handleMessageEvent(ws: WebSocket, event: MessageEvent) {
     const task = this.onMessage(ws, event).catch((e) =>
-      logger.error("[CallBridge] onMessage failed", {
-        error: e instanceof Error ? e.message : String(e),
-      }),
+      logger.error("[CallBridge] onMessage failed", e),
     );
     this.ctx.waitUntil(task);
   }
@@ -276,9 +274,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
         }
       }
     } catch (e) {
-      logger.error("[CallBridge] handlePrompt failed", {
-        error: e instanceof Error ? e.message : String(e),
-      });
+      logger.error("[CallBridge] handlePrompt failed", e);
       if (!controller.signal.aborted) {
         send("ごめんね、うまく聞き取れなかったみたい。", true);
       }
@@ -306,10 +302,7 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     try {
       await conversation.persistTurn({ turnIndex, userText, assistantText });
     } catch (e) {
-      logger.error("[Voice] turn persistence failed", {
-        error: e instanceof Error ? e.message : String(e),
-        turnIndex,
-      });
+      logger.error("[Voice] turn persistence failed", e, { turnIndex });
     }
     return Date.now() - persistStart;
   }
