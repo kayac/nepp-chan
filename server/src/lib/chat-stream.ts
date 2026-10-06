@@ -1,5 +1,5 @@
 import { handleChatStream } from "@mastra/ai-sdk";
-import { createUIMessageStreamResponse } from "ai";
+import { createUIMessageStreamResponse, type UIMessage } from "ai";
 
 type HandleChatStreamArgs = Parameters<typeof handleChatStream>[0];
 type ChatStreamParams = HandleChatStreamArgs["params"];
@@ -13,11 +13,6 @@ type RespondWithChatStreamArgs = {
   onFinish?: ChatStreamParams["onFinish"];
 };
 
-/**
- * @mastra/ai-sdk が vendor する UIMessage 宣言はアプリの ai と一致せず、zod
- * スキーマ（looseObject）由来の message はどちらにも構造一致しないため、
- * handleChatStream のシグネチャ由来の型へキャストして渡す。
- */
 export const respondWithChatStream = async ({
   mastra,
   agentId,
@@ -31,7 +26,7 @@ export const respondWithChatStream = async ({
     agentId,
     version: "v7",
     params: {
-      messages: messages as ChatStreamParams["messages"],
+      messages: messages as UIMessage[],
       requestContext,
       memory,
       onFinish,
