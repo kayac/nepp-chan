@@ -15,13 +15,13 @@ cd "$PROJECT_ROOT"
 
 STAMP_FILE="/tmp/.claude-stop-check-$(echo "$PROJECT_ROOT" | md5 -q)"
 
-current_hash=$(git diff HEAD -- 2>/dev/null | md5 -q 2>/dev/null || echo "")
+current_hash=$({ git diff HEAD -- 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null; } | md5 -q 2>/dev/null || echo "")
 
 if [[ -z "$current_hash" || "$current_hash" == "$(cat "$STAMP_FILE" 2>/dev/null || echo "")" ]]; then
   exit 0
 fi
 
-changed_files=$(git diff --name-only HEAD -- 2>/dev/null || true)
+changed_files=$({ git diff --name-only HEAD -- 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null; } || true)
 
 # ─── Test File Reminder ──────────────────────────────────────
 missing_tests=()
