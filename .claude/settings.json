@@ -13,22 +13,12 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit",
+        "matcher": "Edit|Write|Bash",
         "hooks": [
           {
             "type": "command",
             "command": "zsh \"$CLAUDE_PROJECT_DIR/.claude/scripts/post-edit-lint.sh\"",
-            "timeout": 10
-          }
-        ]
-      },
-      {
-        "matcher": "Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "zsh \"$CLAUDE_PROJECT_DIR/.claude/scripts/post-edit-lint.sh\"",
-            "timeout": 10
+            "timeout": 20
           }
         ]
       }
