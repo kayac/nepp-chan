@@ -1,4 +1,8 @@
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/outline";
 import { useState } from "react";
 import {
   useWeeklyReportDetail,
@@ -103,7 +107,7 @@ export const ReportsSection = () => {
           <SectionEmpty>レポートはまだ生成されていません</SectionEmpty>
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center gap-2">
               <button
                 type="button"
                 aria-label="前の週"
@@ -113,17 +117,20 @@ export const ReportsSection = () => {
               >
                 <ChevronLeftIcon className="w-5 h-5" />
               </button>
-              <select
-                value={selected.id}
-                onChange={(e) => setSelectedId(e.target.value)}
-                className="flex-1 min-w-0 px-3 py-2 border border-stone-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-teal-500"
-              >
-                {reports.map((report) => (
-                  <option key={report.id} value={report.id}>
-                    {report.periodStart} 〜 {report.periodEnd}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={selected.id}
+                  onChange={(e) => setSelectedId(e.target.value)}
+                  className="appearance-none pl-4 pr-9 py-2 border border-stone-300 rounded bg-white text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                >
+                  {reports.map((report) => (
+                    <option key={report.id} value={report.id}>
+                      {report.periodStart} 〜 {report.periodEnd}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-500" />
+              </div>
               <button
                 type="button"
                 aria-label="次の週"
