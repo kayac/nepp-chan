@@ -47,6 +47,6 @@ pnpm web:build
 
 codex プラグインが利用可能な場合は追加で実行する:
 - `/codex:review`
-- `/codex:adversarial-review`（`~/.claude/codex-review-ruleset.md` を focus で渡す）
+- `/codex:adversarial-review`
 
-codex の指摘は `~/.claude/codex-review-ruleset.md` の基準で取捨選択する。取り込まない判断には理由を添え、結果をユーザーに伝える。
+codex は `~/.codex/code_review.md` を採否基準にレビューする。取り込まない判断には理由を添え、結果をユーザーに伝える。
