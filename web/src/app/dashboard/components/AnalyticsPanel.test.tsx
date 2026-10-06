@@ -254,16 +254,10 @@ describe("AnalyticsPanel", () => {
     expect(onAskMayor).toHaveBeenCalledWith("今週の週次レポート");
   });
 
-  it("週次レポートを選択すると詳細（ハイライト全文）を表示する", async () => {
+  it("最新の週次レポートの詳細（ハイライト全文）を表示する", async () => {
     useSuccessHandlers();
-    const user = userEvent.setup();
 
     renderWithQuery(<AnalyticsPanel />);
-
-    const reportButton = await screen.findByRole("button", {
-      name: /2026-06-01 〜 2026-06-07/,
-    });
-    await user.click(reportButton);
 
     await waitFor(() => {
       expect(screen.getByText("今週のハイライト")).toBeInTheDocument();

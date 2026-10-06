@@ -1,4 +1,4 @@
-import { cn } from "@nepp-chan/shared/lib/class-merge";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import {
   useWeeklyReportDetail,
@@ -85,6 +85,11 @@ export const ReportsSection = () => {
   const { data, isLoading, error } = useWeeklyReports();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const reports = data?.reports ?? [];
+  const foundIndex = reports.findIndex((report) => report.id === selectedId);
+  const selectedIndex = foundIndex === -1 ? 0 : foundIndex;
+  const selected = reports[selectedIndex];
+  const olderReport = reports[selectedIndex + 1];
+  const newerReport = reports[selectedIndex - 1];
 
   return (
     <SectionCard
@@ -94,35 +99,43 @@ export const ReportsSection = () => {
       {isLoading && <SectionLoading />}
       {error != null && <SectionError error={error} />}
       {data &&
-        (reports.length === 0 ? (
+        (selected === undefined ? (
           <SectionEmpty>レポートはまだ生成されていません</SectionEmpty>
         ) : (
           <div className="space-y-4">
-            <ul className="divide-y divide-stone-100 border border-stone-200 rounded-lg overflow-hidden">
-              {reports.map((report) => (
-                <li key={report.id}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSelectedId(selectedId === report.id ? null : report.id)
-                    }
-                    className={cn(
-                      "w-full px-4 py-3 text-left hover:bg-stone-50 transition-colors",
-                      selectedId === report.id && "bg-teal-50",
-                    )}
-                  >
-                    <div className="text-sm font-medium text-stone-800">
-                      {report.periodStart} 〜 {report.periodEnd}
-                    </div>
-                    <div className="text-xs text-stone-500 line-clamp-1 mt-0.5">
-                      {report.summary}
-                    </div>
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                aria-label="前の週"
+                disabled={olderReport === undefined}
+                onClick={() => olderReport && setSelectedId(olderReport.id)}
+                className="p-2 rounded text-stone-600 hover:bg-stone-100 disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                <ChevronLeftIcon className="w-5 h-5" />
+              </button>
+              <select
+                value={selected.id}
+                onChange={(e) => setSelectedId(e.target.value)}
+                className="flex-1 min-w-0 px-3 py-2 border border-stone-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-teal-500"
+              >
+                {reports.map((report) => (
+                  <option key={report.id} value={report.id}>
+                    {report.periodStart} 〜 {report.periodEnd}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                aria-label="次の週"
+                disabled={newerReport === undefined}
+                onClick={() => newerReport && setSelectedId(newerReport.id)}
+                className="p-2 rounded text-stone-600 hover:bg-stone-100 disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                <ChevronRightIcon className="w-5 h-5" />
+              </button>
+            </div>
 
-            {selectedId && <ReportDetail id={selectedId} />}
+            <ReportDetail id={selected.id} />
           </div>
         ))}
     </SectionCard>
