@@ -1,5 +1,87 @@
 # Changelog
 
+## [v1.0.15](https://github.com/kayac/nepp-chan/compare/v1.0.14...v1.0.15) - 2026-10-07
+
+- feat(voice): 通話の音声認識を Deepgram Flux にし、割り込み・読み・待ちの声かけを直す by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1243
+- build(deps): bump hono from 4.13.7 to 4.13.8 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1214
+- build(deps-dev): bump @biomejs/biome from 2.5.13 to 2.5.14 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1218
+- build(deps): bump @astrojs/react from 6.0.5 to 6.0.6 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1224
+- build(deps): bump astro from 7.3.2 to 7.3.3 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1230
+- build(deps-dev): bump @testing-library/dom from 10.4.1 to 10.4.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1231
+- build(deps-dev): bump autoprefixer from 10.5.6 to 10.6.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1217
+- build(deps): bump @tanstack/react-query from 5.102.8 to 5.103.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1229
+- build(deps): bump @sentry/cloudflare from 10.74.0 to 10.75.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1234
+- build(deps): bump @mastra/loggers from 1.3.1 to 1.3.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1232
+- build(deps): bump @mastra/memory from 1.29.0 to 1.30.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1212
+- build(deps): bump @sentry/react from 10.74.0 to 10.75.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1213
+- build(deps): bump tailwind-merge from 3.6.0 to 3.7.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1237
+- build(deps-dev): bump wrangler from 4.131.0 to 4.136.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1241
+- build(deps): bump @mastra/rag from 2.6.2 to 2.6.3 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1223
+- build(deps): bump @mastra/evals from 1.10.1 to 1.10.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1239
+- build(deps-dev): bump @types/node from 26.5.1 to 26.6.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1242
+- build(deps): bump @mastra/observability from 1.17.7 to 1.17.8 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1220
+- build(deps): bump @mastra/mcp from 1.17.3 to 1.18.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1222
+- build(deps-dev): bump mastra from 1.29.0 to 1.30.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1219
+- build(deps): bump @mastra/libsql from 1.22.5 to 1.23.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1215
+- build(deps): bump zod from 4.6.2 to 4.6.5 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1236
+- build(deps-dev): vitest と coverage provider を 5.0.1 に揃えて上げる by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1245
+- build(deps): AI SDK 群を @ai-sdk/provider 4.0.15 世代の最新版に上げる by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1246
+- feat(voice): 返答待ちフィラーの既定遅延を 1 秒にする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1247
+- build(deps): bump drizzle-orm from 0.45.2 to 0.45.3 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1248
+- build(deps-dev): bump drizzle-kit from 0.31.10 to 0.31.11 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1251
+- build(deps): bump @tanstack/react-query from 5.103.1 to 5.103.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1271
+- build(deps-dev): bump wrangler from 4.136.1 to 4.139.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1260
+- build(deps): bump @mastra/observability from 1.17.8 to 1.18.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1252
+- build(deps): bump hono from 4.13.8 to 4.13.9 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1262
+- build(deps-dev): bump vite from 8.3.0 to 8.3.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1261
+- build(deps): bump astro from 7.3.3 to 7.3.5 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1255
+- build(deps): bump @mastra/evals from 1.10.2 to 1.10.3 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1270
+- build(deps): bump @astrojs/react from 6.0.6 to 7.0.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1268
+- build(deps): bump @mastra/rag from 2.6.3 to 2.6.4 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1266
+- build(deps-dev): bump tsx from 4.23.13 to 4.23.15 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1249
+- build(deps-dev): bump mastra from 1.30.0 to 1.31.3 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1254
+- build(deps): @mastra/core を 1.71.0 に上げ、AI SDK 群を最新に揃える by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1273
+- build(deps): bump @mastra/memory from 1.30.0 to 1.32.1 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1250
+- build(deps): bump @mastra/libsql from 1.23.0 to 1.23.3 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1267
+- build(deps): bump @mastra/mcp from 1.18.0 to 2.1.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1269
+- build(deps): bump @ai-sdk/google from 4.0.80 to 4.0.82 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1264
+- build(deps): bump @ai-sdk/openai from 4.0.75 to 4.0.78 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1253
+- build(deps): bump @ai-sdk/react from 4.0.117 to 4.0.121 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1256
+- build(deps): bump ai from 7.0.114 to 7.0.118 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1259
+- build(deps): Sentry SDK を v11 に上げ、データ収集の既定を v10 相当に固定する by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1274
+- fix(server): サブエージェントのスレッドをペルソナ抽出から外し、削除時に一緒に消す by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1275
+- build(deps): bump @sentry/cloudflare from 11.0.0 to 11.1.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1263
+- build(deps): bump @sentry/react from 11.0.0 to 11.1.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1272
+- build(deps): bump remark-cjk-friendly from 2.3.1 to 2.3.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1299
+- build(deps-dev): bump @types/node from 26.6.2 to 26.6.4 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1297
+- build(deps-dev): bump @biomejs/biome from 2.5.14 to 2.5.15 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1280
+- build(deps): bump hono from 4.13.9 to 4.13.12 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1279
+- build(deps): bump @line/bot-sdk from 11.2.0 to 11.3.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1296
+- build(deps): bump @tanstack/react-query from 5.103.2 to 5.104.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1295
+- build(deps): bump @ai-sdk/react from 4.0.121 to 4.0.130 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1282
+- build(deps): bump @ai-sdk/google from 4.0.82 to 4.0.87 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1301
+- build(deps): bump @mastra/rag from 2.6.4 to 2.6.6 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1281
+- build(deps): bump @mastra/evals from 1.10.3 to 1.10.5 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1284
+- build(deps): bump @mastra/memory from 1.32.1 to 1.35.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1292
+- build(deps): bump @mastra/cloudflare-d1 from 1.3.2 to 1.4.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1298
+- build(deps-dev): bump wrangler from 4.139.0 to 4.146.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1291
+- build(deps): bump @mastra/loggers from 1.3.2 to 1.3.4 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1276
+- build(deps): bump @ai-sdk/openai from 4.0.78 to 4.0.83 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1286
+- build(deps): bump @mastra/ai-sdk from 1.10.5 to 1.10.6 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1288
+- build(deps): bump @sentry/react from 11.1.0 to 11.2.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1294
+- build(deps): bump @mastra/observability from 1.18.1 to 1.18.3 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1304
+- build(deps): bump ai from 7.0.118 to 7.0.127 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1287
+- build(deps-dev): bump vite from 8.3.1 to 8.3.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1285
+- build(deps): bump @mastra/libsql from 1.23.3 to 1.25.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1302
+- build(deps): bump @sentry/cloudflare from 11.1.0 to 11.2.0 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1290
+- build(deps): bump @mastra/mcp from 2.1.0 to 2.1.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1283
+- build(deps-dev): bump vitest and coverage providers to 5.0.3 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1305
+- build(deps-dev): bump msw from 2.15.0 to 3.0.1 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1306
+- build(deps): bump @mastra/core to 1.74.0 and mastra to 1.32.1 by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1307
+- chore: Claude Code hooks の棚卸し by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1308
+- refactor(server): chat-stream のキャストをアプリの UIMessage に直す by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1309
+- feat(web): 週次レポートを週送り形式にする by @owk-owk130 in https://github.com/kayac/nepp-chan/pull/1310
+
 ## [v1.0.14](https://github.com/kayac/nepp-chan/compare/v1.0.13...v1.0.14) - 2026-09-17
 
 - build(deps): bump astro from 7.3.1 to 7.3.2 by @dependabot[bot] in https://github.com/kayac/nepp-chan/pull/1199
