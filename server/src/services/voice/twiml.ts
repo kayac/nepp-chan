@@ -43,6 +43,21 @@ const attr = (name: string, value: string | undefined) =>
 const boolAttr = (name: string, value: boolean | undefined) =>
   value === undefined ? "" : ` ${name}="${value}"`;
 
+const parameterTags = (parameters: Record<string, string> | undefined) =>
+  Object.entries(parameters ?? {})
+    .map(
+      ([name, value]) =>
+        `<Parameter name="${escapeXmlAttr(name)}" value="${escapeXmlAttr(value)}"/>`,
+    )
+    .join("");
+
+const connectTwiml = (tag: string, attrs: string, params: string) => {
+  const element = params
+    ? `<${tag}${attrs}>${params}</${tag}>`
+    : `<${tag}${attrs}/>`;
+  return `<?xml version="1.0" encoding="UTF-8"?><Response><Connect>${element}</Connect></Response>`;
+};
+
 export const buildConversationRelayTwiml = ({
   wsUrl,
   welcomeGreeting,
@@ -95,16 +110,16 @@ export const buildConversationRelayTwiml = ({
     boolAttr("preemptible", preemptible),
   ].join("");
 
-  const params = Object.entries(parameters ?? {})
-    .map(
-      ([name, value]) =>
-        `<Parameter name="${escapeXmlAttr(name)}" value="${escapeXmlAttr(value)}"/>`,
-    )
-    .join("");
-
-  const relay = params
-    ? `<ConversationRelay${attrs}>${params}</ConversationRelay>`
-    : `<ConversationRelay${attrs}/>`;
-
-  return `<?xml version="1.0" encoding="UTF-8"?><Response><Connect>${relay}</Connect></Response>`;
+  return connectTwiml("ConversationRelay", attrs, parameterTags(parameters));
 };
+
+type MediaStreamConfig = {
+  wsUrl: string;
+  parameters?: Record<string, string>;
+};
+
+export const buildMediaStreamTwiml = ({
+  wsUrl,
+  parameters,
+}: MediaStreamConfig) =>
+  connectTwiml("Stream", attr("url", wsUrl), parameterTags(parameters));
