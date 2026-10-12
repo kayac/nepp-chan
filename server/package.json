@@ -32,7 +32,7 @@
     "@hono/zod-openapi": "^1.6.3",
     "@line/bot-sdk": "^11.3.0",
     "@mastra/ai-sdk": "^1.10.6",
-    "@mastra/cloudflare-d1": "1.4.0",
+    "@mastra/cloudflare-d1": "1.4.1",
     "@mastra/core": "1.74.0",
     "@mastra/evals": "1.10.5",
     "@mastra/libsql": "1.25.0",
