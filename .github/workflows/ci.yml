@@ -26,6 +26,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+          check-latest: true
           cache: "pnpm"
 
       - run: pnpm install --frozen-lockfile
@@ -61,6 +62,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+          check-latest: true
           cache: "pnpm"
 
       - run: pnpm install --frozen-lockfile
