@@ -3,10 +3,6 @@ import * as Sentry from "@sentry/cloudflare";
 const PRIVACY_CRITICAL_TAG = "privacy_critical";
 const PRIVACY_CRITICAL_LEVEL = "fatal" as const;
 
-/**
- * 個人情報保護クリティカル処理（削除パイプライン等）の失敗を Sentry に重大通知として送信する。
- * Queue リトライなどで例外を再 throw しない経路で使う（withSentry の自動 capture が走らない箇所）。
- */
 export const reportPrivacyCriticalError = (
   error: unknown,
   component: string,

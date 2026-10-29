@@ -46,7 +46,6 @@ export const SORT_OPTIONS: { value: VoiceSort; label: string }[] = [
   { value: "topics", label: "話題ごと" },
 ];
 
-// 表示順は村の関心が高い話題から。値の網羅は helpers.test.ts で TOPICS と突き合わせる
 export const TOPIC_OPTIONS = [
   "観光",
   "生活",
@@ -62,7 +61,6 @@ export const TOPIC_OPTIONS = [
 const sentLabel = (value: VoiceSentiment) =>
   SENT_OPTIONS.find((o) => o.value === value)?.label ?? value;
 
-// 感情での絞り込みはサーバーに渡す。緊急はペルソナの感情ではないので落とす
 export const toPersonaFilters = (
   filter: VoiceFilter,
   now: Date = new Date(),
@@ -82,7 +80,6 @@ export const shouldIncludePersonas = (filter: VoiceFilter) =>
   filter.sents.length === 0 || filter.sents.some((s) => s !== "emergency");
 
 export const shouldIncludeEmergencies = (filter: VoiceFilter) => {
-  // 緊急には話題も話者も付かないため、どちらかで絞ったら対象外になる
   if (filter.topic || filter.group) {
     return false;
   }

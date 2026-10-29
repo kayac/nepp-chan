@@ -16,7 +16,6 @@ export const ConvertDialog = ({
   onCancel,
   isConverting,
 }: Props) => {
-  // 元のファイル名から拡張子を除去してデフォルト名を生成
   const defaultName = file.name.replace(/\.[^/.]+$/, "");
   const [filename, setFilename] = useState(defaultName);
 

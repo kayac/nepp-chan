@@ -13,10 +13,6 @@ import { createWidgetSiteRepository } from "@nepp-chan/shared/api/repository/wid
 
 import { client } from "./client";
 
-/**
- * shared/api/repository の factory を web の client で合成した repository 群。
- * domain ごとに名前空間として export する。
- */
 export const adminUserRepository = createAdminUserRepository(client);
 export const analyticsRepository = createAnalyticsRepository(client);
 export const broadcastRepository = createBroadcastRepository(client);

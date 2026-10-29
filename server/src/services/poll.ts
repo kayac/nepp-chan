@@ -1,8 +1,6 @@
 import { type Poll, pollRepository } from "~/repository/poll-repository";
 import { sendPoll } from "~/services/poll-delivery";
 
-// --- 投票作成 ---
-
 type CreateInput = {
   title: string;
   choices: string[];
@@ -41,8 +39,6 @@ export const createPoll = async (
   return getPoll(env.DB, id);
 };
 
-// --- 投票更新 ---
-
 type UpdateInput = {
   title?: string;
   choices?: string[];
@@ -72,8 +68,6 @@ export const updatePoll = async (
 
   return getPoll(db, id);
 };
-
-// --- 投票取得 ---
 
 export const getPoll = async (db: D1Database, id: string) => {
   const poll = await pollRepository.findById(db, id);

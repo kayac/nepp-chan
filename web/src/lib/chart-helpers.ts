@@ -14,7 +14,6 @@ export const AXIS_STYLE = {
 export const OPEN_COLOR = "#5cb7bb";
 export const CLOSED_COLOR = "#f4a06a";
 
-// 中立が件数の大半を占めるため、淡く穏やかな雪の青で「引かせる」配色にする
 export const SENTIMENT_SERIES = [
   { key: "positive", label: "ポジティブ", color: "#5cb7bb" },
   { key: "negative", label: "ネガティブ", color: "#e76f7a" },

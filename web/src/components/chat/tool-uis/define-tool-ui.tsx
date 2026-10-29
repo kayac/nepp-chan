@@ -19,11 +19,8 @@ type Config<TArgs> = {
 };
 
 /**
- * display 系ツール UI の共通枠を生成する。
  * LLM が生成する args はストリーミング途中・完了後ともに不完全でありうるため、
  * スキーマ検証に通った場合のみ Component へ渡す。
- * - 検証失敗: 実行中ならローディング、完了後は空状態
- * - isEmpty に該当: 空状態
  */
 export const defineToolUI = <TArgs,>({
   schema,

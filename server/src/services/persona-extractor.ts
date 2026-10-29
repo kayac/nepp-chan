@@ -78,7 +78,6 @@ export const extractPersonaFromThread = async (
         ? lastMessage.createdAt
         : new Date().toISOString();
 
-  // Working Memory を取得（参考情報として personaAgent に渡す）
   const workingMemory = await getWorkingMemoryByThread(
     env.DB,
     threadId,
@@ -161,7 +160,6 @@ export const extractAllPendingThreads = async (env: CloudflareBindings) => {
     const lastMessageCount = status?.lastMessageCount ?? 0;
     const currentMessageCount = messageCountMap.get(thread.id) ?? 0;
 
-    // DB のメッセージ数で事前フィルタ（memory.recall() を呼ばずにスキップ）
     if (currentMessageCount <= lastMessageCount) {
       results.push({
         threadId: thread.id,
@@ -180,8 +178,6 @@ export const extractAllPendingThreads = async (env: CloudflareBindings) => {
 
     results.push({ threadId: thread.id, result });
 
-    // extracted または skipped (messageCount あり) の場合はステータスを更新
-    // これにより次回の再処理を防ぐ
     const messageCount =
       "messageCount" in result ? result.messageCount : undefined;
     if (messageCount !== undefined) {

@@ -39,7 +39,6 @@ const toRows = (data: TopicAggregation | undefined) =>
       sample: t.sample,
     }));
 
-// 「不明」は上位を占めても村の解釈につながらないため話し手の内訳から外す
 const topKnown = (entries: { label: string; count: number }[]) =>
   topEntries(
     entries.filter((e) => e.label !== "不明"),
@@ -73,7 +72,6 @@ export const useHomeSummary = () => {
     conversationCount: conversations.data?.totals.conversations ?? 0,
     voiceCount: personaStats.data?.totalCount ?? 0,
     bars: dailyBars(conversations.data?.daily ?? []),
-    // 管理画面からの動作確認は村の声ではないため流入元に出さない
     platforms: (conversations.data?.platforms ?? []).filter(
       (p) => p.platform !== "admin",
     ),

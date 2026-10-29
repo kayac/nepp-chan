@@ -22,14 +22,12 @@ import {
 
 type Period = { from: string; to: string };
 
-// 0〜23 時の全時間帯を 0 件で埋めた配列にする（欠けた時間帯はグラフに出ないため）
 const fillHours = (rows: { hour: number; count: number }[]) =>
   Array.from({ length: 24 }, (_, hour) => ({
     hour,
     count: Number(rows.find((r) => Number(r.hour) === hour)?.count ?? 0),
   }));
 
-// 0（日曜）〜6（土曜）の全曜日を 0 件で埋めた配列にする
 const fillWeekdays = (rows: { dow: number; count: number }[]) =>
   Array.from({ length: 7 }, (_, dow) => ({
     dow,
@@ -129,7 +127,6 @@ const addAgentTotals = (
 const sortedAgentTotals = (map: Map<string | null, AgentTotals>) =>
   [...map.values()].sort((a, b) => b.costUsd - a.costUsd);
 
-// 請求元の突き合わせ用。モデル ID からプロバイダを判定する
 const providerOf = (model: string) => {
   if (model.includes("gemini")) return "google";
   if (model.includes("gpt")) return "openai";

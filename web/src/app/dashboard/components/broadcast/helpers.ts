@@ -9,10 +9,6 @@ export type PartState = { id: string } & (
     })
 );
 
-/**
- * 既存 broadcast を編集 form の初期 state に変換する。
- * parts が無いかパース失敗時は body をテキストパート 1 件として復元する。
- */
 export const parseParts = (
   broadcast: BroadcastMessage,
   generateId: () => string,
@@ -21,9 +17,7 @@ export const parseParts = (
     try {
       const raw = JSON.parse(broadcast.parts) as Omit<PartState, "id">[];
       return raw.map((p) => ({ ...p, id: generateId() }) as PartState);
-    } catch {
-      // body fallback
-    }
+    } catch {}
   }
   return [{ id: generateId(), type: "text", text: broadcast.body }];
 };

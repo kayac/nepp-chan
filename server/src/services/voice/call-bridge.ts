@@ -22,7 +22,6 @@ import { createSilenceCover } from "./silence-cover";
 import { createSpeechReader } from "./speech-reading";
 import { verifySetupToken } from "./twilio-token";
 
-// 有効な setup が届かない接続を無期限に張らせないための待受上限。
 const SETUP_TIMEOUT_MS = 10_000;
 
 // token は setup メッセージの customParameters で届くため、検証は onMessage 側で行う。
@@ -47,7 +46,6 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
     { conversation: VoiceConversation; userText: string }
   >();
   private fillerIndex = 0;
-  // 直前の中間認識からの経過時間の観測用（endpointing がどれだけ確定を保留するか）。
   private lastInterimAt: number | null = null;
   private findingsSlot: VoiceFindingsSlot = createVoiceFindingsSlot();
   private config: BridgeConfig = BRIDGE_CONFIG_DEFAULTS;
@@ -116,7 +114,6 @@ export class CallBridge extends DurableObject<CloudflareBindings> {
       this.config = parseBridgeConfig(msg.customParameters);
     } else if (msg.type === "prompt") {
       if (!this.verified) return;
-      // 切断待ちの間にユーザーが話し始めたら会話継続の意思とみなし切断を取り消す。
       this.cancelPendingEnd();
       if (msg.last === false) {
         this.lastInterimAt = Date.now();

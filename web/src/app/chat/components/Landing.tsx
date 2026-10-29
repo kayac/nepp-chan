@@ -15,11 +15,6 @@ type Props = {
   disabled?: boolean;
 };
 
-/**
- * 初回訪問時に表示する Landing 画面。
- * クイックプロンプトのタップ or テキスト送信で会話開始。
- * ChatProvider 外で動くため、Composer は素の <form> + <input>。
- */
 export const Landing = ({ onSubmit, disabled = false }: Props) => {
   const [text, setText] = useState("");
 

@@ -393,7 +393,6 @@ ${currentPageUrl}
   });
 };
 
-// Playground 用（管理者モード・thinking ティア）
 export const neppChanAgent = createNeppChanAgent({
   isAdmin: true,
   modelConfig: resolveModelTier({

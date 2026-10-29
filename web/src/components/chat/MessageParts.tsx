@@ -8,7 +8,6 @@ type Props = {
   message: UIMessage;
 };
 
-/** message parts を種類ごとの表示コンポーネントへ振り分ける */
 export const MessageParts = ({ message }: Props) =>
   message.parts.map((part, index) => {
     if (part.type === "text") {

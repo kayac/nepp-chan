@@ -2,7 +2,6 @@ import { sign, verify } from "hono/jwt";
 import type { JWTPayload } from "hono/utils/jwt/types";
 import { base64UrlFromString, hmacSha256 } from "~/lib/crypto";
 
-// softphone（@twilio/voice-sdk）認証用の Twilio AccessToken を WebCrypto だけで発行する。
 // twilio npm は Workers 非互換のため使わない。JWT は API Key Secret による HS256 署名。
 // 仕様: https://www.twilio.com/docs/iam/access-tokens
 
@@ -44,8 +43,6 @@ export const createVoiceAccessToken = async ({
   return `${signingInput}.${signature}`;
 };
 
-// relay WS（wss://.../voice/relay）の入場を認可する短命トークン。
-// TwiML を発行した本人であることの証明。発信者同定は setup メッセージ側で行う。
 type RelayTokenPayload = JWTPayload & { iat: number; exp: number };
 
 export const createRelayToken = (
@@ -61,7 +58,6 @@ export const verifyRelayToken = async (token: string, secret: string) => {
   }
 };
 
-// setup メッセージの customParameters から relay token を取り出して検証する。
 export const verifySetupToken = (
   customParameters: Record<string, string> | undefined,
   secret: string,

@@ -73,7 +73,6 @@ export const ToolFallback: ToolPartComponent = ({
   status,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
-  // 入出力の生データは運用時の調査用。一般利用者には出さない
   const { data: adminUser } = useAdminUser();
 
   const isError = status.type === "incomplete";

@@ -2,12 +2,6 @@ import type { MessageFeedback } from "~/types";
 
 export type ResolvedFilter = "all" | "unresolved" | "resolved";
 
-/**
- * 解決状態フィルタを適用したフィードバック配列を返す。
- * - "unresolved": resolvedAt が null のものだけ
- * - "resolved": resolvedAt が非 null のものだけ
- * - "all": 全件
- */
 export const filterFeedbacksByResolved = (
   feedbacks: readonly MessageFeedback[],
   filter: ResolvedFilter,

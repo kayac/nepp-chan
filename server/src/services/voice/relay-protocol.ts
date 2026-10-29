@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// Twilio ConversationRelay の WebSocket メッセージ。
 // 仕様: https://www.twilio.com/docs/voice/conversationrelay/websocket-messages
 // setup は多数のフィールドを含むため looseObject で未使用分も許容する。
 

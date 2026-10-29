@@ -87,8 +87,6 @@ chatRoutes.openapi(chatRoute, async (c) => {
   const isAdmin = principal.type === "admin";
   const adminUser = isAdmin ? principal.user : undefined;
   const enableAdminAgents = isAdmin && adminUser?.role !== "staff";
-  // widget 由来の resourceId は widget- prefix を持つ（server/src/lib/principal.ts の
-  // line:/admin: と同じ、resourceId prefix でチャネルを区別する規約）
   const platform = thread.resourceId.startsWith("widget-") ? "widget" : "web";
   const isWidgetGreeting = platform === "widget" && isGreeting === true;
   const [site, storage] = await Promise.all([
@@ -117,7 +115,6 @@ chatRoutes.openapi(chatRoute, async (c) => {
     usageTurnId: turnId,
   });
 
-  // Intent 分類でモデルティアを決定（fixedIntent 指定時はルータースキップ）
   const userText = (
     message.parts.find((p) => p.type === "text") as
       | { type: string; text: string }

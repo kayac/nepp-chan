@@ -1,6 +1,5 @@
 import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-// 緊急報告
 export const emergencyReports = sqliteTable("emergency_reports", {
   id: text("id").primaryKey(),
   type: text("type").notNull(),
@@ -10,7 +9,6 @@ export const emergencyReports = sqliteTable("emergency_reports", {
   updatedAt: text("updated_at"),
 });
 
-// ペルソナ（村の集合知）
 export const persona = sqliteTable("persona", {
   id: text("id").primaryKey(),
   category: text("category").notNull(),
@@ -45,7 +43,6 @@ export const personaTagAliases = sqliteTable("persona_tag_aliases", {
   updatedAt: text("updated_at"),
 });
 
-// スレッドペルソナ処理状態
 export const threadPersonaStatus = sqliteTable("thread_persona_status", {
   threadId: text("thread_id").primaryKey(),
   lastExtractedAt: text("last_extracted_at"),
@@ -72,7 +69,6 @@ export const mastraResources = sqliteTable("mastra_resources", {
   updatedAt: text("updatedAt"),
 });
 
-// 型エクスポート
 export type EmergencyReport = typeof emergencyReports.$inferSelect;
 export type NewEmergencyReport = typeof emergencyReports.$inferInsert;
 
@@ -86,7 +82,6 @@ export type NewThreadPersonaStatus = typeof threadPersonaStatus.$inferInsert;
 
 export type MastraThread = typeof mastraThreads.$inferSelect;
 
-// メッセージフィードバック
 export const messageFeedback = sqliteTable("message_feedback", {
   id: text("id").primaryKey(),
   threadId: text("thread_id").notNull(),
@@ -103,7 +98,6 @@ export const messageFeedback = sqliteTable("message_feedback", {
 export type MessageFeedback = typeof messageFeedback.$inferSelect;
 export type NewMessageFeedback = typeof messageFeedback.$inferInsert;
 
-// 管理者ユーザー
 export const adminUsers = sqliteTable("admin_users", {
   id: text("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -117,7 +111,6 @@ export const adminUsers = sqliteTable("admin_users", {
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type NewAdminUser = typeof adminUsers.$inferInsert;
 
-// 管理者招待
 export const adminInvitations = sqliteTable("admin_invitations", {
   id: text("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -132,7 +125,6 @@ export const adminInvitations = sqliteTable("admin_invitations", {
 export type AdminInvitation = typeof adminInvitations.$inferSelect;
 export type NewAdminInvitation = typeof adminInvitations.$inferInsert;
 
-// LINE配信メッセージ
 export const broadcastMessages = sqliteTable("broadcast_messages", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
@@ -150,7 +142,6 @@ export const broadcastMessages = sqliteTable("broadcast_messages", {
 export type BroadcastMessage = typeof broadcastMessages.$inferSelect;
 export type NewBroadcastMessage = typeof broadcastMessages.$inferInsert;
 
-// 投票
 export const polls = sqliteTable("polls", {
   id: text("id").primaryKey(),
   title: text("title").notNull(), // お題
@@ -171,7 +162,6 @@ export const polls = sqliteTable("polls", {
 export type Poll = typeof polls.$inferSelect;
 export type NewPoll = typeof polls.$inferInsert;
 
-// 投票回答
 export const pollSubmissions = sqliteTable("poll_submissions", {
   id: text("id").primaryKey(),
   pollId: text("poll_id").notNull(),
@@ -183,7 +173,6 @@ export const pollSubmissions = sqliteTable("poll_submissions", {
 export type PollSubmission = typeof pollSubmissions.$inferSelect;
 export type NewPollSubmission = typeof pollSubmissions.$inferInsert;
 
-// 管理者セッション（opaque token）
 export const adminSessions = sqliteTable("admin_sessions", {
   token: text("token").primaryKey(),
   userId: text("user_id").notNull(),
@@ -194,7 +183,6 @@ export const adminSessions = sqliteTable("admin_sessions", {
 export type AdminSession = typeof adminSessions.$inferSelect;
 export type NewAdminSession = typeof adminSessions.$inferInsert;
 
-// ユーザー別配信注入状態
 export const userBroadcastState = sqliteTable("user_broadcast_state", {
   userId: text("user_id").primaryKey(),
   lastInjectedAt: text("last_injected_at").notNull(),
@@ -202,7 +190,6 @@ export const userBroadcastState = sqliteTable("user_broadcast_state", {
 
 export type UserBroadcastState = typeof userBroadcastState.$inferSelect;
 
-// ユーザー別投票注入状態
 export const userPollState = sqliteTable("user_poll_state", {
   userId: text("user_id").primaryKey(),
   lastInjectedAt: text("last_injected_at").notNull(),
@@ -210,7 +197,6 @@ export const userPollState = sqliteTable("user_poll_state", {
 
 export type UserPollState = typeof userPollState.$inferSelect;
 
-// LLM 呼び出しごとのトークン使用量記録
 export const llmUsage = sqliteTable("llm_usage", {
   id: text("id").primaryKey(),
   model: text("model").notNull(),
@@ -235,7 +221,6 @@ export const llmUsage = sqliteTable("llm_usage", {
 export type LlmUsage = typeof llmUsage.$inferSelect;
 export type NewLlmUsage = typeof llmUsage.$inferInsert;
 
-// 週次レポート（数値集計 + LLM ハイライト要約の恒久記録）
 export const weeklyReports = sqliteTable("weekly_reports", {
   id: text("id").primaryKey(),
   periodStart: text("period_start").notNull(), // 週初め月曜の JST 日付（UNIQUE）
@@ -248,7 +233,6 @@ export const weeklyReports = sqliteTable("weekly_reports", {
 export type WeeklyReport = typeof weeklyReports.$inferSelect;
 export type NewWeeklyReport = typeof weeklyReports.$inferInsert;
 
-// 保管期間ポリシーによる削除実行ログ
 export const dataRetentionLogs = sqliteTable("data_retention_logs", {
   id: text("id").primaryKey(),
   executedAt: text("executed_at").notNull(),

@@ -8,7 +8,6 @@ import { type DailyBar, WeekTrendChart } from "./WeekTrendChart";
 
 type Entry = { label: string; count: number };
 
-// 中立は声一覧の絞り込み条件に無いため表示だけにする
 const FILTERABLE: SentimentKey[] = ["positive", "negative", "request"];
 
 interface Props {

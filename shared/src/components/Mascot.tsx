@@ -2,7 +2,6 @@ import { cn } from "@nepp-chan/shared/lib/class-merge";
 import type { CSSProperties } from "react";
 
 const MASCOT_ASSETS = {
-  // 表情（頭・胸あたり）
   zzz: "/mascot/expr-zzz.png",
   startled: "/mascot/expr-startled.png",
   "wave-smile": "/mascot/expr-wave-smile.png",
@@ -11,7 +10,6 @@ const MASCOT_ASSETS = {
   laugh: "/mascot/expr-laugh.png",
   content: "/mascot/expr-content.png",
   shy: "/mascot/expr-shy.png",
-  // ポーズ（全身）
   "nap-curled": "/mascot/pose-nap-curled.png",
   wave: "/mascot/pose-wave.png",
   point: "/mascot/pose-point.png",
@@ -20,7 +18,6 @@ const MASCOT_ASSETS = {
   sleeping: "/mascot/pose-sleeping.png",
   stretch: "/mascot/pose-stretch.png",
   "shy-stand": "/mascot/pose-shy-stand.png",
-  // フルボディ
   normal: "/mascot/pose-normal.png",
   thinking: "/mascot/pose-thinking.png",
 } as const;
@@ -117,7 +114,6 @@ export const Mascot = ({
   );
 };
 
-// 切替頻度の高い表情・ポーズはロード時にプリロードしてチラつきを防ぐ
 const PRELOAD_KEYS: readonly MascotExpression[] = [
   "wave-smile",
   "content",

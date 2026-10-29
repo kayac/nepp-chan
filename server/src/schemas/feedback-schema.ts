@@ -20,7 +20,6 @@ export const toolExecutionSchema = z.object({
   errorText: z.string().optional(),
 });
 
-/** ツールの outputSchema 用。会話コンテキストを含まない軽量版 */
 export const feedbackBaseSchema = z.object({
   id: z.string(),
   threadId: z.string(),
@@ -32,7 +31,6 @@ export const feedbackBaseSchema = z.object({
   resolvedAt: z.string().nullable(),
 });
 
-/** API レスポンス用。会話コンテキスト・ツール実行履歴を含む */
 export const feedbackFullSchema = z.object({
   id: z.string(),
   threadId: z.string(),
@@ -54,7 +52,6 @@ export const feedbackFullSchema = z.object({
   toolExecutions: z.array(toolExecutionSchema).nullable(),
 });
 
-/** 統計情報 */
 export const feedbackStatsSchema = z.object({
   total: z.number(),
   good: z.number(),

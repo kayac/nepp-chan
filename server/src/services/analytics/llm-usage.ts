@@ -37,10 +37,6 @@ type LlmUsageParams = {
   serviceTier?: LlmServiceTier;
 };
 
-/**
- * LLM 呼び出しのトークン使用量を記録する。
- * 計測は本処理の付随なので、失敗しても throw せずログのみ残す。
- */
 // プロバイダが usage を返さない場合に NaN が来る（例: Google embedding）。
 // NaN は D1 の insert 自体を失敗させるため 0 に正規化する
 const finiteOrZero = (value?: number) =>
@@ -98,7 +94,6 @@ const contextAttributes = (requestContext: RequestContext | undefined) => ({
   turnId: requestContext?.get("usageTurnId") as string | undefined,
 });
 
-/** requestContext から db・チャネル・スレッドを取り出して記録する（db 不在なら何もしない） */
 export const recordUsageFromContext = (
   requestContext: RequestContext | undefined,
   params: {

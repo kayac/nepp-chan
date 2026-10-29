@@ -111,9 +111,7 @@ export const mountWidget = ({
   const recordTeaserDismissed = () => {
     try {
       win.localStorage.setItem(TEASER_DISMISSED_KEY, String(Date.now()));
-    } catch {
-      // プライベートモード等 localStorage が使えない環境では記録を諦める
-    }
+    } catch {}
   };
 
   const suppressTeaser = () => {

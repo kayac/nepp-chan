@@ -4,8 +4,6 @@ import { hmacSha1Base64 } from "~/lib/crypto";
 import { logger } from "~/lib/logger";
 
 // 検証仕様: https://www.twilio.com/docs/usage/security#validating-requests
-// URL 全体 + ソート済み POST パラメータの name+value 連結を
-// AuthToken で HMAC-SHA1 署名したものが X-Twilio-Signature と一致すること。
 export const twilioSignatureVerify: MiddlewareHandler<{
   Bindings: CloudflareBindings;
   Variables: { twilioParams: Record<string, string> };

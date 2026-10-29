@@ -8,10 +8,6 @@ type Props = {
   onClose: () => void;
 };
 
-/**
- * ナレッジファイルの閲覧専用ビューア
- * 運用時はFileEditorに置き換え可能
- */
 export const FileViewer = ({ fileKey, onClose }: Props) => {
   const { data, isLoading, error } = useKnowledgeFile(fileKey);
 

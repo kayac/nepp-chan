@@ -44,7 +44,6 @@ const splitKnownUnknown = (data: { label: string; count: number }[]) => {
   return { known, unknown, knownTotal, total, rate };
 };
 
-// 枠の全幅がゲージの判明部分に収束する漏斗で包含関係を表す
 const DrillDownSection = ({
   knownLabel,
   knownTotal,
@@ -165,8 +164,6 @@ const SegmentPie = ({
 export const PersonaSection = () => {
   const { data, isLoading, error } = usePersonaAnalytics();
 
-  // 不明が大半を占めるとチャートが潰れるため、判明分のみ描画して
-  // 不明はキャプションで件数を示す
   const knownAges = data?.ageSentiment.filter((a) => a.age !== "不明") ?? [];
   const knownCount = knownAges.reduce((sum, a) => sum + sentimentTotal(a), 0);
   const unknownCount = (data?.totalCount ?? 0) - knownCount;

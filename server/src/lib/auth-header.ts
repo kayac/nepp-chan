@@ -1,7 +1,3 @@
-/**
- * Authorization ヘッダーから Bearer トークンを抽出するユーティリティ
- */
-
 type RequestLike = {
   req: { header: (name: string) => string | undefined };
 };

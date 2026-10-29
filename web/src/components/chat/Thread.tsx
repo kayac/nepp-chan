@@ -28,7 +28,6 @@ export const Thread = () => {
           "aui-thread-viewport relative flex flex-1 flex-col",
           "overflow-x-auto overflow-y-scroll",
           "px-4 md:px-6",
-          // 半透明 TopBar 下にメッセージが回り込めるよう、TopBar 高さ + 余白を確保
           "pt-[calc(var(--chat-topbar-h,0px)+1.5rem)]",
         )}
       >

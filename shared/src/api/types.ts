@@ -1,6 +1,5 @@
 import type { paths } from "./types.d";
 
-// パスベース型抽出ヘルパー
 type GetOk<P extends keyof paths> = paths[P] extends {
   get: { responses: { 200: { content: { "application/json": infer R } } } };
 }
@@ -41,12 +40,10 @@ type PutBody<P extends keyof paths> = paths[P] extends {
   ? B
   : never;
 
-// スレッド
 export type ThreadsResponse = GetOk<"/threads">;
 export type Thread = ThreadsResponse["threads"][number];
 export type MessagesResponse = GetOk<"/threads/{threadId}/messages">;
 
-// 配信
 export type BroadcastsResponse = GetOk<"/admin/broadcast">;
 export type BroadcastMessage = BroadcastsResponse["broadcasts"][number];
 export type BroadcastStatus = "draft" | "scheduled" | "sent" | "failed";
@@ -54,7 +51,6 @@ export type CreateBroadcastRequest = PostBody<"/admin/broadcast">;
 export type UpdateBroadcastRequest = PutBody<"/admin/broadcast/{id}">;
 export type BroadcastPart = CreateBroadcastRequest["parts"][number];
 
-// フィードバック
 export type FeedbacksResponse = GetOk<"/admin/feedback">;
 export type MessageFeedback = FeedbacksResponse["feedbacks"][number];
 export type FeedbackStats = FeedbacksResponse["stats"];
@@ -82,15 +78,12 @@ export type ToolExecution = NonNullable<
   MessageFeedback["toolExecutions"]
 >[number];
 
-// 緊急情報
 export type EmergenciesResponse = GetOk<"/admin/emergency">;
 export type EmergencyReport = EmergenciesResponse["emergencies"][number];
 
-// ペルソナ
 export type PersonasResponse = GetOk<"/admin/persona">;
 export type Persona = PersonasResponse["personas"][number];
 
-// ナレッジ
 export type SyncResult = PostOk<"/admin/knowledge/sync">;
 export type FilesListResponse = GetOk<"/admin/knowledge/files">;
 export type FileInfo = FilesListResponse["files"][number];
@@ -105,30 +98,24 @@ export type CuratedDraftRequest = {
   files: File[];
 };
 
-// multipart レスポンス型（raw fetch で使用）
 export type ReconvertFileResponse = PostOk<"/admin/knowledge/reconvert">;
 
-// 招待
 export type InvitationsResponse = GetOk<"/admin/invitations">;
 export type Invitation = InvitationsResponse["invitations"][number];
 export type CreateInvitationResponse = PostCreated<"/admin/invitations">;
 
-// 投票
 export type PollsResponse = GetOk<"/admin/polls">;
 export type Poll = PollsResponse["polls"][number];
 export type PollStatus = "draft" | "scheduled" | "sent" | "closed";
 export type CreatePollRequest = PostBody<"/admin/polls">;
 export type UpdatePollRequest = PutBody<"/admin/polls/{id}">;
 
-// 投票結果
 export type PollResultsResponse = GetOk<"/polls/{id}">;
 export type PollChoiceResult = PollResultsResponse["choiceResults"][number];
 
-// 村の声グラフ
 export type OntologyData = GetOk<"/admin/analytics/ontology">;
 export type OntologyNode = OntologyData["nodes"][number];
 export type OntologyLink = OntologyData["links"][number];
 export type OntologyRole = OntologyNode["role"];
 
-// OpenAPI paths 自体も再エクスポート
 export type { paths } from "./types.d";

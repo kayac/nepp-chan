@@ -40,7 +40,6 @@ export const useVoices = (initialFilter?: Partial<VoiceFilter>) => {
     ? (listQuery.data?.pages.flatMap((p) => p.personas) ?? [])
     : [];
 
-  // 期間内の緊急。件数表示と話題ごと集計はこちらを使う
   const periodEmergencies: EmergencyItem[] = includeEmergencies
     ? (emergenciesQuery.data?.emergencies ?? []).filter((e) =>
         onOrAfter(e.reportedAt, periodFrom),
@@ -48,7 +47,6 @@ export const useVoices = (initialFilter?: Partial<VoiceFilter>) => {
     : [];
 
   const voices = useMemo(() => {
-    // 未読み込みのページより古い緊急を先に出すと並びが崩れるため、読み込み済みの範囲だけ混ぜる
     const oldest =
       listQuery.hasNextPage && personas.length > 0
         ? toDateString(new Date(personaDate(personas[personas.length - 1])))
@@ -91,7 +89,6 @@ export const useVoices = (initialFilter?: Partial<VoiceFilter>) => {
     setFilter,
     voices,
     topics,
-    // 一覧はページングなので、該当件数はサーバーの total を使う
     matchCount:
       (includePersonas ? (listQuery.data?.pages[0]?.total ?? 0) : 0) +
       periodEmergencies.length,

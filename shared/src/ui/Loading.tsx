@@ -150,7 +150,6 @@ export const ToolLoadingState = ({ variant, icon }: ToolLoadingStateProps) => {
     );
   }
 
-  // choice
   return (
     <div className={styles.container}>
       <div className={cn("h-4 w-48 animate-pulse rounded", styles.bar)} />

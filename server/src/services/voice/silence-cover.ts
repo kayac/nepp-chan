@@ -27,8 +27,6 @@ type Params = {
   ) => void;
 };
 
-// 応答待ちの沈黙をフィラー発話と保留音で埋める、1ターン分の状態機械。
-// 遅延中に応答か保留音が始まればフィラーは省略し、応答トークンが届いたら予約をすべて取り消す。
 export const createSilenceCover = ({
   config,
   promptText,
@@ -88,7 +86,6 @@ export const createSilenceCover = ({
     holdTimer = null;
     if (signal?.aborted || holdPlaying) return;
     holdPlaying = true;
-    // 保留音が流れるならフィラーはもう不要。
     clearFillerTimer();
     sendPlay(config.holdAudioUrl, {
       loop: 0,
