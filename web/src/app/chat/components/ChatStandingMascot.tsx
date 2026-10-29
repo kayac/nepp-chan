@@ -10,7 +10,6 @@ import { useEffect, useRef, useState } from "react";
 
 import { useChatContext } from "~/app/chat/contexts/ChatContext";
 
-// 応答完了直後にランダムで選ぶ表情。talking 多めで、たまに笑顔・驚きが混じる
 const POST_RESPONSE_STATES: readonly MascotState[] = [
   "talking",
   "talking",
@@ -43,7 +42,6 @@ const useMascotPresentation = (): Presentation => {
   const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // 同値の setPres を避けて不要な再レンダーを抑える
     const setPresIfChanged = (next: Presentation) => {
       setPres((prev) =>
         prev.state === next.state && prev.expression === next.expression
@@ -87,15 +85,6 @@ const useMascotPresentation = (): Presentation => {
   return pres;
 };
 
-/**
- * 画面左下に固定配置するマスコット。
- *
- * 表情:
- * - idle (待機): expr-wave-smile
- * - thinking + ツール実行中: pose-thinking
- * - thinking + テキスト生成のみ: expr-content
- * - 応答完了直後 3.5 秒: ランダムで content / laugh / surprise → idle に戻る
- */
 export const ChatStandingMascot = () => {
   const { state, expression } = useMascotPresentation();
   return (

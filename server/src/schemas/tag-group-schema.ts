@@ -23,7 +23,6 @@ export const tagGroupsResponseSchema = z.object({
     z.object({
       tag: z.string(),
       count: z.number(),
-      // そのタグを持つ最新の声。何のタグか判断する手がかり
       example: z.string().nullable(),
     }),
   ),

@@ -1,9 +1,5 @@
 import { useEffect, useRef } from "react";
 
-// ============================================================
-// 雪 + ドット (前景パーティクル)
-// ============================================================
-
 type Dot = {
   kind: "dot";
   x: number;
@@ -39,7 +35,6 @@ type Flake = {
 
 type FieldParticle = Dot | Flake;
 
-// 初期化時の画面幅で上限を決定 (モバイルは半減 + spawn 間隔も延長)
 const FIELD_LIMITS_DESKTOP = {
   maxDots: 30,
   maxFlakes: 6,
@@ -72,10 +67,6 @@ const DOT_PALETTE: ReadonlyArray<{ color: string; opacity: number }> = [
   { color: "#a8bf9a", opacity: 0.9 },
 ];
 
-// ============================================================
-// 星座 (背景レイヤー)
-// ============================================================
-
 type Star = {
   x: number;
   y: number;
@@ -99,23 +90,14 @@ type Edge = {
 const STAR_DENSITY_PER_MP = 120;
 const STAR_EDGE_MAX_DIST = 140;
 const STAR_EDGE_PER_NODE = 2;
-// O(N²) のエッジ再計算は重いので 100ms 毎に間引き
 const STAR_EDGE_REBUILD_INTERVAL_MS = 100;
 
 const STAR_DOT_COLOR = "rgba(15, 118, 110, 0.45)";
 const STAR_LINE_COLOR = "rgba(15, 118, 110, 0.22)";
 
-// ============================================================
-// shared utils
-// ============================================================
-
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 const pick = <T,>(arr: ReadonlyArray<T>): T =>
   arr[Math.floor(Math.random() * arr.length)];
-
-// ============================================================
-// AmbientCanvas: 1 枚の canvas に星座と雪+ドットを描画
-// ============================================================
 
 const AmbientCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -145,14 +127,12 @@ const AmbientCanvas = () => {
     };
     resize();
 
-    // 初期幅で前景パーティクルの上限を確定
     const {
       maxDots: MAX_DOTS,
       maxFlakes: MAX_FLAKES,
       dotSpawnMs: DOT_SPAWN_MS,
     } = w < 768 ? FIELD_LIMITS_MOBILE : FIELD_LIMITS_DESKTOP;
 
-    // ---------- Snowflake ラスタライズ済み Image ----------
     const flakeImg = new Image();
     let flakeReady = false;
     flakeImg.onload = () => {
@@ -160,7 +140,6 @@ const AmbientCanvas = () => {
     };
     flakeImg.src = `data:image/svg+xml;utf8,${encodeURIComponent(FLAKE_SVG)}`;
 
-    // ---------- 雪 + ドット 状態 ----------
     const fieldParticles: FieldParticle[] = [];
     let dotCount = 0;
     let flakeCount = 0;
@@ -207,10 +186,8 @@ const AmbientCanvas = () => {
       flakeCount++;
     }
 
-    // ---------- 星座 状態 ----------
     const starTargetCount = () => {
       const area = Math.max(1, (w * h) / 1_000_000);
-      // モバイル幅では密度を抑えて負荷軽減
       const isMobile = w < 768;
       const density = isMobile
         ? STAR_DENSITY_PER_MP * 0.5
@@ -238,7 +215,6 @@ const AmbientCanvas = () => {
     let edges: Edge[] = [];
     let lastEdgeRebuildAt = 0;
 
-    // ---------- Resize ----------
     const ro = new ResizeObserver(() => {
       resize();
       starTarget = starTargetCount();
@@ -252,10 +228,6 @@ const AmbientCanvas = () => {
       last = now;
 
       ctx.clearRect(0, 0, w, h);
-
-      // ============================================================
-      // 1. 星座 (背面)
-      // ============================================================
 
       starPositions.length = stars.length;
       ctx.fillStyle = STAR_DOT_COLOR;
@@ -281,7 +253,6 @@ const AmbientCanvas = () => {
       }
       ctx.globalAlpha = 1;
 
-      // エッジ再計算 (O(N²) → 100ms 毎に間引き)
       if (now - lastEdgeRebuildAt > STAR_EDGE_REBUILD_INTERVAL_MS) {
         lastEdgeRebuildAt = now;
         edges = [];
@@ -342,10 +313,6 @@ const AmbientCanvas = () => {
         ctx.stroke();
       }
       ctx.globalAlpha = 1;
-
-      // ============================================================
-      // 2. 雪 + ドット (前面)
-      // ============================================================
 
       if (now - lastDotSpawn > DOT_SPAWN_MS && dotCount < MAX_DOTS) {
         lastDotSpawn = now;
@@ -467,7 +434,6 @@ const AmbientCanvas = () => {
   );
 };
 
-/** 冬景色の背景画像 + 1 枚の canvas に星座 + 雪 + ドットを統合描画 */
 export const AmbientBG = () => (
   <div
     className="fixed inset-0 z-0 pointer-events-none overflow-hidden"

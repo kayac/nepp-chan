@@ -117,7 +117,6 @@ export type AgentModelConfig = {
   defaultOptions: { maxSteps: number };
 };
 
-// ツール実行ループの上限（サブエージェント連鎖の暴走によるコスト事故の保険）
 const MAX_STEPS = { casual: 5, thinking: 10 } as const;
 
 const thinkingTier = (
@@ -175,10 +174,6 @@ export const voiceModelConfig: AgentModelConfig = {
   defaultOptions: { maxSteps: VOICE_MAX_STEPS },
 };
 
-/**
- * Intent・プラットフォーム・管理者フラグからモデル設定を解決する。
- * 管理者の thinking は分析用に reasoning を引き上げ、casual は管理ツール連鎖用に maxSteps だけ引き上げる
- */
 export const resolveModelTier = ({
   intent,
   platform,

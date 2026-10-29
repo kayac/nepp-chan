@@ -38,7 +38,6 @@ const conversationExpr = sql`(
   OR (source = 'embedding' AND thread_id IS NOT NULL)
 )`;
 
-// 会話に直接かかった費用と、それ以外の運用費を分けて見るための区分
 const usageCategoryExpr = sql`
   CASE
     WHEN ${conversationExpr} THEN 'conversation'
@@ -47,7 +46,6 @@ const usageCategoryExpr = sql`
   END
 `;
 
-// 「その日どの用途に使ったか」の軸。会話はまとめ、運用側は source がそのまま用途になる。
 // agent は列追加前の行が NULL なので使わない
 const usagePurposeExpr = sql`
   CASE WHEN ${conversationExpr} THEN 'conversation' ELSE source END

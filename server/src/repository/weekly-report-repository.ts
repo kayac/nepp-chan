@@ -2,7 +2,6 @@ import { desc, eq } from "drizzle-orm";
 import { createDb, type NewWeeklyReport, weeklyReports } from "~/db";
 
 export const weeklyReportRepository = {
-  // period_start UNIQUE 制約により、cron 再実行や手動再生成で重複させない
   async upsert(d1: D1Database, input: NewWeeklyReport) {
     const db = createDb(d1);
 

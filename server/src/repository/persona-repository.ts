@@ -66,7 +66,6 @@ const personaFilters = (options: PersonaFilter): SQL[] => {
   return conditions;
 };
 
-// 集計は正規化後の話題で行う（NULL と未知の値は その他 に寄せる）
 const normalizedTopic = sql`CASE WHEN ${inArray(persona.topic, NAMED_TOPICS)} THEN ${persona.topic} ELSE ${OTHER_TOPIC} END`;
 
 // sortDate と違い conversationEndedAt が NULL の声は期間に含めない
@@ -358,7 +357,6 @@ export const personaRepository = {
     };
   },
 
-  // 話題ごとの件数・感情内訳・代表的な声を SQL で集計する（件数に依存しないコストにするため）
   async topicBreakdown(d1: D1Database, options: PersonaFilter = {}) {
     const db = createDb(d1);
     const conditions = personaFilters(options);

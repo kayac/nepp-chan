@@ -54,7 +54,6 @@ export const useStickToBottom = (dependency: unknown) => {
     if (el) el.scrollTop = el.scrollHeight;
   }, [dependency]);
 
-  // 画像読み込みなどメッセージ更新を伴わない高さ変化にも追従する
   useEffect(() => {
     const el = viewportRef.current;
     if (!el) return;

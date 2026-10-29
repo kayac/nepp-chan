@@ -14,7 +14,6 @@ import remarkGfm from "remark-gfm";
 
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
 
-/** code が pre（コードブロック）配下かどうか。inline コードと区別するために使う。 */
 const IsCodeBlockContext = createContext(false);
 
 const reactNodeToText = (node: ReactNode): string => {

@@ -31,8 +31,6 @@ type ListOptions = {
 };
 
 export const pollRepository = {
-  // --- Poll CRUD ---
-
   async create(d1: D1Database, input: CreatePollInput) {
     const db = createDb(d1);
     await db.insert(polls).values({
@@ -145,8 +143,6 @@ export const pollRepository = {
       .all();
     return rows as SentPoll[];
   },
-
-  // --- Submissions ---
 
   async findSubmission(d1: D1Database, pollId: string, userId: string) {
     const db = createDb(d1);

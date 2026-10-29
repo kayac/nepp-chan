@@ -49,7 +49,6 @@ export const generateReply = async (params: {
       }),
     );
 
-  // Intent 分類でモデルティアを決定（非テキストメッセージは casual 直行）
   const [intent] = await Promise.all([
     params.userMessage
       ? classifyIntent(params.userMessage, requestContext)
@@ -97,7 +96,6 @@ export const generateReply = async (params: {
   });
 
   await recordLlmUsage(params.env.DB, {
-    // フォールバック発火時も実際に応答したモデルで記録する
     model: response.response?.modelId ?? primaryModelId(modelConfig),
     usage: response.totalUsage,
     platform: "line",

@@ -6,10 +6,6 @@ type Options = {
   once?: boolean;
 };
 
-/**
- * 要素が viewport に入ったら data-revealed 属性 / state を true にする hook。
- * Tailwind の data-[revealed=true]: variant で transition を表現する想定。
- */
 export const useScrollReveal = <T extends Element = HTMLDivElement>(
   options: Options = {},
 ): { ref: RefObject<T | null>; revealed: boolean } => {

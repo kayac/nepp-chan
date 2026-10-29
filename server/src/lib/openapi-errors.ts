@@ -1,9 +1,5 @@
 import { z } from "@hono/zod-openapi";
 
-/**
- * グローバルエラーハンドラー（middleware/error-handler.ts）が返すレスポンス形式に対応する
- * OpenAPI スキーマ定義。
- */
 export const ErrorResponseSchema = z.object({
   error: z.object({
     code: z.number(),

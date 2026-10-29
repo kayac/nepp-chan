@@ -32,8 +32,6 @@ export const pollAdminRoutes = new OpenAPIHono<{
 pollAdminRoutes.use("*", requireAuth);
 pollAdminRoutes.use("*", requireRole("staff"));
 
-// --- 一覧取得 ---
-
 const listRoute = createRoute({
   method: "get",
   path: "/",
@@ -88,8 +86,6 @@ pollAdminRoutes.openapi(listRoute, async (c) => {
   );
 });
 
-// --- 作成 ---
-
 const createPollRoute = createRoute({
   method: "post",
   path: "/",
@@ -143,8 +139,6 @@ pollAdminRoutes.openapi(createPollRoute, async (c) => {
   }
 });
 
-// --- 詳細取得 ---
-
 const getDetailRoute = createRoute({
   method: "get",
   path: "/{id}",
@@ -182,8 +176,6 @@ pollAdminRoutes.openapi(getDetailRoute, async (c) => {
 
   return c.json(poll, 200);
 });
-
-// --- 更新 ---
 
 const updateRoute = createRoute({
   method: "put",
@@ -243,8 +235,6 @@ pollAdminRoutes.openapi(updateRoute, async (c) => {
   return c.json(updated, 200);
 });
 
-// --- 削除 ---
-
 const deleteRoute = createRoute({
   method: "delete",
   path: "/{id}",
@@ -290,8 +280,6 @@ pollAdminRoutes.openapi(deleteRoute, async (c) => {
   return c.json({ message: "投票を削除しました" }, 200);
 });
 
-// --- LINE配信 ---
-
 const sendRoute = createRoute({
   method: "post",
   path: "/{id}/send",
@@ -333,8 +321,6 @@ pollAdminRoutes.openapi(sendRoute, async (c) => {
   return c.json({ message: "投票を配信しました" }, 200);
 });
 
-// --- 結果取得 ---
-
 const resultsRoute = createRoute({
   method: "get",
   path: "/{id}/results",
@@ -372,8 +358,6 @@ pollAdminRoutes.openapi(resultsRoute, async (c) => {
 
   return c.json(results, 200);
 });
-
-// --- 締切 ---
 
 const closeRoute = createRoute({
   method: "post",

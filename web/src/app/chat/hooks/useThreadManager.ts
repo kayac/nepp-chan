@@ -19,7 +19,6 @@ const storageKey = (resourceId: string) => `chat_threadId_${resourceId}`;
 
 export const useThreadManager = () => {
   const resourceId = useMemo(() => getResourceId() ?? "default", []);
-  // ?location= 付きアクセスは訪問履歴に関わらず歓迎挨拶の新規スレッドで始める
   const location = useMemo(() => getLocationParam(), []);
   const hasLocationGreeting = location !== null;
   const { data: adminUser, isLoading: isAdminLoading } = useAdminUser();

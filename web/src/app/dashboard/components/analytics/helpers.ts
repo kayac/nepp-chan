@@ -4,7 +4,6 @@ const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const toJstDate = (d: Date) =>
   new Date(d.getTime() + JST_OFFSET_MS).toISOString().slice(0, 10);
 
-/** 直近 days 日の JST 日付範囲（from は days-1 日前、to は今日。両端を含む） */
 export const jstDateRange = (days: number, now: Date = new Date()) => ({
   from: toJstDate(new Date(now.getTime() - (days - 1) * DAY_MS)),
   to: toJstDate(now),
@@ -153,7 +152,6 @@ const PURPOSE_LABELS: Record<string, string> = {
 export const purposeLabel = (purpose: string) =>
   PURPOSE_LABELS[purpose] ?? purpose;
 
-// AGENT_COLORS と同じ画面に並ぶため、そちらで使うトークンとは重ならないものを選ぶ
 const PURPOSE_COLORS: Record<string, string> = {
   conversation: "var(--pine)",
   embedding: "var(--teal-500)",
@@ -166,7 +164,6 @@ const PURPOSE_COLORS: Record<string, string> = {
 export const purposeColor = (purpose: string) =>
   PURPOSE_COLORS[purpose] ?? "var(--border-2)";
 
-// エージェント別コストの色。全体と会話内で同じエージェントが同じ色になるよう名前で固定する
 const AGENT_COLORS: Record<string, string> = {
   "knowledge-reranker": "var(--berry)",
   knowledge: "var(--admin-light)",

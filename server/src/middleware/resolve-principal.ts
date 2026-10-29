@@ -19,7 +19,6 @@ export const resolvePrincipal = createMiddleware<{
     return;
   }
 
-  // opaque session を試行（admin）
   const session = OPAQUE_SESSION_TOKEN_PATTERN.test(token)
     ? await adminSessionRepository.findValid(c.env.DB, token)
     : undefined;
@@ -49,7 +48,6 @@ export const resolvePrincipal = createMiddleware<{
     return;
   }
 
-  // anonymous JWT を試行
   try {
     const resourceId = await verifyAnonymousToken(token, c.env.JWT_SECRET);
     c.set("principal", { type: "anonymous", id: resourceId });

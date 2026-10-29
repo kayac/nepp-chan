@@ -39,8 +39,6 @@ const textContent = (text: string) => ({
   parts: [{ type: "text" as const, text }],
 });
 
-// 通話（DO インスタンス）ごとに1回だけ生成し、会話履歴をメモリ上で保持する。
-// D1 は応答完了後の persistTurn でのみ触る。
 export const createVoiceConversation = async ({
   env,
   from,

@@ -39,7 +39,6 @@ export const useSetTagAlias = () => {
   });
 };
 
-// 1 回の API 呼び出しは 1 バッチだけなので、残りが 0 になるまで繰り返す
 export const useAssignTagGroups = () => {
   const queryClient = useQueryClient();
   return useMutation({

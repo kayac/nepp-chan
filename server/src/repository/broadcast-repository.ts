@@ -176,7 +176,6 @@ export const broadcastRepository = {
     const detailLimit = options.detailLimit ?? 3;
     const summaryDays = options.summaryDays ?? 30;
 
-    // 直近N件（全文）
     const details = await db
       .select()
       .from(broadcastMessages)
@@ -185,7 +184,6 @@ export const broadcastRepository = {
       .limit(detailLimit)
       .all();
 
-    // それ以外の30日分（タイトル+日付のみ）
     const since = new Date();
     since.setDate(since.getDate() - summaryDays);
     const sinceIso = since.toISOString();

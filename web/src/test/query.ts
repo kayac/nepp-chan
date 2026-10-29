@@ -6,9 +6,6 @@ import {
   type ReactElement,
 } from "react";
 
-/**
- * テスト用に retry / cache を完全に無効化した QueryClient を新規作成。
- */
 const buildClient = () =>
   new QueryClient({
     defaultOptions: {
@@ -17,10 +14,6 @@ const buildClient = () =>
     },
   });
 
-/**
- * useXxx hook を testing-library/react の renderHook でテストする時のラッパー。
- * QueryClient はテスト毎に作り直して隔離する。
- */
 export const renderHookWithQuery = <Result, Props>(
   hook: (props: Props) => Result,
   options: Omit<RenderOptions, "wrapper"> & { initialProps?: Props } = {},
@@ -31,9 +24,6 @@ export const renderHookWithQuery = <Result, Props>(
   return renderHook(hook, { wrapper, ...options });
 };
 
-/**
- * コンポーネントを QueryClientProvider で包んでレンダリング。
- */
 export const renderWithQuery = (
   ui: ReactElement,
   options: Omit<RenderOptions, "wrapper"> = {},

@@ -5,9 +5,7 @@ import type { paths } from "./types.d";
 export type ApiClient = Client<paths>;
 
 export type CreateApiClientOptions = {
-  /** ベース URL（例: `https://api.example.com`） */
   baseUrl: string;
-  /** 各リクエストで Authorization に載せる Bearer トークンを返す。null/undefined なら無付与 */
   getAuthToken?: () => string | null;
   /**
    * 401 を受けたとき呼ばれる。トークン破棄やキャッシュ無効化など app 側の後処理に使う。
@@ -20,7 +18,6 @@ export type CreateApiClientOptions = {
    */
   // biome-ignore lint/suspicious/noConfusingVoidType: 戻り値を持たないコールバック (() => void) も許容するため void union が必要
   onUnauthorized?: (sentAuth: string) => boolean | void;
-  /** 5xx 系のときだけ呼ばれる observer。Sentry 等の通報先に流す用途 */
   onServerError?: (error: ApiError, response: Response) => void;
 };
 
@@ -56,10 +53,6 @@ const buildFetch = (options: CreateApiClientOptions) => {
   };
 };
 
-/**
- * openapi-fetch ベースの API クライアントを生成する factory。
- * 認証トークンの付与・401 fallback retry・5xx の通報フックを options で合成する。
- */
 export const createApiClient = (options: CreateApiClientOptions): ApiClient => {
   const client = createOpenApiClient<paths>({
     baseUrl: options.baseUrl,

@@ -28,8 +28,6 @@ const toUserResponse = (user: {
   role: adminRoleSchema.parse(user.role),
 });
 
-// --- Register ---
-
 const registerRoute = createRoute({
   method: "post",
   path: "/register",
@@ -113,8 +111,6 @@ authRoutes.openapi(registerRoute, async (c) => {
   return c.json({ accessToken, user: toUserResponse(user) }, 200);
 });
 
-// --- Login ---
-
 const loginRoute = createRoute({
   method: "post",
   path: "/login",
@@ -171,8 +167,6 @@ authRoutes.openapi(loginRoute, async (c) => {
   return c.json({ accessToken, user: toUserResponse(user) }, 200);
 });
 
-// --- Me ---
-
 const meRoute = createRoute({
   method: "get",
   path: "/me",
@@ -197,8 +191,6 @@ authRoutes.openapi(meRoute, async (c) => {
   const user = principal?.type === "admin" ? principal.user : undefined;
   return c.json({ user: user ? toUserResponse(user) : null }, 200);
 });
-
-// --- Logout ---
 
 const logoutRoute = createRoute({
   method: "post",
@@ -226,8 +218,6 @@ authRoutes.openapi(logoutRoute, async (c) => {
   }
   return c.json({ message: "ログアウトしました" }, 200);
 });
-
-// --- Anonymous Session ---
 
 const anonymousSessionRoute = createRoute({
   method: "post",

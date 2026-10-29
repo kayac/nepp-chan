@@ -133,7 +133,6 @@ export const parseVoiceTuning = (body: Record<string, unknown>) => {
 
 export type VoiceRelayTuning = ReturnType<typeof parseVoiceTuning>["relay"];
 
-// Twilio 側既定値のうち UI が初期表示に使うもの。差分送信の基準にもなる。
 const TWILIO_DEFAULTS = {
   ttsLanguage: "",
   transcriptionLanguage: "",

@@ -7,12 +7,7 @@ type Props = {
   children: ReactNode;
 };
 
-/**
- * native <dialog> ベースの共通モーダル。top-layer 表示なので z-index 管理が不要。
- * - マウント時に showModal()（StrictMode の二重 effect で open 済みなら何もしない）
- * - ESC は dialog の onClose、backdrop クリックは onClick で閉じる
- * - dim / blur は className の backdrop: ユーティリティで指定（既定は backdrop:bg-black/50）
- */
+// マウント時の showModal() は StrictMode の二重 effect で open 済みなら何もしない
 export const Dialog = ({ onClose, className, children }: Props) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
 

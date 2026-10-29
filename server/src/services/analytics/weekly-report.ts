@@ -19,7 +19,6 @@ import { recordLlmUsage } from "~/services/analytics/llm-usage";
 
 const NO_VOICE_SUMMARY = "この週に抽出された村の声はありませんでした。";
 
-/** 実行時刻を含む週の前週（JST 月〜日）をレポート対象期間とする */
 export const resolveReportPeriod = (now: Date) => {
   const thisWeekStart = startOfJstWeek(now);
   const prevWeekStart = new Date(thisWeekStart.getTime() - WEEK_MS);
@@ -32,11 +31,6 @@ export const resolveReportPeriod = (now: Date) => {
   };
 };
 
-/**
- * 対象週に抽出された persona から週次ハイライトを生成する。
- * raw 会話ではなく persona を入力にするのは、匿名化済み・要約済みで
- * トークン量と個人情報リスクを抑えられるため。
- */
 const generateWeeklySummary = async (
   env: CloudflareBindings,
   period: { from: string; to: string },

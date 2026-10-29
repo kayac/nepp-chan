@@ -199,12 +199,11 @@ export const threadTurnUsageResponseSchema = z.object({
     z.object({
       // turn_id 記録前の行は null
       turnId: z.string().nullable(),
-      // 応答を記録した時刻。会話ログとの突き合わせに使う
       answeredAt: z.string().nullable(),
       totalTokens: z.number(),
       costUsd: z.number(),
       durationMs: z.number().nullable(),
-      // casual / thinking。intent 記録前の行は null
+      // intent 記録前の行は null
       intent: z.string().nullable(),
       agents: z.array(agentCostSchema),
     }),
@@ -237,7 +236,6 @@ export const operationCostResponseSchema = z.object({
   totalCostUsd: z.number(),
   byCategory: z.array(
     z.object({
-      // conversation: 会話に直接かかる費用 / knowledge-base: 埋め込み / batch: 定期処理
       category: z.string(),
       costUsd: z.number(),
       agents: z.array(agentCostSchema),
@@ -249,13 +247,11 @@ export const operationCostResponseSchema = z.object({
       // JST の日付（YYYY-MM-DD）
       date: z.string(),
       costUsd: z.number(),
-      // 会話はまとめ、運用側は source がそのまま用途になる
       purposes: z.array(z.object({ purpose: z.string(), costUsd: z.number() })),
     }),
   ),
 });
 
-// 週次レポートの stats(JSON) の中身。生成側（weekly-report service）と共有する
 export const weeklyStatsSchema = z.object({
   conversationCount: z.number(),
   messageCount: z.number(),

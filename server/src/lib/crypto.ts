@@ -1,7 +1,3 @@
-/**
- * 暗号化関連のユーティリティ関数
- */
-
 export const toBase64Url = (bytes: ArrayBuffer | Uint8Array) => {
   const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   let binary = "";

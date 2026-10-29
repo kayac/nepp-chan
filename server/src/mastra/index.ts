@@ -35,10 +35,6 @@ const getCloudflareEnv = async () => {
   }
 };
 
-/**
- * Mastra Playground 用のインスタンス
- * アプリケーション側で利用する時は、各呼び出し箇所で new Mastra() を直接使用してください
- */
 export const mastra = new Mastra({
   workflows: {},
   agents: {

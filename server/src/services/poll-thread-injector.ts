@@ -49,7 +49,6 @@ export const injectPollsToThread = async (params: {
   }
 
   const polls = await pollRepository.findSentSince(d1, since);
-  // 空振りでも state は進めて、次回以降の無駄な SELECT を防ぐ
   if (polls.length === 0) {
     if (!state) {
       await userPollStateRepository.upsert(

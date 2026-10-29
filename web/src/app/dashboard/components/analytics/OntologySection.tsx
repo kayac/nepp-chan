@@ -70,7 +70,6 @@ const nodeRadius = (node: OntologyNode) => {
   return Math.max(7, Math.sqrt(node.count) * 2.4);
 };
 
-// 座標はサーバから来ないため、円環状の初期配置を d3-force のシードにする
 const seedPositions = (nodes: OntologyNode[]) => {
   const { width, height } = ONTOLOGY_VIEWBOX;
   const cx = width / 2;

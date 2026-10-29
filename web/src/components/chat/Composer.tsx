@@ -22,7 +22,6 @@ export const Composer = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // タッチデバイスでは Enter で改行、送信ボタンで送信
     if (isTouchDevice()) return;
     if (e.key !== "Enter" || e.shiftKey) return;
     // IME 変換中の Enter は送信せず、変換確定として扱う
