@@ -23,7 +23,8 @@
     "eval:neppchan": "tsx src/mastra/evals/neppchan/run.ts",
     "eval:neppchan:snapshot": "tsx src/mastra/evals/neppchan/snapshot.ts",
     "eval:neppchan:vitest": "vitest run --config vitest.eval.config.ts",
-    "api:quota": "tsx scripts/api-quota.ts"
+    "api:quota": "tsx scripts/api-quota.ts",
+    "elevenlabs:setup": "tsx scripts/elevenlabs-setup.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.87",
@@ -51,6 +52,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.75.0",
     "@libsql/client": "^0.18.0",
     "@types/node": "^26.6.4",
     "@vitest/coverage-istanbul": "~5.0.3",
