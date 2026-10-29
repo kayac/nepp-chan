@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildConversationRelayTwiml } from "./twiml";
+import { buildConversationRelayTwiml, buildMediaStreamTwiml } from "./twiml";
 
 describe("buildConversationRelayTwiml", () => {
   it("Connect > ConversationRelay を含む TwiML を返す", () => {
@@ -158,5 +158,20 @@ describe("buildConversationRelayTwiml", () => {
     expect(xml).toContain("<ConversationRelay");
     expect(xml).toContain("/></Connect></Response>");
     expect(xml).not.toContain("<Parameter");
+  });
+});
+
+describe("buildMediaStreamTwiml", () => {
+  it("Connect/Stream に token を Parameter として渡す", () => {
+    const xml = buildMediaStreamTwiml({
+      wsUrl: "wss://x/twilio/voice/live",
+      parameters: { token: "abc123" },
+    });
+    expect(xml).toBe(
+      '<?xml version="1.0" encoding="UTF-8"?><Response><Connect>' +
+        '<Stream url="wss://x/twilio/voice/live">' +
+        '<Parameter name="token" value="abc123"/>' +
+        "</Stream></Connect></Response>",
+    );
   });
 });
