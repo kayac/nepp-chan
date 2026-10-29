@@ -22,42 +22,46 @@ export const base64UrlToString = (value: string) => {
   return new TextDecoder().decode(bytes);
 };
 
-export const hmacSha256 = async (value: string, secret: string) => {
+const signHmac = async (
+  hash: "SHA-256" | "SHA-1",
+  value: string,
+  secret: string,
+) => {
   if (!secret) {
-    throw new Error("hmacSha256: secret は空にできません");
+    throw new Error("HMAC の secret は空にできません");
   }
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
+    { name: "HMAC", hash },
     false,
     ["sign"],
   );
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    new TextEncoder().encode(value),
-  );
-  return toBase64Url(signature);
+  return crypto.subtle.sign("HMAC", key, new TextEncoder().encode(value));
+};
+
+export const hmacSha256 = async (value: string, secret: string) =>
+  toBase64Url(await signHmac("SHA-256", value, secret));
+
+export const hmacSha256Hex = async (value: string, secret: string) =>
+  Array.from(new Uint8Array(await signHmac("SHA-256", value, secret)), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+
+export const timingSafeEqual = (a: string, b: string) => {
+  const bytesA = new TextEncoder().encode(a);
+  const bytesB = new TextEncoder().encode(b);
+  if (bytesA.length !== bytesB.length) return false;
+  let diff = 0;
+  for (let i = 0; i < bytesA.length; i++) {
+    diff |= bytesA[i] ^ bytesB[i];
+  }
+  return diff === 0;
 };
 
 // Twilio X-Twilio-Signature 互換（HMAC-SHA1 + 標準 base64、パディングあり）
 export const hmacSha1Base64 = async (value: string, secret: string) => {
-  if (!secret) {
-    throw new Error("hmacSha1Base64: secret は空にできません");
-  }
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-1" },
-    false,
-    ["sign"],
-  );
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    new TextEncoder().encode(value),
-  );
+  const signature = await signHmac("SHA-1", value, secret);
   return btoa(String.fromCharCode(...new Uint8Array(signature)));
 };
 

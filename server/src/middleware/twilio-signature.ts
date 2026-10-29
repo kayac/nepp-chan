@@ -1,6 +1,6 @@
 import type { MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { hmacSha1Base64 } from "~/lib/crypto";
+import { hmacSha1Base64, timingSafeEqual } from "~/lib/crypto";
 import { logger } from "~/lib/logger";
 
 // 検証仕様: https://www.twilio.com/docs/usage/security#validating-requests
@@ -39,15 +39,4 @@ export const twilioSignatureVerify: MiddlewareHandler<{
 
   c.set("twilioParams", params);
   await next();
-};
-
-const timingSafeEqual = (a: string, b: string) => {
-  const bytesA = new TextEncoder().encode(a);
-  const bytesB = new TextEncoder().encode(b);
-  if (bytesA.length !== bytesB.length) return false;
-  let diff = 0;
-  for (let i = 0; i < bytesA.length; i++) {
-    diff |= bytesA[i] ^ bytesB[i];
-  }
-  return diff === 0;
 };

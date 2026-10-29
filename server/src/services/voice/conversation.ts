@@ -3,7 +3,6 @@ import type { ModelMessage } from "ai";
 import { primaryModelId, voiceModelConfig } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { toVoiceIds } from "~/lib/principal";
-import { getStorage } from "~/lib/storage";
 import { sanitizeForSpeech } from "~/lib/voice-text";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
@@ -14,6 +13,7 @@ import {
   createVoicePrefetchSlot,
   type VoiceFindingsSlot,
 } from "./findings-slot";
+import { saveVoiceTurns } from "./persist-turns";
 
 type RunTurnParams = {
   text: string;
@@ -32,12 +32,6 @@ type PersistTurnParams = {
 };
 
 const MAX_HISTORY_MESSAGES = 20;
-const VOICE_THREAD_TITLE = "音声通話";
-
-const textContent = (text: string) => ({
-  format: 2 as const,
-  parts: [{ type: "text" as const, text }],
-});
 
 // 通話（DO インスタンス）ごとに1回だけ生成し、会話履歴をメモリ上で保持する。
 // D1 は応答完了後の persistTurn でのみ触る。
@@ -206,57 +200,14 @@ export const createVoiceConversation = async ({
       : earlier;
   };
 
-  const persistTurn = async ({
-    turnIndex,
-    userText,
-    assistantText,
-  }: PersistTurnParams) => {
-    const storage = await getStorage(env.DB);
-    const memoryStore = await storage.getStore("memory");
-    if (!memoryStore) throw new Error("Memory storage is unavailable");
-
-    const now = new Date();
-    const assistantCreatedAt = new Date(now.getTime() + 1);
-    const thread = {
-      id: threadId,
+  const persistTurn = (turn: PersistTurnParams) =>
+    saveVoiceTurns({
+      db: env.DB,
+      threadId,
       resourceId,
-      title: VOICE_THREAD_TITLE,
       createdAt,
-      updatedAt: now,
-    };
-    const messages = [
-      {
-        id: `${threadId}:turn:${turnIndex}:user`,
-        role: "user" as const,
-        createdAt: now,
-        threadId,
-        resourceId,
-        content: textContent(userText),
-      },
-      {
-        id: `${threadId}:turn:${turnIndex}:assistant`,
-        role: "assistant" as const,
-        createdAt: assistantCreatedAt,
-        threadId,
-        resourceId,
-        content: textContent(assistantText),
-      },
-    ];
-    const save = async () => {
-      await memoryStore.saveThread({ thread });
-      await memoryStore.saveMessages({ messages });
-    };
-
-    try {
-      await save();
-    } catch (error) {
-      logger.warn("[Voice] retrying turn persistence", {
-        error: error instanceof Error ? error.message : String(error),
-        turnIndex,
-      });
-      await save();
-    }
-  };
+      turns: [turn],
+    });
 
   return { runTurn, recordInterruptedTurn, truncateLastReply, persistTurn };
 };
