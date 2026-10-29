@@ -18,6 +18,7 @@
     "@ai-sdk/react": "^4.0.130",
     "@astrojs/check": "^0.9.10",
     "@astrojs/react": "^7.0.0",
+    "@elevenlabs/react": "^1.20.1",
     "@heroicons/react": "^2.2.0",
     "@nepp-chan/shared": "workspace:*",
     "@sentry/react": "^11.2.0",
