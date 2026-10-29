@@ -33,6 +33,8 @@ export default defineConfig({
         // 中心で E2E 領域。API 取得（api.ts）は単体テスト済み、ページはその wiring と rendering のみ
         "src/app/call-dev/CallDevPage.tsx",
         "src/app/call-dev/useCallDevice.ts",
+        // ElevenLabs ブラウザ会話の検証ページ。SDK 配線と rendering のみ、hook は単体テスト済み
+        "src/app/call-el/CallElPage.tsx",
         // 完全に form の rendering のみ。ロジックは useLoginForm / useRegisterForm 側でテスト済み
         "src/app/auth/LoginPage.tsx",
         "src/app/auth/RegisterPage.tsx",
