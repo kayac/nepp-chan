@@ -53,14 +53,17 @@ elevenlabsVoiceRoutes.openapi(signedUrlRoute, async (c) => {
   return c.json({ signedUrl: signed_url }, 200);
 });
 
-const researchBodySchema = z.object({ question: z.string().min(1) });
+const researchBodySchema = z.object({
+  question: z.string().min(1),
+  source: z.enum(["knowledge", "web"]),
+});
 
 elevenlabsVoiceRoutes.post(
   "/research",
   elevenlabsToolSecretVerify,
   async (c) => {
-    const { question } = researchBodySchema.parse(await c.req.json());
-    const answer = await runResearch({ env: c.env, question });
+    const { question, source } = researchBodySchema.parse(await c.req.json());
+    const answer = await runResearch({ env: c.env, question, source });
     return c.json({ answer }, 200);
   },
 );

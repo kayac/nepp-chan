@@ -137,18 +137,22 @@ describe("POST /elevenlabs/voice/research", () => {
     );
 
   it("ツール secret が無い・違うなら 401 で調べ物を始めない", async () => {
-    expect((await post(undefined, { question: "q" })).status).toBe(401);
-    expect((await post("wrong", { question: "q" })).status).toBe(401);
+    const body = { question: "q", source: "knowledge" };
+    expect((await post(undefined, body)).status).toBe(401);
+    expect((await post("wrong", body)).status).toBe(401);
     expect(runResearchMock).not.toHaveBeenCalled();
   });
 
-  it("question を渡して answer を返す", async () => {
+  it("question と source を渡して answer を返す", async () => {
     runResearchMock.mockResolvedValue("8時だよ");
-    const res = await post("tool-secret", { question: "バスの時間" });
+    const res = await post("tool-secret", {
+      question: "バスの時間",
+      source: "knowledge",
+    });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ answer: "8時だよ" });
     expect(runResearchMock).toHaveBeenCalledWith(
-      expect.objectContaining({ question: "バスの時間" }),
+      expect.objectContaining({ question: "バスの時間", source: "knowledge" }),
     );
   });
 });
