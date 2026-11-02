@@ -12,9 +12,9 @@
  * 作成した agent_id は .dev.vars の ELEVENLABS_AGENT_ID に書き戻す。
  */
 import { readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { getPlatformProxy } from "wrangler";
+import { buildElevenLabsPrompt } from "./elevenlabs-prompt";
 
 const REALTIME_MODEL = "eleven_realtime_v1_mini";
 const DEFAULT_VOICE_ID = "8EkOjt4xTPGMclNlh1pk";
@@ -48,12 +48,18 @@ const createResearchTool = (
         requestHeaders: { "x-nepp-tool-secret": toolSecret },
         requestBodySchema: {
           type: "object",
-          required: ["question"],
+          required: ["question", "source"],
           properties: {
             question: {
               type: "string",
               description:
                 "ユーザーが知りたいこと。会話の流れをふまえた具体的な問い",
+            },
+            source: {
+              type: "string",
+              enum: ["knowledge", "web"],
+              description:
+                "音威子府村ローカルのこと（施設・観光・行政・歴史・イベント・村の店）は knowledge、天気・ニュース・時事・村外の一般的なことは web",
             },
           },
         },
@@ -61,9 +67,9 @@ const createResearchTool = (
       responseTimeoutSecs: 120,
       preToolSpeech: "force",
       executionMode: "immediate",
-      interruptionMode: "allow",
+      interruptionMode: "disable_during_tool",
       toolCallSound: "typing",
-      toolCallSoundBehavior: "auto",
+      toolCallSoundBehavior: "always",
     },
   });
 
@@ -82,10 +88,7 @@ const createAgent = (
         firstMessage: "もしもし、ねっぷちゃんだよ。どうしたの？",
         language: "ja",
         prompt: {
-          prompt: readFileSync(
-            join(import.meta.dirname, "elevenlabs-agent-prompt.md"),
-            "utf8",
-          ),
+          prompt: buildElevenLabsPrompt(),
           toolIds: [toolId],
           builtInTools: {
             endCall: {
@@ -97,7 +100,7 @@ const createAgent = (
         },
       },
       tts: { voiceId, modelId: "eleven_flash_v2_5" },
-      turn: { turnEagerness: "normal", turnTimeout: 10 },
+      turn: { turnEagerness: "normal", turnTimeout: 20 },
     },
     platformSettings: {
       overrides: {
