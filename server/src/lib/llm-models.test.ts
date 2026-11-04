@@ -72,7 +72,7 @@ describe("modelWithReasoning", () => {
 });
 
 describe("resolveModelTier", () => {
-  describe("Admin は thinking の reasoning と casual の maxSteps を引き上げる", () => {
+  describe("Admin は casual の maxSteps だけを引き上げる", () => {
     const platform = "web" as const;
 
     it("casual は effort=none のまま maxSteps だけ thinking と揃える", () => {
@@ -88,15 +88,12 @@ describe("resolveModelTier", () => {
       );
     });
 
-    it("thinking は effort=high", () => {
-      const tier = resolveModelTier({
-        intent: "thinking",
-        platform,
-        isAdmin: true,
-      });
-      for (const entry of tier.model) {
-        expect(entry.providerOptions.openai.reasoningEffort).toBe("high");
-      }
+    it("thinking は非 Admin と同じ設定", () => {
+      expect(
+        resolveModelTier({ intent: "thinking", platform, isAdmin: true }),
+      ).toEqual(
+        resolveModelTier({ intent: "thinking", platform, isAdmin: false }),
+      );
     });
   });
 
@@ -114,7 +111,7 @@ describe("resolveModelTier", () => {
       expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe("none");
     });
 
-    it("thinking → プライマリ LITE + medium、フォールバック MAIN", () => {
+    it("thinking → プライマリ LITE + low、フォールバック MAIN", () => {
       const tier = resolveModelTier({
         intent: "thinking",
         platform: "web",
@@ -124,9 +121,7 @@ describe("resolveModelTier", () => {
         OPENAI_LITE,
         OPENAI_MAIN,
       ]);
-      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
-        "medium",
-      );
+      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe("low");
       expect(tier.model[0].providerOptions.openai.textVerbosity).toBe("high");
     });
   });
@@ -145,16 +140,14 @@ describe("resolveModelTier", () => {
       });
     });
 
-    it("thinking → プライマリ LITE + medium", () => {
+    it("thinking → プライマリ LITE + low", () => {
       const tier = resolveModelTier({
         intent: "thinking",
         platform: "line",
         isAdmin: false,
       });
       expect(tier.model[0].model).toBe(OPENAI_LITE);
-      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe(
-        "medium",
-      );
+      expect(tier.model[0].providerOptions.openai.reasoningEffort).toBe("low");
       expect(tier.model[0].providerOptions.openai.textVerbosity).toBe("medium");
     });
   });
@@ -199,7 +192,7 @@ describe("resolveModelTier", () => {
         isAdmin: false,
       });
       expect(tier.model[1].providerOptions.openai.reasoningEffort).toBe(
-        "medium",
+        tier.model[0].providerOptions.openai.reasoningEffort,
       );
     });
 
