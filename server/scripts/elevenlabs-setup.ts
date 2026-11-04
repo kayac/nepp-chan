@@ -103,23 +103,18 @@ const createAgent = (
       tts: { voiceId, modelId: "eleven_flash_v2_5" },
       turn: { turnEagerness: "eager", turnTimeout: 20 },
     },
-    platformSettings: {
-      overrides: {
-        conversationConfigOverride: {
-          agent: { prompt: { prompt: true }, firstMessage: true },
-        },
-      },
-      ...(webhookId
-        ? {
+    ...(webhookId
+      ? {
+          platformSettings: {
             workspaceOverrides: {
               webhooks: {
                 postCallWebhookId: webhookId,
                 events: ["transcript"],
               },
             },
-          }
-        : {}),
-    },
+          },
+        }
+      : {}),
   });
 
 // SDK 2.75 のリクエスト型に realtime_model が無く、未知キーは送信前に落とされるため生 API で設定する
