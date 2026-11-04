@@ -60,7 +60,7 @@ const fixtureResearchTool = (text: string) =>
     description: researchTool.description,
     inputSchema: researchTool.inputSchema,
     outputSchema: researchTool.outputSchema,
-    execute: async () => ({ memo: text, failed: false }),
+    execute: async () => ({ materials: text, failed: false }),
   });
 
 const fixtureVoiceTool = (text: string) =>

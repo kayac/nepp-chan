@@ -11,22 +11,22 @@ export const researchToolName = "researchTool";
 export const researchTool = createTool({
   id: "research-answer",
   description:
-    "村のナレッジと配信、必要に応じて Web を調べ、質問に答えるための調査メモを返します。どこを調べるかはツールが決めます。",
+    "村の資料と LINE 配信を観点ごとに検索し、web を付けた観点は Web 検索も足して、見つかった資料をそのまま返します。",
   inputSchema: researchInputSchema,
   outputSchema: z.object({
-    memo: z.string(),
+    materials: z.string(),
     failed: z.boolean(),
   }),
   execute: async (input, context) => {
     try {
-      const { memo } = await runResearch({
+      const { materials } = await runResearch({
         input,
         requestContext: context?.requestContext,
       });
-      return { memo, failed: false };
+      return { materials, failed: false };
     } catch (error) {
       logger.error("[Research] failed", error);
-      return { memo: "", failed: true };
+      return { materials: "", failed: true };
     }
   },
 });

@@ -114,7 +114,6 @@ export const platformLabel = (platform: string | null) =>
 const AGENT_LABELS: Record<string, string> = {
   "nepp-chan": "本体",
   knowledge: "ナレッジ検索",
-  "knowledge-memo": "ナレッジメモ",
   "research-route": "調べ先判定",
   "web-researcher": "Web検索",
   "voice-summarizer": "音声要約",
@@ -169,7 +168,6 @@ export const purposeColor = (purpose: string) =>
 const AGENT_COLORS: Record<string, string> = {
   "knowledge-reranker": "var(--berry)",
   knowledge: "var(--admin-light)",
-  "knowledge-memo": "var(--admin-light)",
   "research-route": "var(--moss-500)",
   "nepp-chan": "var(--brand)",
   "web-researcher": "var(--sky-500)",
