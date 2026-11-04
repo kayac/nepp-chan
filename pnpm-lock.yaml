@@ -97,8 +97,8 @@ importers:
         specifier: ^1.6.3
         version: 1.6.3(hono@4.13.12)(zod@4.6.7)
       '@line/bot-sdk':
-        specifier: ^11.3.0
-        version: 11.3.0
+        specifier: ^11.4.0
+        version: 11.4.0
       '@mastra/ai-sdk':
         specifier: ^1.10.6
         version: 1.10.6(@mastra/core@1.74.0(ai@7.0.127(zod@4.6.7))(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.7))(zod@4.6.7))(zod@4.6.7)
@@ -2150,8 +2150,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@line/bot-sdk@11.3.0':
-    resolution: {integrity: sha512-AHCtmdgcVDElRLlrR8jxSracF4beWholl3Ywnl6TrPgEiSYH81fSovgWVO/LbyN0tlGidCzJMAsOLXNddF5FGg==}
+  '@line/bot-sdk@11.4.0':
+    resolution: {integrity: sha512-VPPNiCxhJnjjB3zb7q14toar6WnPdeBU9019uIq0ATozkc2LTDozx2Xrqw21uc5wgFz7g/E1MM/vcPI5VlsZPQ==}
     engines: {node: '>=22'}
 
   '@livekit/mutex@1.1.1':
@@ -8278,7 +8278,7 @@ snapshots:
   '@libsql/win32-x64-msvc@0.5.29':
     optional: true
 
-  '@line/bot-sdk@11.3.0':
+  '@line/bot-sdk@11.4.0':
     dependencies:
       '@types/node': 24.13.3
 
