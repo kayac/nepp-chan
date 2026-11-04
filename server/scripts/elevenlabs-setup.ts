@@ -41,7 +41,7 @@ const createResearchTool = (
       type: "webhook",
       name: "research",
       description:
-        "村の情報・最新情報・時事・天気など、事実にもとづく質問に答えるための要点を調べます。",
+        "店・施設・イベント・交通・天気・歴史・行政手続きなど、村と世の中の事実を調べます。ねっぷちゃんはこれらを記憶していないので、事実を口にする前に必ず呼びます。",
       apiSchema: {
         url: `${baseUrl}/elevenlabs/voice/research`,
         method: "POST",
