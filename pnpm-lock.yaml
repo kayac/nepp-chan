@@ -112,8 +112,8 @@ importers:
         specifier: 1.10.10
         version: 1.10.10(@mastra/core@1.74.0(ai@7.0.127(zod@4.6.7))(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.7))(zod@4.6.7))(vitest@5.0.3)
       '@mastra/libsql':
-        specifier: 1.25.0
-        version: 1.25.0(@mastra/core@1.74.0(ai@7.0.127(zod@4.6.7))(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.7))(zod@4.6.7))
+        specifier: 1.28.0
+        version: 1.28.0(@mastra/core@1.74.0(ai@7.0.127(zod@4.6.7))(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.7))(zod@4.6.7))
       '@mastra/loggers':
         specifier: 1.3.10
         version: 1.3.10(@mastra/core@1.74.0(ai@7.0.127(zod@4.6.7))(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.7))(zod@4.6.7))
@@ -2156,11 +2156,11 @@ packages:
       vitest:
         optional: true
 
-  '@mastra/libsql@1.25.0':
-    resolution: {integrity: sha512-mjBvZd8H4Qp8QG86f898zlB49xiM7+3ijebk1FefMIBecYrTdhLxPRJxP4XHNCFX0tuo9zELipeCpTNwRj5SiA==}
+  '@mastra/libsql@1.28.0':
+    resolution: {integrity: sha512-xkc1FLIUQxAz1C0ST1L63y8t/M3WcrhMR6ARGaQWCATQU+KqRhL+X2XNfUqz5jB53UWW2h34OM27W/Ev+yttTA==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
-      '@mastra/core': '>=1.68.0-0 <2.0.0-0'
+      '@mastra/core': '>=1.76.0-0 <2.0.0-0'
 
   '@mastra/loggers@1.3.10':
     resolution: {integrity: sha512-gpUpNh5mIH//SgKENtZQ/qlBMNrZgzyzKHKswF4aIijztKLc03u1rBB4yFV4wO87r0E33OVCjw10mHxyMuWkCA==}
@@ -8371,7 +8371,7 @@ snapshots:
     optionalDependencies:
       vitest: 5.0.3(@opentelemetry/api@1.9.1)(@types/node@26.6.6)(@vitest/coverage-istanbul@5.0.3)(@vitest/coverage-v8@5.0.3)(jsdom@30.1.3(@noble/hashes@1.8.0))(msw@2.15.0(@types/node@26.6.6)(typescript@6.0.3))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
 
-  '@mastra/libsql@1.25.0(@mastra/core@1.74.0(ai@7.0.127(zod@4.6.7))(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.7))(zod@4.6.7))':
+  '@mastra/libsql@1.28.0(@mastra/core@1.74.0(ai@7.0.127(zod@4.6.7))(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.7))(zod@4.6.7))':
     dependencies:
       '@libsql/client': 0.18.0
       '@mastra/core': 1.74.0(ai@7.0.127(zod@4.6.7))(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.7))(zod@4.6.7)
