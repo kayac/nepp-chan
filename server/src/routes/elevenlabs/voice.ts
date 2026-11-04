@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "~/lib/logger";
 import { errorResponse } from "~/lib/openapi-errors";
+import { researchInputSchema } from "~/mastra/workflows/research-workflow";
 import { elevenlabsToolSecretVerify } from "~/middleware/elevenlabs-tool-secret";
 import { requireRole } from "~/middleware/require-role";
 import { handlePostCallEvent } from "~/services/voice/elevenlabs/post-call";
@@ -55,15 +56,15 @@ elevenlabsVoiceRoutes.openapi(signedUrlRoute, async (c) => {
 
 const researchBodySchema = z.object({
   question: z.string().min(1),
-  source: z.enum(["knowledge", "web"]),
+  aspects: researchInputSchema.shape.aspects.optional(),
 });
 
 elevenlabsVoiceRoutes.post(
   "/research",
   elevenlabsToolSecretVerify,
   async (c) => {
-    const { question, source } = researchBodySchema.parse(await c.req.json());
-    const answer = await runResearch({ env: c.env, question, source });
+    const { question, aspects } = researchBodySchema.parse(await c.req.json());
+    const answer = await runResearch({ env: c.env, question, aspects });
     return c.json({ answer }, 200);
   },
 );

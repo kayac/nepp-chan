@@ -48,18 +48,33 @@ const createResearchTool = (
         requestHeaders: { "x-nepp-tool-secret": toolSecret },
         requestBodySchema: {
           type: "object",
-          required: ["question", "source"],
+          required: ["question", "aspects"],
           properties: {
             question: {
               type: "string",
               description:
                 "ユーザーが知りたいこと。会話の流れをふまえた具体的な問い",
             },
-            source: {
-              type: "string",
-              enum: ["knowledge", "web"],
+            aspects: {
+              type: "array",
               description:
-                "音威子府村ローカルのこと（施設・観光・行政・歴史・イベント・村の店）は knowledge、天気・ニュース・時事・村外の一般的なことは web",
+                "答えに要る観点だけ。1 つで足りる質問は 1 つ、多くても 5 つ。念のための観点は足さない",
+              items: {
+                type: "object",
+                required: ["topic", "query"],
+                properties: {
+                  topic: {
+                    type: "string",
+                    description:
+                      "調べる観点。手続き・制度・施設・日程など、答えに必要な要素 1 つ",
+                  },
+                  query: {
+                    type: "string",
+                    description:
+                      "その観点を村の資料から探す検索語。資料に出てきそうな制度名・施設名・手続き名で書く",
+                  },
+                },
+              },
             },
           },
         },
