@@ -24,7 +24,7 @@
     "@sentry/react": "^11.10.0",
     "@tanstack/react-query": "^5.105.0",
     "@twilio/voice-sdk": "^2.18.5",
-    "ai": "^7.0.127",
+    "ai": "^7.0.159",
     "astro": "^7.4.4",
     "d3-force": "^3.0.0",
     "openapi-fetch": "^0.17.0",
