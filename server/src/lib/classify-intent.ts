@@ -1,13 +1,10 @@
+import type { ChoiceQuestion } from "@mastra/core/classifier";
 import type { RequestContext } from "@mastra/core/request-context";
 import { z } from "zod";
 import type { Intent } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { intentRouterAgent } from "~/mastra/agents/intent-router-agent";
-import {
-  type ChoiceQuestion,
-  createDecider,
-  type Decider,
-} from "~/services/decision/decider";
+import { createDecider, type Decider } from "~/services/decision/decider";
 
 const THINKING_THRESHOLD = 0.3;
 
@@ -47,12 +44,8 @@ const classifyWithDecider = async (
   const { intent } = await decider.decide(buildState(input), {
     intent: intentQuestion,
   });
-  return {
-    intent:
-      intent.probabilities.thinking >= THINKING_THRESHOLD
-        ? "thinking"
-        : "casual",
-  };
+  const pThinking = intent.probabilities?.thinking ?? 1;
+  return { intent: pThinking >= THINKING_THRESHOLD ? "thinking" : "casual" };
 };
 
 const classifyWithAgent = async (

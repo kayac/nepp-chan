@@ -1,9 +1,13 @@
 import { RequestContext } from "@mastra/core/request-context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  booleanAnswer,
+  decision,
+  doDecideMock,
+} from "~/__tests__/helpers/jev-provider";
 
-const { generateMock, askJevMock } = vi.hoisted(() => ({
+const { generateMock } = vi.hoisted(() => ({
   generateMock: vi.fn(),
-  askJevMock: vi.fn(),
 }));
 
 vi.mock("@mastra/core/agent", () => ({
@@ -12,10 +16,10 @@ vi.mock("@mastra/core/agent", () => ({
   },
 }));
 
-vi.mock("~/lib/jev", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("~/lib/jev")>()),
-  askJev: askJevMock,
-}));
+vi.mock(
+  "@ai-sdk/typesafe-ai",
+  () => import("~/__tests__/helpers/jev-provider"),
+);
 
 vi.mock("~/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
@@ -29,22 +33,21 @@ const contextWithKey = (key?: string) => {
   return ctx;
 };
 
-const jevResponse = (nouls: number[]) => ({
-  model: "jev-1.13.0",
-  answers: Object.fromEntries(
-    nouls.map((noul, i) => [`p${i}`, { type: "noul" as const, noul }]),
-  ),
-  usage: { input_tokens: 7400, output_tokens: 0 },
-});
+const jevResponse = (probabilities: number[]) =>
+  decision(
+    Object.fromEntries(
+      probabilities.map((p, i) => [`p${i}`, booleanAnswer(p)]),
+    ),
+  );
 
 beforeEach(() => {
   generateMock.mockReset();
-  askJevMock.mockReset();
+  doDecideMock.mockReset();
 });
 
 describe("scoreRelevance（jev）", () => {
   it("候補を 1 回の jev 呼び出しでまとめて採点し、候補の順に関連度を返す", async () => {
-    askJevMock.mockResolvedValueOnce(jevResponse([0.82, 0.1, 0.5]));
+    doDecideMock.mockResolvedValueOnce(jevResponse([0.82, 0.1, 0.5]));
 
     const scores = await scoreRelevance(
       "寮費は？",
@@ -53,13 +56,13 @@ describe("scoreRelevance（jev）", () => {
     );
 
     expect(scores).toEqual([0.82, 0.1, 0.5]);
-    expect(askJevMock).toHaveBeenCalledTimes(1);
+    expect(doDecideMock).toHaveBeenCalledTimes(1);
     expect(generateMock).not.toHaveBeenCalled();
   });
 
   it("候補が無ければ jev を呼ばない", async () => {
     expect(await scoreRelevance("q", [], contextWithKey("k"))).toEqual([]);
-    expect(askJevMock).not.toHaveBeenCalled();
+    expect(doDecideMock).not.toHaveBeenCalled();
   });
 });
 
@@ -72,11 +75,11 @@ describe("scoreRelevance（luna フォールバック）", () => {
     expect(await scoreRelevance("q", ["a", "b"], contextWithKey())).toEqual([
       0.7, 0.2,
     ]);
-    expect(askJevMock).not.toHaveBeenCalled();
+    expect(doDecideMock).not.toHaveBeenCalled();
   });
 
   it("jev が失敗したら、候補ごとに luna で採点する", async () => {
-    askJevMock.mockRejectedValueOnce(new Error("jev responded 429"));
+    doDecideMock.mockRejectedValueOnce(new Error("jev responded 429"));
     generateMock.mockResolvedValue({ text: "0.6" });
     const ctx = contextWithKey("k");
 
@@ -90,7 +93,7 @@ describe("scoreRelevance（luna フォールバック）", () => {
   });
 
   it("jev の答えが候補の一部しか無ければ、候補ごとに luna で採点する", async () => {
-    askJevMock.mockResolvedValueOnce(jevResponse([0.9]));
+    doDecideMock.mockResolvedValueOnce(jevResponse([0.9]));
     generateMock.mockResolvedValue({ text: "0.3" });
 
     expect(await scoreRelevance("q", ["a", "b"], contextWithKey("k"))).toEqual([

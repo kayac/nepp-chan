@@ -1,24 +1,21 @@
 import { Agent } from "@mastra/core/agent";
+import type { BooleanQuestion } from "@mastra/core/classifier";
 import { createSimilarityPrompt } from "@mastra/core/relevance";
 import type { RequestContext } from "@mastra/core/request-context";
 import { modelWithReasoning } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { withUsageRecording } from "~/services/analytics/llm-usage";
-import {
-  createDecider,
-  type Decider,
-  type YesNoQuestion,
-} from "~/services/decision/decider";
+import { createDecider, type Decider } from "~/services/decision/decider";
 
-const rerankQuestion: YesNoQuestion = {
-  type: "yesno",
+const rerankQuestion = {
+  type: "boolean",
   instructions: "この文章に、ユーザーの検索語に答える情報が含まれているか。",
   criteria: {
     true: "検索語に直接答える事実、または答えの主要な部分が書かれている。",
     false:
       "話題が違う、または検索語と言葉や大まかな話題が重なるだけで答えになっていない。",
   },
-};
+} as const satisfies BooleanQuestion;
 
 // 本家 MastraAgentRelevanceScorer は requestContext を generate に渡せず usage を記録できないため自前実装。instructions は本家と同一
 // 呼び出しごとに new すると ephemeral Mastra が増殖するのでモジュールスコープで保持する
@@ -71,7 +68,7 @@ const scoreWithDecider = async (
       ]),
     ),
   );
-  return ids.map((id) => answers[id].p);
+  return ids.map((id) => answers[id].probability);
 };
 
 export const scoreRelevance = async (
