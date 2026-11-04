@@ -101,7 +101,7 @@ const createAgent = (
         },
       },
       tts: { voiceId, modelId: "eleven_flash_v2_5" },
-      turn: { turnEagerness: "normal", turnTimeout: 20 },
+      turn: { turnEagerness: "eager", turnTimeout: 20 },
     },
     platformSettings: {
       overrides: {
