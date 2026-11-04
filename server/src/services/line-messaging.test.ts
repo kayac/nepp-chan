@@ -32,7 +32,11 @@ vi.mock("~/services/poll-thread-injector", () => ({
 }));
 
 vi.mock("~/lib/classify-intent", () => ({
-  classifyIntent: vi.fn(async () => "casual"),
+  classifyTurn: vi.fn(async () => ({ intent: "casual" })),
+}));
+
+vi.mock("~/lib/thread-history", () => ({
+  latestAssistantText: vi.fn(async () => "直前の返答"),
 }));
 
 vi.mock("~/lib/llm-models", async (importOriginal) => ({
@@ -63,7 +67,7 @@ vi.mock("~/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const { classifyIntent } = await import("~/lib/classify-intent");
+const { classifyTurn } = await import("~/lib/classify-intent");
 const { resolveModelTier } = await import("~/lib/llm-models");
 const { recordLlmUsage } = await import("~/services/analytics/llm-usage");
 const { injectBroadcastsToThread } = await import(
@@ -145,7 +149,7 @@ describe("generateReply", () => {
   beforeEach(() => {
     vi.mocked(injectBroadcastsToThread).mockReset().mockResolvedValue();
     vi.mocked(injectPollsToThread).mockReset().mockResolvedValue();
-    vi.mocked(classifyIntent).mockReset().mockResolvedValue("casual");
+    vi.mocked(classifyTurn).mockReset().mockResolvedValue({ intent: "casual" });
     vi.mocked(resolveModelTier)
       .mockReset()
       .mockReturnValue({
@@ -168,7 +172,7 @@ describe("generateReply", () => {
     expect(injectPollsToThread).toHaveBeenCalled();
   });
 
-  it("空文字 userMessage の場合は intent=casual のまま (classifyIntent をスキップ)", async () => {
+  it("空文字 userMessage の場合は intent=casual のまま (classifyTurn をスキップ)", async () => {
     agentHolder.generate.mockResolvedValueOnce({
       steps: [{ text: "ok" }],
       text: "",
@@ -176,9 +180,23 @@ describe("generateReply", () => {
 
     await generateReply({ ...baseParams, userMessage: "" });
 
-    expect(classifyIntent).not.toHaveBeenCalled();
+    expect(classifyTurn).not.toHaveBeenCalled();
     expect(resolveModelTier).toHaveBeenCalledWith(
       expect.objectContaining({ intent: "casual" }),
+    );
+  });
+
+  it("classifyTurn にユーザー発話と直前の assistant 発話を渡す", async () => {
+    agentHolder.generate.mockResolvedValueOnce({
+      steps: [{ text: "x" }],
+      text: "x",
+    });
+
+    await generateReply(baseParams);
+
+    expect(classifyTurn).toHaveBeenCalledWith(
+      { text: baseParams.userMessage, previousAssistant: "直前の返答" },
+      expect.anything(),
     );
   });
 
@@ -243,7 +261,7 @@ describe("generateReply", () => {
   });
 
   it("intent 結果は resolveModelTier に流される", async () => {
-    vi.mocked(classifyIntent).mockResolvedValueOnce("thinking");
+    vi.mocked(classifyTurn).mockResolvedValueOnce({ intent: "thinking" });
     agentHolder.generate.mockResolvedValueOnce({
       steps: [{ text: "x" }],
       text: "x",

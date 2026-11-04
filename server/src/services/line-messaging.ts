@@ -1,11 +1,12 @@
 import { messagingApi } from "@line/bot-sdk";
 import { Mastra } from "@mastra/core/mastra";
-import { classifyIntent } from "~/lib/classify-intent";
+import { classifyTurn } from "~/lib/classify-intent";
 import { primaryModelId, resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { splitMessagesForLine } from "~/lib/split-message";
 import { getStorage } from "~/lib/storage";
 import { stripMarkdown } from "~/lib/strip-markdown";
+import { latestAssistantText } from "~/lib/thread-history";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { newTurnId, recordLlmUsage } from "~/services/analytics/llm-usage";
@@ -24,7 +25,13 @@ export const generateReply = async (params: {
   threadId: string;
   env: CloudflareBindings;
 }) => {
-  const storage = await getStorage(params.env.DB);
+  const storagePromise = getStorage(params.env.DB);
+  const [storage, previousAssistant] = await Promise.all([
+    storagePromise,
+    params.userMessage
+      ? storagePromise.then((s) => latestAssistantText(s, params.threadId))
+      : undefined,
+  ]);
   const turnId = newTurnId();
   const startedAt = Date.now();
 
@@ -49,10 +56,13 @@ export const generateReply = async (params: {
       }),
     );
 
-  const [intent] = await Promise.all([
+  const [{ intent }] = await Promise.all([
     params.userMessage
-      ? classifyIntent(params.userMessage, requestContext)
-      : ("casual" as const),
+      ? classifyTurn(
+          { text: params.userMessage, previousAssistant },
+          requestContext,
+        )
+      : { intent: "casual" as const },
     injectBroadcastsToThread({
       d1: params.env.DB,
       storage,

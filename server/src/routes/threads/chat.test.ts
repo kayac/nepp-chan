@@ -4,13 +4,13 @@ import { primaryModelId, resolveModelTier } from "~/lib/llm-models";
 
 const {
   mockHandleChatStream,
-  mockClassifyIntent,
+  mockClassifyTurn,
   mockGetThreadById,
   mockRecordLlmUsage,
   mockFindWidgetSiteByHost,
 } = vi.hoisted(() => ({
   mockHandleChatStream: vi.fn(),
-  mockClassifyIntent: vi.fn(),
+  mockClassifyTurn: vi.fn(),
   mockGetThreadById: vi.fn(),
   mockRecordLlmUsage: vi.fn(),
   mockFindWidgetSiteByHost: vi.fn(),
@@ -36,11 +36,19 @@ vi.mock("ai", () => ({
 }));
 
 vi.mock("~/lib/classify-intent", () => ({
-  classifyIntent: mockClassifyIntent,
+  classifyTurn: mockClassifyTurn,
 }));
 
 vi.mock("~/lib/storage", () => ({
   getStorage: vi.fn().mockResolvedValue({}),
+}));
+
+const { mockLatestAssistantText } = vi.hoisted(() => ({
+  mockLatestAssistantText: vi.fn(async () => "直前の返答"),
+}));
+
+vi.mock("~/lib/thread-history", () => ({
+  latestAssistantText: mockLatestAssistantText,
 }));
 
 const { mockCreateNeppChanAgent } = vi.hoisted(() => ({
@@ -149,7 +157,7 @@ describe("chatRoutes: POST /:threadId/chat", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockHandleChatStream.mockResolvedValue(buildStubStream());
-    mockClassifyIntent.mockResolvedValue("casual");
+    mockClassifyTurn.mockResolvedValue({ intent: "casual" });
     mockFindWidgetSiteByHost.mockResolvedValue(null);
   });
 
@@ -196,7 +204,7 @@ describe("chatRoutes: POST /:threadId/chat", () => {
     expect(res.headers.get("content-type")).toMatch(/event-stream/);
   });
 
-  it("intent 指定があれば classifyIntent を呼ばない", async () => {
+  it("intent 指定があれば classifyTurn と履歴取得を呼ばない", async () => {
     useAnonAuth();
     mockGetThreadById.mockResolvedValue(ownThread);
 
@@ -206,10 +214,11 @@ describe("chatRoutes: POST /:threadId/chat", () => {
       mockEnv,
     );
 
-    expect(mockClassifyIntent).not.toHaveBeenCalled();
+    expect(mockClassifyTurn).not.toHaveBeenCalled();
+    expect(mockLatestAssistantText).not.toHaveBeenCalled();
   });
 
-  it("intent 未指定は classifyIntent を呼ぶ", async () => {
+  it("intent 未指定は直前の assistant 発話を添えて classifyTurn を呼ぶ", async () => {
     useAnonAuth();
     mockGetThreadById.mockResolvedValue(ownThread);
 
@@ -219,13 +228,13 @@ describe("chatRoutes: POST /:threadId/chat", () => {
       mockEnv,
     );
 
-    expect(mockClassifyIntent).toHaveBeenCalledWith(
-      "こんにちは",
+    expect(mockClassifyTurn).toHaveBeenCalledWith(
+      { text: "こんにちは", previousAssistant: "直前の返答" },
       expect.anything(),
     );
   });
 
-  it("text パートが無いメッセージは空文字で classifyIntent を呼ぶ", async () => {
+  it("text パートが無いメッセージは空文字で classifyTurn を呼ぶ", async () => {
     useAnonAuth();
     mockGetThreadById.mockResolvedValue(ownThread);
 
@@ -237,7 +246,10 @@ describe("chatRoutes: POST /:threadId/chat", () => {
       mockEnv,
     );
 
-    expect(mockClassifyIntent).toHaveBeenCalledWith("", expect.anything());
+    expect(mockClassifyTurn).toHaveBeenCalledWith(
+      { text: "", previousAssistant: "直前の返答" },
+      expect.anything(),
+    );
   });
 
   it("ストリーム完了時に usage を platform=web で記録する", async () => {
