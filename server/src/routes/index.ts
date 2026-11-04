@@ -13,6 +13,7 @@ export {
 } from "./admin";
 export { authRoutes } from "./auth";
 export { broadcastMediaRoutes } from "./broadcast-media";
+export { elevenlabsVoiceRoutes } from "./elevenlabs/voice";
 export { feedbackRoutes } from "./feedback";
 export { healthRoutes } from "./health";
 export { lineRoutes } from "./line";

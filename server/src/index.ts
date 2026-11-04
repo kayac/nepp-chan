@@ -15,6 +15,7 @@ import {
   authRoutes,
   broadcastAdminRoutes,
   broadcastMediaRoutes,
+  elevenlabsVoiceRoutes,
   emergencyAdminRoutes,
   feedbackAdminRoutes,
   feedbackRoutes,
@@ -62,6 +63,7 @@ app.route("/polls", pollRoutes);
 app.route("/auth", authRoutes);
 app.route("/line", lineRoutes);
 app.route("/twilio/voice", twilioVoiceRoutes);
+app.route("/elevenlabs/voice", elevenlabsVoiceRoutes);
 
 app.doc("/doc", {
   openapi: "3.1.0",

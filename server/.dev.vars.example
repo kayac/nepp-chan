@@ -29,3 +29,11 @@ TWILIO_AUTH_TOKEN=your-twilio-auth-token
 
 # relay WS 入場用の短命トークン署名鍵（HMAC-SHA256）
 CALL_TOKEN_SECRET=local-dev-call-token-secret-change-me
+
+# ElevenLabs Agents（通話・ブラウザ会話）
+ELEVENLABS_API_KEY=your-elevenlabs-api-key
+ELEVENLABS_AGENT_ID=agent_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# research ツール呼び出しの共有秘密
+ELEVENLABS_TOOL_SECRET=local-dev-elevenlabs-tool-secret-change-me
+# post-call webhook 作成時に発行される署名 secret
+ELEVENLABS_WEBHOOK_SECRET=wsec_xxxxxxxx
