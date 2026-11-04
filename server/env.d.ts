@@ -12,4 +12,5 @@ interface CloudflareBindings {
   TWILIO_API_KEY_SECRET: string;
   TWILIO_TWIML_APP_SID: string;
   CALL_TOKEN_SECRET: string;
+  TYPESAFE_API_KEY: string;
 }
