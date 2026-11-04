@@ -1,6 +1,5 @@
 import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
-import { ToolCallFilter } from "@mastra/core/processors";
 import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { getCurrentDateInfo } from "~/lib/date";
 import {
@@ -179,10 +178,7 @@ const getAgents = (platform: Platform, isAdmin: boolean) => {
   return { ...research, ...adminOnlyAgents };
 };
 
-const researchProcessors = [
-  new ToolCallFilter({ exclude: [researchToolName] }),
-  researchOncePerTurn(researchToolName),
-];
+const researchProcessors = [researchOncePerTurn(researchToolName)];
 
 const researchTools = {
   [researchToolName]: researchTool,
