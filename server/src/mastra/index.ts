@@ -13,10 +13,12 @@ import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
 import { feedbackAgent } from "~/mastra/agents/feedback-agent";
 import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
+import { knowledgeMemoAgent } from "~/mastra/agents/knowledge-memo-agent";
 import { neppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { personaAgent } from "~/mastra/agents/persona-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
+import { researchWorkflow } from "~/mastra/workflows/research-workflow";
 
 let cloudflareEnv: CloudflareBindings | null = null;
 
@@ -36,13 +38,14 @@ const getCloudflareEnv = async () => {
 };
 
 export const mastra = new Mastra({
-  workflows: {},
+  workflows: { researchWorkflow },
   agents: {
     converterAgent,
     emergencyAgent,
     emergencyReporterAgent,
     feedbackAgent,
     knowledgeAgent,
+    knowledgeMemoAgent,
     neppChanAgent,
     personaAgent,
     personaAnalystAgent,

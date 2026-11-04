@@ -1,7 +1,8 @@
-import { Agent } from "@mastra/core/agent";
+import type { ToolsInput } from "@mastra/core/agent";
 import { createTool } from "@mastra/core/tools";
 import { LibSQLStore } from "@mastra/libsql";
 import { Memory } from "@mastra/memory";
+import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { simulateReadableStream } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { z } from "zod";
@@ -10,13 +11,15 @@ import {
   resolveModelTier,
   voiceModelConfig,
 } from "~/lib/llm-models";
-import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import {
   createNeppChanAgent,
   neppChanMemoryOptions,
 } from "~/mastra/agents/nepp-chan-agent";
-import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
+import { displayChartTool } from "~/mastra/tools/display-chart-tool";
+import { displayTableTool } from "~/mastra/tools/display-table-tool";
+import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
 import { endCallTool, endCallToolName } from "~/mastra/tools/end-call-tool";
+import { researchTool, researchToolName } from "~/mastra/tools/research-tool";
 import { voiceAnswerToolName } from "~/mastra/tools/voice-answer-tool";
 import { fixtures } from "./fixtures";
 import type { PersonaCase } from "./schema";
@@ -51,13 +54,13 @@ const fixedTextModel = (text: string) =>
     }),
   });
 
-const fixtureAgent = (source: Agent, text: string) =>
-  new Agent({
-    id: source.id,
-    name: source.name,
-    description: source.getDescription(),
-    instructions: "与えられた調査メモをそのまま返す。",
-    model: fixedTextModel(text),
+const fixtureResearchTool = (text: string) =>
+  createTool({
+    id: researchTool.id,
+    description: researchTool.description,
+    inputSchema: researchTool.inputSchema,
+    outputSchema: researchTool.outputSchema,
+    execute: async () => ({ memo: text, failed: false }),
   });
 
 const fixtureVoiceTool = (text: string) =>
@@ -78,21 +81,20 @@ export const createEvalTarget = (c: PersonaCase) => {
   const intent = c.intent ?? "thinking";
   const platform = c.platform;
 
-  const knowledge = fixtureAgent(knowledgeAgent, memo);
-  const web = fixtureAgent(webResearcherAgent, memo);
-
-  const agents: Record<string, Agent> =
-    platform === "voice"
-      ? {}
-      : { knowledgeAgent: knowledge, webResearcherAgent: web };
-
-  const tools =
+  const tools: ToolsInput =
     platform === "voice"
       ? {
           [voiceAnswerToolName]: fixtureVoiceTool(memo),
           [endCallToolName]: endCallTool,
         }
-      : undefined;
+      : platform === "web"
+        ? {
+            [researchToolName]: fixtureResearchTool(memo),
+            [DISPLAY_TOOL_NAMES.chart]: displayChartTool,
+            [DISPLAY_TOOL_NAMES.table]: displayTableTool,
+            [DISPLAY_TOOL_NAMES.timeline]: displayTimelineTool,
+          }
+        : { [researchToolName]: fixtureResearchTool(memo) };
 
   const modelConfig =
     platform === "voice"
@@ -115,8 +117,7 @@ export const createEvalTarget = (c: PersonaCase) => {
       modelConfig,
       siteInstructions: c.site?.instructions,
       currentPageUrl: c.site?.currentPageUrl,
-      agents,
-      ...(tools && { tools }),
+      tools,
       memory,
     }),
     memory,
