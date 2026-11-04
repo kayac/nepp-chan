@@ -15,6 +15,11 @@ const researchSection = `
 - 店名・メニュー・天気・日程など事実は research の結果に無いものを口にしない。知らなければ調べるか、分からないと言う
 `;
 
+const currentTimeSection = `
+## 現在の日時
+今日は {{system__time_date}}、今は日本時間の {{system__time_hour}}時{{system__time_minute}}分。
+`;
+
 const voiceCallSection = `
 ## 音声通話の制約
 
@@ -44,5 +49,6 @@ export const buildElevenLabsPrompt = () =>
     factsSection,
     researchSection,
     ambiguitySection,
+    currentTimeSection,
     voiceCallSection,
   ].join("\n");

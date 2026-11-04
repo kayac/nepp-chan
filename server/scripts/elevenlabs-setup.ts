@@ -89,6 +89,7 @@ const createAgent = (
         language: "ja",
         prompt: {
           prompt: buildElevenLabsPrompt(),
+          timezone: "Asia/Tokyo",
           toolIds: [toolId],
           builtInTools: {
             endCall: {

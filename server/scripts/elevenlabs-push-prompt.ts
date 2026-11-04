@@ -12,10 +12,15 @@ const main = async () => {
     const prompt = buildElevenLabsPrompt();
     const agent = await client.conversationalAi.agents.update(
       env.ELEVENLABS_AGENT_ID,
-      { conversationConfig: { agent: { prompt: { prompt } } } },
+      {
+        conversationConfig: {
+          agent: { prompt: { prompt, timezone: "Asia/Tokyo" } },
+        },
+      },
     );
+    const applied = agent.conversationConfig.agent?.prompt;
     console.log(
-      `agent_id=${agent.agentId} prompt_chars=${agent.conversationConfig.agent?.prompt?.prompt?.length ?? 0}`,
+      `agent_id=${agent.agentId} prompt_chars=${applied?.prompt?.length ?? 0} timezone=${applied?.timezone}`,
     );
   } finally {
     await dispose();
