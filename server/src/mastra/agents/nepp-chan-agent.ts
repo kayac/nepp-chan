@@ -14,6 +14,7 @@ import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
+import { answerOnLastStep } from "~/mastra/processors/answer-on-last-step";
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
@@ -320,6 +321,7 @@ ${currentPageUrl}
     ...modelConfig,
     agents,
     tools,
+    inputProcessors: [answerOnLastStep(modelConfig.defaultOptions.maxSteps)],
     ...(withMemory && {
       memory: ({ requestContext }) =>
         getMemoryFromContext(requestContext, neppChanMemoryOptions(intent)),

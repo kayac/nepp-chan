@@ -210,14 +210,16 @@ describe("generateReply", () => {
     expect(result).toEqual(["fallback"]);
   });
 
-  it("step text もフォールバック text も無ければ空配列", async () => {
+  it("step text もフォールバック text も無ければ定型の一言を返す", async () => {
     agentHolder.generate.mockResolvedValueOnce({
       steps: [],
       text: "",
     });
 
     const result = await generateReply(baseParams);
-    expect(result).toEqual([]);
+    expect(result).toEqual([
+      "ごめんね、うまく答えられなかったみたい。もう一度聞いてもらえる？",
+    ]);
   });
 
   it("agent.generate 後に usage を platform=line で記録する", async () => {

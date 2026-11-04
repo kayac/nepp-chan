@@ -8,7 +8,10 @@ import { pollGetToolName } from "~/mastra/tools/poll-get-tool";
 import { voiceAnswerToolName } from "~/mastra/tools/voice-answer-tool";
 import { createNeppChanAgent, neppChanMemoryOptions } from "./nepp-chan-agent";
 
-const modelConfig = { model: "dummy-model" } as unknown as AgentModelConfig;
+const modelConfig = {
+  model: "dummy-model",
+  defaultOptions: { maxSteps: 5 },
+} as unknown as AgentModelConfig;
 
 const build = (over: Partial<Parameters<typeof createNeppChanAgent>[0]> = {}) =>
   createNeppChanAgent({ modelConfig, withMemory: false, ...over });

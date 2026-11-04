@@ -16,6 +16,9 @@ import { injectPollsToThread } from "~/services/poll-thread-injector";
 export const createLineClient = (token: string) =>
   new messagingApi.MessagingApiClient({ channelAccessToken: token });
 
+const EMPTY_REPLY =
+  "ごめんね、うまく答えられなかったみたい。もう一度聞いてもらえる？";
+
 export const generateReply = async (params: {
   client: messagingApi.MessagingApiClient;
   userMessage: string;
@@ -120,14 +123,16 @@ export const generateReply = async (params: {
   const stepTexts = (response.steps ?? []).map((step) => step.text);
   const texts = splitMessagesForLine(stepTexts);
 
-  if (texts.length === 0 && response.text) {
-    logger.warn(`[LINE] step texts empty, using fallback`, {
-      threadId: params.threadId,
-    });
+  if (texts.length > 0) return texts.map(stripMarkdown);
+
+  logger.warn(`[LINE] step texts empty, using fallback`, {
+    threadId: params.threadId,
+    hasResponseText: Boolean(response.text),
+  });
+  if (response.text) {
     return splitMessagesForLine([response.text]).map(stripMarkdown);
   }
-
-  return texts.map(stripMarkdown);
+  return [EMPTY_REPLY];
 };
 
 export const sendLineMessages = async (params: {
