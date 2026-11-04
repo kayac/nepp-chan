@@ -55,7 +55,7 @@
   "devDependencies": {
     "@elevenlabs/elevenlabs-js": "^2.75.0",
     "@libsql/client": "^0.18.0",
-    "@types/node": "^26.6.4",
+    "@types/node": "^26.6.6",
     "@vitest/coverage-istanbul": "~5.0.3",
     "drizzle-kit": "^0.31.11",
     "mastra": "1.32.1",
