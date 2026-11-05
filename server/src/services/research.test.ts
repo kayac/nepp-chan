@@ -1,19 +1,14 @@
 import { RequestContext } from "@mastra/core/request-context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const {
-  webGenerate,
-  decideMock,
-  createDeciderMock,
-  searchMock,
-  findBroadcastsMock,
-} = vi.hoisted(() => ({
-  webGenerate: vi.fn(),
-  decideMock: vi.fn(),
-  createDeciderMock: vi.fn(),
-  searchMock: vi.fn(),
-  findBroadcastsMock: vi.fn(),
-}));
+const { webGenerate, decideMock, searchMock, findBroadcastsMock } = vi.hoisted(
+  () => ({
+    webGenerate: vi.fn(),
+    decideMock: vi.fn(),
+    searchMock: vi.fn(),
+    findBroadcastsMock: vi.fn(),
+  }),
+);
 
 vi.mock("~/repository/broadcast-repository", () => ({
   broadcastRepository: { findByKeyword: findBroadcastsMock },
@@ -24,7 +19,7 @@ vi.mock("~/services/knowledge/search", () => ({
 }));
 
 vi.mock("~/services/decision/decider", () => ({
-  createDecider: createDeciderMock,
+  decide: decideMock,
 }));
 
 vi.mock("~/mastra/agents/web-researcher-agent", () => ({
@@ -35,7 +30,7 @@ vi.mock("~/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const { runResearch } = await import("./research-workflow");
+const { research } = await import("./research");
 
 const requestContext = () => {
   const ctx = new RequestContext();
@@ -53,15 +48,15 @@ type AspectSpec = {
   web?: boolean;
 };
 
-const research = (
+const run = (
   question: string,
   aspects: AspectSpec[],
   chunksPerAspect?: number,
 ) =>
-  runResearch({
-    input: { question, aspects, chunksPerAspect },
-    requestContext: requestContext(),
-  });
+  research(
+    { question, aspects },
+    { requestContext: requestContext(), chunksPerAspect },
+  );
 
 const routes = (...villageProbabilities: number[]) =>
   Object.fromEntries(
@@ -91,19 +86,18 @@ const searchedQueries = () => searchMock.mock.calls.map((c) => c[0]);
 
 beforeEach(() => {
   webGenerate.mockReset().mockResolvedValue({ text: "" });
-  decideMock.mockReset();
-  createDeciderMock.mockReset().mockReturnValue({ decide: decideMock });
+  decideMock.mockReset().mockResolvedValue(undefined);
   searchMock.mockReset().mockResolvedValue({ results: [] });
   findBroadcastsMock.mockReset().mockResolvedValue([]);
 });
 
-describe("runResearch", () => {
+describe("research", () => {
   it("観点ごとに村の資料を引き、観点から番号で参照する資料として返す", async () => {
     searchMock
       .mockResolvedValueOnce(hit("祝い金は10万円"))
       .mockResolvedValueOnce(hit("保育料は無料"));
 
-    const { materials } = await research("子どもが生まれた。支援は？", [
+    const materials = await run("子どもが生まれた。支援は？", [
       { topic: "出産祝い金", queries: ["出産祝い金"], web: false },
       { topic: "保育料", queries: ["保育料 助成"], web: false },
     ]);
@@ -125,7 +119,7 @@ describe("runResearch", () => {
       .mockResolvedValueOnce(hits(["A", 0.5], ["B", 0.9], ["C", 0.7]))
       .mockResolvedValueOnce(hits(["B", 0.9], ["D", 0.8], ["E", 0.6]));
 
-    const { materials } = await research(
+    const materials = await run(
       "国保の保険料は？",
       [
         {
@@ -148,7 +142,7 @@ describe("runResearch", () => {
       .mockResolvedValueOnce(hit("共通の資料"))
       .mockResolvedValueOnce(hits(["共通の資料", 0.9], ["別の資料", 0.8]));
 
-    const { materials } = await research("q", [
+    const materials = await run("q", [
       { topic: "観点1", queries: ["a"], web: false },
       { topic: "観点2", queries: ["b"], web: false },
     ]);
@@ -159,7 +153,7 @@ describe("runResearch", () => {
   });
 
   it("資料が見つからない観点は該当なしと示す", async () => {
-    const { materials } = await research("q", [
+    const materials = await run("q", [
       { topic: "寮費", queries: ["寮費"], web: false },
     ]);
 
@@ -174,7 +168,7 @@ describe("runResearch", () => {
       .mockResolvedValueOnce({ results: [] });
     webGenerate.mockResolvedValueOnce({ text: "開催は11月9日" });
 
-    const { materials } = await research("今週のイベントと天気は？", [
+    const materials = await run("今週のイベントと天気は？", [
       { topic: "今週のイベント", queries: ["イベント"], web: true },
       { topic: "今日の天気", queries: ["天気"], web: true },
     ]);
@@ -197,35 +191,45 @@ describe("runResearch", () => {
     decideMock.mockResolvedValueOnce(routes(0.9, 0.1));
     webGenerate.mockResolvedValueOnce({ text: "晴れ" });
 
-    const { materials } = await research("q", [
+    const materials = await run("q", [
       { topic: "寮費", queries: ["寮費"] },
       { topic: "天気", queries: ["天気"] },
       { topic: "指定済み", queries: ["x"], web: false },
     ]);
 
     expect(decideMock).toHaveBeenCalledTimes(1);
-    expect(decideMock.mock.calls[0]?.[0]).toMatchObject({
+    expect(decideMock.mock.calls[0]?.[2]).toMatchObject({
       question: "q",
       aspects: [
         { id: "a0", topic: "寮費" },
         { id: "a1", topic: "天気" },
       ],
     });
-    expect(Object.keys(decideMock.mock.calls[0]?.[1])).toEqual(["a0", "a1"]);
+    expect(Object.keys(decideMock.mock.calls[0]?.[3])).toEqual(["a0", "a1"]);
     expect(webGenerate.mock.calls[0]?.[0]).toContain("調べる観点: 天気\n");
     expect(materials).toContain("## 観点: 天気（Web でも調べた）");
     expect(materials).toContain("## 観点: 寮費\n");
   });
 
-  it("jev が使えない・失敗したときは web 無しの観点を村だけで調べる", async () => {
-    createDeciderMock.mockReturnValueOnce(undefined);
-    await research("q", [{ topic: "天気", queries: ["天気"] }]);
+  it("判定を待たずに村の資料を引き始める", async () => {
+    let settle!: () => void;
+    decideMock.mockReturnValueOnce(
+      new Promise<ReturnType<typeof routes>>((resolve) => {
+        settle = () => resolve(routes(0.9));
+      }),
+    );
+    const pending = run("q", [{ topic: "寮費", queries: ["寮費"] }]);
+    await vi.waitFor(() => expect(searchMock).toHaveBeenCalled());
     expect(webGenerate).not.toHaveBeenCalled();
+    settle();
+    await pending;
+  });
 
-    decideMock.mockRejectedValueOnce(new Error("jev down"));
-    await research("q", [{ topic: "天気", queries: ["天気"] }]);
+  it("判定が得られないときは web 無しの観点を村だけで調べる", async () => {
+    decideMock.mockResolvedValueOnce(undefined);
+    await run("q", [{ topic: "天気", queries: ["天気"] }]);
     expect(webGenerate).not.toHaveBeenCalled();
-    expect(searchedQueries()).toEqual(["天気", "天気"]);
+    expect(searchedQueries()).toEqual(["天気"]);
   });
 
   it("配信は全観点の検索語をまとめて 1 回だけ引き、新しい順の節として返す", async () => {
@@ -233,7 +237,7 @@ describe("runResearch", () => {
       { title: "除雪のお知らせ", body: "明日から", sentAt: "2026-11-01" },
     ]);
 
-    const { materials } = await research("q", [
+    const materials = await run("q", [
       { topic: "除雪", queries: ["除雪", "排雪"], web: false },
       { topic: "ごみ", queries: ["ごみ"], web: false },
     ]);

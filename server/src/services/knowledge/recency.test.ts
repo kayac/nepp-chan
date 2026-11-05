@@ -13,7 +13,7 @@ describe("recencyScore", () => {
   });
 
   it("1 年前の資料は e^-1", () => {
-    expect(recencyScore("2025-09-29", "observed", now)).toBeCloseTo(
+    expect(recencyScore("2025-09-29", "exact", now)).toBeCloseTo(
       Math.exp(-1),
       2,
     );
@@ -22,6 +22,10 @@ describe("recencyScore", () => {
   it("evergreen は日付に関わらず 1", () => {
     expect(recencyScore("2001-01-01", "evergreen", now)).toBe(1);
     expect(recencyScore(undefined, "evergreen", now)).toBe(1);
+  });
+
+  it("observed は掲載を確認した日なので、新しさとは見なさず 0.5", () => {
+    expect(recencyScore("2026-09-29", "observed", now)).toBe(0.5);
   });
 
   it("date が無い、または日付として不正なら 0.5", () => {

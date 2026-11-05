@@ -2,9 +2,8 @@ import type { ChoiceQuestion } from "@mastra/core/classifier";
 import type { RequestContext } from "@mastra/core/request-context";
 import { z } from "zod";
 import type { Intent } from "~/lib/llm-models";
-import { logger } from "~/lib/logger";
 import { intentRouterAgent } from "~/mastra/agents/intent-router-agent";
-import { createDecider, type Decider } from "~/services/decision/decider";
+import { decide } from "~/services/decision/decider";
 
 const THINKING_THRESHOLD = 0.3;
 
@@ -37,17 +36,6 @@ const buildState = (input: ClassifyTurnInput) => [
   { from: "user", text: input.text },
 ];
 
-const classifyWithDecider = async (
-  input: ClassifyTurnInput,
-  decider: Decider,
-): Promise<TurnClass> => {
-  const { intent } = await decider.decide(buildState(input), {
-    intent: intentQuestion,
-  });
-  const pThinking = intent.probabilities?.thinking ?? 1;
-  return { intent: pThinking >= THINKING_THRESHOLD ? "thinking" : "casual" };
-};
-
 const classifyWithAgent = async (
   text: string,
   requestContext?: RequestContext,
@@ -66,20 +54,14 @@ const classifyWithAgent = async (
 export const classifyTurn = async (
   input: ClassifyTurnInput,
   requestContext?: RequestContext,
-) => {
-  const decider = createDecider(requestContext, {
-    source: "intent-classify",
-    agent: "intent-router",
-  });
-  if (!decider) {
-    return classifyWithAgent(input.text, requestContext);
-  }
-  try {
-    return await classifyWithDecider(input, decider);
-  } catch (error) {
-    logger.warn("[ClassifyTurn] jev failed, falling back to agent", {
-      error: String(error),
-    });
-    return classifyWithAgent(input.text, requestContext);
-  }
+): Promise<TurnClass> => {
+  const answers = await decide(
+    requestContext,
+    { source: "intent-classify", agent: "intent-router" },
+    buildState(input),
+    { intent: intentQuestion },
+  );
+  if (!answers) return classifyWithAgent(input.text, requestContext);
+  const pThinking = answers.intent.probabilities?.thinking ?? 1;
+  return { intent: pThinking >= THINKING_THRESHOLD ? "thinking" : "casual" };
 };

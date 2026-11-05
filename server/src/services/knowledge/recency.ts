@@ -9,7 +9,7 @@ export const recencyScore = (
   now: Date,
 ) => {
   if (dateType === "evergreen") return 1;
-  if (!date) return UNKNOWN_DATE_SCORE;
+  if (dateType === "observed" || !date) return UNKNOWN_DATE_SCORE;
   const time = jstDateToUtc(date).getTime();
   if (Number.isNaN(time)) return UNKNOWN_DATE_SCORE;
   const ageDays = (now.getTime() - time) / DAY_MS;

@@ -3,9 +3,8 @@ import type { BooleanQuestion } from "@mastra/core/classifier";
 import { createSimilarityPrompt } from "@mastra/core/relevance";
 import type { RequestContext } from "@mastra/core/request-context";
 import { modelWithReasoning } from "~/lib/llm-models";
-import { logger } from "~/lib/logger";
 import { withUsageRecording } from "~/services/analytics/llm-usage";
-import { createDecider, type Decider } from "~/services/decision/decider";
+import { decide } from "~/services/decision/decider";
 
 const rerankQuestion = {
   type: "boolean",
@@ -53,10 +52,12 @@ const scoreWithLuna = async (
 const scoreWithDecider = async (
   query: string,
   texts: string[],
-  decider: Decider,
+  requestContext: RequestContext | undefined,
 ) => {
   const ids = texts.map((_, i) => `p${i}`);
-  const answers = await decider.decide(
+  const answers = await decide(
+    requestContext,
+    { source: "rerank", agent: "knowledge-reranker" },
     { query, passages: texts.map((text, i) => ({ id: ids[i], text })) },
     Object.fromEntries(
       ids.map((id) => [
@@ -68,7 +69,7 @@ const scoreWithDecider = async (
       ]),
     ),
   );
-  return ids.map((id) => answers[id].probability);
+  return answers && ids.map((id) => answers[id].probability);
 };
 
 export const scoreRelevance = async (
@@ -77,20 +78,8 @@ export const scoreRelevance = async (
   requestContext?: RequestContext,
 ) => {
   if (texts.length === 0) return [];
-  const decider = createDecider(requestContext, {
-    source: "rerank",
-    agent: "knowledge-reranker",
-  });
-  if (decider) {
-    try {
-      return await scoreWithDecider(query, texts, decider);
-    } catch (error) {
-      logger.warn("[Rerank] jev failed, falling back to agent", {
-        error: String(error),
-      });
-    }
-  }
-  return Promise.all(
-    texts.map((text) => scoreWithLuna(query, text, requestContext)),
+  return (
+    (await scoreWithDecider(query, texts, requestContext)) ??
+    Promise.all(texts.map((text) => scoreWithLuna(query, text, requestContext)))
   );
 };

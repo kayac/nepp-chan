@@ -28,7 +28,6 @@ server/src/
 ├── mastra/                  # Mastra プリミティブ
 │   ├── agents/              # AI エージェント
 │   ├── tools/               # ツール
-│   ├── workflows/           # ワークフロー
 │   ├── evals/               # オフライン eval（neppchan: らしさの code grader と LLM judge）
 │   └── mcp/                 # MCP 設定
 ├── services/                # ビジネスロジック

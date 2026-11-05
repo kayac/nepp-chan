@@ -1,11 +1,10 @@
 import type { ChoiceQuestion } from "@mastra/core/classifier";
 import type { RequestContext } from "@mastra/core/request-context";
-import { createStep, createWorkflow } from "@mastra/core/workflows";
 import { z } from "zod";
 import { logger } from "~/lib/logger";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { broadcastRepository } from "~/repository/broadcast-repository";
-import { createDecider } from "~/services/decision/decider";
+import { decide } from "~/services/decision/decider";
 import {
   type KnowledgeResult,
   searchKnowledge,
@@ -76,12 +75,6 @@ export const researchInputSchema = z.object({
 
 type ResearchInput = z.infer<typeof researchInputSchema>;
 
-const workflowInputSchema = researchInputSchema.extend({
-  chunksPerAspect: z.number().int().min(1).max(CHUNKS_PER_ASPECT).optional(),
-});
-
-const materialsSchema = z.object({ materials: z.string() });
-
 type Aspect = ResearchInput["aspects"][number];
 
 const routeUndecided = async (
@@ -91,32 +84,24 @@ const routeUndecided = async (
 ) => {
   const undecided = aspects.filter((a) => a.web === undefined);
   if (undecided.length === 0) return aspects;
-  const decider = createDecider(requestContext, {
-    source: "intent-classify",
-    agent: "research-route",
-  });
+  const ids = undecided.map((_, i) => `a${i}`);
+  const answers = await decide(
+    requestContext,
+    { source: "intent-classify", agent: "research-route" },
+    {
+      instructions: routeInstructions,
+      question,
+      aspects: undecided.map((a, i) => ({ id: ids[i], topic: a.topic })),
+    },
+    Object.fromEntries(ids.map((id) => [id, routeQuestionFor(id)])),
+  );
   const webOf = new Map<Aspect, boolean>();
-  if (decider) {
-    const ids = undecided.map((_, i) => `a${i}`);
-    try {
-      const answers = await decider.decide(
-        {
-          instructions: routeInstructions,
-          question,
-          aspects: undecided.map((a, i) => ({ id: ids[i], topic: a.topic })),
-        },
-        Object.fromEntries(ids.map((id) => [id, routeQuestionFor(id)])),
+  if (answers) {
+    for (const [i, a] of undecided.entries()) {
+      webOf.set(
+        a,
+        (answers[ids[i]].probabilities?.village ?? 1) < VILLAGE_THRESHOLD,
       );
-      for (const [i, a] of undecided.entries()) {
-        webOf.set(
-          a,
-          (answers[ids[i]].probabilities?.village ?? 1) < VILLAGE_THRESHOLD,
-        );
-      }
-    } catch (error) {
-      logger.warn("[Research] route failed, treating all as village", {
-        error: String(error),
-      });
     }
   }
   return aspects.map((a) =>
@@ -235,74 +220,53 @@ const renderMaterials = (
     .join("\n\n");
 };
 
-const searchStep = createStep({
-  id: "research-search",
-  inputSchema: workflowInputSchema,
-  outputSchema: materialsSchema,
-  execute: async ({ inputData, requestContext, abortSignal }) => {
-    const startedAt = Date.now();
-    const aspects = await routeUndecided(
-      inputData.question,
-      inputData.aspects,
-      requestContext,
-    );
-    const [chunks, broadcasts, web] = await Promise.all([
-      searchChunks(
-        aspects.map((a) => a.queries),
-        inputData.chunksPerAspect ?? CHUNKS_PER_ASPECT,
-        requestContext,
-      ),
-      searchBroadcasts(
-        aspects.flatMap((a) => a.queries),
-        requestContext,
-      ),
-      searchWeb(
-        inputData.question,
-        aspects.filter((a) => a.web).map((a) => a.topic),
-        requestContext,
-        abortSignal,
-      ),
-    ]);
-    const materials = renderMaterials(
-      aspects.map((a, i) => ({ ...a, web: a.web === true, chunks: chunks[i] })),
-      broadcasts,
-      web,
-    );
-    logger.info("[Research] searched", {
-      aspects: aspects.length,
-      web: aspects.filter((a) => a.web).length,
-      chunks: chunks.flat().length,
-      ms: Date.now() - startedAt,
-      chars: materials.length,
-    });
-    return { materials };
-  },
-});
-
-export const researchWorkflow = createWorkflow({
-  id: "research",
-  inputSchema: workflowInputSchema,
-  outputSchema: materialsSchema,
-  options: { shouldPersistSnapshot: () => false },
-})
-  .then(searchStep)
-  .commit();
-
-export const runResearch = async ({
-  input,
-  requestContext,
-  signal,
-}: {
-  input: z.infer<typeof workflowInputSchema>;
-  requestContext?: RequestContext;
-  signal?: AbortSignal;
-}) => {
+export const research = async (
+  input: ResearchInput,
+  {
+    requestContext,
+    signal,
+    chunksPerAspect = CHUNKS_PER_ASPECT,
+  }: {
+    requestContext?: RequestContext;
+    signal?: AbortSignal;
+    chunksPerAspect?: number;
+  } = {},
+) => {
   signal?.throwIfAborted();
-  const run = await researchWorkflow.createRun();
-  signal?.addEventListener("abort", () => void run.cancel(), { once: true });
-  const result = await run.start({ inputData: input, requestContext });
-  if (result.status !== "success") {
-    throw new Error(`research workflow ${result.status}`);
-  }
-  return result.result;
+  const startedAt = Date.now();
+  const [chunks, broadcasts, { aspects, web }] = await Promise.all([
+    searchChunks(
+      input.aspects.map((a) => a.queries),
+      chunksPerAspect,
+      requestContext,
+    ),
+    searchBroadcasts(
+      input.aspects.flatMap((a) => a.queries),
+      requestContext,
+    ),
+    routeUndecided(input.question, input.aspects, requestContext).then(
+      async (aspects) => ({
+        aspects,
+        web: await searchWeb(
+          input.question,
+          aspects.filter((a) => a.web).map((a) => a.topic),
+          requestContext,
+          signal,
+        ),
+      }),
+    ),
+  ]);
+  const materials = renderMaterials(
+    aspects.map((a, i) => ({ ...a, web: a.web === true, chunks: chunks[i] })),
+    broadcasts,
+    web,
+  );
+  logger.info("[Research] searched", {
+    aspects: aspects.length,
+    web: aspects.filter((a) => a.web).length,
+    chunks: chunks.flat().length,
+    ms: Date.now() - startedAt,
+    chars: materials.length,
+  });
+  return materials;
 };
