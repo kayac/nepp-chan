@@ -25,11 +25,13 @@
     "eval:neppchan:vitest": "vitest run --config vitest.eval.config.ts",
     "api:quota": "tsx scripts/api-quota.ts",
     "elevenlabs:setup": "tsx scripts/elevenlabs-setup.ts",
-    "elevenlabs:push-prompt": "tsx scripts/elevenlabs-push-prompt.ts"
+    "elevenlabs:push-prompt": "tsx scripts/elevenlabs-push-prompt.ts",
+    "knowledge:date-ranking": "tsx scripts/knowledge-date-ranking.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.109",
     "@ai-sdk/openai": "^4.0.106",
+    "@ai-sdk/typesafe-ai": "^3.0.33",
     "@hono/swagger-ui": "^0.6.2",
     "@hono/zod-openapi": "^1.6.3",
     "@line/bot-sdk": "^11.4.0",

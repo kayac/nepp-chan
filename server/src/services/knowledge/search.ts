@@ -1,57 +1,25 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { Agent } from "@mastra/core/agent";
-import { createSimilarityPrompt } from "@mastra/core/relevance";
 import type { RequestContext } from "@mastra/core/request-context";
-import { rerankWithScorer } from "@mastra/rag";
 import { embed } from "ai";
-import {
-  GEMINI_EMBEDDING,
-  modelWithReasoning,
-  OPENAI_LITE,
-} from "~/lib/llm-models";
+import { GEMINI_EMBEDDING } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import {
   recordUsageFromContext,
-  withUsageRecording,
+  runInBackground,
 } from "~/services/analytics/llm-usage";
+import { boostByRecency } from "./recency";
+import { scoreRelevance } from "./rerank-scorer";
 import { EMBEDDING_DIMENSIONS } from "./vector-store";
 
-const SEARCH_TOP_K = 10;
+const SEARCH_TOP_K = 50;
+
+const RERANK_CANDIDATES = 15;
 
 const RERANK_TOP_K = 5;
 
-// MastraAgentRelevanceScorer 相当の自前実装。usage 記録のために requestContext を
-// generate まで通す必要があり、本家の getRelevanceScore(query, text) では渡せない。
-// instructions は本家と同一（スコアリング挙動を変えないため）。
-// 呼び出しごとの new は Agent ごとに ephemeral Mastra を増殖させるためモジュールスコープで保持する
-const knowledgeRerankAgent = new Agent({
-  id: "relevance-scorer-knowledge-reranker",
-  name: "Relevance Scorer knowledge-reranker",
-  instructions: `You are a specialized agent for evaluating the relevance of text to queries.
-Your task is to rate how well a text passage answers a given query.
-Output only a number between 0 and 1, where:
-1.0 = Perfectly relevant, directly answers the query
-0.0 = Completely irrelevant
-Consider:
-- Direct relevance to the question
-- Completeness of information
-- Quality and specificity
-Always return just the number, no explanation.`,
-  ...withUsageRecording(
-    modelWithReasoning({ model: OPENAI_LITE, effort: "none" }),
-    { agent: "knowledge-reranker", source: "rerank" },
-  ),
-});
+const RECENCY_WEIGHT = 0.15;
 
-const createRerankScorer = (requestContext?: RequestContext) => ({
-  getRelevanceScore: async (query: string, text: string) => {
-    const response = await knowledgeRerankAgent.generate(
-      createSimilarityPrompt(query, text),
-      { requestContext },
-    );
-    return Number.parseFloat(response.text);
-  },
-});
+const RELEVANCE_WEIGHT = 0.5;
 
 export type KnowledgeResult = {
   content: string;
@@ -106,12 +74,14 @@ export const searchKnowledge = async (
         },
       },
     });
-    await recordUsageFromContext(requestContext, {
-      model: GEMINI_EMBEDDING,
-      usage: { inputTokens: usage?.tokens ?? 0 },
-      source: "embedding",
-      agent: "embedding",
-    });
+    runInBackground(
+      recordUsageFromContext(requestContext, {
+        model: GEMINI_EMBEDDING,
+        usage: { inputTokens: usage?.tokens ?? 0 },
+        source: "embedding",
+        agent: "embedding",
+      }),
+    );
 
     const results = await vectorize.query(embedding, {
       topK: SEARCH_TOP_K,
@@ -124,38 +94,40 @@ export const searchKnowledge = async (
       };
     }
 
-    const queryResults = results.matches.map((match) => {
-      const result = toKnowledgeResult(
-        match.metadata as Record<string, unknown> | undefined,
-        match.score,
-      );
-      return {
-        id: match.id,
-        score: match.score,
-        metadata: { ...result, text: result.content },
-      };
-    });
+    const now = new Date();
+    const candidates = boostByRecency(
+      results.matches.map((match) => {
+        const result = toKnowledgeResult(
+          match.metadata as Record<string, unknown> | undefined,
+          match.score,
+        );
+        return {
+          score: match.score,
+          result,
+          date: result.date,
+          dateType: result.dateType,
+        };
+      }),
+      now,
+      RECENCY_WEIGHT,
+    ).slice(0, RERANK_CANDIDATES);
 
-    const rerankedResults = await rerankWithScorer({
-      results: queryResults,
+    const relevance = await scoreRelevance(
       query,
-      scorer: createRerankScorer(requestContext),
-      options: {
-        topK: RERANK_TOP_K,
-        weights: {
-          semantic: 0.5,
-          vector: 0.3,
-          position: 0.2,
-        },
-      },
-    });
+      candidates.map((c) => c.result.content),
+      requestContext,
+    );
 
-    const knowledgeResults = rerankedResults.map((r) => {
-      const { text: _, ...result } = r.result.metadata as KnowledgeResult & {
-        text: string;
-      };
-      return { ...result, score: r.score };
-    });
+    const knowledgeResults = boostByRecency(
+      candidates.map((c, i) => ({
+        ...c.result,
+        score:
+          RELEVANCE_WEIGHT * (relevance[i] ?? 0) +
+          (1 - RELEVANCE_WEIGHT) * c.result.score,
+      })),
+      now,
+      RECENCY_WEIGHT,
+    ).slice(0, RERANK_TOP_K);
 
     logger.info("[Knowledge] search result", {
       query,

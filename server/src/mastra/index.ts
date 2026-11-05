@@ -17,6 +17,7 @@ import { neppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { personaAgent } from "~/mastra/agents/persona-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
+import { researchWorkflow } from "~/mastra/workflows/research-workflow";
 
 let cloudflareEnv: CloudflareBindings | null = null;
 
@@ -36,7 +37,7 @@ const getCloudflareEnv = async () => {
 };
 
 export const mastra = new Mastra({
-  workflows: {},
+  workflows: { researchWorkflow },
   agents: {
     converterAgent,
     emergencyAgent,

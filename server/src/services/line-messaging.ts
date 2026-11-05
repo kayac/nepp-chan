@@ -1,11 +1,12 @@
 import { messagingApi } from "@line/bot-sdk";
 import { Mastra } from "@mastra/core/mastra";
-import { classifyIntent } from "~/lib/classify-intent";
+import { classifyTurn } from "~/lib/classify-intent";
 import { primaryModelId, resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import { splitMessagesForLine } from "~/lib/split-message";
 import { getStorage } from "~/lib/storage";
 import { stripMarkdown } from "~/lib/strip-markdown";
+import { latestAssistantText } from "~/lib/thread-history";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
 import { newTurnId, recordLlmUsage } from "~/services/analytics/llm-usage";
@@ -14,6 +15,9 @@ import { injectPollsToThread } from "~/services/poll-thread-injector";
 
 export const createLineClient = (token: string) =>
   new messagingApi.MessagingApiClient({ channelAccessToken: token });
+
+const EMPTY_REPLY =
+  "ごめんね、うまく答えられなかったみたい。もう一度聞いてもらえる？";
 
 export const generateReply = async (params: {
   client: messagingApi.MessagingApiClient;
@@ -24,7 +28,13 @@ export const generateReply = async (params: {
   threadId: string;
   env: CloudflareBindings;
 }) => {
-  const storage = await getStorage(params.env.DB);
+  const storagePromise = getStorage(params.env.DB);
+  const [storage, previousAssistant] = await Promise.all([
+    storagePromise,
+    params.userMessage
+      ? storagePromise.then((s) => latestAssistantText(s, params.threadId))
+      : undefined,
+  ]);
   const turnId = newTurnId();
   const startedAt = Date.now();
 
@@ -49,10 +59,13 @@ export const generateReply = async (params: {
       }),
     );
 
-  const [intent] = await Promise.all([
+  const [{ intent }] = await Promise.all([
     params.userMessage
-      ? classifyIntent(params.userMessage, requestContext)
-      : ("casual" as const),
+      ? classifyTurn(
+          { text: params.userMessage, previousAssistant },
+          requestContext,
+        )
+      : { intent: "casual" as const },
     injectBroadcastsToThread({
       d1: params.env.DB,
       storage,
@@ -110,14 +123,16 @@ export const generateReply = async (params: {
   const stepTexts = (response.steps ?? []).map((step) => step.text);
   const texts = splitMessagesForLine(stepTexts);
 
-  if (texts.length === 0 && response.text) {
-    logger.warn(`[LINE] step texts empty, using fallback`, {
-      threadId: params.threadId,
-    });
+  if (texts.length > 0) return texts.map(stripMarkdown);
+
+  logger.warn(`[LINE] step texts empty, using fallback`, {
+    threadId: params.threadId,
+    hasResponseText: Boolean(response.text),
+  });
+  if (response.text) {
     return splitMessagesForLine([response.text]).map(stripMarkdown);
   }
-
-  return texts.map(stripMarkdown);
+  return [EMPTY_REPLY];
 };
 
 export const sendLineMessages = async (params: {

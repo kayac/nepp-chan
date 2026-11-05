@@ -2,11 +2,12 @@ import { waitUntil } from "cloudflare:workers";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { Mastra } from "@mastra/core/mastra";
 import { respondWithChatStream } from "~/lib/chat-stream";
-import { classifyIntent } from "~/lib/classify-intent";
+import { classifyTurn } from "~/lib/classify-intent";
 import { primaryModelId, resolveModelTier } from "~/lib/llm-models";
 import { logger } from "~/lib/logger";
 import type { PrincipalVariables } from "~/lib/principal";
 import { getStorage } from "~/lib/storage";
+import { latestAssistantText } from "~/lib/thread-history";
 import { normalizeSiteHost } from "~/lib/widget-site";
 import { createNeppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { createRequestContext } from "~/mastra/request-context";
@@ -89,11 +90,15 @@ chatRoutes.openapi(chatRoute, async (c) => {
   const enableAdminAgents = isAdmin && adminUser?.role !== "staff";
   const platform = thread.resourceId.startsWith("widget-") ? "widget" : "web";
   const isWidgetGreeting = platform === "widget" && isGreeting === true;
-  const [site, storage] = await Promise.all([
+  const storagePromise = getStorage(c.env.DB);
+  const [site, storage, previousAssistant] = await Promise.all([
     platform === "widget" && siteHost
       ? widgetSiteRepository.findByHost(c.env.DB, siteHost)
       : null,
-    getStorage(c.env.DB),
+    storagePromise,
+    fixedIntent
+      ? undefined
+      : storagePromise.then((s) => latestAssistantText(s, threadId)),
   ]);
   const turnId = newTurnId();
   const verifiedCurrentPageUrl =
@@ -121,7 +126,13 @@ chatRoutes.openapi(chatRoute, async (c) => {
       | undefined
   )?.text;
   const intent =
-    fixedIntent ?? (await classifyIntent(userText ?? "", requestContext));
+    fixedIntent ??
+    (
+      await classifyTurn(
+        { text: userText ?? "", previousAssistant },
+        requestContext,
+      )
+    ).intent;
   const modelConfig = resolveModelTier({ intent, platform: "web", isAdmin });
   logger.info(`[Chat] intent: ${intent}`, { threadId });
 

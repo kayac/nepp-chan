@@ -1,5 +1,6 @@
 import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
+import { ToolCallFilter } from "@mastra/core/processors";
 import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { getCurrentDateInfo } from "~/lib/date";
 import {
@@ -14,11 +15,14 @@ import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
+import { answerOnLastStep } from "~/mastra/processors/answer-on-last-step";
+import { researchLimitPerTurn } from "~/mastra/processors/research-limit-per-turn";
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
 import { endCallTool, endCallToolName } from "~/mastra/tools/end-call-tool";
 import { pollGetTool, pollGetToolName } from "~/mastra/tools/poll-get-tool";
+import { researchTool, researchToolName } from "~/mastra/tools/research-tool";
 import {
   voiceAnswerTool,
   voiceAnswerToolName,
@@ -45,6 +49,30 @@ const toneSamples = `
 - 英語でも同じ声。「I finished my first scarf!」→「Yay, congratulations!! 🧣🎉✨ A little wonkiness just gives it so much charm—it's proof of the love in every stitch! 🥰 What color did you choose?」
 - 説明の段落でも声は変わらない。✕「大きな氷は光がまっすぐ通り抜けやすいよ。だから透明に見えるんだね。」→ ○「大きな氷は光がまっすぐ通り抜けやすいよ！だから透明に見えるんだね〜🧊」
 `;
+const RESEARCH_TOOL_PLATFORMS: ReadonlySet<Platform> = new Set([
+  "web",
+  "widget",
+  "line",
+]);
+
+const usesResearchTool = (platform: Platform) =>
+  RESEARCH_TOOL_PLATFORMS.has(platform);
+
+const researchGuide = (platform: Platform) => {
+  if (platform === "voice") {
+    return `- 村の情報・最新情報・時事・天気など事実にもとづく質問 → ${voiceAnswerToolName} ツールを使う（このツールが検索と要点化をまとめて行う）`;
+  }
+  if (usesResearchTool(platform)) {
+    return `- 村の情報（最新のお知らせを含む）、天気・交通・ニュース・時事・村外の情報 → ${researchToolName} に質問と、答えに要る観点ごとの検索語を渡す。村の資料は必ず引かれる。天気・運行状況・ニュースなどの最新情報や村外の事柄、イベントや店の最新状況を補いたい観点だけ web を true にする
+- ${researchToolName} が返すのは資料そのもの。制度・手続き・ルール・施設の基本情報は村の資料を一次情報とし、日程・開催状況・最新情報は Web の結果で補う。資料に無いことは言わず、根拠の URL を添える
+- 資料に答えが無ければ、検索語を変えるか web を true にして一度だけ調べ直す（同じターンで ${RESEARCH_CALLS_PER_TURN} 回まで）
+- failed が true のときは調べられなかったことを伝え、村の公式サイトや役場への確認を案内する`;
+  }
+  return `- 村の情報（最新のお知らせを含む）→ knowledgeAgent に委譲。ナレッジ検索と配信検索でも重要項目が見つからなければ、webResearcherAgent で補う
+- 天気・交通・ニュース・時事・村外の情報 → webResearcherAgent
+- knowledgeAgent の返却内容はユーザー向け回答ではなく調査メモ。事実・URL・不確実性を根拠に、ねっぷちゃんが一度だけユーザー向け回答を組み立てる。調査メモの文面をそのまま言い換えない`;
+};
+
 const researchSection = (platform: Platform) => `
 ## 調べ方
 ${
@@ -54,13 +82,7 @@ ${
 
 `
 }### 検索・委譲の使い分け
-${
-  platform === "voice"
-    ? `- 村の情報・最新情報・時事・天気など事実にもとづく質問 → ${voiceAnswerToolName} ツールを使う（このツールが検索と要点化をまとめて行う）`
-    : `- 村の情報（最新のお知らせを含む）→ knowledgeAgent に委譲。ナレッジ検索と配信検索でも重要項目が見つからなければ、webResearcherAgent で補う
-- 天気・交通・ニュース・時事・村外の情報 → webResearcherAgent
-- knowledgeAgent の返却内容はユーザー向け回答ではなく調査メモ。事実・URL・不確実性を根拠に、ねっぷちゃんが一度だけユーザー向け回答を組み立てる。調査メモの文面をそのまま言い換えない`
-}
+${researchGuide(platform)}
 - 挨拶・相槌・自己紹介は調べずにテキストだけで返す
 `;
 
@@ -116,7 +138,7 @@ const baseInstructions = (platform: Platform) =>
     .filter(Boolean)
     .join("\n");
 
-const adminInstructions = `
+const adminInstructions = (researcher: string) => `
 ## 管理者機能
 あなたは管理者としてログインしているユーザーと会話しています。
 以下の管理者向け機能が使用可能です。
@@ -125,7 +147,7 @@ const adminInstructions = `
 - 緊急報告の取得（例: 「村の危険情報は？」「緊急報告を見せて」）→ emergencyAgent
 - フィードバック一覧と統計（例: 「最近のフィードバックは？」「利用者の満足度は？」）→ feedbackAgent
 - 村民の声・住民レポート → まず personaAnalystAgent に委譲する
-  村の状況把握や住民の声に関する質問はpersonaAnalystAgentを優先する。結果が不十分な場合はwebResearcherAgentで補完する。
+  村の状況把握や住民の声に関する質問はpersonaAnalystAgentを優先する。結果が不十分な場合は${researcher}で補完する。
   例: 「住民の声を教えて」「困ってる人はいる？」「村の調子はどう？」「最近どんな話題が多い？」「年代別の傾向は？」「交通の不満をもっと教えて」
 
 ### 投票の結果・傾向分析
@@ -140,24 +162,34 @@ const adminInstructions = `
 4. 打ち手の提案（LINE配信・投票・ナレッジ追加のうち効きそうなもの）
 `;
 
-const baseAgents = {
+const delegatedResearchAgents = {
   knowledgeAgent,
   webResearcherAgent,
 };
 
-const adminAgents = {
-  ...baseAgents,
+const adminOnlyAgents = {
   emergencyAgent,
   feedbackAgent,
   personaAnalystAgent,
 };
 
-const widgetAgents = {
-  knowledgeAgent,
-  webResearcherAgent,
+const getAgents = (platform: Platform, isAdmin: boolean) => {
+  if (platform === "voice") return {};
+  const research = usesResearchTool(platform) ? {} : delegatedResearchAgents;
+  if (platform === "widget" || !isAdmin) return research;
+  return { ...research, ...adminOnlyAgents };
 };
 
-const voiceAgents = {};
+const RESEARCH_CALLS_PER_TURN = 2;
+
+const researchProcessors = [
+  researchLimitPerTurn(researchToolName, RESEARCH_CALLS_PER_TURN),
+  new ToolCallFilter({ exclude: [researchToolName] }),
+];
+
+const researchTools = {
+  [researchToolName]: researchTool,
+};
 
 const adminTools = {
   [pollGetToolName]: pollGetTool,
@@ -176,11 +208,12 @@ const voiceTools = {
 
 const getTools = (platform: Platform, isAdmin: boolean) => {
   if (platform === "voice") return voiceTools;
-  if (platform === "line" || platform === "widget") return {};
-  return isAdmin ? { ...webTools, ...adminTools } : webTools;
+  const research = usesResearchTool(platform) ? researchTools : {};
+  if (platform === "line" || platform === "widget") return research;
+  return { ...research, ...webTools, ...(isAdmin && adminTools) };
 };
 
-const lineInstructions = `
+const lineInstructions = (researcher: string) => `
 ## LINE チャットの制約
 
 ### 検索・エージェント呼び出し
@@ -209,7 +242,7 @@ const lineInstructions = `
 ### LINE配信の記憶
 ユーザーはLINE配信メッセージを受信している。会話履歴に【LINE配信のお知らせ】として含まれている。
 - ユーザーの発言が直近の配信内容に関連していそうなら、その配信を踏まえて応答する。指示語（「これ」「さっきの」「あれ」「この前の」等）に限らず、配信で触れた話題・イベント・告知への反応や質問・感想も対象とする
-- 古い配信や会話履歴に無い配信の詳細が必要なときは knowledgeAgent に委譲する
+- 古い配信や会話履歴に無い配信の詳細が必要なときは ${researcher} で調べる
 `;
 
 const voiceInstructions = `
@@ -278,20 +311,16 @@ export const createNeppChanAgent = ({
   withMemory = true,
   ...agentOptions
 }: Props) => {
-  const agents =
-    platform === "widget"
-      ? widgetAgents
-      : platform === "voice"
-        ? voiceAgents
-        : isAdmin
-          ? adminAgents
-          : baseAgents;
+  const agents = getAgents(platform, isAdmin);
   const tools = getTools(platform, isAdmin);
+  const researcher = usesResearchTool(platform)
+    ? researchToolName
+    : "webResearcherAgent";
 
   const instructions = () =>
     [
       baseInstructions(platform),
-      platform === "line" ? lineInstructions : "",
+      platform === "line" ? lineInstructions(researcher) : "",
       platform === "voice" ? voiceInstructions : "",
       siteInstructions ? `## 設置サイトの文脈\n${siteInstructions}` : "",
       platform === "widget" && currentPageUrl
@@ -307,7 +336,7 @@ ${currentPageUrl}
 - URL だけを返さず、ユーザーが判断・行動できる要点を添える`
         : "",
       `## 現在の日時\n${getCurrentDateInfo()}`,
-      isAdmin ? adminInstructions : "",
+      isAdmin ? adminInstructions(researcher) : "",
       platform === "voice" ? "" : sendCheck,
     ]
       .filter(Boolean)
@@ -320,6 +349,10 @@ ${currentPageUrl}
     ...modelConfig,
     agents,
     tools,
+    inputProcessors: [
+      answerOnLastStep(modelConfig.defaultOptions.maxSteps),
+      ...(usesResearchTool(platform) ? researchProcessors : []),
+    ],
     ...(withMemory && {
       memory: ({ requestContext }) =>
         getMemoryFromContext(requestContext, neppChanMemoryOptions(intent)),
