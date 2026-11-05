@@ -5,6 +5,7 @@ import type { AgentModelConfig } from "~/lib/llm-models";
 import { broadcastGetToolName } from "~/mastra/tools/broadcast-get-tool";
 import { endCallToolName } from "~/mastra/tools/end-call-tool";
 import { pollGetToolName } from "~/mastra/tools/poll-get-tool";
+import { researchToolName } from "~/mastra/tools/research-tool";
 import { voiceAnswerToolName } from "~/mastra/tools/voice-answer-tool";
 import { createNeppChanAgent, neppChanMemoryOptions } from "./nepp-chan-agent";
 
@@ -27,6 +28,9 @@ const instructionsOf = async (agent: ReturnType<typeof createNeppChanAgent>) =>
 
 const toolNamesOf = (agent: ReturnType<typeof createNeppChanAgent>) =>
   Object.keys(agent.__getOverridableFields().tools as Record<string, unknown>);
+
+const agentNamesOf = async (agent: ReturnType<typeof createNeppChanAgent>) =>
+  Object.keys(await agent.listAgents());
 
 describe("createNeppChanAgent", () => {
   describe("instructions の合成", () => {
@@ -158,22 +162,32 @@ describe("createNeppChanAgent", () => {
       expect(ins).not.toContain("### 例");
     });
 
-    it("村内情報は knowledgeAgent から不足時 webResearcherAgent へ補完する", async () => {
+    it.each(["web", "widget", "line"] as const)(
+      "platform=%s は村内外を問わず researchTool に観点ごとの検索語を渡し、Web を足す観点だけ web を付ける",
+      async (platform) => {
+        const ins = await instructionsOf(build({ platform }));
+        expect(ins).toContain(
+          `${researchToolName} に質問と、答えに要る観点ごとの検索語を渡す`,
+        );
+        expect(ins).toContain("村の資料は必ず引かれる");
+        expect(ins).toContain("補いたい観点だけ web を true にする");
+        expect(ins).not.toContain("knowledgeAgent");
+        expect(ins).not.toContain("webResearcherAgent");
+      },
+    );
+
+    it("調べられなかったときは公式サイトや役場への確認を案内させる", async () => {
       const ins = await instructionsOf(build());
-      expect(ins).toContain("村の情報（最新のお知らせを含む）");
       expect(ins).toContain(
-        "ナレッジ検索と配信検索でも重要項目が見つからなければ、webResearcherAgent で補う",
+        "failed が true のときは調べられなかったことを伝え",
       );
-      expect(ins).toContain("天気・交通・ニュース・時事・村外の情報");
     });
 
-    it("knowledgeAgent の調査メモからユーザー向け回答を1度だけ作る", async () => {
+    it("researchTool の資料は村の資料を一次情報、Web を補足として読み、足りなければ 2 回まで調べ直す", async () => {
       const ins = await instructionsOf(build());
-      expect(ins).toContain("ユーザー向け回答ではなく調査メモ");
-      expect(ins).toContain(
-        "ねっぷちゃんが一度だけユーザー向け回答を組み立てる",
-      );
-      expect(ins).toContain("調査メモの文面をそのまま言い換えない");
+      expect(ins).toContain("村の資料を一次情報とし");
+      expect(ins).toContain("最新情報は Web の結果で補う");
+      expect(ins).toContain("同じターンで 2 回まで");
     });
 
     it.each(["web", "line", "widget", "voice"] as const)(
@@ -198,7 +212,9 @@ describe("createNeppChanAgent", () => {
       expect(ins).toContain(pollGetToolName);
 
       const lineIns = await instructionsOf(build({ platform: "line" }));
-      expect(lineIns).toContain("knowledgeAgent");
+      expect(lineIns).toContain(
+        `配信の詳細が必要なときは ${researchToolName} で調べる`,
+      );
       expect(lineIns).not.toContain(broadcastGetToolName);
     });
 
@@ -237,6 +253,27 @@ describe("createNeppChanAgent", () => {
       expect(names).toContain(endCallToolName);
       expect(names).not.toContain(broadcastGetToolName);
       expect(names).not.toContain(pollGetToolName);
+    });
+
+    it.each(["web", "widget", "line"] as const)(
+      "platform=%s は researchTool を公開し、ナレッジ・Web の委譲先を持たない",
+      async (platform) => {
+        const agent = build({ platform });
+        expect(toolNamesOf(agent)).toContain(researchToolName);
+        const agents = await agentNamesOf(agent);
+        expect(agents).not.toContain("knowledgeAgent");
+        expect(agents).not.toContain("webResearcherAgent");
+      },
+    );
+
+    it("管理者は researchTool に加えて分析用の委譲先を持つ", async () => {
+      const agent = build({ isAdmin: true });
+      expect(toolNamesOf(agent)).toContain(researchToolName);
+      const agents = await agentNamesOf(agent);
+      expect(agents).toEqual(
+        expect.arrayContaining(["emergencyAgent", "personaAnalystAgent"]),
+      );
+      expect(agents).not.toContain("knowledgeAgent");
     });
 
     it("投票取得ツールは管理者だけに公開する", async () => {

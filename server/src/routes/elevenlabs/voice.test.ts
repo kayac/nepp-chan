@@ -137,22 +137,32 @@ describe("POST /elevenlabs/voice/research", () => {
     );
 
   it("ツール secret が無い・違うなら 401 で調べ物を始めない", async () => {
-    const body = { question: "q", source: "knowledge" };
+    const body = { question: "q" };
     expect((await post(undefined, body)).status).toBe(401);
     expect((await post("wrong", body)).status).toBe(401);
     expect(runResearchMock).not.toHaveBeenCalled();
   });
 
-  it("question と source を渡して answer を返す", async () => {
+  it("question と aspects を渡して answer を返す", async () => {
+    runResearchMock.mockResolvedValue("8時だよ");
+    const aspects = [{ topic: "バスの時刻", queries: ["地域バス 時刻表"] }];
+    const res = await post("tool-secret", { question: "バスの時間", aspects });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ answer: "8時だよ" });
+    expect(runResearchMock).toHaveBeenCalledWith(
+      expect.objectContaining({ question: "バスの時間", aspects }),
+    );
+  });
+
+  it("旧ツール定義の source は無視して question だけで調べる", async () => {
     runResearchMock.mockResolvedValue("8時だよ");
     const res = await post("tool-secret", {
       question: "バスの時間",
       source: "knowledge",
     });
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ answer: "8時だよ" });
     expect(runResearchMock).toHaveBeenCalledWith(
-      expect.objectContaining({ question: "バスの時間", source: "knowledge" }),
+      expect.objectContaining({ question: "バスの時間", aspects: undefined }),
     );
   });
 });

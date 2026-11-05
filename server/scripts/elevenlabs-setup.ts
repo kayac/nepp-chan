@@ -16,7 +16,7 @@ import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { getPlatformProxy } from "wrangler";
 import { buildElevenLabsPrompt } from "./elevenlabs-prompt";
 
-const REALTIME_MODEL = "eleven_realtime_v1_mini";
+const REALTIME_MODEL = "eleven_realtime_v1_max";
 const DEFAULT_VOICE_ID = "8EkOjt4xTPGMclNlh1pk";
 const DEV_VARS_PATH = ".dev.vars";
 
@@ -48,18 +48,34 @@ const createResearchTool = (
         requestHeaders: { "x-nepp-tool-secret": toolSecret },
         requestBodySchema: {
           type: "object",
-          required: ["question", "source"],
+          required: ["question", "aspects"],
           properties: {
             question: {
               type: "string",
               description:
                 "ユーザーが知りたいこと。会話の流れをふまえた具体的な問い",
             },
-            source: {
-              type: "string",
-              enum: ["knowledge", "web"],
+            aspects: {
+              type: "array",
               description:
-                "音威子府村ローカルのこと（施設・観光・行政・歴史・イベント・村の店）は knowledge、天気・ニュース・時事・村外の一般的なことは web",
+                "答えに要る観点だけ。1 つで足りる質問は 1 つ、多くても 5 つ。念のための観点は足さない",
+              items: {
+                type: "object",
+                required: ["topic", "queries"],
+                properties: {
+                  topic: {
+                    type: "string",
+                    description:
+                      "調べる観点。手続き・制度・施設・日程など、答えに必要な要素 1 つ",
+                  },
+                  queries: {
+                    type: "array",
+                    description:
+                      "その観点を村の資料から探す検索語。1〜3 個。資料に出てきそうな制度名・施設名・手続き名で書く。ユーザーが略称で言ったら略称と正式名称の両方を入れる（国保 と 国民健康保険）。年度は資料どおり令和表記のまま",
+                    items: { type: "string", description: "検索語 1 つ" },
+                  },
+                },
+              },
             },
           },
         },
