@@ -1,7 +1,7 @@
 import { logger } from "~/lib/logger";
 import { createRequestContext } from "~/mastra/request-context";
-import { runResearch as runResearchWorkflow } from "~/mastra/workflows/research-workflow";
 import { newTurnId } from "~/services/analytics/llm-usage";
+import { research } from "~/services/research";
 
 const FAILED_ANSWER = "ごめんね、うまく調べられなかったみたい。";
 
@@ -23,17 +23,16 @@ export const runResearch = async ({
     usageTurnId: newTurnId(),
   });
   const start = Date.now();
-  const answer = await runResearchWorkflow({
-    input: {
+  const answer = await research(
+    {
       question,
       aspects: aspects?.length
         ? aspects
         : [{ topic: question, queries: [question] }],
-      chunksPerAspect: VOICE_CHUNKS_PER_ASPECT,
     },
-    requestContext,
-  })
-    .then(({ materials }) => materials.trim() || FAILED_ANSWER)
+    { requestContext, chunksPerAspect: VOICE_CHUNKS_PER_ASPECT },
+  )
+    .then((materials) => materials.trim() || FAILED_ANSWER)
     .catch((error) => {
       logger.error("[Voice][EL] research failed", error);
       return FAILED_ANSWER;

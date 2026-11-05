@@ -1,12 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
-const { runResearchMock } = vi.hoisted(() => ({ runResearchMock: vi.fn() }));
+const { researchMock } = vi.hoisted(() => ({ researchMock: vi.fn() }));
 
-vi.mock("~/mastra/workflows/research-workflow", async (importOriginal) => ({
-  ...(await importOriginal<
-    typeof import("~/mastra/workflows/research-workflow")
-  >()),
-  runResearch: runResearchMock,
+vi.mock("~/services/research", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("~/services/research")>()),
+  research: researchMock,
 }));
 
 vi.mock("~/lib/logger", () => ({
@@ -34,19 +32,17 @@ const execute = () =>
   )(input, undefined);
 
 describe("researchTool", () => {
-  it("質問と観点をそのままワークフローに渡し、資料を返す", async () => {
-    runResearchMock.mockResolvedValueOnce({ materials: "寮費は3万円" });
+  it("質問と観点をそのまま検索に渡し、資料を返す", async () => {
+    researchMock.mockResolvedValueOnce("寮費は3万円");
     expect(await execute()).toEqual({
       materials: "寮費は3万円",
       failed: false,
     });
-    expect(runResearchMock).toHaveBeenCalledWith(
-      expect.objectContaining({ input }),
-    );
+    expect(researchMock.mock.calls[0]?.[0]).toEqual(input);
   });
 
-  it("ワークフローが失敗したら空の資料と failed を返す", async () => {
-    runResearchMock.mockRejectedValueOnce(new Error("boom"));
+  it("検索が失敗したら空の資料と failed を返す", async () => {
+    researchMock.mockRejectedValueOnce(new Error("boom"));
     expect(await execute()).toEqual({ materials: "", failed: true });
   });
 });

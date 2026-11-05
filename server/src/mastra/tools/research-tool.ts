@@ -1,10 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { logger } from "~/lib/logger";
-import {
-  researchInputSchema,
-  runResearch,
-} from "~/mastra/workflows/research-workflow";
+import { research, researchInputSchema } from "~/services/research";
 
 export const researchToolName = "researchTool";
 
@@ -19,8 +16,7 @@ export const researchTool = createTool({
   }),
   execute: async (input, context) => {
     try {
-      const { materials } = await runResearch({
-        input,
+      const materials = await research(input, {
         requestContext: context?.requestContext,
       });
       return { materials, failed: false };
