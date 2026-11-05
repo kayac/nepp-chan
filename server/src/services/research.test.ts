@@ -84,6 +84,11 @@ const hits = (...entries: [content: string, score: number][]) => ({
 
 const searchedQueries = () => searchMock.mock.calls.map((c) => c[0]);
 
+const foundFor = (byQuery: Record<string, ReturnType<typeof hits>>) =>
+  searchMock.mockImplementation(
+    async (query: string) => byQuery[query] ?? { results: [] },
+  );
+
 beforeEach(() => {
   webGenerate.mockReset().mockResolvedValue({ text: "" });
   decideMock.mockReset().mockResolvedValue(undefined);
@@ -93,16 +98,22 @@ beforeEach(() => {
 
 describe("research", () => {
   it("観点ごとに村の資料を引き、観点から番号で参照する資料として返す", async () => {
-    searchMock
-      .mockResolvedValueOnce(hit("祝い金は10万円"))
-      .mockResolvedValueOnce(hit("保育料は無料"));
+    foundFor({
+      出産祝い金: hit("祝い金は10万円"),
+      "保育料 助成": hit("保育料は無料"),
+    });
 
     const materials = await run("子どもが生まれた。支援は？", [
       { topic: "出産祝い金", queries: ["出産祝い金"], web: false },
       { topic: "保育料", queries: ["保育料 助成"], web: false },
     ]);
 
-    expect(searchedQueries()).toEqual(["出産祝い金", "保育料 助成"]);
+    expect(searchedQueries()).toEqual([
+      "出産祝い金",
+      "保育料 助成",
+      "保育料",
+      "子どもが生まれた。支援は？",
+    ]);
     expect(materials).toBe(
       [
         "## 観点: 出産祝い金\n【1】",
@@ -115,9 +126,10 @@ describe("research", () => {
   });
 
   it("観点の検索語が複数なら並列に引き、スコア順に重複を除いて観点あたりの上限に絞る", async () => {
-    searchMock
-      .mockResolvedValueOnce(hits(["A", 0.5], ["B", 0.9], ["C", 0.7]))
-      .mockResolvedValueOnce(hits(["B", 0.9], ["D", 0.8], ["E", 0.6]));
+    foundFor({
+      国保: hits(["A", 0.5], ["B", 0.9], ["C", 0.7]),
+      国民健康保険: hits(["B", 0.9], ["D", 0.8], ["E", 0.6]),
+    });
 
     const materials = await run(
       "国保の保険料は？",
@@ -131,16 +143,22 @@ describe("research", () => {
       3,
     );
 
-    expect(searchedQueries()).toEqual(["国保", "国民健康保険"]);
+    expect(searchedQueries()).toEqual([
+      "国保",
+      "国民健康保険",
+      "国保の保険料",
+      "国保の保険料は？",
+    ]);
     expect(materials).toContain("## 観点: 国保の保険料\n【1】【2】【3】");
     expect(materials).toContain("【1】\nB\n\n【2】\nD\n\n【3】\nC");
     expect(materials).not.toContain("\nA");
   });
 
   it("観点をまたいで同じ資料が出たら 1 回だけ載せる", async () => {
-    searchMock
-      .mockResolvedValueOnce(hit("共通の資料"))
-      .mockResolvedValueOnce(hits(["共通の資料", 0.9], ["別の資料", 0.8]));
+    foundFor({
+      a: hit("共通の資料"),
+      b: hits(["共通の資料", 0.9], ["別の資料", 0.8]),
+    });
 
     const materials = await run("q", [
       { topic: "観点1", queries: ["a"], web: false },
@@ -163,9 +181,7 @@ describe("research", () => {
   });
 
   it("web を付けた観点は村の資料も引きつつ、まとめて 1 回の Web 検索で補う", async () => {
-    searchMock
-      .mockResolvedValueOnce(hit("村の行事予定"))
-      .mockResolvedValueOnce({ results: [] });
+    foundFor({ イベント: hit("村の行事予定") });
     webGenerate.mockResolvedValueOnce({ text: "開催は11月9日" });
 
     const materials = await run("今週のイベントと天気は？", [
@@ -173,7 +189,13 @@ describe("research", () => {
       { topic: "今日の天気", queries: ["天気"], web: true },
     ]);
 
-    expect(searchedQueries()).toEqual(["イベント", "天気"]);
+    expect(searchedQueries()).toEqual([
+      "イベント",
+      "今週のイベント",
+      "天気",
+      "今日の天気",
+      "今週のイベントと天気は？",
+    ]);
     expect(webGenerate).toHaveBeenCalledTimes(1);
     expect(webGenerate.mock.calls[0]?.[0]).toBe(
       "ユーザーの質問: 今週のイベントと天気は？\n\n調べる観点: 今週のイベント / 今日の天気\n上の観点だけを調べる。",
@@ -229,7 +251,39 @@ describe("research", () => {
     decideMock.mockResolvedValueOnce(undefined);
     await run("q", [{ topic: "天気", queries: ["天気"] }]);
     expect(webGenerate).not.toHaveBeenCalled();
-    expect(searchedQueries()).toEqual(["天気"]);
+    expect(searchedQueries()).toEqual(["天気", "q"]);
+  });
+
+  it("質問文でも引き、観点の枠とは別に最大 3 件を質問文の節で返す", async () => {
+    foundFor({
+      寮費: hit("寮費は3万円"),
+      "寮費はどこで確認できる？": hits(
+        ["案内ページ", 0.9],
+        ["寮費は3万円", 0.8],
+        ["募集要項", 0.7],
+        ["4件目", 0.6],
+      ),
+    });
+
+    const materials = await run("寮費はどこで確認できる？", [
+      { topic: "寮費", queries: ["寮費"], web: false },
+    ]);
+
+    expect(materials).toContain("## 観点: 寮費\n【1】");
+    expect(materials).toContain("## 質問文で引いた資料\n【2】【1】【3】");
+    expect(materials).toContain("【3】\n募集要項");
+    expect(materials).not.toContain("4件目");
+  });
+
+  it("質問文が検索語と同じなら重ねて引かず、質問文の節も出さない", async () => {
+    foundFor({ 今日の天気: hit("晴れ") });
+
+    const materials = await run("今日の天気", [
+      { topic: "今日の天気", queries: ["今日の天気"], web: false },
+    ]);
+
+    expect(searchedQueries()).toEqual(["今日の天気"]);
+    expect(materials).not.toContain("質問文で引いた資料");
   });
 
   it("配信は全観点の検索語をまとめて 1 回だけ引き、新しい順の節として返す", async () => {
