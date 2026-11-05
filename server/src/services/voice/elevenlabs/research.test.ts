@@ -21,27 +21,30 @@ beforeEach(() => {
 });
 
 describe("runResearch", () => {
-  it("質問と観点をワークフローに渡し、調査メモをそのまま返す", async () => {
-    workflowMock.mockResolvedValue({ memo: "確認できた事実\n- 8時発\n" });
+  it("質問と観点を観点あたり 2 件の資料でワークフローに渡し、資料をそのまま返す", async () => {
+    workflowMock.mockResolvedValue({ materials: "## 村の資料\n【1】8時発\n" });
     const aspects = [{ topic: "バスの時刻", queries: ["地域バス 時刻表"] }];
     const answer = await runResearch({ env, question: "バスの時間", aspects });
-    expect(answer).toBe("確認できた事実\n- 8時発");
+    expect(answer).toBe("## 村の資料\n【1】8時発");
     expect(workflowMock).toHaveBeenCalledWith(
-      expect.objectContaining({ input: { question: "バスの時間", aspects } }),
+      expect.objectContaining({
+        input: { question: "バスの時間", aspects, chunksPerAspect: 2 },
+      }),
     );
   });
 
   it("観点が無ければ質問そのものを 1 観点にする", async () => {
-    workflowMock.mockResolvedValue({ memo: "晴れ" });
+    workflowMock.mockResolvedValue({ materials: "晴れ" });
     await runResearch({ env, question: "今日の天気" });
     expect(workflowMock.mock.calls[0]?.[0].input).toEqual({
       question: "今日の天気",
       aspects: [{ topic: "今日の天気", queries: ["今日の天気"] }],
+      chunksPerAspect: 2,
     });
   });
 
-  it("メモが空なら定型の失敗文を返す", async () => {
-    workflowMock.mockResolvedValue({ memo: "  " });
+  it("資料が空なら定型の失敗文を返す", async () => {
+    workflowMock.mockResolvedValue({ materials: "  " });
     expect(await runResearch({ env, question: "q" })).toBe(
       "ごめんね、うまく調べられなかったみたい。",
     );

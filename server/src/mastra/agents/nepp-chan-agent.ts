@@ -1,5 +1,6 @@
 import type { AgentConfig } from "@mastra/core/agent";
 import { Agent } from "@mastra/core/agent";
+import { ToolCallFilter } from "@mastra/core/processors";
 import { DISPLAY_TOOL_NAMES } from "@nepp-chan/shared/constants/display-tools";
 import { getCurrentDateInfo } from "~/lib/date";
 import {
@@ -15,7 +16,7 @@ import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
 import { answerOnLastStep } from "~/mastra/processors/answer-on-last-step";
-import { researchOncePerTurn } from "~/mastra/processors/research-once-per-turn";
+import { researchLimitPerTurn } from "~/mastra/processors/research-limit-per-turn";
 import { displayChartTool } from "~/mastra/tools/display-chart-tool";
 import { displayTableTool } from "~/mastra/tools/display-table-tool";
 import { displayTimelineTool } from "~/mastra/tools/display-timeline-tool";
@@ -62,8 +63,9 @@ const researchGuide = (platform: Platform) => {
     return `- 村の情報・最新情報・時事・天気など事実にもとづく質問 → ${voiceAnswerToolName} ツールを使う（このツールが検索と要点化をまとめて行う）`;
   }
   if (usesResearchTool(platform)) {
-    return `- 村の情報（最新のお知らせを含む）、天気・交通・ニュース・時事・村外の情報 → ${researchToolName} に質問と、答えに要る観点ごとの検索語を渡す。どこを調べるかはツールが決める
-- ${researchToolName} の返却内容はユーザー向け回答ではなく調査メモ。事実・URL・不確実性を根拠に、ねっぷちゃんが一度だけユーザー向け回答を組み立てる。調査メモの文面をそのまま言い換えない
+    return `- 村の情報（最新のお知らせを含む）、天気・交通・ニュース・時事・村外の情報 → ${researchToolName} に質問と、答えに要る観点ごとの検索語を渡す。村の資料は必ず引かれる。天気・運行状況・ニュースなどの最新情報や村外の事柄、イベントや店の最新状況を補いたい観点だけ web を true にする
+- ${researchToolName} が返すのは資料そのもの。制度・手続き・ルール・施設の基本情報は村の資料を一次情報とし、日程・開催状況・最新情報は Web の結果で補う。資料に無いことは言わず、根拠の URL を添える
+- 資料に答えが無ければ、検索語を変えるか web を true にして一度だけ調べ直す（同じターンで ${RESEARCH_CALLS_PER_TURN} 回まで）
 - failed が true のときは調べられなかったことを伝え、村の公式サイトや役場への確認を案内する`;
   }
   return `- 村の情報（最新のお知らせを含む）→ knowledgeAgent に委譲。ナレッジ検索と配信検索でも重要項目が見つからなければ、webResearcherAgent で補う
@@ -178,7 +180,12 @@ const getAgents = (platform: Platform, isAdmin: boolean) => {
   return { ...research, ...adminOnlyAgents };
 };
 
-const researchProcessors = [researchOncePerTurn(researchToolName)];
+const RESEARCH_CALLS_PER_TURN = 2;
+
+const researchProcessors = [
+  researchLimitPerTurn(researchToolName, RESEARCH_CALLS_PER_TURN),
+  new ToolCallFilter({ exclude: [researchToolName] }),
+];
 
 const researchTools = {
   [researchToolName]: researchTool,

@@ -5,6 +5,8 @@ import { newTurnId } from "~/services/analytics/llm-usage";
 
 const FAILED_ANSWER = "ごめんね、うまく調べられなかったみたい。";
 
+const VOICE_CHUNKS_PER_ASPECT = 2;
+
 export const runResearch = async ({
   env,
   question,
@@ -27,10 +29,11 @@ export const runResearch = async ({
       aspects: aspects?.length
         ? aspects
         : [{ topic: question, queries: [question] }],
+      chunksPerAspect: VOICE_CHUNKS_PER_ASPECT,
     },
     requestContext,
   })
-    .then(({ memo }) => memo.trim() || FAILED_ANSWER)
+    .then(({ materials }) => materials.trim() || FAILED_ANSWER)
     .catch((error) => {
       logger.error("[Voice][EL] research failed", error);
       return FAILED_ANSWER;

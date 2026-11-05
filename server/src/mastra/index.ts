@@ -13,7 +13,6 @@ import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { emergencyReporterAgent } from "~/mastra/agents/emergency-reporter-agent";
 import { feedbackAgent } from "~/mastra/agents/feedback-agent";
 import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
-import { knowledgeMemoAgent } from "~/mastra/agents/knowledge-memo-agent";
 import { neppChanAgent } from "~/mastra/agents/nepp-chan-agent";
 import { personaAgent } from "~/mastra/agents/persona-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
@@ -45,7 +44,6 @@ export const mastra = new Mastra({
     emergencyReporterAgent,
     feedbackAgent,
     knowledgeAgent,
-    knowledgeMemoAgent,
     neppChanAgent,
     personaAgent,
     personaAnalystAgent,

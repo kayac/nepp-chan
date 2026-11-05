@@ -30,20 +30,23 @@ const execute = () =>
     researchTool.execute as unknown as (
       input: Input,
       context: undefined,
-    ) => Promise<{ memo: string; failed: boolean }>
+    ) => Promise<{ materials: string; failed: boolean }>
   )(input, undefined);
 
 describe("researchTool", () => {
-  it("質問と観点をそのままワークフローに渡し、調査メモを返す", async () => {
-    runResearchMock.mockResolvedValueOnce({ memo: "寮費は3万円" });
-    expect(await execute()).toEqual({ memo: "寮費は3万円", failed: false });
+  it("質問と観点をそのままワークフローに渡し、資料を返す", async () => {
+    runResearchMock.mockResolvedValueOnce({ materials: "寮費は3万円" });
+    expect(await execute()).toEqual({
+      materials: "寮費は3万円",
+      failed: false,
+    });
     expect(runResearchMock).toHaveBeenCalledWith(
       expect.objectContaining({ input }),
     );
   });
 
-  it("ワークフローが失敗したら空のメモと failed を返す", async () => {
+  it("ワークフローが失敗したら空の資料と failed を返す", async () => {
     runResearchMock.mockRejectedValueOnce(new Error("boom"));
-    expect(await execute()).toEqual({ memo: "", failed: true });
+    expect(await execute()).toEqual({ materials: "", failed: true });
   });
 });

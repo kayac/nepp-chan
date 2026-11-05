@@ -163,13 +163,14 @@ describe("createNeppChanAgent", () => {
     });
 
     it.each(["web", "widget", "line"] as const)(
-      "platform=%s は村内外を問わず researchTool に観点ごとの検索語を渡し、調べ先はツールに任せる",
+      "platform=%s は村内外を問わず researchTool に観点ごとの検索語を渡し、Web を足す観点だけ web を付ける",
       async (platform) => {
         const ins = await instructionsOf(build({ platform }));
         expect(ins).toContain(
           `${researchToolName} に質問と、答えに要る観点ごとの検索語を渡す`,
         );
-        expect(ins).toContain("どこを調べるかはツールが決める");
+        expect(ins).toContain("村の資料は必ず引かれる");
+        expect(ins).toContain("補いたい観点だけ web を true にする");
         expect(ins).not.toContain("knowledgeAgent");
         expect(ins).not.toContain("webResearcherAgent");
       },
@@ -182,13 +183,11 @@ describe("createNeppChanAgent", () => {
       );
     });
 
-    it("researchTool の調査メモからユーザー向け回答を1度だけ作る", async () => {
+    it("researchTool の資料は村の資料を一次情報、Web を補足として読み、足りなければ 2 回まで調べ直す", async () => {
       const ins = await instructionsOf(build());
-      expect(ins).toContain("ユーザー向け回答ではなく調査メモ");
-      expect(ins).toContain(
-        "ねっぷちゃんが一度だけユーザー向け回答を組み立てる",
-      );
-      expect(ins).toContain("調査メモの文面をそのまま言い換えない");
+      expect(ins).toContain("村の資料を一次情報とし");
+      expect(ins).toContain("最新情報は Web の結果で補う");
+      expect(ins).toContain("同じターンで 2 回まで");
     });
 
     it.each(["web", "line", "widget", "voice"] as const)(
