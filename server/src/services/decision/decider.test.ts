@@ -18,12 +18,16 @@ vi.mock("~/db", async (importOriginal) => ({
   createDb: () => testDbHolder.db,
 }));
 
+vi.mock("~/lib/logger", () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
+
 vi.mock(
   "@ai-sdk/typesafe-ai",
   () => import("~/__tests__/helpers/jev-provider"),
 );
 
-const { createDecider } = await import("./decider");
+const { decide } = await import("./decider");
 
 const d1 = {} as D1Database;
 
@@ -56,14 +60,14 @@ beforeEach(async () => {
   doDecideMock.mockReset();
 });
 
-describe("createDecider", () => {
-  it("TYPESAFE_API_KEY が無ければ判定器を作らない", () => {
-    expect(createDecider(contextWith(), usage)).toBeUndefined();
-    expect(createDecider(undefined, usage)).toBeUndefined();
-  });
-});
-
 describe("decide", () => {
+  it("TYPESAFE_API_KEY が無ければ jev を呼ばずに undefined を返す", async () => {
+    const questions = { relevant: relevantQuestion };
+    expect(await decide(contextWith(), usage, "x", questions)).toBeUndefined();
+    expect(await decide(undefined, usage, "x", questions)).toBeUndefined();
+    expect(doDecideMock).not.toHaveBeenCalled();
+  });
+
   it("boolean は確率を、choice は選ばれた選択肢と全選択肢の確率を返す", async () => {
     doDecideMock.mockResolvedValueOnce(
       decision({
@@ -72,7 +76,7 @@ describe("decide", () => {
       }),
     );
 
-    const answers = await createDecider(contextWith("k"), usage)?.decide("x", {
+    const answers = await decide(contextWith("k"), usage, "x", {
       relevant: relevantQuestion,
       color: colorQuestion,
     });
@@ -87,12 +91,12 @@ describe("decide", () => {
 
   it("配列やオブジェクトの state は json パーツ、文字列は text パーツとして渡す", async () => {
     doDecideMock.mockResolvedValue(decision({ relevant: booleanAnswer(1) }));
-    const decider = createDecider(contextWith("k"), usage);
+    const ctx = contextWith("k");
 
-    await decider?.decide([{ from: "user", text: "hi" }], {
+    await decide(ctx, usage, [{ from: "user", text: "hi" }], {
       relevant: relevantQuestion,
     });
-    await decider?.decide("plain", { relevant: relevantQuestion });
+    await decide(ctx, usage, "plain", { relevant: relevantQuestion });
 
     expect(doDecideMock.mock.calls[0]?.[0]).toMatchObject({
       state: [{ type: "json", value: [{ from: "user", text: "hi" }] }],
@@ -111,9 +115,7 @@ describe("decide", () => {
       ),
     );
 
-    await createDecider(contextWith("k"), usage)?.decide("x", {
-      relevant: relevantQuestion,
-    });
+    await decide(contextWith("k"), usage, "x", { relevant: relevantQuestion });
 
     await vi.waitFor(async () => {
       const rows = await db.select().from(llmUsage).all();
@@ -128,14 +130,14 @@ describe("decide", () => {
     });
   });
 
-  it("jev が throw したら記録せずにそのまま throw する", async () => {
+  it("jev が失敗したら記録せずに undefined を返す", async () => {
     doDecideMock.mockRejectedValueOnce(new Error("jev responded 429"));
 
-    await expect(
-      createDecider(contextWith("k"), usage)?.decide("x", {
+    expect(
+      await decide(contextWith("k"), usage, "x", {
         relevant: relevantQuestion,
       }),
-    ).rejects.toThrow("jev responded 429");
+    ).toBeUndefined();
     expect(await db.select().from(llmUsage).all()).toHaveLength(0);
   });
 });

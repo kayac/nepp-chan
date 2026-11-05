@@ -1,19 +1,14 @@
 import { RequestContext } from "@mastra/core/request-context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const {
-  webGenerate,
-  decideMock,
-  createDeciderMock,
-  searchMock,
-  findBroadcastsMock,
-} = vi.hoisted(() => ({
-  webGenerate: vi.fn(),
-  decideMock: vi.fn(),
-  createDeciderMock: vi.fn(),
-  searchMock: vi.fn(),
-  findBroadcastsMock: vi.fn(),
-}));
+const { webGenerate, decideMock, searchMock, findBroadcastsMock } = vi.hoisted(
+  () => ({
+    webGenerate: vi.fn(),
+    decideMock: vi.fn(),
+    searchMock: vi.fn(),
+    findBroadcastsMock: vi.fn(),
+  }),
+);
 
 vi.mock("~/repository/broadcast-repository", () => ({
   broadcastRepository: { findByKeyword: findBroadcastsMock },
@@ -24,7 +19,7 @@ vi.mock("~/services/knowledge/search", () => ({
 }));
 
 vi.mock("~/services/decision/decider", () => ({
-  createDecider: createDeciderMock,
+  decide: decideMock,
 }));
 
 vi.mock("~/mastra/agents/web-researcher-agent", () => ({
@@ -91,8 +86,7 @@ const searchedQueries = () => searchMock.mock.calls.map((c) => c[0]);
 
 beforeEach(() => {
   webGenerate.mockReset().mockResolvedValue({ text: "" });
-  decideMock.mockReset();
-  createDeciderMock.mockReset().mockReturnValue({ decide: decideMock });
+  decideMock.mockReset().mockResolvedValue(undefined);
   searchMock.mockReset().mockResolvedValue({ results: [] });
   findBroadcastsMock.mockReset().mockResolvedValue([]);
 });
@@ -204,20 +198,20 @@ describe("research", () => {
     ]);
 
     expect(decideMock).toHaveBeenCalledTimes(1);
-    expect(decideMock.mock.calls[0]?.[0]).toMatchObject({
+    expect(decideMock.mock.calls[0]?.[2]).toMatchObject({
       question: "q",
       aspects: [
         { id: "a0", topic: "寮費" },
         { id: "a1", topic: "天気" },
       ],
     });
-    expect(Object.keys(decideMock.mock.calls[0]?.[1])).toEqual(["a0", "a1"]);
+    expect(Object.keys(decideMock.mock.calls[0]?.[3])).toEqual(["a0", "a1"]);
     expect(webGenerate.mock.calls[0]?.[0]).toContain("調べる観点: 天気\n");
     expect(materials).toContain("## 観点: 天気（Web でも調べた）");
     expect(materials).toContain("## 観点: 寮費\n");
   });
 
-  it("jev の判定を待たずに村の資料を引き始める", async () => {
+  it("判定を待たずに村の資料を引き始める", async () => {
     let settle!: () => void;
     decideMock.mockReturnValueOnce(
       new Promise<ReturnType<typeof routes>>((resolve) => {
@@ -231,15 +225,11 @@ describe("research", () => {
     await pending;
   });
 
-  it("jev が使えない・失敗したときは web 無しの観点を村だけで調べる", async () => {
-    createDeciderMock.mockReturnValueOnce(undefined);
+  it("判定が得られないときは web 無しの観点を村だけで調べる", async () => {
+    decideMock.mockResolvedValueOnce(undefined);
     await run("q", [{ topic: "天気", queries: ["天気"] }]);
     expect(webGenerate).not.toHaveBeenCalled();
-
-    decideMock.mockRejectedValueOnce(new Error("jev down"));
-    await run("q", [{ topic: "天気", queries: ["天気"] }]);
-    expect(webGenerate).not.toHaveBeenCalled();
-    expect(searchedQueries()).toEqual(["天気", "天気"]);
+    expect(searchedQueries()).toEqual(["天気"]);
   });
 
   it("配信は全観点の検索語をまとめて 1 回だけ引き、新しい順の節として返す", async () => {

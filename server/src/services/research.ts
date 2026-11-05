@@ -4,7 +4,7 @@ import { z } from "zod";
 import { logger } from "~/lib/logger";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { broadcastRepository } from "~/repository/broadcast-repository";
-import { createDecider } from "~/services/decision/decider";
+import { decide } from "~/services/decision/decider";
 import {
   type KnowledgeResult,
   searchKnowledge,
@@ -84,32 +84,24 @@ const routeUndecided = async (
 ) => {
   const undecided = aspects.filter((a) => a.web === undefined);
   if (undecided.length === 0) return aspects;
-  const decider = createDecider(requestContext, {
-    source: "intent-classify",
-    agent: "research-route",
-  });
+  const ids = undecided.map((_, i) => `a${i}`);
+  const answers = await decide(
+    requestContext,
+    { source: "intent-classify", agent: "research-route" },
+    {
+      instructions: routeInstructions,
+      question,
+      aspects: undecided.map((a, i) => ({ id: ids[i], topic: a.topic })),
+    },
+    Object.fromEntries(ids.map((id) => [id, routeQuestionFor(id)])),
+  );
   const webOf = new Map<Aspect, boolean>();
-  if (decider) {
-    const ids = undecided.map((_, i) => `a${i}`);
-    try {
-      const answers = await decider.decide(
-        {
-          instructions: routeInstructions,
-          question,
-          aspects: undecided.map((a, i) => ({ id: ids[i], topic: a.topic })),
-        },
-        Object.fromEntries(ids.map((id) => [id, routeQuestionFor(id)])),
+  if (answers) {
+    for (const [i, a] of undecided.entries()) {
+      webOf.set(
+        a,
+        (answers[ids[i]].probabilities?.village ?? 1) < VILLAGE_THRESHOLD,
       );
-      for (const [i, a] of undecided.entries()) {
-        webOf.set(
-          a,
-          (answers[ids[i]].probabilities?.village ?? 1) < VILLAGE_THRESHOLD,
-        );
-      }
-    } catch (error) {
-      logger.warn("[Research] route failed, treating all as village", {
-        error: String(error),
-      });
     }
   }
   return aspects.map((a) =>
