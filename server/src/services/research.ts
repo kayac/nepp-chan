@@ -16,6 +16,8 @@ const MAX_QUERIES_PER_ASPECT = 3;
 
 const CHUNKS_PER_ASPECT = 4;
 
+const QUESTION_CHUNKS = 3;
+
 const BROADCAST_LIMIT = 5;
 
 const VILLAGE_THRESHOLD = 0.3;
@@ -194,8 +196,13 @@ const searchWeb = async (
   return res.text;
 };
 
+const queriesFor = (aspect: Aspect) => [
+  ...new Set([...aspect.queries, aspect.topic]),
+];
+
 const renderMaterials = (
   aspects: (Aspect & { web: boolean; chunks: string[] })[],
+  questionChunks: string[],
   broadcasts: string,
   web: string,
 ) => {
@@ -212,6 +219,8 @@ const renderMaterials = (
   );
   return [
     ...perAspect,
+    questionChunks.length > 0 &&
+      `## 質問文で引いた資料\n${questionChunks.map((c) => `【${numberOf(c)}】`).join("")}`,
     `## 村の資料\n${chunks.length ? chunks.map((c, i) => `【${i + 1}】${c}`).join("\n\n") : "該当なし"}`,
     broadcasts && `## 村の LINE 配信（新しい順）\n${broadcasts}`,
     web && `## Web 検索\n${web}`,
@@ -234,9 +243,13 @@ export const research = async (
 ) => {
   signal?.throwIfAborted();
   const startedAt = Date.now();
+  const aspectQueries = input.aspects.map(queriesFor);
+  const questionQueries = aspectQueries.flat().includes(input.question)
+    ? []
+    : [input.question];
   const [chunks, broadcasts, { aspects, web }] = await Promise.all([
     searchChunks(
-      input.aspects.map((a) => a.queries),
+      [...aspectQueries, questionQueries],
       chunksPerAspect,
       requestContext,
     ),
@@ -258,6 +271,7 @@ export const research = async (
   ]);
   const materials = renderMaterials(
     aspects.map((a, i) => ({ ...a, web: a.web === true, chunks: chunks[i] })),
+    chunks[aspects.length].slice(0, QUESTION_CHUNKS),
     broadcasts,
     web,
   );
