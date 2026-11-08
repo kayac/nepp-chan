@@ -172,6 +172,7 @@ throw new HTTPException(404, { message: "Not found" });
 
 ```bash
 pnpm dev               # 開発サーバー（http://localhost:8787）
+pnpm db:migrate:local  # ローカル D1 にマイグレーション適用 + ダミーユーザーを作成
 pnpm db:seed:local     # ローカル D1 に管理画面確認用のダミーデータを投入
 pnpm test              # vitest 実行（istanbul provider）
 pnpm test --coverage   # カバレッジ計測
