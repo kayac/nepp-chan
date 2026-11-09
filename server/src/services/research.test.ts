@@ -48,8 +48,13 @@ type AspectSpec = {
   web?: boolean;
 };
 
-const run = (question: string, aspects: AspectSpec[]) =>
-  research({ question, aspects }, { requestContext: requestContext() });
+const run = async (question: string, aspects: AspectSpec[]) =>
+  JSON.parse(
+    await research({ question, aspects }, { requestContext: requestContext() }),
+  );
+
+const contentsOf = (results: { content: string }[]) =>
+  results.map((r) => r.content);
 
 const routes = (...villageProbabilities: number[]) =>
   Object.fromEntries(
@@ -90,11 +95,25 @@ beforeEach(() => {
 });
 
 describe("research", () => {
-  it("観点ごとに村の資料を引き、観点から番号で参照する資料として返す", async () => {
-    foundFor({
-      出産祝い金: hit("祝い金は10万円"),
-      "保育料 助成": hit("保育料は無料"),
-    });
+  it("観点ごとに村の資料を引き、観点ごとの結果として JSON で返す", async () => {
+    searchMock.mockImplementation(async (query: string) =>
+      query === "出産祝い金"
+        ? {
+            results: [
+              {
+                content: "祝い金は10万円",
+                score: 0.9,
+                source: "doc",
+                title: "子育て支援",
+                section: "出産",
+                url: "https://example.com/kosodate",
+                date: "2026-04-01",
+                dateType: "published",
+              },
+            ],
+          }
+        : { results: [] },
+    );
 
     const materials = await run("子どもが生まれた。支援は？", [
       { topic: "出産祝い金", queries: ["出産祝い金"], web: false },
@@ -107,21 +126,36 @@ describe("research", () => {
       "保育料",
       "子どもが生まれた。支援は？",
     ]);
-    expect(materials).toBe(
-      [
-        "## 観点: 出産祝い金\n【1】",
-        "## 観点: 保育料\n【2】",
-        "## 村の資料\n【1】\n祝い金は10万円\n\n【2】\n保育料は無料",
-      ].join("\n\n"),
-    );
+    expect(materials).toEqual({
+      aspects: [
+        {
+          topic: "出産祝い金",
+          web: false,
+          results: [
+            {
+              title: "子育て支援",
+              section: "出産",
+              url: "https://example.com/kosodate",
+              date: "2026-04-01",
+              dateType: "published",
+              content: "祝い金は10万円",
+            },
+          ],
+        },
+        { topic: "保育料", web: false, results: [] },
+      ],
+      question: { text: "子どもが生まれた。支援は？", results: [] },
+      broadcasts: [],
+      web: "",
+    });
     expect(decideMock).not.toHaveBeenCalled();
     expect(webGenerate).not.toHaveBeenCalled();
   });
 
-  it("観点の検索語が複数なら並列に引き、スコア順に重複を除いて観点あたりの上限に絞る", async () => {
+  it("観点の検索語が複数なら並列に引き、スコア順に重複を除いて返す", async () => {
     foundFor({
       国保: hits(["A", 0.5], ["B", 0.9], ["C", 0.7]),
-      国民健康保険: hits(["B", 0.9], ["D", 0.8], ["E", 0.6], ["F", 0.4]),
+      国民健康保険: hits(["B", 0.9], ["D", 0.8]),
     });
 
     const materials = await run("国保の保険料は？", [
@@ -138,13 +172,15 @@ describe("research", () => {
       "国保の保険料",
       "国保の保険料は？",
     ]);
-    expect(materials).toContain("## 観点: 国保の保険料\n【1】【2】【3】【4】");
-    expect(materials).toContain("【1】\nB\n\n【2】\nD\n\n【3】\nC\n\n【4】\nE");
-    expect(materials).not.toContain("\nA");
-    expect(materials).not.toContain("\nF");
+    expect(contentsOf(materials.aspects[0].results)).toEqual([
+      "B",
+      "D",
+      "C",
+      "A",
+    ]);
   });
 
-  it("観点をまたいで同じ資料が出たら 1 回だけ載せる", async () => {
+  it("前の観点で出た資料は後ろの観点に重ねて載せない", async () => {
     foundFor({
       a: hit("共通の資料"),
       b: hits(["共通の資料", 0.9], ["別の資料", 0.8]),
@@ -155,19 +191,8 @@ describe("research", () => {
       { topic: "観点2", queries: ["b"], web: false },
     ]);
 
-    expect(materials).toContain("## 観点: 観点1\n【1】");
-    expect(materials).toContain("## 観点: 観点2\n【1】【2】");
-    expect(materials.match(/共通の資料/g)).toHaveLength(1);
-  });
-
-  it("資料が見つからない観点は該当なしと示す", async () => {
-    const materials = await run("q", [
-      { topic: "寮費", queries: ["寮費"], web: false },
-    ]);
-
-    expect(materials).toBe(
-      "## 観点: 寮費\n村の資料に該当なし\n\n## 村の資料\n該当なし",
-    );
+    expect(contentsOf(materials.aspects[0].results)).toEqual(["共通の資料"]);
+    expect(contentsOf(materials.aspects[1].results)).toEqual(["別の資料"]);
   });
 
   it("web を付けた観点は村の資料も引きつつ、まとめて 1 回の Web 検索で補う", async () => {
@@ -190,13 +215,15 @@ describe("research", () => {
     expect(webGenerate.mock.calls[0]?.[0]).toBe(
       "ユーザーの質問: 今週のイベントと天気は？\n\n調べる観点: 今週のイベント / 今日の天気\n上の観点だけを調べる。",
     );
-    expect(materials).toContain(
-      "## 観点: 今週のイベント（Web でも調べた）\n【1】",
-    );
-    expect(materials).toContain(
-      "## 観点: 今日の天気（Web でも調べた）\n村の資料に該当なし",
-    );
-    expect(materials).toContain("## Web 検索\n開催は11月9日");
+    expect(materials.aspects).toEqual([
+      {
+        topic: "今週のイベント",
+        web: true,
+        results: [{ content: "村の行事予定" }],
+      },
+      { topic: "今日の天気", web: true, results: [] },
+    ]);
+    expect(materials.web).toBe("開催は11月9日");
   });
 
   it("web が無い観点だけ jev に聞き、P(village) 0.3 未満を Web に回す", async () => {
@@ -219,8 +246,16 @@ describe("research", () => {
     });
     expect(Object.keys(decideMock.mock.calls[0]?.[3])).toEqual(["a0", "a1"]);
     expect(webGenerate.mock.calls[0]?.[0]).toContain("調べる観点: 天気\n");
-    expect(materials).toContain("## 観点: 天気（Web でも調べた）");
-    expect(materials).toContain("## 観点: 寮費\n");
+    expect(
+      materials.aspects.map((a: { topic: string; web: boolean }) => [
+        a.topic,
+        a.web,
+      ]),
+    ).toEqual([
+      ["寮費", false],
+      ["天気", true],
+      ["指定済み", false],
+    ]);
   });
 
   it("判定を待たずに村の資料を引き始める", async () => {
@@ -244,14 +279,13 @@ describe("research", () => {
     expect(searchedQueries()).toEqual(["天気", "q"]);
   });
 
-  it("質問文でも引き、観点の枠とは別に最大 3 件を質問文の節で返す", async () => {
+  it("質問文でも引き、観点で出ていない資料を質問文の結果として返す", async () => {
     foundFor({
       寮費: hit("寮費は3万円"),
       "寮費はどこで確認できる？": hits(
         ["案内ページ", 0.9],
         ["寮費は3万円", 0.8],
         ["募集要項", 0.7],
-        ["4件目", 0.6],
       ),
     });
 
@@ -259,13 +293,15 @@ describe("research", () => {
       { topic: "寮費", queries: ["寮費"], web: false },
     ]);
 
-    expect(materials).toContain("## 観点: 寮費\n【1】");
-    expect(materials).toContain("## 質問文で引いた資料\n【2】【1】【3】");
-    expect(materials).toContain("【3】\n募集要項");
-    expect(materials).not.toContain("4件目");
+    expect(contentsOf(materials.aspects[0].results)).toEqual(["寮費は3万円"]);
+    expect(materials.question.text).toBe("寮費はどこで確認できる？");
+    expect(contentsOf(materials.question.results)).toEqual([
+      "案内ページ",
+      "募集要項",
+    ]);
   });
 
-  it("質問文が検索語と同じなら重ねて引かず、質問文の節も出さない", async () => {
+  it("質問文が検索語と同じなら重ねて引かず、質問文の結果も出さない", async () => {
     foundFor({ 今日の天気: hit("晴れ") });
 
     const materials = await run("今日の天気", [
@@ -273,10 +309,10 @@ describe("research", () => {
     ]);
 
     expect(searchedQueries()).toEqual(["今日の天気"]);
-    expect(materials).not.toContain("質問文で引いた資料");
+    expect(materials.question).toBeUndefined();
   });
 
-  it("配信は全観点の検索語をまとめて 1 回だけ引き、新しい順の節として返す", async () => {
+  it("配信は全観点の検索語をまとめて 1 回だけ引いて返す", async () => {
     findBroadcastsMock.mockResolvedValueOnce([
       { title: "除雪のお知らせ", body: "明日から", sentAt: "2026-11-01" },
     ]);
@@ -288,8 +324,8 @@ describe("research", () => {
 
     expect(findBroadcastsMock).toHaveBeenCalledTimes(1);
     expect(findBroadcastsMock.mock.calls[0]?.[1]).toBe("除雪 排雪 ごみ");
-    expect(materials).toContain(
-      "## 村の LINE 配信（新しい順）\n【配信1】除雪のお知らせ [2026-11-01]\n明日から",
-    );
+    expect(materials.broadcasts).toEqual([
+      { title: "除雪のお知らせ", sentAt: "2026-11-01", body: "明日から" },
+    ]);
   });
 });
