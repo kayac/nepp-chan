@@ -14,10 +14,6 @@ const MAX_ASPECTS = 5;
 
 const MAX_QUERIES_PER_ASPECT = 3;
 
-const CHUNKS_PER_ASPECT = 4;
-
-const QUESTION_CHUNKS = 3;
-
 const BROADCAST_LIMIT = 5;
 
 const VILLAGE_THRESHOLD = 0.3;
@@ -111,20 +107,13 @@ const routeUndecided = async (
   );
 };
 
-const renderResult = (r: KnowledgeResult) => {
-  const heading = [r.title, r.section].filter(Boolean).join(" / ");
-  const url = r.url ? ` (${r.url})` : "";
-  const date = r.date ? ` [${r.date} ${r.dateType ?? ""}]` : "";
-  return `${heading}${url}${date}\n${r.content}`;
-};
-
 const searchChunks = async (
   queriesPerAspect: string[][],
   requestContext: RequestContext | undefined,
 ) => {
   const env = requestContext?.get("env") as CloudflareBindings | undefined;
   if (!env?.VECTORIZE || !env.GOOGLE_GENERATIVE_AI_API_KEY) {
-    return queriesPerAspect.map(() => []);
+    return queriesPerAspect.map((): KnowledgeResult[] => []);
   }
   return Promise.all(
     queriesPerAspect.map(async (queries) => {
@@ -138,13 +127,9 @@ const searchChunks = async (
           ),
         ),
       );
-      const seen = new Set<string>();
       return outputs
         .flatMap((o) => o.results)
-        .sort((a, b) => b.score - a.score)
-        .filter((r) => !seen.has(r.content) && seen.add(r.content))
-        .slice(0, CHUNKS_PER_ASPECT)
-        .map(renderResult);
+        .sort((a, b) => b.score - a.score);
     }),
   );
 };
@@ -154,24 +139,23 @@ const searchBroadcasts = async (
   requestContext: RequestContext | undefined,
 ) => {
   const db = requestContext?.get("db") as D1Database | undefined;
-  if (!db) return "";
+  if (!db) return [];
   try {
     const broadcasts = await broadcastRepository.findByKeyword(
       db,
       keywords.join(" "),
       BROADCAST_LIMIT,
     );
-    return broadcasts
-      .map(
-        (b, i) =>
-          `【配信${i + 1}】${b.title}${b.sentAt ? ` [${b.sentAt}]` : ""}\n${b.body}`,
-      )
-      .join("\n\n");
+    return broadcasts.map(({ title, sentAt, body }) => ({
+      title,
+      sentAt,
+      body,
+    }));
   } catch (error) {
     logger.warn("[Research] broadcast search failed", {
       error: String(error),
     });
-    return "";
+    return [];
   }
 };
 
@@ -199,33 +183,20 @@ const queriesFor = (aspect: Aspect) => [
   ...new Set([...aspect.queries, aspect.topic]),
 ];
 
-const renderMaterials = (
-  aspects: (Aspect & { web: boolean; chunks: string[] })[],
-  questionChunks: string[],
-  broadcasts: string,
-  web: string,
-) => {
-  const chunks: string[] = [];
-  const numberOf = (chunk: string) => {
-    const found = chunks.indexOf(chunk);
-    if (found >= 0) return found + 1;
-    chunks.push(chunk);
-    return chunks.length;
-  };
-  const perAspect = aspects.map(
-    (a) =>
-      `## 観点: ${a.topic}${a.web ? "（Web でも調べた）" : ""}\n${a.chunks.length ? a.chunks.map((c) => `【${numberOf(c)}】`).join("") : "村の資料に該当なし"}`,
+const dedupeAcross = (lists: KnowledgeResult[][]) => {
+  const seen = new Set<string>();
+  return lists.map((results) =>
+    results
+      .filter((r) => !seen.has(r.content) && seen.add(r.content))
+      .map(({ title, section, url, date, dateType, content }) => ({
+        title,
+        section,
+        url,
+        date,
+        dateType,
+        content,
+      })),
   );
-  return [
-    ...perAspect,
-    questionChunks.length > 0 &&
-      `## 質問文で引いた資料\n${questionChunks.map((c) => `【${numberOf(c)}】`).join("")}`,
-    `## 村の資料\n${chunks.length ? chunks.map((c, i) => `【${i + 1}】${c}`).join("\n\n") : "該当なし"}`,
-    broadcasts && `## 村の LINE 配信（新しい順）\n${broadcasts}`,
-    web && `## Web 検索\n${web}`,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
 };
 
 export const research = async (
@@ -262,16 +233,24 @@ export const research = async (
       }),
     ),
   ]);
-  const materials = renderMaterials(
-    aspects.map((a, i) => ({ ...a, web: a.web === true, chunks: chunks[i] })),
-    chunks[aspects.length].slice(0, QUESTION_CHUNKS),
+  const results = dedupeAcross(chunks);
+  const materials = JSON.stringify({
+    aspects: aspects.map((a, i) => ({
+      topic: a.topic,
+      web: a.web === true,
+      results: results[i],
+    })),
+    question:
+      questionQueries.length > 0
+        ? { text: input.question, results: results[aspects.length] }
+        : undefined,
     broadcasts,
     web,
-  );
+  });
   logger.info("[Research] searched", {
     aspects: aspects.length,
     web: aspects.filter((a) => a.web).length,
-    chunks: chunks.flat().length,
+    chunks: results.flat().length,
     ms: Date.now() - startedAt,
     chars: materials.length,
   });
