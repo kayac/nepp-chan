@@ -5,8 +5,6 @@ import { research } from "~/services/research";
 
 const FAILED_ANSWER = "ごめんね、うまく調べられなかったみたい。";
 
-const VOICE_CHUNKS_PER_ASPECT = 2;
-
 export const runResearch = async ({
   env,
   question,
@@ -30,7 +28,7 @@ export const runResearch = async ({
         ? aspects
         : [{ topic: question, queries: [question] }],
     },
-    { requestContext, chunksPerAspect: VOICE_CHUNKS_PER_ASPECT },
+    { requestContext },
   )
     .then((materials) => materials.trim() || FAILED_ANSWER)
     .catch((error) => {
