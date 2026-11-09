@@ -15,7 +15,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate:dev": "wrangler d1 migrations apply nepp-chan-db-dev --remote --env development",
     "db:migrate:prd": "wrangler d1 migrations apply nepp-chan-db-prd --remote --env production",
-    "db:migrate:local": "wrangler d1 migrations apply nepp-chan-db-dev --local --env local",
+    "db:migrate:local": "wrangler d1 migrations apply nepp-chan-db-dev --local --env local && wrangler d1 execute nepp-chan-db-dev --local --env local --file scripts/seed-local-admin.sql",
     "db:seed:local": "wrangler d1 execute nepp-chan-db-dev --local --env local --file scripts/seed-local.sql",
     "db:check": "drizzle-kit check",
     "eval:v2": "tsx scripts/run-eval-v2.ts",
