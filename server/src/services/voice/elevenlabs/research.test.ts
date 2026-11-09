@@ -21,7 +21,7 @@ beforeEach(() => {
 });
 
 describe("runResearch", () => {
-  it("質問と観点を観点あたり 2 件の資料で検索に渡し、資料をそのまま返す", async () => {
+  it("質問と観点を検索に渡し、資料をそのまま返す", async () => {
     researchMock.mockResolvedValue("## 村の資料\n【1】8時発\n");
     const aspects = [{ topic: "バスの時刻", queries: ["地域バス 時刻表"] }];
     const answer = await runResearch({ env, question: "バスの時間", aspects });
@@ -29,9 +29,6 @@ describe("runResearch", () => {
     expect(researchMock.mock.calls[0]?.[0]).toEqual({
       question: "バスの時間",
       aspects,
-    });
-    expect(researchMock.mock.calls[0]?.[1]).toMatchObject({
-      chunksPerAspect: 2,
     });
   });
 

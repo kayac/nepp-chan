@@ -120,7 +120,6 @@ const renderResult = (r: KnowledgeResult) => {
 
 const searchChunks = async (
   queriesPerAspect: string[][],
-  chunksPerAspect: number,
   requestContext: RequestContext | undefined,
 ) => {
   const env = requestContext?.get("env") as CloudflareBindings | undefined;
@@ -144,7 +143,7 @@ const searchChunks = async (
         .flatMap((o) => o.results)
         .sort((a, b) => b.score - a.score)
         .filter((r) => !seen.has(r.content) && seen.add(r.content))
-        .slice(0, chunksPerAspect)
+        .slice(0, CHUNKS_PER_ASPECT)
         .map(renderResult);
     }),
   );
@@ -234,11 +233,9 @@ export const research = async (
   {
     requestContext,
     signal,
-    chunksPerAspect = CHUNKS_PER_ASPECT,
   }: {
     requestContext?: RequestContext;
     signal?: AbortSignal;
-    chunksPerAspect?: number;
   } = {},
 ) => {
   signal?.throwIfAborted();
@@ -248,11 +245,7 @@ export const research = async (
     ? []
     : [input.question];
   const [chunks, broadcasts, { aspects, web }] = await Promise.all([
-    searchChunks(
-      [...aspectQueries, questionQueries],
-      chunksPerAspect,
-      requestContext,
-    ),
+    searchChunks([...aspectQueries, questionQueries], requestContext),
     searchBroadcasts(
       input.aspects.flatMap((a) => a.queries),
       requestContext,

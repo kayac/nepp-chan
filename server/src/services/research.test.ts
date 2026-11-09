@@ -48,15 +48,8 @@ type AspectSpec = {
   web?: boolean;
 };
 
-const run = (
-  question: string,
-  aspects: AspectSpec[],
-  chunksPerAspect?: number,
-) =>
-  research(
-    { question, aspects },
-    { requestContext: requestContext(), chunksPerAspect },
-  );
+const run = (question: string, aspects: AspectSpec[]) =>
+  research({ question, aspects }, { requestContext: requestContext() });
 
 const routes = (...villageProbabilities: number[]) =>
   Object.fromEntries(
@@ -128,20 +121,16 @@ describe("research", () => {
   it("観点の検索語が複数なら並列に引き、スコア順に重複を除いて観点あたりの上限に絞る", async () => {
     foundFor({
       国保: hits(["A", 0.5], ["B", 0.9], ["C", 0.7]),
-      国民健康保険: hits(["B", 0.9], ["D", 0.8], ["E", 0.6]),
+      国民健康保険: hits(["B", 0.9], ["D", 0.8], ["E", 0.6], ["F", 0.4]),
     });
 
-    const materials = await run(
-      "国保の保険料は？",
-      [
-        {
-          topic: "国保の保険料",
-          queries: ["国保", "国民健康保険"],
-          web: false,
-        },
-      ],
-      3,
-    );
+    const materials = await run("国保の保険料は？", [
+      {
+        topic: "国保の保険料",
+        queries: ["国保", "国民健康保険"],
+        web: false,
+      },
+    ]);
 
     expect(searchedQueries()).toEqual([
       "国保",
@@ -149,9 +138,10 @@ describe("research", () => {
       "国保の保険料",
       "国保の保険料は？",
     ]);
-    expect(materials).toContain("## 観点: 国保の保険料\n【1】【2】【3】");
-    expect(materials).toContain("【1】\nB\n\n【2】\nD\n\n【3】\nC");
+    expect(materials).toContain("## 観点: 国保の保険料\n【1】【2】【3】【4】");
+    expect(materials).toContain("【1】\nB\n\n【2】\nD\n\n【3】\nC\n\n【4】\nE");
     expect(materials).not.toContain("\nA");
+    expect(materials).not.toContain("\nF");
   });
 
   it("観点をまたいで同じ資料が出たら 1 回だけ載せる", async () => {
