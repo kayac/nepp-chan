@@ -229,6 +229,38 @@ describe("syncAll", () => {
     expect(vi.mocked(queue.sendBatch).mock.calls[1]?.[0]).toHaveLength(50);
   });
 
+  it("一覧が複数ページに分かれていても、最後のページまでたどって投入する", async () => {
+    const pages: Record<string, R2Objects> = {
+      start: {
+        objects: [buildR2Object("a.md")],
+        truncated: true,
+        cursor: "c1",
+        delimitedPrefixes: [],
+      },
+      c1: {
+        objects: [buildR2Object("b.md")],
+        truncated: false,
+        delimitedPrefixes: [],
+      },
+    };
+    const bucket = {
+      list: vi.fn(
+        async (options?: R2ListOptions) => pages[options?.cursor ?? "start"],
+      ),
+    } as unknown as R2Bucket;
+    const queue = buildQueue();
+
+    const result = await syncAll(bucket, queue);
+
+    expect(result).toEqual({ queued: 2 });
+    const keys = vi
+      .mocked(queue.sendBatch)
+      .mock.calls.flatMap(([batch]) =>
+        [...batch].map((m) => (m.body as R2EventMessage).object.key),
+      );
+    expect(keys).toEqual(["a.md", "b.md"]);
+  });
+
   it("md が無ければ何も投入しない", async () => {
     const queue = buildQueue();
 
