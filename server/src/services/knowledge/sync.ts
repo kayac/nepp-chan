@@ -85,8 +85,14 @@ export const syncAll = async (
   bucket: R2Bucket,
   queue: Queue<R2EventMessage>,
 ) => {
-  const listed = await bucket.list();
-  const targets = listed.objects.filter(
+  const objects: R2Object[] = [];
+  let cursor: string | undefined;
+  do {
+    const listed = await bucket.list({ cursor });
+    objects.push(...listed.objects);
+    cursor = listed.truncated ? listed.cursor : undefined;
+  } while (cursor);
+  const targets = objects.filter(
     (obj) => obj.key.endsWith(".md") && !obj.key.startsWith("originals/"),
   );
 
