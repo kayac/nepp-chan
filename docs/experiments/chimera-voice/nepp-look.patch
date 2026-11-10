@@ -1,0 +1,3201 @@
+diff --git a/bun.lock b/bun.lock
+index 94eaee6..da95dfd 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -1,10 +1,11 @@
+ {
+-  "lockfileVersion": 2,
++  "lockfileVersion": 1,
+   "configVersion": 1,
+   "workspaces": {
+     "": {
+       "name": "chimera-voice",
+       "dependencies": {
++        "@keanu-thakalath/openjtalkjs": "0.1.0",
+         "react": "19.3.1",
+         "react-dom": "19.3.1",
+         "three": "0.186.1",
+@@ -25,39 +26,41 @@
+   "packages": {
+     "@dimforge/rapier3d-compat": ["@dimforge/rapier3d-compat@0.12.0", "", {}, "sha512-uekIGetywIgopfD97oDL5PfeezkFpNhwlzlaEYNOA0N6ghdsOvh/HYjSMek5Q2O1PYvRSDFcqFVJl4r4ZBwOow=="],
+ 
++    "@keanu-thakalath/openjtalkjs": ["@keanu-thakalath/openjtalkjs@0.1.0", "", { "dependencies": { "node-addon-api": "^8.1.0", "node-gyp-build": "^4.8.1" }, "bin": { "openjtalkjs-demo": "bin/openjtalkjs-demo.mjs", "openjtalkjs-g2p-demo": "bin/openjtalkjs-g2p-demo.mjs", "openjtalkjs-labels-demo": "bin/openjtalkjs-labels-demo.mjs", "openjtalkjs-synth-demo": "bin/openjtalkjs-synth-demo.mjs", "openjtalkjs-frontend-demo": "bin/openjtalkjs-frontend-demo.mjs", "openjtalkjs-all-apis-demo": "bin/openjtalkjs-all-apis-demo.mjs" } }, "sha512-Mud5msXc83++jes/DDDz4huDuo/KH5TeTwy4LhLKdSahdAwwCZ9CVu8KL2Kp7MOJBNR755R4vW4mpFaFEfUgKg=="],
++
+     "@oxc-project/types": ["@oxc-project/types@0.156.0", "", {}, "sha512-1Duyg48TdJNdyhEB8Xn1L36bT9Pv6GUtlKjHxOys8xkaF/rQq3XJE+bAurSK/AgIz5mGFsb77cn9Pb20+WCScw=="],
+ 
+-    "@rolldown/binding-android-arm-eabi": ["@rolldown/binding-android-arm-eabi@1.2.16", "", { "os": "android", "cpu": "arm" }, "sha512-ia3DwAs0OsMGS7+IConptSiyk9pEXkOx/AbJ2n/lAGxH3QkWQus1t8d7gnAT38FCU2sQu8lUbeR6AiZFv4JxaA=="],
++    "@rolldown/binding-android-arm-eabi": ["@rolldown/binding-android-arm-eabi@1.2.18", "", { "os": "android", "cpu": "arm" }, "sha512-ubTG+4KlidvioxjOFdsdEa2F6JVGZb8m2ByJUqQ7fYzUeT1cEn194POcsQ10PKH4p//q0YQn4SB3YpSuzcA1Yg=="],
+ 
+-    "@rolldown/binding-android-arm64": ["@rolldown/binding-android-arm64@1.2.16", "", { "os": "android", "cpu": "arm64" }, "sha512-kx5wBiMB6E7TEvpl2B9gjLU004BkvEm2Dr941BFjx/SontPwSzNuQUIoVKxHHoSjpFIfHMmcguyLOtyn0hObRg=="],
++    "@rolldown/binding-android-arm64": ["@rolldown/binding-android-arm64@1.2.18", "", { "os": "android", "cpu": "arm64" }, "sha512-2Xa1t/JeFGTZn5TbzgPppcCftF8sCVnTNvrIvoSdcZhoFzAuVy1L3xxQUQ4sfWDtwVzg1u6Yi1R3SlJugRNV2Q=="],
+ 
+-    "@rolldown/binding-darwin-arm64": ["@rolldown/binding-darwin-arm64@1.2.16", "", { "os": "darwin", "cpu": "arm64" }, "sha512-qslZrXnKJU4cUpjoAmtAo/KQM9e2IRMlmpig6Zpwj+8KWxW8v+nkAf9216Bsek9lOC1jvg2yCjygCFo2f83msQ=="],
++    "@rolldown/binding-darwin-arm64": ["@rolldown/binding-darwin-arm64@1.2.18", "", { "os": "darwin", "cpu": "arm64" }, "sha512-iUzw9HshVvrWci9gVXjxWS7/M/IcLvNo67vu2c/w9zKBz4hIvPRixdUpIW/iCfhldLaq9ER2hecsI9UY5z0/yA=="],
+ 
+-    "@rolldown/binding-darwin-x64": ["@rolldown/binding-darwin-x64@1.2.16", "", { "os": "darwin", "cpu": "x64" }, "sha512-FdF+y48ND13eAyM2mQn+85kvAqNlvRWROy2rhgA463X/0Gv4vGtazZtfaF1mRBLscYvtOlh4QnLjOWiFzX69OQ=="],
++    "@rolldown/binding-darwin-x64": ["@rolldown/binding-darwin-x64@1.2.18", "", { "os": "darwin", "cpu": "x64" }, "sha512-XuDHFzbFEtZl0QGJi92+fmG67tfnp1iZ9VOeDkwasGyTq2VG3/5PnJnvAr+MTzFh/rNScJ3VhN+XpZyyGsN7Jw=="],
+ 
+-    "@rolldown/binding-freebsd-x64": ["@rolldown/binding-freebsd-x64@1.2.16", "", { "os": "freebsd", "cpu": "x64" }, "sha512-ddjqFM5e95AgLbUPtKIS7V1KTVlA0RUgCVr5mn+/IEhsdy3pr+Vuj/HZ7nlMN2FyxIwUktOH1LEPIQXO1v9y1Q=="],
++    "@rolldown/binding-freebsd-x64": ["@rolldown/binding-freebsd-x64@1.2.18", "", { "os": "freebsd", "cpu": "x64" }, "sha512-MM8opLfsLK15oEXDz6iBc0t3ahu+ew9jsAmha+ovZ33hSwYgqo7YmpRITqFTfW7xA71BLEQ3jJdTsaCmhB1c9w=="],
+ 
+-    "@rolldown/binding-linux-arm-gnueabihf": ["@rolldown/binding-linux-arm-gnueabihf@1.2.16", "", { "os": "linux", "cpu": "arm" }, "sha512-tHdKWbFkFBI687iim3LIyIvyL7j66VvQYkDPss5Stn/qyE2tWkR1YD0dXmXPFKKqT/o5ZEJVsaRsWS2meQwGOA=="],
++    "@rolldown/binding-linux-arm-gnueabihf": ["@rolldown/binding-linux-arm-gnueabihf@1.2.18", "", { "os": "linux", "cpu": "arm" }, "sha512-J6EoCWiy5RnFQzHrKyHXXevZ9lukQfGpnchX/zG/k/WC2nc9O9XyS1JgA8kI9VxMFggMbCPjpv7LcikriXfehw=="],
+ 
+-    "@rolldown/binding-linux-arm64-gnu": ["@rolldown/binding-linux-arm64-gnu@1.2.16", "", { "os": "linux", "cpu": "arm64", "libc": "glibc" }, "sha512-FJiLGAblPBMlBEdbOqw6kW6QcXDWAf/oJu7gYs9ZJZwmg+K+/zjFLxPTIY9izJUzxzc24FHvmseyA0IvJSl17w=="],
++    "@rolldown/binding-linux-arm64-gnu": ["@rolldown/binding-linux-arm64-gnu@1.2.18", "", { "os": "linux", "cpu": "arm64" }, "sha512-HIkFuLF7CdDeki+1aCZLLbLq0hk/PHntb+z4/YCTo47JbksTD6jJEELIz92tYROmDmvMrNqUMqBi71BkJLDR+A=="],
+ 
+-    "@rolldown/binding-linux-arm64-musl": ["@rolldown/binding-linux-arm64-musl@1.2.16", "", { "os": "linux", "cpu": "arm64", "libc": "musl" }, "sha512-hrJpblMsrQ58U9veWpbXzkhV5zStunds6HWLprqq1qauvgBr1E6P+24kLj6lSLI9vjRn/RYpjprhkHQPKGWpNg=="],
++    "@rolldown/binding-linux-arm64-musl": ["@rolldown/binding-linux-arm64-musl@1.2.18", "", { "os": "linux", "cpu": "arm64" }, "sha512-4oqWItLLYt7IceOnElCct8T2ek5p7PmD7LN04TRJRXGo5f3HtKTgGH6PhYRFK4C2ICkq/LMUU0BVPvvlAKhm8g=="],
+ 
+-    "@rolldown/binding-linux-ppc64-gnu": ["@rolldown/binding-linux-ppc64-gnu@1.2.16", "", { "os": "linux", "cpu": "ppc64", "libc": "glibc" }, "sha512-qJd/dC6j6CwLG9/s/RP2nb1RZ0GIgj7Ioj7x/SYa3RzjVrlzrmH0fhIOpfvqQDeIsdP0loi+kHaMhJzY1PBIaA=="],
++    "@rolldown/binding-linux-ppc64-gnu": ["@rolldown/binding-linux-ppc64-gnu@1.2.18", "", { "os": "linux", "cpu": "ppc64" }, "sha512-+AkRly5SrCEgnPhGRfub7pucASYEC2fTsxZg7VCcnozpA2+Wn/gCYy1t7LuJS67/xyJu/7noYBJncDUkbwgw2A=="],
+ 
+-    "@rolldown/binding-linux-s390x-gnu": ["@rolldown/binding-linux-s390x-gnu@1.2.16", "", { "os": "linux", "cpu": "s390x", "libc": "glibc" }, "sha512-Vx7Xg5uUJuNcujJjI70OICaH0EYj80BtOLZTSN7uOYg8QOLlyKnaG0IW7Fn/J0IpJsaKzmDKMhOQv1JBM9m9vg=="],
++    "@rolldown/binding-linux-s390x-gnu": ["@rolldown/binding-linux-s390x-gnu@1.2.18", "", { "os": "linux", "cpu": "s390x" }, "sha512-Ttg1r9vVykMnQrE/GwYO9icKtXiuiMfRe/w74xJkeoVuvhRG+WtT6LEMOf58Yl63yd77lhHzO8Y55R8CC3XALA=="],
+ 
+-    "@rolldown/binding-linux-x64-gnu": ["@rolldown/binding-linux-x64-gnu@1.2.16", "", { "os": "linux", "cpu": "x64", "libc": "glibc" }, "sha512-TNKhgE3uJTsTzatUSSYt0Kgo+Oa2uSlSjz4r1aEIea7HX6ULBym4fAlYUhG1i6pjNf2njfCUAfKwr6C3E9Xg1w=="],
++    "@rolldown/binding-linux-x64-gnu": ["@rolldown/binding-linux-x64-gnu@1.2.18", "", { "os": "linux", "cpu": "x64" }, "sha512-xX1Tt4o5jUMma0vJsXp5eRZA9nOuyigb2dKJMMzZRmzMxLYGE9PaKKSqHPzPvSQgM8ZOEacSTQwDQcwWfh0xmQ=="],
+ 
+-    "@rolldown/binding-linux-x64-musl": ["@rolldown/binding-linux-x64-musl@1.2.16", "", { "os": "linux", "cpu": "x64", "libc": "musl" }, "sha512-7chXdpjXZ8qG0+mIxECN3cT9kvhZ3/oZhMX6Pp876P7CDrIy8nJswva6Mq357JR7eYXfuskwZxMeV1SzoZdHrA=="],
++    "@rolldown/binding-linux-x64-musl": ["@rolldown/binding-linux-x64-musl@1.2.18", "", { "os": "linux", "cpu": "x64" }, "sha512-4VVlGI5K2kociZlW3lSN8VjG3TW5yQIlAcfCdBXMgGjJxZll15Fa4ocRHXHvIVVnwlibCw/NQajJrNDiqqpiiw=="],
+ 
+-    "@rolldown/binding-openharmony-arm64": ["@rolldown/binding-openharmony-arm64@1.2.16", "", { "os": "none", "cpu": "arm64" }, "sha512-Kwjt+7uNTJK5/MDkGWGVO2KQPnj8yAV75dMpfwyHZrJSXWHrniOB0aUEWlVYf3H1hOqFLIStLdM5QXq6bnKmOQ=="],
++    "@rolldown/binding-openharmony-arm64": ["@rolldown/binding-openharmony-arm64@1.2.18", "", { "os": "none", "cpu": "arm64" }, "sha512-PApTsgH1jLYuyy3tSCz9De82Gq5qXwi7vImVZhEzTgX1C4150Cp5M2ZfL3pLvbCvbEHL0oJeC6pd6podtv8Y5w=="],
+ 
+-    "@rolldown/binding-win32-arm64-msvc": ["@rolldown/binding-win32-arm64-msvc@1.2.16", "", { "os": "win32", "cpu": "arm64" }, "sha512-/LH6WfjDRXXJz/p5xl4TmU+jpcnwcxbKEQBW/GZE0JHfN0lGIyTtsUEGaQ/q/GikkGJ2yLKe6pwm7AnEWO8pdw=="],
++    "@rolldown/binding-win32-arm64-msvc": ["@rolldown/binding-win32-arm64-msvc@1.2.18", "", { "os": "win32", "cpu": "arm64" }, "sha512-J2XjWjx/SP+4x0H4r6dz3Vzb5WVkg7re40Do9K7HJ3sK2/xcmZrWwakXlSwaMvOkvruLJCD4CL/3wqsIR/thgg=="],
+ 
+-    "@rolldown/binding-win32-x64-msvc": ["@rolldown/binding-win32-x64-msvc@1.2.16", "", { "os": "win32", "cpu": "x64" }, "sha512-1lv1KvX0Z871zfk7vw+dnXMMnHNyDwMzWG8Kv3HxDXMOhzCX4SHc7HK319fInP0i+0p9D8brkfzL7pJOaGl+tw=="],
++    "@rolldown/binding-win32-x64-msvc": ["@rolldown/binding-win32-x64-msvc@1.2.18", "", { "os": "win32", "cpu": "x64" }, "sha512-XwRJxRQvkuEtS0hIIt29QrqPJ+JzMJSNYHJw4ae/mc6uEarfRG1ceyg4HmmWiBdL/YCb6g7N5BLbSvmRJRYZHw=="],
+ 
+-    "@rolldown/pluginutils": ["@rolldown/pluginutils@1.0.1", "", {}, "sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw=="],
++    "@rolldown/pluginutils": ["@rolldown/pluginutils@1.1.0", "", {}, "sha512-K+NU2HDCEem4sClgHH4ZZXwdJeNFkJo+hRk479DIwdIviAPN2hFJH1KHHwg8CxHQXvi0M5XY4deTXINfIiSG6w=="],
+ 
+     "@tweenjs/tween.js": ["@tweenjs/tween.js@23.1.3", "", {}, "sha512-vJmvvwFxYuGnF2axRtPYocag6Clbb5YS7kLL+SO/TeVFzHqDIWrNKYtcsPMibjDx9O+bu+psAy9NKfWklassUA=="],
+ 
+@@ -127,7 +130,7 @@
+ 
+     "fflate": ["fflate@0.8.3", "", {}, "sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA=="],
+ 
+-    "fsevents": ["fsevents@2.3.3", "", { "os": "darwin", "hasInstallScript": true }, "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw=="],
++    "fsevents": ["fsevents@2.3.3", "", { "os": "darwin" }, "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw=="],
+ 
+     "lightningcss": ["lightningcss@1.33.0", "", { "dependencies": { "detect-libc": "^2.0.3" }, "optionalDependencies": { "lightningcss-android-arm64": "1.33.0", "lightningcss-darwin-arm64": "1.33.0", "lightningcss-darwin-x64": "1.33.0", "lightningcss-freebsd-x64": "1.33.0", "lightningcss-linux-arm-gnueabihf": "1.33.0", "lightningcss-linux-arm64-gnu": "1.33.0", "lightningcss-linux-arm64-musl": "1.33.0", "lightningcss-linux-x64-gnu": "1.33.0", "lightningcss-linux-x64-musl": "1.33.0", "lightningcss-win32-arm64-msvc": "1.33.0", "lightningcss-win32-x64-msvc": "1.33.0" } }, "sha512-WkUDrojuJs0xkgGf2udWxa3yGBRxPtxUkB79i6aCZLRgc7PM8fZe9TosfPDcvEpQZbuFASnHYmRLBLUbmLOIIA=="],
+ 
+@@ -141,13 +144,13 @@
+ 
+     "lightningcss-linux-arm-gnueabihf": ["lightningcss-linux-arm-gnueabihf@1.33.0", "", { "os": "linux", "cpu": "arm" }, "sha512-N7FVBe6iS24MlM6R/4RBTxGhQheZGs7tiQ9U32UtF75NzP5Q7xWPRqLBCKxlRQRk3rY1jCIPLzx7WzOhuUIRLQ=="],
+ 
+-    "lightningcss-linux-arm64-gnu": ["lightningcss-linux-arm64-gnu@1.33.0", "", { "os": "linux", "cpu": "arm64", "libc": "glibc" }, "sha512-j2v/itmy4HlNxlc6voKXYgBqNi0Ng2LShg4z7GufpEgs05P+2suBVyi9I6YHq5uoVFx9ETin3eCEhLVyXGQnKg=="],
++    "lightningcss-linux-arm64-gnu": ["lightningcss-linux-arm64-gnu@1.33.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-j2v/itmy4HlNxlc6voKXYgBqNi0Ng2LShg4z7GufpEgs05P+2suBVyi9I6YHq5uoVFx9ETin3eCEhLVyXGQnKg=="],
+ 
+-    "lightningcss-linux-arm64-musl": ["lightningcss-linux-arm64-musl@1.33.0", "", { "os": "linux", "cpu": "arm64", "libc": "musl" }, "sha512-yiO5ROMuYQgXbC60yjZU5CYSFZGKXL0HFATXt9mHJn1+zW55oCtMI9NfcVhYLMFDL7gV7oBPon/EmMMGg2OvtQ=="],
++    "lightningcss-linux-arm64-musl": ["lightningcss-linux-arm64-musl@1.33.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-yiO5ROMuYQgXbC60yjZU5CYSFZGKXL0HFATXt9mHJn1+zW55oCtMI9NfcVhYLMFDL7gV7oBPon/EmMMGg2OvtQ=="],
+ 
+-    "lightningcss-linux-x64-gnu": ["lightningcss-linux-x64-gnu@1.33.0", "", { "os": "linux", "cpu": "x64", "libc": "glibc" }, "sha512-ar+Ju7LmcN0Jo4FpL4hpFybwNG9/3A/Br5KW2n2jyODg3MEZXaDYADdemoNS+BDNfMgKvylJLj4S5tyRActuAg=="],
++    "lightningcss-linux-x64-gnu": ["lightningcss-linux-x64-gnu@1.33.0", "", { "os": "linux", "cpu": "x64" }, "sha512-ar+Ju7LmcN0Jo4FpL4hpFybwNG9/3A/Br5KW2n2jyODg3MEZXaDYADdemoNS+BDNfMgKvylJLj4S5tyRActuAg=="],
+ 
+-    "lightningcss-linux-x64-musl": ["lightningcss-linux-x64-musl@1.33.0", "", { "os": "linux", "cpu": "x64", "libc": "musl" }, "sha512-RYiYbkokw0trfKqqzfF55lginwEPrD3OJDfTuJzFs1MK6iFnDenaz1fqLLtX4ITG3OktJQXOeTaw1awrBAlZPw=="],
++    "lightningcss-linux-x64-musl": ["lightningcss-linux-x64-musl@1.33.0", "", { "os": "linux", "cpu": "x64" }, "sha512-RYiYbkokw0trfKqqzfF55lginwEPrD3OJDfTuJzFs1MK6iFnDenaz1fqLLtX4ITG3OktJQXOeTaw1awrBAlZPw=="],
+ 
+     "lightningcss-win32-arm64-msvc": ["lightningcss-win32-arm64-msvc@1.33.0", "", { "os": "win32", "cpu": "arm64" }, "sha512-1K+MPfLSFVpphzpdbfkhlWk6wBrTObBzS2T6db10PNOZgR9GoVsAWzwNyuhUYYbTp23j+4RrncfujZ4uAzXvwA=="],
+ 
+@@ -157,6 +160,10 @@
+ 
+     "nanoid": ["nanoid@3.3.20", "", { "bin": { "nanoid": "bin/nanoid.cjs" } }, "sha512-uKdg2G3GNCKQn9byYOpxbGqrT2fGO5KRt5J/8b3pok8rT6qxGWF6hxMyJiEYtAf+FVyYuD9hRaDqX5uPFYJ4ZQ=="],
+ 
++    "node-addon-api": ["node-addon-api@8.9.2", "", {}, "sha512-VijLXbi3UACN69I0JVXJsX4tjACjNoQDgv2gTF6sx2wWEi8tkSg2eX8p5gSIFi8z2+DL3oHmY6OyKce38SDolg=="],
++
++    "node-gyp-build": ["node-gyp-build@4.8.4", "", { "bin": { "node-gyp-build": "bin.js", "node-gyp-build-optional": "optional.js", "node-gyp-build-test": "build-test.js" } }, "sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ=="],
++
+     "picocolors": ["picocolors@1.1.1", "", {}, "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA=="],
+ 
+     "picomatch": ["picomatch@4.0.7", "", {}, "sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA=="],
+@@ -169,7 +176,7 @@
+ 
+     "react-dom": ["react-dom@19.3.1", "", { "dependencies": { "scheduler": "^0.28.0" }, "peerDependencies": { "react": "^19.3.1" } }, "sha512-Y0bARz53lhEC1NMCASs0/j+faB/zqt3R8hpvg1e8+61ZVJ4UL0UdC4cBbXfZMcIuhrfgeILTLe+ZeBCavQPtKQ=="],
+ 
+-    "rolldown": ["rolldown@1.2.16", "", { "dependencies": { "@oxc-project/types": "=0.156.0", "@rolldown/pluginutils": "^1.0.0" }, "optionalDependencies": { "@rolldown/binding-android-arm-eabi": "1.2.16", "@rolldown/binding-android-arm64": "1.2.16", "@rolldown/binding-darwin-arm64": "1.2.16", "@rolldown/binding-darwin-x64": "1.2.16", "@rolldown/binding-freebsd-x64": "1.2.16", "@rolldown/binding-linux-arm-gnueabihf": "1.2.16", "@rolldown/binding-linux-arm64-gnu": "1.2.16", "@rolldown/binding-linux-arm64-musl": "1.2.16", "@rolldown/binding-linux-ppc64-gnu": "1.2.16", "@rolldown/binding-linux-s390x-gnu": "1.2.16", "@rolldown/binding-linux-x64-gnu": "1.2.16", "@rolldown/binding-linux-x64-musl": "1.2.16", "@rolldown/binding-openharmony-arm64": "1.2.16", "@rolldown/binding-win32-arm64-msvc": "1.2.16", "@rolldown/binding-win32-x64-msvc": "1.2.16" }, "bin": { "rolldown": "./bin/cli.mjs" } }, "sha512-bWvlMpFKiTfDKfnK7FC2MPgPeWCf/Kpwsq49ApdW+FQaBZb6O6dZ4MAPbPUjp7hYQrw/RobqCzn64BRrQecGHw=="],
++    "rolldown": ["rolldown@1.2.18", "", { "dependencies": { "@oxc-project/types": "=0.156.0", "@rolldown/pluginutils": "^1.0.0" }, "optionalDependencies": { "@rolldown/binding-android-arm-eabi": "1.2.18", "@rolldown/binding-android-arm64": "1.2.18", "@rolldown/binding-darwin-arm64": "1.2.18", "@rolldown/binding-darwin-x64": "1.2.18", "@rolldown/binding-freebsd-x64": "1.2.18", "@rolldown/binding-linux-arm-gnueabihf": "1.2.18", "@rolldown/binding-linux-arm64-gnu": "1.2.18", "@rolldown/binding-linux-arm64-musl": "1.2.18", "@rolldown/binding-linux-ppc64-gnu": "1.2.18", "@rolldown/binding-linux-s390x-gnu": "1.2.18", "@rolldown/binding-linux-x64-gnu": "1.2.18", "@rolldown/binding-linux-x64-musl": "1.2.18", "@rolldown/binding-openharmony-arm64": "1.2.18", "@rolldown/binding-win32-arm64-msvc": "1.2.18", "@rolldown/binding-win32-x64-msvc": "1.2.18" }, "bin": { "rolldown": "./bin/cli.mjs" } }, "sha512-C1uuT3UR60SShuCaPQFAAZyefJCWZlAKB02BV3BuPE2Rs4fevRQltEKoFO2tV5W9/eJhU5RieV6vJj3euulfNQ=="],
+ 
+     "scheduler": ["scheduler@0.28.0", "", {}, "sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw=="],
+ 
+@@ -181,10 +188,12 @@
+ 
+     "typescript": ["typescript@7.0.2", "", { "optionalDependencies": { "@typescript/typescript-aix-ppc64": "7.0.2", "@typescript/typescript-darwin-arm64": "7.0.2", "@typescript/typescript-darwin-x64": "7.0.2", "@typescript/typescript-freebsd-arm64": "7.0.2", "@typescript/typescript-freebsd-x64": "7.0.2", "@typescript/typescript-linux-arm": "7.0.2", "@typescript/typescript-linux-arm64": "7.0.2", "@typescript/typescript-linux-loong64": "7.0.2", "@typescript/typescript-linux-mips64el": "7.0.2", "@typescript/typescript-linux-ppc64": "7.0.2", "@typescript/typescript-linux-riscv64": "7.0.2", "@typescript/typescript-linux-s390x": "7.0.2", "@typescript/typescript-linux-x64": "7.0.2", "@typescript/typescript-netbsd-arm64": "7.0.2", "@typescript/typescript-netbsd-x64": "7.0.2", "@typescript/typescript-openbsd-arm64": "7.0.2", "@typescript/typescript-openbsd-x64": "7.0.2", "@typescript/typescript-sunos-x64": "7.0.2", "@typescript/typescript-win32-arm64": "7.0.2", "@typescript/typescript-win32-x64": "7.0.2" }, "bin": { "tsc": "bin/tsc" } }, "sha512-8FYau96o3NKOhbjKi/qNvG/W5jhzxkbdm5sj9AbZ/5T5sWqn3hJgLfGx27sRKZWTvyzCP8dLRBTf5tBTSRVUNA=="],
+ 
+-    "undici-types": ["undici-types@8.9.0", "", {}, "sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg=="],
++    "undici-types": ["undici-types@8.12.4", "", {}, "sha512-GNCQH3MbVGB8OAVAoTiLH8pu4wx5Ni3DWKpnBzGj3WDsi8EwmK0aOVBooNEt+g5YL1eHPxcS9XUTouwFU6j1kQ=="],
+ 
+     "vite": ["vite@8.3.6", "", { "dependencies": { "lightningcss": "^1.33.0", "picomatch": "^4.0.7", "postcss": "^8.5.32", "rolldown": "~1.2.16", "tinyglobby": "^0.2.17" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^20.19.0 || >=22.12.0", "@vitejs/devtools": "^0.7.1 || ^0.8.0", "esbuild": "^0.27.0 || ^0.28.0", "jiti": ">=1.21.0", "less": "^4.0.0", "sass": "^1.70.0", "sass-embedded": "^1.70.0", "stylus": ">=0.54.8", "sugarss": "^5.0.0", "terser": "^5.16.0", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["@types/node", "@vitejs/devtools", "esbuild", "jiti", "less", "sass", "sass-embedded", "stylus", "sugarss", "terser", "tsx", "yaml"], "bin": { "vite": "bin/vite.js" } }, "sha512-UI7dK29NnS54Fk+mmo7o+jI6U8Fp7hDl+X5Q1k45WH+d4dSlbLVUETGQ+hfkNgvLQGyoElPj837nZyv4MBc0VA=="],
+ 
+     "zustand": ["zustand@5.0.16", "", { "peerDependencies": { "@types/react": ">=18.0.0", "immer": ">=9.0.6", "react": ">=18.0.0", "use-sync-external-store": ">=1.2.0" }, "optionalPeers": ["@types/react", "immer", "react", "use-sync-external-store"] }, "sha512-Uv7e327ihlCfayfja3hDc0M64Upev1LWBKpRobdK4NyovDDPeeX4imWXc/wzC1yc6fkYPoAY/ncKVPAs2jrtQw=="],
++
++    "@types/node/undici-types": ["undici-types@8.9.0", "", {}, "sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg=="],
+   }
+ }
+diff --git a/package.json b/package.json
+index 7c703c1..1c6fab5 100644
+--- a/package.json
++++ b/package.json
+@@ -14,6 +14,7 @@
+     "wasm": "cargo build -p chimera-wasm --release --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/release/chimera_wasm.wasm src/wasm/chimera.wasm"
+   },
+   "dependencies": {
++    "@keanu-thakalath/openjtalkjs": "0.1.0",
+     "react": "19.3.1",
+     "react-dom": "19.3.1",
+     "three": "0.186.1",
+diff --git a/src/ui/colors.ts b/src/ui/colors.ts
+index e35f9ce..c70c098 100644
+--- a/src/ui/colors.ts
++++ b/src/ui/colors.ts
+@@ -4,23 +4,47 @@
+  * slots: each screen maps its own four controls onto them and draws what they move in the same
+  * colour. CSS mirrors these as custom properties in styles.css.
+  */
++/** ねっぷちゃんのデザイントークン（nepp-chan shared/src/styles/index.css の値の写し） */
++export const NEPP = {
++  paper0: "#fefdfb",
++  paper50: "#faf7f2",
++  paper200: "#e8dfd1",
++  teal500: "#5cb7bb",
++  teal600: "#0d9296",
++  teal700: "#0f7177",
++  moss700: "#5c7a3f",
++  sky700: "#4f708b",
++  berry: "#e76f7a",
++  apricot300: "#ffc8a2",
++  apricot500: "#f4a06a",
++  apricot700: "#c26d3c",
++  apricot800: "#a8542a",
++  snow600: "#57534e",
++  snow800: "#292524",
++  snow900: "#1c1917",
++} as const;
++/** canvas の地色 */
++export const PAPER = NEPP.paper0;
++/** 紙にインクで描く合成。線が重なるほど濃くなる（黒地の加算合成の裏返し） */
++export const INK_BLEND: GlobalCompositeOperation = "multiply";
++
+ export const V = {
+-  blue: "#4fb6f2",
+-  blueMid: "#3487c4",
+-  blueDim: "#1f5f8c",
+-  frame: "#133954",
+-  green: "#5be381",
+-  red: "#ff5d40",
+-  pink: "#ff73cf",
+-  white: "#eef6f8",
+-  amber: "#ffb340",
++  blue: NEPP.teal700,
++  blueMid: NEPP.teal600,
++  blueDim: NEPP.teal500,
++  frame: NEPP.paper200,
++  green: NEPP.moss700,
++  red: NEPP.berry,
++  pink: NEPP.sky700,
++  white: NEPP.snow800,
++  amber: NEPP.apricot700,
+ };
+ /** the four control slots, in order */
+ export const SLOTS = [V.green, V.red, V.pink, V.white] as const;
+ /** brighter canvas text, kept separate from the vector line palette */
+ export const TEXT = {
+-  primary: "#effbff",
+-  secondary: "#e2f5fc",
++  primary: NEPP.snow800,
++  secondary: NEPP.snow600,
+ } as const;
+ 
+ /** mix two #rrggbb colours */
+@@ -30,9 +54,9 @@ export function mix(hex: string, to: string, u: number): string {
+   return "#" + [16, 8, 0].map((s) => ch(s).toString(16).padStart(2, "0")).join("");
+ }
+ /** the whitish core of a bright beam in this colour */
+-export const core = (hex: string): string => mix(hex, "#ffffff", 0.55);
++export const core = (hex: string): string => mix(hex, NEPP.snow900, 0.45);
+ 
+-const HEAT: [number, string][] = [[0, "#3a2408"], [0.35, "#c9822a"], [0.6, "#ffb340"], [0.82, "#ffe39a"], [1, "#fff8ec"]];
++const HEAT: [number, string][] = [[0, NEPP.paper200], [0.35, NEPP.apricot300], [0.6, NEPP.apricot500], [0.82, NEPP.apricot700], [1, NEPP.apricot800]];
+ /** sound level 0..1 → dim amber → amber → pale yellow → white */
+ export function heat(level: number): string {
+   const v = Math.max(0, Math.min(1, level));
+@@ -45,9 +69,9 @@ export function heat(level: number): string {
+  * still sit on black in blue and amber.
+  */
+ export const C = {
+-  black: "#000000",
+-  console: "#000000",
+-  inset: "#000000",
++  black: PAPER,
++  console: PAPER,
++  inset: PAPER,
+   line: V.frame,
+   text: V.blue,
+   textDim: V.blueMid,
+diff --git a/src/ui/components/AnatomyView.tsx b/src/ui/components/AnatomyView.tsx
+index 7dfc54f..ff8735d 100644
+--- a/src/ui/components/AnatomyView.tsx
++++ b/src/ui/components/AnatomyView.tsx
+@@ -6,7 +6,7 @@ import { sameBody } from "../body.ts";
+ import { useStore } from "../store.ts";
+ import { VoiceModel } from "../analysis.ts";
+ import { useModel } from "../useModel.ts";
+-import { V } from "../colors.ts";
++import { PAPER, V } from "../colors.ts";
+ import type { HumanArtic, HumanFrame } from "../../wasm/types.ts";
+ import type { TelemetryMessage } from "../../worklet/protocol.ts";
+ 
+@@ -104,7 +104,7 @@ export function AnatomyView(props: { slots?: SlotsFn; info?: InfoFn; showFormant
+         const info = infoRef.current(m, f, tele);
+         ctx.setTransform(1, 0, 0, 1, 0, 0);
+         ctx.globalCompositeOperation = "source-over";
+-        ctx.fillStyle = "#000";
++        ctx.fillStyle = PAPER;
+         ctx.fillRect(0, 0, canvas.width, canvas.height);
+         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+         r.draw(ctx, m, f, a, tele, st.view, { hover: hoverRef.current, drag: dragRef.current?.id ?? null, dt, formants: formantsRef.current ? formants : [], slots: slotsRef.current(m, a, f, formants, tele), info: info.map((s) => s.toUpperCase()) });
+diff --git a/src/ui/components/AnatomyView3D.tsx b/src/ui/components/AnatomyView3D.tsx
+index 2f3469c..658a3c2 100644
+--- a/src/ui/components/AnatomyView3D.tsx
++++ b/src/ui/components/AnatomyView3D.tsx
+@@ -17,7 +17,7 @@ import { sameBody } from "../body.ts";
+ import { useStore } from "../store.ts";
+ import { VoiceModel } from "../analysis.ts";
+ import { useModel } from "../useModel.ts";
+-import { V } from "../colors.ts";
++import { PAPER, V } from "../colors.ts";
+ import { articulatorSlots, tractInfo, type InfoFn, type OverlayFn, type SlotsFn } from "./AnatomyView.tsx";
+ import type { ViewFlags } from "../render/anatomy.ts";
+ import type { HumanArtic } from "../../wasm/engine.ts";
+@@ -72,7 +72,7 @@ export function AnatomyView3D(props: { slots?: SlotsFn; info?: InfoFn; showForma
+     }
+     // the palette's sRGB values go straight through, as on the 2D screens
+     gl.outputColorSpace = THREE.LinearSRGBColorSpace;
+-    gl.setClearColor(0x000000, 1);
++    gl.setClearColor(PAPER, 1);
+     const r = new Anatomy3D();
+     r.centred = !readoutsRef.current;
+     r.facing = feedRef.current?.facing ?? 1;
+@@ -222,7 +222,7 @@ export function AnatomyView3D(props: { slots?: SlotsFn; info?: InfoFn; showForma
+         gl.render(r.scene, camera);
+         ctx.setTransform(1, 0, 0, 1, 0, 0);
+         ctx.globalCompositeOperation = "source-over";
+-        ctx.fillStyle = "#000";
++        ctx.fillStyle = PAPER;
+         ctx.fillRect(0, 0, canvas.width, canvas.height);
+         ctx.drawImage(glCanvas, 0, 0, canvas.width, canvas.height);
+         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+diff --git a/src/ui/components/ChatPanel.tsx b/src/ui/components/ChatPanel.tsx
+new file mode 100644
+index 0000000..3c64942
+--- /dev/null
++++ b/src/ui/components/ChatPanel.tsx
+@@ -0,0 +1,97 @@
++import { useEffect, useRef, useState } from "react";
++import { useStore } from "../store.ts";
++import { speakText, stopSpeaking } from "../speech.ts";
++import { NeppChat, speechTextOf } from "../neppChat.ts";
++import { SpeechQueue } from "../speechQueue.ts";
++import { Screen } from "./Screen.tsx";
++
++interface Message {
++  role: "user" | "nepp";
++  text: string;
++}
++
++const chat = new NeppChat();
++const SPEAKING_RATE = 1;
++
++/** ねっぷちゃんに話しかける欄。返ってきたセリフはそのまま声に出す */
++export function ChatScreen() {
++  const body = useStore((s) => s.body);
++  const f0 = useStore((s) => s.source.f0);
++  const start = useStore((s) => s.start);
++  const [messages, setMessages] = useState<Message[]>([]);
++  const [input, setInput] = useState("");
++  const [busy, setBusy] = useState(false);
++  const [error, setError] = useState<string | null>(null);
++  const logRef = useRef<HTMLDivElement>(null);
++  const voice = useRef({ body, f0 });
++  voice.current = { body, f0 };
++  const queue = useRef<SpeechQueue | null>(null);
++  queue.current ??= new SpeechQueue(async (sentence) => {
++    const spoken = await speakText(sentence, { ipa: false, rate: SPEAKING_RATE, ...voice.current });
++    return spoken ? spoken.plan.end : null;
++  }, stopSpeaking);
++
++  useEffect(() => {
++    const log = logRef.current;
++    if (log) log.scrollTop = log.scrollHeight;
++  }, [messages]);
++
++  const submit = async () => {
++    const text = input.trim();
++    if (!text || busy) return;
++    setBusy(true);
++    setError(null);
++    setInput("");
++    setMessages((m) => [...m, { role: "user", text }, { role: "nepp", text: "" }]);
++    try {
++      // 返答を待ってから音を起こすと、クリックから時間が空いてブラウザに止められる
++      await start();
++      queue.current?.clear();
++      await chat.send(text, {
++        progress: (soFar) => setMessages((m) => [...m.slice(0, -1), { role: "nepp", text: soFar }]),
++        sentence: (sentence) => {
++          const spoken = speechTextOf(sentence);
++          if (spoken) void queue.current?.enqueue(spoken);
++        },
++      });
++    } catch (cause) {
++      console.error(cause);
++      setMessages((m) => (m.at(-1)?.text === "" ? m.slice(0, -1) : m));
++      setError("ねっぷちゃんにつながりませんでした。nepp-chan の API サーバー（localhost:8787）が起動しているか確認してください。");
++    } finally {
++      setBusy(false);
++    }
++  };
++
++  return (
++    <Screen className="s-chat" title="ねっぷちゃんと話す" sub="返事を声に出します">
++      <div className="chat">
++        <div className="chat-log" ref={logRef} aria-live="polite">
++          {messages.length === 0 && <p className="chat-empty">メッセージを送ると、ねっぷちゃんが返事をして、そのまま喋ります。</p>}
++          {messages.map((m, i) => (
++            <p key={i} className={`chat-msg ${m.role}`}>
++              {m.text || "…"}
++            </p>
++          ))}
++        </div>
++        {error && (
++          <p className="chat-error" role="alert">
++            {error}
++          </p>
++        )}
++        <form
++          className="chat-form"
++          onSubmit={(e) => {
++            e.preventDefault();
++            void submit();
++          }}
++        >
++          <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.stopPropagation()} placeholder="ねっぷちゃんに話しかける" aria-label="ねっぷちゃんへのメッセージ" />
++          <button className="primary" type="submit" disabled={busy || !input.trim()}>
++            {busy ? "返事を待っています…" : "送信"}
++          </button>
++        </form>
++      </div>
++    </Screen>
++  );
++}
+diff --git a/src/ui/components/PianoRoll.tsx b/src/ui/components/PianoRoll.tsx
+index 95bcab9..48d748e 100644
+--- a/src/ui/components/PianoRoll.tsx
++++ b/src/ui/components/PianoRoll.tsx
+@@ -3,7 +3,7 @@ import { usePhosphor } from "../usePhosphor.ts";
+ import { engine } from "../../audio/AudioEngine.ts";
+ import { useStore } from "../store.ts";
+ import { roll, tickSinging } from "../singing.ts";
+-import { TEXT, V } from "../colors.ts";
++import { INK_BLEND, TEXT, V } from "../colors.ts";
+ import { beam, beamPts, label, seg, type Pt } from "../render/vector.ts";
+ import { nearestBody } from "../body.ts";
+ 
+@@ -87,7 +87,7 @@ export function PianoRoll() {
+       r.rect(x0, yc - barH / 2, x1 - x0, barH);
+       if (live) {
+         ctx.save();
+-        ctx.globalCompositeOperation = "lighter";
++        ctx.globalCompositeOperation = INK_BLEND;
+         ctx.fillStyle = "rgba(91, 227, 129, 0.12)";
+         ctx.fill(r);
+         ctx.restore();
+diff --git a/src/ui/components/ScoreView.tsx b/src/ui/components/ScoreView.tsx
+index e32de32..4e3e977 100644
+--- a/src/ui/components/ScoreView.tsx
++++ b/src/ui/components/ScoreView.tsx
+@@ -3,7 +3,7 @@ import { usePhosphor } from "../usePhosphor.ts";
+ import { engine } from "../../audio/AudioEngine.ts";
+ import { currentPlan, onPlan, type SpokenPlan } from "../speech.ts";
+ import { activation, type Gesture } from "../../wasm/engine.ts";
+-import { TEXT, V } from "../colors.ts";
++import { PAPER, TEXT, V } from "../colors.ts";
+ import { beam, beamPts, blockLineH, label, labelBlock, seg, wrapLabel, type Pt } from "../render/vector.ts";
+ 
+ /** rows of the score, coloured like the articulators on the face (lips pink, tongue green, soft palate white, glottis amber) */
+@@ -47,7 +47,7 @@ export function ScoreView() {
+       const msg = "SPEAK SOMETHING TO SEE ITS GESTURES: WHICH ARTICULATOR MOVES, WHEN, AND HOW THEY OVERLAP.";
+       const cy = (top + bottom) / 2;
+       const bh = wrapLabel(ctx, msg, right - left - 16, { size: 10, ls: 0.12 }).length * blockLineH(10) + 8;
+-      ctx.fillStyle = "#000";
++      ctx.fillStyle = PAPER;
+       ctx.fillRect(left, cy - bh / 2, right - left, bh);
+       labelBlock(ctx, msg, left + 8, cy, right - left - 16, { size: 10, color: TEXT.secondary, ls: 0.12 });
+       return;
+diff --git a/src/ui/components/SpeakPanel.tsx b/src/ui/components/SpeakPanel.tsx
+index 5bb8ee5..1825cda 100644
+--- a/src/ui/components/SpeakPanel.tsx
++++ b/src/ui/components/SpeakPanel.tsx
+@@ -5,6 +5,7 @@ import { mouthWords } from "../mouthWords.ts";
+ import { tokenizeIpa } from "../../wasm/engine.ts";
+ import { Slider, Toggle } from "./Controls.tsx";
+ import { Chip, Screen } from "./Screen.tsx";
++import { ChatScreen } from "./ChatPanel.tsx";
+ import { ScoreView, planNow } from "./ScoreView.tsx";
+ import { TubeView } from "./TubeView.tsx";
+ import { Stroboscope } from "./Stroboscope.tsx";
+@@ -12,7 +13,7 @@ import type { InfoFn, SlotsFn } from "./AnatomyView.tsx";
+ import { V } from "../colors.ts";
+ import { engine } from "../../audio/AudioEngine.ts";
+ 
+-const EXAMPLES = ["Hello. Can you hear me?", "She sells sea shells by the sea shore.", "Every sound here is air moving through a throat.", "The quick brown fox jumps over the lazy dog."];
++const EXAMPLES = ["こんにちは！ねっぷちゃんだよ。", "音威子府村へようこそ。今日はいい天気だね。", "こんにちわ。ね'っぷちゃん だ'よ。", "Hello. Can you hear me?", "She sells sea shells by the sea shore.", "Every sound here is air moving through a throat.", "The quick brown fox jumps over the lazy dog."];
+ 
+ // IPA pulmonic consonant chart (rows = manner, columns = place); empty cells are null
+ const PLACES = ["Bilabial", "Labiodental", "Dental", "Alveolar", "Postalveolar", "Retroflex", "Palatal", "Velar", "Uvular", "Pharyngeal", "Glottal"];
+@@ -141,6 +142,7 @@ export function SpeakRight() {
+ 
+   return (
+     <div className="right right-speak">
++      <ChatScreen />
+       <Screen className="s-say" title="Say" sub="Text to speech" tools={<Toggle label="Text is IPA" checked={ipa} onChange={setIpa} />}>
+         <div className="say">
+           <div className="say-row">
+@@ -154,7 +156,7 @@ export function SpeakRight() {
+               rows={2}
+               spellCheck={!ipa}
+               aria-label={ipa ? "IPA to speak" : "Text to speak"}
+-              placeholder={ipa ? "Type IPA, for example ˈhɛloʊ" : "Type something for the voice to say"}
++              placeholder={ipa ? "Type IPA, for example ˈhɛloʊ" : "Type something for the voice to say（かなで日本語）"}
+             />
+             <div className="say-actions">
+               <button className="primary" onClick={() => void speak()} disabled={busy}>
+@@ -173,6 +175,7 @@ export function SpeakRight() {
+               <Slider label="Rate" value={rate} min={0.5} max={1.8} onChange={setRate} format={(v) => `${v.toFixed(2)}×`} />
+             </div>
+           </div>
++          <p className="say-hint">日本語はそのまま入力できます（漢字まじり可）。アクセントを自分で決めたいときは、かなだけで書いて、音が下がる位置に &apos; を置きます（ね&apos;こ）。</p>
+           <div className="examples" role="group" aria-label="Examples">
+             {EXAMPLES.map((ex) => (
+               <Chip
+diff --git a/src/ui/components/Spectrogram.tsx b/src/ui/components/Spectrogram.tsx
+index d83c7db..5840785 100644
+--- a/src/ui/components/Spectrogram.tsx
++++ b/src/ui/components/Spectrogram.tsx
+@@ -2,7 +2,7 @@ import { useRef } from "react";
+ import { usePhosphor } from "../usePhosphor.ts";
+ import { engine } from "../../audio/AudioEngine.ts";
+ import { useStore } from "../store.ts";
+-import { TEXT, V, mix } from "../colors.ts";
++import { PAPER, TEXT, V, mix } from "../colors.ts";
+ import { beam, label, seg } from "../render/vector.ts";
+ 
+ const FMIN = 60, FMAX = 12000;
+@@ -67,7 +67,7 @@ export function Spectrogram() {
+       fill.closePath();
+       ctx.save();
+       ctx.globalCompositeOperation = "source-over";
+-      ctx.fillStyle = "#000";
++      ctx.fillStyle = PAPER;
+       ctx.fill(fill);
+       ctx.restore();
+       const fade = 1 - age / SLICES;
+diff --git a/src/ui/japanese.ts b/src/ui/japanese.ts
+new file mode 100644
+index 0000000..93394a2
+--- /dev/null
++++ b/src/ui/japanese.ts
+@@ -0,0 +1,313 @@
++/**
++ * 日本語 → 発話計画の入力。モーラを等拍に並べ、アクセント核から各モーラの高さを決める。
++ * 入口は 2 つ: 手書きのかな記法（発音どおりのかな、' の直前のモーラがアクセント核、空白で
++ * アクセント句、句読点で息継ぎ）と、形態素解析（OpenJTalk）の結果。
++ */
++import type { Segment } from "../wasm/engine.ts";
++import type { Gesture, Syllable } from "../wasm/types.ts";
++
++const MORA_SEC = 0.14;
++const HIGH_RATIO = 1.12;
++const LOW_RATIO = 0.9;
++const DOWNSTEP_RATIO = 0.92;
++const DECLINATION = 0.08;
++const FINAL_FALL_RATIO = 0.9;
++const QUESTION_RISE_RATIO = 1.3;
++const F0_FLOOR_RATIO = 0.75;
++const FINAL_VOWEL_EXTRA_SEC = 0.06;
++const PHRASE_PAUSE_SEC = 0.35;
++
++const VOWEL_IPA: Record<string, string> = { a: "a", i: "i", u: "ɯ", e: "e", o: "o" };
++
++const ONSETS: Record<string, { ipa: string[]; dur: number }> = {
++  k: { ipa: ["k"], dur: 0.06 },
++  g: { ipa: ["g"], dur: 0.055 },
++  s: { ipa: ["s"], dur: 0.08 },
++  sh: { ipa: ["ʃ"], dur: 0.08 },
++  z: { ipa: ["z"], dur: 0.06 },
++  j: { ipa: ["dʒ"], dur: 0.07 },
++  t: { ipa: ["t"], dur: 0.06 },
++  ch: { ipa: ["tʃ"], dur: 0.075 },
++  ts: { ipa: ["ts"], dur: 0.075 },
++  d: { ipa: ["d"], dur: 0.05 },
++  n: { ipa: ["n"], dur: 0.05 },
++  ny: { ipa: ["ɲ"], dur: 0.05 },
++  h: { ipa: ["h"], dur: 0.06 },
++  hy: { ipa: ["ç"], dur: 0.07 },
++  f: { ipa: ["ɸ"], dur: 0.07 },
++  b: { ipa: ["b"], dur: 0.05 },
++  p: { ipa: ["p"], dur: 0.06 },
++  m: { ipa: ["m"], dur: 0.05 },
++  y: { ipa: ["j"], dur: 0.05 },
++  r: { ipa: ["ɾ"], dur: 0.03 },
++  w: { ipa: ["w"], dur: 0.05 },
++  ky: { ipa: ["k", "j"], dur: 0.08 },
++  gy: { ipa: ["g", "j"], dur: 0.075 },
++  by: { ipa: ["b", "j"], dur: 0.07 },
++  py: { ipa: ["p", "j"], dur: 0.08 },
++  my: { ipa: ["m", "j"], dur: 0.07 },
++  ry: { ipa: ["ɾ", "j"], dur: 0.06 },
++};
++
++const PALATALIZED: Record<string, string> = { k: "ky", g: "gy", s: "sh", sh: "sh", z: "j", j: "j", t: "ch", ch: "ch", d: "j", n: "ny", ny: "ny", h: "hy", hy: "hy", b: "by", p: "py", m: "my", r: "ry" };
++
++const NASAL_BEFORE: Record<string, string> = { p: "m", b: "m", m: "m", t: "n", d: "n", n: "n", ɲ: "ɲ", tʃ: "n", dʒ: "n", ts: "n", ɾ: "n", k: "ŋ", g: "ŋ" };
++
++const ROWS: [string, string][] = [
++  ["あいうえお", ""], ["かきくけこ", "k"], ["がぎぐげご", "g"], ["さしすせそ", "s"], ["ざじずぜぞ", "z"], ["たちつてと", "t"], ["だぢづでど", "d"],
++  ["なにぬねの", "n"], ["はひふへほ", "h"], ["ばびぶべぼ", "b"], ["ぱぴぷぺぽ", "p"], ["まみむめも", "m"], ["らりるれろ", "r"],
++];
++const IRREGULAR: Record<string, [string, string]> = {
++  し: ["sh", "i"], ち: ["ch", "i"], つ: ["ts", "u"], ふ: ["f", "u"], じ: ["j", "i"], ぢ: ["j", "i"], づ: ["z", "u"], ひ: ["hy", "i"], に: ["ny", "i"],
++  や: ["y", "a"], ゆ: ["y", "u"], よ: ["y", "o"], わ: ["w", "a"], を: ["", "o"],
++};
++const SMALL_Y: Record<string, string> = { ゃ: "a", ゅ: "u", ょ: "o" };
++const SMALL_VOWEL: Record<string, string> = { ぁ: "a", ぃ: "i", ぅ: "u", ぇ: "e", ぉ: "o" };
++const ACCENT_MARKS = new Set(["'", "’", "＼", "\\", "↓"]);
++
++const KANA = new Map<string, [string, string]>();
++for (const [chars, onset] of ROWS) [...chars].forEach((ch, i) => KANA.set(ch, [onset, "aiueo"[i]]));
++for (const [ch, cv] of Object.entries(IRREGULAR)) KANA.set(ch, cv);
++
++/** text は入力に書かれていたかな（歌詞の表示に使う） */
++export type Mora = { kind: "cv"; onset: string; vowel: string; text: string } | { kind: "N" } | { kind: "Q" } | { kind: "R" };
++
++export const containsKana = (text: string): boolean => /[ぁ-ゖァ-ヺ]/.test(text);
++
++const toHiragana = (ch: string): string => (ch >= "ァ" && ch <= "ヶ" ? String.fromCharCode(ch.charCodeAt(0) - 0x60) : ch);
++
++/** アクセント句 1 つぶんのかなをモーラ列にする。accent は核のモーラ番号（0 = 平板） */
++export function parseAccentPhrase(text: string, o: { lengthenOU?: boolean } = {}): { moras: Mora[]; accent: number } {
++  const lengthenOU = o.lengthenOU ?? true;
++  const moras: Mora[] = [];
++  let accent = 0;
++  for (const raw of text) {
++    const ch = toHiragana(raw);
++    const prev = moras.at(-1);
++    if (ACCENT_MARKS.has(ch)) accent = moras.length;
++    else if (ch === "ん") moras.push({ kind: "N" });
++    else if (ch === "っ") moras.push({ kind: "Q" });
++    else if (ch === "ー") moras.push({ kind: "R" });
++    else if (SMALL_Y[ch] && prev?.kind === "cv") {
++      prev.onset = PALATALIZED[prev.onset] ?? prev.onset;
++      prev.vowel = SMALL_Y[ch];
++      prev.text += raw;
++    } else if (SMALL_VOWEL[ch] && prev?.kind === "cv") {
++      prev.vowel = SMALL_VOWEL[ch];
++      prev.text += raw;
++    }
++    else if (lengthenOU && ch === "う" && prev?.kind === "cv" && prev.vowel === "o") moras.push({ kind: "R" });
++    else {
++      const cv = KANA.get(ch);
++      if (cv) moras.push({ kind: "cv", onset: cv[0], vowel: cv[1], text: raw });
++    }
++  }
++  return { moras, accent };
++}
++
++function moraLevels(count: number, accent: number): ("H" | "L")[] {
++  return Array.from({ length: count }, (_, i) => {
++    const n = i + 1;
++    if (accent === 0) return n === 1 ? "L" : "H";
++    if (accent === 1) return n === 1 ? "H" : "L";
++    return n === 1 || n > accent ? "L" : "H";
++  });
++}
++
++function moraSegments(mora: Mora, prevVowel: string | undefined, next: Mora | undefined): Segment[] {
++  if (mora.kind === "Q") return [];
++  if (mora.kind === "R") return prevVowel ? [{ ipa: prevVowel, dur: MORA_SEC }] : [];
++  if (mora.kind === "N") {
++    const nextOnset = next?.kind === "cv" ? ONSETS[next.onset]?.ipa[0] : undefined;
++    return [{ ipa: (nextOnset && NASAL_BEFORE[nextOnset]) || "ɴ", dur: MORA_SEC }];
++  }
++  const onset = ONSETS[mora.onset];
++  const onsetSegments = onset ? onset.ipa.map((ipa) => ({ ipa, dur: onset.dur / onset.ipa.length })) : [];
++  return [...onsetSegments, { ipa: VOWEL_IPA[mora.vowel], dur: MORA_SEC - (onset?.dur ?? 0) }];
++}
++
++function planBreathGroup(parsed: { moras: Mora[]; accent: number }[], baseF0: number, question: boolean): Segment[] {
++  const totalMoras = parsed.reduce((sum, p) => sum + p.moras.length, 0);
++  const segments: Segment[] = [];
++  let register = 1;
++  let moraIndex = 0;
++  for (const { moras, accent } of parsed) {
++    const levels = moraLevels(moras.length, accent);
++    let geminate = false;
++    moras.forEach((mora, i) => {
++      const prevVowel = segments.at(-1)?.ipa;
++      const segs = moraSegments(mora, prevVowel, moras[i + 1]);
++      const isLast = moraIndex === totalMoras - 1;
++      const declination = 1 - DECLINATION * (moraIndex / Math.max(1, totalMoras - 1));
++      const ending = isLast ? (question ? QUESTION_RISE_RATIO : FINAL_FALL_RATIO) : 1;
++      const ratio = (levels[i] === "H" ? HIGH_RATIO : LOW_RATIO) * register * declination * ending;
++      const carrier = segs.at(-1);
++      if (carrier) carrier.f0 = Math.round(baseF0 * Math.max(F0_FLOOR_RATIO, ratio));
++      if (geminate && segs[0]) {
++        segs[0].dur = (segs[0].dur ?? 0) + MORA_SEC;
++        geminate = false;
++      }
++      if (mora.kind === "Q") geminate = true;
++      segments.push(...segs);
++      moraIndex += 1;
++    });
++    const last = segments.at(-1);
++    if (last) last.wordEnd = true;
++    if (accent > 0) register *= DOWNSTEP_RATIO;
++  }
++  const finalVowel = segments.at(-1);
++  if (finalVowel?.dur !== undefined) finalVowel.dur += FINAL_VOWEL_EXTRA_SEC;
++  return segments;
++}
++
++export interface JapanesePhrase {
++  segments: Segment[];
++  intonation: "flat";
++  pause: number;
++  words: string[];
++}
++
++export function japanesePhrases(text: string, baseF0: number): JapanesePhrase[] {
++  const groups = text.match(/[^、。，．,.!?！？\n|/]+[、。，．,.!?！？]?/g) ?? [];
++  return groups
++    .map((group) => {
++      const question = /[?？]$/.test(group);
++      const accentPhrases = group.replace(/[、。，．,.!?！？]$/, "").split(/[\s　]+/).filter((p) => parseAccentPhrase(p).moras.length > 0);
++      const words = accentPhrases.map((p) => [...p].filter((ch) => !ACCENT_MARKS.has(ch)).join(""));
++      return { segments: planBreathGroup(accentPhrases.map((p) => parseAccentPhrase(p)), baseF0, question), intonation: "flat" as const, pause: PHRASE_PAUSE_SEC, words };
++    })
++    .filter((p) => p.segments.length > 0);
++}
++
++/** 形態素解析（OpenJTalk の NJD）が 1 語ごとに返す項目のうち、ここで使うもの */
++export interface NjdNode {
++  string: string;
++  pron: string;
++  pos: string;
++  /** アクセント句の先頭の語では、句全体で数えた核のモーラ番号（0 = 平板） */
++  acc: number;
++  /** 1 = 前の語と同じアクセント句に続く */
++  chain_flag: number;
++}
++
++export type SpeechItem = { kind: "unit"; text: string; moras: Mora[]; accent: number } | { kind: "break"; question: boolean };
++
++/** 解析器が読めない、または読みを固定したい語（手書きのかな記法で書く） */
++const PROPER_READINGS: Record<string, string> = {
++  ねっぷちゃん: "ね'っぷちゃん",
++  おといねっぷ: "おといねっぷ",
++  ねっぷ: "ね'っぷ",
++  咲来: "さっくる",
++  筬島: "おさしま",
++  物満内: "ものまない",
++  天北: "てんぽく",
++  木遊館: "もくゆーかん",
++};
++const PROPER_RE = new RegExp(`(${Object.keys(PROPER_READINGS).sort((a, b) => b.length - a.length).join("|")})`);
++
++export const containsJapanese = (text: string): boolean => containsKana(text) || /[\u4e00-\u9fff]/.test(text);
++
++/** 手書き記法として読むのは、アクセント記号があって漢字がない入力だけ */
++export const isKanaNotation = (text: string): boolean => /['’＼\\↓]/.test(text) && !/[\u4e00-\u9fff]/.test(text);
++
++/** 固有語とそれ以外に分ける。固有語は解析器に渡さず、決めた読みを使う */
++export function splitProperNouns(text: string): { text: string; reading?: string }[] {
++  return text
++    .split(PROPER_RE)
++    .filter((part) => part !== "")
++    .map((part) => (PROPER_READINGS[part] ? { text: part, reading: PROPER_READINGS[part] } : { text: part }));
++}
++
++export function properNounItem(text: string, reading: string): SpeechItem {
++  return { kind: "unit", text, ...parseAccentPhrase(reading) };
++}
++
++// 解析器は無声化する母音の後ろに ’ を付ける。無声化は扱わないので落とす
++const DEVOICING_MARK = /’/g;
++
++export function njdToItems(nodes: NjdNode[]): SpeechItem[] {
++  const items: SpeechItem[] = [];
++  for (const node of nodes) {
++    if (node.pos === "記号") {
++      items.push({ kind: "break", question: /[?？]/.test(node.string) });
++      continue;
++    }
++    const moras = parseAccentPhrase(node.pron.replace(DEVOICING_MARK, ""), { lengthenOU: false }).moras;
++    if (moras.length === 0) continue;
++    const prev = items.at(-1);
++    if (node.chain_flag === 1 && prev?.kind === "unit") {
++      prev.moras.push(...moras);
++      prev.text += node.string;
++    } else items.push({ kind: "unit", text: node.string, moras, accent: node.acc });
++  }
++  return items;
++}
++
++export function itemsToPhrases(items: SpeechItem[], baseF0: number): JapanesePhrase[] {
++  const phrases: JapanesePhrase[] = [];
++  let units: Extract<SpeechItem, { kind: "unit" }>[] = [];
++  const flush = (question: boolean) => {
++    if (units.length > 0) phrases.push({ segments: planBreathGroup(units, baseF0, question), intonation: "flat", pause: PHRASE_PAUSE_SEC, words: units.map((u) => u.text) });
++    units = [];
++  };
++  for (const item of items) {
++    if (item.kind === "unit") units.push(item);
++    else flush(item.question);
++  }
++  flush(false);
++  return phrases;
++}
++
++/**
++ * 歌詞のかな → 音符 1 つぶんずつの音節。かな 1 文字（拗音はまとめて）が 1 音符を使い、「ー」は
++ * 前の母音を次の音符へ伸ばす。「ん」は前の音符の終わりに付き、「っ」は音符を使わない。
++ * 空白で語、句読点と / で句が切れる。
++ */
++export function japaneseSyllables(text: string): Syllable[] {
++  const out: Syllable[] = [];
++  for (const phrase of text.split(/[、。，．,.!?！？\n|/]+/)) {
++    for (const word of phrase.split(/[\s　]+/)) {
++      const { moras } = parseAccentPhrase(word, { lengthenOU: false });
++      let sang = false;
++      moras.forEach((mora, i) => {
++        const prev = out.at(-1);
++        if (mora.kind === "cv") {
++          out.push({ text: mora.text, onset: (ONSETS[mora.onset]?.ipa ?? []).map((ipa) => ({ ipa })), nucleus: { ipa: VOWEL_IPA[mora.vowel] }, coda: [], wordEnd: false, phraseEnd: false });
++          sang = true;
++        } else if (!prev) return;
++        else if (mora.kind === "R") {
++          out.push({ text: "ー", onset: [], nucleus: { ...prev.nucleus }, coda: [], melisma: true, wordEnd: false, phraseEnd: false });
++          sang = true;
++        } else if (mora.kind === "N") {
++          const next = moras[i + 1];
++          const nextOnset = next?.kind === "cv" ? ONSETS[next.onset]?.ipa[0] : undefined;
++          prev.coda.push({ ipa: (nextOnset && NASAL_BEFORE[nextOnset]) || "ɴ" });
++          prev.text += "ん";
++        } else prev.text += "っ";
++      });
++      const last = out.at(-1);
++      if (sang && last) last.wordEnd = true;
++    }
++    const last = out.at(-1);
++    if (last) last.phraseEnd = true;
++  }
++  return out;
++}
++
++const ASPIRATED_ABDUCTION = 0.36;
++const UNASPIRATED_ABDUCTION = 0.22;
++const ASPIRATED_VOT = 0.05;
++const UNASPIRATED_VOT = 0.012;
++const FRICATIVE_LEAD = 0.015;
++
++/**
++ * プランナーは母音前の無声破裂音を英語式に帯気させ、摩擦音では声門を早めに開く。日本語の短い
++ * 母音が無声のまま終わるので、帯気を無気の形に戻し、摩擦音の前倒しをやめる。
++ */
++export function adaptVoicingForJapanese(gestures: Gesture[], rate: number): Gesture[] {
++  return gestures.map((g) => {
++    if (g.label === "voiceless") return { ...g, t0: g.t0 + FRICATIVE_LEAD, rampIn: 0.02 };
++    if (g.label !== "aspiration" || g.targets.abduction !== ASPIRATED_ABDUCTION) return g;
++    return { ...g, t1: g.t1 + (UNASPIRATED_VOT - ASPIRATED_VOT / rate) * 0.4, rampOut: 0.02, targets: { ...g.targets, abduction: UNASPIRATED_ABDUCTION } };
++  });
++}
+diff --git a/src/ui/neppChat.ts b/src/ui/neppChat.ts
+new file mode 100644
+index 0000000..156069f
+--- /dev/null
++++ b/src/ui/neppChat.ts
+@@ -0,0 +1,142 @@
++/** ローカルで動かした nepp-chan の API と話す。Vite の proxy 越しに同一オリジンで呼ぶ。 */
++
++const API_BASE = "/nepp-api";
++
++/** 返答ストリーム（SSE）の断片を受け取り、本文の差分だけを取り出す */
++export function createDeltaParser(): (chunk: string) => string[] {
++  let buffer = "";
++  return (chunk) => {
++    buffer += chunk;
++    const lines = buffer.split("\n");
++    buffer = lines.pop() ?? "";
++    const deltas: string[] = [];
++    for (const line of lines) {
++      if (!line.startsWith("data:")) continue;
++      const payload = line.slice(5).trim();
++      if (payload === "" || payload === "[DONE]") continue;
++      let event: { type?: unknown; delta?: unknown };
++      try {
++        event = JSON.parse(payload);
++      } catch {
++        // 行の途中で切れた断片は buffer に残るので、ここに来るのは壊れた行だけ
++        continue;
++      }
++      if (event.type === "text-delta" && typeof event.delta === "string") deltas.push(event.delta);
++    }
++    return deltas;
++  };
++}
++
++// 閉じ括弧が続く記号は引用の中（「食べてみたい！」ってなる…）なので、文の終わりにしない
++const SENTENCE_END = /[。！？!?]+(?![。！？!?」』）)])|\n+/;
++
++/** 返答の差分を受け取り、言い終わった文から順に取り出す。flush は言いかけの残りを返す */
++export function createSentenceSplitter(): { push: (delta: string) => string[]; flush: () => string | null } {
++  let buffer = "";
++  return {
++    push(delta) {
++      buffer += delta;
++      const sentences: string[] = [];
++      for (;;) {
++        const match = SENTENCE_END.exec(buffer);
++        // 終わりの記号がバッファの末尾にあるうちは、続きの記号や閉じ括弧が届くかもしれない
++        if (!match || match.index + match[0].length === buffer.length) break;
++        const sentence = buffer.slice(0, match.index + match[0].length).trim();
++        buffer = buffer.slice(match.index + match[0].length);
++        if (sentence) sentences.push(sentence);
++      }
++      return sentences;
++    },
++    flush() {
++      const rest = buffer.trim();
++      buffer = "";
++      return rest || null;
++    },
++  };
++}
++
++const MARKDOWN_LINK = /\[([^\]]+)\]\([^)]*\)/g;
++const URL = /https?:\/\/\S+/g;
++const EMOJI_RUN = /[\p{Extended_Pictographic}\uFE0F\u200D]+/gu;
++const LINE_BREAKS = /\s*\n+\s*/g;
++const EDGE_PAUSES = /^[、\s]+|[、\s]+$/g;
++const SPOKEN_MARKUP = /~~|[*#`]/g;
++const PHONE = /(?<!\d)(\d{2,5})-(\d{1,4})-(\d{3,4})(?!\d)/g;
++const TIME = /(?<!\d)(\d{1,2})[:：](\d{2})(?!\d)/g;
++const RANGE = /[~〜～]\s*(?=\d)/g;
++const TIME_RANGE = /([時分])\s*[-－]\s*(?=\d)/g;
++const WEEKDAY_RANGE = /([月火水木金土日](?:曜日?)?)\s*[~〜～]\s*(?=[月火水木金土日])/g;
++const WAVE_DASH = /[~〜～]/g;
++
++/** 画面に出す返答から、声に出す文面を作る（規則は nepp-chan の音声通話用の整形に合わせている） */
++export function speechTextOf(reply: string): string {
++  return reply
++    .replace(MARKDOWN_LINK, "$1")
++    .replace(URL, "")
++    // 絵文字と改行は文の切れ目として書かれていることが多いので、息継ぎに置き換える
++    .replace(EMOJI_RUN, "、")
++    .replace(LINE_BREAKS, "。")
++    .replace(SPOKEN_MARKUP, "")
++    .replace(PHONE, "$1の$2の$3")
++    .replace(TIME, (_, hour: string, minute: string) => `${Number(hour)}時${minute === "00" ? "" : `${Number(minute)}分`}`)
++    .replace(RANGE, "から")
++    .replace(TIME_RANGE, "$1から")
++    .replace(WEEKDAY_RANGE, "$1から")
++    .replace(WAVE_DASH, "ー")
++    .replace(EDGE_PAUSES, "");
++}
++
++interface Session {
++  token: string;
++  threadId: string;
++}
++
++async function postJson(path: string, body: unknown, token?: string): Promise<Response> {
++  const response = await fetch(`${API_BASE}${path}`, {
++    method: "POST",
++    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
++    body: JSON.stringify(body),
++  });
++  if (!response.ok) throw new Error(`nepp-chan API ${path} が ${response.status} を返しました`);
++  return response;
++}
++
++async function openSession(): Promise<Session> {
++  const { token } = (await (await postJson("/auth/anonymous-session", {})).json()) as { token: string };
++  const { id } = (await (await postJson("/threads", {}, token)).json()) as { id: string };
++  return { token, threadId: id };
++}
++
++export class NeppChat {
++  private session: Promise<Session> | null = null;
++
++  /** 質問を送り、返答の全文を返す。途中経過は onProgress に、言い終わった文は順に onSentence に渡す */
++  async send(text: string, on: { progress: (replySoFar: string) => void; sentence: (sentence: string) => void }): Promise<string> {
++    this.session ??= openSession();
++    let session: Session;
++    try {
++      session = await this.session;
++    } catch (error) {
++      this.session = null;
++      throw error;
++    }
++    const response = await postJson(`/threads/${session.threadId}/chat`, { message: { id: crypto.randomUUID(), role: "user", parts: [{ type: "text", text }] } }, session.token);
++    if (!response.body) throw new Error("nepp-chan API の返答に本文がありません");
++    const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
++    const parse = createDeltaParser();
++    const splitter = createSentenceSplitter();
++    let reply = "";
++    for (;;) {
++      const { done, value } = await reader.read();
++      if (done) break;
++      for (const delta of parse(value)) {
++        reply += delta;
++        for (const sentence of splitter.push(delta)) on.sentence(sentence);
++      }
++      on.progress(reply);
++    }
++    const rest = splitter.flush();
++    if (rest) on.sentence(rest);
++    return reply;
++  }
++}
+diff --git a/src/ui/openjtalk.ts b/src/ui/openjtalk.ts
+new file mode 100644
+index 0000000..461f427
+--- /dev/null
++++ b/src/ui/openjtalk.ts
+@@ -0,0 +1,24 @@
++/** ブラウザ内の形態素解析（OpenJTalk の wasm）。辞書は初回の解析時に読み込む。 */
++import type { NjdNode } from "./japanese.ts";
++
++const DIC_URL = "/ojt/assets/dic";
++// 音声合成は使わないが、解析器の初期化に音声ファイルの指定が要る
++const VOICE_URL = "/ojt/assets/voice.htsvoice";
++
++type Frontend = (text: string) => Promise<NjdNode[]>;
++let frontend: Promise<Frontend> | null = null;
++
++async function load(): Promise<Frontend> {
++  // モジュールの読み込み時に Worker が起動するので、使うときまで import しない
++  const ojt = await import("@keanu-thakalath/openjtalkjs/browser");
++  await ojt.configure({ dicUrl: DIC_URL, voiceUrl: VOICE_URL });
++  return ojt.runFrontendAsync;
++}
++
++export function analyzeJapanese(text: string): Promise<NjdNode[]> {
++  frontend ??= load().catch((error) => {
++    frontend = null;
++    throw error;
++  });
++  return frontend.then((run) => run(text));
++}
+diff --git a/src/ui/render/anatomy.ts b/src/ui/render/anatomy.ts
+index 74ed186..eeb5cbf 100644
+--- a/src/ui/render/anatomy.ts
++++ b/src/ui/render/anatomy.ts
+@@ -13,8 +13,8 @@ import type { HumanArtic, HumanFrame } from "../../wasm/types.ts";
+ import type { Vec } from "./geom.ts";
+ import type { TelemetryMessage } from "../../worklet/protocol.ts";
+ import type { VoiceModel } from "../analysis.ts";
+-import { V, heat, pressureLevel } from "../colors.ts";
+-import { beam, beamPts, chaikin, dot, handle, label, ring, seg, type Pt } from "./vector.ts";
++import { INK_BLEND, NEPP as TOKEN, PAPER, V, heat, pressureLevel } from "../colors.ts";
++import { beam, beamPts, chaikin, dot, handle, label, pathOf, ring, seg, type Pt } from "./vector.ts";
+ import { buildProfile, Gaze, jawFn, VIEW, type Profile } from "./profile.ts";
+ import { drawReadouts, type Slot } from "./readouts.ts";
+ import { Expression } from "./expression.ts";
+@@ -79,7 +79,44 @@ interface Echo {
+ const ECHO_AGES = [0.09, 0.06, 0.03];
+ 
+ /** top of the cranium in body cm (profile.ts's skin outline peaks at 22.9), with a little air */
+-const CROWN = 23.4;
++const CROWN = 28.7;
++
++/** キャラ絵の輪郭線の色 */
++const OUTLINE = TOKEN.snow800;
++
++/** 輪郭を毛並みのギザギザにする。一定の間隔で、頭の中心から見て外へ小さく跳ねさせる */
++function fur(pts: Vec[], k: number): Vec[] {
++  if (pts.length < 2) return pts;
++  const step = 0.55 * k;
++  const center = { x: -1 * k, y: 12 * k };
++  const out: Vec[] = [pts[0]];
++  let untilNext = step;
++  let tuft = 0;
++  for (let i = 1; i < pts.length; i++) {
++    const a = pts[i - 1], b = pts[i];
++    const len = Math.hypot(b.x - a.x, b.y - a.y);
++    if (len === 0) continue;
++    let d = untilNext;
++    for (; d <= len; d += step, tuft++) {
++      const p = { x: a.x + ((b.x - a.x) * d) / len, y: a.y + ((b.y - a.y) * d) / len };
++      if (tuft % 2 === 1) {
++        out.push(p);
++        continue;
++      }
++      let nx = -(b.y - a.y) / len, ny = (b.x - a.x) / len;
++      if (nx * (p.x - center.x) + ny * (p.y - center.y) < 0) {
++        nx = -nx;
++        ny = -ny;
++      }
++      // 毛束の長さを少しずつ変えて、機械的な鋸歯に見えないようにする
++      const height = (0.2 + 0.16 * (((tuft * 7) % 5) / 4)) * k;
++      out.push({ x: p.x + nx * height, y: p.y + ny * height });
++    }
++    untilNext = d - len;
++  }
++  out.push(pts[pts.length - 1]);
++  return out;
++}
+ 
+ const smoothstep = (a: number, b: number, x: number): number => {
+   const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+@@ -246,28 +283,14 @@ export class AnatomyRenderer {
+     const pts = (v: Vec[]) => v.map((p) => this.P(p));
+     const line = (v: Vec[], color: string, w: number, o: { alpha?: number; hot?: boolean; close?: boolean } = {}) => beamPts(ctx, pts(v), color, w, o);
+ 
+-    // deep structures, dim blue
+-    line(G.inset, V.blueDim, 0.9, { alpha: 0.9 });
+-    line(G.skull, V.blueDim, 0.9, { close: true });
+-    line(G.brain, V.blueMid, 1.1, { close: true });
+-    line(G.sulcus, V.blueDim, 0.9);
+-    line(G.eye, V.blueMid, 1.1);
++    this.drawNepp(ctx, G);
++
++    // 骨・眼球・鼻腔・喉頭の軟骨は、キャラの顔の中に透けると怖く見えるので描かない。口の天井だけ残す
+     const k = model.tract.scale;
+     const bulge = puffProfile(f, k, this.face.puff);
+     const puffed = (v: Vec[]) => (bulge ? v.map(bulge) : v);
+-    line(this.lens(G.eyeC, k, opts.dt), V.blueDim, 0.9, { alpha: 1 - smoothstep(0.45, 0.9, this.face.lid) });
+-    for (const l of eyeFeatures(G.eyeC, k, this.face)) line(l.pts, V.blue, l.w, { alpha: l.alpha });
+-    for (const v of G.vertebrae) line(v, V.blueDim, 1);
+-    line(G.cords[0], V.blueDim, 0.8, { alpha: 0.8 });
+-    line(G.cords[1], V.blueDim, 0.8, { alpha: 0.6 });
+-    line(G.nasal, V.blueMid, 1, { close: true });
+-    for (const tb of G.turbinates) line(tb, V.blueDim, 0.9);
+     line(G.palOral, V.blueMid, 1.1);
+     line(G.palNasal, V.blueMid, 1.1);
+-    line(G.hyoid, V.blueDim, 1);
+-    line(G.thyroid, V.blueDim, 1);
+-    for (const tr of G.trachea) line(tr, V.blueMid, 1);
+-    for (const r of G.rings) line(r, V.blueDim, 0.9);
+ 
+     // the airway's cross-section lines: lit by sound pressure, else a dim measurement grid
+     if (view.pressure && tele) this.drawPressure(ctx, model, f, tele);
+@@ -294,15 +317,19 @@ export class AnatomyRenderer {
+     }
+ 
+     // skin, airway walls, teeth, folds
+-    line(puffed(G.skinLower), V.blue, 1.7, { hot: true });
+-    line(puffed(G.skinUpper), V.blue, 1.7, { hot: true });
++    const lower = puffed(G.skinLower), upper = puffed(G.skinUpper);
++    line(fur(lower.slice(0, G.furLowerTo + 1), k), OUTLINE, 1.7);
++    line(lower.slice(G.furLowerTo), OUTLINE, 1.9);
++    line(upper.slice(0, G.furFrom + 1), OUTLINE, 1.9);
++    line(fur(upper.slice(G.furFrom), k), OUTLINE, 1.7);
+     line(G.outerWall, V.blue, 1.4, { hot: true });
+     line(f.inner, V.blue, 1.3, { alpha: 0.9 });
+     line(G.glottisWall, V.blue, 1.2, { alpha: 0.8 });
+     line(f.epiglottis.slice(0, 3), V.blue, 2.2, { alpha: 0.85 });
+-    line(f.upperTeeth, V.blueMid, 1.1, { close: true });
+-    line(G.lowerTeeth, V.blueMid, 1.1);
++    line(f.upperTeeth, V.blueDim, 1, { close: true, alpha: 0.5 });
++    line(G.lowerTeeth, V.blueDim, 1, { alpha: 0.5 });
+     for (const fo of G.folds) line(fo, V.blue, 1);
++    this.drawNeppHat(ctx, G);
+ 
+     // the four handled articulators in their slot colours
+     const tongueOutline = pts(f.tongue);
+@@ -328,6 +355,75 @@ export class AnatomyRenderer {
+     this.drawReadouts(ctx, opts.formants, opts.info, opts.slots);
+   }
+ 
++  /** ねっぷちゃんの外見: 塗りは淡く重ね、下の解剖の線が透けて読めるようにする */
++  private drawNepp(ctx: CanvasRenderingContext2D, G: Profile): void {
++    const N = G.nepp;
++    const pts = (v: Vec[]) => v.map((p) => this.P(p));
++    const fill = (v: Vec[], color: string, alpha: number) => {
++      ctx.save();
++      ctx.globalCompositeOperation = INK_BLEND;
++      ctx.globalAlpha = alpha;
++      ctx.fillStyle = color;
++      ctx.fill(pathOf(pts(v), true));
++      ctx.restore();
++    };
++    const outline = (v: Vec[], w = 1.7, close = true) => beamPts(ctx, pts(v), OUTLINE, w, { close });
++
++    fill(N.ear, TOKEN.paper200, 0.5);
++    outline(N.ear);
++    fill(N.earInner, TOKEN.berry, 0.28);
++    fill(N.scarfTail, TOKEN.teal500, 0.8);
++    outline(N.scarfTail, 1.6, false);
++    fill(N.scarf, TOKEN.teal500, 0.8);
++    outline(N.scarf, 1.9);
++    outline(N.scarfFold, 1.2, false);
++    fill(N.hairSide, TOKEN.teal500, 0.55);
++    outline(N.hairSide, 1.4);
++    fill(N.fringe, TOKEN.teal500, 0.7);
++    outline(N.fringe, 1.3);
++    fill(N.cheek, TOKEN.berry, 0.45);
++    fill(N.nose, TOKEN.snow800, 0.9);
++
++    // 目はまばたきで縦につぶれ、閉じきるとまつげの線だけになる
++    const open = 1 - 0.92 * this.face.lid;
++    const blink = (v: Vec[]) => v.map((p) => ({ x: p.x, y: N.eyeC.y + (p.y - N.eyeC.y) * open }));
++    const eyeOpen = open > 0.25;
++    if (eyeOpen) {
++      fill(blink(N.iris), TOKEN.teal600, 0.8);
++      outline(blink(N.iris), 1.5);
++      fill(blink(N.pupil), TOKEN.snow800, 0.85);
++    }
++    outline(blink(N.lash), 2.8, false);
++    if (eyeOpen) {
++      // 瞳の光は紙色の「抜き」。重ね塗りでは明るい色を置けないので上書きで描く
++      ctx.save();
++      ctx.globalCompositeOperation = "source-over";
++      ctx.fillStyle = PAPER;
++      ctx.fill(pathOf(pts(blink(N.glint)), true));
++      ctx.fill(pathOf(pts(blink(N.glintSmall)), true));
++      ctx.restore();
++    }
++  }
++
++  /** 帽子は頭の輪郭の上にかぶせる。不透明に塗って、下を通る頭頂の線を隠す */
++  private drawNeppHat(ctx: CanvasRenderingContext2D, G: Profile): void {
++    const N = G.nepp;
++    const pts = (v: Vec[]) => v.map((p) => this.P(p));
++    ctx.save();
++    ctx.globalCompositeOperation = "source-over";
++    ctx.fillStyle = TOKEN.teal500;
++    ctx.fill(pathOf(pts(N.beret), true));
++    ctx.fill(pathOf(pts(N.pom), true));
++    ctx.strokeStyle = PAPER;
++    ctx.lineWidth = 2.1;
++    ctx.lineCap = "round";
++    for (const l of N.snowflake) ctx.stroke(pathOf(pts(l)));
++    ctx.restore();
++    beamPts(ctx, pts(N.beret), OUTLINE, 1.9, { close: true });
++    for (const b of N.band) beamPts(ctx, pts(b), OUTLINE, 1.3);
++    beamPts(ctx, pts(N.pom), OUTLINE, 1.6, { close: true });
++  }
++
+   private nearestEcho(t: number): Echo | null {
+     let best: Echo | null = null, bd = 0.016;
+     for (const e of this.echoes) {
+diff --git a/src/ui/render/anatomy3d.ts b/src/ui/render/anatomy3d.ts
+index 5013f5a..ffa95bc 100644
+--- a/src/ui/render/anatomy3d.ts
++++ b/src/ui/render/anatomy3d.ts
+@@ -20,11 +20,11 @@ import type { HumanArtic, HumanFrame } from "../../wasm/types.ts";
+ import { NEUTRAL } from "../../wasm/engine.ts";
+ import type { TelemetryMessage } from "../../worklet/protocol.ts";
+ import type { VoiceModel } from "../analysis.ts";
+-import { V, heat, pressureLevel } from "../colors.ts";
++import { NEPP as TOKEN, PAPER, V, heat, pressureLevel } from "../colors.ts";
+ import { catmullRom, rotateAbout, type Vec } from "./geom.ts";
+ import { chaikin, type Pt } from "./vector.ts";
+ import { Beams, Poly } from "./beams3d.ts";
+-import { bodyPoint, buildProfile, Gaze, jawAngle, wallX } from "./profile.ts";
++import { bodyPoint, buildProfile, Gaze, jawAngle, NEPP_SHAPE, wallX } from "./profile.ts";
+ import { faceHandles, type FaceView, type ViewFlags } from "./anatomy.ts";
+ import { Expression } from "./expression.ts";
+ 
+@@ -52,11 +52,11 @@ function interp(tab: Table, x: number): number {
+ // template cm (the adult male, before the body's scale), by template height unless noted
+ 
+ /** half-width of the head and neck */
+-const WIDTH: Table = [[-4.6, 5.3], [0, 5.4], [2.5, 5.5], [4.5, 5.25], [6.5, 5.5], [8.5, 6.1], [10.5, 6.6], [12.5, 7.0], [15, 7.3], [17.5, 7.65], [19.5, 7.4], [21, 6.5], [22.2, 4.6], [23.0, 1.0]];
++const WIDTH: Table = [[-4.6, 4.0], [0, 4.1], [2.5, 4.5], [4.5, 5.8], [6.5, 7.6], [8.5, 8.8], [10.5, 9.3], [12.5, 9.6], [15, 9.6], [17.5, 9.3], [19.5, 8.6], [21, 7.3], [22.4, 5.2], [23.4, 1.0]];
+ /** the face's surface beside the midline features (chin, lips, nose), as body x */
+-const PLANE: Table = [[3.4, 5.9], [4.6, 6.2], [5.7, 6.15], [6.5, 6.2], [8.0, 6.35], [9.5, 6.35], [10.6, 6.55], [11.6, 6.75], [12.6, 6.9], [13.9, 7.15], [15.0, 7.45], [16.1, 7.95]];
++const PLANE: Table = [[3.4, 5.9], [4.6, 6.2], [5.7, 6.15], [6.5, 6.2], [8.0, 6.35], [9.5, 6.35], [10.6, 6.7], [11.6, 7.2], [12.6, 7.6], [13.9, 8.0], [15.0, 8.3], [16.1, 8.6]];
+ /** half-width of the midline feature: the chin, then the nose */
+-const FEATURE: Table = [[3.4, 2.0], [4.6, 2.2], [5.7, 2.4], [6.5, 2.6], [10.6, 1.7], [11.0, 1.75], [11.65, 1.2], [12.6, 0.95], [13.9, 0.75], [15.0, 0.9], [16.1, 1.6]];
++const FEATURE: Table = [[3.4, 2.0], [4.6, 2.2], [5.7, 2.4], [6.5, 2.6], [10.6, 1.9], [11.0, 2.0], [11.65, 1.9], [12.6, 1.7], [13.9, 1.5], [15.0, 1.6], [16.1, 1.8]];
+ /** where the head is widest, as a fraction of the way from the back to the face */
+ const WIDEST: Table = [[-4.6, 0.5], [3.0, 0.5], [6.0, 0.42], [12, 0.42], [16, 0.45], [23, 0.45]];
+ /** the jaw's lower border in the side view (x → y): the skin below it is the neck's */
+@@ -89,6 +89,12 @@ interface Section {
+   pf: number;
+ }
+ 
++/** キャラ絵の輪郭線の色 */
++const OUTLINE = TOKEN.snow800;
++
++/** 骨・歯・鼻腔の線の濃さ。キャラの顔の中に透けると怖く見えるので、3D では描かない */
++const SKELETON = 0;
++
+ const bump = (u: number) => (Math.abs(u) < 1 ? (1 - u * u) ** 2 : 0);
+ 
+ /** x of the front surface at lateral z (without the midline feature when bare) */
+@@ -407,19 +413,96 @@ function buildRest(model: VoiceModel): Rest {
+     L.end();
+   };
+ 
+-  // ---- ears
+-  group(fixed, V.blueDim, 1.05, 0.9, (L) => {
++  // ---- ねっぷちゃんの丸耳: 頭の横から外上へ立つ円盤（人間の耳の代わり）
++  const N = NEPP_SHAPE;
++  group(fixed, OUTLINE, 1.5, 0.95, (L) => {
++    for (const side of [1, -1]) {
++      const y = By(N.ear.y + 0.3), s = head.at(y);
++      const z = side * ((s ? sideZ(s, N.ear.x * k) : 7.3 * k) + 0.5 * k);
++      const r = N.ear.r * k;
++      L.ellipse([N.ear.x * k, y, z], [r, 0, 0], [0, 0.8 * r, side * 0.6 * r], 28);
++      L.ellipse([N.ear.x * k, y - 0.1 * k, z], [0.58 * r, 0, 0], [0, 0.5 * r, side * 0.36 * r], 20);
++    }
++  });
++
++  // ---- ベレー帽: 横顔の輪郭を中線にして、ほぼ円い平面形に広げる
++  const beret = new Shape(prof.nepp.beret, 0.08 * k, (_y, F, Bk) => ({ F, Bk, Fs: F, W: (F - Bk) / 2, xw: (F + Bk) / 2, E: 0, wf: 1, pf: 2.0 }));
++  const beretAt = (s: Section, th: number): [number, number] => {
++    const c = Math.cos(th), sn = Math.sin(th);
++    const p = c >= 0 ? s.pf : PB;
++    const x = c >= 0 ? s.xw + (s.Fs - s.xw) * Math.pow(c, 2 / p) : s.xw - (s.xw - s.Bk) * Math.pow(-c, 2 / p);
++    return [x, Math.sign(sn) * s.W * Math.pow(Math.abs(sn), 2 / p)];
++  };
++  group(fixed, V.blueMid, 1.1, 0.75, (L) => {
++    for (let y = beret.y0 + 0.5 * k; y < beret.y1 - 0.1 * k; y += 0.95 * k) {
++      const s = beret.at(y);
++      if (!s) continue;
++      for (let i = 0; i <= 48; i++) {
++        const [x, z] = beretAt(s, (i / 48) * Math.PI * 2);
++        L.p(x, y, z);
++      }
++      L.end();
++    }
++    for (const frac of [0.12, 0.3, 0.5, 0.7, 0.88, 1.12, 1.3, 1.5, 1.7, 1.88]) {
++      for (let y = beret.y0; y <= beret.y1; y += 0.3 * k) {
++        const s = beret.at(y);
++        if (!s) continue;
++        const [x, z] = beretAt(s, frac * Math.PI);
++        L.p(x, y, z);
++      }
++      L.end();
++    }
++  });
++  group(fixed, OUTLINE, 1.6, 0.95, (L) => {
++    const f0 = B(N.beretBrimFront.x, N.beretBrimFront.y), b0 = B(N.beretBrimBack.x, N.beretBrimBack.y);
++    const mid: V3 = [(f0.x + b0.x) / 2, (f0.y + b0.y) / 2, 0];
++    const u: V3 = [(f0.x - b0.x) / 2, (f0.y - b0.y) / 2, 0];
++    L.ellipse(mid, u, [0, 0, 9.3 * k], 48);
++    L.ellipse([mid[0], mid[1] + 0.85 * k, 0], u, [0, 0, 9.5 * k], 48);
++    const pom = B(N.pom.x, N.pom.y), r = N.pom.r * k;
++    L.ellipse([pom.x, pom.y, 0], [r, 0, 0], [0, r, 0], 20);
++    L.ellipse([pom.x, pom.y, 0], [r, 0, 0], [0, 0, r], 20);
++    L.ellipse([pom.x, pom.y, 0], [0, r, 0], [0, 0, r], 20);
++  });
++  // 雪の結晶: 帽子の両側面に沿わせる
++  group(fixed, V.blue, 1.5, 0.95, (L) => {
++    for (const side of [1, -1]) {
++      for (const seg of prof.nepp.snowflake) {
++        for (const p of seg) {
++          const s = beret.at(p.y);
++          L.p(p.x, p.y, side * ((s ? sideZ(s, p.x) : 0) + 0.12 * k));
++        }
++        L.end();
++      }
++    }
++  });
++
++  // ---- マフラー: 首の断面をひとまわり大きくした輪と、前に垂れる端
++  group(fixed, V.blueMid, 1.6, 0.9, (L) => {
++    const puff = 0.9 * k;
++    let front = 0;
++    for (const Y of [-0.4, 0.3, 1.0, 1.7, 2.4]) {
++      const y = By(Y), s = head.at(y);
++      if (!s) continue;
++      const cx = (s.F + s.Bk) / 2;
++      if (front === 0) front = s.F + puff;
++      L.ellipse([cx, y, 0], [(s.F - s.Bk) / 2 + puff, 0, 0], [0, 0, s.W + puff], 48);
++    }
++    const top = By(-0.4), bottom = By(-4.2);
++    L.p(front, top, 1.0 * k).p(front + 0.2 * k, bottom, 1.2 * k).p(front + 0.2 * k, bottom, 2.9 * k).p(front, top, 2.7 * k).end();
++  });
++
++  // ---- 頬: 顔の前斜面に沿う小さな輪
++  group(fixed, V.red, 1.3, 0.85, (L) => {
++    const y = By(N.cheek.y), s = head.at(y);
++    if (!s) return;
+     for (const side of [1, -1]) {
+-      onSide(L, [[-2.55, 13.4], [-2.85, 14.75], [-3.65, 15.45], [-4.6, 15.25], [-5.2, 14.25], [-5.4, 12.8], [-5.05, 11.3], [-4.55, 10.2], [-3.95, 9.55], [-3.35, 9.65], [-3.0, 10.35]], (i, n) => (0.25 + 1.2 * Math.sin((Math.PI * i) / (n - 1)) ** 1.5) * k, side);
+-      onSide(L, [[-3.15, 14.3], [-3.95, 14.45], [-4.55, 13.5], [-4.6, 12.1], [-4.15, 11.05]], () => 0.55 * k, side);
+-      onSide(L, [[-2.7, 11.2], [-2.55, 11.85], [-2.75, 12.35]], () => 0.35 * k, side);
+-      const concha: [number, number][] = [];
+-      for (let i = 0; i <= 16; i++) concha.push([-3.5 + 0.6 * Math.cos((i / 16) * Math.PI * 2), 12.0 + 0.85 * Math.sin((i / 16) * Math.PI * 2)]);
+-      onSide(L, concha, () => 0.12 * k, side);
++      const z = side * 6.2 * k;
++      for (const scale of [1.7, 1.0]) L.ellipse([frontX(s, Math.abs(z)) + 0.05 * k, y, z], [-0.35 * k * scale, 0, side * 0.95 * k * scale], [0, N.cheek.ry * k * scale, 0], 20);
+     }
+   });
+   // ---- the nose's sides and wings, so it reads from the front
+-  group(fixed, V.blueMid, 1.0, 0.8, (L) => {
++  group(fixed, V.blueMid, 1.0, 0.8 * SKELETON, (L) => {
+     for (const side of [1, -1]) {
+       for (let Y = 14.6; Y >= 11.3; Y -= 0.15) {
+         const y = By(Y), s = head.at(y);
+@@ -428,19 +511,18 @@ function buildRest(model: VoiceModel): Rest {
+         L.p(frontX(s, z), y, z);
+       }
+       L.end();
+-      const wing: [number, number, number][] = [[7.95, 11.05, 0.95], [7.4, 11.15, 1.45], [7.25, 11.6, 1.55], [7.55, 12.1, 1.35], [8.2, 12.15, 1.0]];
+-      for (const [x, Y, z] of wing) L.p(x * k, By(Y), side * z * k);
+-      L.end();
+     }
+   });
+-  // ---- nostrils, under the tip of the nose
+-  group(fixed, V.blueMid, 1.0, 0.9, (L) => {
+-    for (const side of [1, -1]) L.ellipse([8.05 * k, By(10.98), side * 0.62 * k], [0.42 * k, 0.04 * k, 0], [0, 0, 0.26 * k], 16);
++  // ---- 鼻先の小さな黒い鼻
++  group(fixed, OUTLINE, 1.6, 0.95, (L) => {
++    const tip = B(9.12, 11.5), r = 0.4 * k;
++    for (const [u, v] of [[[r, 0, 0], [0, r, 0]], [[r, 0, 0], [0, 0, r]], [[0, r, 0], [0, 0, r]]] as [V3, V3][]) L.ellipse([tip.x, tip.y, 0], u, v, 16);
+   });
+ 
+   // ---- brain: rings and meridians over the 2D outline, the skull and its base stay on the midline
+   const brain = new Shape(prof.brain, 0.08 * k, (y, F, Bk) => ({ F, Bk, Fs: F, W: interp(BRAIN_WIDTH, unBy(y)) * k, xw: Bk + (F - Bk) * 0.48, E: 0, wf: 1, pf: 2.3 }));
+-  group(fixed, V.blueMid, 0.85, 0.32, (L) => {
++  // 脳の線は帽子の中で煩雑になるので見せない
++  group(fixed, V.blueMid, 0.85, 0, (L) => {
+     for (let y = brain.y0 + 0.6 * k; y < brain.y1 - 0.15 * k; y += 1.5 * k) {
+       const s = brain.at(y);
+       if (!s) continue;
+@@ -468,7 +550,7 @@ function buildRest(model: VoiceModel): Rest {
+   });
+ 
+   // ---- cervical vertebrae: bodies, arches, processes; the spinal cord through them
+-  group(fixed, V.blueDim, 0.9, 0.6, (L) => {
++  group(fixed, V.blueDim, 0.9, 0.6 * SKELETON, (L) => {
+     for (let i = 0; i < 9; i++) {
+       const y0 = -4.4 + i * 1.75;
+       if (y0 > 10.5) break;
+@@ -486,14 +568,14 @@ function buildRest(model: VoiceModel): Rest {
+       L.p(ax - 0.72 * k, ym, 0).p(ax - 1.8 * k, ym - 0.55 * k, 0).end();
+     }
+   });
+-  group(fixed, V.blueDim, 0.85, 0.5, (L) => {
++  group(fixed, V.blueDim, 0.85, 0.5 * SKELETON, (L) => {
+     const cx = P(-4.9, 0).x;
+     for (let y = -4.4; y <= 11.0; y += 1.75) L.ellipse([cx, P(0, y).y, 0], [0.42 * k, 0, 0], [0, 0, 0.6 * k], 16);
+     for (const s of [1, -1]) L.p(cx, P(0, -4.6).y, s * 0.6 * k).p(cx, P(0, 11.4).y, s * 0.6 * k).end();
+   });
+ 
+   // ---- nasal cavity: the septum is the 2D outline; its side walls and the turbinates beside it
+-  group(fixed, V.blueDim, 0.9, 0.7, (L) => {
++  group(fixed, V.blueDim, 0.9, 0.7 * SKELETON, (L) => {
+     for (const s of [1, -1]) {
+       for (const p of prof.nasal) L.p(p.x, p.y, s * 1.2 * k);
+       L.end(true);
+@@ -545,8 +627,8 @@ function buildRest(model: VoiceModel): Rest {
+     }
+   };
+   const upFront = P(7.3, 0).x, upDepth = 4.2 * k, upHalf = 2.65 * k;
+-  group(fixed, V.blue, 1.0, 0.8, (L) => teeth(L, upFront, upDepth, upHalf, UPPER_TEETH, (u) => (7.95 + 0.3 * u * u) * k, 1));
+-  group(fixed, V.blueMid, 1.0, 0.6, (L) => {
++  group(fixed, V.blue, 1.0, 0.8 * SKELETON, (L) => teeth(L, upFront, upDepth, upHalf, UPPER_TEETH, (u) => (7.95 + 0.3 * u * u) * k, 1));
++  group(fixed, V.blueMid, 1.0, 0.6 * SKELETON, (L) => {
+     for (const i of [0, 2, 4, 5, 6, 7]) {
+       const m = prof.palOral[i];
+       // the arch's half-width at this depth, inside the teeth
+@@ -581,7 +663,7 @@ function buildRest(model: VoiceModel): Rest {
+     L.p(...q[q.length - 1]);
+     L.end();
+   };
+-  group(jaw, V.red, 1.25, 0.9, (L) => {
++  group(jaw, V.red, 1.25, 0.9 * SKELETON, (L) => {
+     for (const side of [1, -1]) {
+       // lower border, then the ramus up to the condyle
+       mline(L, [[6.4, 4.6, 0], [5.6, 4.45, 1.5], [4.5, 4.4, 2.6], [3.2, 4.5, 3.5], [1.8, 4.85, 4.15], [0.4, 5.6, 4.6], [-0.55, 6.6, 4.85], [-0.9, 7.6, 4.9], [-1.45, 8.9, 4.95], [-1.9, 9.7, 5.0], [-2.15, 10.2, 5.0]], side);
+@@ -591,7 +673,7 @@ function buildRest(model: VoiceModel): Rest {
+       L.ellipse(c, [0.45 * k, 0, 0], [0, 0.12 * k, 0.85 * k], 16);
+     }
+   });
+-  group(jaw, V.red, 1.0, 0.55, (L) => {
++  group(jaw, V.red, 1.0, 0.55 * SKELETON, (L) => {
+     for (const side of [1, -1]) {
+       // the alveolar border along the lower teeth, and the body's height at a few places
+       mline(L, [[1.9, 7.2, 3.55], [3.0, 7.15, 3.15], [4.3, 7.1, 2.6], [5.4, 7.05, 1.85], [6.2, 7.05, 1.05], [6.72, 7.15, 0]], side);
+@@ -603,12 +685,15 @@ function buildRest(model: VoiceModel): Rest {
+   mline(chinL, [[7.25, 6.75, 0], [7.4, 5.4, 0], [6.4, 4.6, 0], [5.6, 5.0, 0], [5.9, 6.2, 0], [6.45, 6.55, 0]], 1);
+   const chin = chinL.lines[0];
+   const loFront = P(6.98, 0).x, loDepth = 4.0 * k, loHalf = 2.5 * k;
+-  group(jaw, V.blue, 1.0, 0.8, (L) => teeth(L, loFront, loDepth, loHalf, LOWER_TEETH, (u) => (7.75 + 0.45 * Math.pow(u, 1.5)) * k, -1));
++  group(jaw, V.blue, 1.0, 0.8 * SKELETON, (L) => teeth(L, loFront, loDepth, loHalf, LOWER_TEETH, (u) => (7.75 + 0.45 * Math.pow(u, 1.5)) * k, -1));
+ 
+   // eyes: the 2D view draws one on the midline; here they sit either side of the nose
+-  const eyeC = B(6.15, 15.35);
+-  const center = new THREE.Vector3(0.3 * k, (head.y0 + head.y1) / 2, 0);
+-  return { model, head, condyle, lipHalf, center, shell, fixed, jaw, chin, eyes: [[eyeC.x, eyeC.y, 3.15 * k], [eyeC.x, eyeC.y, -3.15 * k]], eyeR: 1.05 * k };
++  const eyeY = By(14.3), eyeZ = 4.0 * k;
++  const eyeSection = head.at(eyeY);
++  const eyeX = (eyeSection ? frontX(eyeSection, eyeZ) : B(8.2, 14.3).x) + 0.08 * k;
++  // 帽子のぶんだけ見る中心を上げる
++  const center = new THREE.Vector3(0.3 * k, (head.y0 + head.y1) / 2 + 1.9 * k, 0);
++  return { model, head, condyle, lipHalf, center, shell, fixed, jaw, chin, eyes: [[eyeX, eyeY, eyeZ], [eyeX, eyeY, -eyeZ]], eyeR: 2.05 * k };
+ }
+ 
+ // ------------------------------------------------------------------ the renderer
+@@ -668,7 +753,7 @@ export class Anatomy3D {
+ 
+   constructor() {
+     this.scene.add(this.beams.group);
+-    this.scene.fog = new THREE.Fog(0x000000, 50, 100);
++    this.scene.fog = new THREE.Fog(PAPER, 50, 100);
+     for (let i = 0; i < 200; i++) this.particles.push({ s: Math.random() * 17, u: Math.random() * 2 - 1, v: Math.random() * 2 - 1, life: Math.random(), px: NaN, py: NaN, pz: NaN });
+   }
+ 
+@@ -704,7 +789,7 @@ export class Anatomy3D {
+     const r = this.restFor(model);
+     const half = Math.tan((this.camera.fov * Math.PI) / 360);
+     // fit the head's height (and its width in a narrow screen) at a male's size, so bodies compare
+-    const d = 1.1 * Math.max(15.2 / half, 11 / (half * Math.max(0.3, this.camera.aspect)));
++    const d = 1.1 * Math.max(17.8 / half, 12.5 / (half * Math.max(0.3, this.camera.aspect)));
+     const target = r.center.clone();
+     // facing left: the same three-quarter view from the head's other side
+     const az = this.facing > 0 ? 0.62 : Math.PI - 0.62, el = 0.2;
+@@ -816,15 +901,10 @@ export class Anatomy3D {
+ 
+     // ---- the midsagittal section, as the 2D view draws it
+     const G = buildProfile(model, f, a);
+-    line(G.inset, V.blueDim, 0.9, { alpha: 0.5 });
+-    line(G.skull, V.blueDim, 0.9, { close: true, alpha: 0.6 });
+-    line(G.brain, V.blueMid, 1.0, { close: true, alpha: 0.75 });
+-    line(G.sulcus, V.blueDim, 0.9);
+-    line(G.nasal, V.blueMid, 1, { close: true });
+     line(G.palOral, V.blueMid, 1.1);
+-    line(G.palNasal, V.blueMid, 1.1);
+-    line(G.skinLower, V.blue, 1.5);
+-    line(G.skinUpper, V.blue, 1.5);
++    // 顔の真ん中を縦に割る線は仮面のように見えるので、横顔の線は細く淡くする
++    line(G.skinLower, V.blueMid, 1.2, { alpha: 0.7 });
++    line(G.skinUpper, V.blueMid, 1.2, { alpha: 0.7 });
+     line(G.outerWall, V.blue, 1.4, { hot: true });
+     line(f.inner, V.blue, 1.3, { alpha: 0.9 });
+     line(G.glottisWall, V.blue, 1.2, { alpha: 0.8 });
+@@ -906,59 +986,36 @@ export class Anatomy3D {
+   }
+ 
+   // ------------------------------------------------------------------ eyes
++  /** 顔の表面に貼る、縦長の大きな目。まぶたが下りると縦につぶれ、視線で瞳が少し動く */
+   private eyes(rest: Rest, dt: number): void {
+     const g = this.gaze, e = this.face;
+     g.update(this.clock, dt);
+-    const r = rest.eyeR;
+-    // where they look: forward, turned by the gaze (yaw towards +z, pitch up)
++    const open = 1 - 0.92 * e.lid;
++    const rx = rest.eyeR * 0.7, ry = rest.eyeR * open;
+     const pitch = g.pitch + 1.3 * e.lookUp;
+-    const d: V3 = [Math.cos(pitch) * Math.cos(g.yaw), Math.sin(pitch), Math.cos(pitch) * Math.sin(g.yaw)];
+-    const basis = (n: V3): [V3, V3] => {
+-      const up: V3 = Math.abs(n[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0];
+-      const u = norm3(cross(up, n));
+-      return [u, cross(n, u)];
+-    };
+-    const cam = this.eye;
+-    // the iris shows less as the lids close
+-    const seen = 1 - smooth(0.4, 0.9, e.lid);
+-    const wide = Math.max(0, e.brow);
+     for (const c of rest.eyes) {
+-      // a sphere's outline is the circle facing the camera
+-      const toCam = norm3([cam.x - c[0], cam.y - c[1], cam.z - c[2]]);
+-      const [u, v] = basis(toCam);
+-      const L = new Lines();
+-      L.ellipse(c, scale3(u, r), scale3(v, r), 36);
+-      const [iu, iv] = basis(d);
+-      const ic: V3 = [c[0] + d[0] * r * 0.86, c[1] + d[1] * r * 0.86, c[2] + d[2] * r * 0.86];
+-      L.ellipse(ic, scale3(iu, r * 0.5), scale3(iv, r * 0.5), 24);
+-      const pc: V3 = [c[0] + d[0] * r * 0.97, c[1] + d[1] * r * 0.97, c[2] + d[2] * r * 0.97];
+-      L.ellipse(pc, scale3(iu, r * 0.2), scale3(iv, r * 0.2), 14);
+-      // the lids: an almond over the front of the eyeball, inner corner towards the nose; the
+-      // upper one opens wide on a high note and comes down onto the lower one to shut
+       const out = Math.sign(c[2]);
+-      const lidAt = (open: number, sv: number, sgn: number) => open * (1 - sv * sv) + 0.06 * sv * out * sgn;
+-      const lid = (upper: boolean) => {
+-        for (let i = 0; i <= 16; i++) {
+-          const sv = -1 + i / 8, al = out * sv * 0.95;
+-          const lo = lidAt(-0.36, sv, -1);
+-          const be = upper ? lidAt(0.5 + 0.2 * wide, sv, 1) * (1 - e.lid) + (lo + 0.03) * e.lid : lo;
+-          L.p(c[0] + 1.04 * r * Math.cos(be) * Math.cos(al), c[1] + 1.04 * r * Math.sin(be), c[2] + 1.04 * r * Math.cos(be) * Math.sin(al));
+-        }
+-        L.end();
+-      };
+-      lid(true);
+-      lid(false);
+-      // the brow above it: up with the pitch, knit (inner end down) on a low note, and on a long
+-      // high note with the eyes shut, the inner end up (the singer feeling it)
+-      const lift = 0.3 * e.brow, knit = 0.28 * Math.max(0, -e.brow), feel = 0.22 * e.lid * wide;
+-      for (let i = 0; i <= 12; i++) {
+-        const sv = -1 + i / 6, al = out * (0.15 + sv * 0.62), inner = (1 - sv) / 2;
+-        const be = 0.82 + 0.12 * (1 - sv * sv) - 0.06 * sv + lift + (feel - knit) * inner;
+-        L.p(c[0] + 1.32 * r * Math.cos(be) * Math.cos(al), c[1] + 1.32 * r * Math.sin(be), c[2] + 1.32 * r * Math.cos(be) * Math.sin(al));
+-      }
+-      L.end();
+-      const style = [[V.blueMid, 1.0, 0.35], [V.blue, 1.0, 0.9 * seen], [V.blue, 1.0, 0.7 * seen], [V.blue, 1.25, 0.95], [V.blue, 1.05, 0.75], [V.blueMid, 1.3, 0.8]] as const;
+-      L.lines.forEach((l, i) => this.beams.line(l, l.length / 3, style[i][0], style[i][1], { alpha: style[i][2] }));
++      // 顔の丸みに沿わせて、外側の端を後ろへ倒す
++      const u = norm3([-0.42, 0, out]);
++      const v: V3 = [0, 1, 0];
++      const at = (du: number, dv: number): V3 => [c[0] + u[0] * du, c[1] + dv, c[2] + u[2] * du];
++      const L = new Lines();
++      L.ellipse(c, scale3(u, rx), scale3(v, ry), 40);
++      // 上まつげ: 上半分をひとまわり外に重ねて太く見せる
++      L.ellipse(c, scale3(u, rx * 1.06), scale3(v, ry * 1.06), 20, 0.12 * Math.PI, 0.88 * Math.PI);
++      const iris = at(out * g.yaw * 0.3 * rx, (pitch * 0.3 - 0.1) * ry);
++      // 同心の輪を重ねると渦巻きに見えるので、虹彩は輪 1 本、瞳孔は太い小さな輪だけにする
++      const irisRings = [0.74];
++      for (const f of irisRings) L.ellipse(iris, scale3(u, rx * f), scale3(v, ry * f), 28);
++      const pupil: V3 = [iris[0], iris[1] - 0.12 * ry, iris[2]];
++      for (const f of [0.26, 0.12]) L.ellipse(pupil, scale3(u, rx * f), scale3(v, ry * f), 18);
++      const seen = open > 0.25 ? 1 : 0;
++      L.lines.forEach((l, i) => {
++        if (i === 0) this.beams.line(l, l.length / 3, OUTLINE, 1.7, { alpha: 0.95 });
++        else if (i === 1) this.beams.line(l, l.length / 3, OUTLINE, 2.4, { alpha: 0.95 });
++        else if (i < 2 + irisRings.length) this.beams.line(l, l.length / 3, V.blueMid, 2.1, { alpha: 0.95 * seen });
++        else this.beams.line(l, l.length / 3, OUTLINE, 2.4, { alpha: 0.95 * seen });
++      });
+     }
+   }
+ 
+@@ -1196,7 +1253,7 @@ export class Anatomy3D {
+       if (!pos) continue;
+       if (Number.isFinite(p.px)) {
+         const band = Math.min(2, Math.floor(Math.min(1, Math.abs(vis) / 6) * Math.min(1, p.life) * 3));
+-        this.beams.seg(p.px, p.py, p.pz, pos[0], pos[1], pos[2], "#ffe2a8", 1.05, 0.16 + 0.2 * band);
++        this.beams.seg(p.px, p.py, p.pz, pos[0], pos[1], pos[2], V.amber, 1.05, 0.16 + 0.2 * band);
+       }
+       [p.px, p.py, p.pz] = pos;
+     }
+@@ -1215,7 +1272,7 @@ export class Anatomy3D {
+       const pos = this.airPoint(f, s + 0.2 + rnd() * 1.2, rnd() * 2 - 1, rnd() * 2 - 1);
+       if (!pos) continue;
+       const r = 0.02 + rnd() * 0.05;
+-      this.beams.seg(pos[0] - r, pos[1], pos[2], pos[0] + r, pos[1], pos[2], "#f4fbff", 1.6, 0.15 + 0.7 * intensity * rnd());
++      this.beams.seg(pos[0] - r, pos[1], pos[2], pos[0] + r, pos[1], pos[2], V.white, 1.6, 0.15 + 0.7 * intensity * rnd());
+     }
+   }
+ 
+diff --git a/src/ui/render/beams3d.ts b/src/ui/render/beams3d.ts
+index d7f5189..f10dcf8 100644
+--- a/src/ui/render/beams3d.ts
++++ b/src/ui/render/beams3d.ts
+@@ -13,7 +13,7 @@ import * as THREE from "three";
+ import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
+ import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
+ import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+-import { core } from "../colors.ts";
++import { PAPER, core } from "../colors.ts";
+ 
+ /** line widths (CSS px) the batches draw at; a beam takes the nearest */
+ const WIDTHS = [0.6, 0.85, 1.05, 1.3, 1.6, 2.1];
+@@ -105,6 +105,12 @@ class Batch {
+   }
+ }
+ 
++/** 透明度ぶんだけ紙色へ寄せる（黒地では黒へ寄せていた） */
++function towardPaper([r, g, b]: [number, number, number], alpha: number): [number, number, number] {
++  const [pr, pg, pb] = rgb(PAPER);
++  return [pr + (r - pr) * alpha, pg + (g - pg) * alpha, pb + (b - pb) * alpha];
++}
++
+ const rgbCache = new Map<string, [number, number, number]>();
+ function rgb(hex: string): [number, number, number] {
+   let c = rgbCache.get(hex);
+@@ -131,7 +137,8 @@ export class Beams {
+     this.batches = WIDTHS.map((w) => {
+       const m = new LineMaterial({ linewidth: w, vertexColors: true, transparent: true, depthTest: false, depthWrite: false, toneMapped: false });
+       m.blending = THREE.CustomBlending;
+-      m.blendEquation = THREE.MaxEquation;
++      // 紙地では暗い側を残す。黒地の最大値合成の裏返し
++      m.blendEquation = THREE.MinEquation;
+       m.fog = true;
+       const b = new Batch(m);
+       this.group.add(b.mesh);
+@@ -172,14 +179,12 @@ export class Beams {
+ 
+   /** one segment */
+   seg(x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, color: string, width: number, alpha = 1): void {
+-    const [r, g, b] = rgb(color);
+-    this.batch(width).seg(x0, y0, z0, x1, y1, z1, r * alpha, g * alpha, b * alpha);
++    const [r, g, b] = towardPaper(rgb(color), alpha);
++    this.batch(width).seg(x0, y0, z0, x1, y1, z1, r, g, b);
+   }
+ 
+-  private strokes(a: ArrayLike<number>, n: number, [r, g, b]: [number, number, number], al: number, bt: Batch, close: boolean): void {
+-    r *= al;
+-    g *= al;
+-    b *= al;
++  private strokes(a: ArrayLike<number>, n: number, color: [number, number, number], al: number, bt: Batch, close: boolean): void {
++    const [r, g, b] = towardPaper(color, al);
+     for (let i = 0; i < n - 1; i++) {
+       const j = 3 * i;
+       bt.seg(a[j], a[j + 1], a[j + 2], a[j + 3], a[j + 4], a[j + 5], r, g, b);
+diff --git a/src/ui/render/petting.ts b/src/ui/render/petting.ts
+index 3eca70a..979f389 100644
+--- a/src/ui/render/petting.ts
++++ b/src/ui/render/petting.ts
+@@ -3,7 +3,7 @@
+  * heart outlines float up beside it, as if it likes it. The view feeds the pointer's path over the
+  * crown (in cm on the head, so it doesn't matter how big the head is drawn) and draws the hearts.
+  */
+-import { V } from "../colors.ts";
++import { INK_BLEND, V } from "../colors.ts";
+ 
+ /** path over the crown (cm) that makes a head happy from rest, less what fades meanwhile: an
+  *  ordinary wiggle (30 cm/s on the head: a mouse at ~700 px/s over a desktop head) gets there in
+@@ -79,7 +79,7 @@ export class Petting {
+ export function heart(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string, alpha: number): void {
+   if (alpha <= 0 || size <= 0) return;
+   ctx.save();
+-  ctx.globalCompositeOperation = "lighter";
++  ctx.globalCompositeOperation = INK_BLEND;
+   ctx.globalAlpha = alpha;
+   ctx.strokeStyle = color;
+   ctx.lineWidth = Math.max(1.2, size / 16);
+diff --git a/src/ui/render/profile.ts b/src/ui/render/profile.ts
+index 2f7d25d..933de30 100644
+--- a/src/ui/render/profile.ts
++++ b/src/ui/render/profile.ts
+@@ -10,7 +10,7 @@ import { rotateAbout, dist, catmullRom } from "./geom.ts";
+ import type { VoiceModel } from "../analysis.ts";
+ 
+ /** the visible part of the head, in body cm */
+-export const VIEW = { x0: -7.5, x1: 10.25, y0: -4.55, y1: 19.9 };
++export const VIEW = { x0: -12.6, x1: 10.25, y0: -4.55, y1: 28.7 };
+ 
+ /** Body-space outlines for one frame. */
+ export interface Profile {
+@@ -41,6 +41,95 @@ export interface Profile {
+   fibres: Vec[][];
+   folds: Vec[][];
+   lowerTeeth: Vec[];
++  nepp: NeppParts;
++  /** skinUpper のこの位置から先（額の上〜後頭部〜首の後ろ）と、skinLower のこの位置まで（首の前）が毛並みの輪郭 */
++  furFrom: number;
++  furLowerTo: number;
++}
++
++/**
++ * ねっぷちゃんの外見（横顔、body cm）。エンジンの出力ではない飾りで、気道や調音器官には触れない。
++ * 3D はこれを中線として左右に広げる。
++ */
++export interface NeppParts {
++  beret: Vec[];
++  band: Vec[][];
++  pom: Vec[];
++  snowflake: Vec[][];
++  ear: Vec[];
++  earInner: Vec[];
++  hairSide: Vec[];
++  fringe: Vec[];
++  cheek: Vec[];
++  iris: Vec[];
++  pupil: Vec[];
++  glint: Vec[];
++  glintSmall: Vec[];
++  lash: Vec[];
++  eyeC: Vec;
++  nose: Vec[];
++  scarf: Vec[];
++  scarfFold: Vec[];
++  scarfTail: Vec[];
++}
++
++/** 帽子のふくらみ・縁・耳などの位置。3D もこの値から立体を組む（テンプレート cm） */
++export const NEPP_SHAPE = {
++  beretBrimFront: { x: 8.35, y: 19.0 },
++  beretBrimBack: { x: -9.0, y: 17.4 },
++  beretTop: 26.8,
++  pom: { x: 0.5, y: 27.45, r: 0.72 },
++  snowflake: { x: 3.4, y: 21.9, r: 1.55 },
++  ear: { x: -2.0, y: 15.9, r: 1.95 },
++  cheek: { x: 6.55, y: 12.25, rx: 1.35, ry: 0.85 },
++  scarfTop: 4.7,
++  scarfBottom: -0.3,
++} as const;
++
++function snowflake(c: Vec, r: number): Vec[][] {
++  const lines: Vec[][] = [];
++  for (let i = 0; i < 6; i++) {
++    const ang = Math.PI / 2 + (i * Math.PI) / 3;
++    const at = (d: number, off = 0): Vec => ({ x: c.x + Math.cos(ang + off) * d, y: c.y + Math.sin(ang + off) * d });
++    lines.push([c, at(r)]);
++    for (const side of [1, -1]) {
++      const from = at(r * 0.58);
++      lines.push([from, { x: from.x + Math.cos(ang + side * 0.9) * r * 0.32, y: from.y + Math.sin(ang + side * 0.9) * r * 0.32 }]);
++    }
++  }
++  return lines;
++}
++
++export function buildNepp(B: (x: number, y: number) => Vec, k: number, eyeC: Vec): NeppParts {
++  const N = NEPP_SHAPE;
++  const brim = catmullRom([B(N.beretBrimFront.x, N.beretBrimFront.y), B(2.5, 18.4), B(-3.5, 17.8), B(N.beretBrimBack.x, N.beretBrimBack.y)], 6);
++  const dome = catmullRom([B(N.beretBrimBack.x, N.beretBrimBack.y), B(-11.2, 19.0), B(-11.4, 22.4), B(-6.0, 26.0), B(0.8, N.beretTop), B(6.7, 25.0), B(9.4, 21.5), B(N.beretBrimFront.x, N.beretBrimFront.y)], 6);
++  const bandUpper = brim.map((p) => ({ x: p.x, y: p.y + 0.85 * k }));
++  return {
++    beret: [...brim, ...dome],
++    band: [brim, bandUpper],
++    pom: ellipse(B(N.pom.x, N.pom.y), N.pom.r * k, N.pom.r * k, 0, 24),
++    snowflake: snowflake(B(N.snowflake.x, N.snowflake.y), N.snowflake.r * k),
++    ear: ellipse(B(N.ear.x, N.ear.y), N.ear.r * k, N.ear.r * k, 0, 32),
++    earInner: ellipse(B(N.ear.x, N.ear.y - 0.15), N.ear.r * 0.58 * k, N.ear.r * 0.62 * k, 0, 24),
++    hairSide: catmullRom([B(5.4, 18.8), B(6.4, 17.0), B(5.5, 14.4), B(5.2, 11.8), B(5.5, 9.2), B(6.2, 7.3), B(4.6, 8.4), B(3.2, 11.4), B(2.0, 14.6), B(1.2, 18.3), B(5.4, 18.8)], 5),
++    fringe: catmullRom([B(8.4, 18.95), B(8.75, 17.7), B(8.15, 16.7), B(7.75, 17.8), B(6.95, 16.95), B(6.4, 18.85), B(8.4, 18.95)], 5),
++    cheek: ellipse(B(N.cheek.x, N.cheek.y), N.cheek.rx * k, N.cheek.ry * k, 0, 28),
++    iris: ellipse(eyeC, 1.12 * k, 1.62 * k, 0, 36),
++    pupil: ellipse({ x: eyeC.x + 0.12 * k, y: eyeC.y - 0.22 * k }, 0.6 * k, 0.95 * k, 0, 28),
++    glint: ellipse({ x: eyeC.x + 0.38 * k, y: eyeC.y + 0.72 * k }, 0.32 * k, 0.38 * k, 0, 18),
++    glintSmall: ellipse({ x: eyeC.x - 0.42 * k, y: eyeC.y - 0.7 * k }, 0.16 * k, 0.18 * k, 0, 12),
++    // 上まつげ: 瞳の上をなぞり、目尻（後ろ側）で少しはねる
++    lash: [...Array.from({ length: 17 }, (_, i) => {
++      const a = Math.PI * (0.06 + (0.9 * i) / 16);
++      return { x: eyeC.x + 1.2 * k * Math.cos(a), y: eyeC.y + 1.72 * k * Math.sin(a) };
++    }), { x: eyeC.x - 1.6 * k, y: eyeC.y + 0.62 * k }],
++    eyeC,
++    nose: ellipse(B(9.12, 11.5), 0.38 * k, 0.34 * k, 0, 20),
++    scarf: catmullRom([B(-7.4, N.scarfTop + 0.4), B(-2.0, N.scarfTop), B(3.6, N.scarfTop - 0.7), B(5.7, 2.9), B(5.2, N.scarfBottom + 0.5), B(-2.0, N.scarfBottom - 0.1), B(-7.7, N.scarfBottom + 0.5), B(-8.3, 2.2), B(-7.4, N.scarfTop + 0.4)], 5),
++    scarfFold: catmullRom([B(-7.9, 2.6), B(-2.0, 2.0), B(3.4, 1.9), B(5.4, 2.5)], 5),
++    scarfTail: catmullRom([B(0.2, 0.5), B(0.4, -1.4), B(0.7, -3.3), B(2.4, -3.2), B(2.3, -1.2), B(2.2, 0.5)], 5),
++  };
+ }
+ 
+ /** the jaw's rotation (radians, about the condyle) for an opening at the incisors */
+@@ -106,9 +195,9 @@ export function buildProfile(model: VoiceModel, f: HumanFrame, a: HumanArtic): P
+   const B = bodyPoint(model);
+   const ulOut = f.upperLip.slice(7); // edge → nose
+   const llOut = f.lowerLip.slice(7); // edge → chin
+-  const neckFront = catmullRom([B(2.3, -4.6), B(2.38, -1.5), B(2.52, 0.4), B(3.0, 1.7), J(5.3, 3.0), J(7.25, 3.35), J(7.95, 4.6), J(7.55, 5.7)], 4);
+-  const face = catmullRom([ulOut[ulOut.length - 1], B(7.05, 10.6), B(7.75, 10.78), B(8.75, 11.05), B(9.25, 11.65), B(8.95, 12.6), B(8.35, 13.9), B(7.7, 15.0), B(7.95, 16.1), B(7.9, 18.1), B(6.9, 20.5)], 4);
+-  const cranium = catmullRom([B(6.9, 20.5), B(3.0, 22.9), B(-2.2, 22.7), B(-6.9, 19.6), B(-8.7, 15.4), B(-8.3, 11.9), B(-7.4, 8.9), B(-6.8, 4.8), B(-6.6, 0), B(-6.6, -4.6)], 4);
++  const neckFront = catmullRom([B(2.3, -4.6), B(2.38, -1.5), B(2.52, 0.4), B(3.0, 1.7), J(5.3, 3.0), J(7.0, 3.5), J(7.7, 4.7), J(7.5, 5.7)], 4);
++  const face = catmullRom([ulOut[ulOut.length - 1], B(7.35, 10.45), B(8.3, 10.6), B(9.05, 10.95), B(9.3, 11.5), B(9.0, 12.15), B(8.6, 13.2), B(8.55, 14.8), B(8.7, 16.6), B(8.45, 18.5), B(7.0, 20.8)], 4);
++  const cranium = catmullRom([B(7.0, 20.8), B(3.0, 23.3), B(-2.6, 23.3), B(-7.6, 20.6), B(-9.7, 16.2), B(-9.5, 11.8), B(-8.2, 8.0), B(-6.6, 5.2), B(-6.0, 2.0), B(-6.0, -4.6)], 4);
+   const vertebrae: Vec[][] = [];
+   for (let i = 0; i < 9; i++) {
+     const y0 = -4.4 + i * 1.75;
+@@ -152,8 +241,8 @@ export function buildProfile(model: VoiceModel, f: HumanFrame, a: HumanArtic): P
+     skull: catmullRom([B(7.0, 16.2), B(7.3, 18.5), B(6.0, 20.7), B(3.0, 22.1), B(-2.0, 22.0), B(-6.3, 19.2), B(-7.9, 15.3), B(-7.4, 12.6), B(-4.6, 12.2), B(-2.2, 13.3), B(1.0, 13.7), B(4.1, 14.1), B(6.2, 14.9)], 4),
+     brain: catmullRom([B(6.55, 16.3), B(6.75, 18.4), B(5.5, 20.1), B(2.8, 21.4), B(-1.9, 21.3), B(-5.8, 18.8), B(-7.1, 15.4), B(-6.7, 13.1), B(-4.4, 12.8), B(-2.1, 13.9), B(1.0, 14.3), B(4.0, 14.7), B(5.9, 15.4)], 4),
+     sulcus: catmullRom([B(5.4, 19.4), B(2.4, 20.5), B(-1.4, 20.4), B(-4.8, 18.4)], 4),
+-    eye: ellipse(B(6.5, 15.4), 1.1 * k, 0.95 * k),
+-    eyeC: B(6.5, 15.4),
++    eye: ellipse(B(6.95, 14.75), 1.3 * k, 1.3 * k),
++    eyeC: B(6.95, 14.75),
+     vertebrae,
+     cords: [[P(-5.3, -4.6), P(-4.5, -4.6), P(-4.5, 11.8), P(-5.1, 12.4), P(-5.6, 11.6)], [P(-5.1, -4.6), P(-4.7, -4.6), P(-4.72, 11.4), P(-5.15, 11.6)]],
+     nasal: catmullRom([B(0.3, 11.2), B(1.1, 10.25), B(2.7, 10.75), B(4.6, 10.85), B(6.4, 10.65), B(7.6, 10.85), B(8.45, 11.3), B(8.0, 12.2), B(6.7, 13.4), B(4.4, 13.9), B(1.8, 13.6), B(0.2, 12.6)], 4),
+@@ -174,6 +263,9 @@ export function buildProfile(model: VoiceModel, f: HumanFrame, a: HumanArtic): P
+       [{ x: g.x + 0.72 * k, y: g.y + 0.05 }, { x: g.x + 0.12, y: g.y + 0.12 * k }, { x: g.x + 0.72 * k, y: g.y + 0.32 * k }, { x: g.x + 0.72 * k, y: g.y + 0.05 }],
+     ],
+     lowerTeeth: [...f.lowerTeeth, J(6.8, 6.0), J(6.4, 6.2), f.lowerTeeth[0]],
++    nepp: buildNepp(B, k, B(6.95, 14.75)),
++    furFrom: ulOut.length + face.length - 2,
++    furLowerTo: 12,
+   };
+ }
+ 
+diff --git a/src/ui/render/vector.ts b/src/ui/render/vector.ts
+index 79b6a3e..df2f495 100644
+--- a/src/ui/render/vector.ts
++++ b/src/ui/render/vector.ts
+@@ -5,13 +5,13 @@
+  *
+  * Beams are drawn additively ("lighter"), so where lines cross they get brighter, like a beam.
+  */
+-import { V, core } from "../colors.ts";
++import { INK_BLEND, V, core } from "../colors.ts";
+ 
+ export type Pt = [number, number];
+ 
+ /** Hershey Simplex first; anything it lacks (IPA, ², ×) falls back to Archivo, which covers IPA. */
+-export const HERSHEY = '"Hershey", "Archivo", system-ui, sans-serif';
+-export const hfont = (size: number, weight: "l" | "m" = "l") => `${weight === "m" ? 500 : 300} ${size}px ${HERSHEY}`;
++export const HERSHEY = '"Zen Maru Gothic", "M PLUS Rounded 1c", "Archivo", system-ui, sans-serif';
++export const hfont = (size: number, weight: "l" | "m" = "l") => `${weight === "m" ? 700 : 500} ${size}px ${HERSHEY}`;
+ 
+ const hasLetterSpacing = typeof CanvasRenderingContext2D !== "undefined" && "letterSpacing" in CanvasRenderingContext2D.prototype;
+ 
+@@ -36,7 +36,7 @@ export function pathOf(pts: ArrayLike<Pt>, close = false): Path2D {
+ /** stroke a path as a glowing beam */
+ export function beam(ctx: CanvasRenderingContext2D, path: Path2D, color: string, width: number, o: BeamOpts = {}): void {
+   ctx.save();
+-  ctx.globalCompositeOperation = "lighter";
++  ctx.globalCompositeOperation = INK_BLEND;
+   ctx.globalAlpha = o.alpha ?? 1;
+   ctx.lineJoin = "round";
+   ctx.lineCap = "round";
+@@ -76,7 +76,7 @@ export function ring(ctx: CanvasRenderingContext2D, x: number, y: number, r: num
+ 
+ export function dot(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string, alpha = 1): void {
+   ctx.save();
+-  ctx.globalCompositeOperation = "lighter";
++  ctx.globalCompositeOperation = INK_BLEND;
+   ctx.globalAlpha = alpha;
+   ctx.fillStyle = color;
+   ctx.beginPath();
+@@ -121,10 +121,10 @@ export interface LabelOpts {
+ export function label(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, o: LabelOpts = {}): void {
+   const size = o.size ?? 11;
+   ctx.save();
+-  ctx.globalCompositeOperation = "lighter";
++  ctx.globalCompositeOperation = INK_BLEND;
+   ctx.globalAlpha = o.alpha ?? 1;
+   ctx.font = hfont(size, o.weight);
+-  if (hasLetterSpacing) (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${((o.ls ?? 0.14) * size).toFixed(2)}px`;
++  if (hasLetterSpacing) (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${((o.ls ?? 0.06) * size).toFixed(2)}px`;
+   ctx.textAlign = o.align ?? "left";
+   ctx.textBaseline = o.baseline ?? "alphabetic";
+   ctx.fillStyle = o.color ?? V.blue;
+@@ -140,7 +140,7 @@ export function labelWidth(ctx: CanvasRenderingContext2D, text: string, o: Label
+   const size = o.size ?? 11;
+   ctx.save();
+   ctx.font = hfont(size, o.weight);
+-  if (hasLetterSpacing) (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${((o.ls ?? 0.14) * size).toFixed(2)}px`;
++  if (hasLetterSpacing) (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${((o.ls ?? 0.06) * size).toFixed(2)}px`;
+   const wd = ctx.measureText(text).width;
+   ctx.restore();
+   return wd;
+@@ -199,7 +199,7 @@ export function ipaGlyph(ctx: CanvasRenderingContext2D, x: number, y: number, ip
+   const f = (n: number) => n.toFixed(2);
+   const stroke = (d: string) => {
+     ctx.save();
+-    ctx.globalCompositeOperation = "lighter";
++    ctx.globalCompositeOperation = INK_BLEND;
+     ctx.globalAlpha = alpha;
+     ctx.strokeStyle = color;
+     ctx.lineWidth = sw;
+@@ -210,7 +210,7 @@ export function ipaGlyph(ctx: CanvasRenderingContext2D, x: number, y: number, ip
+   };
+   const glyph = (s: string, tf?: (c: CanvasRenderingContext2D) => void) => {
+     ctx.save();
+-    ctx.globalCompositeOperation = "lighter";
++    ctx.globalCompositeOperation = INK_BLEND;
+     ctx.globalAlpha = alpha;
+     ctx.font = hfont(size);
+     ctx.textAlign = "center";
+@@ -256,6 +256,7 @@ export function ipaGlyph(ctx: CanvasRenderingContext2D, x: number, y: number, ip
+ }
+ 
+ // ------------------------------------------------------------------ the glow
++const PAPER_HAS_NO_GLOW = true;
+ /**
+  * One reduced-resolution glow layer: the finished frame is copied down, blurred there (cheap:
+  * a fraction of the pixels), and added back on top. sigma is the halo radius in CSS px.
+@@ -275,6 +276,8 @@ export class Glow {
+   }
+ 
+   apply(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, dpr: number): void {
++    // 紙地では発光の重ね焼き（screen）が線を白く薄めるので掛けない
++    if (PAPER_HAS_NO_GLOW) return;
+     const W = canvas.width, H = canvas.height;
+     const w = Math.max(1, Math.round(W / this.down)), h = Math.max(1, Math.round(H / this.down));
+     if (this.small.width !== w || this.small.height !== h) {
+diff --git a/src/ui/singing.ts b/src/ui/singing.ts
+index 9a6fbaf..3170e45 100644
+--- a/src/ui/singing.ts
++++ b/src/ui/singing.ts
+@@ -12,9 +12,16 @@ import { g2p } from "./speech.ts";
+ import { lyricsToSyllables, type Syllable } from "../wasm/engine.ts";
+ import { planSong, planNoteOn, planNoteOff, planMelisma } from "../wasm/engine.ts";
+ import { EXHALE_LABEL } from "../wasm/engine.ts";
+-import { DEMO_SONGS } from "../wasm/engine.ts";
++import { DEMO_SONGS as ENGINE_SONGS } from "../wasm/engine.ts";
++import { JAPANESE_SONGS } from "./songsJa.ts";
+ import type { Gesture } from "../wasm/types.ts";
+ import { nearestBody, type BodyMix } from "./body.ts";
++import { adaptVoicingForJapanese, containsKana, japaneseSyllables } from "./japanese.ts";
++
++const DEMO_SONGS = [...JAPANESE_SONGS, ...ENGINE_SONGS];
++
++/** かなの歌詞は日本語として、それ以外は英語の辞書で音節にする */
++const syllablesOf = (text: string): Syllable[] => (containsKana(text) ? japaneseSyllables(text) : lyricsToSyllables(text));
+ 
+ /** A note on the piano roll, on the voice clock (s); t1 is null while it is held. */
+ export interface RollNote {
+@@ -51,14 +58,14 @@ interface SingState {
+ 
+ export const useSing = create<SingState>((set, get) => ({
+   lyrics: DEFAULT_LYRICS,
+-  syllables: lyricsToSyllables(DEFAULT_LYRICS),
++  syllables: syllablesOf(DEFAULT_LYRICS),
+   cursor: 0,
+   vibrato: 35,
+   demo: null,
+   demoAt: -1,
+   setLyrics: (text) => {
+     stopDemo();
+-    set({ lyrics: text, syllables: lyricsToSyllables(text), cursor: 0 });
++    set({ lyrics: text, syllables: syllablesOf(text), cursor: 0 });
+   },
+   setCursor: (i) => set({ cursor: Math.max(0, Math.min(i, Math.max(0, get().syllables.length - 1))) }),
+   setVibrato: (cents) => set({ vibrato: cents }),
+@@ -71,7 +78,7 @@ export function ensureDictionary(): void {
+     .load()
+     .then(() => {
+       const s = useSing.getState();
+-      const syllables = lyricsToSyllables(s.lyrics);
++      const syllables = syllablesOf(s.lyrics);
+       useSing.setState({ syllables, cursor: Math.min(s.cursor, Math.max(0, syllables.length - 1)) });
+     })
+     .catch(() => {
+@@ -252,12 +259,13 @@ export async function playDemo(name: string, body: BodyMix, ready?: () => Promis
+     // letter-to-sound rules
+   }
+   if (token !== demoToken) return;
+-  const syl = lyricsToSyllables(song.lyrics);
++  const syl = syllablesOf(song.lyrics);
+   if (!syl.length) return;
+   const shift = song.octave[nearestBody(body)] * 12;
+   const notes = song.notes.map((n, i) => ({ midi: n[0] + shift, beats: n[1], syl: syl[i % syl.length] }));
+   const t0 = 0.35;
+-  const plan = planSong(notes, { body, bpm: song.bpm, t0, vibrato: useSing.getState().vibrato });
++  const planned = planSong(notes, { body, bpm: song.bpm, t0, vibrato: useSing.getState().vibrato });
++  const plan = containsKana(song.lyrics) ? { ...planned, gestures: adaptVoicingForJapanese(planned.gestures, 1) } : planned;
+   const beat = 60 / song.bpm;
+   let t = t0;
+   const times = notes.map((n): [number, number] => {
+diff --git a/src/ui/songsJa.ts b/src/ui/songsJa.ts
+new file mode 100644
+index 0000000..5254030
+--- /dev/null
++++ b/src/ui/songsJa.ts
+@@ -0,0 +1,25 @@
++import type { DemoSong } from "../wasm/types.ts";
++
++/**
++ * 日本語の歌。旋律は [MIDI ノート, 拍]。歌詞はかな 1 文字が 1 音符で、「ー」は前の母音を次の
++ * 音符へ伸ばし、読点が息継ぎになる。曲データは休符を持てないので、休符の長さは直前の音符に
++ * 含めている（息継ぎの前の音符なので、声はそこで切れる）。
++ */
++export const JAPANESE_SONGS: DemoSong[] = [
++  {
++    // 詞 北原白秋（1942 年没）、曲 山田耕筰（1965 年没）。どちらも保護期間が満了している。
++    // 旋律と歌詞の割り付けは、日本語版 Wikipedia「この道」に掲載の譜（ホ長調、4 分音符 = 60）による
++    name: "この道",
++    bpm: 60,
++    lyrics: "このみちは、いつかきたみち、ああ、そうだよー、あかしやーのー、はながさいてる",
++    notes: [
++      [59, 0.5], [64, 0.5], [66, 0.5], [68, 1], [68, 1.5],
++      [73, 0.5], [71, 0.5], [68, 0.5], [66, 0.5], [68, 0.5], [66, 1], [64, 1.5],
++      [76, 0.5], [71, 1.5],
++      [73, 0.5], [71, 0.5], [68, 0.5], [69, 1], [59, 1.5],
++      [68, 0.5], [69, 0.5], [68, 0.5], [66, 0.5], [69, 0.5], [73, 1], [71, 1.5],
++      [68, 0.5], [69, 0.5], [68, 0.5], [66, 0.5], [68, 0.5], [66, 1], [64, 1.5],
++    ],
++    octave: { male: -1, female: 0, child: 0 },
++  },
++];
+diff --git a/src/ui/speech.ts b/src/ui/speech.ts
+index 16630c2..c5bfc71 100644
+--- a/src/ui/speech.ts
++++ b/src/ui/speech.ts
+@@ -6,6 +6,8 @@ import { planPhrases, type Plan, type Segment } from "../wasm/engine.ts";
+ import { engine } from "../audio/AudioEngine.ts";
+ import type { Gesture } from "../wasm/types.ts";
+ import { wordSpans, type WordSpan } from "./words.ts";
++import { adaptVoicingForJapanese, containsJapanese, isKanaNotation, itemsToPhrases, japanesePhrases, njdToItems, properNounItem, splitProperNouns, type SpeechItem } from "./japanese.ts";
++import { analyzeJapanese } from "./openjtalk.ts";
+ 
+ export const g2p = new EnglishG2P();
+ 
+@@ -51,17 +53,32 @@ export function transcribe(phrases: { segments: Segment[]; intonation?: string }
+   return phrases.map((p) => p.segments.map((s) => (s.stress === 1 ? "ˈ" : s.stress === 2 ? "ˌ" : "") + s.ipa + (s.wordEnd ? " " : "")).join("").trim() + (p.intonation === "question" ? "?" : "")).join(" | ");
+ }
+ 
+-export function speakPhrases(phrases: { segments: Segment[]; intonation?: "statement" | "question" | "flat"; pause?: number; words?: string[] }[], o: { body: BodyMix; rate: number; f0: number }): SpokenPlan {
+-  const plan = planPhrases(phrases, { body: o.body, t0: 0, rate: o.rate, f0: o.f0 });
++export function speakPhrases(phrases: { segments: Segment[]; intonation?: "statement" | "question" | "flat"; pause?: number; words?: string[] }[], o: { body: BodyMix; rate: number; f0: number; japanese?: boolean }): SpokenPlan {
++  const planned = planPhrases(phrases, { body: o.body, t0: 0, rate: o.rate, f0: o.f0 });
++  const plan = o.japanese ? { ...planned, gestures: adaptVoicingForJapanese(planned.gestures, o.rate) } : planned;
+   const id = engine.schedule({ gestures: plan.gestures.map((g: Gesture) => ({ ...g, targets: { ...g.targets } })), segments: plan.segments, end: plan.end });
+   current = { plan, offset: null, id, transcription: transcribe(phrases), words: wordSpans(phrases, plan) };
+   for (const l of listeners) l(current);
+   return current;
+ }
+ 
++/** 漢字まじりの文を、読みとアクセントのついた発話単位にする */
++export async function analyzeToItems(text: string): Promise<SpeechItem[]> {
++  const items: SpeechItem[] = [];
++  for (const part of splitProperNouns(text)) {
++    if (part.reading) items.push(properNounItem(part.text, part.reading));
++    else items.push(...njdToItems(await analyzeJapanese(part.text)));
++  }
++  return items;
++}
++
+ export async function speakText(text: string, o: { ipa: boolean; body: BodyMix; rate: number; f0: number }): Promise<SpokenPlan | null> {
+   if (!text.trim()) return null;
+   let phrases: Phrase[];
++  if (!o.ipa && containsJapanese(text)) {
++    const japanese = isKanaNotation(text) ? japanesePhrases(text, o.f0) : itemsToPhrases(await analyzeToItems(text), o.f0);
++    return japanese.length ? speakPhrases(japanese, { ...o, japanese: true }) : null;
++  }
+   if (o.ipa) phrases = ipaToPhrases(text);
+   else {
+     try {
+diff --git a/src/ui/speechQueue.ts b/src/ui/speechQueue.ts
+new file mode 100644
+index 0000000..7dea8d1
+--- /dev/null
++++ b/src/ui/speechQueue.ts
+@@ -0,0 +1,46 @@
++/**
++ * 文を届いた順に 1 つずつ喋らせる列。エンジンは新しい発話の予約で前の発話を上書きするので、
++ * 前の文が終わるまで次の文の予約を待つ。
++ */
++
++/** 文と文のあいだの間（秒） */
++const GAP_SEC = 0.22;
++
++export class SpeechQueue {
++  private generation = 0;
++  private tail: Promise<void> = Promise.resolve();
++
++  /**
++   * @param speak 文を喋らせ、その長さ（秒）を返す。喋るものがなければ null
++   * @param stop いま喋っている発話を止める
++   */
++  constructor(
++    private readonly speak: (text: string) => Promise<number | null>,
++    private readonly stop: () => void,
++    private readonly wait: (seconds: number) => Promise<void> = (seconds) => new Promise((resolve) => setTimeout(resolve, seconds * 1000)),
++  ) {}
++
++  enqueue(text: string): Promise<void> {
++    const generation = this.generation;
++    this.tail = this.tail.then(async () => {
++      if (generation !== this.generation) return;
++      let duration: number | null;
++      try {
++        duration = await this.speak(text);
++      } catch (cause) {
++        // 1 文の失敗で残りの文まで黙らせない
++        console.error(cause);
++        return;
++      }
++      if (duration === null || generation !== this.generation) return;
++      await this.wait(duration + GAP_SEC);
++    });
++    return this.tail;
++  }
++
++  /** 待っている文を捨て、喋っている途中の文も止める */
++  clear(): void {
++    this.generation += 1;
++    this.stop();
++  }
++}
+diff --git a/src/ui/store.ts b/src/ui/store.ts
+index a982a0a..60acc2d 100644
+--- a/src/ui/store.ts
++++ b/src/ui/store.ts
+@@ -121,8 +121,8 @@ export const useStore = create<State>((set, get) => ({
+   started: false,
+   starting: false,
+   startError: null,
+-  body: PRESETS.male,
+-  source: { ...DEFAULT_SOURCE },
++  body: PRESETS.child,
++  source: { ...DEFAULT_SOURCE, f0: defaultF0(PRESETS.child) },
+   artic: (() => {
+     const tip = restTip(NEUTRAL.jaw, NEUTRAL.tbX, NEUTRAL.tbY);
+     return { ...NEUTRAL, ttX: tip.x, ttY: tip.y };
+@@ -131,7 +131,7 @@ export const useStore = create<State>((set, get) => ({
+   volume: 0.8,
+   hold: false,
+   heldNotes: [],
+-  view: { pressure: true, particles: true, grid: false, calipers: true, threeD: false },
++  view: { pressure: true, particles: true, grid: false, calipers: true, threeD: true },
+   mode: "play",
+   setMode: (m) => {
+     const prev = get().mode;
+diff --git a/src/ui/styles.css b/src/ui/styles.css
+index 5281d10..990ee85 100644
+--- a/src/ui/styles.css
++++ b/src/ui/styles.css
+@@ -1,3 +1,5 @@
++@import url("https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap");
++
+ @font-face {
+   font-family: "Hershey";
+   src: url("/fonts/AVHersheySimplexLight.otf") format("opentype");
+@@ -28,36 +30,52 @@
+ }
+ 
+ :root {
+-  /* the vector-display palette (src/ui/colors.ts V): blue is the body, amber is sound,
+-     green/red/pink/white are the four control slots */
+-  --blue: #4fb6f2;
+-  --blue-mid: #3487c4;
+-  --blue-dim: #1f5f8c;
+-  --frame: #133954;
+-  --green: #5be381;
+-  --red: #ff5d40;
+-  --pink: #ff73cf;
+-  --white: #eef6f8;
+-  --amber: #ffb340;
+-  --glow-blue: 0 0 1.5px rgba(79, 182, 242, 0.9), 0 0 6px rgba(79, 182, 242, 0.4);
+-  /* older names, remapped so screens not yet redrawn sit on black in blue and amber */
+-  --black: #000000;
+-  --console: #000000;
+-  --inset: #000000;
++  /* ねっぷちゃんのデザイントークン（nepp-chan shared/src/styles/index.css の値の写し） */
++  --paper-0: #fefdfb;
++  --paper-50: #faf7f2;
++  --paper-100: #f3eee6;
++  --paper-200: #e8dfd1;
++  --teal-500: #5cb7bb;
++  --teal-600: #0d9296;
++  --teal-700: #0f7177;
++  --moss-700: #5c7a3f;
++  --sky-700: #4f708b;
++  --berry: #e76f7a;
++  --apricot-700: #c26d3c;
++  --snow-600: #57534e;
++  --snow-800: #292524;
++  --r-md: 8px;
++  --r-lg: 12px;
++  --shadow-xs: 0 1px 2px rgba(28, 25, 23, 0.04);
++
++  /* 元の役割名は残し、値だけトークンへ向ける: blue = 体と構造、amber = 音、残り 4 色 = 操作スロット */
++  --blue: var(--teal-700);
++  --blue-mid: var(--teal-600);
++  --blue-dim: var(--teal-500);
++  --frame: var(--paper-200);
++  --green: var(--moss-700);
++  --red: var(--berry);
++  --pink: var(--sky-700);
++  --white: var(--snow-800);
++  --amber: var(--apricot-700);
++  --glow-blue: var(--shadow-xs);
++  --black: var(--paper-50);
++  --console: var(--paper-0);
++  --inset: var(--paper-100);
+   --line: var(--frame);
+   --text: var(--blue);
+   --text-dim: var(--blue-mid);
+   --caliper: var(--amber);
+-  --caliper-dim: rgba(255, 179, 64, 0.45);
+-  --radius-s: 0;
+-  --radius-m: 0;
+-  --font: "Hershey", "Archivo", system-ui, -apple-system, "Segoe UI", "Noto Sans", sans-serif;
+-  color-scheme: dark;
++  --caliper-dim: rgba(194, 109, 60, 0.45);
++  --radius-s: var(--r-md);
++  --radius-m: var(--r-lg);
++  --font: "Zen Maru Gothic", "M PLUS Rounded 1c", "Archivo", system-ui, -apple-system, "Segoe UI", "Noto Sans", sans-serif;
++  color-scheme: light;
+ }
+ 
+ .text-colors {
+-  --text: #effbff;
+-  --text-dim: #e2f5fc;
++  --text: var(--snow-800);
++  --text-dim: var(--snow-600);
+   color: var(--text);
+ }
+ 
+@@ -155,7 +173,7 @@ input {
+ 
+ button.primary {
+   background: var(--caliper);
+-  color: #1d1a10;
++  color: var(--paper-0);
+   border: 0;
+   border-radius: var(--radius-s);
+   padding: 7px 14px;
+@@ -262,7 +280,7 @@ button.primary.large {
+   transform: translate(-50%, -50%);
+   max-width: 360px;
+   padding: 22px 24px;
+-  background: rgba(10, 12, 14, 0.82);
++  background: rgba(250, 247, 242, 0.9);
+   border: 1px solid var(--line);
+   border-radius: var(--radius-m);
+   text-align: center;
+@@ -281,7 +299,7 @@ button.primary.large {
+ 
+ .start-prompt .error {
+   margin: 14px 0 0;
+-  color: #ffb4a0;
++  color: var(--berry);
+   font-size: 14px;
+ }
+ 
+@@ -501,7 +519,7 @@ button.ghost {
+ 
+ .ipa-chart button.ipa:hover {
+   background: var(--caliper);
+-  color: #1d1a10;
++  color: var(--paper-0);
+ }
+ 
+ .score-canvas {
+@@ -612,7 +630,7 @@ button.ghost {
+ .call.sustain.on {
+   background: var(--caliper);
+   border-color: var(--caliper);
+-  color: #1d1a10;
++  color: var(--paper-0);
+ }
+ 
+ .call.playing {
+@@ -797,8 +815,8 @@ button.midi.on .midi-status {
+ 
+ .pad.lit,
+ .pad:active {
+-  border-color: #ffd15c;
+-  box-shadow: inset 0 0 0 1px #ffd15c, 0 0 18px rgba(240, 88, 28, 0.45);
++  border-color: var(--amber);
++  box-shadow: inset 0 0 0 1px var(--amber), 0 0 18px rgba(231, 111, 122, 0.45);
+ }
+ 
+ .pad-sym {
+@@ -840,7 +858,7 @@ button.midi.on .midi-status {
+ }
+ 
+ .transport .play.on {
+-  background: #ffd15c;
++  background: var(--amber);
+ }
+ 
+ .seq-grid {
+@@ -879,21 +897,21 @@ button.midi.on .midi-status {
+   height: 22px;
+   border: 0;
+   border-radius: 3px;
+-  background: #151a1d;
++  background: var(--snow-800);
+   cursor: pointer;
+   padding: 0;
+ }
+ 
+ .cell.downbeat {
+-  background: #2b3338;
++  background: var(--snow-600);
+ }
+ 
+ .cell:hover {
+-  background: #2c3438;
++  background: var(--snow-600);
+ }
+ 
+ .cell.on {
+-  background: #cfd3d5;
++  background: var(--paper-0);
+ }
+ 
+ .cell.now {
+@@ -901,8 +919,8 @@ button.midi.on .midi-status {
+ }
+ 
+ .cell.on.now {
+-  background: #ffd15c;
+-  box-shadow: 0 0 10px rgba(240, 88, 28, 0.7);
++  background: var(--amber);
++  box-shadow: 0 0 10px rgba(231, 111, 122, 0.7);
+ }
+ 
+ .cell-note {
+@@ -912,7 +930,7 @@ button.midi.on .midi-status {
+   place-items: center;
+   font-size: 9.5px;
+   font-weight: 650;
+-  color: #1d1a10;
++  color: var(--paper-0);
+   line-height: 1;
+ }
+ 
+@@ -950,8 +968,8 @@ button.midi.on .midi-status {
+   font-weight: 800;
+   font-stretch: 125%;
+   line-height: 0.9;
+-  color: #ffd15c;
+-  text-shadow: 0 0 24px rgba(240, 88, 28, 0.55);
++  color: var(--amber);
++  text-shadow: 0 0 24px rgba(231, 111, 122, 0.55);
+ }
+ 
+ .beat-name {
+@@ -992,7 +1010,7 @@ button.midi.on .midi-status {
+ 
+ .key.white {
+   flex: 1;
+-  background: #cfd3d5;
++  background: var(--paper-0);
+   border-radius: 0 0 4px 4px;
+ }
+ 
+@@ -1012,13 +1030,13 @@ button.midi.on .midi-status {
+   top: 0;
+   width: 2.2%;
+   height: 100%;
+-  background: #15191b;
++  background: var(--snow-800);
+   border-radius: 0 0 3px 3px;
+   pointer-events: auto;
+ }
+ 
+ .key.black.down {
+-  background: #b69a3e;
++  background: var(--amber);
+ }
+ 
+ /* ---------- responsive */
+@@ -1159,7 +1177,7 @@ button.midi.on .midi-status {
+ 
+ html,
+ body {
+-  background: #000;
++  background: var(--black);
+   color: var(--blue);
+   font-size: 13px;
+   letter-spacing: 0.06em;
+@@ -1244,7 +1262,7 @@ body {
+   background: transparent;
+   color: var(--text);
+   border-color: var(--blue);
+-  box-shadow: 0 0 5px rgba(79, 182, 242, 0.35), inset 0 0 4px rgba(79, 182, 242, 0.15);
++  box-shadow: 0 0 5px rgba(15, 113, 119, 0.35), inset 0 0 4px rgba(15, 113, 119, 0.15);
+   text-shadow: var(--glow-blue);
+ }
+ 
+@@ -1284,12 +1302,12 @@ body {
+ .body-pad:hover .body-frame,
+ .body-pad:focus-visible .body-frame {
+   stroke: var(--blue);
+-  filter: drop-shadow(0 0 2px rgba(79, 182, 242, 0.6));
++  filter: drop-shadow(0 0 2px rgba(15, 113, 119, 0.6));
+ }
+ 
+ .body-pad .body-dot {
+   fill: var(--blue);
+-  filter: drop-shadow(0 0 3px rgba(79, 182, 242, 0.9));
++  filter: drop-shadow(0 0 3px rgba(15, 113, 119, 0.9));
+ }
+ 
+ .volume,
+@@ -1308,7 +1326,7 @@ body {
+ 
+ .repo-link:hover {
+   color: var(--text);
+-  filter: drop-shadow(0 0 3px rgba(79, 182, 242, 0.7));
++  filter: drop-shadow(0 0 3px rgba(15, 113, 119, 0.7));
+ }
+ 
+ /* ---------- buttons, chips */
+@@ -1333,7 +1351,7 @@ button.ghost,
+ button.primary {
+   color: var(--text);
+   border-color: var(--blue);
+-  box-shadow: 0 0 5px rgba(79, 182, 242, 0.35), inset 0 0 4px rgba(79, 182, 242, 0.15);
++  box-shadow: 0 0 5px rgba(15, 113, 119, 0.35), inset 0 0 4px rgba(15, 113, 119, 0.15);
+   text-shadow: var(--glow-blue);
+ }
+ 
+@@ -1352,7 +1370,7 @@ button.ghost:hover,
+ .chip[aria-pressed="true"] {
+   color: var(--text);
+   border-color: var(--blue);
+-  box-shadow: 0 0 5px rgba(79, 182, 242, 0.35), inset 0 0 4px rgba(79, 182, 242, 0.15);
++  box-shadow: 0 0 5px rgba(15, 113, 119, 0.35), inset 0 0 4px rgba(15, 113, 119, 0.15);
+   text-shadow: var(--glow-blue);
+ }
+ 
+@@ -1394,8 +1412,11 @@ button.ghost:hover,
+   flex-direction: column;
+   min-width: 0;
+   min-height: 0;
+-  background: #000;
++  background: var(--console);
+   border: 1px solid var(--frame);
++  border-radius: var(--radius-m);
++  box-shadow: var(--shadow-xs);
++  overflow: clip;
+ }
+ 
+ .screen.focus {
+@@ -1520,13 +1541,13 @@ button.ghost:hover,
+ 
+ /* the start prompt, over the left screen */
+ .start-prompt {
+-  background: rgba(0, 0, 0, 0.88);
++  background: rgba(250, 247, 242, 0.92);
+   border: 1px solid var(--blue-dim);
+   border-radius: 0;
+   backdrop-filter: none;
+   max-width: 380px;
+   padding: 22px 26px;
+-  box-shadow: 0 0 10px rgba(79, 182, 242, 0.15);
++  box-shadow: 0 0 10px rgba(15, 113, 119, 0.15);
+ }
+ 
+ .start-prompt p {
+@@ -1709,21 +1730,21 @@ button.ghost:hover,
+ }
+ 
+ .key.white.down {
+-  background: rgba(91, 227, 129, 0.12);
++  background: rgba(92, 122, 63, 0.12);
+   border-color: var(--green);
+-  box-shadow: 0 0 6px rgba(91, 227, 129, 0.5), inset 0 0 6px rgba(91, 227, 129, 0.25);
++  box-shadow: 0 0 6px rgba(92, 122, 63, 0.5), inset 0 0 6px rgba(92, 122, 63, 0.25);
+ }
+ 
+ .key.black {
+-  background: #000;
++  background: var(--black);
+   border: 1px solid var(--blue-mid);
+   border-radius: 0;
+ }
+ 
+ .key.black.down {
+-  background: rgba(91, 227, 129, 0.2);
++  background: rgba(92, 122, 63, 0.2);
+   border-color: var(--green);
+-  box-shadow: 0 0 6px rgba(91, 227, 129, 0.5);
++  box-shadow: 0 0 6px rgba(92, 122, 63, 0.5);
+ }
+ 
+ button.midi {
+@@ -1755,7 +1776,7 @@ button.midi.on .midi-status {
+ 
+ /* ---------- panels of modes not yet redrawn: framed, black, capital headings */
+ .panel {
+-  background: #000;
++  background: var(--black);
+   border: 1px solid var(--frame);
+   border-radius: 0;
+ }
+@@ -1771,7 +1792,7 @@ button.midi.on .midi-status {
+ textarea,
+ input[type="text"],
+ .sbn input {
+-  background: #000;
++  background: var(--black);
+   color: var(--blue);
+   border: 1px solid var(--frame);
+   border-radius: 0;
+@@ -1811,18 +1832,18 @@ input[type="range"]::-webkit-slider-thumb {
+   height: 13px;
+   margin-top: -6px;
+   border-radius: 0;
+-  background: #000;
++  background: var(--black);
+   border: 1px solid var(--blue);
+-  box-shadow: 0 0 4px rgba(79, 182, 242, 0.5);
++  box-shadow: 0 0 4px rgba(15, 113, 119, 0.5);
+ }
+ 
+ input[type="range"]::-moz-range-thumb {
+   width: 7px;
+   height: 13px;
+   border-radius: 0;
+-  background: #000;
++  background: var(--black);
+   border: 1px solid var(--blue);
+-  box-shadow: 0 0 4px rgba(79, 182, 242, 0.5);
++  box-shadow: 0 0 4px rgba(15, 113, 119, 0.5);
+ }
+ 
+ /* the tagline gives way so the top bar stays one row on a laptop screen */
+@@ -1881,10 +1902,11 @@ input[type="range"]::-moz-range-thumb {
+ /* ---------- Speak */
+ .right-speak {
+   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+-  grid-template-rows: auto minmax(min-content, 236fr) auto minmax(min-content, 190fr);
+-  grid-template-areas: "say say" "score score" "chart chart" "tube folds";
++  grid-template-rows: auto auto minmax(min-content, 236fr) auto minmax(min-content, 190fr);
++  grid-template-areas: "chat chat" "say say" "score score" "chart chart" "tube folds";
+ }
+ 
++.s-chat { grid-area: chat; }
+ .s-say { grid-area: say; }
+ .s-score { grid-area: score; }
+ .s-chart { grid-area: chart; }
+@@ -1917,7 +1939,7 @@ input[type="range"]::-moz-range-thumb {
+ .say textarea:focus {
+   outline: none;
+   border-color: var(--blue-dim);
+-  box-shadow: 0 0 5px rgba(79, 182, 242, 0.25);
++  box-shadow: 0 0 5px rgba(15, 113, 119, 0.25);
+ }
+ 
+ .say-actions {
+@@ -1937,7 +1959,7 @@ input[type="range"]::-moz-range-thumb {
+   color: var(--amber);
+   font-size: 14px;
+   letter-spacing: 0.04em;
+-  text-shadow: 0 0 2px rgba(255, 179, 64, 0.6);
++  text-shadow: 0 0 2px rgba(194, 109, 60, 0.6);
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+@@ -2055,7 +2077,7 @@ input[type="range"]::-moz-range-thumb {
+ .ipa-chart button.ipa:hover {
+   background: transparent;
+   color: var(--white);
+-  text-shadow: 0 0 3px rgba(238, 246, 248, 0.6);
++  text-shadow: 0 0 3px rgba(41, 37, 36, 0.6);
+ }
+ 
+ /* the old rule fixed buttons and gaps at 26 px square, which made the chart taller than its screen */
+@@ -2070,8 +2092,8 @@ input[type="range"]::-moz-range-thumb {
+   color: var(--green);
+   outline: 1px solid var(--green);
+   outline-offset: 1px;
+-  box-shadow: 0 0 6px rgba(91, 227, 129, 0.5);
+-  text-shadow: 0 0 3px rgba(91, 227, 129, 0.7);
++  box-shadow: 0 0 6px rgba(92, 122, 63, 0.5);
++  text-shadow: 0 0 3px rgba(92, 122, 63, 0.7);
+ }
+ 
+ .screen-body > .score-canvas {
+@@ -2185,7 +2207,7 @@ input[type="range"]::-moz-range-thumb {
+ 
+ .syl.sung {
+   color: var(--blue-mid);
+-  border-color: rgba(19, 57, 84, 0.6);
++  border-color: rgba(232, 223, 209, 0.6);
+ }
+ 
+ .syl.held {
+@@ -2201,11 +2223,11 @@ input[type="range"]::-moz-range-thumb {
+ }
+ 
+ .syl.now {
+-  background: rgba(91, 227, 129, 0.1);
++  background: rgba(92, 122, 63, 0.1);
+   color: var(--green);
+   border: 1px solid var(--green);
+-  box-shadow: 0 0 6px rgba(91, 227, 129, 0.45);
+-  text-shadow: 0 0 3px rgba(91, 227, 129, 0.6);
++  box-shadow: 0 0 6px rgba(92, 122, 63, 0.45);
++  text-shadow: 0 0 3px rgba(92, 122, 63, 0.6);
+ }
+ 
+ .breath-mark {
+@@ -2329,17 +2351,17 @@ input[type="range"]::-moz-range-thumb {
+   background:
+     linear-gradient(45deg, transparent calc(50% - 0.8px), var(--amber) calc(50% - 0.8px), var(--amber) calc(50% + 0.8px), transparent calc(50% + 0.8px)) center / min(14px, 60%) min(14px, 60%) no-repeat,
+     linear-gradient(-45deg, transparent calc(50% - 0.8px), var(--amber) calc(50% - 0.8px), var(--amber) calc(50% + 0.8px), transparent calc(50% + 0.8px)) center / min(14px, 60%) min(14px, 60%) no-repeat;
+-  box-shadow: inset 0 0 0 3px #000, inset 0 0 0 4px rgba(255, 179, 64, 0.8);
+-  filter: drop-shadow(0 0 2px rgba(255, 179, 64, 0.6));
++  box-shadow: inset 0 0 0 3px var(--black), inset 0 0 0 4px rgba(194, 109, 60, 0.8);
++  filter: drop-shadow(0 0 2px rgba(194, 109, 60, 0.6));
+ }
+ 
+ .s-seq .cell.now {
+-  background-color: rgba(238, 246, 248, 0.06);
++  background-color: rgba(41, 37, 36, 0.06);
+   box-shadow: inset 0 0 0 1px var(--white);
+ }
+ 
+ .s-seq .cell.on.now {
+-  box-shadow: inset 0 0 0 1px var(--white), inset 0 0 0 3px #000, inset 0 0 0 4px var(--amber);
++  box-shadow: inset 0 0 0 1px var(--white), inset 0 0 0 3px var(--black), inset 0 0 0 4px var(--amber);
+ }
+ 
+ .s-seq .cell-note {
+@@ -2384,7 +2406,7 @@ input[type="range"]::-moz-range-thumb {
+ .s-pads .pad.lit {
+   border-color: var(--amber);
+   color: var(--amber);
+-  box-shadow: 0 0 8px rgba(255, 179, 64, 0.5), inset 0 0 6px rgba(255, 179, 64, 0.3);
++  box-shadow: 0 0 8px rgba(194, 109, 60, 0.5), inset 0 0 6px rgba(194, 109, 60, 0.3);
+ }
+ 
+ .s-pads .pad-sym {
+@@ -2396,7 +2418,7 @@ input[type="range"]::-moz-range-thumb {
+ }
+ 
+ .s-pads .pad.lit .pad-sym {
+-  text-shadow: 0 0 3px rgba(255, 179, 64, 0.8);
++  text-shadow: 0 0 3px rgba(194, 109, 60, 0.8);
+ }
+ 
+ .s-pads .pad-name {
+@@ -2439,8 +2461,8 @@ input[type="range"]::-moz-range-thumb {
+   background: transparent;
+   border-color: var(--amber);
+   color: var(--amber);
+-  box-shadow: 0 0 6px rgba(255, 179, 64, 0.4);
+-  text-shadow: 0 0 3px rgba(255, 179, 64, 0.6);
++  box-shadow: 0 0 6px rgba(194, 109, 60, 0.4);
++  text-shadow: 0 0 3px rgba(194, 109, 60, 0.6);
+ }
+ 
+ .transport-encoders {
+@@ -2515,7 +2537,7 @@ input[type="range"]::-moz-range-thumb {
+   color: transparent;
+   -webkit-text-stroke: 1.5px var(--amber);
+   text-shadow: none;
+-  filter: drop-shadow(0 0 4px rgba(255, 179, 64, 0.6));
++  filter: drop-shadow(0 0 4px rgba(194, 109, 60, 0.6));
+ }
+ 
+ .beat-name,
+@@ -2621,14 +2643,14 @@ input[type="range"]::-moz-range-thumb {
+ 
+ .s-gallery .specimen.on {
+   border-color: var(--blue);
+-  box-shadow: 0 0 6px rgba(79, 182, 242, 0.3), inset 0 0 5px rgba(79, 182, 242, 0.15);
++  box-shadow: 0 0 6px rgba(15, 113, 119, 0.3), inset 0 0 5px rgba(15, 113, 119, 0.15);
+ }
+ 
+ .s-gallery .thumb {
+   width: 100%;
+   height: 100%;
+   min-height: 0;
+-  filter: drop-shadow(0 0 2px rgba(79, 182, 242, 0.6));
++  filter: drop-shadow(0 0 2px rgba(15, 113, 119, 0.6));
+ }
+ 
+ .s-gallery .specimen-name {
+@@ -2695,8 +2717,8 @@ input[type="range"]::-moz-range-thumb {
+ .calls-body .call.playing {
+   border-color: var(--amber);
+   color: var(--amber);
+-  box-shadow: 0 0 6px rgba(255, 179, 64, 0.45);
+-  text-shadow: 0 0 3px rgba(255, 179, 64, 0.6);
++  box-shadow: 0 0 6px rgba(194, 109, 60, 0.45);
++  text-shadow: 0 0 3px rgba(194, 109, 60, 0.6);
+ }
+ 
+ .calls-body .call.playing .call-name {
+@@ -2865,3 +2887,76 @@ input[type="range"]::-moz-range-thumb {
+     padding: 7px 8px 0;
+   }
+ }
++
++.say-hint {
++  margin: 0;
++  font-size: 12px;
++  line-height: 1.7;
++  letter-spacing: 0.02em;
++  text-transform: none;
++  color: var(--snow-600);
++}
++
++.chat {
++  padding: 6px 14px 12px;
++  display: grid;
++  gap: 8px;
++  text-transform: none;
++  letter-spacing: 0.02em;
++}
++
++.chat-log {
++  max-height: 200px;
++  overflow-y: auto;
++  display: flex;
++  flex-direction: column;
++  gap: 6px;
++}
++
++.chat-empty,
++.chat-error {
++  margin: 0;
++  font-size: 13px;
++  line-height: 1.7;
++  color: var(--snow-600);
++}
++
++.chat-error {
++  color: var(--apricot-700);
++}
++
++.chat-msg {
++  margin: 0;
++  max-width: 85%;
++  padding: 8px 12px;
++  border-radius: var(--r-lg);
++  font-size: 15px;
++  line-height: 1.7;
++  white-space: pre-wrap;
++  color: var(--snow-800);
++}
++
++.chat-msg.user {
++  align-self: flex-end;
++  background: var(--paper-100);
++}
++
++.chat-msg.nepp {
++  align-self: flex-start;
++  background: var(--paper-0);
++  border: 1px solid var(--teal-500);
++}
++
++.chat-form {
++  display: flex;
++  gap: 10px;
++}
++
++.chat-form input {
++  flex: 1;
++  min-width: 0;
++  padding: 8px 12px;
++  font-size: 15px;
++  text-transform: none;
++  letter-spacing: 0.02em;
++}
+diff --git a/src/ui/usePhosphor.ts b/src/ui/usePhosphor.ts
+index a44efee..66b5e15 100644
+--- a/src/ui/usePhosphor.ts
++++ b/src/ui/usePhosphor.ts
+@@ -1,4 +1,5 @@
+ import { useEffect, useRef } from "react";
++import { PAPER } from "./colors.ts";
+ import { Glow } from "./render/vector.ts";
+ import type { CanvasFrame } from "./useCanvas.ts";
+ 
+@@ -38,7 +39,7 @@ export function usePhosphor(draw: (f: CanvasFrame) => void, opts: { sigma?: numb
+         ctx.setTransform(1, 0, 0, 1, 0, 0);
+         ctx.globalCompositeOperation = "source-over";
+         ctx.globalAlpha = 1;
+-        ctx.fillStyle = "#000";
++        ctx.fillStyle = PAPER;
+         ctx.fillRect(0, 0, canvas.width, canvas.height);
+         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+         drawRef.current({ ctx, w, h, dpr, dt, now });
+diff --git a/tests/japanese.test.ts b/tests/japanese.test.ts
+new file mode 100644
+index 0000000..88677d8
+--- /dev/null
++++ b/tests/japanese.test.ts
+@@ -0,0 +1,244 @@
++import { describe, expect, test } from "bun:test";
++import { initEngine } from "./harness.ts";
++
++await initEngine();
++const { planPhrases } = await import("../src/wasm/engine.ts");
++const { adaptVoicingForJapanese, containsJapanese, containsKana, isKanaNotation, itemsToPhrases, japanesePhrases, japaneseSyllables, njdToItems, parseAccentPhrase, properNounItem, splitProperNouns } = await import("../src/ui/japanese.ts");
++
++const BASE_F0 = 200;
++const ipaOf = (text: string) => japanesePhrases(text, BASE_F0).map((p) => p.segments.map((s) => s.ipa).join(" "));
++const pitched = (text: string) => japanesePhrases(text, BASE_F0)[0].segments.filter((s) => s.f0 !== undefined);
++const totalDur = (text: string) => japanesePhrases(text, BASE_F0)[0].segments.reduce((sum, s) => sum + (s.dur ?? 0), 0);
++
++describe("かなの判定", () => {
++  test("ひらがな・カタカナを含めば日本語として扱う", () => {
++    expect(containsKana("こんにちわ")).toBe(true);
++    expect(containsKana("ネップ")).toBe(true);
++  });
++  test("英文と IPA は日本語として扱わない", () => {
++    expect(containsKana("Hello. Can you hear me?")).toBe(false);
++    expect(containsKana("ˈhɛloʊ")).toBe(false);
++  });
++});
++
++describe("かな → 音素", () => {
++  test("撥音は次の子音の位置に同化する", () => {
++    expect(ipaOf("こんにちわ")).toEqual(["k o ɲ ɲ i tʃ i w a"]);
++    expect(ipaOf("さんぽ")).toEqual(["s a m p o"]);
++    expect(ipaOf("ほん")).toEqual(["h o ɴ"]);
++  });
++  test("拗音は 1 モーラにまとまる", () => {
++    expect(parseAccentPhrase("ちゃ").moras).toHaveLength(1);
++    expect(ipaOf("きょ")).toEqual(["k j o"]);
++  });
++  test("カタカナはひらがなと同じ音になる", () => {
++    expect(ipaOf("ネップ")).toEqual(ipaOf("ねっぷ"));
++  });
++  test("お段 + う と長音記号は同じ長音になる", () => {
++    expect(ipaOf("ようこそ")).toEqual(ipaOf("よーこそ"));
++    expect(ipaOf("よーこそ")).toEqual(["j o o k o s o"]);
++  });
++  test("句読点で息継ぎ句に分かれる", () => {
++    expect(ipaOf("こんにちわ。ねっぷ")).toHaveLength(2);
++  });
++  test("かな以外だけの入力は句を作らない", () => {
++    expect(japanesePhrases("。 、", BASE_F0)).toEqual([]);
++  });
++});
++
++describe("モーラの長さ", () => {
++  test("モーラ数が同じなら子音が違っても全長は同じ", () => {
++    expect(totalDur("あさ")).toBeCloseTo(totalDur("かた"), 6);
++  });
++  test("促音は次の子音を 1 モーラぶん長くする", () => {
++    const plain = japanesePhrases("ねぷ", BASE_F0)[0].segments.find((s) => s.ipa === "p");
++    const geminate = japanesePhrases("ねっぷ", BASE_F0)[0].segments.find((s) => s.ipa === "p");
++    expect((geminate?.dur ?? 0) - (plain?.dur ?? 0)).toBeCloseTo(0.14, 6);
++  });
++  test("促音・撥音・長音も 1 モーラとして全長に数える", () => {
++    expect(totalDur("ねっぷ") - totalDur("ねぷ")).toBeCloseTo(0.14, 6);
++    expect(totalDur("ほん") - totalDur("ほ")).toBeCloseTo(0.14, 6);
++    expect(totalDur("よー") - totalDur("よ")).toBeCloseTo(0.14, 6);
++  });
++});
++
++describe("ピッチアクセント", () => {
++  test("核がなければ平板: 1 モーラ目が低く、2 モーラ目から高い", () => {
++    const [first, second] = pitched("さかな");
++    expect(first.f0!).toBeLessThan(second.f0!);
++  });
++  test("頭高: 1 モーラ目が高く、次から下がる", () => {
++    const [first, second] = pitched("ね'こ");
++    expect(first.f0!).toBeGreaterThan(second.f0!);
++  });
++  test("中高: 核のモーラまで高く、その次で下がる", () => {
++    const [mo1, mo2, mo3] = pitched("たま'ご");
++    expect(mo2.f0!).toBeGreaterThan(mo1.f0!);
++    expect(mo3.f0!).toBeLessThan(mo2.f0!);
++  });
++  test("疑問符で終わる句は最後のモーラが上がる", () => {
++    const statement = pitched("ね'こ").at(-1)!;
++    const question = pitched("ね'こ？").at(-1)!;
++    expect(question.f0!).toBeGreaterThan(statement.f0!);
++  });
++  test("どれだけ下がっても基準の 75% を下回らない", () => {
++    const phrases = japanesePhrases("あ'め あ'め あ'め あ'め あ'め あ'め", BASE_F0);
++    for (const s of phrases[0].segments) if (s.f0 !== undefined) expect(s.f0).toBeGreaterThanOrEqual(BASE_F0 * 0.75);
++  });
++});
++
++describe("無気化の後処理", () => {
++  const plan = planPhrases(japanesePhrases("かたさ", BASE_F0), { body: { female: 1, child: 0 }, t0: 0, rate: 1, f0: BASE_F0 });
++  const adapted = adaptVoicingForJapanese(plan.gestures, 1);
++  test("帯気ジェスチャは声門の開きが小さくなり、早く終わる", () => {
++    const before = plan.gestures.filter((g) => g.label === "aspiration");
++    const after = adapted.filter((g) => g.label === "aspiration");
++    expect(before.length).toBeGreaterThan(0);
++    after.forEach((g, i) => {
++      expect(g.targets.abduction).toBe(0.22);
++      expect(g.t1).toBeLessThan(before[i].t1);
++    });
++  });
++  test("摩擦音の声門開放は遅れて始まる", () => {
++    const before = plan.gestures.find((g) => g.label === "voiceless")!;
++    const after = adapted.find((g) => g.label === "voiceless")!;
++    expect(after.t0).toBeGreaterThan(before.t0);
++  });
++  test("それ以外のジェスチャは変えない", () => {
++    const untouched = (g: { label?: string }) => g.label !== "aspiration" && g.label !== "voiceless";
++    expect(adapted.filter(untouched)).toEqual(plan.gestures.filter(untouched));
++  });
++});
++
++const node = (string: string, pron: string, acc: number, chain_flag: number, pos = "名詞") => ({ string, pron, pos, acc, chain_flag });
++
++describe("入力の振り分け", () => {
++  test("漢字だけの文も日本語として扱う", () => {
++    expect(containsJapanese("今日")).toBe(true);
++    expect(containsJapanese("Hello")).toBe(false);
++  });
++  test("アクセント記号があり漢字がなければ手書き記法として読む", () => {
++    expect(isKanaNotation("ね'こ")).toBe(true);
++  });
++  test("記号がない、または漢字を含む文は解析に回す", () => {
++    expect(isKanaNotation("ねこ")).toBe(false);
++    expect(isKanaNotation("猫'だ")).toBe(false);
++  });
++});
++
++describe("固有語の切り出し", () => {
++  test("固有語は決めた読みつきで切り出し、前後は解析用に残す", () => {
++    expect(splitProperNouns("こんにちは！ねっぷちゃんだよ")).toEqual([{ text: "こんにちは！" }, { text: "ねっぷちゃん", reading: "ね'っぷちゃん" }, { text: "だよ" }]);
++  });
++  test("固有語がなければ全体を 1 つで返す", () => {
++    expect(splitProperNouns("いい天気")).toEqual([{ text: "いい天気" }]);
++  });
++  test("空の入力は何も返さない", () => {
++    expect(splitProperNouns("")).toEqual([]);
++  });
++  test("固有語の読みはアクセント核つきの発話単位になる", () => {
++    const item = properNounItem("ねっぷちゃん", "ね'っぷちゃん");
++    expect(item).toMatchObject({ kind: "unit", text: "ねっぷちゃん", accent: 1 });
++  });
++});
++
++describe("解析結果 → 発話単位", () => {
++  test("前の語に続く語は 1 つのアクセント句にまとまり、核は先頭の語の値を使う", () => {
++    const items = njdToItems([node("今日", "キョー", 1, 0), node("は", "ワ", 0, 1, "助詞")]);
++    expect(items).toHaveLength(1);
++    expect(items[0]).toMatchObject({ kind: "unit", text: "今日は", accent: 1 });
++    expect(items[0].kind === "unit" && items[0].moras).toHaveLength(3);
++  });
++  test("続かない語は別のアクセント句になる", () => {
++    expect(njdToItems([node("いい", "イイ", 1, 0), node("天気", "テンキ", 1, 0)])).toHaveLength(2);
++  });
++  test("記号は息継ぎになり、疑問符は語尾上げとして残る", () => {
++    const items = njdToItems([node("元気", "ゲンキ", 1, 0), node("？", "？", 0, 0, "記号"), node("はい", "ハイ", 1, 0), node("。", "、", 0, 0, "記号")]);
++    expect(items.map((i) => (i.kind === "break" ? i.question : i.text))).toEqual(["元気", true, "はい", false]);
++  });
++  test("無声化の印は読みから落とす", () => {
++    const items = njdToItems([node("です", "デス’", 1, 0, "助動詞")]);
++    expect(items[0]).toMatchObject({ accent: 1 });
++    expect(items[0].kind === "unit" && items[0].moras).toHaveLength(2);
++  });
++  test("解析器の読みでは、お段 + ウ を長音にしない（長音は「ー」で届く）", () => {
++    const items = njdToItems([node("思う", "オモウ", 2, 0, "動詞")]);
++    const phrase = itemsToPhrases(items, BASE_F0)[0];
++    expect(phrase.segments.map((s) => s.ipa).join(" ")).toBe("o m o ɯ");
++  });
++  test("読みのない語は捨てる", () => {
++    expect(njdToItems([node("", "", 0, 0)])).toEqual([]);
++  });
++});
++
++describe("発話単位 → 句", () => {
++  const items = njdToItems([node("今日", "キョー", 1, 0), node("は", "ワ", 0, 1, "助詞"), node("。", "、", 0, 0, "記号"), node("元気", "ゲンキ", 1, 0), node("？", "？", 0, 0, "記号")]);
++  const phrases = itemsToPhrases(items, BASE_F0);
++  test("息継ぎごとに句が分かれ、語は口元の表示用に残る", () => {
++    expect(phrases.map((p) => p.words)).toEqual([["今日は"], ["元気"]]);
++    expect(phrases[0].segments.map((s) => s.ipa).join(" ")).toBe("k j o o w a");
++  });
++  test("疑問の句は最後が上がり、平叙の句は下がる", () => {
++    const lastF0 = (i: number) => phrases[i].segments.filter((s) => s.f0 !== undefined).at(-1)!.f0!;
++    expect(lastF0(1)).toBeGreaterThan(lastF0(0));
++  });
++  test("末尾に記号がなくても最後の句を落とさない", () => {
++    expect(itemsToPhrases(njdToItems([node("はい", "ハイ", 1, 0)]), BASE_F0)).toHaveLength(1);
++  });
++  test("息継ぎだけなら句を作らない", () => {
++    expect(itemsToPhrases([{ kind: "break", question: false }], BASE_F0)).toEqual([]);
++  });
++});
++
++describe("歌詞 → 音符ごとの音節", () => {
++  const sung = (text: string) => japaneseSyllables(text).map((s) => s.text);
++  test("かな 1 文字が 1 音符、拗音は 1 音符にまとまる", () => {
++    expect(sung("にしん きたか")).toEqual(["に", "しん", "き", "た", "か"]);
++    expect(sung("ちょい")).toEqual(["ちょ", "い"]);
++  });
++  test("「ー」は前の母音を次の音符へ伸ばす", () => {
++    const [so, hold] = japaneseSyllables("そー");
++    expect(hold).toMatchObject({ text: "ー", melisma: true, onset: [], nucleus: so.nucleus });
++  });
++  test("「ん」は音符を使わず、前の音節の終わりに付く", () => {
++    const syllables = japaneseSyllables("らん");
++    expect(syllables).toHaveLength(1);
++    expect(syllables[0].coda).toEqual([{ ipa: "ɴ" }]);
++  });
++  test("伸ばしたあとの「ん」は、伸ばした音符の終わりに付く", () => {
++    const syllables = japaneseSyllables("れーん");
++    expect(syllables.map((s) => s.coda.length)).toEqual([0, 1]);
++  });
++  test("「っ」は音符を使わない", () => {
++    expect(sung("どっこいしょ")).toEqual(["どっ", "こ", "い", "しょ"]);
++  });
++  test("歌詞では、お段 + う を勝手に伸ばさない", () => {
++    expect(sung("とう")).toEqual(["と", "う"]);
++  });
++  test("空白で語が、句読点で句が切れる", () => {
++    const syllables = japaneseSyllables("なみ に、きけ");
++    expect(syllables.map((s) => s.wordEnd)).toEqual([false, true, true, false, true]);
++    expect(syllables.map((s) => s.phraseEnd)).toEqual([false, false, true, false, true]);
++  });
++  test("かながなければ音節を作らない", () => {
++    expect(japaneseSyllables("  、 ")).toEqual([]);
++  });
++});
++
++describe("日本語の曲データ", () => {
++  test("どの曲も、音符の数と歌詞の音節の数が一致する", async () => {
++    const { JAPANESE_SONGS } = await import("../src/ui/songsJa.ts");
++    for (const song of JAPANESE_SONGS) expect([song.name, japaneseSyllables(song.lyrics).length]).toEqual([song.name, song.notes.length]);
++  });
++  test("「この道」は弱起 1.5 拍 + 9 小節 24 拍から、最後の休符 0.5 拍を除いた 25 拍になる", async () => {
++    const { JAPANESE_SONGS } = await import("../src/ui/songsJa.ts");
++    const song = JAPANESE_SONGS.find((s) => s.name === "この道")!;
++    expect(song.notes.reduce((sum, [, beats]) => sum + beats, 0)).toBe(25);
++  });
++  test("「この道」の息継ぎは、休符のある 5 か所と曲の終わりに入る", async () => {
++    const { JAPANESE_SONGS } = await import("../src/ui/songsJa.ts");
++    const song = JAPANESE_SONGS.find((s) => s.name === "この道")!;
++    const breaths = japaneseSyllables(song.lyrics).flatMap((s, i) => (s.phraseEnd ? [i + 1] : []));
++    expect(breaths).toEqual([5, 12, 14, 19, 26, 33]);
++  });
++});
+diff --git a/tests/nepp-chat.test.ts b/tests/nepp-chat.test.ts
+new file mode 100644
+index 0000000..f9955f3
+--- /dev/null
++++ b/tests/nepp-chat.test.ts
+@@ -0,0 +1,152 @@
++import { describe, expect, test } from "bun:test";
++import { createDeltaParser, createSentenceSplitter, speechTextOf } from "../src/ui/neppChat.ts";
++import { SpeechQueue } from "../src/ui/speechQueue.ts";
++
++const delta = (text: string) => `data: ${JSON.stringify({ type: "text-delta", id: "m", delta: text })}\n\n`;
++
++describe("返答ストリームの読み取り", () => {
++  test("本文の差分だけを順に取り出す", () => {
++    const parse = createDeltaParser();
++    expect(parse(`data: {"type":"start"}\n\n${delta("こん")}${delta("にちは")}data: {"type":"finish"}\n\ndata: [DONE]\n\n`)).toEqual(["こん", "にちは"]);
++  });
++  test("行の途中で切れた断片は、続きが届いてから取り出す", () => {
++    const parse = createDeltaParser();
++    const line = delta("ねっぷ");
++    expect(parse(line.slice(0, 20))).toEqual([]);
++    expect(parse(line.slice(20))).toEqual(["ねっぷ"]);
++  });
++  test("壊れた行があっても、その後の差分は取り出せる", () => {
++    const parse = createDeltaParser();
++    expect(parse(`data: {oops\n${delta("よ")}`)).toEqual(["よ"]);
++  });
++  test("data 以外の行は無視する", () => {
++    const parse = createDeltaParser();
++    expect(parse(`event: ping\n: comment\n${delta("は")}`)).toEqual(["は"]);
++  });
++});
++
++describe("声に出す文面", () => {
++  test("Markdown の記号を落とす", () => {
++    expect(speechTextOf("**こんにちは** `ねっぷ`だよ")).toBe("こんにちは ねっぷだよ");
++  });
++  test("文の途中の絵文字と改行は息継ぎになり、文がつながらない", () => {
++    expect(speechTextOf("調べてくるね🌲✨音威子府村は")).toBe("調べてくるね、音威子府村は");
++    expect(speechTextOf("村だよ\n雪が多く")).toBe("村だよ。雪が多く");
++  });
++  test("先頭と末尾の絵文字は息継ぎを残さない", () => {
++    expect(speechTextOf("😊こんにちは🍜")).toBe("こんにちは");
++  });
++  test("リンクは表示名だけ残し、URL は読まない", () => {
++    expect(speechTextOf("[村のサイト](https://example.jp/a)を見てね https://example.jp/b")).toBe("村のサイトを見てね");
++  });
++  test("電話番号は区切りを「の」で読む", () => {
++    expect(speechTextOf("01656-5-3311")).toBe("01656の5の3311");
++  });
++  test("時刻は「時」「分」で読み、ちょうどの分は読まない", () => {
++    expect(speechTextOf("9:30")).toBe("9時30分");
++    expect(speechTextOf("10:00")).toBe("10時");
++  });
++  test("数字の前の波ダッシュは「から」と読む", () => {
++    expect(speechTextOf("9:00〜17:00")).toBe("9時から17時");
++  });
++  test("語尾の波ダッシュは伸ばす音にする", () => {
++    expect(speechTextOf("こんにちは〜！")).toBe("こんにちはー！");
++  });
++  test("掃除して何も残らなければ空文字を返す", () => {
++    expect(speechTextOf("😊 **")).toBe("");
++  });
++});
++
++describe("文ごとの切り出し", () => {
++  test("言い終わった文だけを返し、言いかけは次の差分まで持つ", () => {
++    const splitter = createSentenceSplitter();
++    expect(splitter.push("こんにちは！ねっぷ")).toEqual(["こんにちは！"]);
++    expect(splitter.push("ちゃんだよ。元気")).toEqual(["ねっぷちゃんだよ。"]);
++    expect(splitter.flush()).toBe("元気");
++  });
++  test("終わりの記号が末尾にあるうちは確定せず、続く記号をまとめる", () => {
++    const splitter = createSentenceSplitter();
++    expect(splitter.push("ほんと！")).toEqual([]);
++    expect(splitter.push("？すごい")).toEqual(["ほんと！？"]);
++  });
++  test("引用の中の感嘆符では分けない", () => {
++    const splitter = createSentenceSplitter();
++    expect(splitter.push("「食べてみたい！」ってなるものを調べるね。次")).toEqual(["「食べてみたい！」ってなるものを調べるね。"]);
++  });
++  test("改行でも文を分ける", () => {
++    const splitter = createSentenceSplitter();
++    expect(splitter.push("村だよ\n雪が多く")).toEqual(["村だよ"]);
++  });
++  test("小数点や時刻では分けない", () => {
++    const splitter = createSentenceSplitter();
++    expect(splitter.push("気温は3.5度、9:30に")).toEqual([]);
++  });
++  test("残りがなければ flush は null を返す", () => {
++    const splitter = createSentenceSplitter();
++    splitter.push("はい。");
++    expect(splitter.flush()).toBe("はい。");
++    expect(splitter.flush()).toBeNull();
++  });
++});
++
++describe("発話の順番待ち", () => {
++  const setup = (durations: Record<string, number | null>) => {
++    const log: string[] = [];
++    const waits: { seconds: number; resolve: () => void }[] = [];
++    const queue = new SpeechQueue(
++      async (text) => {
++        log.push(`speak:${text}`);
++        return text in durations ? durations[text] : 1;
++      },
++      () => log.push("stop"),
++      (seconds) => new Promise((resolve) => waits.push({ seconds, resolve })),
++    );
++    const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
++    return { log, waits, queue, settle };
++  };
++
++  test("前の文が終わるまで次の文を喋り始めない", async () => {
++    const { log, waits, queue, settle } = setup({});
++    void queue.enqueue("一");
++    void queue.enqueue("二");
++    await settle();
++    expect(log).toEqual(["speak:一"]);
++    waits[0].resolve();
++    await settle();
++    expect(log).toEqual(["speak:一", "speak:二"]);
++  });
++  test("文の長さに間を足したぶんだけ待つ", async () => {
++    const { waits, queue, settle } = setup({ 一: 2 });
++    void queue.enqueue("一");
++    await settle();
++    expect(waits[0].seconds).toBeCloseTo(2.22, 6);
++  });
++  test("喋るものがない文は待たずに次へ進む", async () => {
++    const { log, waits, queue, settle } = setup({ 空: null });
++    void queue.enqueue("空");
++    void queue.enqueue("二");
++    await settle();
++    expect(log).toEqual(["speak:空", "speak:二"]);
++    expect(waits).toHaveLength(1);
++  });
++  test("clear は喋っている文を止め、待っていた文を捨てる", async () => {
++    const { log, waits, queue, settle } = setup({});
++    void queue.enqueue("一");
++    void queue.enqueue("二");
++    await settle();
++    queue.clear();
++    waits[0].resolve();
++    await settle();
++    expect(log).toEqual(["speak:一", "stop"]);
++  });
++  test("clear のあとに入れた文は喋る", async () => {
++    const { log, waits, queue, settle } = setup({});
++    void queue.enqueue("一");
++    await settle();
++    queue.clear();
++    void queue.enqueue("新");
++    waits[0].resolve();
++    await settle();
++    expect(log).toEqual(["speak:一", "stop", "speak:新"]);
++  });
++});
+diff --git a/vite.config.ts b/vite.config.ts
+index 46572f3..a3cce0a 100644
+--- a/vite.config.ts
++++ b/vite.config.ts
+@@ -4,7 +4,16 @@ import react from "@vitejs/plugin-react";
+ export default defineConfig({
+   plugins: [react()],
+   worker: { format: "es" },
++  // 事前バンドルされると、パッケージ内の Worker と wasm の相対 URL が解決できなくなる
++  optimizeDeps: { exclude: ["@keanu-thakalath/openjtalkjs"] },
+   build: { target: "es2022", sourcemap: true },
+-  server: { host: "127.0.0.1", port: 5317, strictPort: true, allowedHosts: true },
++  server: {
++    host: "127.0.0.1",
++    port: 5317,
++    strictPort: true,
++    allowedHosts: true,
++    // nepp-chan の API は localhost のオリジンしか許可しないので、同一オリジンに見せて呼ぶ
++    proxy: { "/nepp-api": { target: "http://localhost:8787", changeOrigin: true, rewrite: (path) => path.replace(/^\/nepp-api/, "") } },
++  },
+   preview: { host: "127.0.0.1", port: 5318, strictPort: true, allowedHosts: true },
+ });
