@@ -21,6 +21,18 @@ describe("MarkdownText", () => {
     expect(link).toHaveAttribute("href", "https://example.com");
   });
 
+  it("回答の中のリンクは新しいタブで開き、開いた先からチャット画面を操作させない", () => {
+    render(
+      <MarkdownText
+        text={"[音威子府村](https://www.vill.otoineppu.hokkaido.jp/)"}
+      />,
+    );
+
+    const link = screen.getByRole("link", { name: "音威子府村" });
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
   it("インラインコードには inline-code クラスを付ける", () => {
     const { container } = render(
       <MarkdownText text={"これは `inline` です"} />,

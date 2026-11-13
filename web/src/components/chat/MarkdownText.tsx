@@ -126,6 +126,8 @@ const components: Components = {
         "aui-md-a font-medium text-(--brand) underline underline-offset-4",
         className,
       )}
+      target="_blank"
+      rel="noopener noreferrer"
       {...props}
     />
   ),
@@ -157,18 +159,20 @@ const components: Components = {
     />
   ),
   table: ({ node: _node, className, ...props }) => (
-    <table
-      className={cn(
-        "aui-md-table my-5 w-full border-separate border-spacing-0 overflow-y-auto",
-        className,
-      )}
-      {...props}
-    />
+    <div className="aui-md-table-scroll my-5 overflow-x-auto">
+      <table
+        className={cn(
+          "aui-md-table w-full border-separate border-spacing-0 text-sm leading-relaxed",
+          className,
+        )}
+        {...props}
+      />
+    </div>
   ),
   th: ({ node: _node, className, ...props }) => (
     <th
       className={cn(
-        "aui-md-th bg-(--bg-sunken) px-4 py-2 text-left font-semibold text-(--fg-2) first:rounded-tl-lg last:rounded-tr-lg [[align=center]]:text-center [[align=right]]:text-right",
+        "aui-md-th whitespace-nowrap bg-(--bg-sunken) px-3 py-2 text-left font-semibold text-(--fg-2) first:rounded-tl-lg last:rounded-tr-lg [[align=center]]:text-center [[align=right]]:text-right",
         className,
       )}
       {...props}
@@ -177,7 +181,7 @@ const components: Components = {
   td: ({ node: _node, className, ...props }) => (
     <td
       className={cn(
-        "aui-md-td border-b border-l border-(--border-1) px-4 py-2 text-left text-(--fg-2) last:border-r [[align=center]]:text-center [[align=right]]:text-right",
+        "aui-md-td min-w-[8em] border-b border-l border-(--border-1) px-3 py-2 text-left align-top text-(--fg-2) last:border-r [[align=center]]:text-center [[align=right]]:text-right",
         className,
       )}
       {...props}
