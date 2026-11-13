@@ -11,7 +11,10 @@ import {
 } from "~/lib/llm-models";
 import { emergencyAgent } from "~/mastra/agents/emergency-agent";
 import { feedbackAgent } from "~/mastra/agents/feedback-agent";
-import { knowledgeAgent } from "~/mastra/agents/knowledge-agent";
+import {
+  knowledgeAgent,
+  pinKnowledgeAgentSteps,
+} from "~/mastra/agents/knowledge-agent";
 import { personaAnalystAgent } from "~/mastra/agents/persona-analyst-agent";
 import { webResearcherAgent } from "~/mastra/agents/web-researcher-agent";
 import { getMemoryFromContext } from "~/mastra/memory";
@@ -347,6 +350,10 @@ ${currentPageUrl}
     name: "ねっぷちゃん",
     instructions,
     ...modelConfig,
+    defaultOptions: {
+      ...modelConfig.defaultOptions,
+      delegation: { onDelegationStart: pinKnowledgeAgentSteps },
+    },
     agents,
     tools,
     inputProcessors: [

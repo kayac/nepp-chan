@@ -1,4 +1,8 @@
-import { Agent } from "@mastra/core/agent";
+import { Agent, type DelegationStartContext } from "@mastra/core/agent";
+import type {
+  ProcessInputStepArgs,
+  ProcessInputStepResult,
+} from "@mastra/core/processors";
 import { getCurrentDateInfo } from "~/lib/date";
 import { modelWithReasoning, type ReasoningEffort } from "~/lib/llm-models";
 import {
@@ -8,7 +12,36 @@ import {
 import { knowledgeSearchTool } from "~/mastra/tools/knowledge-search-tool";
 import { withUsageRecording } from "~/services/analytics/llm-usage";
 
-const KNOWLEDGE_MAX_STEPS = 5;
+export const KNOWLEDGE_AGENT_ID = "knowledge-agent";
+export const KNOWLEDGE_SEARCH_MAX_STEPS = 5;
+const KNOWLEDGE_MAX_STEPS = KNOWLEDGE_SEARCH_MAX_STEPS + 1;
+
+export const pinKnowledgeAgentSteps = ({
+  primitiveId,
+}: Pick<DelegationStartContext, "primitiveId">) =>
+  primitiveId === KNOWLEDGE_AGENT_ID
+    ? { modifiedMaxSteps: KNOWLEDGE_MAX_STEPS }
+    : undefined;
+
+export const knowledgeFinalStepGuard = ({
+  stepNumber,
+  systemMessages,
+}: Pick<ProcessInputStepArgs, "stepNumber" | "systemMessages">):
+  | ProcessInputStepResult
+  | undefined => {
+  if (stepNumber < KNOWLEDGE_SEARCH_MAX_STEPS) return undefined;
+  return {
+    toolChoice: "none",
+    systemMessages: [
+      ...systemMessages,
+      {
+        role: "system",
+        content:
+          "検索の手数を使い切った。これ以上検索せず、ここまでの検索結果だけで調査メモを書く。",
+      },
+    ],
+  };
+};
 
 const baseInstructions = `
 あなたは音威子府村の情報検索専門エージェントです。
@@ -83,20 +116,27 @@ export const createKnowledgeAgent = ({
 }: {
   model?: string;
   effort?: ReasoningEffort;
-} = {}) =>
-  new Agent({
-    id: "knowledge-agent",
+} = {}) => {
+  const reasoning = modelWithReasoning({
+    model,
+    effort,
+    maxSteps: KNOWLEDGE_MAX_STEPS,
+    promptCacheKey: "knowledge",
+  });
+  return new Agent({
+    id: KNOWLEDGE_AGENT_ID,
     name: "Knowledge Agent",
     description:
       "音威子府村の情報（歴史、施設、観光、村長、行政、行事）を検索し、ユーザー向け文章ではない簡潔な調査メモを返す担当。",
     instructions: knowledgeAgentInstructions,
     ...withUsageRecording(
-      modelWithReasoning({
-        model,
-        effort,
-        maxSteps: KNOWLEDGE_MAX_STEPS,
-        promptCacheKey: "knowledge",
-      }),
+      {
+        ...reasoning,
+        defaultOptions: {
+          ...reasoning.defaultOptions,
+          prepareStep: knowledgeFinalStepGuard,
+        },
+      },
       { agent: "knowledge" },
     ),
     tools: {
@@ -104,5 +144,6 @@ export const createKnowledgeAgent = ({
       [broadcastGetToolName]: broadcastGetTool,
     },
   });
+};
 
 export const knowledgeAgent = createKnowledgeAgent();
