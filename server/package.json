@@ -55,7 +55,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@elevenlabs/elevenlabs-js": "^2.75.0",
+    "@elevenlabs/elevenlabs-js": "^2.76.0",
     "@libsql/client": "^0.18.0",
     "@types/node": "^26.6.6",
     "@vitest/coverage-istanbul": "~5.0.5",
