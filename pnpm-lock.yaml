@@ -136,8 +136,8 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@sentry/cloudflare':
-        specifier: ^11.10.0
-        version: 11.10.0(@cloudflare/workers-types@4.20260702.1)(vite@8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(wrangler@4.159.0(@cloudflare/workers-types@4.20260702.1)(@types/node@26.6.6))
+        specifier: ^11.11.0
+        version: 11.11.0(@cloudflare/workers-types@4.20260702.1)(vite@8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(wrangler@4.159.0(@cloudflare/workers-types@4.20260702.1)(@types/node@26.6.6))
       ai:
         specifier: ^7.0.159
         version: 7.0.159(zod@4.6.7)
@@ -2711,8 +2711,8 @@ packages:
       webpack:
         optional: true
 
-  '@sentry/cloudflare@11.10.0':
-    resolution: {integrity: sha512-S9x1ZFHnM1BLh2FVzCKO+2QLG0rCtLsZjYn3ZhHfyT6RN3jwh73So1RT/gE1dsAZj+xq8lr2ptTPmv/ATsYc7w==}
+  '@sentry/cloudflare@11.11.0':
+    resolution: {integrity: sha512-N3s9PjTDNvkIDFdoTbPtJnJsxDVUPvd0AEh/aMtZaqJK90vk2yULpP7VjU96nCIl4VMwc8E/YpNbPyBX0eAxhQ==}
     engines: {node: '>=20.19.0 <22.0.0 || >=22.12.0 <23.0.0 || >=23.2.0'}
     peerDependencies:
       '@cloudflare/workers-types': ^4.x || ^5.x
@@ -2726,17 +2726,9 @@ packages:
       wrangler:
         optional: true
 
-  '@sentry/conventions@0.29.0':
-    resolution: {integrity: sha512-kYq9/HJ/l6MYP/srIc20dy1W4mWyJfCF0OWFF+RhBGZwyr/wCmtabRFKyw7kqM+DTwZXQOjSTSZUcJhDowcInQ==}
-    engines: {node: '>=14'}
-
   '@sentry/conventions@0.30.0':
     resolution: {integrity: sha512-WTumd5A2iFmHTRubi6mc6gLHU8LswPQqoNaZu6T1cxiTUmy3WdEw0i8FAnVbcgxTlsumX5oh63/b4B9lY5wAPQ==}
     engines: {node: '>=14'}
-
-  '@sentry/core@11.10.0':
-    resolution: {integrity: sha512-l/OtTo1v+TQgZtHG2Q5N4IX+gFdAE1tZ27K/P21UCzJglWk54TPEm+d9T2lulPqMK06kZcLwDgRAhE2GO4YS5w==}
-    engines: {node: '>=20.19.0 <22.0.0 || >=22.12.0 <23.0.0 || >=23.2.0'}
 
   '@sentry/core@11.11.0':
     resolution: {integrity: sha512-PRrcEdPrTYuHcbDa6DhJZR9Qg2d+2gjKVXiv2QeiTgxvhvXDxYiaVSXH0lldKTR099Er5TAEChiX7aEu4yNlUw==}
@@ -2746,8 +2738,8 @@ packages:
     resolution: {integrity: sha512-KP1AYilzLYLIDcDiUD8eaEV955x5rKnwdxpXE70sJpuHUWuEB28MyyDe+tPWU8/MZtdmFGrqCxRqGQN9dNuvtw==}
     engines: {node: '>=20.19.0 <22.0.0 || >=22.12.0 <23.0.0 || >=23.2.0'}
 
-  '@sentry/opentelemetry@11.10.0':
-    resolution: {integrity: sha512-YMV4ZgaRlW7QPCcMScVpSBvYOdvDlY+alqRT3KOTcmPKFZtf8O2hXHWFhl/M33kKDEfqOk2XtEVeHs3mZFOCaw==}
+  '@sentry/opentelemetry@11.11.0':
+    resolution: {integrity: sha512-L1lXAF1hNUSOTLG8NLkBaopvWWpXqlYgQ++cfWr8Gw4wdmReNp9ec533bEj4r6ZJ6PvIYNdIVNI22GdvmbP6xg==}
     engines: {node: '>=20.19.0 <22.0.0 || >=22.12.0 <23.0.0 || >=23.2.0'}
     peerDependencies:
       '@opentelemetry/api': ^1.9.0
@@ -2770,8 +2762,8 @@ packages:
     resolution: {integrity: sha512-di2nOSxPOu9kgNb4G3Y0uAOCX4mKmTCfzyJxTQBKaj0F9ymugUO9Epu4n5Vez7x96KpfIZPA1AzbNVArYmVX2g==}
     engines: {node: '>=20.19.0 <22.0.0 || >=22.12.0 <23.0.0 || >=23.2.0'}
 
-  '@sentry/server-utils@11.10.0':
-    resolution: {integrity: sha512-m/MVCvPzQJJZZCTFlVPCrTuoncT7SR80+QKg1K7ul25AsL0byABr5KsHCbXVpOYXLVz04Omk+pOOR5Cv2IAlrA==}
+  '@sentry/server-utils@11.11.0':
+    resolution: {integrity: sha512-t1lx9Zw+zhRre0ko+F3CsucG2BqB/7KOZmG1W+Wv/fSvYSnT06vg7WhIvmvH+df7BSFO+cFGBpkxwQWGq3zj+w==}
     engines: {node: '>=20.19.0 <22.0.0 || >=22.12.0 <23.0.0 || >=23.2.0'}
 
   '@sentry/vite-plugin@11.11.0':
@@ -8547,26 +8539,20 @@ snapshots:
     optionalDependencies:
       rollup: 4.67.4
 
-  '@sentry/cloudflare@11.10.0(@cloudflare/workers-types@4.20260702.1)(vite@8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(wrangler@4.159.0(@cloudflare/workers-types@4.20260702.1)(@types/node@26.6.6))':
+  '@sentry/cloudflare@11.11.0(@cloudflare/workers-types@4.20260702.1)(vite@8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(wrangler@4.159.0(@cloudflare/workers-types@4.20260702.1)(@types/node@26.6.6))':
     dependencies:
       '@opentelemetry/api': 1.9.1
-      '@sentry/conventions': 0.29.0
-      '@sentry/core': 11.10.0
-      '@sentry/opentelemetry': 11.10.0(@opentelemetry/api@1.9.1)
-      '@sentry/server-utils': 11.10.0
+      '@sentry/conventions': 0.30.0
+      '@sentry/core': 11.11.0
+      '@sentry/opentelemetry': 11.11.0(@opentelemetry/api@1.9.1)
+      '@sentry/server-utils': 11.11.0
       magic-string: 0.30.21
     optionalDependencies:
       '@cloudflare/workers-types': 4.20260702.1
       vite: 8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
       wrangler: 4.159.0(@cloudflare/workers-types@4.20260702.1)(@types/node@26.6.6)
 
-  '@sentry/conventions@0.29.0': {}
-
   '@sentry/conventions@0.30.0': {}
-
-  '@sentry/core@11.10.0':
-    dependencies:
-      '@sentry/conventions': 0.29.0
 
   '@sentry/core@11.11.0':
     dependencies:
@@ -8576,11 +8562,11 @@ snapshots:
     dependencies:
       '@sentry/core': 11.11.0
 
-  '@sentry/opentelemetry@11.10.0(@opentelemetry/api@1.9.1)':
+  '@sentry/opentelemetry@11.11.0(@opentelemetry/api@1.9.1)':
     dependencies:
       '@opentelemetry/api': 1.9.1
-      '@sentry/conventions': 0.29.0
-      '@sentry/core': 11.10.0
+      '@sentry/conventions': 0.30.0
+      '@sentry/core': 11.11.0
 
   '@sentry/react@11.11.0(react@19.3.1)':
     dependencies:
@@ -8599,11 +8585,11 @@ snapshots:
       '@sentry/browser-utils': 11.11.0
       '@sentry/core': 11.11.0
 
-  '@sentry/server-utils@11.10.0':
+  '@sentry/server-utils@11.11.0':
     dependencies:
       '@opentelemetry/api': 1.9.1
-      '@sentry/conventions': 0.29.0
-      '@sentry/core': 11.10.0
+      '@sentry/conventions': 0.30.0
+      '@sentry/core': 11.11.0
 
   '@sentry/vite-plugin@11.11.0(rollup@4.67.4)':
     dependencies:
