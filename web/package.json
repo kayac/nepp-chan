@@ -32,7 +32,7 @@
     "react-dom": "^19.3.1",
     "react-markdown": "^10.1.0",
     "recharts": "^3.10.1",
-    "remark-cjk-friendly": "^2.3.3",
+    "remark-cjk-friendly": "^2.3.4",
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
