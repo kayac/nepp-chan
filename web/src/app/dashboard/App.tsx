@@ -11,6 +11,7 @@ import {
   HandThumbUpIcon,
   HomeIcon,
   MegaphoneIcon,
+  MicrophoneIcon,
   TagIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -62,13 +63,14 @@ const tabGroups: { id: TabGroup; label: string }[] = [
   { id: "system", label: "システム" },
 ];
 
-const tabs: {
-  id: Tab;
+type NavItem = {
   label: string;
   icon: React.ReactNode;
   group: TabGroup;
   minRole?: AdminRole;
-}[] = [
+} & ({ id: Tab } | { href: string });
+
+const tabs: NavItem[] = [
   {
     id: "home",
     label: "ホーム",
@@ -138,6 +140,13 @@ const tabs: {
     id: "usage",
     label: "利用コスト",
     icon: <BanknotesIcon className="w-5 h-5" aria-hidden="true" />,
+    group: "system",
+    minRole: "super_admin",
+  },
+  {
+    href: "/call-el",
+    label: "会話（ベータ）",
+    icon: <MicrophoneIcon className="w-5 h-5" aria-hidden="true" />,
     group: "system",
     minRole: "super_admin",
   },
@@ -256,23 +265,42 @@ export const App = () => {
                 <div className="px-4 pt-3 pb-1 text-[11px] font-bold text-stone-400 tracking-wider">
                   {group.label}
                 </div>
-                {groupTabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => handleTabChange(tab.id)}
-                    className={cn(
-                      "w-full px-4 py-3 text-left transition-colors flex items-center gap-3",
-                      "hover:bg-stone-50",
-                      activeTab === tab.id &&
-                        "bg-teal-50 border-l-2 border-teal-600 text-teal-700",
-                      activeTab !== tab.id && "text-stone-600",
-                    )}
-                  >
-                    {tab.icon}
-                    <span className="text-sm font-medium">{tab.label}</span>
-                  </button>
-                ))}
+                {groupTabs.map((tab) => {
+                  const base =
+                    "w-full px-4 py-3 text-left transition-colors flex items-center gap-3 hover:bg-stone-50";
+                  const label = (
+                    <>
+                      {tab.icon}
+                      <span className="text-sm font-medium">{tab.label}</span>
+                    </>
+                  );
+                  if ("href" in tab) {
+                    return (
+                      <a
+                        key={tab.href}
+                        href={tab.href}
+                        className={cn(base, "text-stone-600")}
+                      >
+                        {label}
+                      </a>
+                    );
+                  }
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => handleTabChange(tab.id)}
+                      className={cn(
+                        base,
+                        activeTab === tab.id &&
+                          "bg-teal-50 border-l-2 border-teal-600 text-teal-700",
+                        activeTab !== tab.id && "text-stone-600",
+                      )}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             );
           })}
@@ -316,7 +344,7 @@ export const App = () => {
             <Bars3Icon className="w-5 h-5 text-stone-600" aria-hidden="true" />
           </button>
           <h2 className="text-lg font-semibold text-stone-800">
-            {visibleTabs.find((t) => t.id === activeTab)?.label}
+            {visibleTabs.find((t) => "id" in t && t.id === activeTab)?.label}
           </h2>
         </header>
 
