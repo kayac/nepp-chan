@@ -112,8 +112,8 @@ importers:
         specifier: 1.81.0
         version: 1.81.0(@opentelemetry/api@1.9.1)(ai@7.0.159(zod@4.6.7))(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.7))(zod@4.6.7)
       '@mastra/evals':
-        specifier: 1.10.10
-        version: 1.10.10(@mastra/core@1.81.0(@opentelemetry/api@1.9.1)(ai@7.0.159(zod@4.6.7))(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.7))(zod@4.6.7))(vitest@5.0.5)
+        specifier: 1.10.11
+        version: 1.10.11(@mastra/core@1.81.0(@opentelemetry/api@1.9.1)(ai@7.0.159(zod@4.6.7))(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.7))(zod@4.6.7))(vitest@5.0.5)
       '@mastra/libsql':
         specifier: 1.28.0
         version: 1.28.0(@mastra/core@1.81.0(@opentelemetry/api@1.9.1)(ai@7.0.159(zod@4.6.7))(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.7))(zod@4.6.7))
@@ -2023,12 +2023,12 @@ packages:
     peerDependencies:
       '@mastra/core': '>=1.81.0-0 <2.0.0-0'
 
-  '@mastra/evals@1.10.10':
-    resolution: {integrity: sha512-gI2yamCyRTCDUKysCZkYbNHw82L92FGPHZzTfgzZvy5qJfoIHGcQo3SnzUo9PU2jaoB45UgcYCAUI4f56r98Qw==}
+  '@mastra/evals@1.10.11':
+    resolution: {integrity: sha512-5UGBjace+4VvqpcEBKATLCtb3daHSu7wSsTFn0daJLAb+YRVHytFosY9guidU9MP5CgYHMBqWDDaObkoKpTaoQ==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.0.0-0 <2.0.0-0'
-      vitest: '>=3.0.0 <5.0.0'
+      vitest: '>=3.0.0 <6.0.0'
     peerDependenciesMeta:
       vitest:
         optional: true
@@ -5742,9 +5742,6 @@ packages:
   tailwind-merge@3.7.0:
     resolution: {integrity: sha512-XPPUyAc+cvspz3lHTcR/QgPfW2A0lv/xQNIjX3HGhLR+Nq2lHaLq5MtTesHn8GUr3W3DguT2KT5x3NVgRtYwmA==}
 
-  tailwindcss@4.3.3:
-    resolution: {integrity: sha512-gOhV3P7ufE62QDGg1zVaTgCR+EtPv92k2nIhVcVKcLmxT1sUBsQGhnZj175j+MqRt4zLF7ic+sCYjfhxMxj7YQ==}
-
   tailwindcss@4.3.4:
     resolution: {integrity: sha512-PCJZTFFdG+sL3gvnP1Do9o6GbkvH2q0p04xSs3f7cSvmAeK+sttG+/7ncK1fdRwKFfC7n+wDDJaOMBSefkI9ow==}
 
@@ -7951,7 +7948,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@mastra/evals@1.10.10(@mastra/core@1.81.0(@opentelemetry/api@1.9.1)(ai@7.0.159(zod@4.6.7))(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.7))(zod@4.6.7))(vitest@5.0.5)':
+  '@mastra/evals@1.10.11(@mastra/core@1.81.0(@opentelemetry/api@1.9.1)(ai@7.0.159(zod@4.6.7))(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.7))(zod@4.6.7))(vitest@5.0.5)':
     dependencies:
       '@mastra/core': 1.81.0(@opentelemetry/api@1.9.1)(ai@7.0.159(zod@4.6.7))(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.7))(zod@4.6.7)
       compromise: 14.19.0
@@ -11937,8 +11934,6 @@ snapshots:
   tagged-tag@1.0.0: {}
 
   tailwind-merge@3.7.0: {}
-
-  tailwindcss@4.3.3: {}
 
   tailwindcss@4.3.4: {}
 
