@@ -54,7 +54,7 @@
     "openapi:generate": "pnpm --filter @nepp-chan/web openapi:generate"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.4",
+    "@biomejs/biome": "^2.6.6",
     "glob": "^14.0.4",
     "gray-matter": "^4.0.3",
     "tsx": "^4.23.15",
