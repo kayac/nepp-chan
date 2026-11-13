@@ -45,13 +45,33 @@ describe("chunkDocument", () => {
     expect(texts[0]).not.toContain("category");
   });
 
-  it("50 文字未満のチャンクは捨てる", async () => {
-    const md = `# T\n\n## 短い\n\nみじかい\n\n## 長い\n\n${paragraph("x", 60)}`;
+  it("見出しの付く短い節は残し、見出しに本文を添えて埋め込む", async () => {
+    const md = `# パスポート\n\n## 申請できる場所\n\n本庁舎でも支所でも申請できる\n\n## 問い合わせ\n\n${paragraph("x", 60)}`;
+
+    const { texts } = await chunkDocument("passport.md", md);
+
+    expect(texts).toHaveLength(2);
+    expect(texts[0]).toBe(
+      "パスポート > 申請できる場所\n\n本庁舎でも支所でも申請できる",
+    );
+  });
+
+  it("区切り線やページ番号だけの節は見出しがあっても捨てる", async () => {
+    const md =
+      "# T\n\n## 区切りだけ\n\n---\n\n## ページ番号\n\n266\n\n## 日程\n\n令和8年3月22日（日）";
+
+    const { texts } = await chunkDocument("doc.md", md);
+
+    expect(texts).toEqual(["T > 日程\n\n令和8年3月22日（日）"]);
+  });
+
+  it("見出しの無い 50 文字未満の断片は捨てる", async () => {
+    const md = `本文へ移動\n\n# T\n\n${paragraph("x", 60)}`;
 
     const { texts } = await chunkDocument("doc.md", md);
 
     expect(texts).toHaveLength(1);
-    expect(texts[0]).toContain("長い");
+    expect(texts[0]).toContain("T");
   });
 
   it("見出しの無い長いセクションは maxSize で分割し、各片が見出し metadata を保つ", async () => {
