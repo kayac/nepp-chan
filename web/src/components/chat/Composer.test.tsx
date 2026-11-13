@@ -97,4 +97,40 @@ describe("Composer", () => {
     expect(screen.getByLabelText("停止")).toBeInTheDocument();
     expect(screen.queryByLabelText("送信")).not.toBeInTheDocument();
   });
+
+  describe("入力欄の高さ", () => {
+    const stubScrollHeight = () =>
+      vi
+        .spyOn(HTMLTextAreaElement.prototype, "scrollHeight", "get")
+        .mockImplementation(function (this: HTMLTextAreaElement) {
+          return this.value.length > 10 ? 120 : 42;
+        });
+
+    afterEach(() => vi.restoreAllMocks());
+
+    it("入力が増えたら中身の高さまで広げる", () => {
+      stubScrollHeight();
+      renderComposer();
+      const textarea = screen.getByLabelText("メッセージ入力");
+
+      fireEvent.change(textarea, {
+        target: { value: "おすすめのお店を教えてください" },
+      });
+
+      expect(textarea).toHaveStyle({ height: "120px" });
+    });
+
+    it("送信して空になったら 1 行の高さに戻す", () => {
+      stubScrollHeight();
+      renderComposer();
+      const textarea = screen.getByLabelText("メッセージ入力");
+
+      fireEvent.change(textarea, {
+        target: { value: "おすすめのお店を教えてください" },
+      });
+      fireEvent.keyDown(textarea, { key: "Enter" });
+
+      expect(textarea).toHaveStyle({ height: "42px" });
+    });
+  });
 });
