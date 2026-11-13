@@ -58,13 +58,13 @@
     "@elevenlabs/elevenlabs-js": "^2.76.0",
     "@libsql/client": "^0.18.0",
     "@types/node": "^26.6.6",
-    "@vitest/coverage-istanbul": "~5.0.5",
+    "@vitest/coverage-istanbul": "~5.1.0",
     "drizzle-kit": "^0.31.11",
     "mastra": "1.37.0",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "~5.0.5",
+    "vitest": "~5.1.0",
     "wrangler": "^4.159.0"
   }
 }
