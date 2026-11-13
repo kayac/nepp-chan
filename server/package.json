@@ -29,7 +29,7 @@
     "knowledge:date-ranking": "tsx scripts/knowledge-date-ranking.ts"
   },
   "dependencies": {
-    "@ai-sdk/google": "^4.0.109",
+    "@ai-sdk/google": "^4.0.114",
     "@ai-sdk/openai": "^4.0.106",
     "@ai-sdk/typesafe-ai": "^3.0.33",
     "@hono/swagger-ui": "^0.6.2",
