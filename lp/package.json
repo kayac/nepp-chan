@@ -25,6 +25,7 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
+    "@emnapi/runtime": "1.11.3",
     "@tailwindcss/vite": "^4.3.4",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
