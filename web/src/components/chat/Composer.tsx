@@ -1,7 +1,7 @@
 import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import { StopIcon } from "@heroicons/react/24/solid";
 import { cn } from "@nepp-chan/shared/lib/class-merge";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 import { useChatContext } from "~/app/chat/contexts/ChatContext";
 
@@ -13,6 +13,15 @@ const isTouchDevice = () =>
 export const Composer = () => {
   const { sendMessage, isRunning, stop } = useChatContext();
   const [input, setInput] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 入力が変わるたびに中身の高さを測り直す
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, [input]);
 
   const submit = () => {
     const text = input.trim();
@@ -45,6 +54,7 @@ export const Composer = () => {
       }}
     >
       <textarea
+        ref={textareaRef}
         value={input}
         onChange={(e) => setInput(e.target.value)}
         placeholder="ねっぷちゃんに話しかける…"

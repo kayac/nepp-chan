@@ -12,8 +12,10 @@ import { Thread } from "~/components/chat/Thread";
 
 import { ChatProvider } from "./contexts/ChatProvider";
 import { useThreadManager } from "./hooks/useThreadManager";
+import { useVisualViewportStyle } from "./hooks/useVisualViewportStyle";
 
 export const ChatPage = () => {
+  const viewportStyle = useVisualViewportStyle();
   const {
     threads,
     currentThreadId,
@@ -87,7 +89,10 @@ export const ChatPage = () => {
   };
 
   return (
-    <div className="relative flex h-dvh flex-col overflow-hidden bg-(--bg-app)">
+    <div
+      className="relative flex h-dvh flex-col overflow-hidden bg-(--bg-app)"
+      style={viewportStyle}
+    >
       <AmbientBG />
 
       {isAdmin && (
