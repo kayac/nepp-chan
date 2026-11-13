@@ -21,6 +21,8 @@ type HeaderMetadata = {
   subsection?: string;
 };
 
+const hasLetters = (text: string) => /\p{L}/u.test(text);
+
 const headerPrefix = (meta: HeaderMetadata) =>
   [meta.title, meta.section, meta.subsection]
     .filter((v): v is string => typeof v === "string")
@@ -49,7 +51,11 @@ export const chunkDocument = async (filename: string, content: string) => {
 
   const kept = allTexts
     .map((text, i) => ({ text, meta: allMetadata[i] ?? {} }))
-    .filter(({ text }) => text.length >= MIN_CHUNK_LENGTH)
+    .filter(
+      ({ text, meta }) =>
+        text.length >= MIN_CHUNK_LENGTH ||
+        (headerPrefix(meta) && hasLetters(text)),
+    )
     .map(({ text, meta }) => {
       const prefix = headerPrefix(meta);
       return { text: prefix ? `${prefix}\n\n${text}` : text, meta };
@@ -66,7 +72,7 @@ export const chunkDocument = async (filename: string, content: string) => {
   }));
 
   logger.info(
-    `[Knowledge Sync] ${filename}: ${allTexts.length} chunks -> ${texts.length} after filtering (min ${MIN_CHUNK_LENGTH} chars)`,
+    `[Knowledge Sync] ${filename}: ${allTexts.length} chunks -> ${texts.length} after dropping headless chunks under ${MIN_CHUNK_LENGTH} chars`,
   );
 
   return { texts, metadata };
