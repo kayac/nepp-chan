@@ -22,6 +22,12 @@ const Conversation = () => {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center gap-6 p-6">
+      <a
+        href="/dashboard"
+        className="self-start text-sm text-teal-700 hover:text-teal-800"
+      >
+        ← 管理画面へ戻る
+      </a>
       <h1 className="text-xl font-bold">ねっぷちゃんと会話（ElevenLabs）</h1>
       <p className="text-(--color-text)">
         {STATUS_LABEL[status]}
