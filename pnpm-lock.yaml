@@ -161,8 +161,8 @@ importers:
         version: 4.6.7
     devDependencies:
       '@elevenlabs/elevenlabs-js':
-        specifier: ^2.76.0
-        version: 2.76.0
+        specifier: ^2.79.0
+        version: 2.79.0
       '@libsql/client':
         specifier: ^0.18.0
         version: 0.18.0
@@ -1096,8 +1096,8 @@ packages:
   '@elevenlabs/client@1.36.1':
     resolution: {integrity: sha512-QevGjhLJ5qeM3pyqOukE+ZHU8bLiD8FkjzY90db0WyQhrjDdPDzddkuV4b+9jLmE7jHoeBwiZT/mjgBDNfZkww==}
 
-  '@elevenlabs/elevenlabs-js@2.76.0':
-    resolution: {integrity: sha512-XMWRR19xCgRst+63b7EOArJRZOjCxLDo2nsAr/eE2JRxdYirIOIUIfdiM0aCb6lY7ydPgQfC95c20Hacc2Oqww==}
+  '@elevenlabs/elevenlabs-js@2.79.0':
+    resolution: {integrity: sha512-GBkWMKTU4T2oBDiffffekWQNZi6/HIXB1zAIi9thKHew6QBuqdttD6iVUDEzMRoKhmsRAvweE4mYi4ZlZ6T7qQ==}
     engines: {node: '>=18.0.0'}
 
   '@elevenlabs/react@1.22.1':
@@ -6445,18 +6445,6 @@ packages:
       utf-8-validate:
         optional: true
 
-  ws@8.22.1:
-    resolution: {integrity: sha512-oyL6OPYme/CmiFvNuGzeoxCJ4nOrZE2O1FwM9MWM1AsGri6nLXB2pg+lNA8aLeXMSav0J6eIVS1j6vUPzUtK9g==}
-    engines: {node: '>=10.0.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: '>=5.0.2'
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
-
   ws@8.23.0:
     resolution: {integrity: sha512-wCkmX8QMOrKjgO8HW2WyDbTSGeqkocxgDzS9iR79rEAexty6/2qzilx3Ag8Tqf9ykop3irLKle0MtVn5qjVnoQ==}
     engines: {node: '>=10.0.0'}
@@ -7303,11 +7291,11 @@ snapshots:
     transitivePeerDependencies:
       - '@types/dom-mediacapture-record'
 
-  '@elevenlabs/elevenlabs-js@2.76.0':
+  '@elevenlabs/elevenlabs-js@2.79.0':
     dependencies:
       command-exists: 1.2.9
       node-fetch: 2.7.0
-      ws: 8.22.1
+      ws: 8.23.0
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -12649,8 +12637,6 @@ snapshots:
   wrappy@1.0.2: {}
 
   ws@8.21.0: {}
-
-  ws@8.22.1: {}
 
   ws@8.23.0: {}
 
