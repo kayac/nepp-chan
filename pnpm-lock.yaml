@@ -6858,11 +6858,6 @@ snapshots:
       '@oslojs/encoding': 1.1.0
       clsx: 2.1.1
 
-  '@astrojs/runtime@0.1.1':
-    dependencies:
-      '@oslojs/encoding': 1.1.0
-      clsx: 2.1.1
-
   '@astrojs/telemetry@3.4.2':
     dependencies:
       ci-info: 4.4.0
