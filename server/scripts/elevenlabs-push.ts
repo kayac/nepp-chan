@@ -2,6 +2,9 @@
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { getPlatformProxy } from "wrangler";
 import {
+  builtInTools,
+  languagePresets,
+  maxConversationDurationMessage,
   promptSettings,
   researchToolConfig,
   turnConfig,
@@ -19,8 +22,12 @@ const main = async () => {
       env.ELEVENLABS_AGENT_ID,
       {
         conversationConfig: {
-          agent: { prompt: { prompt, ...promptSettings } },
+          agent: {
+            maxConversationDurationMessage,
+            prompt: { prompt, ...promptSettings, builtInTools },
+          },
           turn: turnConfig,
+          languagePresets,
         },
       },
     );
