@@ -55,7 +55,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.6",
-    "glob": "^14.0.4",
+    "glob": "^14.0.6",
     "gray-matter": "^4.0.3",
     "tsx": "^4.23.15",
     "wrangler": "^4.159.0"
