@@ -2,6 +2,24 @@ import type { ElevenLabs } from "@elevenlabs/elevenlabs-js";
 
 export const promptSettings = { timezone: "Asia/Tokyo", temperature: 0.6 };
 
+export const maxConversationDurationMessage =
+  "ごめんね、そろそろ時間だから切るね。またお話ししようね。";
+
+export const languagePresets = Object.fromEntries(
+  ["en", "fr", "it", "de", "es", "zh", "ko"].map((language) => [
+    language,
+    { overrides: {} },
+  ]),
+);
+
+export const builtInTools: ElevenLabs.BuiltInToolsInput = {
+  endCall: { name: "end_call", params: { systemToolType: "end_call" } },
+  languageDetection: {
+    name: "language_detection",
+    params: { systemToolType: "language_detection" },
+  },
+};
+
 export const turnConfig: ElevenLabs.TurnConfig = {
   turnEagerness: "eager",
   turnTimeout: 20,

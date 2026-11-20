@@ -15,6 +15,9 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { getPlatformProxy } from "wrangler";
 import {
+  builtInTools,
+  languagePresets,
+  maxConversationDurationMessage,
   promptSettings,
   researchToolConfig,
   turnConfig,
@@ -66,17 +69,14 @@ const createAgent = (
           prompt: buildElevenLabsPrompt(),
           ...promptSettings,
           toolIds: [toolId],
-          builtInTools: {
-            endCall: {
-              name: "end_call",
-              params: { systemToolType: "end_call" },
-            },
-          },
+          builtInTools,
           cascadeTimeoutSeconds: 15,
         },
+        maxConversationDurationMessage,
       },
       tts: { voiceId, modelId: "eleven_flash_v2_5" },
       turn: turnConfig,
+      languagePresets,
     },
     ...(webhookId
       ? {
