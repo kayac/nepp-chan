@@ -47,7 +47,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitest/coverage-istanbul": "~5.1.0",
     "jsdom": "^31.0.0",
-    "msw": "^3.0.4",
+    "msw": "^3.0.6",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "typescript": "~6.0.3",
