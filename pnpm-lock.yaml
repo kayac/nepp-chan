@@ -279,8 +279,8 @@ importers:
         specifier: ^7.1.9
         version: 7.1.9(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(vite@8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
       '@elevenlabs/react':
-        specifier: ^1.22.1
-        version: 1.22.1(@types/dom-mediacapture-record@1.0.22)(react@19.3.1)
+        specifier: ^1.23.1
+        version: 1.23.1(@types/dom-mediacapture-record@1.0.22)(react@19.3.1)
       '@heroicons/react':
         specifier: ^2.2.0
         version: 2.2.0(react@19.3.1)
@@ -1113,20 +1113,20 @@ packages:
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
 
-  '@elevenlabs/client@1.36.1':
-    resolution: {integrity: sha512-QevGjhLJ5qeM3pyqOukE+ZHU8bLiD8FkjzY90db0WyQhrjDdPDzddkuV4b+9jLmE7jHoeBwiZT/mjgBDNfZkww==}
+  '@elevenlabs/client@1.37.1':
+    resolution: {integrity: sha512-4WvfsriJq9pj+nedoseL/bivAhgeXqE1aqvujbNH2+uz04Qi1+oGetsr+49shNSupcauN1nIUdEa21+wg+U/Og==}
 
   '@elevenlabs/elevenlabs-js@2.79.0':
     resolution: {integrity: sha512-GBkWMKTU4T2oBDiffffekWQNZi6/HIXB1zAIi9thKHew6QBuqdttD6iVUDEzMRoKhmsRAvweE4mYi4ZlZ6T7qQ==}
     engines: {node: '>=18.0.0'}
 
-  '@elevenlabs/react@1.22.1':
-    resolution: {integrity: sha512-wqE082+Q7f6s5OGZNR9/fYFvhoQ3oAi/r/7kp4Fjw6023FJ7pZuFYrZ8dTnn6yduBMffR/h9FAwi96VQjugQgw==}
+  '@elevenlabs/react@1.23.1':
+    resolution: {integrity: sha512-EPRmGyZ47LuUrsBT7Pk8dcv04URW+2wl41O2CsmBcmsWOPfDpPvgWGy+eNOxyQxubwKaU03uloMpeJb5cseEgw==}
     peerDependencies:
       react: '>=16.8.0'
 
-  '@elevenlabs/types@0.29.0':
-    resolution: {integrity: sha512-qbn4UM53JnUFOwkiQGfaL2OxooDh1ZZJyA5fSiaKZthG+kCYrNgAI/yE4DNSd2CI34JKM8i/k0V/cus7+lp+Hg==}
+  '@elevenlabs/types@0.30.0':
+    resolution: {integrity: sha512-fOfe5aXbLemU59YnHiDBQ7sq5u7OuQXW/YtZizk8U+RHLFcaHIrPERFlM6qIKzLu7bG/01MW7YemSH1M2zWk2g==}
 
   '@emmetio/abbreviation@2.3.3':
     resolution: {integrity: sha512-mgv58UrU3rh4YgbE/TzgLQwJ3pFsHHhCLqY20aJq+9comytTXUDNGG/SMtSeMJdkpxgXSXunBGLD8Boka3JyVA==}
@@ -7284,9 +7284,9 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
-  '@elevenlabs/client@1.36.1(@types/dom-mediacapture-record@1.0.22)':
+  '@elevenlabs/client@1.37.1(@types/dom-mediacapture-record@1.0.22)':
     dependencies:
-      '@elevenlabs/types': 0.29.0
+      '@elevenlabs/types': 0.30.0
       livekit-client: 2.23.0(@types/dom-mediacapture-record@1.0.22)
     transitivePeerDependencies:
       - '@types/dom-mediacapture-record'
@@ -7301,14 +7301,14 @@ snapshots:
       - encoding
       - utf-8-validate
 
-  '@elevenlabs/react@1.22.1(@types/dom-mediacapture-record@1.0.22)(react@19.3.1)':
+  '@elevenlabs/react@1.23.1(@types/dom-mediacapture-record@1.0.22)(react@19.3.1)':
     dependencies:
-      '@elevenlabs/client': 1.36.1(@types/dom-mediacapture-record@1.0.22)
+      '@elevenlabs/client': 1.37.1(@types/dom-mediacapture-record@1.0.22)
       react: 19.3.1
     transitivePeerDependencies:
       - '@types/dom-mediacapture-record'
 
-  '@elevenlabs/types@0.29.0': {}
+  '@elevenlabs/types@0.30.0': {}
 
   '@emmetio/abbreviation@2.3.3':
     dependencies:
