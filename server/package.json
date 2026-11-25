@@ -58,7 +58,7 @@
     "@elevenlabs/elevenlabs-js": "^2.79.0",
     "@libsql/client": "^0.18.0",
     "@types/node": "^26.6.6",
-    "@vitest/coverage-istanbul": "~5.1.0",
+    "@vitest/coverage-istanbul": "~5.1.1",
     "drizzle-kit": "^0.31.11",
     "mastra": "1.39.0",
     "tsx": "^4.23.15",
