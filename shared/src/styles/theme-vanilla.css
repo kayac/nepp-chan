@@ -1,0 +1,69 @@
+/* 白黒の素体。配下のデザイントークンを無彩色に張り替える。
+   意味トークンは :root で値が確定して継承されるので、生パレットと合わせて張り替える */
+.theme-vanilla {
+  --teal-50: #f2f2f2;
+  --teal-100: #e5e5e5;
+  --teal-200: #e5e5e5;
+  --teal-300: #6b6b6b;
+  --teal-400: #6b6b6b;
+  --teal-500: #151515;
+  --teal-600: #151515;
+  --teal-700: #151515;
+  --teal-800: #151515;
+  --teal-900: #151515;
+
+  --snow-0: #ffffff;
+  --snow-50: #f2f2f2;
+  --snow-100: #f2f2f2;
+  --snow-200: #e5e5e5;
+  --snow-300: #e5e5e5;
+  --snow-400: #6b6b6b;
+  --snow-500: #595959;
+  --snow-600: #595959;
+  --snow-700: #151515;
+  --snow-800: #151515;
+  --snow-900: #151515;
+
+  --paper-0: #ffffff;
+  --paper-50: #ffffff;
+  --paper-100: #f2f2f2;
+  --paper-200: #e5e5e5;
+
+  --bg-app: #ffffff;
+  --bg-raised: #ffffff;
+  --bg-sunken: #e5e5e5;
+
+  --fg-1: #151515;
+  --fg-2: #595959;
+  --fg-3: #595959;
+  --fg-4: #6b6b6b;
+  --fg-on-brand: #ffffff;
+
+  --border-1: #e5e5e5;
+  --border-2: #6b6b6b;
+
+  --brand: #151515;
+  --brand-hover: #151515;
+  --brand-press: #151515;
+  --brand-soft: #f2f2f2;
+  --brand-soft-2: #e5e5e5;
+
+  --r-bubble: 23px;
+
+  --shadow-float-sm: none;
+  --shadow-float-md: none;
+  --shadow-float-lg: none;
+  --shadow-floating-input: none;
+  --shadow-brand: none;
+  --ring-brand: 0 0 0 2px #151515;
+
+  --font-display:
+    -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans CJK JP",
+    sans-serif;
+  --font-body:
+    -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans CJK JP",
+    sans-serif;
+
+  font-family: var(--font-body);
+  color: var(--fg-1);
+}
