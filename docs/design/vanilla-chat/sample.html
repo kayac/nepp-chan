@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="ja" data-chat-theme="vanilla">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>白黒のチャット素体　見本</title>
+    <style>
+/* 色・寸法の値 */
+:where([data-chat-theme="vanilla"]) {
+  --vanilla-chat-surface: #fff;
+  --vanilla-chat-ink: #151515;
+  --vanilla-chat-muted: #595959;
+  --vanilla-chat-quiet: #6b6b6b;
+  --vanilla-chat-control: #f2f2f2;
+  --vanilla-chat-disabled: #e5e5e5;
+  --vanilla-chat-font: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans CJK JP", sans-serif;
+  --vanilla-chat-rail-width: 640px;
+  --vanilla-chat-answer-width: 560px;
+  --vanilla-chat-start-width: 520px;
+  --vanilla-chat-bubble-radius: 23px;
+  --vanilla-chat-pill-radius: 99px;
+  --vanilla-chat-icon-button-size: 44px;
+}
+
+/* 画面の組版 */
+:root {
+  color-scheme: light;
+  font-family: var(--vanilla-chat-font);
+  color: var(--vanilla-chat-ink);
+  font-synthesis: none;
+}
+* { box-sizing: border-box; }
+body, h1, h2, p, ul { margin: 0; }
+body { background: var(--vanilla-chat-surface); }
+button, input { font: inherit; color: inherit; }
+button { appearance: none; background: var(--vanilla-chat-surface); }
+button, input { min-width: 0; }
+:focus-visible { outline: 2px solid var(--vanilla-chat-ink); outline-offset: 3px; }
+
+.screen {
+  --page-gutter: 28px;
+  --topbar-height: 68px;
+  --turn-gap: 28px;
+  --thread-inset: 56px;
+  --composer-bottom: 28px;
+  --chat-text: 16px;
+  height: 100vh;
+  width: 100%;
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  background: var(--vanilla-chat-surface);
+  overflow: hidden;
+}
+.frame-header {
+  min-height: var(--topbar-height);
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: var(--page-gutter);
+}
+.frame-title { font-size: 17px; font-weight: 650; letter-spacing: -.03em; }
+.icon-button {
+  width: var(--vanilla-chat-icon-button-size);
+  height: var(--vanilla-chat-icon-button-size);
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+}
+.frame-header .icon-button { background: var(--vanilla-chat-control); }
+.icon { color: currentColor; position: relative; display: block; width: 18px; height: 18px; }
+.icon-menu::before, .icon-menu::after, .icon-menu > i { content: ""; position: absolute; left: 1.5px; right: 1.5px; height: 1.5px; border-radius: 2px; background: currentColor; }
+.icon-menu::before { top: 4px; }
+.icon-menu > i { top: 8px; }
+.icon-menu::after { top: 12px; }
+.icon-send::before { content: ""; position: absolute; left: 8px; top: 3px; width: 1.5px; height: 12px; background: currentColor; border-radius: 2px; }
+.icon-send::after { content: ""; position: absolute; left: 4.5px; top: 3.5px; width: 8.5px; height: 8.5px; border-top: 1.5px solid; border-left: 1.5px solid; transform: rotate(45deg); }
+.icon-close::before, .icon-close::after { content: ""; position: absolute; left: 2px; right: 2px; top: 8px; height: 1.5px; background: currentColor; transform: rotate(45deg); }
+.icon-close::after { transform: rotate(-45deg); }
+.icon-next::before { content: ""; position: absolute; left: 5px; top: 5px; width: 7px; height: 7px; border-top: 1.5px solid; border-right: 1.5px solid; transform: rotate(45deg); }
+
+.chat-main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.thread { overflow: auto; flex: 1; min-height: 0; padding: var(--thread-inset) var(--page-gutter) 22px; }
+.thread-rail { width: min(100%, var(--vanilla-chat-rail-width)); margin: 0 auto; display: flex; flex-direction: column; gap: var(--turn-gap); }
+.turn { min-width: 0; display: flex; flex-direction: column; align-items: start; }
+.turn-user { align-items: end; }
+.speaker { font-size: 12px; font-weight: 600; line-height: 1.4; color: var(--vanilla-chat-muted); margin-bottom: 8px; }
+.turn-user .speaker { margin-inline-end: 5px; }
+.message {
+  font-size: var(--chat-text);
+  line-height: 1.85;
+  letter-spacing: .01em;
+  line-break: strict;
+  overflow-wrap: anywhere;
+  max-width: min(100%, var(--vanilla-chat-answer-width));
+}
+.turn-user .message { max-width: 88%; }
+.turn-user .message {
+  padding: 11px 18px;
+  background: var(--vanilla-chat-ink);
+  color: var(--vanilla-chat-surface);
+  border-radius: var(--vanilla-chat-bubble-radius);
+}
+.turn-assistant .message {
+  padding: 11px 18px;
+  background: var(--vanilla-chat-control);
+  border-radius: var(--vanilla-chat-bubble-radius);
+}
+.feedback { display: flex; flex-wrap: wrap; align-items: center; column-gap: 4px; margin-top: 11px; color: var(--vanilla-chat-quiet); font-size: 11px; line-height: 1.6; }
+.feedback p { margin-right: 5px; }
+.feedback button { position: relative; border: 0; padding: 0 9px; min-height: 36px; font-size: inherit; font-weight: 550; isolation: isolate; }
+.feedback button::before { content: ""; position: absolute; inset: 5px 0; border-radius: var(--vanilla-chat-pill-radius); background: var(--vanilla-chat-control); z-index: -1; }
+.composer-area { flex: 0 0 auto; padding: 0 var(--page-gutter) var(--composer-bottom); }
+.composer {
+  width: min(100%, var(--vanilla-chat-rail-width));
+  margin: 0 auto;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 7px 6px 19px;
+  background: var(--vanilla-chat-control);
+  border-radius: var(--vanilla-chat-pill-radius);
+}
+.composer input { flex: 1; width: 0; height: 42px; border: 0; border-radius: 4px; background: transparent; font-size: 15px; padding: 0; }
+.composer input::placeholder { opacity: 1; color: var(--vanilla-chat-quiet); }
+.composer button { color: var(--vanilla-chat-surface); background: var(--vanilla-chat-ink); }
+.composer button:disabled { color: var(--vanilla-chat-quiet); background: var(--vanilla-chat-disabled); }
+
+.start { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; padding: 24px var(--page-gutter) var(--composer-bottom); }
+.start-content { width: min(100%, var(--vanilla-chat-start-width)); margin: auto; }
+.start h2 { font-size: 30px; line-height: 1.45; letter-spacing: -.055em; font-weight: 650; }
+.start p { margin-top: 8px; font-size: 14px; line-height: 1.7; color: var(--vanilla-chat-muted); }
+.suggestions { margin: 29px 0 26px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; list-style: none; padding: 0; }
+.suggestions button { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 46px; border: 0; background: var(--vanilla-chat-control); border-radius: var(--vanilla-chat-pill-radius); text-align: left; padding: 8px 15px 8px 17px; line-height: 1.45; font-size: 13px; }
+.suggestions .icon { flex: 0 0 auto; color: var(--vanilla-chat-quiet); }
+
+.embed-footer { flex: 0 0 auto; color: var(--vanilla-chat-muted); font-size: 12px; text-align: center; padding: 0 var(--page-gutter) 11px; }
+.embed-footer span { text-decoration: underline; text-underline-offset: 3px; }
+.mini .composer-area { padding-bottom: 18px; }
+.mini .continue { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 44px; border: 0; background: var(--vanilla-chat-ink); color: var(--vanilla-chat-surface); border-radius: var(--vanilla-chat-pill-radius); font-size: 13px; font-weight: 600; }
+
+.widget, .mini { --page-gutter: 16px; --topbar-height: 54px; --turn-gap: 16px; --thread-inset: 19px; --composer-bottom: 10px; --chat-text: 14px; }
+.widget .composer { min-height: 52px; padding-block: 4px; }
+.embed .thread { padding-bottom: 12px; }
+.embed .composer input { font-size: 16px; }
+
+@container (max-width: 520px) {
+  .screen:not(.embed) > * {
+    --page-gutter: 18px;
+    --topbar-height: 58px;
+    --turn-gap: 23px;
+    --thread-inset: 28px;
+    --composer-bottom: 18px;
+    --chat-text: 15px;
+  }
+  .start h2 { font-size: 26px; }
+  .suggestions { grid-template-columns: 1fr; }
+  .composer input { font-size: 16px; }
+}
+@container (max-width: 360px) {
+  .screen:not(.embed) > * { --page-gutter: 16px; }
+  .start h2 { font-size: 24px; }
+}
+
+/* 見本ページの枠。チャットの見た目には含まれない */
+body { background: #ededed; }
+.sample { padding: 32px 32px 64px; }
+.sample h1 { font-size: 22px; font-weight: 650; line-height: 1.4; }
+.sample-intro { margin-top: 6px; font-size: 13px; line-height: 1.7; color: var(--vanilla-chat-muted); }
+.sample-nav { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; }
+.sample-nav a { color: inherit; text-underline-offset: 3px; }
+.sample-figure { margin-top: 40px; }
+.sample-caption { margin-bottom: 10px; font-size: 13px; line-height: 1.5; color: var(--vanilla-chat-muted); }
+.sample-caption strong { color: var(--vanilla-chat-ink); font-weight: 650; }
+.sample-scroll { overflow-x: auto; }
+.sample-frame { width: var(--frame-width); height: var(--frame-height); flex: 0 0 auto; }
+.sample-frame .screen { height: 100%; }
+    </style>
+  </head>
+  <body>
+    <main class="sample">
+      <h1>白黒のチャット素体　見本</h1>
+      <p class="sample-intro">各画面を確定寸法の枠に収めている。会話例と質問候補は組版確認用の仮文言。入力欄には文字を打てるが、送信などの動作はない。</p>
+      <nav class="sample-nav" aria-label="画面一覧">
+        <a href="#desktop-start">Web デスクトップ　初回</a>
+        <a href="#desktop-thread">Web デスクトップ　会話中</a>
+        <a href="#mobile-start">Web スマホ　初回</a>
+        <a href="#mobile-thread">Web スマホ　会話中</a>
+        <a href="#widget-thread">埋め込みウィジェット　入力中</a>
+        <a href="#lp-mini-chat">LP ミニチャット　回答後</a>
+      </nav>
+
+      <div class="sample-figure" id="desktop-start">
+        <p class="sample-caption"><strong>Web デスクトップ　初回</strong>　1440 × 900</p>
+        <div class="sample-scroll">
+          <div class="sample-frame" style="--frame-width: 1440px; --frame-height: 900px">
+    <section class="screen desktop" aria-label="初回画面">
+      <header class="frame-header">
+        <p class="frame-title">チャット</p>
+        <button class="icon-button" type="button" aria-label="会話履歴を開く"><span class="icon icon-menu" aria-hidden="true"><i></i></span></button>
+      </header>
+      <div class="chat-main">
+        <div class="start">
+          <div class="start-content">
+            <h2>何を知りたいですか？</h2>
+            <p>質問を選ぶか、メッセージを入力してください。</p>
+            <ul class="suggestions">
+              <li><button type="button">はじめて訪れる方へ<span class="icon icon-next" aria-hidden="true"></span></button></li>
+              <li><button type="button">見どころを知りたい<span class="icon icon-next" aria-hidden="true"></span></button></li>
+              <li><button type="button">食事をする場所を探す<span class="icon icon-next" aria-hidden="true"></span></button></li>
+              <li><button type="button">交通アクセスを調べる<span class="icon icon-next" aria-hidden="true"></span></button></li>
+            </ul>
+            <div class="composer">
+            <input aria-label="メッセージ入力" placeholder="メッセージを入力…" value="">
+            <button class="icon-button" type="button" aria-label="送信" disabled><span class="icon icon-send" aria-hidden="true"></span></button>
+          </div>
+          </div>
+        </div>
+      </div>
+    </section>
+          </div>
+        </div>
+      </div>
+
+      <div class="sample-figure" id="desktop-thread">
+        <p class="sample-caption"><strong>Web デスクトップ　会話中</strong>　1440 × 900</p>
+        <div class="sample-scroll">
+          <div class="sample-frame" style="--frame-width: 1440px; --frame-height: 900px">
+    <section class="screen desktop" aria-label="会話中">
+      <header class="frame-header">
+        <p class="frame-title">チャット</p>
+        <button class="icon-button" type="button" aria-label="会話履歴を開く"><span class="icon icon-menu" aria-hidden="true"><i></i></span></button>
+      </header>
+      <div class="chat-main">
+        <section class="thread" aria-label="会話">
+          <div class="thread-rail">
+            <div class="turn turn-assistant">
+              <p class="speaker">アシスタント</p>
+              <p class="message">こんにちは。知りたいことがあれば、気軽に聞いてください。</p>
+            </div>
+            <div class="turn turn-user">
+              <p class="speaker">あなた</p>
+              <p class="message">はじめて訪れるなら、どこから回るといいですか？</p>
+            </div>
+            <div class="turn turn-assistant">
+              <p class="speaker">アシスタント</p>
+              <p class="message">まずは駅の周辺から歩いてみると、まちの雰囲気をつかめます。時間に余裕があれば、川沿いまで足を延ばすのもおすすめです。</p>
+              <div class="feedback">
+                <p>この回答は役に立ちましたか？</p>
+                <button type="button">はい</button>
+                <button type="button">いいえ</button>
+                <button type="button">提案する</button>
+              </div>
+            </div>
+            <div class="turn turn-user">
+              <p class="speaker">あなた</p>
+              <p class="message">歩いて回れるコースを教えてください。</p>
+            </div>
+          </div>
+        </section>
+        <div class="composer-area">
+          <div class="composer">
+            <input aria-label="メッセージ入力" placeholder="メッセージを入力…" value="">
+            <button class="icon-button" type="button" aria-label="送信" disabled><span class="icon icon-send" aria-hidden="true"></span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+          </div>
+        </div>
+      </div>
+
+      <div class="sample-figure" id="mobile-start">
+        <p class="sample-caption"><strong>Web スマホ　初回</strong>　390 × 844</p>
+        <div class="sample-scroll">
+          <div class="sample-frame" style="--frame-width: 390px; --frame-height: 844px">
+    <section class="screen mobile" aria-label="初回画面">
+      <header class="frame-header">
+        <p class="frame-title">チャット</p>
+        <button class="icon-button" type="button" aria-label="会話履歴を開く"><span class="icon icon-menu" aria-hidden="true"><i></i></span></button>
+      </header>
+      <div class="chat-main">
+        <div class="start">
+          <div class="start-content">
+            <h2>何を知りたいですか？</h2>
+            <p>質問を選ぶか、メッセージを入力してください。</p>
+            <ul class="suggestions">
+              <li><button type="button">はじめて訪れる方へ<span class="icon icon-next" aria-hidden="true"></span></button></li>
+              <li><button type="button">見どころを知りたい<span class="icon icon-next" aria-hidden="true"></span></button></li>
+              <li><button type="button">食事をする場所を探す<span class="icon icon-next" aria-hidden="true"></span></button></li>
+              <li><button type="button">交通アクセスを調べる<span class="icon icon-next" aria-hidden="true"></span></button></li>
+            </ul>
+            <div class="composer">
+            <input aria-label="メッセージ入力" placeholder="メッセージを入力…" value="">
+            <button class="icon-button" type="button" aria-label="送信" disabled><span class="icon icon-send" aria-hidden="true"></span></button>
+          </div>
+          </div>
+        </div>
+      </div>
+    </section>
+          </div>
+        </div>
+      </div>
+
+      <div class="sample-figure" id="mobile-thread">
+        <p class="sample-caption"><strong>Web スマホ　会話中</strong>　390 × 844</p>
+        <div class="sample-scroll">
+          <div class="sample-frame" style="--frame-width: 390px; --frame-height: 844px">
+    <section class="screen mobile" aria-label="会話中">
+      <header class="frame-header">
+        <p class="frame-title">チャット</p>
+        <button class="icon-button" type="button" aria-label="会話履歴を開く"><span class="icon icon-menu" aria-hidden="true"><i></i></span></button>
+      </header>
+      <div class="chat-main">
+        <section class="thread" aria-label="会話">
+          <div class="thread-rail">
+            <div class="turn turn-assistant">
+              <p class="speaker">アシスタント</p>
+              <p class="message">こんにちは。知りたいことがあれば、気軽に聞いてください。</p>
+            </div>
+            <div class="turn turn-user">
+              <p class="speaker">あなた</p>
+              <p class="message">はじめて訪れるなら、どこから回るといいですか？</p>
+            </div>
+            <div class="turn turn-assistant">
+              <p class="speaker">アシスタント</p>
+              <p class="message">まずは駅の周辺から歩いてみると、まちの雰囲気をつかめます。時間に余裕があれば、川沿いまで足を延ばすのもおすすめです。</p>
+              <div class="feedback">
+                <p>この回答は役に立ちましたか？</p>
+                <button type="button">はい</button>
+                <button type="button">いいえ</button>
+                <button type="button">提案する</button>
+              </div>
+            </div>
+            <div class="turn turn-user">
+              <p class="speaker">あなた</p>
+              <p class="message">歩いて回れるコースを教えてください。</p>
+            </div>
+          </div>
+        </section>
+        <div class="composer-area">
+          <div class="composer">
+            <input aria-label="メッセージ入力" placeholder="メッセージを入力…" value="">
+            <button class="icon-button" type="button" aria-label="送信" disabled><span class="icon icon-send" aria-hidden="true"></span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+          </div>
+        </div>
+      </div>
+
+      <div class="sample-figure" id="widget-thread">
+        <p class="sample-caption"><strong>埋め込みウィジェット　入力中</strong>　380 × 560</p>
+        <div class="sample-scroll">
+          <div class="sample-frame" style="--frame-width: 380px; --frame-height: 560px">
+    <section class="screen widget embed" aria-label="会話中">
+      <header class="frame-header">
+        <p class="frame-title">チャット</p>
+        <button class="icon-button" type="button" aria-label="閉じる"><span class="icon icon-close" aria-hidden="true"></span></button>
+      </header>
+      <div class="chat-main">
+        <section class="thread" aria-label="会話">
+          <div class="thread-rail">
+            <div class="turn turn-assistant">
+              <p class="speaker">アシスタント</p>
+              <p class="message">こんにちは。知りたいことがあれば、気軽に聞いてください。</p>
+            </div>
+            <div class="turn turn-user">
+              <p class="speaker">あなた</p>
+              <p class="message">はじめて訪れるなら、どこから回るといいですか？</p>
+            </div>
+            <div class="turn turn-assistant">
+              <p class="speaker">アシスタント</p>
+              <p class="message">まずは駅の周辺から歩いてみると、まちの雰囲気をつかめます。時間に余裕があれば、川沿いまで足を延ばすのもおすすめです。</p>
+            </div>
+          </div>
+        </section>
+        <div class="composer-area">
+          <div class="composer">
+            <input aria-label="メッセージ入力" placeholder="メッセージを入力…" value="歩いて回れるコースはありますか？">
+            <button class="icon-button" type="button" aria-label="送信"><span class="icon icon-send" aria-hidden="true"></span></button>
+          </div>
+        </div>
+        <p class="embed-footer"><span>Webチャットで続ける</span></p>
+      </div>
+    </section>
+          </div>
+        </div>
+      </div>
+
+      <div class="sample-figure" id="lp-mini-chat">
+        <p class="sample-caption"><strong>LP ミニチャット　回答後</strong>　380 × 464</p>
+        <div class="sample-scroll">
+          <div class="sample-frame" style="--frame-width: 380px; --frame-height: 464px">
+    <section class="screen mini embed" aria-label="会話中">
+      <header class="frame-header">
+        <p class="frame-title">チャット</p>
+        
+      </header>
+      <div class="chat-main">
+        <section class="thread" aria-label="会話">
+          <div class="thread-rail">
+            <div class="turn turn-assistant">
+              <p class="speaker">アシスタント</p>
+              <p class="message">こんにちは。知りたいことがあれば、気軽に聞いてください。</p>
+            </div>
+            <div class="turn turn-user">
+              <p class="speaker">あなた</p>
+              <p class="message">はじめて訪れるなら、どこから回るといいですか？</p>
+            </div>
+            <div class="turn turn-assistant">
+              <p class="speaker">アシスタント</p>
+              <p class="message">まずは駅の周辺から歩いてみると、まちの雰囲気をつかめます。時間に余裕があれば、川沿いまで足を延ばすのもおすすめです。</p>
+            </div>
+          </div>
+        </section>
+        <div class="composer-area"><button type="button" class="continue">Webチャットで続ける<span class="icon icon-next" aria-hidden="true"></span></button></div>
+      </div>
+    </section>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
